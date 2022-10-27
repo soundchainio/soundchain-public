@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/link-passhref */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from 'components/Buttons/Button'
+import { ListNFTButton } from 'components/Buttons/ListNFT'
 import { Divider } from 'components/common'
 import { Matic } from 'components/Matic'
 import { Ogun } from 'components/Ogun'
@@ -71,8 +72,18 @@ export const PriceCard = (props: Props) => {
         <>
           <PriceContainer>
             <span>
-              {isMaticPrice && <Matic value={price} variant="currency-inline" className="text-xs" />}
-              {isOgunPrice && <Ogun value={price} variant="currency" className="text-xs" showBonus />}
+              {isMaticPrice && (
+                <Matic value={price} variant="currency-inline" className="text-xs" truncate="max-w-[50px] truncate" />
+              )}
+              {isOgunPrice && (
+                <Ogun
+                  value={price}
+                  variant="currency"
+                  className="text-xs"
+                  showBonus
+                  truncate="max-w-[80px] md:max-w-[300px] truncate"
+                />
+              )}
             </span>
             {isOwner ? (
               <NextLink
@@ -82,9 +93,9 @@ export const PriceCard = (props: Props) => {
                 }}
               >
                 <a>
-                  <Button variant="list-nft" className="w-[170px]" loading={isProcessing}>
+                  <ListNFTButton className="md:w-[170px]" loading={isProcessing}>
                     <span className="py-4">EDIT</span>
-                  </Button>
+                  </ListNFTButton>
                 </a>
               </NextLink>
             ) : (

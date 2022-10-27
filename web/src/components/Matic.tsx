@@ -7,9 +7,10 @@ interface Props {
   value?: string | number
   className?: string
   variant?: 'currency' | 'currency-inline' | 'listing-inline'
+  truncate?: string
 }
 
-export const Matic = ({ value = '', className, variant }: Props) => {
+export const Matic = ({ value = '', truncate, className, variant }: Props) => {
   const { data: maticUsd } = useMaticUsdQuery()
   const currencyValue = currency(parseFloat(value.toString()) * parseFloat(maticUsd?.maticUsd || ''))
 
@@ -26,14 +27,15 @@ export const Matic = ({ value = '', className, variant }: Props) => {
     case 'currency-inline':
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          {value}
+          <span className={truncate}>{value}</span>
           <MaticIcon className="inline" />
         </p>
       )
     case 'listing-inline':
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          <MaticIcon className="inline" /> {fixedDecimals(value)}{' '}
+          <MaticIcon className="inline" />
+          <span className={`${truncate}`}>{fixedDecimals(value)}</span>
           <span className="hidden text-xs text-gray-80 xs:inline">MATIC</span>
         </p>
       )
