@@ -84,17 +84,15 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
         <Row>
           <Cell $bgDark>GENRES</Cell>
           <Cell>
-            <Overflow>
-              {isEmptyGenre ? (
-                <div>No Genre Selected</div>
-              ) : (
-                <>
-                  {genres.map(genre => (
-                    <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} className="mr-4" />
-                  ))}
-                </>
-              )}
-            </Overflow>
+            {isEmptyGenre ? (
+              <div>No Genre Selected</div>
+            ) : (
+              <Overflow>
+                {genres.map(genre => (
+                  <Badges.Badge key={genre} label={getGenreLabelByKey(genre) || genre} className="mr-4" />
+                ))}
+              </Overflow>
+            )}
           </Cell>
         </Row>
         <Row>
