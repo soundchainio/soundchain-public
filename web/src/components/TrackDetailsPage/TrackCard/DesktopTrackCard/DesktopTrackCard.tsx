@@ -11,6 +11,8 @@ import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { MobilePlayer } from '../MobileTrackCard/components'
 import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
 import { LinkItUrl } from 'react-linkify-it'
+import Asset from 'components/Asset'
+import ReactTooltip from 'react-tooltip'
 interface Props {
   me?: MeQuery['me']
   track: TrackQuery['track']
@@ -58,13 +60,7 @@ export const DesktopTrackCard = (props: Props) => {
       <div className="flex items-start xl:flex-col">
         <ArtistContainer>
           <ImageContainer>
-            <Image
-              src={track.artworkUrl || ''}
-              layout="fill"
-              objectFit="contain"
-              alt="art image of the current track "
-              className="rounded-xl"
-            />
+            <Asset src={track.artworkUrl} objectFit="contain" disableImageWave />
             <MobilePlayer
               handleOnPlayClicked={handleOnPlayClicked}
               isPlaying={isPlaying}
@@ -79,7 +75,13 @@ export const DesktopTrackCard = (props: Props) => {
 
           <ArtistNameContainer>
             <span>
-              <TrackTitle>{track.title}</TrackTitle>
+              <ReactTooltip id="track-title" type="dark" effect="solid">
+                <span>{track.title}</span>
+              </ReactTooltip>
+              <a data-tip data-for="track-title">
+                <TrackTitle>{track.title}</TrackTitle>
+              </a>
+
               <Link href={`/profiles/${track.artist}` || ''}>
                 <a>
                   <ArtistName>{track.artist}</ArtistName>
@@ -186,6 +188,8 @@ const TrackTitle = tw.h1`
   text-base 
   leading-6
   text-white
+  max-w-[200px]
+  truncate
 `
 const ArtistName = tw.h2`
   not-italic 
@@ -193,6 +197,8 @@ const ArtistName = tw.h2`
   text-sm 
   leading-5
   text-[#969899]
+  max-w-[200px]
+  truncate
 `
 
 const SubTitle = tw.h2`
