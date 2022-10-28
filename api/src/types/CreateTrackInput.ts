@@ -32,6 +32,9 @@ export class CreateTrackInput {
   album: string;
 
   @Field({ nullable: true })
+  ISRC: string;
+
+  @Field({ nullable: true })
   releaseYear: number;
 
   @Field({ nullable: true })
