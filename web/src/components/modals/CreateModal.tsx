@@ -171,6 +171,7 @@ export const CreateModal = () => {
         copyright,
         royalty,
         editionQuantity,
+        ISRC,
       } = values
       const artist = me.handle
       const artistId = me.id
@@ -220,6 +221,7 @@ export const CreateModal = () => {
           artist,
           releaseYear,
           genres,
+          ISRC,
           attributes: metadataAttributes,
         }
 
@@ -325,6 +327,7 @@ export const CreateModal = () => {
                         artworkUrl,
                         description,
                         genres,
+                        ISRC,
                         releaseYear,
                         artistProfileId,
                         copyright,
