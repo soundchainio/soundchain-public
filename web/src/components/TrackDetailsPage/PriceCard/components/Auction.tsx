@@ -63,17 +63,18 @@ export const Auction = (props: AuctionProps) => {
   const endingTime = auctionItem?.auctionItem?.endingTime || 0
   const isAuctionOver = (auctionItem?.auctionItem?.endingTime || 0) < Math.floor(Date.now() / 1000)
   const startPrice = auctionItem?.auctionItem?.reservePriceToShow
+  const isAuction = Boolean(auctionItem?.auctionItem)
 
   const startingDate = new Date(startingTime * 1000)
   const endingDate = new Date(endingTime * 1000)
   const isFutureSale = startingDate ? startingDate.getTime() > new Date().getTime() : false
   const bidCount = countBids?.countBids.numberOfBids ?? 0
   const canEditAuction = isOwner && !isAuctionOver && bidCount === 0
-  const canCancel = isOwner && bidCount === 0 && !isAuctionOver
+  const canCancel = isOwner && bidCount === 0 && isAuction
 
   const canHighestBidderComplete = isAuctionOver && compareWallets(highestBid.bidder, account)
   const canHighestOwnerComplete = isAuctionOver && compareWallets(account, auctionItem?.auctionItem?.owner)
-  const canComplete = canHighestBidderComplete || canHighestOwnerComplete
+  const canComplete = (canHighestBidderComplete || canHighestOwnerComplete) && bidCount > 0
 
   useEffect(() => {
     if (!web3 || !tokenId || !getHighestBid || highestBid.bidder != undefined || !track.trackEdition) {
@@ -146,6 +147,8 @@ export const Auction = (props: AuctionProps) => {
     )
   }
 
+  if (!isAuction) return null
+
   return (
     <>
       <Container>
@@ -184,7 +187,7 @@ export const Auction = (props: AuctionProps) => {
           )}
         </BidsContainer>
 
-        <div className="mt-4 mb-2 flex  w-full flex-col items-center">
+        <div className="mt-4 mb-2 flex  w-full flex-col items-center gap-2">
           {isFutureSale && !isAuctionOver && (
             <>
               <Title>Auction Starting in</Title>
