@@ -1,4 +1,4 @@
-import { ButtonProps } from 'components/Button'
+import { ButtonProps } from 'components/Buttons/Button'
 
 export const BuyNFTButton = ({ className, type = 'button', children, disabled, loading, ...rest }: ButtonProps) => {
   return (

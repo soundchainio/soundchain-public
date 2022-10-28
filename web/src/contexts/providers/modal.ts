@@ -75,7 +75,13 @@ export const useModalDispatch = () => {
       show: boolean,
       genres: GenreLabel[] | undefined,
       filterSaleType: SaleTypeLabel | undefined,
-    ) => dispatch({ type: ModalActionTypes.SHOW_FILTER_MARKETPLACE, payload: { show, genres, filterSaleType } }),
+      acceptsMATIC: boolean | undefined,
+      acceptsOGUN: boolean | undefined,
+    ) =>
+      dispatch({
+        type: ModalActionTypes.SHOW_FILTER_MARKETPLACE,
+        payload: { show, genres, filterSaleType, acceptsMATIC, acceptsOGUN },
+      }),
     dispatchShowBidsHistory: (show: boolean, auctionId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_BIDS_HISTORY, payload: { show, auctionId } }),
     dispatchShowNftTransferConfirmationModal: (payload: ShowTransferNftConfirmationPayload) =>

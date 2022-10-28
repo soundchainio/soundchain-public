@@ -45,6 +45,10 @@ enum Genre {
   SPOKEN = 'spoken',
   URBAN_LATINO = 'urban_latino',
   WORLD = 'world',
+  TECHNO = 'techno',
+  BPM = 'bpm',
+  DEEP_HOUSE = 'deep_house',
+  JUNGLE = 'jungle'
 }
 
 registerEnumType(Genre, {

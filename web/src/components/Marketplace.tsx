@@ -1,27 +1,61 @@
 /* eslint-disable react/display-name */
+import { GridView } from 'components/GridView'
+import { ListView } from 'components/ListView'
 import { useModalState } from 'contexts/providers/modal'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
-import { Track, useListingItemsQuery } from 'lib/graphql'
-import React, { useEffect, useState } from 'react'
+import { SaleType, Track, useListingItemsQuery } from 'lib/graphql'
+import { useEffect, useState } from 'react'
 import { GenreLabel } from 'utils/Genres'
 import { SaleTypeLabel } from 'utils/SaleTypeLabel'
 import { MarketplaceFilterWrapper } from './MarketplaceFilterWrapper'
-import { ListView } from 'components/ListView'
-import { GridView } from 'components/GridView'
 
-const buildMarketplaceFilter = (genres: GenreLabel[] | undefined, saleType: SaleTypeLabel | undefined) => {
+interface ListingItem {
+  saleType?: SaleType | undefined
+  acceptsMATIC?: boolean | undefined
+  acceptsOGUN?: boolean | undefined
+}
+
+const buildMarketplaceFilter = (
+  genres: GenreLabel[] | undefined,
+  saleType: SaleTypeLabel | undefined,
+  acceptsMATIC: boolean | undefined,
+  acceptsOGUN: boolean | undefined,
+) => {
+  const listingItem: ListingItem = {}
+
+  if (saleType) {
+    listingItem.saleType = saleType.key
+  }
+
+  if (acceptsMATIC) {
+    listingItem.acceptsMATIC = acceptsMATIC
+  }
+
+  if (acceptsOGUN) {
+    listingItem.acceptsOGUN = acceptsOGUN
+  }
+
   return {
     ...(genres?.length && { genres: genres.map(genre => genre.key) }),
-    ...(saleType && { listingItem: { saleType: saleType.key } }),
+    ...(Object.keys(listingItem).length > 0 && {
+      listingItem: listingItem,
+    }),
   }
 }
 
 export const Marketplace = () => {
   const pageSize = 15
-  const { genres: genresFromModal, filterSaleType } = useModalState()
+  const {
+    genres: genresFromModal,
+    filterSaleType,
+    acceptsMATIC: filterAcceptsMATIC,
+    acceptsOGUN: filterAcceptsOGUN,
+  } = useModalState()
   const [isGrid, setIsGrid] = useState(true)
   const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined)
   const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined)
+  const [acceptsMATIC, setAcceptsMATIC] = useState<boolean | undefined>(undefined)
+  const [acceptsOGUN, setAcceptsOGUN] = useState<boolean | undefined>(undefined)
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
 
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
@@ -35,6 +69,8 @@ export const Marketplace = () => {
 
   useEffect(() => genresFromModal && setGenres(genresFromModal), [genresFromModal])
   useEffect(() => filterSaleType && setSaleType(filterSaleType), [filterSaleType])
+  useEffect(() => setAcceptsMATIC(filterAcceptsMATIC), [filterAcceptsMATIC])
+  useEffect(() => setAcceptsOGUN(filterAcceptsOGUN), [filterAcceptsOGUN])
 
   useEffect(() => {
     refetch({
@@ -42,9 +78,9 @@ export const Marketplace = () => {
         first: pageSize,
       },
       sort: SelectToApolloQuery[sorting],
-      filter: buildMarketplaceFilter(genres, saleType),
+      filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN),
     })
-  }, [genres, saleType, refetch, sorting])
+  }, [genres, saleType, refetch, sorting, acceptsMATIC, acceptsOGUN])
 
   const loadMore = () => {
     fetchMore({
@@ -54,7 +90,7 @@ export const Marketplace = () => {
           after: data?.listingItems.pageInfo.endCursor,
         },
         sort: SelectToApolloQuery[sorting],
-        filter: buildMarketplaceFilter(genres, saleType),
+        filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN),
       },
     })
   }
@@ -69,6 +105,10 @@ export const Marketplace = () => {
         setGenres={setGenres}
         saleType={saleType}
         setSaleType={setSaleType}
+        acceptsMATIC={acceptsMATIC}
+        setAcceptsMATIC={setAcceptsMATIC}
+        acceptsOGUN={acceptsOGUN}
+        setAcceptsOGUN={setAcceptsOGUN}
         sorting={sorting}
         setSorting={setSorting}
       />

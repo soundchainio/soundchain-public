@@ -17,8 +17,7 @@ import {
   useChatHistoryQuery,
 } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
-import { useEffect } from 'react'
-import { animateScroll as scroll } from 'react-scroll'
+import { MutableRefObject, useEffect, useRef } from 'react'
 
 export interface PostPageProps {
   recipientName: string
@@ -50,14 +49,22 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
     hasPreviousPage: false,
     totalCount: 0,
   })
+  const bottomRef = useRef<HTMLDivElement>()
 
   useEffect(() => {
     delayFocus('#newMessageInput')
   }, [])
 
   const setNewMessages = (data: ChatHistoryQuery, refetch: boolean) => {
-    if (refetch) setMessages([...data.chatHistory.nodes] as Message[])
-    else setMessages([...data.chatHistory.nodes, ...messages] as Message[])
+    if (refetch) {
+      setMessages([...data.chatHistory.nodes] as Message[])
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }, 1200)
+    } else setMessages([...data.chatHistory.nodes, ...messages] as Message[])
     setPageInfo(data.chatHistory.pageInfo as PageInfo)
     setTimeout(() => setLoading(false), 1000)
   }
@@ -72,10 +79,6 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
     setMessages([])
     const { data } = await fetchMore({ variables: { profileId } })
     setNewMessages(data, true)
-    setTimeout(() => {
-      scroll.scrollToBottom({ duration: 500 })
-      setLoading(false)
-    }, 100)
   }
 
   const onFetchMore = async () => {
@@ -97,8 +100,18 @@ export default function ChatPage({ recipientName, profileId }: PostPageProps) {
     <>
       <SEO title="Message | SoundChain" canonicalUrl={`/messages/${profileId}`} description="SoundChain Message" />
       <ChatLayout topNavBarProps={topNavBarProps}>
-        <Chat messages={messages} pageInfo={pageInfo} onFetchMore={onFetchMore} loading={loading} />
-        <NewMessageForm profileId={profileId} onNewMessage={onNewMessage} />
+        <Chat
+          messages={messages}
+          pageInfo={pageInfo}
+          onFetchMore={onFetchMore}
+          loading={loading}
+          bottomRef={bottomRef as MutableRefObject<HTMLDivElement>}
+        />
+        <NewMessageForm
+          profileId={profileId}
+          onNewMessage={onNewMessage}
+          bottomRef={bottomRef as MutableRefObject<HTMLDivElement>}
+        />
       </ChatLayout>
     </>
   )

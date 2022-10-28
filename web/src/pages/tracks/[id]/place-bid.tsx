@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'
 import MaxGasFee from 'components/MaxGasFee'
@@ -8,7 +8,7 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
-import { Timer } from 'components/trackpage/SingleTrackPage'
+import { Timer } from 'components/TrackDetailsPage'
 import { WalletSelector } from 'components/WalletSelector'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { Form, Formik } from 'formik'
@@ -31,6 +31,7 @@ import {
   useUserByWalletLazyQuery,
 } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
+import { useRouter } from 'next/router'
 import { authenticator } from 'otplib'
 import { ParsedUrlQuery } from 'querystring'
 import { useEffect, useState } from 'react'
@@ -88,12 +89,14 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   const [highestBid, setHighestBid] = useState<HighestBid>()
   const { setTopNavBarProps } = useLayoutContext()
 
+  const router = useRouter()
   const tokenId = track.nftData?.tokenId ?? -1
   const contractAddress = track.nftData?.contract ?? ''
 
   const { data: { auctionItem } = {} } = useAuctionItemQuery({
     variables: { tokenId },
   })
+
   const [fetchHaveBided, { data: haveBided, refetch: refetchHaveBided }] = useHaveBidedLazyQuery({
     fetchPolicy: 'network-only',
   })
@@ -190,7 +193,6 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
       return
     }
 
-    console.log('Amount bided: ', amount)
     setLoading(true)
     placeBid(tokenId, account, amount, {
       nft: contractAddress,
@@ -206,7 +208,10 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
         console.log('Error on your transaction: ', error)
         toast.warn('You may have been outbid. Please try again')
       })
-      .finally(() => setLoading(false))
+      .finally(() => {
+        setLoading(false)
+        router.push(`/tracks/${router.query.id}`)
+      })
       .execute(web3)
   }
 

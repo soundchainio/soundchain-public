@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const defaultTheme = require('tailwindcss/defaultTheme');
+const defaultTheme = require('tailwindcss/defaultTheme')
 
 const measures = {
   third: '30%',
@@ -13,7 +13,7 @@ const measures = {
   '8/10': '80%',
   '9/10': '90%',
   '15/16': '93.75%',
-};
+}
 
 module.exports = {
   content: ['./src/**/*.{ts,tsx}'],
@@ -21,8 +21,9 @@ module.exports = {
   theme: {
     extend: {
       screens: {
-        'xs': '420px',
+        xs: '420px',
         ...defaultTheme.screens,
+
         '2k': { raw: '(min-width: 2000px)' },
         vsm: { raw: '(min-height: 600px)' },
         vmd: { raw: '(min-height: 800px)' },
@@ -130,4 +131,4 @@ module.exports = {
       },
     },
   },
-};
+}

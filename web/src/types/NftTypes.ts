@@ -10,6 +10,7 @@ export interface Metadata {
   genres?: string[]
   releaseYear?: number
   attributes?: { trait_type: string; value: string }[]
+  ISRC?: string
 }
 
 export interface NftToken extends Metadata {

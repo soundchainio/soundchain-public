@@ -8,7 +8,7 @@ export const currency = (value: number) => {
   }).format(value)
 }
 
-export const fixedDecimals = (value: number | string) => {
+export const fixedDecimals = (value: number | string, maxDecimals = 6) => {
   const s = value.toString()
   if (!s || isNaN(parseFloat(s))) {
     return 0
@@ -16,7 +16,7 @@ export const fixedDecimals = (value: number | string) => {
   const [integerPart, decimals] = s.split('.')
   const n = parseFloat(s)
 
-  if (decimals?.length > 6) {
+  if (decimals?.length > maxDecimals) {
     return parseFloat(n.toPrecision(Math.min(integerPart.length + 3, 21)))
   }
 
