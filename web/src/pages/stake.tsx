@@ -1,4 +1,4 @@
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import { WalletButton } from 'components/Buttons/WalletButton'
 import { config } from 'config'
 import { Form, Formik } from 'formik'

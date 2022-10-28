@@ -1,5 +1,6 @@
 import '@reach/dialog/styles.css'
 import '@reach/slider/styles.css'
+
 import * as Sentry from '@sentry/react'
 import { Integrations } from '@sentry/tracing'
 import { CheckBodyScroll } from 'components/CheckBodyScroll'
@@ -7,6 +8,7 @@ import { Layout } from 'components/Layout'
 import { config } from 'config'
 import { StateProvider } from 'contexts'
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer'
+import { TrackProvider } from 'hooks/useTrack'
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
 import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { ApolloProvider } from 'lib/apollo'
@@ -17,6 +19,7 @@ import Router from 'next/router'
 import Script from 'next/script'
 import NProgress from 'nprogress'
 import { ReactElement } from 'react'
+
 import 'react-toastify/dist/ReactToastify.css'
 import 'styles/audio-player.css'
 import 'styles/bottom-audio-player.css'
@@ -60,14 +63,16 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
         <MagicProvider>
           <WalletProvider>
             <AudioPlayerProvider>
-              <HideBottomNavBarProvider>
-                <LayoutContextProvider>
-                  <CheckBodyScroll />
-                  <Layout>
-                    <Component {...pageProps} />
-                  </Layout>
-                </LayoutContextProvider>
-              </HideBottomNavBarProvider>
+              <TrackProvider>
+                <HideBottomNavBarProvider>
+                  <LayoutContextProvider>
+                    <CheckBodyScroll />
+                    <Layout>
+                      <Component {...pageProps} />
+                    </Layout>
+                  </LayoutContextProvider>
+                </HideBottomNavBarProvider>
+              </TrackProvider>
             </AudioPlayerProvider>
           </WalletProvider>
         </MagicProvider>

@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { ButtonProps, commonClasses } from 'components/Button'
+import { ButtonProps, commonClasses } from 'components/Buttons/Button'
 
 export const OrangeButton = ({ className, type = 'button', icon: Icon, children, loading, ...rest }: ButtonProps) => {
   return (

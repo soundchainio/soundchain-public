@@ -1,4 +1,3 @@
-import { Slider } from '@reach/slider'
 import { config } from 'config'
 import { useModalDispatch } from 'contexts/providers/modal'
 import Hls from 'hls.js'
@@ -8,7 +7,8 @@ import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import mux from 'mux-embed'
 import { useEffect, useRef } from 'react'
-import Asset from './Asset'
+import Asset from 'components/Asset'
+import { FavoriteTrack } from 'components/Buttons/FavoriteTrack/FavoriteTrack'
 
 export const BottomAudioPlayer = () => {
   const me = useMe()
@@ -16,8 +16,6 @@ export const BottomAudioPlayer = () => {
   const {
     currentSong,
     isPlaying,
-    duration,
-    progress,
     progressFromSlider,
     hasNext,
     volume,
@@ -28,6 +26,7 @@ export const BottomAudioPlayer = () => {
     setProgressState,
     setProgressStateFromSlider,
   } = useAudioPlayerContext()
+
   const { dispatchShowAudioPlayerModal } = useModalDispatch()
 
   useEffect(() => {
@@ -114,30 +113,33 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <div className="flex flex-col gap-2 bg-black py-2">
-      <div className="flex justify-between px-2">
+    <div className="flex flex-col gap-2 bg-neutral-900 py-2">
+      <div className="flex items-center justify-between px-2">
         <button
           className="flex min-w-0 flex-1 items-center gap-2"
           aria-label="Open audio player controls"
           onClick={() => dispatchShowAudioPlayerModal(true)}
         >
-          <div className="relative flex h-10 w-10 flex-shrink-0 items-center bg-gray-80">
+          <div className="relative flex h-12 w-12 flex-shrink-0 items-center bg-gray-80">
             <Asset src={currentSong.art} sizes="2.5rem" />
           </div>
-          <div className="flex min-w-0 flex-col items-start text-xs text-white">
-            <h2 className="w-full truncate font-black">{currentSong.title || 'Unknown title'}</h2>
-            <p className="truncate font-medium">{currentSong.artist || 'Unknown artist'}</p>
+          <div className="flex flex-col items-start gap-1 text-sm text-white">
+            <h2 className="truncate font-black">{currentSong.title || 'Unknown title'}</h2>
+            <p className="ml-[2px] truncate font-medium">{currentSong.artist || 'Unknown artist'}</p>
           </div>
         </button>
-        <button
-          aria-label={isPlaying ? 'Pause' : 'Play'}
-          className="flex h-10 w-11 flex-shrink-0 items-center justify-center duration-75 hover:scale-125"
-          onClick={togglePlay}
-        >
-          {isPlaying ? <Pause /> : <Play />}
-        </button>
+        <div className="flex items-center gap-2">
+          <FavoriteTrack />
+          <button
+            aria-label={isPlaying ? 'Pause' : 'Play'}
+            className="flex h-10 w-11 flex-shrink-0 items-center justify-center duration-75 hover:scale-125"
+            onClick={togglePlay}
+          >
+            {isPlaying ? <Pause /> : <Play />}
+          </button>
+        </div>
       </div>
-      <Slider className="bottom-audio-player" min={0} max={duration} value={progress} disabled />
+
       <audio
         ref={audioRef}
         onPlay={() => setPlayingState(true)}

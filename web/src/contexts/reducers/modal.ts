@@ -16,12 +16,12 @@ import {
   ShowCreatePayload,
   ShowMarketplaceFilterPayload,
   ShowNewPostPayload,
+  ShowOgunTransferConfirmationPayload,
   ShowReactionsPayload,
   ShowRemoveListing,
   ShowTransferConfirmationPayload,
-  ShowOgunTransferConfirmationPayload,
-  ShowUnderDevelopmentPayload,
   ShowTransferNftConfirmationPayload,
+  ShowUnderDevelopmentPayload,
 } from 'contexts/payloads/modal'
 import { ContractAddresses } from 'hooks/useBlockchainV2'
 import { ReactionType, TracksQuery } from 'lib/graphql'
@@ -71,6 +71,8 @@ export interface ModalState {
   showMarketplaceFilter: boolean
   genres?: GenreLabel[]
   filterSaleType?: SaleTypeLabel
+  acceptsMATIC: boolean | undefined
+  acceptsOGUN: boolean | undefined
   auctionId?: string
   showTransferNftConfirmation: boolean
   track?: TracksQuery['tracks']
@@ -111,6 +113,8 @@ export const initialModalState = {
   showMarketplaceFilter: false,
   genres: undefined,
   filterSaleType: undefined,
+  acceptsMATIC: undefined,
+  acceptsOGUN: undefined,
   auctionId: undefined,
   showTransferNftConfirmation: false,
 }
@@ -255,6 +259,8 @@ export const modalReducer = (state: ModalState, action: Action) => {
         showMarketplaceFilter: (action.payload as ShowMarketplaceFilterPayload).show,
         genres: (action.payload as ShowMarketplaceFilterPayload).genres,
         filterSaleType: (action.payload as ShowMarketplaceFilterPayload).filterSaleType,
+        acceptsMATIC: (action.payload as ShowMarketplaceFilterPayload).acceptsMATIC,
+        acceptsOGUN: (action.payload as ShowMarketplaceFilterPayload).acceptsOGUN,
       }
     case ModalActionTypes.SHOW_BIDS_HISTORY:
       return {

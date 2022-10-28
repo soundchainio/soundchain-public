@@ -63,4 +63,10 @@ export class NFTSoldNotificationResolver {
     const { sellType } = metadata as NFTSoldNotificationMetadata;
     return sellType;
   }
+
+  @FieldResolver(() => Boolean, { nullable: true })
+  isPaymentOgun(@Root() { metadata }: Notification): boolean {
+    const { isPaymentOgun } = metadata as NFTSoldNotificationMetadata;
+    return isPaymentOgun;
+  }
 }

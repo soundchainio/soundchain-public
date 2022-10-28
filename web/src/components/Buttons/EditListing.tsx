@@ -1,4 +1,4 @@
-import { ButtonProps } from 'components/Button'
+import { ButtonProps } from 'components/Buttons/Button'
 import { LinkAnchor } from '../LinkAnchor'
 
 export const EditListingButton = ({ className, href, type = 'button', children, loading, ...rest }: ButtonProps) => {

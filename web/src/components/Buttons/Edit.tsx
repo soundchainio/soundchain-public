@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { ButtonProps } from 'components/Button'
+import { ButtonProps } from 'components/Buttons/Button'
 import { Pencil } from 'icons/Pencil'
 
 const editClasses =

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { InMemoryCacheConfig } from '@apollo/client'
 import {
   ChatConnection,
@@ -12,6 +13,18 @@ import {
   PostConnection,
   TrackConnection,
 } from 'lib/graphql'
+
+const filterNodeDuplicates = (existingNodes: any, incomingNodes: any, pageInfo: any) => {
+  return {
+    nodes: [
+      ...existingNodes,
+      ...incomingNodes.filter(
+        (incomingNode: any) => existingNodes.filter((existingNode: any) => existingNode.__ref === incomingNode.__ref).length === 0,
+      ),
+    ],
+    pageInfo,
+  }
+}
 
 export const cacheConfig: InMemoryCacheConfig = {
   typePolicies: {
@@ -246,19 +259,19 @@ export const cacheConfig: InMemoryCacheConfig = {
         listingItems: {
           keyArgs: ['sort'],
           merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
-            return {
-              nodes: [...existing.nodes, ...nodes],
-              pageInfo,
-            }
+            return filterNodeDuplicates(existing.nodes, nodes, pageInfo)
           },
         },
         buyNowListingItems: {
           keyArgs: ['filter'],
           merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
-            return {
-              nodes: [...existing.nodes, ...nodes],
-              pageInfo,
-            }
+            return filterNodeDuplicates(existing.nodes, nodes, pageInfo)
+          },
+        },
+        ownedTracks: {
+          keyArgs: ['filter'],
+          merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
+            return filterNodeDuplicates(existing.nodes, nodes, pageInfo)
           },
         },
       },

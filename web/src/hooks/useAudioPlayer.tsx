@@ -36,6 +36,8 @@ interface AudioPlayerContextData {
   jumpTo: (index: number) => void
   toggleShuffle: () => void
   setPlayerFavorite: (isFavorite: boolean) => void
+  setIsPlaylistOpen: (isPlaylistOpen: boolean) => void
+  isPlaylistOpen: boolean
 }
 
 const localStorageVolumeKey = 'SOUNDCHAIN_VOLUME'
@@ -53,6 +55,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [volume, setVolume] = useState(0.5) // goes from 0 to 1
   const [isPlaying, setIsPlaying] = useState(false)
   const [isShuffleOn, setIsShuffleOn] = useState(false)
+  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [currentSong, setCurrentSong] = useState<Song>({} as Song)
   const [originalPlaylist, setOriginalPlaylist] = useState<Song[]>([])
   const [playlist, setPlaylist] = useState<Song[]>([])
@@ -238,6 +241,8 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         jumpTo,
         toggleShuffle,
         setPlayerFavorite,
+        setIsPlaylistOpen,
+        isPlaylistOpen,
       }}
     >
       {children}

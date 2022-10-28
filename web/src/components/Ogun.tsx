@@ -9,9 +9,10 @@ interface Props {
   variant?: 'currency' | 'currency-inline'
   showBonus?: boolean
   rewardRatePercentage?: string
+  truncate?: string
 }
 
-export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePercentage }: Props) => {
+export const Ogun = ({ value = '', className, variant, truncate, showBonus, rewardRatePercentage }: Props) => {
   const moneyValue = fixedDecimals(value)
   if (!rewardRatePercentage) {
     rewardRatePercentage = '0'
@@ -22,15 +23,16 @@ export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePerc
   switch (variant) {
     case 'currency':
       return (
-        <div className={classNames('font-bold', className)}>
-          <p className="text-white">
-            <OgunIcon id="ogun-token" className="inline h-5 w-5" />{' '}
-            {showBonus ? (
-              <span className="text-sm text-gray-60">{`${fixedDecimals(moneyValue - ogunBonus)} OGUN`}</span>
-            ) : (
-              <span className="text-sm text-gray-60">{`${moneyValue} OGUN`}</span>
-            )}
-          </p>
+        <div className={classNames('flex items-center font-bold', className)}>
+          <OgunIcon id="ogun-token" className="mr-[10px] inline h-6 w-6" />
+          {showBonus ? (
+            <span className="flex items-center text-xl text-slate-50">
+              <span className={truncate}>{`${fixedDecimals(moneyValue - ogunBonus)}`}</span>
+              <span className="ml-[4px] mt-[4px] text-sm font-semibold text-gray-60">OGUN</span>
+            </span>
+          ) : (
+            <span className="text-sm text-slate-50">{`${moneyValue} OGUN`}</span>
+          )}
         </div>
       )
     case 'currency-inline':
@@ -49,8 +51,9 @@ export const Ogun = ({ value = '', className, variant, showBonus, rewardRatePerc
     default:
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          <OgunIcon id="ogun-token" className="inline h-5 w-5" /> {fixedDecimals(value)}{' '}
-          <span className="text-xs text-gray-80">OGUN</span>
+          <OgunIcon id="ogun-token" className="mr-[2px] inline h-4 w-4" />
+          <span className={`mt-[1px] ${truncate}`}>{fixedDecimals(value)}</span>
+          <span className="mt-[1px] text-xs text-gray-80">OGUN</span>
         </p>
       )
   }

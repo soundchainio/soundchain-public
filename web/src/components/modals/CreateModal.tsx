@@ -1,6 +1,6 @@
 import ID3Writer from 'browser-id3-writer'
 import classNames from 'classnames'
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm'
 import { TrackUploader } from 'components/forms/track/TrackUploader'
 import { Modal } from 'components/Modal'
@@ -171,6 +171,7 @@ export const CreateModal = () => {
         copyright,
         royalty,
         editionQuantity,
+        ISRC,
       } = values
       const artist = me.handle
       const artistId = me.id
@@ -220,6 +221,7 @@ export const CreateModal = () => {
           artist,
           releaseYear,
           genres,
+          ISRC,
           attributes: metadataAttributes,
         }
 
@@ -325,6 +327,7 @@ export const CreateModal = () => {
                         artworkUrl,
                         description,
                         genres,
+                        ISRC,
                         releaseYear,
                         artistProfileId,
                         copyright,

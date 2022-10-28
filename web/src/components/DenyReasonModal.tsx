@@ -1,5 +1,5 @@
 import { Dialog } from '@reach/dialog'
-import { Button } from 'components/Button'
+import { Button } from 'components/Buttons/Button'
 import { Delete as DeleteButton } from 'components/Buttons/Delete'
 import { TextareaField } from 'components/TextareaField'
 import { Form, Formik } from 'formik'

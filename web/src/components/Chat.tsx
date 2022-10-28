@@ -1,8 +1,7 @@
 import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock'
 import { useMountedState } from 'hooks/useMountedState'
 import { Message as MessageItem, PageInfo } from 'lib/graphql'
-import { useEffect, useRef, useState } from 'react'
-import { animateScroll as scroll } from 'react-scroll'
+import { MutableRefObject, useEffect, useRef, useState } from 'react'
 import { InfiniteLoader } from './InfiniteLoader'
 import { Message } from './Message'
 import { MessageSkeleton } from './MessageSkeleton'
@@ -12,15 +11,16 @@ interface ChatProps {
   pageInfo: PageInfo
   onFetchMore: () => void
   loading: boolean
+  bottomRef: MutableRefObject<HTMLDivElement>
 }
 
-export const Chat = ({ messages, pageInfo, onFetchMore, loading }: ChatProps) => {
+export const Chat = ({ messages, pageInfo, onFetchMore, loading, bottomRef }: ChatProps) => {
   const [renderLoader, setRenderLoader] = useState(false)
   const [lastContainerHeight, setLastContainerHeight] = useMountedState(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!renderLoader && messages) initialScrollToBottom()
+    if (!renderLoader && messages.length > 0) initialScrollToBottom()
   }, [messages, renderLoader])
 
   useEffect(() => {
@@ -29,7 +29,10 @@ export const Chat = ({ messages, pageInfo, onFetchMore, loading }: ChatProps) =>
       requestAnimationFrame(() => {
         if (!containerRef.current) return
         disableBodyScroll(containerRef.current)
-        scroll.scrollTo(containerRef.current?.scrollHeight - lastContainerHeight, { duration: 0 })
+        bottomRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
         requestAnimationFrame(() => {
           if (containerRef.current) enableBodyScroll(containerRef.current)
         })
@@ -42,8 +45,13 @@ export const Chat = ({ messages, pageInfo, onFetchMore, loading }: ChatProps) =>
 
   const initialScrollToBottom = () => {
     requestAnimationFrame(() => {
-      setTimeout(() => scroll.scrollToBottom({ duration: 0 }), 100)
-      setTimeout(() => setRenderLoader(true), 1000)
+      setTimeout(() => {
+        bottomRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        })
+      }, 1000)
+      setTimeout(() => setRenderLoader(true), 1500)
     })
   }
 
@@ -57,6 +65,7 @@ export const Chat = ({ messages, pageInfo, onFetchMore, loading }: ChatProps) =>
           <Message key={id} messageId={id} nextMessage={messages[index + 1] as MessageItem} />
         ))}
       </div>
+      <div ref={bottomRef} />
     </div>
   )
 }

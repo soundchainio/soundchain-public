@@ -49,7 +49,10 @@ export const genres: GenreLabel[] = [
   { key: Genre.Soundtrack, label: 'Soundtrack' },
   { key: Genre.Spoken, label: 'Spoken' },
   { key: Genre.UrbanLatino, label: 'Urban Latino' },
-  { key: Genre.World, label: 'World' },
+  { key: Genre.Techno, label: 'Techno' },
+  { key: Genre.Bpm, label: 'BPM' },
+  { key: Genre.DeepHouse, label: 'Deep House' },
+  { key: Genre.Jungle, label: 'Jungle' },
 ]
 
 export function getGenreLabelByKey(key: Genre): string | undefined {
