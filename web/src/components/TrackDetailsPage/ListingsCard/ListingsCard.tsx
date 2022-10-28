@@ -8,12 +8,13 @@ import { useIsMobile } from 'hooks/useIsMobile'
 import { Accordion } from 'components/common'
 interface ListingsCardProps {
   track: TrackQuery['track']
+  isOwner: boolean
 }
 
 const pageSize = 5
 
 export const ListingsCard = (props: ListingsCardProps) => {
-  const { track } = props
+  const { track, isOwner } = props
 
   const isMobile = useIsMobile(639)
 
@@ -85,7 +86,7 @@ export const ListingsCard = (props: ListingsCardProps) => {
 
       {!shouldShowLoadMoreButton && <Button onClick={loadMore}>LOAD MORE</Button>}
 
-      {nodes && nodes.length > 0 && <Button onClick={handleUnlistAll}>Unlist All</Button>}
+      {isOwner && nodes && nodes.length > 0 && <Button onClick={handleUnlistAll}>Unlist All</Button>}
     </Accordion>
   )
 }
