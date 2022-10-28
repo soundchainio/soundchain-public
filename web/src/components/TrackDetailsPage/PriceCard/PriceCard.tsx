@@ -53,6 +53,7 @@ export const PriceCard = (props: Props) => {
 
   const shouldShowAuction = (isAuction && !isDeleted) || (isAuctionOver && !isDeleted)
 
+  console.log(track)
   const { isOwner, loading: useOwnerIsLoading } = useTokenOwner(track.nftData?.tokenId, track.nftData?.contract)
 
   const song: Song = {

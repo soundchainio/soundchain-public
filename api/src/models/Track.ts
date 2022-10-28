@@ -81,6 +81,10 @@ export class Track extends Model {
   saleType: string;
 
   @Field()
+  @prop()
+  ISRC: string;
+  
+  @Field()
   playbackCountFormatted: string;
 
   @Field({ nullable: true })
