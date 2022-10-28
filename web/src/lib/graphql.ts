@@ -291,6 +291,7 @@ export type CreateTrackInput = {
   artistId?: Maybe<Scalars['String']>
   artistProfileId?: Maybe<Scalars['String']>
   album?: Maybe<Scalars['String']>
+  ISRC?: Maybe<Scalars['String']>
   releaseYear?: Maybe<Scalars['Float']>
   copyright?: Maybe<Scalars['String']>
   genres?: Maybe<Array<Genre>>
@@ -1607,6 +1608,7 @@ export type Track = {
   releaseYear: Maybe<Scalars['Float']>
   genres: Maybe<Array<Genre>>
   nftData: Maybe<NftDataType>
+  ISRC: Scalars['String']
   playbackCountFormatted: Scalars['String']
   trackEditionId: Maybe<Scalars['String']>
   trackEdition: Maybe<TrackEdition>
@@ -1668,6 +1670,7 @@ export type TrackWithListingItem = {
   releaseYear: Maybe<Scalars['Float']>
   genres: Maybe<Array<Genre>>
   nftData: Maybe<NftDataType>
+  ISRC: Scalars['String']
   playbackCountFormatted: Scalars['String']
   trackEditionId: Maybe<Scalars['String']>
   trackEdition: Maybe<TrackEdition>
@@ -3039,6 +3042,7 @@ export type TrackComponentFieldsFragment = { __typename?: 'Track' } & Pick<
   | 'description'
   | 'utilityInfo'
   | 'artist'
+  | 'ISRC'
   | 'artistId'
   | 'artistProfileId'
   | 'album'
@@ -3689,6 +3693,7 @@ export const TrackComponentFieldsFragmentDoc = gql`
     description
     utilityInfo
     artist
+    ISRC
     artistId
     artistProfileId
     album

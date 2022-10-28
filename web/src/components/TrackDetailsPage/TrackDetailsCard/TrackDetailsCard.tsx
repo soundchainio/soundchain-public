@@ -78,6 +78,10 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
           <Cell>{props.track.releaseYear}</Cell>
         </Row>
         <Row>
+          <Cell $bgDark>ISRC</Cell>
+          <Cell>{props.track.ISRC || 'No ISRC found'}</Cell>
+        </Row>
+        <Row>
           <Cell $bgDark>COPYRIGHT</Cell>
           <Cell>{props.track.copyright || 'No Copyright'}</Cell>
         </Row>

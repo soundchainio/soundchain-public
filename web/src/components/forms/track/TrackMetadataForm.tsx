@@ -24,12 +24,14 @@ export interface FormValues {
   genres?: Genre[]
   artworkFile?: File | null
   royalty: number
+  ISRC?: string
 }
 
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   editionQuantity: yup.number().label('# of Editions').min(1).max(1000).required('# of Editions is a required field'),
   title: yup.string().max(100).required('Title is a required field'),
   description: yup.string().max(500).required('Description is a required field'),
+  ISRC: yup.string().min(12).max(25).optional(),
   utilityInfo: yup.string().max(10000),
   artist: yup.string(),
   album: yup.string().max(100),
@@ -61,6 +63,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     genres: initialValues?.genres || [],
     artworkFile: initialValues?.artworkFile || null,
     royalty: 0,
+    ISRC: initialValues?.ISRC || '',
   }
 
   return (
@@ -141,6 +144,7 @@ function InnerForm(props: InnerFormProps) {
       <div className="flex w-full gap-4 px-4">
         <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
         <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} />
+        <InputField name="ISRC" type="text" label="ISRC" maxLength={25} />
       </div>
       <div className="px-4">
         <TextareaField rows={3} name="utilityInfo" label="UTILITY" maxLength={500} />
