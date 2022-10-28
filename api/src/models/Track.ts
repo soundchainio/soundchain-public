@@ -80,7 +80,7 @@ export class Track extends Model {
   @prop()
   saleType: string;
 
-  @Field()
+  @Field({ nullable: true })
   @prop()
   ISRC: string;
   
