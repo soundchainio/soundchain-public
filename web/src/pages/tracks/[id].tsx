@@ -59,7 +59,6 @@ export default function TrackPage() {
 
   return (
     <>
-      {console.log(track)}
       <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
       <Container>
         {isMobile ? (
