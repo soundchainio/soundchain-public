@@ -1,4 +1,4 @@
-import { useTrackQuery } from 'lib/graphql'
+import { TrackDocument, useTrackQuery } from 'lib/graphql'
 import SEO from 'components/SEO'
 import tw from 'tailwind-styled-components'
 import { useMe } from 'hooks/useMe'
@@ -18,16 +18,41 @@ import {
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useTokenOwner } from 'hooks/useTokenOwner'
+import { GetServerSideProps } from 'next/types'
+import { cacheFor, createApolloClient } from 'lib/apollo'
+import { ParsedUrlQuery } from 'querystring'
 export interface TrackPageProps {
   track: TrackQuery['track']
 }
 
-export default function TrackPage() {
+interface TrackPageParams extends ParsedUrlQuery {
+  id: string
+}
+
+export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPageParams> = async context => {
+  const trackId = context.params?.id
+
+  if (!trackId) return { notFound: true }
+
+  const apolloClient = createApolloClient(context)
+
+  const { data, error } = await apolloClient.query({
+    query: TrackDocument,
+    variables: { id: trackId },
+    context,
+  })
+
+  if (error || data.track.deleted) return { notFound: true }
+
+  return cacheFor(TrackPage, { track: data.track }, context, apolloClient)
+}
+
+export default function TrackPage({ track: serverSideTrack }: TrackPageProps) {
   const me = useMe()
   const isMobile = useIsMobile(639)
   const router = useRouter()
 
-  const [track, setTrack] = useState<TrackQuery['track'] | null>(null)
+  const [track, setTrack] = useState<TrackQuery['track']>(serverSideTrack)
 
   const title = `${track?.title} - song by ${track?.artist} | SoundChain`
   const description = `Listen to ${track?.title} on SoundChain. ${track?.artist}. ${track?.album || 'Song'}. ${
