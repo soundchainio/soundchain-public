@@ -50,6 +50,7 @@ export const {
   POLYGON_SCAN_API_KEY,
   AUCTION_ADDRESS,
   AUCTION_V2_ADDRESS,
+  MAILCHIMP_API_KEY,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -148,5 +149,8 @@ export const config = {
   },
   env: {
     isProduction: process.env.NODE_ENV === 'production',
+  },
+  mailchimp: {
+    apiKey: MAILCHIMP_API_KEY,
   },
 };
