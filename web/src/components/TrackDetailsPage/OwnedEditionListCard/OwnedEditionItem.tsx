@@ -27,7 +27,7 @@ export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
 
   return (
     <>
-      <div className="my-2 flex items-center justify-center gap-10">
+      <div className="my-2 flex items-center justify-center gap-4">
         {isProcessing && (
           <ProcessingContainer>
             <ReactTooltip id="processingEdition" type="dark" effect="solid">

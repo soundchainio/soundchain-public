@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Table, Row, Cell, Header, Accordion } from 'components/common'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
-import { TrackQuery, TrackWithListingItem, useOwnedTracksQuery } from 'lib/graphql'
+import { Profile, TrackQuery, TrackWithListingItem, useOwnedTracksQuery } from 'lib/graphql'
 import { Button } from 'components/Buttons/Button'
 import { OwnedEditionItem } from './OwnedEditionItem'
 import { useRouter } from 'next/router'
@@ -11,6 +11,7 @@ import { useMemo } from 'react'
 import useMetaMask from 'hooks/useMetaMask'
 import { SpinAnimation } from 'components/common/SpinAnimation'
 import { config } from 'config'
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 interface OwnedEditionListCardProps {
   track: TrackQuery['track']
 }
@@ -100,6 +101,7 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
         <Table>
           <Row>
             <Header $roundedTopLeft>Token ID</Header>
+            <Header>Owner</Header>
             <Header $roundedTopRight>Actions</Header>
           </Row>
 
@@ -116,6 +118,11 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
                   >
                     #{ownedTrack.nftData?.tokenId}
                   </AnchorTag>
+                </Cell>
+                <Cell>
+                  <div className="flex items-center justify-center">
+                    <ProfileWithAvatar profile={me?.profile as Partial<Profile>} avatarSize={35} />
+                  </div>
                 </Cell>
                 <Cell>
                   <OwnedEditionItem key={ownedTrack.id} ownedTrack={ownedTrack} />
