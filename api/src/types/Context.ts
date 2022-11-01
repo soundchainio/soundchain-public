@@ -16,6 +16,7 @@ import { FollowService } from '../services/FollowService';
 import { JwtService, JwtUser } from '../services/JwtService';
 import { ListingItemService } from '../services/ListingItemService';
 import { LogErrorService } from '../services/LogErrorService';
+import { MailchimpService } from '../services/MailchimpService';
 import { MessageService } from '../services/MessageService';
 import { MuxService } from '../services/MuxService';
 import { NotificationService } from '../services/NotificationService';
@@ -71,6 +72,7 @@ export class Context {
     op: 'gql',
     name: 'GraphQLTransaction', // this will be the default name, unless the gql query has a name
   });
+  mailchimpService = new MailchimpService(this);
 
   constructor(jwtUser?: JwtUser) {
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);
