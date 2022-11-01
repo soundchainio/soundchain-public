@@ -35,6 +35,7 @@ export class AuthService extends Service {
     try {
       await user.save();
       await this.context.profileService.followProfile(profile._id, soundChainUser.profileId);
+      await this.context.mailchimpService.addMember(user);
     } catch (err) {
       ProfileModel.deleteOne({ _id: profile.id });
       await this.context.profileService.unfollowProfile(profile._id, soundChainUser.profileId);
