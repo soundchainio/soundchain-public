@@ -1,5 +1,5 @@
 import tw from 'tailwind-styled-components'
-import Asset from '../../Asset'
+import Asset from '../../Asset/Asset'
 import mux from 'mux-embed'
 import Hls from 'hls.js'
 import { Slider } from '@reach/slider'

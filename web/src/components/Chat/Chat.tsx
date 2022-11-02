@@ -2,9 +2,9 @@ import { disableBodyScroll, enableBodyScroll } from 'body-scroll-lock'
 import { useMountedState } from 'hooks/useMountedState'
 import { Message as MessageItem, PageInfo } from 'lib/graphql'
 import { MutableRefObject, useEffect, useRef, useState } from 'react'
-import { InfiniteLoader } from './InfiniteLoader'
-import { Message } from './Message'
-import { MessageSkeleton } from './MessageSkeleton'
+import { InfiniteLoader } from '../InfiniteLoader'
+import { Message } from '../Message'
+import { MessageSkeleton } from '../MessageSkeleton'
 
 interface ChatProps {
   messages: MessageItem[]

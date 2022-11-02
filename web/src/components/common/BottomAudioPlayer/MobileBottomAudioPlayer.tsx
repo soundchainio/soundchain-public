@@ -7,7 +7,7 @@ import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import mux from 'mux-embed'
 import { useEffect, useRef } from 'react'
-import Asset from 'components/Asset'
+import Asset from 'components/Asset/Asset'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 
 export const BottomAudioPlayer = () => {

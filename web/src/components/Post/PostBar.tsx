@@ -2,7 +2,7 @@ import { MusicNoteIcon, VideoCameraIcon } from '@heroicons/react/outline'
 import { BaseEmoji, Picker } from 'emoji-mart'
 import { useState } from 'react'
 import { PostLinkType } from 'types/PostLinkType'
-import { LinksModal } from './LinksModal'
+import { LinksModal } from '../LinksModal'
 import { FormValues } from './PostForm'
 import { getBodyCharacterCount, maxLength } from './PostModal'
 

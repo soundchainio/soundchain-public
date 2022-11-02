@@ -1,11 +1,11 @@
 import { RefreshIcon } from '@heroicons/react/solid'
 import { Track, usePostQuery } from 'lib/graphql'
-import { Avatar } from './Avatar'
-import { DisplayName } from './DisplayName'
-import { MiniAudioPlayer } from './MiniAudioPlayer'
-import { NotAvailableMessage } from './NotAvailableMessage'
-import { RepostPreviewSkeleton } from './RepostPreviewSkeleton'
-import { Timestamp } from './Timestamp'
+import { Avatar } from '../Avatar'
+import { DisplayName } from '../DisplayName'
+import { MiniAudioPlayer } from '../MiniAudioPlayer'
+import { NotAvailableMessage } from '../NotAvailableMessage'
+import { RepostPreviewSkeleton } from '../RepostPreviewSkeleton'
+import { Timestamp } from '../Timestamp'
 
 interface RepostPreviewProps {
   postId: string

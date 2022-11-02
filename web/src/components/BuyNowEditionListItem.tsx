@@ -1,7 +1,7 @@
 import { useTokenOwner } from 'hooks/useTokenOwner'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { Button } from './common/Buttons/Button'
-import { NftOwner } from './details-NFT/NftOwner'
+import { NftOwner } from './pages/details-NFT/NftOwner'
 import { Matic } from './Matic'
 import { Ogun } from './Ogun'
 import OutlinedLink from './Links/OutlinedLink'

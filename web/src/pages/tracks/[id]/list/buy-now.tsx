@@ -1,4 +1,4 @@
-import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow'
+import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/pages/details-NFT/ListNFTBuyNow'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
 import { useModalDispatch, useModalState } from 'contexts/providers/modal'

@@ -11,7 +11,7 @@ import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { MobilePlayer } from '../MobileTrackCard/components'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { LinkItUrl } from 'react-linkify-it'
-import Asset from 'components/Asset'
+import Asset from 'components/Asset/Asset'
 import ReactTooltip from 'react-tooltip'
 interface Props {
   me?: MeQuery['me']

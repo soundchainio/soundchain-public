@@ -1,5 +1,5 @@
 import { Button } from 'components/common/Buttons/Button'
-import { BuyNow } from 'components/details-NFT/BuyNow'
+import { BuyNow } from 'components/pages/details-NFT/BuyNow'
 import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'
 import { Ogun } from 'components/Ogun'

@@ -7,7 +7,7 @@ import { NoResultFound } from './NoResultFound'
 import { TrackListItemSkeleton } from './TrackListItemSkeleton'
 import { LoaderAnimation } from './LoaderAnimation'
 import { Track } from './Track'
-import { ExploreSearchBar } from './ExploreSearchBar'
+import { ExploreSearchBar } from './pages/ExplorePage/ExploreSearchBar'
 
 const pageSize = 15
 

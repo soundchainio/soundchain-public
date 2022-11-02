@@ -1,4 +1,4 @@
-import { twd } from '../utils/twd'
+import { twd } from '../../utils/twd'
 import { Disclosure, Transition } from '@headlessui/react'
 import { ReactElement } from 'react'
 import { ArrowRightIcon } from '@heroicons/react/solid'

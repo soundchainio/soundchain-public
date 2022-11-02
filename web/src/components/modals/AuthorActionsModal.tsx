@@ -10,9 +10,9 @@ import {
 } from 'lib/graphql'
 import { useRouter } from 'next/router'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { Delete as DeleteButton } from './common/Buttons/Delete'
-import { Edit as EditButton } from './common/Buttons/Edit'
-import { ModalsPortal } from './ModalsPortal'
+import { Delete as DeleteButton } from '../common/Buttons/Delete'
+import { Edit as EditButton } from '../common/Buttons/Edit'
+import { ModalsPortal } from '../ModalsPortal'
 
 const baseClasses =
   'fixed w-screen h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
