@@ -14,7 +14,7 @@ import {
   OwnedEditionListCard,
   DesktopTrackCard,
   BidHistory,
-} from 'components/TrackDetailsPage'
+} from 'components/pages/TrackDetailsPage'
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useTokenOwner } from 'hooks/useTokenOwner'

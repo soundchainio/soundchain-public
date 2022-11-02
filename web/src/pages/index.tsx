@@ -9,7 +9,7 @@ import { cacheFor, createApolloClient } from 'lib/apollo'
 import { MeDocument, MeQuery } from 'lib/graphql'
 import { GetServerSideProps } from 'next'
 import type { ReactElement } from 'react'
-import LandingPageLayout from '../components/LandingPage/layout'
+import LandingPageLayout from '../components/pages/LandingPage/layout'
 
 interface RootLandingPageProps {
   me?: MeQuery['me']

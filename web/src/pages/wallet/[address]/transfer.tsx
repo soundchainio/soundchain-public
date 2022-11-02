@@ -1,6 +1,6 @@
 import SEO from '../../../components/SEO'
 import React from 'react'
-import { TransferNftsForm } from '../../../components/TransferNfts'
+import { TransferNftsForm } from '../../../components/pages/TransferNfts'
 import { ParsedUrlQuery } from 'querystring'
 import { protectPage } from '../../../lib/protectPage'
 import { User } from '../../../lib/graphql'

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
