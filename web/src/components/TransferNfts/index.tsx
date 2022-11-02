@@ -21,6 +21,8 @@ import { Button } from '../Buttons/Button'
 import { RefreshButton } from '../Buttons/RefreshButton'
 import { InfiniteLoader } from '../InfiniteLoader'
 import { InputField } from '../InputField'
+import { config } from 'config'
+import tw from 'tailwind-styled-components'
 
 export interface FormValues {
   recipient: string
@@ -119,6 +121,14 @@ function SelectNFTsField() {
                     </div>
                   </div>
 
+                  <AnchorTag
+                    href={`${config.polygonscan}address/${track.nftData?.contract}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    #${track.nftData?.tokenId}
+                  </AnchorTag>
+
                   <div className="flex-1" />
 
                   {track.nftData?.tokenId ? <NftItemCheckbox active={selected} /> : <Badge label="Pending" />}
@@ -133,6 +143,16 @@ function SelectNFTsField() {
     </div>
   )
 }
+
+const AnchorTag = tw.a`
+  text-sm
+  text-blue-300
+  break-words
+  font-medium
+  ml-6
+  
+  hover:text-white
+`
 
 export function useTransferNftsControls() {
   const [selectedWallet, setSelectedWallet] = useState(DefaultWallet.Soundchain)

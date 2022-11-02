@@ -84,7 +84,13 @@ export default function TrackPage({ track: serverSideTrack }: TrackPageProps) {
 
   return (
     <>
-      <SEO title={title} description={description} canonicalUrl={`/tracks/${track.id}`} image={track.artworkUrl} />
+      <SEO
+        title={title}
+        description={description}
+        canonicalUrl={`/tracks/${track.id}`}
+        image={track.artworkUrl}
+        type="music.song"
+      />
       <Container>
         {isMobile ? (
           <MobileTrackCard me={me} track={track} />
