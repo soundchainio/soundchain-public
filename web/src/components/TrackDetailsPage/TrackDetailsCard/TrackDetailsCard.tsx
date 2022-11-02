@@ -3,6 +3,7 @@ import { config } from 'config'
 import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useWalletContext } from 'hooks/useWalletContext'
+import Link from 'next/link'
 import { Pinata } from 'icons/Pinata'
 import { Token } from 'icons/Token'
 import { PendingRequest, TrackQuery } from 'lib/graphql'
@@ -63,7 +64,17 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
           <Cell $bgDark $roundedTopLeft>
             ARTIST ROYALTY %
           </Cell>
-          <Cell $roundedTopRight>{royalties ? `${royalties}%` : 'No Royalties found'}</Cell>
+          <Cell $roundedTopRight>
+            {royalties ? (
+              `${royalties}%`
+            ) : (
+              <Link href="/login">
+                <a>
+                  <span className="text-indigo-100 hover:text-indigo-200">Login</span> to see royalties
+                </a>
+              </Link>
+            )}
+          </Cell>
         </Row>
         <Row>
           <Cell $bgDark>TRACK TITLE</Cell>
