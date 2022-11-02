@@ -1,4 +1,4 @@
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import { useMe } from 'hooks/useMe'
 import Clip from '../icons/Clip'
 import { toast } from 'react-toastify'

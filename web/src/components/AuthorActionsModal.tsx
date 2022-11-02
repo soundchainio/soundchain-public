@@ -10,8 +10,8 @@ import {
 } from 'lib/graphql'
 import { useRouter } from 'next/router'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { Delete as DeleteButton } from './Buttons/Delete'
-import { Edit as EditButton } from './Buttons/Edit'
+import { Delete as DeleteButton } from './common/Buttons/Delete'
+import { Edit as EditButton } from './common/Buttons/Edit'
 import { ModalsPortal } from './ModalsPortal'
 
 const baseClasses =
