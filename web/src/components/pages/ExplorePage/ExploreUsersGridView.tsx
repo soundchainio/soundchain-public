@@ -1,13 +1,13 @@
 /* eslint-disable react/display-name */
 import { PageInput, useExploreUsersQuery } from 'lib/graphql'
 import React from 'react'
-import { NoResultFound } from './NoResultFound'
-import { ProfileListItemSkeleton } from './ProfileListItemSkeleton'
-import { ExploreUsersProps } from './ExploreUsersListView'
-import { ProfileGridItem } from './ProfileGridItem'
-import { GridSkeleton } from './GridSkeleton'
+import { NoResultFound } from '../../NoResultFound'
+import { ProfileListItemSkeleton } from '../../ProfileListItemSkeleton'
+import { ExploreUsersProps } from '../../ExploreUsersListView'
+import { ProfileGridItem } from '../../ProfileGridItem'
+import { GridSkeleton } from '../../GridSkeleton'
 import PullToRefresh from 'react-simple-pull-to-refresh'
-import { InfiniteLoader as InfiniteLoaderLegacy } from './InfiniteLoader'
+import { InfiniteLoader as InfiniteLoaderLegacy } from '../../InfiniteLoader'
 
 const pageSize = 15
 

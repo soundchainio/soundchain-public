@@ -1,6 +1,6 @@
 import { Search } from 'icons/Search'
 import { useEffect, useMemo, useRef } from 'react'
-import { debounce } from '../utils/debounce'
+import { debounce } from '../../../utils/debounce'
 
 interface ExploreSearchBarProps {
   setSearchTerm: (val: string) => void

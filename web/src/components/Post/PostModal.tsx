@@ -5,8 +5,8 @@ import GraphemeSplitter from 'grapheme-splitter'
 import { usePostLazyQuery } from 'lib/graphql'
 import { default as React, useCallback, useEffect, useState } from 'react'
 import { PostFormType } from 'types/PostFormType'
-import { getNormalizedLink, hasLink } from '../utils/NormalizeEmbedLinks'
-import { ModalsPortal } from './ModalsPortal'
+import { getNormalizedLink, hasLink } from '../../utils/NormalizeEmbedLinks'
+import { ModalsPortal } from '../ModalsPortal'
 import { PostForm } from './PostForm'
 
 const baseClasses =

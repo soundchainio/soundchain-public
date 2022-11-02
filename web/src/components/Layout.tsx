@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { BottomNavBarWrapper } from 'components/BottomNavBarWrapper'
+import { BottomNavBarWrapper } from 'components/BottomNavBar/BottomNavBarWrapper'
 import { useModalState } from 'contexts/providers/modal'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useIsMobile } from 'hooks/useIsMobile'
@@ -15,10 +15,10 @@ import { TagManager } from './TagManager'
 import { TopNavBar, TopNavBarProps } from './TopNavBar'
 
 const SideMenu = dynamic(() => import('./SideMenu'))
-const PostModal = dynamic(import('./PostModal'))
+const PostModal = dynamic(import('./Post/PostModal'))
 const ReactionsModal = dynamic(import('./ReactionsModal'))
 const CommentModal = dynamic(import('./CommentModal'))
-const AuthorActionsModal = dynamic(import('./AuthorActionsModal'))
+const AuthorActionsModal = dynamic(import('./modals/AuthorActionsModal'))
 const ApproveModal = dynamic(import('./modals/ApproveModal'))
 const BidsHistoryModal = dynamic(import('./modals/BidsHistoryModal'))
 const ConfirmDeleteNFTModal = dynamic(import('./modals/ConfirmDeleteNFTModal'))

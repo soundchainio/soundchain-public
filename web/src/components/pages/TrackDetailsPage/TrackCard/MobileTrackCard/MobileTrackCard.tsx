@@ -5,7 +5,7 @@ import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useEffect, useState } from 'react'
 import tw from 'tailwind-styled-components'
 import { MobilePlayer } from './components'
-import Asset from 'components/Asset'
+import Asset from 'components/Asset/Asset'
 
 interface Props {
   me?: MeQuery['me']

@@ -5,10 +5,10 @@ import { Ellipsis } from 'icons/Ellipsis'
 import { Role, useCommentQuery } from 'lib/graphql'
 import NextLink from 'next/link'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { Avatar } from './Avatar'
+import { Avatar } from '../Avatar'
 import { CommentSkeleton } from './CommentSkeleton'
-import { DisplayName } from './DisplayName'
-import { Timestamp } from './Timestamp'
+import { DisplayName } from '../DisplayName'
+import { Timestamp } from '../Timestamp'
 
 interface CommentProps {
   commentId: string

@@ -1,5 +1,5 @@
-import { RoadmapStepList } from 'components/roadmap/roadmapStep'
-import { roadmapSteps } from '../../roadmap/roadmap.config'
+import { RoadmapStepList } from 'components/pages/roadmap/roadmapStep'
+import { roadmapSteps } from '../roadmap/roadmap.config'
 import RainbowLink from '../../Links/RainbowLink'
 
 export function RoadmapSection() {

@@ -6,7 +6,7 @@ import { MediaProvider } from 'types/MediaProvider'
 import { PostLinkType } from 'types/PostLinkType'
 import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { ModalsPortal } from './ModalsPortal'
-import { MediaLink, PostLinkInput } from './PostLinkInput'
+import { MediaLink, PostLinkInput } from './Post/PostLinkInput'
 
 interface AddLinkProps {
   onClose: () => void

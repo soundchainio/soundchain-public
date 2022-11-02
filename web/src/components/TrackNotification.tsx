@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { Matic } from 'components/Matic'
 import NextLink from 'next/link'
 import React from 'react'
-import Asset from './Asset'
+import Asset from './Asset/Asset'
 import { Timestamp } from './Timestamp'
 
 interface NotificationProps {

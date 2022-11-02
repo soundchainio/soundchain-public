@@ -3,7 +3,7 @@ import { Form, Formik, FormikHelpers } from 'formik'
 import { UpdateCommentInput, useUpdateCommentMutation } from 'lib/graphql'
 import * as yup from 'yup'
 import { Button } from './common/Buttons/Button'
-import { PostBodyField } from './PostBodyField'
+import { PostBodyField } from './Post/PostBodyField'
 
 interface InitialValues {
   body: UpdateCommentInput['body']
