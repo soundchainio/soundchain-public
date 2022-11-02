@@ -32,6 +32,7 @@ export default function TransferPage() {
 
   const { dispatchShowTransferConfirmationModal, dispatchSetRecipientWalletAddress, dispatchSetAmountToTransfer } =
     useModalDispatch()
+
   if (!me) return null
 
   const handleSubmit = (values: FormValues) => {

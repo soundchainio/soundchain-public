@@ -7,14 +7,11 @@ export interface SEOProps {
   description: string
   image?: string | null
   canonicalUrl: string
+  type?: 'music.song'
 }
 
-export default function SEO({
-  title,
-  description,
-  image = `${config.domainUrl}/soundchain-meta-logo.png`,
-  canonicalUrl,
-}: SEOProps) {
+export default function SEO(props: SEOProps) {
+  const { title, description, image = `${config.domainUrl}/soundchain-meta-logo.png`, canonicalUrl } = props
   const metaImage = image?.startsWith('/') ? `${config.domainUrl}${image}` : image
   return (
     <Head>
@@ -37,6 +34,7 @@ export default function SEO({
         <>
           <meta property="og:image" content={metaImage} />
           <meta property="twitter:image" content={metaImage} />
+          <meta name="twitter:card" content="summary_large_image" />
         </>
       )}
       <link rel="canonical" href={`${config.domainUrl}${canonicalUrl}`} />
