@@ -114,7 +114,7 @@ export const DesktopTrackCard = (props: Props) => {
         <Divider />
       </div>
 
-      <div className="mx-2 flex w-full items-center  xl:flex-col xl:items-start">
+      <div className="mx-2 flex w-full items-start  xl:flex-col">
         <div className="my-6 w-full">
           <SubTitle>Description</SubTitle>
           <LinkItUrl>
