@@ -17,6 +17,7 @@ interface NavBarButtonProps {
   nyanCat?: boolean
   className?: string
   alwaysShowLabel?: boolean
+  showUnreadLabel?: boolean
 }
 
 export const NavBarButton = ({
@@ -29,7 +30,7 @@ export const NavBarButton = ({
   id,
   nyanCat,
   className,
-  alwaysShowLabel,
+  alwaysShowLabel
 }: NavBarButtonProps) => {
   const [isActive, setActive] = useState(false)
   const router = useRouter()
