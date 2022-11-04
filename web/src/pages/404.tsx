@@ -1,15 +1,7 @@
-import { useLayoutContext } from 'hooks/useLayoutContext'
 import { Sad } from 'icons/emoji/Sad'
 import Head from 'next/head'
-import { useEffect } from 'react'
 
 export default function Page404() {
-  const { setTopNavBarProps } = useLayoutContext()
-
-  useEffect(() => {
-    setTopNavBarProps({ title: '404 Error' })
-  }, [setTopNavBarProps])
-
   return (
     <>
       <Head>
