@@ -17,6 +17,7 @@ interface NavBarButtonProps {
   nyanCat?: boolean
   className?: string
   alwaysShowLabel?: boolean
+  showUnreadLabel?: boolean
 }
 
 export const NavBarButton = ({
