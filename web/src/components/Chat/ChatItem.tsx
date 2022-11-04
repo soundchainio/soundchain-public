@@ -2,9 +2,9 @@ import classNames from 'classnames'
 import { CircleRightArrow } from 'icons/CircleRightArrow'
 import { Chat } from 'lib/graphql'
 import NextLink from 'next/link'
-import { Avatar } from './Avatar'
-import { DisplayName } from './DisplayName'
-import { Timestamp } from './Timestamp'
+import { Avatar } from 'components/Avatar'
+import { DisplayName } from 'components/DisplayName'
+import { Timestamp } from 'components/Timestamp'
 
 interface FollowerNotificationProps {
   chatItem: Chat
