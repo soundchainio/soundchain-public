@@ -1,5 +1,5 @@
 import { Feed } from 'components/Feed'
-import { Posts } from 'components/Posts'
+import { Posts } from 'components/Post/Posts'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'

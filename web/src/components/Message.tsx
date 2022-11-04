@@ -2,9 +2,9 @@ import classNames from 'classnames'
 import { format } from 'date-fns'
 import { useMe } from 'hooks/useMe'
 import { Message as MessageItem, useMessageQuery } from 'lib/graphql'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { MessageSkeleton } from './MessageSkeleton'
-import { Timestamp } from './Timestamp'
+import { Timestamp } from 'components/Timestamp'
 
 interface MessageProps {
   messageId: string

@@ -1,12 +1,12 @@
 import classNames from 'classnames'
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import 'emoji-mart/css/emoji-mart.css'
 import { default as React, useEffect, useState } from 'react'
 import { MediaProvider } from 'types/MediaProvider'
 import { PostLinkType } from 'types/PostLinkType'
 import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { ModalsPortal } from './ModalsPortal'
-import { MediaLink, PostLinkInput } from './PostLinkInput'
+import { MediaLink, PostLinkInput } from './Post/PostLinkInput'
 
 interface AddLinkProps {
   onClose: () => void

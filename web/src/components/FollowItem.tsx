@@ -1,6 +1,6 @@
 import { Profile } from 'lib/graphql'
 import Link from 'next/link'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { DisplayName } from './DisplayName'
 
 interface FollowItemProps {

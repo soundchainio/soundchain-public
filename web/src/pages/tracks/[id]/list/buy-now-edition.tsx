@@ -1,5 +1,5 @@
-import { BackButton } from 'components/Buttons/BackButton'
-import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow'
+import { BackButton } from 'components/common/Buttons/BackButton'
+import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/pages/details-NFT/ListNFTBuyNow'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
 import { useModalDispatch, useModalState } from 'contexts/providers/modal'

@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { DeletedCommentNotification } from 'lib/graphql'
 import React from 'react'
-import { Timestamp } from './Timestamp'
+import { Timestamp } from 'components/Timestamp'
 
 interface DeletedCommentNotificationProps {
   notification: DeletedCommentNotification

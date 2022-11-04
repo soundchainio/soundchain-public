@@ -1,4 +1,4 @@
-import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/details-NFT/ListNFTBuyNow'
+import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/pages/details-NFT/ListNFTBuyNow'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
