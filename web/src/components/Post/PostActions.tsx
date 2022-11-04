@@ -8,7 +8,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { ReactionSelector } from './ReactionSelector'
+import { ReactionSelector } from 'components/ReactionSelector'
 
 interface PostActionsProps {
   postId: string

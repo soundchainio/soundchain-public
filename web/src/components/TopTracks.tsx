@@ -1,6 +1,6 @@
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { SortOrder, SortTrackField, useTracksQuery } from 'lib/graphql'
-import { InfiniteLoader } from './InfiniteLoader'
+import { InfiniteLoader } from 'components/InfiniteLoader'
 import { NoResultFound } from './NoResultFound'
 import { TrackListItem } from './TrackListItem'
 import { TrackListItemSkeleton } from './TrackListItemSkeleton'

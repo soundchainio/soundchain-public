@@ -5,9 +5,9 @@ import { Matic as MaticIcon } from 'icons/Matic'
 import { NftSoldNotification, SellType } from 'lib/graphql'
 import NextLink from 'next/link'
 import Asset from './Asset/Asset'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { Ogun } from './Ogun'
-import { Timestamp } from './Timestamp'
+import { Timestamp } from 'components/Timestamp'
 
 interface NFTSoldNotificationProps {
   notification: NftSoldNotification

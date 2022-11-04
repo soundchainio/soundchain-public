@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react'
-import SideMenu from './SideMenu'
-import { TopNavBar, TopNavBarProps } from './TopNavBar'
+import SideMenu from 'components/SideMenu'
+import { TopNavBar, TopNavBarProps } from 'components/TopNavBar'
 
 interface LayoutMenuProps {
   children: ReactNode

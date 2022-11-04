@@ -1,9 +1,9 @@
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { SortTrackInput, Track, useFavoriteTracksQuery } from 'lib/graphql'
 import { useEffect } from 'react'
-import { SelectToApolloQuery, SortListingItem } from '../../lib/apollo/sorting'
+import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { GridView } from 'components/common'
-import { TrackListItemSkeleton } from '../TrackListItemSkeleton'
+import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton'
 import { ListView } from 'components/ListView/ListView'
 
 interface FavoriteTracksProps {
