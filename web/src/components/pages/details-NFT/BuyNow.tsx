@@ -1,6 +1,6 @@
 import MaxGasFee from 'components/MaxGasFee'
 import { SoundchainFee } from 'components/SoundchainFee'
-import { WalletSelector } from 'components/WalletSelector'
+import { WalletSelector } from 'components/waveform/WalletSelector'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { useEffect, useState } from 'react'
