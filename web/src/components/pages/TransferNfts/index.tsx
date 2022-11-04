@@ -23,6 +23,7 @@ import { InfiniteLoader } from '../../InfiniteLoader'
 import { InputField } from '../../InputField'
 import { config } from 'config'
 import tw from 'tailwind-styled-components'
+import { OrangeButton } from 'components/common/Buttons/Orange'
 
 export interface FormValues {
   recipient: string
@@ -90,7 +91,7 @@ function SelectNFTsField() {
 
   return (
     <div className="flex flex-col">
-      <p className="font-semibold">Select the NFT you which to transfer:</p>
+      <p className="my-4 text-center font-semibold">Select the NFT you which to transfer:</p>
       <Listbox value={selectedNft} onChange={setSelectedNft}>
         <Listbox.Options static className="space-y-1 text-white">
           {tracks?.nodes.map((track, index) => (
@@ -103,33 +104,34 @@ function SelectNFTsField() {
                   <div className="relative ml-3 flex h-14 w-14 flex-shrink-0 items-center bg-gray-80">
                     <Asset src={track.artworkUrl} sizes="5rem" />
                   </div>
-                  <div className="flex flex-col pl-3">
-                    <div className="max-w-[170px] sm:max-w-[250px]">
-                      <h3 className={'truncate overflow-ellipsis font-semibold'}>{track.title}</h3>
-                    </div>
+
+                  <div className="ml-3 flex h-full flex-col self-start">
+                    <h3 className={'max-w-[80px] truncate overflow-ellipsis text-sm font-semibold xxs:max-w-[130px]'}>
+                      {track.title}
+                    </h3>
 
                     <div className="flex gap-3">
                       <div className={'flex items-center'}>
                         <Play fill="#808080" />
-                        <span className={'ml-2'}>{track.playbackCountFormatted || 0}</span>
+                        <span className={'ml-2 text-gray-80'}>{track.playbackCountFormatted || 0}</span>
                       </div>
 
                       <div className={'flex items-center'}>
                         <HeartFilled width={'10'} height={'10'} fill="#808080" />
-                        <span className={'ml-2'}>{track.favoriteCount}</span>
+                        <span className={'ml-2 text-gray-80'}>{track.favoriteCount}</span>
                       </div>
                     </div>
                   </div>
+
+                  <div className="flex-1" />
 
                   <AnchorTag
                     href={`${config.polygonscan}address/${track.nftData?.contract}`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    #${track.nftData?.tokenId}
+                    #{track.nftData?.tokenId}
                   </AnchorTag>
-
-                  <div className="flex-1" />
 
                   {track.nftData?.tokenId ? <NftItemCheckbox active={selected} /> : <Badge label="Pending" />}
                 </li>
@@ -149,7 +151,7 @@ const AnchorTag = tw.a`
   text-blue-300
   break-words
   font-medium
-  ml-6
+  mx-4
   
   hover:text-white
 `
@@ -194,7 +196,6 @@ export function useTransferNftsControls() {
 
   useEffect(() => {
     setTopNavBarProps({
-      title: 'Transfer NFT',
       rightButton: (
         <RefreshButton onClick={() => refetch()} label="Refresh" className="text-center" refreshing={loading} />
       ),
@@ -254,7 +255,7 @@ function SelectedNftPreview() {
           <div className="relative flex h-10 w-10 flex-shrink-0 items-center bg-gray-80">
             <Asset src={selectedNftTrack.artworkUrl} sizes="5rem" />
           </div>
-          <div className="flex max-w-[110px] flex-col sm:max-w-[250px]">
+          <div className="flex max-w-[110px] flex-col self-start sm:max-w-[250px]">
             <h3 className={'truncate overflow-ellipsis text-xs font-semibold text-white'}>{selectedNftTrack.title}</h3>
             <span className={'text-xs text-gray-80'}>{selectedNftTrack.artist}</span>
           </div>
@@ -315,12 +316,12 @@ export function TransferNftsForm() {
           <WalletAddressField />
           <SelectNFTsField />
 
-          <div className="fixed bottom-0 left-0 z-20 flex w-full justify-between bg-black p-5">
+          <div className="fixed bottom-0 left-0 z-20 flex w-full justify-between bg-black py-5 px-4">
             <SelectedNftPreview />
-            <div className="w-6/12 md:w-3/12">
-              <Button className="p-1" type="submit" variant="orange">
+            <div className="w-5/12 md:w-3/12">
+              <OrangeButton className="text-xs" type="submit">
                 Transfer NFT
-              </Button>
+              </OrangeButton>
             </div>
           </div>
         </Form>

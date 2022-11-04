@@ -95,8 +95,8 @@ export const TopNavBar = ({
             )}
           </div>
         </div>
-        <div className="flex-grow-basis-0 h-full flex-1 items-center text-gray-80">
-          <div className="flex h-full items-center justify-end gap-2 pr-4 md:gap-4 md:pr-10">
+        <div className="h-full items-center text-gray-80">
+          <div className="flex h-full items-center justify-end gap-4 pr-4 md:gap-4 md:pr-10">
             <div className={`flex-grow-basis-0 flex items-center gap-2`}>
               {(LeftButton || RightButton) && (
                 <>
