@@ -17,7 +17,7 @@ import { TopNavBar, TopNavBarProps } from './TopNavBar'
 const SideMenu = dynamic(() => import('./SideMenu'))
 const PostModal = dynamic(import('./Post/PostModal'))
 const ReactionsModal = dynamic(import('./ReactionsModal'))
-const CommentModal = dynamic(import('./CommentModal'))
+const CommentModal = dynamic(import('./Comment/CommentModal'))
 const AuthorActionsModal = dynamic(import('./modals/AuthorActionsModal'))
 const ApproveModal = dynamic(import('./modals/ApproveModal'))
 const BidsHistoryModal = dynamic(import('./modals/BidsHistoryModal'))
