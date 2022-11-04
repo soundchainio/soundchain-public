@@ -4,8 +4,8 @@ import { useRouter } from 'next/router'
 import React, { useEffect, useRef, useState } from 'react'
 import { Comment } from './Comment'
 import { CommentSkeleton } from './CommentSkeleton'
-import { InfiniteLoader } from './InfiniteLoader'
-import { LoaderAnimation } from './LoaderAnimation'
+import { InfiniteLoader } from 'components/InfiniteLoader'
+import { LoaderAnimation } from 'components/LoaderAnimation'
 
 interface CommentsProps {
   postId: string

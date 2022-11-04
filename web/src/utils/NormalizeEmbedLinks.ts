@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import axios from 'axios'
-import { MediaLink } from 'components/PostLinkInput'
+import { MediaLink } from 'components/Post/PostLinkInput'
 import { apolloClient } from 'lib/apollo'
 import { BandcampLinkDocument } from 'lib/graphql'
 import { MediaProvider } from 'types/MediaProvider'

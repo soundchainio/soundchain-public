@@ -13,7 +13,7 @@ import ReactDatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import Web3 from 'web3'
 import { date, number, object, SchemaOf, string } from 'yup'
-import { CurrencyType } from '../../types/CurrenctyType'
+import { CurrencyType } from 'types/CurrenctyType'
 
 export interface ListNFTBuyNowFormValues {
   salePrice: number

@@ -1,5 +1,5 @@
 /* eslint-disable react/display-name */
-import { Post } from 'components/Post'
+import { Post } from 'components/Post/Post'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { Post as PostType, SortOrder, SortPostField, usePostsQuery } from 'lib/graphql'
 import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react'
@@ -7,8 +7,8 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { LoaderAnimation } from './LoaderAnimation'
-import { NoResultFound } from './NoResultFound'
+import { LoaderAnimation } from 'components/LoaderAnimation'
+import { NoResultFound } from 'components/NoResultFound'
 import { PostSkeleton } from './PostSkeleton'
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string

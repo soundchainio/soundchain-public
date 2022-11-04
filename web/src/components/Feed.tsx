@@ -7,7 +7,7 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, ListChildComponentProps, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { LoaderAnimation } from './LoaderAnimation'
+import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from './NoResultFound'
 import { PostSkeleton } from './Post/PostSkeleton'
 

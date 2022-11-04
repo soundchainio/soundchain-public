@@ -3,7 +3,7 @@ import { useMe } from 'hooks/useMe'
 import { Send } from 'icons/Send'
 import * as yup from 'yup'
 import { SendMessageMutation, useSendMessageMutation } from '../lib/graphql'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { FlexareaField } from './FlexareaField'
 import { MutableRefObject } from 'react'
 

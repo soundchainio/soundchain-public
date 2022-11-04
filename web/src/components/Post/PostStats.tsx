@@ -3,7 +3,7 @@ import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { ReactionType } from 'lib/graphql'
 import NextLink from 'next/link'
 import React from 'react'
-import { Number } from './Number'
+import { Number } from 'components/Number'
 
 interface PostStatsProps {
   totalReactions: number

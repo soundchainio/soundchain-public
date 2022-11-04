@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { ReactElement } from 'react'
-import LandingPageHeader from '../pages/LandingPage/Header/header'
+import LandingPageHeader from 'components/pages/LandingPage/Header/header'
 import { RoadmapStepList } from './roadmapStep'
 import { roadmapSteps } from './roadmap.config'
 
