@@ -5,7 +5,7 @@ import GraphemeSplitter from 'grapheme-splitter'
 import { useCommentQuery } from 'lib/graphql'
 import { default as React } from 'react'
 import { CommentForm } from './CommentForm'
-import { ModalsPortal } from './ModalsPortal'
+import { ModalsPortal } from '../ModalsPortal'
 
 const baseClasses =
   'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
