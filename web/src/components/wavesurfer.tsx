@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import * as WaveformCursorPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.cursor'
-import { getRandomPeakFileData } from './peaks'
+import { getRandomPeakFileData } from './waveform/peaks'
 interface Props {
   url: string
   isPlaying: boolean

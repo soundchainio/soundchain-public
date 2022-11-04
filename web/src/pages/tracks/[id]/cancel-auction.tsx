@@ -1,4 +1,4 @@
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import MaxGasFee from 'components/MaxGasFee'
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
 import { TopNavBarProps } from 'components/TopNavBar'

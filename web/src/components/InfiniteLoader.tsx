@@ -1,6 +1,6 @@
 import { useOnScreen } from 'hooks/useOnScreen'
 import React, { useEffect, useRef } from 'react'
-import { LoaderAnimation } from './LoaderAnimation'
+import { LoaderAnimation } from 'components/LoaderAnimation'
 
 interface InfiniteLoaderProps {
   loadMore: () => void

@@ -2,7 +2,7 @@ import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { Reaction, ReactionType } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { DisplayName } from './DisplayName'
 
 interface FollowItemProps {

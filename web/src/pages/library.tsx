@@ -4,8 +4,8 @@ import { useLayoutContext } from 'hooks/useLayoutContext'
 import React, { useEffect, useMemo, useState } from 'react'
 import { SortListingItem } from 'lib/apollo/sorting'
 import { SearchBar, TabsMenu } from 'components/common'
-import { FavoriteTracks } from 'components/LibraryPage/FavoriteTracks'
-import { FavoriteArtists } from 'components/LibraryPage/FavoriteArtists'
+import { FavoriteTracks } from 'components/pages/LibraryPage/FavoriteTracks'
+import { FavoriteArtists } from 'components/pages/LibraryPage/FavoriteArtists'
 
 enum LibraryTab {
   FAVORITE_TRACKS = 'Favorite Tracks',

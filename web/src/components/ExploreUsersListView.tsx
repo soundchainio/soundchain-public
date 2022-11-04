@@ -5,7 +5,7 @@ import { memo } from 'react'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, FixedSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { LoaderAnimation } from './LoaderAnimation'
+import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from './NoResultFound'
 import { ProfileListItemSkeleton } from './ProfileListItemSkeleton'
 

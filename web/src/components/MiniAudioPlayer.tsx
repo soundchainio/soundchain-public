@@ -8,7 +8,7 @@ import NextLink from 'next/link'
 import { useEffect, useState } from 'react'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { TrackPrice } from '../lib/graphql'
-import Asset from './Asset'
+import Asset from './Asset/Asset'
 import { PriceDisplay } from './PriceDisplay'
 
 interface Song {
