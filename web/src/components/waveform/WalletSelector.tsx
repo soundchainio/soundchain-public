@@ -8,7 +8,7 @@ import { MetaMask } from 'icons/MetaMask'
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
 import { useCallback, useState } from 'react'
 import { compareWallets } from 'utils/Wallet'
-import { Ogun } from './Ogun'
+import { Ogun } from '../Ogun'
 
 interface WalletSelectorProps {
   className?: string | undefined
