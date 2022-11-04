@@ -76,7 +76,7 @@ export const BottomNavBar = () => {
             label=""
             icon={Inbox}
             color="purple-green"
-            path={'/marketplace'}
+            path={me ? '/messages' : '/login'}
             badge={me ? InboxBadgeWrapper : undefined}
             alwaysShowLabel
           />
