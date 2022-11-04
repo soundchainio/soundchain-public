@@ -56,6 +56,7 @@ interface TransferNftContextData {
   loadMore: () => void
   refetch: () => void
   setSelectedNft: (newSelectedNft: string) => void
+  handleSetSelectedNft: (evenincomingSelectiont: string) => void
   selectedNft: string
   balance?: string
   gasPrice?: string
@@ -86,13 +87,13 @@ function NftItemCheckbox({ active }: { active: boolean }) {
 }
 
 function SelectNFTsField() {
-  const { tracks, selectedNft, setSelectedNft, loadMore } = useTransferNftCtx()
+  const { tracks, selectedNft, loadMore, handleSetSelectedNft } = useTransferNftCtx()
   const pageInfo = tracks?.pageInfo
 
   return (
     <div className="flex flex-col">
-      <p className="my-4 text-center font-semibold">Select the NFT you which to transfer:</p>
-      <Listbox value={selectedNft} onChange={setSelectedNft}>
+      <p className="my-4 text-center font-semibold">Select the NFT you wish to transfer:</p>
+      <Listbox value={selectedNft} onChange={handleSetSelectedNft}>
         <Listbox.Options static className="space-y-1 text-white">
           {tracks?.nodes.map((track, index) => (
             <Listbox.Option key={track.id} value={track.id} as={Fragment} disabled={!track.nftData?.tokenId}>
@@ -170,6 +171,12 @@ export function useTransferNftsControls() {
   const { getCurrentGasPrice } = useBlockchain()
   const [gasPrice, setGasPrice] = useState<string>('')
 
+  const handleSetSelectedNft = (incomingSelection: string) => {
+    if (incomingSelection === selectedNft) return setSelectedNft('')
+
+    setSelectedNft(incomingSelection)
+  }
+
   useEffect(() => {
     const gasCheck = () => {
       if (web3) {
@@ -238,6 +245,7 @@ export function useTransferNftsControls() {
     loadMore,
     refetch,
     setSelectedNft,
+    handleSetSelectedNft,
     selectedNft,
     selectedNftTrack,
     balance,
