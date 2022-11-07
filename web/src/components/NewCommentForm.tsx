@@ -5,7 +5,7 @@ import { Send } from 'icons/Send'
 import { useRouter } from 'next/router'
 import * as yup from 'yup'
 import { AddCommentMutation, CommentDocument, useAddCommentMutation } from '../lib/graphql'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { FlexareaField } from './FlexareaField'
 
 export interface NewCommentFormProps {

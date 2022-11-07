@@ -1,4 +1,4 @@
-import { Explore } from 'components/ExplorePage/Explore'
+import { Explore } from 'components/pages/ExplorePage/Explore'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'
@@ -15,7 +15,6 @@ export default function ExplorePage() {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      title: 'Explore',
       rightButton: undefined,
       leftButton: undefined,
     }),

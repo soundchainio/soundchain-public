@@ -1,10 +1,8 @@
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import { CopyLink } from 'components/CopyLink'
 import { FormValues, RequestVerificationForm } from 'components/RequestVerificationForm'
 import SEO from 'components/SEO'
-import { TopNavBarProps } from 'components/TopNavBar'
 import { format as formatTimestamp } from 'date-fns'
-import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { Verified } from 'icons/Verified'
 import { cacheFor } from 'lib/apollo'
@@ -23,10 +21,6 @@ export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(GetVerified, {}, context, apolloClient)
 })
 
-const topNavBarProps: TopNavBarProps = {
-  title: 'Get Verified',
-}
-
 export default function GetVerified() {
   const [createRequestVerification] = useCreateProfileVerificationRequestMutation()
   const [removeRequestVerification] = useRemoveProfileVerificationRequestMutation()
@@ -35,11 +29,6 @@ export default function GetVerified() {
   const [requested, setRequested] = useState<ProfileVerificationRequest>()
   const [myProfileLink, setMyProfileLink] = useState('')
   const me = useMe()
-  const { setTopNavBarProps } = useLayoutContext()
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps])
 
   const handleSubmit = async (values: FormValues) => {
     if (values.soundcloud || values.youtube || values.bandcamp) {

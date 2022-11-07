@@ -9,7 +9,7 @@ import mux from 'mux-embed'
 import NextLink from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
-import Asset from './Asset'
+import Asset from './Asset/Asset'
 
 export interface Song {
   src: string

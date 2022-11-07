@@ -1,4 +1,4 @@
-import { Button, ButtonProps } from 'components/Buttons/Button'
+import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Form, Formik, FormikProps } from 'formik'
 import { useMe } from 'hooks/useMe'

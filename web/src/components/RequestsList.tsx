@@ -1,7 +1,7 @@
 import { PageInput, useProfileVerificationRequestsQuery } from 'lib/graphql'
 import React from 'react'
 import { ManageRequestTab } from 'types/ManageRequestTabType'
-import { InfiniteLoader } from './InfiniteLoader'
+import { InfiniteLoader } from 'components/InfiniteLoader'
 import { ManageRequestCard } from './ManageRequestCard'
 import { NoResultFound } from './NoResultFound'
 

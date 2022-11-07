@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { DeletedPostNotification } from 'lib/graphql'
 import React from 'react'
 import { MiniAudioPlayer } from './MiniAudioPlayer'
-import { Timestamp } from './Timestamp'
+import { Timestamp } from 'components/Timestamp'
 
 interface DeletedPostNotificationProps {
   notification: DeletedPostNotification

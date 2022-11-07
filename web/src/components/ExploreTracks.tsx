@@ -5,9 +5,9 @@ import AutoSizer from 'react-virtualized-auto-sizer'
 import InfiniteLoader from 'react-window-infinite-loader'
 import { NoResultFound } from './NoResultFound'
 import { TrackListItemSkeleton } from './TrackListItemSkeleton'
-import { LoaderAnimation } from './LoaderAnimation'
+import { LoaderAnimation } from 'components/LoaderAnimation'
 import { Track } from './Track'
-import { ExploreSearchBar } from './ExploreSearchBar'
+import { ExploreSearchBar } from './pages/ExplorePage/ExploreSearchBar'
 
 const pageSize = 15
 

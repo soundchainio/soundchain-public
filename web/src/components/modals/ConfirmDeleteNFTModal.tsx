@@ -1,4 +1,4 @@
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import MaxGasFee from 'components/MaxGasFee'
 import { Modal } from 'components/Modal'
 import { Track as TrackComponent } from 'components/Track'
