@@ -3,8 +3,8 @@ import { NewFollowerBadge } from 'icons/NewFollowerBadge'
 import { FollowerNotification } from 'lib/graphql'
 import NextLink from 'next/link'
 import React from 'react'
-import { Avatar } from './Avatar'
-import { Timestamp } from './Timestamp'
+import { Avatar } from 'components/Avatar'
+import { Timestamp } from 'components/Timestamp'
 
 interface FollowerNotificationProps {
   notification: FollowerNotification

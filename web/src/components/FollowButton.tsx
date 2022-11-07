@@ -1,5 +1,5 @@
 import { ApolloCache, FetchResult } from '@apollo/client'
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import { useMe } from 'hooks/useMe'
 import { Checkmark } from 'icons/Checkmark'
 import {

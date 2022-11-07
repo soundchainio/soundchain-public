@@ -1,8 +1,8 @@
 import { Chat, useChatsQuery } from 'lib/graphql'
 import React from 'react'
-import { ChatItem } from './ChatItem'
-import { ChatSkeleton } from './ChatSkeleton'
-import { InfiniteLoader } from './InfiniteLoader'
+import { ChatItem } from 'components/Chat/ChatItem'
+import { ChatSkeleton } from 'components/Chat/ChatSkeleton'
+import { InfiniteLoader } from 'components/InfiniteLoader'
 import { NoResultFound } from './NoResultFound'
 
 export const Inbox = () => {

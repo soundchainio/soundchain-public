@@ -1,4 +1,4 @@
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import { Modal } from 'components/Modal'
 import { Track as TrackComponent } from 'components/Track'
 import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton'

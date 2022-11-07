@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'
 import MaxGasFee from 'components/MaxGasFee'
@@ -8,8 +8,8 @@ import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
-import { Timer } from 'components/TrackDetailsPage'
-import { WalletSelector } from 'components/WalletSelector'
+import { Timer } from 'components/pages/TrackDetailsPage'
+import { WalletSelector } from 'components/waveform/WalletSelector'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { Form, Formik } from 'formik'
 import useBlockchain from 'hooks/useBlockchain'

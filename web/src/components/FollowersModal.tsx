@@ -3,8 +3,8 @@ import { Profile, useFollowersLazyQuery, useFollowingLazyQuery } from 'lib/graph
 import { useEffect } from 'react'
 import { FollowModalType } from 'types/FollowModalType'
 import { FollowItem } from './FollowItem'
-import { InfiniteLoader } from './InfiniteLoader'
-import { LoaderAnimation } from './LoaderAnimation'
+import { InfiniteLoader } from 'components/InfiniteLoader'
+import { LoaderAnimation } from 'components/LoaderAnimation'
 import { Modal } from './Modal'
 
 interface FollowersModal {

@@ -5,8 +5,8 @@ import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
-import { Avatar } from './Avatar'
-import { Button } from './Buttons/Button'
+import { Avatar } from 'components/Avatar'
+import { Button } from './common/Buttons/Button'
 import { NavBar } from './NavBar'
 import { NotificationBadge } from './NotificationBadge'
 import { Title } from './Title'
@@ -95,8 +95,8 @@ export const TopNavBar = ({
             )}
           </div>
         </div>
-        <div className="flex-grow-basis-0 h-full flex-1 items-center text-gray-80">
-          <div className="flex h-full items-center justify-end gap-2 pr-4 md:gap-4 md:pr-10">
+        <div className="h-full items-center text-gray-80">
+          <div className="flex h-full items-center justify-end gap-4 pr-4 md:gap-4 md:pr-10">
             <div className={`flex-grow-basis-0 flex items-center gap-2`}>
               {(LeftButton || RightButton) && (
                 <>

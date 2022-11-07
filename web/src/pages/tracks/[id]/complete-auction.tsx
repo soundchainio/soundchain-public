@@ -1,5 +1,5 @@
-import { Button } from 'components/Buttons/Button'
-import { AuctionEnded } from 'components/details-NFT/AuctionEnded'
+import { Button } from 'components/common/Buttons/Button'
+import { AuctionEnded } from 'components/pages/details-NFT/AuctionEnded'
 import { Matic } from 'components/Matic'
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
 import { TopNavBarProps } from 'components/TopNavBar'
