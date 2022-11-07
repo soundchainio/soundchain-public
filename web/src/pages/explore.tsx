@@ -15,7 +15,6 @@ export default function ExplorePage() {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      title: 'Explore',
       rightButton: undefined,
       leftButton: undefined,
     }),
