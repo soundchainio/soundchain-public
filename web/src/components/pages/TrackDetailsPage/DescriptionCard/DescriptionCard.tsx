@@ -126,4 +126,7 @@ const Paragraph = tw.p`
   leading-4 
   text-[#7D7F80]
   break-words
+
+  [&>a]:text-indigo-200
+  [&>a]:hover:text-indigo-100
 `
