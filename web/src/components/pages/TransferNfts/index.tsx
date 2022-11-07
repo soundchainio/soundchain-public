@@ -56,7 +56,7 @@ interface TransferNftContextData {
   loadMore: () => void
   refetch: () => void
   setSelectedNft: (newSelectedNft: string) => void
-  handleSetSelectedNft: (evenincomingSelectiont: string) => void
+  handleSetSelectedNft: (incomingSelection: string) => void
   selectedNft: string
   balance?: string
   gasPrice?: string
