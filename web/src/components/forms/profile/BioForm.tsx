@@ -1,5 +1,5 @@
-import { Button, ButtonProps } from 'components/Buttons/Button'
-import { getBodyCharacterCount } from 'components/PostModal'
+import { Button, ButtonProps } from 'components/common/Buttons/Button'
+import { getBodyCharacterCount } from 'components/Post/PostModal'
 import { TextareaField } from 'components/TextareaField'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'

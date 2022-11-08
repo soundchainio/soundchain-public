@@ -1,5 +1,5 @@
 /* eslint-disable react/display-name */
-import { Post } from 'components/Post'
+import { Post } from 'components/Post/Post'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { FeedItem, useFeedQuery } from 'lib/graphql'
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
@@ -7,9 +7,9 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, ListChildComponentProps, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { LoaderAnimation } from './LoaderAnimation'
+import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from './NoResultFound'
-import { PostSkeleton } from './PostSkeleton'
+import { PostSkeleton } from './Post/PostSkeleton'
 
 interface FeedProps {
   pageSize?: number

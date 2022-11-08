@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { Profile } from 'lib/graphql'
 import NextLink from 'next/link'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { DisplayName } from './DisplayName'
 
 interface Props {

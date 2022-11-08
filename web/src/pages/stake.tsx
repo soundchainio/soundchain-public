@@ -1,5 +1,5 @@
-import { Button } from 'components/Buttons/Button'
-import { WalletButton } from 'components/Buttons/WalletButton'
+import { Button } from 'components/common/Buttons/Button'
+import { WalletButton } from 'components/common/Buttons/WalletButton'
 import { config } from 'config'
 import { Form, Formik } from 'formik'
 import useBlockchain from 'hooks/useBlockchain'

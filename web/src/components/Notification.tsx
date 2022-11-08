@@ -19,7 +19,7 @@ import {
 import React from 'react'
 import { AuctionEndedNotificationItem } from './AuctionEndedNotificationItem'
 import { AuctionIsEndingNotificationItem } from './AuctionIsEndingNotificationItem'
-import { CommentNotificationItem } from './CommentNotificationItem'
+import { CommentNotificationItem } from 'components/Comment/CommentNotificationItem'
 import { DeletedCommentNotificationItem } from './DeletedCommentNotificationItem'
 import { DeletedPostNotificationItem } from './DeletedPostNotificationItem'
 import { FollowerNotificationItem } from './FollowerNotificationItem'

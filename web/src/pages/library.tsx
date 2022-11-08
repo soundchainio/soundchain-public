@@ -1,11 +1,9 @@
 import SEO from 'components/SEO'
-import { TopNavBarProps } from 'components/TopNavBar'
-import { useLayoutContext } from 'hooks/useLayoutContext'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { SortListingItem } from 'lib/apollo/sorting'
 import { SearchBar, TabsMenu } from 'components/common'
-import { FavoriteTracks } from 'components/LibraryPage/FavoriteTracks'
-import { FavoriteArtists } from 'components/LibraryPage/FavoriteArtists'
+import { FavoriteTracks } from 'components/pages/LibraryPage/FavoriteTracks'
+import { FavoriteArtists } from 'components/pages/LibraryPage/FavoriteArtists'
 
 enum LibraryTab {
   FAVORITE_TRACKS = 'Favorite Tracks',
@@ -18,20 +16,7 @@ export default function LibraryPage() {
   const [isGrid, setIsGrid] = useState(true)
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
 
-  const { setTopNavBarProps } = useLayoutContext()
-
-  const topNavBarProps: TopNavBarProps = useMemo(
-    () => ({
-      title: 'Library',
-    }),
-    [],
-  )
-
   const libraryTabList = [LibraryTab.FAVORITE_TRACKS, LibraryTab.FAVORITE_ARTISTS]
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps, topNavBarProps])
 
   return (
     <>

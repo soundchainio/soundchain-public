@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { NewVerificationRequestNotification } from 'lib/graphql'
 import NextLink from 'next/link'
 import React from 'react'
-import { Timestamp } from './Timestamp'
+import { Timestamp } from 'components/Timestamp'
 
 interface NewVerificationRequestNotificationItemProps {
   notification: NewVerificationRequestNotification

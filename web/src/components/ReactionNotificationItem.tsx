@@ -4,9 +4,9 @@ import { ThumbsUpNotification } from 'icons/ThumbsUpNotification'
 import { ReactionNotification } from 'lib/graphql'
 import NextLink from 'next/link'
 import React from 'react'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { PreviewPostNotification } from './PreviewPostNotification'
-import { Timestamp } from './Timestamp'
+import { Timestamp } from 'components/Timestamp'
 
 interface ReactionNotificationProps {
   notification: ReactionNotification

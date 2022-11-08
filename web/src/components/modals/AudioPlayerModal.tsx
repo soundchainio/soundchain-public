@@ -1,6 +1,6 @@
 import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid'
 import Slider from '@reach/slider'
-import Asset from 'components/Asset'
+import Asset from 'components/Asset/Asset'
 import { Modal } from 'components/Modal'
 import { TrackListItem } from 'components/TrackListItem'
 import { TrackShareButton } from 'components/TrackShareButton'
@@ -48,9 +48,9 @@ export const AudioPlayerModal = () => {
     toggleShuffle,
     setPlayerFavorite,
     isPlaylistOpen,
-    setIsPlaylistOpen
+    setIsPlaylistOpen,
   } = useAudioPlayerContext()
-  
+
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true)
   const [isMobile, setIsMobile] = useState(true)
   const me = useMe()

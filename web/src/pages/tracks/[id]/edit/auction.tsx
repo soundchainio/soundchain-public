@@ -1,4 +1,4 @@
-import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/details-NFT/ListNFTAuction'
+import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/pages/details-NFT/ListNFTAuction'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
 import { useModalDispatch } from 'contexts/providers/modal'

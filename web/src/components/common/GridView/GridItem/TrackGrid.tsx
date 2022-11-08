@@ -14,7 +14,7 @@ import { currency, limitTextToNumberOfCharacters } from 'utils/format'
 import { Cards } from '../../../../icons/Cards'
 import { Logo } from '../../../../icons/Logo'
 import { CurrencyType } from '../../../../types/CurrenctyType'
-import Asset from '../../../Asset'
+import Asset from '../../../Asset/Asset'
 
 const WavesurferComponent = dynamic(() => import('../../../wavesurfer'), {
   ssr: false,

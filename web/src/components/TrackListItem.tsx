@@ -2,7 +2,7 @@ import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import NextLink from 'next/link'
-import Asset from './Asset'
+import Asset from './Asset/Asset'
 
 interface TrackProps {
   index: number
