@@ -3,9 +3,9 @@ import { NewPostNotification as NewPostIcon } from 'icons/NewPostNotification'
 import { NewPostNotification } from 'lib/graphql'
 import NextLink from 'next/link'
 import React from 'react'
-import { Avatar } from './Avatar'
+import { Avatar } from 'components/Avatar'
 import { MiniAudioPlayer } from './MiniAudioPlayer'
-import { Timestamp } from './Timestamp'
+import { Timestamp } from 'components/Timestamp'
 
 interface NewPostNotificationProps {
   notification: NewPostNotification

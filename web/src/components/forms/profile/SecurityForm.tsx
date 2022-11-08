@@ -1,5 +1,5 @@
 import * as bip39 from 'bip39'
-import { Button, ButtonProps } from 'components/Buttons/Button'
+import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
 import { useUpdateOtpMutation } from 'lib/graphql'

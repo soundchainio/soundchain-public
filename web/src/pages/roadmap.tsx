@@ -1,6 +1,6 @@
 import SEO from '../components/SEO'
 import { ReactElement } from 'react'
-import RoadmapLayout from '../components/roadmap/layout'
+import RoadmapLayout from '../components/pages/roadmap/layout'
 
 export default function RoadmapPage() {
   return (

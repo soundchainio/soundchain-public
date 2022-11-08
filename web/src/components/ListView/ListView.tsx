@@ -2,7 +2,7 @@
 import { ApolloQueryResult } from '@apollo/client'
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from 'components/NoResultFound'
-import { PostSkeleton } from 'components/PostSkeleton'
+import { PostSkeleton } from 'components/Post/PostSkeleton'
 import { Track as TrackItem } from 'components/Track'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import {

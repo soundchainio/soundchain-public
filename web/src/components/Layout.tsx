@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { BottomNavBarWrapper } from 'components/BottomNavBarWrapper'
+import { BottomNavBarWrapper } from 'components/BottomNavBar/BottomNavBarWrapper'
 import { useModalState } from 'contexts/providers/modal'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useIsMobile } from 'hooks/useIsMobile'
@@ -15,10 +15,10 @@ import { TagManager } from './TagManager'
 import { TopNavBar, TopNavBarProps } from './TopNavBar'
 
 const SideMenu = dynamic(() => import('./SideMenu'))
-const PostModal = dynamic(import('./PostModal'))
+const PostModal = dynamic(import('./Post/PostModal'))
 const ReactionsModal = dynamic(import('./ReactionsModal'))
-const CommentModal = dynamic(import('./CommentModal'))
-const AuthorActionsModal = dynamic(import('./AuthorActionsModal'))
+const CommentModal = dynamic(import('./Comment/CommentModal'))
+const AuthorActionsModal = dynamic(import('./modals/AuthorActionsModal'))
 const ApproveModal = dynamic(import('./modals/ApproveModal'))
 const BidsHistoryModal = dynamic(import('./modals/BidsHistoryModal'))
 const ConfirmDeleteNFTModal = dynamic(import('./modals/ConfirmDeleteNFTModal'))
@@ -28,8 +28,8 @@ const TransferConfirmationModal = dynamic(import('./TransferConfirmationModal'))
 const TransferOgunConfirmationModal = dynamic(import('./TransferOgunConfirmationModal'))
 const UnderDevelopmentModal = dynamic(import('./UnderDevelopmentModal'))
 const NftTransferConfirmationModal = dynamic(import('./modals/NftTransferConfirmationModal'))
-const MobileBottomAudioPlayer = dynamic(import('components/BottomAudioPlayer/MobileBottomAudioPlayer'))
-const DesktopBottomAudioPlayer = dynamic(import('components/BottomAudioPlayer/DesktopBottomAudioPlayer'))
+const MobileBottomAudioPlayer = dynamic(import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
+const DesktopBottomAudioPlayer = dynamic(import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'))
 const CreateModal = dynamic(import('components/modals/CreateModal'))
 

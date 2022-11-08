@@ -1,5 +1,5 @@
 import { Badge } from 'components/common/Badges/Badge'
-import { Button, ButtonProps } from 'components/Buttons/Button'
+import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { Label } from 'components/Label'
 import { Genre, useUpdateFavoriteGenresMutation } from 'lib/graphql'
 import React, { useEffect, useState } from 'react'

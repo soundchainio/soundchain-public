@@ -1,4 +1,4 @@
-import { Button } from 'components/Buttons/Button'
+import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'
 import { Form, Formik } from 'formik'
