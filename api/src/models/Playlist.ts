@@ -1,10 +1,9 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
-import { MuxAsset } from '../types/MuxAsset';
 import { Model } from './Model';
 
 @ObjectType()
-export class AuctionItem extends Model {
+export class Playlist extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
@@ -20,19 +19,22 @@ export class AuctionItem extends Model {
   @prop()
   artworkUrl: string;
 
-  @Field({ nullable: true })
+  @Field()
   @prop()
-  artist: string;
+  profileId: string;
 
   @prop({ default: 0 })
   playbackCount: number;
 
-  @prop()
-  muxAsset: MuxAsset;
+  @prop({ nullable: true })
+  tracks: string[];
 
+  @Field(() => Date)
+  createdAt: Date;
+  
   @Field({ nullable: true })
   @prop({ default: false })
   deleted?: boolean;
 }
 
-export const AuctionItemModel = getModelForClass(AuctionItem);
+export const PlaylistModel = getModelForClass(Playlist);
