@@ -99,7 +99,6 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const onTextAreaChange = (newVal: string) => {
     props.setBodyValue(newVal)
   }
-
   return (
     <Formik
       enableReinitialize={true}
