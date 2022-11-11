@@ -3,7 +3,7 @@ import { useModalDispatch, useModalState } from 'contexts/providers/modal'
 import 'emoji-mart/css/emoji-mart.css'
 import GraphemeSplitter from 'grapheme-splitter'
 import { usePostLazyQuery } from 'lib/graphql'
-import { default as React, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { PostFormType } from 'types/PostFormType'
 import { getNormalizedLink, hasLink } from '../../utils/NormalizeEmbedLinks'
 import { ModalsPortal } from '../ModalsPortal'
@@ -12,7 +12,7 @@ import { PostForm } from './PostForm'
 const baseClasses =
   'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
 
-export const maxLength = 160
+export const maxLength = 500
 
 const splitter = new GraphemeSplitter()
 
