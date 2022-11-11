@@ -61,6 +61,11 @@ export class PlaylistResolver {
     return playlistService.favoriteCount(playlistId);
   }
 
+  @FieldResolver(() => Number)
+  followCount(@Ctx() { playlistService }: Context, @Root() { _id: playlistId }: Playlist): Promise<number> {
+    return playlistService.followCount(playlistId);
+  }
+
   @FieldResolver(() => Boolean)
   isFavorite(
     @Ctx() { playlistService }: Context,

@@ -57,7 +57,11 @@ export class PlaylistService extends ModelService<typeof Playlist> {
 
   
   async favoriteCount(playlistId: string): Promise<number> {
-    return await FavoritePlaylistModel.countDocuments({ "playlistId": playlistId})
+    return await FavoritePlaylistModel.countDocuments({playlistId})
+  }
+
+  async followCount(playlistId: string): Promise<number> {
+    return await FollowPlaylistModel.countDocuments({playlistId})
   }
 
   async toggleFavorite(playlistId: string, profileId: string): Promise<FavoritePlaylist> {
