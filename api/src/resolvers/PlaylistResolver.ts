@@ -1,6 +1,6 @@
 import { GetPlaylistPayload } from './../types/GetPlaylistPayload';
 import { EditPlaylistPlayload } from './../types/EditPlaylistPlayload';
-import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from "type-graphql";
 import { CurrentUser } from "../decorators/current-user";
 import { Playlist } from "../models/Playlist";
 import { User } from "../models/User";
@@ -8,9 +8,9 @@ import { Context } from "../types/Context";
 import { CreatePlaylistData } from "../types/CreatePlaylistInput";
 import { CreatePlaylistPayload } from "../types/CreatePlaylistPayload";
 import { EditPlaylistData } from '../types/EditPlaylistInput';
-import { FilterGetPlaylist } from '../types/FilterGetPlaylist';
 import { SortPlaylistInput } from '../services/SortPlaylistInput';
 import { PageInput } from '../types/PageInput';
+import { FavoritePlaylist } from '../models/FavoritePlaylist';
 
 @Resolver(Playlist)
 export class PlaylistResolver {
@@ -36,13 +36,40 @@ export class PlaylistResolver {
     return { playlist };
   }
 
-  @Query(() => GetPlaylistPayload)
-  playlists(
+  @Mutation(() => FavoritePlaylist)
+  @Authorized()
+  async togglePlaylistFavorite(
     @Ctx() { playlistService }: Context,
-    @Arg('filter', { nullable: true }) filter?: FilterGetPlaylist,
+    @CurrentUser() { profileId }: User,
+    @Arg('playlistId') playlistId: string,
+  ): Promise<FavoritePlaylist> {
+    return await playlistService.toggleFavorite(playlistId, profileId);
+  }
+
+  @Query(() => GetPlaylistPayload)
+  getUserPlaylists(
+    @Ctx() { playlistService }: Context,
+    @CurrentUser() { profileId }: User,
     @Arg('sort', { nullable: true }) sort?: SortPlaylistInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<GetPlaylistPayload> {
-    return playlistService.getPlaylists(filter, sort, page);
+    return playlistService.getPlaylists(profileId, sort, page);
+  }
+
+  @FieldResolver(() => Number)
+  favoriteCount(@Ctx() { playlistService }: Context, @Root() { _id: playlistId }: Playlist): Promise<number> {
+    return playlistService.favoriteCount(playlistId);
+  }
+
+  @FieldResolver(() => Boolean)
+  isFavorite(
+    @Ctx() { playlistService }: Context,
+    @Root() { _id: playlistId }: Playlist,
+    @CurrentUser() user?: User,
+  ): Promise<boolean> {
+    if (!user) {
+      return Promise.resolve(false);
+    }
+    return playlistService.isFavorite(playlistId, user.profileId);
   }
 }

@@ -1,7 +1,8 @@
+import { ObjectId } from 'mongodb';
 import { PaginateResult } from '../db/pagination/paginate';
+import { FavoritePlaylist, FavoritePlaylistModel } from '../models/FavoritePlaylist';
 import { Playlist, PlaylistModel } from '../models/Playlist';
 import { Context } from '../types/Context';
-import { FilterGetPlaylist } from '../types/FilterGetPlaylist';
 import { PageInput } from '../types/PageInput';
 import { ModelService } from './ModelService';
 import { SortPlaylistInput } from './SortPlaylistInput';
@@ -49,7 +50,54 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     return playlist;
   }
 
-  getPlaylists(filter?: FilterGetPlaylist, sort?: SortPlaylistInput, page?: PageInput): Promise<PaginateResult<Playlist>> {
-    return this.paginate({ filter: { ...filter, deleted: false }, sort, page });
+  getPlaylists(profileId?: string, sort?: SortPlaylistInput, page?: PageInput): Promise<PaginateResult<Playlist>> {
+    return this.paginate({ filter: { profileId, deleted: false }, sort, page });
+  }
+
+  
+  async favoriteCount(playlistId: string): Promise<number> {
+    return await FavoritePlaylistModel.countDocuments({ "playlistId": playlistId})
+  }
+
+  async toggleFavorite(playlistId: string, profileId: string): Promise<FavoritePlaylist> {
+    const favoritePlaylist = await FavoritePlaylistModel.findOne({playlistId});
+
+    if (favoritePlaylist?.id) {
+      return await FavoritePlaylistModel.findOneAndDelete({playlistId});
+    }
+
+    const favorite = new FavoritePlaylistModel({
+      profileId,
+      playlistId,
+    });
+
+    await favorite.save();
+    return favorite;
+  }
+
+  async isFavorite(playlistId: string, profileId: string): Promise<boolean> {
+    return await FavoritePlaylistModel.exists({
+      playlistId,
+      profileId,
+    });
+  }
+
+  getFavoritePlaylists(
+    ids: ObjectId[],
+    search?: string,
+    sort?: SortPlaylistInput,
+    page?: PageInput,
+  ): Promise<PaginateResult<Playlist>> {
+    const regex = new RegExp(search, 'i');
+
+    const filter = {
+      $or: [{ title: regex }, { description: regex }, { profileId: regex }, { playbackCount: regex }],
+    };
+
+    return this.paginate({
+      filter: { _id: { $in: ids }, title: { $exists: true }, deleted: false, ...filter },
+      sort,
+      page,
+    });
   }
 }
