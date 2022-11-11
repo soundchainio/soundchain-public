@@ -72,4 +72,26 @@ export class PlaylistResolver {
     }
     return playlistService.isFavorite(playlistId, user.profileId);
   }
+
+  @Mutation(() => FavoritePlaylist)
+  @Authorized()
+  async togglePlaylistFollow(
+    @Ctx() { playlistService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('playlistId') playlistId: string,
+  ): Promise<FavoritePlaylist> {
+    return await playlistService.togglePlaylistFollow(playlistId, profileId);
+  }
+
+  @FieldResolver(() => Boolean)
+  isFollowed(
+    @Ctx() { playlistService }: Context,
+    @Root() { _id: playlistId }: Playlist,
+    @CurrentUser() user?: User,
+  ): Promise<boolean> {
+    if (!user) {
+      return Promise.resolve(false);
+    }
+    return playlistService.isFollowed(playlistId, user.profileId);
+  }
 }
