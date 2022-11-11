@@ -1,6 +1,7 @@
 import { ObjectId } from 'mongodb';
 import { PaginateResult } from '../db/pagination/paginate';
 import { FavoritePlaylist, FavoritePlaylistModel } from '../models/FavoritePlaylist';
+import { FollowPlaylist, FollowPlaylistModel } from '../models/FollowPlaylist';
 import { Playlist, PlaylistModel } from '../models/Playlist';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
@@ -77,6 +78,29 @@ export class PlaylistService extends ModelService<typeof Playlist> {
 
   async isFavorite(playlistId: string, profileId: string): Promise<boolean> {
     return await FavoritePlaylistModel.exists({
+      playlistId,
+      profileId,
+    });
+  }
+
+  async togglePlaylistFollow(playlistId: string, profileId: string): Promise<FollowPlaylist> {
+    const followPlaylistModel = await FollowPlaylistModel.findOne({playlistId});
+
+    if (followPlaylistModel?.id) {
+      return await FollowPlaylistModel.findOneAndDelete({playlistId});
+    }
+
+    const favorite = new FollowPlaylistModel({
+      profileId,
+      playlistId,
+    });
+
+    await favorite.save();
+    return favorite;
+  }
+
+  async isFollowed(playlistId: string, profileId: string): Promise<boolean> {
+    return await FollowPlaylistModel.exists({
       playlistId,
       profileId,
     });
