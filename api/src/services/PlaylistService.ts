@@ -3,6 +3,8 @@ import { PaginateResult } from '../db/pagination/paginate';
 import { FavoritePlaylist, FavoritePlaylistModel } from '../models/FavoritePlaylist';
 import { FollowPlaylist, FollowPlaylistModel } from '../models/FollowPlaylist';
 import { Playlist, PlaylistModel } from '../models/Playlist';
+import { Track } from '../models/Track';
+import { TrackFromPlaylistModel } from '../models/TrackFromPlaylist';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { ModelService } from './ModelService';
@@ -13,7 +15,7 @@ interface CreatePlaylistParams {
   description: string;
   artworkUrl: string;
   profileId: string;
-  tracks?: string[];
+  trackIds?: string[];
 }
 
 interface EditPlaylistParams {
@@ -22,7 +24,7 @@ interface EditPlaylistParams {
   description?: string;
   artworkUrl?: string;
   profileId?: string;
-  tracks?: string[];
+  trackIds?: string[];
 }
 
 export class PlaylistService extends ModelService<typeof Playlist> {
@@ -31,6 +33,18 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async createPlaylist(params: CreatePlaylistParams): Promise<Playlist> {
+    const { trackIds, profileId } = params;
+
+    if (trackIds.length > 0) {
+      trackIds.forEach(trackId => {
+        const trackFromPlaylist = new TrackFromPlaylistModel({
+          trackId,
+          profileId
+        })
+        trackFromPlaylist.save()
+      })
+    }
+
     const playlist = new this.model(params);
     await playlist.save();
 
