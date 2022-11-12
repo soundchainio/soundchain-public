@@ -11,18 +11,27 @@ import { EditPlaylistData } from '../types/EditPlaylistInput';
 import { SortPlaylistInput } from '../services/SortPlaylistInput';
 import { PageInput } from '../types/PageInput';
 import { FavoritePlaylist } from '../models/FavoritePlaylist';
-
 @Resolver(Playlist)
 export class PlaylistResolver {
+
+  @Query(() => GetPlaylistPayload)
+  getUserPlaylists(
+    @Ctx() { playlistService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('sort', { nullable: true }) sort?: SortPlaylistInput,
+    @Arg('page', { nullable: true }) page?: PageInput,
+  ): Promise<GetPlaylistPayload> {
+    return playlistService.getPlaylists(profileId, sort, page);
+  }
 
   @Mutation(() => CreatePlaylistPayload)
   @Authorized()
   async createPlaylist(
     @Ctx() { playlistService }: Context,
-    @Arg('input') { title, description, artworkUrl, tracks }: CreatePlaylistData,
+    @Arg('input') { title, description, artworkUrl, trackIds }: CreatePlaylistData,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePlaylistPayload> {
-    const playlist = await playlistService.createPlaylist({ profileId, title, description, artworkUrl, tracks });
+    const playlist = await playlistService.createPlaylist({ profileId, title, description, artworkUrl, trackIds });
     return { playlist };
   }
 
@@ -30,9 +39,9 @@ export class PlaylistResolver {
   @Authorized()
   async updatePlaylist(
     @Ctx() { playlistService }: Context,
-    @Arg('input') { playlistId, title, description, artworkUrl, tracks }: EditPlaylistData,
+    @Arg('input') { playlistId, title, description, artworkUrl, trackIds }: EditPlaylistData,
   ): Promise<CreatePlaylistPayload> {
-    const playlist = await playlistService.updatePlaylist({ playlistId, title, description, artworkUrl, tracks });
+    const playlist = await playlistService.updatePlaylist({ playlistId, title, description, artworkUrl, trackIds });
     return { playlist };
   }
 
@@ -46,14 +55,14 @@ export class PlaylistResolver {
     return await playlistService.toggleFavorite(playlistId, profileId);
   }
 
-  @Query(() => GetPlaylistPayload)
-  getUserPlaylists(
+  @Mutation(() => FavoritePlaylist)
+  @Authorized()
+  async togglePlaylistFollow(
     @Ctx() { playlistService }: Context,
     @CurrentUser() { profileId }: User,
-    @Arg('sort', { nullable: true }) sort?: SortPlaylistInput,
-    @Arg('page', { nullable: true }) page?: PageInput,
-  ): Promise<GetPlaylistPayload> {
-    return playlistService.getPlaylists(profileId, sort, page);
+    @Arg('playlistId') playlistId: string,
+  ): Promise<FavoritePlaylist> {
+    return await playlistService.togglePlaylistFollow(playlistId, profileId);
   }
 
   @FieldResolver(() => Number)
@@ -78,16 +87,6 @@ export class PlaylistResolver {
     return playlistService.isFavorite(playlistId, user.profileId);
   }
 
-  @Mutation(() => FavoritePlaylist)
-  @Authorized()
-  async togglePlaylistFollow(
-    @Ctx() { playlistService }: Context,
-    @CurrentUser() { profileId }: User,
-    @Arg('playlistId') playlistId: string,
-  ): Promise<FavoritePlaylist> {
-    return await playlistService.togglePlaylistFollow(playlistId, profileId);
-  }
-
   @FieldResolver(() => Boolean)
   isFollowed(
     @Ctx() { playlistService }: Context,
@@ -99,4 +98,10 @@ export class PlaylistResolver {
     }
     return playlistService.isFollowed(playlistId, user.profileId);
   }
+
+  // @FieldResolver(() => Track, { nullable: true })
+  // async track(@Ctx() { trackService }: Context, @Root() { tracks }: Playlist): Promise<Track | null> {
+  //   if (!trackId) return null;
+  //   return trackService.getTrackFromEdition(trackId, trackEditionId);
+  // }
 }

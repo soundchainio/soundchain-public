@@ -1,6 +1,7 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
+import { Track } from './Track';
 
 @ObjectType()
 export class Playlist extends Model {
@@ -25,9 +26,6 @@ export class Playlist extends Model {
 
   @prop({ default: 0 })
   playbackCount: number;
-
-  @prop({ nullable: true })
-  tracks: string[];
 
   @Field(() => Date)
   createdAt: Date;

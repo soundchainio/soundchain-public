@@ -15,5 +15,5 @@ export class EditPlaylistData {
   artworkUrl?: string;
 
   @Field(() => [String], { nullable: true })
-  tracks?: string[];
+  trackIds?: string[];
 }
