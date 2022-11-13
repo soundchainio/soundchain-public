@@ -64,17 +64,6 @@ export class TrackService extends ModelService<typeof Track> {
 
     return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
   }
-
-  getTracksFromPlaylist(
-    playlistId: string,
-    sort?: SortTrackInput,
-    page?: PageInput
-  ): Promise<PaginateResult<Track>> {
-
-    const filter = { playlistId, deleted: false };
-
-    return this.paginate({ filter: { ...filter }, sort, page });
-  }
   
   getOwnedTracks(
     filter?: FilterOwnedTracksInput,

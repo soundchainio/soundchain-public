@@ -1,11 +1,14 @@
 import { ObjectId } from 'mongodb';
-import { PaginateResult } from '../db/pagination/paginate';
+import { paginate, PaginateResult } from '../db/pagination/paginate';
 import { FavoritePlaylist, FavoritePlaylistModel } from '../models/FavoritePlaylist';
 import { FollowPlaylist, FollowPlaylistModel } from '../models/FollowPlaylist';
 import { Playlist, PlaylistModel } from '../models/Playlist';
-import { TrackFromPlaylistModel } from '../models/TrackFromPlaylist';
+import { Track } from '../models/Track';
+import { TrackFromPlaylist, TrackFromPlaylistModel } from '../models/TrackFromPlaylist';
+import { TrackWithListingItemModel } from '../models/TrackWithListingItem';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
+import { SortTrackInput } from '../types/SortTrackInput';
 import { ModelService } from './ModelService';
 import { SortPlaylistInput } from './SortPlaylistInput';
 
@@ -34,18 +37,19 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   async createPlaylist(params: CreatePlaylistParams): Promise<Playlist> {
     const { trackIds, profileId } = params;
 
+    const playlist = new this.model(params);
+    await playlist.save();
+
     if (trackIds.length > 0) {
       trackIds.forEach(trackId => {
         const trackFromPlaylist = new TrackFromPlaylistModel({
           trackId,
-          profileId
+          profileId,
+          playlistId: playlist.id,
         })
         trackFromPlaylist.save()
       })
     }
-
-    const playlist = new this.model(params);
-    await playlist.save();
 
     return playlist;
   }
@@ -143,4 +147,15 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     });
   }
 
+  getTracksFromPlaylist(
+    playlistId: string,
+    sort?: any,
+    page?: PageInput
+  ): Promise<PaginateResult<TrackFromPlaylist>> {
+
+    const filter = { playlistId, deleted: false };
+
+    return paginate(TrackFromPlaylistModel,{ filter: { ...filter }, sort, page });
+  }
+  
 }
