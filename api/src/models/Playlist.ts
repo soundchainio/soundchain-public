@@ -1,7 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
-import { Track } from './Track';
 
 @ObjectType()
 export class Playlist extends Model {
