@@ -14,6 +14,14 @@ export class TrackFromPlaylist extends Model {
   @Field()
   @prop({ required: true })
   trackId: string;
+
+  @Field()
+  @prop({ required: true })
+  playlistId: string;
+
+  @Field({ nullable: true })
+  @prop({ default: false })
+  deleted?: boolean;
 }
 
 export const TrackFromPlaylistModel = getModelForClass(TrackFromPlaylist);
