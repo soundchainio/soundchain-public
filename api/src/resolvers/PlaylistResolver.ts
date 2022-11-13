@@ -11,6 +11,9 @@ import { EditPlaylistData } from '../types/EditPlaylistInput';
 import { SortPlaylistInput } from '../services/SortPlaylistInput';
 import { PageInput } from '../types/PageInput';
 import { FavoritePlaylist } from '../models/FavoritePlaylist';
+import { Track } from '../models/Track';
+import { SortTrackField } from '../types/SortTrackField';
+import { SortOrder } from '../types/SortOrder';
 @Resolver(Playlist)
 export class PlaylistResolver {
 
@@ -99,9 +102,24 @@ export class PlaylistResolver {
     return playlistService.isFollowed(playlistId, user.profileId);
   }
 
-  // @FieldResolver(() => Track, { nullable: true })
-  // async track(@Ctx() { trackService }: Context, @Root() { tracks }: Playlist): Promise<Track | null> {
-  //   if (!trackId) return null;
-  //   return trackService.getTrackFromEdition(trackId, trackEditionId);
-  // }
+  @FieldResolver(() => Track, { nullable: true })
+  async tracks(@Ctx() { trackService }: Context, @Root() { _id }: Playlist): Promise<Track | null> {
+    if (!_id) return null;
+
+    const page = {
+      "first": 10
+    };
+
+    console.log('_id', _id)
+    const sort = {
+        field:  SortTrackField.CREATED_AT,
+        order: SortOrder.DESC
+    };
+    
+    const tracks = await trackService.getTracksFromPlaylist(_id, sort, page);
+
+    console.log(tracks);
+
+    return null;
+  }
 }

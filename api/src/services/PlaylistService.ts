@@ -3,7 +3,6 @@ import { PaginateResult } from '../db/pagination/paginate';
 import { FavoritePlaylist, FavoritePlaylistModel } from '../models/FavoritePlaylist';
 import { FollowPlaylist, FollowPlaylistModel } from '../models/FollowPlaylist';
 import { Playlist, PlaylistModel } from '../models/Playlist';
-import { Track } from '../models/Track';
 import { TrackFromPlaylistModel } from '../models/TrackFromPlaylist';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
@@ -124,6 +123,7 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     });
   }
 
+
   getFavoritePlaylists(
     ids: ObjectId[],
     search?: string,
@@ -142,4 +142,5 @@ export class PlaylistService extends ModelService<typeof Playlist> {
       page,
     });
   }
+
 }
