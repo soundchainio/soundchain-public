@@ -2,7 +2,7 @@ import { GetPlaylistPayload } from './../types/GetPlaylistPayload';
 import { EditPlaylistPlayload } from './../types/EditPlaylistPlayload';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from "type-graphql";
 import { CurrentUser } from "../decorators/current-user";
-import { Playlist } from "../models/Playlist";
+import { Playlist, PlaylistModel } from "../models/Playlist";
 import { User } from "../models/User";
 import { Context } from "../types/Context";
 import { CreatePlaylistData } from "../types/CreatePlaylistInput";
@@ -14,10 +14,12 @@ import { FavoritePlaylist } from '../models/FavoritePlaylist';
 import { SortTrackField } from '../types/SortTrackField';
 import { SortOrder } from '../types/SortOrder';
 import { PaginateResult } from '../db/pagination/paginate';
-import { TrackFromPlaylist } from '../models/TrackFromPlaylist';
+import { PlaylistTrack } from '../models/PlaylistTrack';
 import { GetTracksFromPlaylist } from '../types/GetTracksFromPlaylist';
+import { CreatePlaylistTracks } from '../types/CreatePlaylistTracks';
+import { DeletePlaylistTracks } from '../types/DeletePlaylistTracks';
+import { DeletePlaylistPayload } from '../types/DeletePlaylistPayload';
 
-type s = PaginateResult<TrackFromPlaylist>
 @Resolver(Playlist)
 export class PlaylistResolver {
 
@@ -46,9 +48,37 @@ export class PlaylistResolver {
   @Authorized()
   async updatePlaylist(
     @Ctx() { playlistService }: Context,
-    @Arg('input') { playlistId, title, description, artworkUrl, trackIds }: EditPlaylistData,
+    @Arg('input') { playlistId, title, description, artworkUrl }: EditPlaylistData,
   ): Promise<CreatePlaylistPayload> {
-    const playlist = await playlistService.updatePlaylist({ playlistId, title, description, artworkUrl, trackIds });
+    const playlist = await playlistService.updatePlaylist({ playlistId, title, description, artworkUrl });
+    return { playlist };
+  }
+
+  @Mutation(() => CreatePlaylistPayload)
+  @Authorized()
+  async createPlaylistTracks(
+    @Ctx() { playlistService }: Context,
+    @Arg('input') { trackIds, playlistId }: CreatePlaylistTracks,
+    @CurrentUser() { profileId }: User,
+  ): Promise<CreatePlaylistPayload> {
+    await playlistService.createPlaylistTracks({ trackIds, playlistId }, profileId);
+
+    const playlist = await playlistService.findOrFail(playlistId)
+
+    return { playlist };
+  }
+
+  @Mutation(() => DeletePlaylistPayload)
+  @Authorized()
+  async deletePlaylistTracks(
+    @Ctx() { playlistService }: Context,
+    @Arg('input') { trackIds, playlistId }: DeletePlaylistTracks,
+    @CurrentUser() { profileId }: User,
+  ): Promise<DeletePlaylistPayload> {
+    await playlistService.deletePlaylistTracks({ trackIds, playlistId }, profileId);
+
+    const playlist = await playlistService.findOrFail(playlistId)
+
     return { playlist };
   }
 
@@ -107,7 +137,7 @@ export class PlaylistResolver {
   }
 
   @FieldResolver(() => GetTracksFromPlaylist, { nullable: true })
-  async tracks(@Ctx() { playlistService }: Context, @Root() { _id }: Playlist): Promise<PaginateResult<TrackFromPlaylist> | null> {
+  async tracks(@Ctx() { playlistService }: Context, @Root() { _id }: Playlist): Promise<PaginateResult<PlaylistTrack> | null> {
     if (!_id) return null;
 
     const page = {

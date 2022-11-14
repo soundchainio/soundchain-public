@@ -13,7 +13,4 @@ export class EditPlaylistData {
 
   @Field({ nullable: true })
   artworkUrl?: string;
-
-  @Field(() => [String], { nullable: true })
-  trackIds?: string[];
 }
