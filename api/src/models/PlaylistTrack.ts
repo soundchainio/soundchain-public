@@ -3,7 +3,7 @@ import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
-export class TrackFromPlaylist extends Model {
+export class PlaylistTrack extends Model {
   @Field(() => ID, { name: 'id' })
   readonly _id: string;
 
@@ -13,15 +13,11 @@ export class TrackFromPlaylist extends Model {
 
   @Field()
   @prop({ required: true })
-  trackId: string;
+  playlistId: string;
 
   @Field()
   @prop({ required: true })
-  playlistId: string;
-
-  @Field({ nullable: true })
-  @prop({ default: false })
-  deleted?: boolean;
+  trackId: string;
 }
 
-export const TrackFromPlaylistModel = getModelForClass(TrackFromPlaylist);
+export const PlaylistTrackModel = getModelForClass(PlaylistTrack);

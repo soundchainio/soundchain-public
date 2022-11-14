@@ -1,5 +1,5 @@
 import { Field, ObjectType } from 'type-graphql';
-import { TrackFromPlaylist } from '../models/TrackFromPlaylist';
+import { PlaylistTrack } from '../models/PlaylistTrack';
 import { PageInfo } from './PageInfo';
 
 
@@ -8,6 +8,6 @@ export class GetTracksFromPlaylist {
   @Field()
   pageInfo: PageInfo;
 
-  @Field(() => [TrackFromPlaylist], { nullable: true })
-  nodes: TrackFromPlaylist
+  @Field(() => [PlaylistTrack], { nullable: true })
+  nodes: PlaylistTrack
 }
