@@ -1,3 +1,4 @@
+import { Avatar } from 'components/Avatar'
 import { Bell } from 'icons/Bell'
 import { Logo } from 'icons/Logo'
 import { getJwt } from 'lib/apollo'
@@ -5,7 +6,6 @@ import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
-import { Avatar } from 'components/Avatar'
 import { Button } from './common/Buttons/Button'
 import { NavBar } from './NavBar'
 import { NotificationBadge } from './NotificationBadge'
@@ -54,14 +54,14 @@ export const TopNavBar = ({
 
   return (
     <header>
-      <div className="relative z-10 flex h-16 flex-shrink-0 bg-black shadow">
+      <div className="relative z-10 grid h-16 grid-cols-3 bg-black shadow sm:grid-cols-6">
         <Link href="/home">
           <a className="flex-grow-basis flex items-center pl-4 md:hidden">
             <Logo id="logo_mobile" className="block h-8 w-auto" />
           </a>
         </Link>
         {me ? (
-          <div className="hidden w-full flex-1 items-stretch justify-start pl-4 md:flex">
+          <div className="col-span-3 hidden w-full flex-1 items-stretch justify-start pl-4 md:flex">
             <div className="flex w-full items-center">
               <NavBar />
             </div>
@@ -83,19 +83,17 @@ export const TopNavBar = ({
             </div>
           )
         )}
-        <div className="ml-4 flex items-center">
-          <div className="flex w-full flex-shrink-0 items-center justify-center">
-            {title && (
-              <div className="flex w-full flex-col">
-                <Title navTitle className="truncate text-center text-sm md:text-left">
-                  {title}
-                </Title>
-                {Subtitle}
-              </div>
-            )}
-          </div>
+        <div className="flex items-center justify-center sm:col-span-2">
+          {title && (
+            <div>
+              <Title navTitle className="truncate text-center text-sm md:text-left">
+                {title}
+              </Title>
+              {Subtitle}
+            </div>
+          )}
         </div>
-        <div className="h-full items-center text-gray-80">
+        <div className="h-full items-center text-gray-80 sm:col-span-1">
           <div className="flex h-full items-center justify-end gap-4 pr-4 md:gap-4 md:pr-10">
             <div className={`flex-grow-basis-0 flex items-center gap-2`}>
               {(LeftButton || RightButton) && (
