@@ -1,0 +1,13 @@
+fragment PlaylistComponentFields on Playlist {
+    id
+    title
+    description
+    artworkUrl
+    profileId
+    createdAt
+    deleted
+    favoriteCount
+    followCount
+    isFavorite
+    isFollowed
+}

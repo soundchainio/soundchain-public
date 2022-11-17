@@ -23,6 +23,14 @@ import { DeletePlaylistPayload } from '../types/DeletePlaylistPayload';
 @Resolver(Playlist)
 export class PlaylistResolver {
 
+  @Query(() => Playlist)
+  playlist(
+    @Ctx() { playlistService }: Context,
+    @Arg('id') id: string,
+  ): Promise<Playlist> {
+    return playlistService.getPlaylist(id);
+  }
+
   @Query(() => GetPlaylistPayload)
   getUserPlaylists(
     @Ctx() { playlistService }: Context,

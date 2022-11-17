@@ -111,6 +111,10 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     return deleted
   }
 
+  getPlaylist(id: string): Promise<Playlist> {
+    return this.findOrFail(id)
+  }
+
   getPlaylists(profileId?: string, sort?: SortPlaylistInput, page?: PageInput): Promise<PaginateResult<Playlist>> {
     return this.paginate({ filter: { profileId, deleted: false }, sort, page });
   }

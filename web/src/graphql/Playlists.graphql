@@ -1,0 +1,8 @@
+query GetUserPlaylists($sort: SortPlaylistInput, $page: PageInput) {
+   getUserPlaylists(sort: $sort, page: $page) {
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
