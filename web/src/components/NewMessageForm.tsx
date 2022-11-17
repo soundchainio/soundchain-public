@@ -1,13 +1,13 @@
+import { Avatar } from 'components/Avatar'
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik'
 import { useMe } from 'hooks/useMe'
 import { Send } from 'icons/Send'
+import { MutableRefObject } from 'react'
 import * as yup from 'yup'
 import { SendMessageMutation, useSendMessageMutation } from '../lib/graphql'
-import { Avatar } from 'components/Avatar'
 import { FlexareaField } from './FlexareaField'
-import { MutableRefObject } from 'react'
 
-const messageMaxLength = 160
+const messageMaxLength = 1000
 
 export interface NewMessageFormProps {
   profileId: string
