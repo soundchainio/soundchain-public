@@ -126,13 +126,13 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     const weiPrice = web3?.utils.toWei(salePrice.toString(), 'ether') || '0'
     const startTimestamp = Math.ceil(startTime.getTime() / 1000)
 
-    function listIds(trackIds: string[], params: ListBatchParams) {
+    function listIds(trackEditionIds: string[], params: ListBatchParams) {
       return new Promise<void>((resolve, reject) => {
         const onReceipt = async () => {
           await ownedTracksUpdate({
             variables: {
               input: {
-                trackIds,
+                trackEditionIds,
                 trackEditionId: track.trackEdition!.id,
                 owner: params.from,
                 nftData: {

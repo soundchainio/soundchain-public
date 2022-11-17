@@ -1,6 +1,6 @@
 mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
   createMultipleTracks(input: $input) {
-    trackIds
+    trackEditionIds
     firstTrack {
       ...TrackComponentFields
     }

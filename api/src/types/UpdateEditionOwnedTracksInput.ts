@@ -4,7 +4,7 @@ import { NFTData } from './NFTData';
 @InputType()
 export class UpdateEditionOwnedTracksInput {
   @Field(() => [String])
-  trackIds: string[];
+  trackEditionIds: string[];
 
   @Field()
   trackEditionId: string;

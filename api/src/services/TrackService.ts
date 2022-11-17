@@ -243,7 +243,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async updateEditionOwnedTracks(
-    trackIds: string[],
+    trackEditionIds: string[],
     trackEditionId: string,
     owner: string,
     changes: RecursivePartial<Track>,
@@ -258,13 +258,13 @@ export class TrackService extends ModelService<typeof Track> {
           'editionData.pendingTime': newNftData.pendingTime,
         },
         $inc: {
-          'editionData.pendingTrackCount': trackIds.length,
+          'editionData.pendingTrackCount': trackEditionIds.length,
         },
       },
     );
 
     await this.model.updateMany(
-      { _id: trackIds, 'nftData.owner': owner, trackEditionId: trackEditionId },
+      { _id: trackEditionIds, 'nftData.owner': owner, trackEditionId: trackEditionId },
       {
         ...data,
         $set: Object.keys(newNftData).reduce((acc, key) => {

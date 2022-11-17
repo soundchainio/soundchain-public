@@ -2,7 +2,7 @@ import { GetPlaylistPayload } from './../types/GetPlaylistPayload';
 import { EditPlaylistPlayload } from './../types/EditPlaylistPlayload';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from "type-graphql";
 import { CurrentUser } from "../decorators/current-user";
-import { Playlist, PlaylistModel } from "../models/Playlist";
+import { Playlist } from "../models/Playlist";
 import { User } from "../models/User";
 import { Context } from "../types/Context";
 import { CreatePlaylistData } from "../types/CreatePlaylistInput";
@@ -45,10 +45,10 @@ export class PlaylistResolver {
   @Authorized()
   async createPlaylist(
     @Ctx() { playlistService }: Context,
-    @Arg('input') { title, description, artworkUrl, trackIds }: CreatePlaylistData,
+    @Arg('input') { title, description, artworkUrl, trackEditionIds }: CreatePlaylistData,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePlaylistPayload> {
-    const playlist = await playlistService.createPlaylist({ profileId, title, description, artworkUrl, trackIds });
+    const playlist = await playlistService.createPlaylist({ profileId, title, description, artworkUrl, trackEditionIds });
     return { playlist };
   }
 
@@ -66,10 +66,10 @@ export class PlaylistResolver {
   @Authorized()
   async createPlaylistTracks(
     @Ctx() { playlistService }: Context,
-    @Arg('input') { trackIds, playlistId }: CreatePlaylistTracks,
+    @Arg('input') { trackEditionIds, playlistId }: CreatePlaylistTracks,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePlaylistPayload> {
-    await playlistService.createPlaylistTracks({ trackIds, playlistId }, profileId);
+    await playlistService.createPlaylistTracks({ trackEditionIds, playlistId }, profileId);
 
     const playlist = await playlistService.findOrFail(playlistId)
 
@@ -80,10 +80,10 @@ export class PlaylistResolver {
   @Authorized()
   async deletePlaylistTracks(
     @Ctx() { playlistService }: Context,
-    @Arg('input') { trackIds, playlistId }: DeletePlaylistTracks,
+    @Arg('input') { trackEditionIds, playlistId }: DeletePlaylistTracks,
     @CurrentUser() { profileId }: User,
   ): Promise<DeletePlaylistPayload> {
-    await playlistService.deletePlaylistTracks({ trackIds, playlistId }, profileId);
+    await playlistService.deletePlaylistTracks({ trackEditionIds, playlistId }, profileId);
 
     const playlist = await playlistService.findOrFail(playlistId)
 

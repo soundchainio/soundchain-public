@@ -86,13 +86,13 @@ export const RemoveListingConfirmationModal = () => {
   }
 
   const handleCancelBatch = async (trackEditionId: string, account: string, contractAddresses?: ContractAddresses) => {
-    function cancelIds(trackIds: string[], params: CancelListingBatchParams) {
+    function cancelIds(trackEditionIds: string[], params: CancelListingBatchParams) {
       return new Promise<void>((resolve, reject) => {
         const onReceipt = async () => {
           await ownedTracksUpdate({
             variables: {
               input: {
-                trackIds,
+                trackEditionIds,
                 trackEditionId,
                 owner: params.from,
                 nftData: {

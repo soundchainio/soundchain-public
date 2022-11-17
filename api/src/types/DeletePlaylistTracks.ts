@@ -6,5 +6,5 @@ export class DeletePlaylistTracks {
   playlistId: string;
 
   @Field(() => [String])
-  trackIds: string[];
+  trackEditionIds: string[];
 }

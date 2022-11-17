@@ -234,14 +234,14 @@ export type CreateMultipleTracksInput = {
 export type CreateMultipleTracksPayload = {
   __typename?: 'CreateMultipleTracksPayload';
   firstTrack: Track;
-  trackIds: Array<Scalars['String']>;
+  trackEditionIds: Array<Scalars['String']>;
 };
 
 export type CreatePlaylistData = {
   title: Scalars['String'];
   description?: Maybe<Scalars['String']>;
   artworkUrl?: Maybe<Scalars['String']>;
-  trackIds?: Maybe<Array<Scalars['String']>>;
+  trackEditionIds?: Maybe<Array<Scalars['String']>>;
 };
 
 export type CreatePlaylistPayload = {
@@ -251,7 +251,7 @@ export type CreatePlaylistPayload = {
 
 export type CreatePlaylistTracks = {
   playlistId: Scalars['String'];
-  trackIds: Array<Scalars['String']>;
+  trackEditionIds: Array<Scalars['String']>;
 };
 
 export type CreatePostInput = {
@@ -353,7 +353,7 @@ export type DeletePlaylistPayload = {
 
 export type DeletePlaylistTracks = {
   playlistId: Scalars['String'];
-  trackIds: Array<Scalars['String']>;
+  trackEditionIds: Array<Scalars['String']>;
 };
 
 export type DeletePostInput = {
@@ -1942,7 +1942,7 @@ export type UpdateDefaultWalletPayload = {
 };
 
 export type UpdateEditionOwnedTracksInput = {
-  trackIds: Array<Scalars['String']>;
+  trackEditionIds: Array<Scalars['String']>;
   trackEditionId: Scalars['String'];
   owner: Scalars['String'];
   nftData?: Maybe<NftDataInput>;
@@ -2380,7 +2380,7 @@ export type CreateMultipleTracksMutation = (
   { __typename?: 'Mutation' }
   & { createMultipleTracks: (
     { __typename?: 'CreateMultipleTracksPayload' }
-    & Pick<CreateMultipleTracksPayload, 'trackIds'>
+    & Pick<CreateMultipleTracksPayload, 'trackEditionIds'>
     & { firstTrack: (
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
@@ -5161,7 +5161,7 @@ export type CountBidsQueryResult = Apollo.QueryResult<CountBidsQuery, CountBidsQ
 export const CreateMultipleTracksDocument = gql`
     mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
   createMultipleTracks(input: $input) {
-    trackIds
+    trackEditionIds
     firstTrack {
       ...TrackComponentFields
     }

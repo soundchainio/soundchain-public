@@ -193,7 +193,7 @@ export class TrackResolver {
     }
     return {
       firstTrack: track,
-      trackIds: [track._id, ...otherTracks.map(track => track._id)],
+      trackEditionIds: [track._id, ...otherTracks.map(track => track._id)],
     };
   }
 
@@ -211,9 +211,9 @@ export class TrackResolver {
   @Authorized()
   async updateEditionOwnedTracks(
     @Ctx() { trackService }: Context,
-    @Arg('input') { trackIds, trackEditionId, owner, ...changes }: UpdateEditionOwnedTracksInput,
+    @Arg('input') { trackEditionIds, trackEditionId, owner, ...changes }: UpdateEditionOwnedTracksInput,
   ): Promise<UpdateEditionOwnedTracksPayload> {
-    const tracks = await trackService.updateEditionOwnedTracks(trackIds, trackEditionId, owner, changes);
+    const tracks = await trackService.updateEditionOwnedTracks(trackEditionIds, trackEditionId, owner, changes);
     return { tracks };
   }
 

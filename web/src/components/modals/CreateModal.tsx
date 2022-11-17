@@ -358,7 +358,7 @@ export const CreateModal = () => {
                     }
 
                     const newTracks =
-                      createMultipleTracksData?.createMultipleTracks.trackIds.map(
+                      createMultipleTracksData?.createMultipleTracks.trackEditionIds.map(
                         trackId =>
                           ({
                             ...createMultipleTracksData?.createMultipleTracks.firstTrack,

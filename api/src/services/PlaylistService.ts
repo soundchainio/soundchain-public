@@ -18,7 +18,7 @@ interface CreatePlaylistParams {
   description: string;
   artworkUrl: string;
   profileId: string;
-  trackIds?: string[];
+  trackEditionIds?: string[];
 }
 
 interface EditPlaylistParams {
@@ -34,8 +34,8 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     super(context, PlaylistModel);
   }
 
-  async createPlaylistTrack(trackIds: string[], profileId: string, playlist: DocumentType<Playlist>) {
-    const existingTracks = await TrackModel.find({ _id: trackIds }, '_id');
+  async createPlaylistTrack(trackEditionIds: string[], profileId: string, playlist: DocumentType<Playlist>) {
+    const existingTracks = await TrackModel.find({ _id: trackEditionIds }, '_id');
 
     existingTracks.forEach(track => {
       const playlistTrack = new PlaylistTrackModel({
@@ -49,12 +49,12 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   };
 
   async createPlaylist(params: CreatePlaylistParams): Promise<Playlist> {
-    const { trackIds, profileId } = params;
+    const { trackEditionIds, profileId } = params;
 
     const playlist = new this.model(params);
     await playlist.save();
 
-    if (trackIds.length > 0) this.createPlaylistTrack(trackIds, profileId, playlist);
+    if (trackEditionIds.length > 0) this.createPlaylistTrack(trackEditionIds, profileId, playlist);
 
     return playlist;
   }
@@ -76,9 +76,9 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async createPlaylistTracks(params: CreatePlaylistTracks, profileId: string): Promise<void> {
-    const { trackIds, playlistId } = params
+    const { trackEditionIds, playlistId } = params
 
-    const playlistTracks = trackIds.map(trackId => {
+    const playlistTracks = trackEditionIds.map(trackId => {
       return {
         updateOne: {
           filter: {playlistId, trackId},
@@ -96,9 +96,9 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async deletePlaylistTracks(params: DeletePlaylistTracks, profileId: string): Promise<PlaylistTrack> {
-    const { trackIds, playlistId } = params
+    const { trackEditionIds, playlistId } = params
 
-    const playlistTracks = trackIds.map(trackId => {
+    const playlistTracks = trackEditionIds.map(trackId => {
       return {
         deleteOne: {
           filter: { playlistId, trackId, profileId},
@@ -199,8 +199,7 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     sort?: any,
     page?: PageInput
   ): Promise<PaginateResult<PlaylistTrack>> {
-
-    const filter = { playlistId, deleted: false };
+    const filter = { playlistId };
 
     return paginate(PlaylistTrackModel,{ filter: { ...filter }, sort, page });
   }

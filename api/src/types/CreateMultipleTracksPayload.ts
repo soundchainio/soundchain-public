@@ -7,5 +7,5 @@ export class CreateMultipleTracksPayload {
   firstTrack: Track
 
   @Field(() => [String])
-  trackIds: string[]
+  trackEditionIds: string[]
 }

@@ -6,5 +6,5 @@ export class CreatePlaylistTracks {
   playlistId: string;
 
   @Field(() => [String])
-  trackIds: string[];
+  trackEditionIds: string[];
 }
