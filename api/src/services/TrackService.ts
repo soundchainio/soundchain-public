@@ -16,6 +16,7 @@ import { Context } from '../types/Context';
 import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
 import { CurrencyType } from '../types/CurrencyType';
 import { FilterBuyNowItemInput } from '../types/FilterBuyNowItemInput';
+import { FilterMultipleTracks } from '../types/FilterMultipleTracks';
 import { FilterOwnedTracksInput } from '../types/FilterOwnedTracksInput';
 import { FilterTrackInput } from '../types/FilterTrackInput';
 import { FilterTrackMarketplace } from '../types/FilterTrackMarketplace';
@@ -57,12 +58,17 @@ export class TrackService extends ModelService<typeof Track> {
 
   getTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
     const defaultFilter = { title: { $exists: true }, deleted: false };
-    const dotNotationFilter = filter && dot.dot(filter);
+    const dotNotationFilter = filter.nftData && dot.dot(filter);
     const owner = filter?.nftData?.owner && {
       'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
     };
 
-    return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
+    const ids = filter.trackEditionIds.map(id => new ObjectId(id))
+    const trackEditionIdsFilter = filter.trackEditionIds && {
+      trackEditionId: { $in: ids },
+    }
+
+    return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner, ...trackEditionIdsFilter }, sort, page });
   }
   
   getOwnedTracks(

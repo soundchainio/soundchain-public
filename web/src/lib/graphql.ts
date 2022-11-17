@@ -490,6 +490,7 @@ export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
   trackEditionId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
+  trackEditionIds?: Maybe<Array<Scalars['String']>>;
 };
 
 export type FilterTrackMarketplace = {
@@ -1159,7 +1160,7 @@ export type PlaylistTrack = {
   id: Scalars['ID'];
   profileId: Scalars['String'];
   playlistId: Scalars['String'];
-  trackId: Scalars['String'];
+  trackEditionId: Scalars['String'];
 };
 
 export type PolygonscanResult = {
@@ -3215,6 +3216,13 @@ export type PlaylistQuery = (
 export type PlaylistComponentFieldsFragment = (
   { __typename?: 'Playlist' }
   & Pick<Playlist, 'id' | 'title' | 'description' | 'artworkUrl' | 'profileId' | 'createdAt' | 'deleted' | 'favoriteCount' | 'followCount' | 'isFavorite' | 'isFollowed'>
+  & { tracks: Maybe<(
+    { __typename?: 'GetTracksFromPlaylist' }
+    & { nodes: Maybe<Array<(
+      { __typename?: 'PlaylistTrack' }
+      & Pick<PlaylistTrack, 'trackEditionId'>
+    )>> }
+  )> }
 );
 
 export type GetUserPlaylistsQueryVariables = Exact<{
@@ -4361,6 +4369,11 @@ export const PlaylistComponentFieldsFragmentDoc = gql`
   followCount
   isFavorite
   isFollowed
+  tracks {
+    nodes {
+      trackEditionId
+    }
+  }
 }
     `;
 export const TrackComponentFieldsFragmentDoc = gql`

@@ -35,11 +35,11 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async createPlaylistTrack(trackEditionIds: string[], profileId: string, playlist: DocumentType<Playlist>) {
-    const existingTracks = await TrackModel.find({ _id: trackEditionIds }, '_id');
+    const existingTracks = await TrackModel.find({ trackEditionId: trackEditionIds }, 'trackEditionId');
 
     existingTracks.forEach(track => {
       const playlistTrack = new PlaylistTrackModel({
-        trackId: track._id,
+        trackEditionId: track.trackEditionId,
         profileId,
         playlistId: playlist.id,
       })
@@ -78,12 +78,12 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   async createPlaylistTracks(params: CreatePlaylistTracks, profileId: string): Promise<void> {
     const { trackEditionIds, playlistId } = params
 
-    const playlistTracks = trackEditionIds.map(trackId => {
+    const playlistTracks = trackEditionIds.map(trackEditionId => {
       return {
         updateOne: {
-          filter: {playlistId, trackId},
+          filter: {playlistId, trackEditionId},
           update: { $set : {
-            trackId,
+            trackEditionId,
             playlistId,
             profileId
           }},

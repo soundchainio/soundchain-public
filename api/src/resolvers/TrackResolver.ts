@@ -30,6 +30,7 @@ import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTrac
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 import { TrackPrice } from '../types/TrackPrice';
+import { FilterMultipleTracks } from '../types/FilterMultipleTracks';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -137,6 +138,7 @@ export class TrackResolver {
   ): Promise<TrackConnection> {
     return trackService.getTracks(filter, sort, page);
   }
+
 
   @Query(() => TrackConnection)
   @Authorized()

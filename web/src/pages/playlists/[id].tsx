@@ -1,6 +1,6 @@
 import { GetServerSideProps } from "next/types"
 import tw from "tailwind-styled-components"
-import { PageInfo, Playlist, PlaylistDocument, Track, TracksDocument } from "../../lib/graphql"
+import { PageInfo, Playlist, PlaylistDocument, PlaylistTrack, Track, TracksDocument } from "../../lib/graphql"
 import { cacheFor, createApolloClient } from "../../lib/apollo"
 import { ApolloQueryResult } from "@apollo/client"
 
@@ -12,6 +12,14 @@ export interface PaginateResult<T> {
   nodes: T[];
 }
 
+export interface Play<T> {
+  playlist: T;
+}
+
+export interface Tracks<T> {
+  tracks: T;
+}
+
 export const getServerSideProps: GetServerSideProps = async context => {
   const playlistId = context.params?.id
 
@@ -19,27 +27,28 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
   const apolloClient = createApolloClient(context)
 
-  const playlist: ApolloQueryResult<Playlist> = await apolloClient.query({
+  const playlist: ApolloQueryResult<Play<Tracks<PaginateResult<PlaylistTrack>>>> = await apolloClient.query({
     query: PlaylistDocument,
     variables: { id: playlistId },
     context,
   })
 
+  const ids = playlist.data.playlist.tracks.nodes.map(track => track.trackEditionId)
+
   const playlistTracks: ApolloQueryResult<PlaylistTracks<PaginateResult<Track>>> = await apolloClient.query({
     query: TracksDocument,
-    variables: { filter: {trackEditionId: '636ed67843ead0084c1d22df'}  },
+    variables: { filter: { trackEditionIds: ids }  },
     context,
   })
 
-  return cacheFor(PlaylistPage, { playlist, playlistTracks}, context, apolloClient)
+  return cacheFor(PlaylistPage, { playlist, playlistTracks }, context, apolloClient)
 }
 export interface PlaylistPageProps {
-  playlist: ApolloQueryResult<Playlist>
+  playlist: ApolloQueryResult<Play<Tracks<PaginateResult<PlaylistTrack>>>>
   playlistTracks: ApolloQueryResult<PlaylistTracks<PaginateResult<Track>>>
 }
 
 export default function PlaylistPage({ playlist, playlistTracks }: PlaylistPageProps) {
-
   return (
     <Container data-testid="playlist-container">
       <h1 className="tet-white">hi</h1>

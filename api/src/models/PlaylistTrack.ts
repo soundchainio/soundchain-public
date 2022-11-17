@@ -17,7 +17,7 @@ export class PlaylistTrack extends Model {
 
   @Field()
   @prop({ required: true })
-  trackId: string;
+  trackEditionId: string;
 }
 
 export const PlaylistTrackModel = getModelForClass(PlaylistTrack);

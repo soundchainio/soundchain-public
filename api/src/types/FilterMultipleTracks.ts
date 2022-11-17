@@ -2,16 +2,10 @@ import { Field, InputType } from 'type-graphql';
 import { NFTData } from './NFTData';
 
 @InputType()
-export class FilterTrackInput {
+export class FilterMultipleTracks {
   @Field({ nullable: true })
   profileId?: string;
 
   @Field({ nullable: true })
-  trackEditionId?: string;
-
-  @Field(() => NFTData, { nullable: true })
-  nftData: Partial<NFTData>;
-
-  @Field(() => [String], { nullable: true })
   trackEditionIds?: string[];
 }
