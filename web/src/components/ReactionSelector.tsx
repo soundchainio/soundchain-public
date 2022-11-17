@@ -6,7 +6,6 @@ import {
   useReactToPostMutation,
   useRetractReactionMutation,
 } from 'lib/graphql'
-import React from 'react'
 
 interface ReactionSelectorProps {
   postId: string
@@ -16,11 +15,11 @@ interface ReactionSelectorProps {
 }
 
 const reactionTypes = [
-  ReactionType.Heart,
-  ReactionType.Horns,
-  ReactionType.Happy,
   ReactionType.Sad,
+  ReactionType.Happy,
+  ReactionType.Horns,
   ReactionType.Sunglasses,
+  ReactionType.Heart,
 ]
 
 const baseListClasses =
