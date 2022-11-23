@@ -14,7 +14,7 @@ export const SocialMediaMenu = () => {
           </a>
         </Link>
 
-        <Link href="https://t.me/+DbHfqlVpV644ZGMx">
+        <Link href="https://t.me/DbHfqlVpV644ZGMx">
           <a target="_blank" rel="noreferrer">
             <span className="pointer-events-none flex h-12 w-12 items-center justify-center bg-[#30a2e8] transition-transform  hover:scale-[1.5] md:pointer-events-auto ">
               <FaTelegramPlane size={25} className="mr-1" />
