@@ -151,6 +151,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
           icon={InstagramSquare}
         />
       </div>
+
       {me && (
         <FollowModal
           show={showModal}
