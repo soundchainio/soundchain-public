@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Playlist, Profile } from 'lib/graphql'
 import { TrackShareButton } from 'components/TrackShareButton'
 import ReactTooltip from 'react-tooltip'
-import { FavoritePlaylistButton } from '../../FavoritePlaylistButton/FavoritePlaylistButton'
+import { FavoritePlaylistButton } from '../FavoritePlaylistButton/FavoritePlaylistButton'
 import { useEffect, useState } from 'react'
 
 interface Props {

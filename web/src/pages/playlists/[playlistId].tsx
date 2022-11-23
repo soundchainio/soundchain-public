@@ -5,7 +5,8 @@ import { ApolloQueryResult } from '@apollo/client'
 import tw from 'tailwind-styled-components'
 import { getPlaylistData, getPlaylistTracksData, getProfileData } from 'repositories/playlist'
 import { errorHandler } from 'utils/errorHandler'
-import { ImageCard } from 'components/pages/Playlist/Mobile/MainImage/ImageCard'
+import { ImageCard } from 'components/pages/Playlist/MainImage/ImageCard'
+import { PlaylistTracks } from 'components/pages/Playlist/PlaylistTracks'
 
 export interface PaginateResult<T> {
   pageInfo: PageInfo
@@ -53,6 +54,7 @@ export default function PlaylistPage({ playlistData, playlistTracksData, profile
         playlist={playlistData.data.playlist}
         playlistTracks={playlistTracksData?.data.tracks.nodes}
       />
+      {/* <PlaylistTracks playlistTracks={playlistTracksData} /> */}
     </Container>
   )
 }

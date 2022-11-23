@@ -22,39 +22,39 @@ export const ImageCard = (props: Props) => {
   const [isPlaying, setIsPlaying] = useState(false)
 
   const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
-  // const { isFollowedPlaylist, toggleFollowPlaylist, likeCount, followCount, setFollowCount } = usePlaylistContext()
+  const { isFollowedPlaylist, toggleFollowPlaylist, likeCount, followCount, setFollowCount } = usePlaylistContext()
 
-  // const followState = isFollowedPlaylist ? false : true
-  // const isFollowedButtonText = isFollowedPlaylist ? 'Unfollow' : 'Follow'
-  // const isFollowedButtonColor = isFollowedPlaylist ? 'disabled' : 'blue'
-  // const playlistDate = formatDate({ date: playlist.createdAt })
+  const followState = isFollowedPlaylist ? false : true
+  const isFollowedButtonText = isFollowedPlaylist ? 'Unfollow' : 'Follow'
+  const isFollowedButtonColor = isFollowedPlaylist ? 'disabled' : 'blue'
+  const playlistDate = formatDate({ date: playlist.createdAt })
 
-  // const handleOnPlayClicked = () => {
-  //   if (!playlistTracks) return
+  const handleOnPlayClicked = () => {
+    if (!playlistTracks) return
 
-  //   const track = playlistTracks[0]
+    const track = playlistTracks[0]
 
-  //   const list = [
-  //     {
-  //       trackId: track.id,
-  //       src: track.playbackUrl,
-  //       art: track.artworkUrl,
-  //       title: track.title,
-  //       artist: track.artist,
-  //       isFavorite: track.isFavorite,
-  //     } as Song,
-  //   ]
+    const list = [
+      {
+        trackId: track.id,
+        src: track.playbackUrl,
+        art: track.artworkUrl,
+        title: track.title,
+        artist: track.artist,
+        isFavorite: track.isFavorite,
+      } as Song,
+    ]
 
-  //   playlistState(list, 0)
-  //   isCurrentlyPlaying(track.id)
-  // }
+    playlistState(list, 0)
+    isCurrentlyPlaying(track.id)
+  }
 
-  // const handleFollowClick = () => {
-  //   const followAction = isFollowedPlaylist ? -1 : +1
+  const handleFollowClick = () => {
+    const followAction = isFollowedPlaylist ? -1 : +1
 
-  //   setFollowCount(followCount => followCount + followAction)
-  //   toggleFollowPlaylist(followState)
-  // }
+    setFollowCount(followCount => followCount + followAction)
+    toggleFollowPlaylist(followState)
+  }
 
   useEffect(() => {
     if (!playlistTracks) return
@@ -66,7 +66,7 @@ export const ImageCard = (props: Props) => {
 
   return (
     <Container>
-      {/* <InnerContainer>
+      <InnerContainer>
         <ImageContainer>
           <Asset src={playlist.artworkUrl} objectFit="contain" disableImageWave />
         </ImageContainer>
@@ -104,7 +104,7 @@ export const ImageCard = (props: Props) => {
       <Published>
         <span className="font-bold">Published</span>
         <span>{playlistDate}</span>
-      </Published> */}
+      </Published>
     </Container>
   )
 }
