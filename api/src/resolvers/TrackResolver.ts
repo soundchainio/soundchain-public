@@ -136,6 +136,7 @@ export class TrackResolver {
     @Arg('sort', { nullable: true }) sort?: SortTrackInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
+    console.log(filter)
     return trackService.getTracks(filter, sort, page);
   }
 

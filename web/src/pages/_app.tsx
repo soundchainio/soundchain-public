@@ -28,6 +28,7 @@ import 'styles/loading-ring.css'
 import 'styles/nprogress.css'
 import 'styles/track-card.css'
 import 'styles/volume-slider.css'
+import { PlaylistProvider } from 'hooks/usePlaylistContext'
 
 const WalletProvider = dynamic(import('hooks/useWalletContext'))
 const MagicProvider = dynamic(import('hooks/useMagicContext'))
@@ -64,14 +65,16 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
           <WalletProvider>
             <AudioPlayerProvider>
               <TrackProvider>
-                <HideBottomNavBarProvider>
-                  <LayoutContextProvider>
-                    <CheckBodyScroll />
-                    <Layout>
-                      <Component {...pageProps} />
-                    </Layout>
-                  </LayoutContextProvider>
-                </HideBottomNavBarProvider>
+                <PlaylistProvider>
+                  <HideBottomNavBarProvider>
+                    <LayoutContextProvider>
+                      <CheckBodyScroll />
+                      <Layout>
+                        <Component {...pageProps} />
+                      </Layout>
+                    </LayoutContextProvider>
+                  </HideBottomNavBarProvider>
+                </PlaylistProvider>
               </TrackProvider>
             </AudioPlayerProvider>
           </WalletProvider>

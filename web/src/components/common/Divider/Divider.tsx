@@ -12,5 +12,5 @@ export const Divider = (props: Props) => {
 const StyledDivider = tw.div`
   h-[2px] 
   w-full 
-  bg-[#323333]
+  bg-neutral-700
 `

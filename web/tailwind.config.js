@@ -81,6 +81,31 @@ module.exports = {
         'landing-card': 'linear-gradient(89.78deg, 30.49% 208.35%, var(--tw-gradient-stops))',
         'rainbow-gradient': 'linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%)',
         'rainbow-gradient-dark': 'linear-gradient(90deg, #1ea686 0%, #8a3fcc 25%, #ccaa02 75%, #cc4533 100%)',
+
+        // Blue Button
+        'blue-background-gradient': 'linear-gradient(76.4deg, #2A2D38 8.28%, #34383F 83.02%)',
+        'blue-border-gradient': 'linear-gradient(76.4deg, #6681C8 8.28%, #B0C8F7 83.02%)',
+        'blue-text-gradient': 'linear-gradient(76.4deg, #6681C8 8.28%, #B0C8F7 83.02%)',
+
+        // Disabled Button
+        'disabled-background-gradient': 'linear-gradient(0deg, #2A2A2A, #2A2A2A)',
+        'disabled-border-gradient': 'linear-gradient(0deg, #595959, #595959)',
+        'disabled-text-gradient': 'linear-gradient(0deg, #595959, #595959)',
+
+        // Green Button,
+        'green-border-gradient': 'linear-gradient(76.4deg, #5ABA64 8.28%, #A9D99E 83.02%)',
+        'green-background-gradient': 'linear-gradient(76.4deg, #1A261A 8.28%, #1A261A 83.02%)',
+        'green-text-gradient': 'linear-gradient(76.4deg, #5ABA64 8.28%, #A9D99E 83.02%)',
+
+        // Purple Button,
+        'purple-border-gradient': 'linear-gradient(76.4deg, #9C65E2 8.28%, #BC8DF8 83.02%)',
+        'purple-background-gradient': 'linear-gradient(76.4deg, #241A27 8.28%, #241A27 83.02%)',
+        'purple-text-gradient': 'linear-gradient(76.4deg, #9C65E2 8.28%, #BC8DF8 83.02%)',
+
+        // Rainbow Button,
+        'rainbow-border-gradient': 'linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%)',
+        'rainbow-background-gradient': 'linear-gradient(90deg, #1ea686 0%, #8a3fcc 25%, #ccaa02 75%, #cc4533 100%)',
+        'rainbow-text-gradient': 'linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 25%, #FFFFFF 75%, #FFFFFF 100%)',
       },
       colors: {
         gray: {

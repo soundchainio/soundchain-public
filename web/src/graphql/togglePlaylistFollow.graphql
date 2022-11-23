@@ -1,0 +1,6 @@
+mutation togglePlaylistFollow($playlistId: String!) {
+  togglePlaylistFollow(playlistId: $playlistId) {
+      id
+      playlistId
+  }
+}

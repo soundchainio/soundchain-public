@@ -1,88 +1,79 @@
-import { PlaylistDocument } from "../../../../lib/graphql";
+import { ApolloQueryResult } from "@apollo/client";
+import { PaginateResult } from "pages/playlists/[playlistId]";
+import { Playlist, Profile, Track } from "../../../../lib/graphql";
 
 export const mockPlaylist = {
-  id: "any_id",
+  data: {
+    playlist: {
+      id: "any_id",
       title: "any_title",
       description: "any_description",
-      artworkUrl: "any_artworkUrl",
+      artworkUrl: "any_artwork_url",
       profileId: "any_profileId",
-      createdAt: "any_createdAt",
-      deleted: "any_deleted",
-      favoriteCount: "any_favoriteCount",
-      followCount: "any_followCount",
-      isFavorite: "any_isFavorite",
-      isFollowed: "any_isFollowed",
-}
-
-export const mockPlaylistTracks = {
-  tracks: [
-    {
-      __typename: "Track",
-      id: "636ed68243ead0084c1d22e0",
-      profileId: "636d616a2433871bfdfbea0c",
-      title: "Guns 1",
-      assetUrl: "https://soundchain-api-develop-uploads.s3.us-east-1.amazonaws.com/71910692-4274-4f90-b426-4aa02d92de12",
-      artworkUrl: "https://soundchain-api-develop-uploads.s3.us-east-1.amazonaws.com/bfb7528f-6061-4481-a9bd-426d98daeec1",
-      description: "123",
-      utilityInfo: "123",
-      artist: "randal923",
-      ISRC: "",
-      artistId: "636d616a2433871bfdfbea0e",
-      artistProfileId: "636d616a2433871bfdfbea0c",
-      album: "1231",
-      releaseYear: 2022,
-      copyright: "",
-      genres: [],
-      playbackUrl: "https://stream.mux.com/xTLWnBAK33RwymXb4eei2kBD2rzHw5I2v1M2PcmeTS00.m3u8",
-      createdAt: "2022-11-11T23:10:58.432Z",
-      updatedAt: "2022-11-11T23:10:59.400Z",
+      createdAt: "any_date",
       deleted: false,
-      playbackCountFormatted: "",
-      isFavorite: false,
       favoriteCount: 0,
-      listingCount: 0,
-      playbackCount: 0,
-      saleType: "",
-      price: {
-        __typename: "TrackPrice",
-        value: 0,
-        currency: "MATIC"
-      },
-      trackEditionId: "636ed67843ead0084c1d22df",
-      editionSize: 1,
-      nftData: {
-        __typename: "NFTDataType",
-        transactionHash: "0x4d475cdcb461a820c1f533f1dffa09a8a8ddd7a66b9db5887138bebe7f3a81ab",
-        tokenId: 574,
-        contract: "0xEFdd1A20Bd6159Bf023d784c0fbE3b70580F378C",
-        minter: "0xb7824c3Bfb6dD456788CDD801Bd961a8dFF7CC09",
-        ipfsCid: "QmRigLghSoHPBM39b9VG49wmGmLm2imB9Jrszf3H8mZMDo",
-        pendingRequest: "None",
-        owner: "0xb7824c3Bfb6dD456788CDD801Bd961a8dFF7CC09",
-        pendingTime: "2022-11-11T23:10:57.874Z"
-      },
-      trackEdition: {
-        __typename: "TrackEdition",
-        id: "636ed67843ead0084c1d22df",
-        editionId: 128,
-        transactionHash: "0x3f34424482d769adfbe758944ae8cbef3e5eb9789929bc6daeba3e7c7bc22268",
-        contract: "0xEFdd1A20Bd6159Bf023d784c0fbE3b70580F378C",
-        listed: false,
-        marketplace: null,
-        editionSize: 1,
-        deleted: false,
-        createdAt: "2022-11-11T23:10:48.229Z",
-        updatedAt: "2022-11-11T23:10:59.397Z",
-        editionData: {
-          __typename: "EditionDataType",
-          pendingRequest: "None",
-          pendingTime: null,
-          pendingTrackCount: null,
-          transactionHash: "0x3f34424482d769adfbe758944ae8cbef3e5eb9789929bc6daeba3e7c7bc22268",
-          contract: "0xEFdd1A20Bd6159Bf023d784c0fbE3b70580F378C",
-          owner: "0xb7824c3Bfb6dD456788CDD801Bd961a8dFF7CC09"
-        }
+      followCount: 0,
+      isFavorite: false,
+      isFollowed: false,
+      tracks: {
+          nodes: [
+            {
+              id: 'any_track_id',
+              src: 'any_track_src',
+              art: 'any_track_art',
+              title: 'any_track_title',
+              artist: 'any_track_artist',
+              isFavorite: false,
+            }
+          ]
+
       }
     }
-  ]
-}
+  },
+} as unknown as ApolloQueryResult<{playlist: Playlist}>
+
+export const mockPlaylistTracks = {
+  data: {
+    tracks: {
+      nodes: [
+        {
+          id: 'any_track_id',
+          src: 'any_track_src',
+          art: 'any_track_art',
+          title: 'any_track_title',
+          artist: 'any_track_artist',
+          isFavorite: false,
+        }
+      ]
+    }
+  },
+} as unknown as ApolloQueryResult<{tracks: PaginateResult<Track>}>
+
+export const mockProfile = {
+  data: {
+    profile: {
+      id: "any_id",
+      displayName: "any_displayName",
+      profilePicture: "any_profilePicture",
+      coverPicture: "any_coverPicture",
+      socialMedias: "any_socialMedias",
+      favoriteGenres: "any_favoriteGenres",
+      musicianTypes: "any_musicianTypes",
+      bio: "any_bio",
+      followerCount: "any_followerCount",
+      followingCount: "any_followingCount",
+      unreadNotificationCount: "any_unreadNotificationCount",
+      unreadMessageCount: "any_unreadMessageCount",
+      verified: "any_verified",
+      magicWalletAddress: "any_magicWalletAddress",
+      badges: "any_badges",
+      createdAt: "any_createdAt",
+      updatedAt: "any_updatedAt",
+      userHandle: "any_userHandle",
+      teamMember: "any_teamMember",
+      isFollowed: "any_isFollowed",
+      isSubscriber: "any_isSubscriber",
+    }
+  }
+} as unknown as ApolloQueryResult<{profile: Profile}>

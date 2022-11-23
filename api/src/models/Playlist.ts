@@ -15,8 +15,8 @@ export class Playlist extends Model {
   @prop()
   description: string;
 
-  @Field({ nullable: true })
-  @prop()
+  @Field()
+  @prop({ required: true })
   artworkUrl: string;
 
   @Field()

@@ -1,40 +1,70 @@
-import PlaylistPage, { PlaylistPageProps } from "./[id]";
-import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
-import { GetServerSidePropsContext } from "next/types";
-import { getServerSideProps } from "./[id]";
-import { ParsedUrlQuery } from 'querystring';
-import { mockPlaylist, mockPlaylistTracks } from "components/pages/Playlist/mocks/playlist.mock";
+import '@testing-library/jest-dom'
+import { GetServerSidePropsContext } from 'next/types'
+import PlaylistPage, { getServerSideProps } from './[playlistId]'
+import { ParsedUrlQuery } from 'querystring'
+import { mockPlaylist, mockPlaylistTracks, mockProfile } from 'components/pages/Playlist/mocks/playlist.mock'
+import { getPlaylistData, getPlaylistTracksData, getProfileData } from 'repositories/playlist'
+import { mocked } from 'jest-mock'
+import { render, screen } from '@testing-library/react'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 
-const mockGetServerSideProps = jest.fn(() => Promise.resolve({ props: mockPlaylist }));
+jest.mock('repositories/playlist')
+const mockedGetPlaylistData = mocked(getPlaylistData)
+const mockedGetPlaylistTracksData = mocked(getPlaylistTracksData)
+const mockedGetProfileData = mocked(getProfileData)
 
+interface NextLink {
+  children: any
+  href: string
+}
 
-describe("Playlist", () => {
-  it("should render playlist page correctly", () => {
-    render(
-      <PlaylistPage playlist={mockPlaylist as any} playlistTracks={mockPlaylistTracks as any}/> 
-    )
+jest.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, href }: NextLink) => <children.type {...children.props} href={href} />,
+}))
 
-    expect(screen.getByTestId("playlist-container")).toBeInTheDocument();
-  });
-  
+describe('Playlist', () => {
   it('should return NOT FOUND if not playlist id is found in the url params', async () => {
-    render(
-      <PlaylistPage playlist={mockPlaylist as any} playlistTracks={mockPlaylistTracks as any}/> 
-    )
+    const context = {
+      params: {} as ParsedUrlQuery,
+    }
+    const value = await getServerSideProps(context as GetServerSidePropsContext)
+    expect(value).toEqual({ notFound: true })
+  })
+
+  it('should run getServerSideProps correctly', async () => {
+    mockedGetPlaylistData.mockResolvedValue(mockPlaylist)
+    mockedGetPlaylistTracksData.mockResolvedValue(mockPlaylistTracks)
+    mockedGetProfileData.mockResolvedValue(mockProfile)
 
     const context = {
-      params: {  } as ParsedUrlQuery
-    };
-    
-    const value = await getServerSideProps(context as GetServerSidePropsContext);
+      params: { playlistId: 'any_id' } as ParsedUrlQuery,
+      resolvedUrl: 'any_url',
+      req: {
+        url: 'any_url',
+      },
+    }
 
-    expect(value).toEqual({ notFound: true });
+    const value = await getServerSideProps(context as GetServerSidePropsContext)
+
+    const response = {
+      props: {
+        playlistData: mockPlaylist,
+        playlistTracksData: mockPlaylistTracks,
+        profileData: mockProfile,
+        cache: {},
+      },
+    }
+
+    expect(value).toStrictEqual(response)
   })
 
-  it('should return playlist data correctly', async () => {
-    const data = await mockGetServerSideProps();
+  it('should render playlist page correctly', () => {
+    jest.spyOn('hooks/useAudioPlayer', isCurrentlyPlaying)
+    render(
+      <PlaylistPage playlistData={mockPlaylist} playlistTracksData={mockPlaylistTracks} profileData={mockProfile} />,
+    )
 
-    expect(data).toEqual({ props: mockPlaylist })
+    expect(screen.getByTestId('playlist-container')).toBeInTheDocument()
   })
-});
+})

@@ -1,4 +1,3 @@
-import { GetPlaylistPayload } from './../types/GetPlaylistPayload';
 import { EditPlaylistPlayload } from './../types/EditPlaylistPlayload';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from "type-graphql";
 import { CurrentUser } from "../decorators/current-user";
@@ -11,14 +10,11 @@ import { EditPlaylistData } from '../types/EditPlaylistInput';
 import { SortPlaylistInput } from '../services/SortPlaylistInput';
 import { PageInput } from '../types/PageInput';
 import { FavoritePlaylist } from '../models/FavoritePlaylist';
-import { SortTrackField } from '../types/SortTrackField';
-import { SortOrder } from '../types/SortOrder';
-import { PaginateResult } from '../db/pagination/paginate';
 import { PlaylistTrack } from '../models/PlaylistTrack';
-import { GetTracksFromPlaylist } from '../types/GetTracksFromPlaylist';
 import { CreatePlaylistTracks } from '../types/CreatePlaylistTracks';
 import { DeletePlaylistTracks } from '../types/DeletePlaylistTracks';
 import { DeletePlaylistPayload } from '../types/DeletePlaylistPayload';
+import { GetPlaylistPayload } from '../types/GetPlaylistPayload';
 
 @Resolver(Playlist)
 export class PlaylistResolver {
@@ -144,20 +140,11 @@ export class PlaylistResolver {
     return playlistService.isFollowed(playlistId, user.profileId);
   }
 
-  @FieldResolver(() => GetTracksFromPlaylist, { nullable: true })
-  async tracks(@Ctx() { playlistService }: Context, @Root() { _id }: Playlist): Promise<PaginateResult<PlaylistTrack> | null> {
+  @FieldResolver(() => [PlaylistTrack], { nullable: true })
+  async playlistTracks(@Ctx() { playlistService }: Context, @Root() { _id }: Playlist): Promise<PlaylistTrack[]> {
     if (!_id) return null;
 
-    const page = {
-      first: 10
-    };
-
-    const sort = {
-      field:  SortTrackField.CREATED_AT,
-      order: SortOrder.DESC
-    };
-    
-    const tracks = await playlistService.getTracksFromPlaylist(_id, sort, page);
+    const tracks = await playlistService.getTracksFromPlaylist(_id);
 
     return tracks;
   }

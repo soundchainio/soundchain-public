@@ -593,12 +593,6 @@ export type GetPlaylistPayload = {
   nodes: Array<Playlist>;
 };
 
-export type GetTracksFromPlaylist = {
-  __typename?: 'GetTracksFromPlaylist';
-  pageInfo: PageInfo;
-  nodes: Maybe<Array<PlaylistTrack>>;
-};
-
 
 export type ListingItem = {
   __typename?: 'ListingItem';
@@ -1144,7 +1138,7 @@ export type Playlist = {
   id: Scalars['ID'];
   title: Scalars['String'];
   description: Maybe<Scalars['String']>;
-  artworkUrl: Maybe<Scalars['String']>;
+  artworkUrl: Scalars['String'];
   profileId: Scalars['String'];
   createdAt: Scalars['DateTime'];
   deleted: Maybe<Scalars['Boolean']>;
@@ -1152,7 +1146,7 @@ export type Playlist = {
   followCount: Scalars['Float'];
   isFavorite: Scalars['Boolean'];
   isFollowed: Scalars['Boolean'];
-  tracks: Maybe<GetTracksFromPlaylist>;
+  playlistTracks: Maybe<Array<PlaylistTrack>>;
 };
 
 export type PlaylistTrack = {
@@ -3216,13 +3210,10 @@ export type PlaylistQuery = (
 export type PlaylistComponentFieldsFragment = (
   { __typename?: 'Playlist' }
   & Pick<Playlist, 'id' | 'title' | 'description' | 'artworkUrl' | 'profileId' | 'createdAt' | 'deleted' | 'favoriteCount' | 'followCount' | 'isFavorite' | 'isFollowed'>
-  & { tracks: Maybe<(
-    { __typename?: 'GetTracksFromPlaylist' }
-    & { nodes: Maybe<Array<(
-      { __typename?: 'PlaylistTrack' }
-      & Pick<PlaylistTrack, 'trackEditionId'>
-    )>> }
-  )> }
+  & { playlistTracks: Maybe<Array<(
+    { __typename?: 'PlaylistTrack' }
+    & Pick<PlaylistTrack, 'id' | 'playlistId' | 'profileId' | 'trackEditionId'>
+  )>> }
 );
 
 export type GetUserPlaylistsQueryVariables = Exact<{
@@ -3581,6 +3572,19 @@ export type ToggleFavoriteMutation = (
       { __typename?: 'FavoriteProfileTrack' }
       & Pick<FavoriteProfileTrack, 'id' | 'trackId' | 'profileId'>
     ) }
+  ) }
+);
+
+export type TogglePlaylistFavoriteMutationVariables = Exact<{
+  playlistId: Scalars['String'];
+}>;
+
+
+export type TogglePlaylistFavoriteMutation = (
+  { __typename?: 'Mutation' }
+  & { togglePlaylistFavorite: (
+    { __typename?: 'FavoritePlaylist' }
+    & Pick<FavoritePlaylist, 'id' | 'playlistId' | 'profileId'>
   ) }
 );
 
@@ -4061,6 +4065,19 @@ export type WonAuctionNotificationFieldsFragment = (
   & Pick<WonAuctionNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
 );
 
+export type TogglePlaylistFollowMutationVariables = Exact<{
+  playlistId: Scalars['String'];
+}>;
+
+
+export type TogglePlaylistFollowMutation = (
+  { __typename?: 'Mutation' }
+  & { togglePlaylistFollow: (
+    { __typename?: 'FavoritePlaylist' }
+    & Pick<FavoritePlaylist, 'id' | 'playlistId'>
+  ) }
+);
+
 export const AuctionEndedNotificationFieldsFragmentDoc = gql`
     fragment AuctionEndedNotificationFields on AuctionEndedNotification {
   id
@@ -4369,10 +4386,11 @@ export const PlaylistComponentFieldsFragmentDoc = gql`
   followCount
   isFavorite
   isFollowed
-  tracks {
-    nodes {
-      trackEditionId
-    }
+  playlistTracks {
+    id
+    playlistId
+    profileId
+    trackEditionId
   }
 }
     `;
@@ -7665,6 +7683,41 @@ export function useToggleFavoriteMutation(baseOptions?: Apollo.MutationHookOptio
 export type ToggleFavoriteMutationHookResult = ReturnType<typeof useToggleFavoriteMutation>;
 export type ToggleFavoriteMutationResult = Apollo.MutationResult<ToggleFavoriteMutation>;
 export type ToggleFavoriteMutationOptions = Apollo.BaseMutationOptions<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>;
+export const TogglePlaylistFavoriteDocument = gql`
+    mutation togglePlaylistFavorite($playlistId: String!) {
+  togglePlaylistFavorite(playlistId: $playlistId) {
+    id
+    playlistId
+    profileId
+  }
+}
+    `;
+export type TogglePlaylistFavoriteMutationFn = Apollo.MutationFunction<TogglePlaylistFavoriteMutation, TogglePlaylistFavoriteMutationVariables>;
+
+/**
+ * __useTogglePlaylistFavoriteMutation__
+ *
+ * To run a mutation, you first call `useTogglePlaylistFavoriteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useTogglePlaylistFavoriteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [togglePlaylistFavoriteMutation, { data, loading, error }] = useTogglePlaylistFavoriteMutation({
+ *   variables: {
+ *      playlistId: // value for 'playlistId'
+ *   },
+ * });
+ */
+export function useTogglePlaylistFavoriteMutation(baseOptions?: Apollo.MutationHookOptions<TogglePlaylistFavoriteMutation, TogglePlaylistFavoriteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<TogglePlaylistFavoriteMutation, TogglePlaylistFavoriteMutationVariables>(TogglePlaylistFavoriteDocument, options);
+      }
+export type TogglePlaylistFavoriteMutationHookResult = ReturnType<typeof useTogglePlaylistFavoriteMutation>;
+export type TogglePlaylistFavoriteMutationResult = Apollo.MutationResult<TogglePlaylistFavoriteMutation>;
+export type TogglePlaylistFavoriteMutationOptions = Apollo.BaseMutationOptions<TogglePlaylistFavoriteMutation, TogglePlaylistFavoriteMutationVariables>;
 export const TrackDocument = gql`
     query Track($id: String!) {
   track(id: $id) {
@@ -8692,3 +8745,37 @@ export function useWhitelistEntryByWalletLazyQuery(baseOptions?: Apollo.LazyQuer
 export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletQuery>;
 export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
 export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;
+export const TogglePlaylistFollowDocument = gql`
+    mutation togglePlaylistFollow($playlistId: String!) {
+  togglePlaylistFollow(playlistId: $playlistId) {
+    id
+    playlistId
+  }
+}
+    `;
+export type TogglePlaylistFollowMutationFn = Apollo.MutationFunction<TogglePlaylistFollowMutation, TogglePlaylistFollowMutationVariables>;
+
+/**
+ * __useTogglePlaylistFollowMutation__
+ *
+ * To run a mutation, you first call `useTogglePlaylistFollowMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useTogglePlaylistFollowMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [togglePlaylistFollowMutation, { data, loading, error }] = useTogglePlaylistFollowMutation({
+ *   variables: {
+ *      playlistId: // value for 'playlistId'
+ *   },
+ * });
+ */
+export function useTogglePlaylistFollowMutation(baseOptions?: Apollo.MutationHookOptions<TogglePlaylistFollowMutation, TogglePlaylistFollowMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<TogglePlaylistFollowMutation, TogglePlaylistFollowMutationVariables>(TogglePlaylistFollowDocument, options);
+      }
+export type TogglePlaylistFollowMutationHookResult = ReturnType<typeof useTogglePlaylistFollowMutation>;
+export type TogglePlaylistFollowMutationResult = Apollo.MutationResult<TogglePlaylistFollowMutation>;
+export type TogglePlaylistFollowMutationOptions = Apollo.BaseMutationOptions<TogglePlaylistFollowMutation, TogglePlaylistFollowMutationVariables>;

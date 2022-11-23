@@ -98,10 +98,10 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   async deletePlaylistTracks(params: DeletePlaylistTracks, profileId: string): Promise<PlaylistTrack> {
     const { trackEditionIds, playlistId } = params
 
-    const playlistTracks = trackEditionIds.map(trackId => {
+    const playlistTracks = trackEditionIds.map(trackEditionId => {
       return {
         deleteOne: {
-          filter: { playlistId, trackId, profileId},
+          filter: { playlistId, trackEditionId, profileId},
         }
       }
     })
@@ -194,14 +194,12 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     });
   }
 
-  getTracksFromPlaylist(
+  async getTracksFromPlaylist(
     playlistId: string,
-    sort?: any,
-    page?: PageInput
-  ): Promise<PaginateResult<PlaylistTrack>> {
-    const filter = { playlistId };
+  ): Promise<PlaylistTrack[]> {
+    const playlistTracks = await PlaylistTrackModel.find({ playlistId: playlistId })
 
-    return paginate(PlaylistTrackModel,{ filter: { ...filter }, sort, page });
+    return playlistTracks
   }
   
 }

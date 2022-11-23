@@ -1,0 +1,7 @@
+mutation togglePlaylistFavorite($playlistId: String!) {
+  togglePlaylistFavorite(playlistId: $playlistId) {
+    id
+    playlistId
+    profileId
+  }
+}

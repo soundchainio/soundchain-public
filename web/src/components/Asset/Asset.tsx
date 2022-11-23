@@ -41,7 +41,7 @@ const Asset = (props: AssetProps) => {
   }
 
   return (
-    <ImageContainer disableImageWave={disableImageWave}>
+    <ImageContainer $disableImageWave={disableImageWave}>
       <Image
         src={src || '/default-pictures/album-artwork.png'}
         alt=""
@@ -57,12 +57,12 @@ const Asset = (props: AssetProps) => {
 
 export default Asset
 
-const ImageContainer = tw.div<{ disableImageWave?: boolean }>`
+const ImageContainer = tw.div<{ $disableImageWave?: boolean }>`
   to-gray-70 
   relative 
   h-full 
   w-full 
 
-  ${({ disableImageWave }) =>
-    disableImageWave ? '' : 'animate-wave  bg-opacity-80 bg-gradient-to-r from-black via-gray-40 bg-wave-size'}
+  ${({ $disableImageWave }) =>
+    $disableImageWave ? '' : 'animate-wave  bg-opacity-80 bg-gradient-to-r from-black via-gray-40 bg-wave-size'}
 `

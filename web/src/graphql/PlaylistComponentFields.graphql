@@ -10,9 +10,10 @@ fragment PlaylistComponentFields on Playlist {
     followCount
     isFavorite
     isFollowed
-    tracks {
-        nodes {
-            trackEditionId
-        }
+    playlistTracks {
+        id
+        playlistId
+        profileId
+        trackEditionId
     }
 }
