@@ -17,13 +17,13 @@ import { useMemo } from 'react'
 import isBrowser from '../isBrowser'
 import { cacheConfig } from './cache-config'
 import { FakeRouter } from './fake-router'
-import fetch from 'cross-fetch';
+import fetch from 'cross-fetch'
 
 const jwtKey = 'token'
 
 let jwt = (isBrowser && Cookies.get(jwtKey)) || undefined
 
-const httpLink = createHttpLink({ uri: config.apiUrl ?? 'http://localhost:4000/graphql', fetch})
+const httpLink = createHttpLink({ uri: config.apiUrl ?? 'http://localhost:4000/graphql', fetch })
 
 export function createApolloClient(context?: GetServerSidePropsContext) {
   const authLink = setContext(() => {

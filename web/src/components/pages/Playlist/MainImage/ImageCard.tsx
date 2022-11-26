@@ -60,7 +60,7 @@ export const ImageCard = (props: Props) => {
     if (!playlistTracks) return
 
     const track = playlistTracks[0]
-    console.log(isCurrentlyPlaying)
+
     setIsPlaying(isCurrentlyPlaying(track.id))
   }, [isCurrentlyPlaying, setIsPlaying, playlistTracks])
 
@@ -78,7 +78,7 @@ export const ImageCard = (props: Props) => {
         />
       </InnerContainer>
 
-      <Button color={isFollowedButtonColor} text={isFollowedButtonText} onClick={handleFollowClick} />
+      <Button color={isFollowedButtonColor} text={isFollowedButtonText} onClick={handleFollowClick} buttonType="text" />
       <MetricsContainer>
         <Metric>
           <MetricTitle>{playlist?.playlistTracks?.length || 0}</MetricTitle>

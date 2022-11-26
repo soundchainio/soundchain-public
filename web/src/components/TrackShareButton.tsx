@@ -8,14 +8,15 @@ type Props = {
   trackId: string
   title?: string | null
   artist?: string | null
-  position?: 'top-right'
+  position?: 'top-right' | 'top-left' | 'bottom-left'
   height?: number
   width?: number
   color?: string
+  label?: boolean
 }
 
 export const TrackShareButton = (props: Props) => {
-  const { trackId, title, artist, position, height = 18, width = 18, color } = props
+  const { trackId, title, artist, position, height = 18, width = 18, color, label = false } = props
 
   const { dispatchShowPostModal, dispatchShowAudioPlayerModal } = useModalDispatch()
 
@@ -46,10 +47,13 @@ export const TrackShareButton = (props: Props) => {
   }
 
   return (
-    <div className="relative flex items-center">
+    <div className="flex items-center">
       <Menu>
-        <Menu.Button aria-label="Share" className="flex h-10 w-10 items-center justify-center text-gray-80">
-          <ShareIcon width={width} height={height} color={color || ''} />
+        <Menu.Button aria-label="Share" className="">
+          <div className="flex items-center gap-4">
+            <ShareIcon width={width} height={height} color={color || ''} />
+            {label && <h3>Share</h3>}
+          </div>
         </Menu.Button>
         <Transition
           as={Fragment}
@@ -96,6 +100,10 @@ const getPosition = (position: Props['position']) => {
   switch (position) {
     case 'top-right':
       return 'bottom-5 left-5'
+    case 'top-left':
+      return 'top-10 left-0'
+    case 'bottom-left':
+      return 'bottom-[65px] left-3'
     default:
       return 'top-8 right-0'
   }

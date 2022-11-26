@@ -3226,7 +3226,14 @@ export type GetUserPlaylistsQuery = (
   { __typename?: 'Query' }
   & { getUserPlaylists: (
     { __typename?: 'GetPlaylistPayload' }
-    & { pageInfo: (
+    & { nodes: Array<(
+      { __typename?: 'Playlist' }
+      & Pick<Playlist, 'title'>
+      & { playlistTracks: Maybe<Array<(
+        { __typename?: 'PlaylistTrack' }
+        & Pick<PlaylistTrack, 'trackEditionId'>
+      )>> }
+    )>, pageInfo: (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
     ) }
@@ -6869,6 +6876,12 @@ export type PlaylistQueryResult = Apollo.QueryResult<PlaylistQuery, PlaylistQuer
 export const GetUserPlaylistsDocument = gql`
     query GetUserPlaylists($sort: SortPlaylistInput, $page: PageInput) {
   getUserPlaylists(sort: $sort, page: $page) {
+    nodes {
+      title
+      playlistTracks {
+        trackEditionId
+      }
+    }
     pageInfo {
       hasNextPage
       endCursor

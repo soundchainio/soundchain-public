@@ -22,7 +22,7 @@ import InfiniteLoader from 'react-window-infinite-loader'
 interface ViewProps {
   loading: boolean
   loadMore: () => void
-  refetch: () => Promise<
+  refetch?: () => Promise<
     ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery | FavoriteTracksQuery | FollowedArtistsQuery>
   >
   hasNextPage?: boolean
@@ -65,41 +65,45 @@ export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBa
       ) : !tracks ? (
         <NoResultFound type="items" />
       ) : (
-        <AutoSizer>
-          {({ height, width }) => (
-            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={tracksCount} loadMoreItems={loadMoreItems}>
-              {({ onItemsRendered, ref }) => (
-                <List
-                  height={height}
-                  width={width}
-                  onItemsRendered={onItemsRendered}
-                  className="no-scrollbars"
-                  ref={ref}
-                  itemCount={tracksCount}
-                  itemSize={145}
-                  itemData={tracks}
-                >
-                  {memo(
-                    ({ data, index, style }) => (
-                      <div style={style}>
-                        {!isItemLoaded(index) ? (
-                          <LoaderAnimation loadingMessage="Loading..." />
-                        ) : (
-                          <TrackItem
-                            hideBadgeAndPrice={displaySaleBadge}
-                            key={data[index].id}
-                            track={data[index] as TrackQuery['track']}
-                            handleOnPlayClicked={() => handleOnPlayClicked(index)}
-                          />
-                        )}
-                      </div>
-                    ),
-                    areEqual,
-                  )}
-                </List>
-              )}
-            </InfiniteLoader>
-          )}
+        <AutoSizer defaultHeight={300} defaultWidth={300}>
+          {({ height, width }) => {
+            console.log('height', height)
+            console.log('width', width)
+            return (
+              <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={tracksCount} loadMoreItems={loadMoreItems}>
+                {({ onItemsRendered, ref }) => (
+                  <List
+                    height={height}
+                    width={width}
+                    onItemsRendered={onItemsRendered}
+                    className="no-scrollbars"
+                    ref={ref}
+                    itemCount={tracksCount}
+                    itemSize={145}
+                    itemData={tracks}
+                  >
+                    {memo(
+                      ({ data, index, style }) => (
+                        <div style={style}>
+                          {!isItemLoaded(index) ? (
+                            <LoaderAnimation loadingMessage="Loading..." />
+                          ) : (
+                            <TrackItem
+                              hideBadgeAndPrice={displaySaleBadge}
+                              key={data[index].id}
+                              track={data[index] as TrackQuery['track']}
+                              handleOnPlayClicked={() => handleOnPlayClicked(index)}
+                            />
+                          )}
+                        </div>
+                      ),
+                      areEqual,
+                    )}
+                  </List>
+                )}
+              </InfiniteLoader>
+            )
+          }}
         </AutoSizer>
       )}
     </>

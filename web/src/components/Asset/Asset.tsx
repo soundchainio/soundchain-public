@@ -8,10 +8,12 @@ interface AssetProps {
   sizes?: string
   objectFit?: 'contain' | 'cover'
   disableImageWave?: boolean
+  imageClassname?: string
+  icon?: JSX.Element
 }
 
 const Asset = (props: AssetProps) => {
-  const { src, sizes, objectFit = 'cover', disableImageWave } = props
+  const { src, sizes, objectFit = 'cover', disableImageWave, imageClassname } = props
 
   const isLocalFile = src?.startsWith('blob:')
   const { data } = useMimeTypeQuery({
@@ -46,7 +48,7 @@ const Asset = (props: AssetProps) => {
         src={src || '/default-pictures/album-artwork.png'}
         alt=""
         layout="fill"
-        className="m-auto object-cover"
+        className={`m-auto object-cover ${imageClassname}`}
         priority
         sizes={sizes}
         objectFit={objectFit}

@@ -1,22 +1,41 @@
 import tw from 'tailwind-styled-components'
 import { ComponentProps } from 'react'
 import { SpinAnimation } from '../SpinAnimation'
+import { CurrencyType } from 'lib/graphql'
+import { Matic } from 'icons/Matic'
+import { Logo as OgunIcon } from 'icons/Logo'
 
-type Colors = 'blue' | 'green' | 'disabled' | 'rainbow' | 'purple'
+type Colors = 'blue' | 'green' | 'disabled' | 'rainbow' | 'purple' | 'yellow'
 
 interface ButtonProps extends ComponentProps<'button'> {
   color: Colors
-  text: string
+  buttonType: 'text' | 'currency'
+  currency?: {
+    type?: CurrencyType
+    value?: number
+  }
+  text?: string
   isLoading?: boolean
 }
 
 export const Button = (props: ButtonProps) => {
-  const { color, text, isLoading = false, ...rest } = props
+  const { color, text, isLoading = false, buttonType, currency, ...rest } = props
 
   return (
     <Border color={color}>
       <ButtonContainer color={color} {...rest}>
-        <Text color={color}>{isLoading ? <SpinAnimation /> : text}</Text>
+        {buttonType === 'text' || !currency ? (
+          <Text color={color}>{isLoading ? <SpinAnimation /> : text}</Text>
+        ) : (
+          <Currency>
+            <Buy>BUY</Buy>
+            <span className="flex items-center justify-center gap-2">
+              <Value>{isLoading ? <SpinAnimation /> : currency.value}</Value>
+              {currency.type === CurrencyType.Matic && <Matic className="mb-[2px] h-4 w-4" />}
+              {currency.type === CurrencyType.Ogun && <OgunIcon className="h-4 w-4" />}
+            </span>
+          </Currency>
+        )}
       </ButtonContainer>
     </Border>
   )
@@ -27,11 +46,13 @@ const Border = tw.div<{ color: Colors }>`
   rounded-lg
   p-[2px]
   w-full
-  
-  ${({ color }) => color === 'blue' && 'bg-blue-border-gradient'}
-  ${({ color }) => color === 'disabled' && 'bg-disabled-border-gradient'}
-  ${({ color }) => color === 'green' && 'bg-green-border-gradient'}
-  ${({ color }) => color === 'purple' && 'bg-purple-border-gradient'}
+  border-2
+
+  ${({ color }) => color === 'blue' && 'border-blue-300'}
+  ${({ color }) => color === 'disabled' && 'border-neutral-500'}
+  ${({ color }) => color === 'green' && 'border-green-400'}
+  ${({ color }) => color === 'purple' && 'border-fuchsia-500'}
+  ${({ color }) => color === 'purple' && 'border-yellow-400'}
   ${({ color }) => color === 'rainbow' && 'bg-rainbow-border-gradient'}
 `
 const ButtonContainer = tw.button<{ color: Colors }>`
@@ -39,26 +60,45 @@ const ButtonContainer = tw.button<{ color: Colors }>`
   w-full
   h-full
   p-2
+  bg-transparent
 
-  ${({ color }) => color === 'blue' && 'bg-blue-background-gradient'}
-  ${({ color }) => color === 'disabled' && 'bg-disabled-background-gradient'}
-  ${({ color }) => color === 'green' && 'bg-green-background-gradient'}
-  ${({ color }) => color === 'purple' && 'bg-purple-background-gradient'}
-  ${({ color }) => color === 'rainbow' && 'bg-rainbow-background-gradient'}
+  ${({ color }) => color === 'blue' && 'hover:bg-blue-300'}
+  ${({ color }) => color === 'disabled' && 'hover:bg-neutral-500'}
+  ${({ color }) => color === 'green' && 'hover:bg-green-400'}
+  ${({ color }) => color === 'purple' && 'hover:bg-fuchsia-500'}
+  ${({ color }) => color === 'purple' && 'hover:bg-yellow-400'}
+  ${({ color }) => color === 'rainbow' && 'hover:bg-rainbow-background-gradient'}
 `
 const Text = tw.span<{ color: Colors }>`
-  text-transparent
-  bg-clip-text
-  font-black
+  font-bold
   text-lg
   flex
   items-center
   justify-center
   h-[30px]
+  tracking-wide
 
-  ${({ color }) => color === 'blue' && 'bg-blue-text-gradient'}
-  ${({ color }) => color === 'disabled' && 'bg-disabled-text-gradient'}
-  ${({ color }) => color === 'green' && 'bg-green-text-gradient'}
-  ${({ color }) => color === 'purple' && 'bg-purple-text-gradient'}
-  ${({ color }) => color === 'rainbow' && 'bg-rainbow-text-gradient'}
+  ${({ color }) => color === 'blue' && 'text-blue-300'}
+  ${({ color }) => color === 'disabled' && 'text-neutral-500'}
+  ${({ color }) => color === 'green' && 'text-green-400'}
+  ${({ color }) => color === 'purple' && 'text-fuchsia-500'}
+  ${({ color }) => color === 'purple' && 'text-yellow-500'}
+  ${({ color }) => color === 'rainbow' && 'text-transparent bg-clip-text font-blackbg-rainbow-text-gradient'}
+`
+
+const Currency = tw.div`
+  flex
+  items-center
+  justify-center
+  gap-3
+`
+
+const Value = tw.span`
+  text-white
+  font-bold
+  overflow-hidden
+`
+const Buy = tw.h2`
+  text-green-400
+  font-bold
 `
