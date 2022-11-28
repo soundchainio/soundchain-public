@@ -1,6 +1,5 @@
 import { GetServerSideProps } from 'next/types'
 import { PageInfo, Playlist, PlaylistTrack, Profile, Track } from '../../lib/graphql'
-import { cacheFor, createApolloClient } from '../../lib/apollo'
 import { ApolloQueryResult } from '@apollo/client'
 import tw from 'tailwind-styled-components'
 import { getPlaylistData, getPlaylistTracksData, getProfileData } from 'repositories/playlist'
@@ -22,6 +21,8 @@ export const getServerSideProps: GetServerSideProps = async context => {
     if (!playlistId || Array.isArray(playlistId)) return { notFound: true }
 
     const playlistData = await getPlaylistData({ context, playlistId })
+
+    if (!playlistData) return { notFound: true }
 
     const trackEditionIds = playlistData?.data?.playlist?.playlistTracks?.map(
       (track: PlaylistTrack) => track.trackEditionId,

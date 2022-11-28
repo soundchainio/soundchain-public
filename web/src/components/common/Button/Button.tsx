@@ -46,27 +46,26 @@ const Border = tw.div<{ color: Colors }>`
   rounded-lg
   p-[2px]
   w-full
-  border-2
 
-  ${({ color }) => color === 'blue' && 'border-blue-300'}
-  ${({ color }) => color === 'disabled' && 'border-neutral-500'}
-  ${({ color }) => color === 'green' && 'border-green-400'}
-  ${({ color }) => color === 'purple' && 'border-fuchsia-500'}
-  ${({ color }) => color === 'purple' && 'border-yellow-400'}
-  ${({ color }) => color === 'rainbow' && 'bg-rainbow-border-gradient'}
+
+  ${({ color }) => color === 'blue' && 'bg-blue-300'}
+  ${({ color }) => color === 'disabled' && 'bg-neutral-500'}
+  ${({ color }) => color === 'green' && 'bg-green-400'}
+  ${({ color }) => color === 'purple' && 'bg-fuchsia-500'}
+  ${({ color }) => color === 'purple' && 'bg-yellow-400'}
+  ${({ color }) => color === 'rainbow' && 'bg-rainbow-bg-gradient'}
 `
 const ButtonContainer = tw.button<{ color: Colors }>`
   rounded-lg
   w-full
   h-full
   p-2
-  bg-transparent
+  bg-neutral-800
 
-  ${({ color }) => color === 'blue' && 'hover:bg-blue-300'}
-  ${({ color }) => color === 'disabled' && 'hover:bg-neutral-500'}
-  ${({ color }) => color === 'green' && 'hover:bg-green-400'}
-  ${({ color }) => color === 'purple' && 'hover:bg-fuchsia-500'}
-  ${({ color }) => color === 'purple' && 'hover:bg-yellow-400'}
+  ${({ color }) => color === 'blue' && 'hover:bg-blue-background-gradient'}
+  ${({ color }) => color === 'disabled' && 'hover:bg-disabled-background-gradient'}
+  ${({ color }) => color === 'green' && 'hover:bg-green-background-gradient'}
+  ${({ color }) => color === 'purple' && 'hover:bg-purple-background-gradient'}
   ${({ color }) => color === 'rainbow' && 'hover:bg-rainbow-background-gradient'}
 `
 const Text = tw.span<{ color: Colors }>`
