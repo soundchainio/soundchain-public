@@ -1,5 +1,6 @@
 import { PositioningPortal } from '@codastic/react-positioning-portal'
 import { MusicNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/outline'
+import { ClearInputButton } from 'components/common/Buttons/ClearInputButton'
 import { BaseEmoji, Picker } from 'emoji-mart'
 import { Bandcamp } from 'icons/Bandcamp'
 import { Edit } from 'icons/Edit'
@@ -17,13 +18,15 @@ import { MediaLink } from './PostLinkInput'
 
 export const PostFormTimeline = () => {
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
-  const [postBody, setPostBody] = useState<string>('')
+  const [postBody, setPostBody] = useState('')
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false)
   const [isMusicLinkVisible, setMusicLinkVisible] = useState(false)
   const [isVideoLinkVisible, setVideoLinkVisible] = useState(false)
   const [isPreviewVisible, setPreviewVisible] = useState(false)
   const [link, setLink] = useState<MediaLink>()
   const postMaxLength = 500
+  const soundProviders = [MediaProvider.BANDCAMP, MediaProvider.SPOTIFY, MediaProvider.SOUNDCLOUD]
+  const videoProviders = [MediaProvider.YOUTUBE, MediaProvider.VIMEO]
 
   const onPostSubmit = async () => {
     if (postBody.length > postMaxLength) {
@@ -35,8 +38,14 @@ export const PostFormTimeline = () => {
 
     if (link && link.value) newPostParams.mediaLink = link.value
 
-    await createPost({ variables: { input: newPostParams } })
-    toast.success(`Post successfully created.`)
+    try {
+      await createPost({ variables: { input: newPostParams } })
+      toast.success(`Post successfully created.`)
+    } catch (error) {
+      // good to log the error here on console in case the transaction can't be seen in sentry
+      console.log(error)
+      toast.error('We were unable to create your Post, try again in a few.')
+    }
   }
 
   const onTextAreaChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -78,16 +87,16 @@ export const PostFormTimeline = () => {
   }
 
   const onSaveClick = async () => {
-    if (link?.value) {
-      const normalizedLink = await getNormalizedLink(link.value)
-      setLink({
-        type: link?.type,
-        value: normalizedLink,
-      })
-      setMusicLinkVisible(false)
-      setVideoLinkVisible(false)
-      setPreviewVisible(true)
-    }
+    if (!link?.value) return
+
+    const normalizedLink = await getNormalizedLink(link.value)
+    setLink({
+      type: link?.type,
+      value: normalizedLink,
+    })
+    setMusicLinkVisible(false)
+    setVideoLinkVisible(false)
+    setPreviewVisible(true)
   }
 
   const cancelPreviewClick = () => {
@@ -98,13 +107,11 @@ export const PostFormTimeline = () => {
   }
 
   const editPreviewClick = () => {
-    const soundProviders = [MediaProvider.BANDCAMP, MediaProvider.SPOTIFY, MediaProvider.SOUNDCLOUD]
-    const videoProviders = [MediaProvider.YOUTUBE, MediaProvider.VIMEO]
+    if (!link?.type) return
+
     setPreviewVisible(false)
-    if (link?.type) {
-      if (soundProviders.includes(link.type)) setMusicLinkVisible(true)
-      if (videoProviders.includes(link.type)) setVideoLinkVisible(true)
-    }
+    if (soundProviders.includes(link.type)) setMusicLinkVisible(true)
+    if (videoProviders.includes(link.type)) setVideoLinkVisible(true)
   }
 
   return (
@@ -206,18 +213,6 @@ export const PostFormTimeline = () => {
         </div>
       )}
     </div>
-  )
-}
-
-interface ClearInputButtonProps {
-  resetLink: () => void
-}
-
-const ClearInputButton = ({ resetLink }: ClearInputButtonProps) => {
-  return (
-    <button className="w-6" aria-label="Close" onClick={resetLink}>
-      <XCircleIcon className="w-6" stroke="#737373" />
-    </button>
   )
 }
 
