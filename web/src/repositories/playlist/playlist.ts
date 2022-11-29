@@ -1,5 +1,13 @@
 import { apolloClient, createApolloClient } from 'lib/apollo'
-import { GetUserPlaylistsDocument, PlaylistDocument, ProfileDocument, TracksDocument } from 'lib/graphql'
+import {
+  DeletePlaylistTracksDocument,
+  GetPlaylistTracksDocument,
+  GetUserPlaylistsDocument,
+  PlaylistDocument,
+  PlaylistTrack,
+  ProfileDocument,
+  TracksDocument,
+} from 'lib/graphql'
 import { GetServerSidePropsContext, PreviewData } from 'next'
 import { ParsedUrlQuery } from 'querystring'
 import { Playlist, Profile, Track } from 'lib/graphql'
@@ -108,6 +116,50 @@ export const getUserPlaylists = async () => {
     })
 
     return userPlaylists
+  } catch (error) {
+    errorHandler(error)
+  }
+}
+
+export interface GetPlaylistTracksParams {
+  playlistId: string
+  trackEditionId: string
+}
+
+export type GetPlaylistTracksReturn = ApolloQueryResult<{ getPlaylistTracks: PlaylistTrack[] }>
+
+export const getPlaylistTracks = async (params: GetPlaylistTracksParams) => {
+  try {
+    const { playlistId, trackEditionId } = params
+
+    const playlistTracks: GetPlaylistTracksReturn = await apolloClient.query({
+      query: GetPlaylistTracksDocument,
+      variables: { input: { playlistId, trackEditionId } },
+    })
+
+    return playlistTracks.data.getPlaylistTracks
+  } catch (error) {
+    errorHandler(error)
+  }
+}
+
+export interface RemoveTrackFromPlaylistParams {
+  playlistId: string
+  trackEditionIds: string[]
+}
+
+// export type GetPlaylistTracksReturn = ApolloQueryResult<{ getPlaylistTracks: PlaylistTrack[] }>
+
+export const removeTrackFromPlaylist = async (params: RemoveTrackFromPlaylistParams) => {
+  try {
+    const { playlistId, trackEditionIds } = params
+
+    const removedTrack = await apolloClient.mutate({
+      mutation: DeletePlaylistTracksDocument,
+      variables: { input: { playlistId, trackEditionIds: trackEditionIds } },
+    })
+
+    return removedTrack.data
   } catch (error) {
     errorHandler(error)
   }

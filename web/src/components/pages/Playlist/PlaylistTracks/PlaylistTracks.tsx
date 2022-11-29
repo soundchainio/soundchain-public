@@ -9,29 +9,34 @@ import { TrackShareButton } from 'components/TrackShareButton'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
 import { CurrencyType, Playlist, Profile, Track } from 'lib/graphql'
-import { PaginateResult } from 'pages/playlists/[playlistId]'
+import { PaginateResult, PlaylistData, PlaylistTracksData, ProfileData } from 'pages/playlists/[playlistId]'
 import tw from 'tailwind-styled-components'
 import { PlaylistTrackPlayerControls } from '../MainImage/PlaylistTrackPlayerControls'
 import { TbPlaylistX, TbPlaylistAdd } from 'react-icons/tb'
 import { TrackMenu } from './TrackMenu'
+import { useState } from 'react'
 
 interface PlaylistTracksProps {
-  playlistData: ApolloQueryResult<{
+  playlistTrackData: ApolloQueryResult<{
     tracks: PaginateResult<Track>
   }>
   isGrid?: boolean
   playlist: Playlist
   profile: Profile
   userPlaylists?: Playlist[]
+  setPlaylistData: React.Dispatch<React.SetStateAction<PlaylistData>>
+  setProfileData: React.Dispatch<React.SetStateAction<ProfileData>>
+  setPlaylistTracksData: React.Dispatch<React.SetStateAction<PlaylistTracksData>> | null
 }
 
 export const PlaylistTracks = (props: PlaylistTracksProps) => {
-  const { playlistData, profile, playlist, userPlaylists } = props
+  const { playlistTrackData, profile, playlist, userPlaylists, setPlaylistTracksData } = props
 
-  const { data, loading } = playlistData
+  const { data, loading } = playlistTrackData
 
   const { nodes, pageInfo } = data.tracks
 
+  const [showTrackMenu, setShowTrackMenu] = useState(false)
   const isPlaying = false
 
   const handleOnPlayClicked = () => {
@@ -59,12 +64,16 @@ export const PlaylistTracks = (props: PlaylistTracksProps) => {
               <ArtistName>{track.artist}</ArtistName>
             </Details>
 
-            <EllipsisButton>
+            <EllipsisButton setShowTrackMenu={setShowTrackMenu} showTrackMenu={showTrackMenu}>
               <TrackMenu
                 track={track}
                 isPlaying={isPlaying}
                 handleOnPlayClicked={handleOnPlayClicked}
                 userPlaylists={userPlaylists}
+                currentPlaylist={playlist}
+                setShowTrackMenu={setShowTrackMenu}
+                setPlaylistTracksData={setPlaylistTracksData}
+                playlistTrackData={playlistTrackData}
               />
             </EllipsisButton>
           </TrackContainer>

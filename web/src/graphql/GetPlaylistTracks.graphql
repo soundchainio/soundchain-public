@@ -1,0 +1,7 @@
+query getPlaylistTracks($input: GetPlaylistTracks!) {
+  getPlaylistTracks(input: $input) {
+    id
+    playlistId
+    trackEditionId
+  }
+}

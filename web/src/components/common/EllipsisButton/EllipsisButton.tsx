@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { MobileModal } from './MobileModal'
 
 const ellipsisSvg = () => {
@@ -14,21 +14,17 @@ const ellipsisSvg = () => {
 
 interface EllipsisButtonProps {
   children: React.ReactNode
+  setShowTrackMenu: React.Dispatch<React.SetStateAction<boolean>>
+  showTrackMenu: boolean
 }
 
 export const EllipsisButton = (props: EllipsisButtonProps) => {
-  const { children } = props
-
-  const [show, setShow] = useState(false)
-
-  const closeModal = () => {
-    setShow(false)
-  }
+  const { children, setShowTrackMenu, showTrackMenu } = props
 
   return (
     <>
-      <div onClick={() => setShow(true)}>{ellipsisSvg()}</div>
-      <MobileModal open={show} close={closeModal}>
+      <div onClick={() => setShowTrackMenu(true)}>{ellipsisSvg()}</div>
+      <MobileModal open={showTrackMenu} close={setShowTrackMenu as () => void}>
         {children}
       </MobileModal>
     </>

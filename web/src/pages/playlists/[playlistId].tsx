@@ -8,6 +8,7 @@ import { ImageCard } from 'components/pages/Playlist/MainImage/ImageCard'
 import { PlaylistTracks } from 'components/pages/Playlist/PlaylistTracks'
 import { useEffect, useState } from 'react'
 import { getUserPlaylists } from 'repositories/playlist/playlist'
+import { usePlaylistContext } from 'hooks/usePlaylistContext'
 
 export interface PaginateResult<T> {
   pageInfo: PageInfo
@@ -20,20 +21,20 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
     if (!playlistId || Array.isArray(playlistId)) return { notFound: true }
 
-    const playlistData = await getPlaylistData({ context, playlistId })
+    const playlistDataSv = await getPlaylistData({ context, playlistId })
 
-    if (!playlistData) return { notFound: true }
+    if (!playlistDataSv) return { notFound: true }
 
-    const trackEditionIds = playlistData?.data?.playlist?.playlistTracks?.map(
+    const trackEditionIds = playlistDataSv?.data?.playlist?.playlistTracks?.map(
       (track: PlaylistTrack) => track.trackEditionId,
     )
 
-    const playlistTracksData = await getPlaylistTracksData({ trackEditionIds, context })
+    const playlistTracksDataSv = await getPlaylistTracksData({ trackEditionIds, context })
 
-    const profileData = await getProfileData({ context, profileId: playlistData.data.playlist.profileId })
+    const profileDataSv = await getProfileData({ context, profileId: playlistDataSv.data.playlist.profileId })
 
     return {
-      props: { playlistData, playlistTracksData, profileData },
+      props: { playlistDataSv, playlistTracksDataSv, profileDataSv },
     }
   } catch (error) {
     errorHandler(error)
@@ -41,14 +42,20 @@ export const getServerSideProps: GetServerSideProps = async context => {
   }
 }
 
+export type PlaylistData = ApolloQueryResult<{ playlist: Playlist }>
+export type ProfileData = ApolloQueryResult<{ profile: Profile }>
+export type PlaylistTracksData = ApolloQueryResult<{ tracks: PaginateResult<Track> }>
 export interface PlaylistPageProps {
-  playlistData?: ApolloQueryResult<{ playlist: Playlist }>
-  profileData?: ApolloQueryResult<{ profile: Profile }>
-  playlistTracksData?: ApolloQueryResult<{ tracks: PaginateResult<Track> }> | null
+  playlistDataSv: PlaylistData
+  profileDataSv: ProfileData
+  playlistTracksDataSv?: PlaylistTracksData
 }
 
-export default function PlaylistPage({ playlistData, playlistTracksData, profileData }: PlaylistPageProps) {
+export default function PlaylistPage({ playlistDataSv, profileDataSv, playlistTracksDataSv }: PlaylistPageProps) {
   const [userPlaylists, setUserPlaylists] = useState<Playlist[] | undefined>(undefined)
+  const [playlistData, setPlaylistData] = useState<PlaylistData>(playlistDataSv)
+  const [profileData, setProfileData] = useState<ProfileData>(profileDataSv)
+  const [playlistTracksData, setPlaylistTracksData] = useState<PlaylistTracksData | null>(playlistTracksDataSv || null)
 
   const fetchUserPlaylists = async () => {
     const userPlaylists = await getUserPlaylists()
@@ -72,10 +79,13 @@ export default function PlaylistPage({ playlistData, playlistTracksData, profile
       <Card>
         {playlistTracksData && (
           <PlaylistTracks
-            playlistData={playlistTracksData}
+            playlistTrackData={playlistTracksData}
             profile={profileData.data.profile}
             playlist={playlistData.data.playlist}
             userPlaylists={userPlaylists}
+            setPlaylistData={setPlaylistData}
+            setProfileData={setProfileData}
+            setPlaylistTracksData={setPlaylistTracksData}
           />
         )}
       </Card>

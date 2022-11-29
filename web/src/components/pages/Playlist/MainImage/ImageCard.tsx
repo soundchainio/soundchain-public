@@ -34,6 +34,8 @@ export const ImageCard = (props: Props) => {
 
     const track = playlistTracks[0]
 
+    if (!track) return
+
     const list = [
       {
         trackId: track.id,
@@ -61,6 +63,7 @@ export const ImageCard = (props: Props) => {
 
     const track = playlistTracks[0]
 
+    if (!track) return
     setIsPlaying(isCurrentlyPlaying(track.id))
   }, [isCurrentlyPlaying, setIsPlaying, playlistTracks])
 
@@ -116,7 +119,7 @@ const Container = tw.div`
   items-center 
   justify-center 
   rounded-xl 
-  bg-[#19191A] 
+  bg-neutral-800
   p-4
   w-full
   max-w-[350px]
@@ -148,9 +151,10 @@ const Metric = tw.div`
   flex-col 
   items-center 
   justify-center 
-  bg-[#202020] 
+  bg-neutral-700
   py-2 
   px-6
+  rounded-md
 `
 const MetricTitle = tw.h1`
   text-white
@@ -158,7 +162,7 @@ const MetricTitle = tw.h1`
 const MetricParagraph = tw.p`
   font-sm 
   font-normal 
-  text-[#808080]
+  text-neutral-400
 `
 
 const Description = tw.p`

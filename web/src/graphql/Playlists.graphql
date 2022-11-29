@@ -1,6 +1,7 @@
 query GetUserPlaylists($sort: SortPlaylistInput, $page: PageInput) {
   getUserPlaylists(sort: $sort, page: $page) {
     nodes {
+      id
       title
       playlistTracks {
         trackEditionId

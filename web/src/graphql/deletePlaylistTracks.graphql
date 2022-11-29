@@ -1,0 +1,7 @@
+mutation deletePlaylistTracks($input: DeletePlaylistTracks!) {
+  deletePlaylistTracks(input: $input) {
+    playlist {
+      title
+    }
+  }
+}

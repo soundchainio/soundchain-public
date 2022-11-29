@@ -593,6 +593,11 @@ export type GetPlaylistPayload = {
   nodes: Array<Playlist>;
 };
 
+export type GetPlaylistTracks = {
+  playlistId: Scalars['String'];
+  trackEditionId: Scalars['String'];
+};
+
 
 export type ListingItem = {
   __typename?: 'ListingItem';
@@ -1332,6 +1337,7 @@ export type Query = {
   ownedBuyNowListingItems: ListingItemConnection;
   playlist: Playlist;
   getUserPlaylists: GetPlaylistPayload;
+  getPlaylistTracks: Array<PlaylistTrack>;
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -1592,6 +1598,11 @@ export type QueryPlaylistArgs = {
 export type QueryGetUserPlaylistsArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortPlaylistInput>;
+};
+
+
+export type QueryGetPlaylistTracksArgs = {
+  input: GetPlaylistTracks;
 };
 
 
@@ -2762,6 +2773,19 @@ export type GetOriginalPostFromTrackQuery = (
   ) }
 );
 
+export type GetPlaylistTracksQueryVariables = Exact<{
+  input: GetPlaylistTracks;
+}>;
+
+
+export type GetPlaylistTracksQuery = (
+  { __typename?: 'Query' }
+  & { getPlaylistTracks: Array<(
+    { __typename?: 'PlaylistTrack' }
+    & Pick<PlaylistTrack, 'id' | 'playlistId' | 'trackEditionId'>
+  )> }
+);
+
 export type GroupedTracksQueryVariables = Exact<{
   filter?: Maybe<FilterTrackInput>;
   sort?: Maybe<SortTrackInput>;
@@ -3228,7 +3252,7 @@ export type GetUserPlaylistsQuery = (
     { __typename?: 'GetPlaylistPayload' }
     & { nodes: Array<(
       { __typename?: 'Playlist' }
-      & Pick<Playlist, 'title'>
+      & Pick<Playlist, 'id' | 'title'>
       & { playlistTracks: Maybe<Array<(
         { __typename?: 'PlaylistTrack' }
         & Pick<PlaylistTrack, 'trackEditionId'>
@@ -4070,6 +4094,22 @@ export type WhitelistEntryByWalletQuery = (
 export type WonAuctionNotificationFieldsFragment = (
   { __typename?: 'WonAuctionNotification' }
   & Pick<WonAuctionNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
+);
+
+export type DeletePlaylistTracksMutationVariables = Exact<{
+  input: DeletePlaylistTracks;
+}>;
+
+
+export type DeletePlaylistTracksMutation = (
+  { __typename?: 'Mutation' }
+  & { deletePlaylistTracks: (
+    { __typename?: 'DeletePlaylistPayload' }
+    & { playlist: (
+      { __typename?: 'Playlist' }
+      & Pick<Playlist, 'title'>
+    ) }
+  ) }
 );
 
 export type TogglePlaylistFollowMutationVariables = Exact<{
@@ -6019,6 +6059,43 @@ export function useGetOriginalPostFromTrackLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>;
 export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>;
 export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>;
+export const GetPlaylistTracksDocument = gql`
+    query getPlaylistTracks($input: GetPlaylistTracks!) {
+  getPlaylistTracks(input: $input) {
+    id
+    playlistId
+    trackEditionId
+  }
+}
+    `;
+
+/**
+ * __useGetPlaylistTracksQuery__
+ *
+ * To run a query within a React component, call `useGetPlaylistTracksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPlaylistTracksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPlaylistTracksQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useGetPlaylistTracksQuery(baseOptions: Apollo.QueryHookOptions<GetPlaylistTracksQuery, GetPlaylistTracksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPlaylistTracksQuery, GetPlaylistTracksQueryVariables>(GetPlaylistTracksDocument, options);
+      }
+export function useGetPlaylistTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPlaylistTracksQuery, GetPlaylistTracksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPlaylistTracksQuery, GetPlaylistTracksQueryVariables>(GetPlaylistTracksDocument, options);
+        }
+export type GetPlaylistTracksQueryHookResult = ReturnType<typeof useGetPlaylistTracksQuery>;
+export type GetPlaylistTracksLazyQueryHookResult = ReturnType<typeof useGetPlaylistTracksLazyQuery>;
+export type GetPlaylistTracksQueryResult = Apollo.QueryResult<GetPlaylistTracksQuery, GetPlaylistTracksQueryVariables>;
 export const GroupedTracksDocument = gql`
     query GroupedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
   groupedTracks(filter: $filter, sort: $sort, page: $page) {
@@ -6877,6 +6954,7 @@ export const GetUserPlaylistsDocument = gql`
     query GetUserPlaylists($sort: SortPlaylistInput, $page: PageInput) {
   getUserPlaylists(sort: $sort, page: $page) {
     nodes {
+      id
       title
       playlistTracks {
         trackEditionId
@@ -8758,6 +8836,41 @@ export function useWhitelistEntryByWalletLazyQuery(baseOptions?: Apollo.LazyQuer
 export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletQuery>;
 export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
 export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;
+export const DeletePlaylistTracksDocument = gql`
+    mutation deletePlaylistTracks($input: DeletePlaylistTracks!) {
+  deletePlaylistTracks(input: $input) {
+    playlist {
+      title
+    }
+  }
+}
+    `;
+export type DeletePlaylistTracksMutationFn = Apollo.MutationFunction<DeletePlaylistTracksMutation, DeletePlaylistTracksMutationVariables>;
+
+/**
+ * __useDeletePlaylistTracksMutation__
+ *
+ * To run a mutation, you first call `useDeletePlaylistTracksMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeletePlaylistTracksMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deletePlaylistTracksMutation, { data, loading, error }] = useDeletePlaylistTracksMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useDeletePlaylistTracksMutation(baseOptions?: Apollo.MutationHookOptions<DeletePlaylistTracksMutation, DeletePlaylistTracksMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeletePlaylistTracksMutation, DeletePlaylistTracksMutationVariables>(DeletePlaylistTracksDocument, options);
+      }
+export type DeletePlaylistTracksMutationHookResult = ReturnType<typeof useDeletePlaylistTracksMutation>;
+export type DeletePlaylistTracksMutationResult = Apollo.MutationResult<DeletePlaylistTracksMutation>;
+export type DeletePlaylistTracksMutationOptions = Apollo.BaseMutationOptions<DeletePlaylistTracksMutation, DeletePlaylistTracksMutationVariables>;
 export const TogglePlaylistFollowDocument = gql`
     mutation togglePlaylistFollow($playlistId: String!) {
   togglePlaylistFollow(playlistId: $playlistId) {

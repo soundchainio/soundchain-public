@@ -1,8 +1,6 @@
 import {
   Playlist,
   usePlaylistLazyQuery,
-  usePlaylistQuery,
-  useToggleFavoriteMutation,
   useTogglePlaylistFavoriteMutation,
   useTogglePlaylistFollowMutation,
 } from 'lib/graphql'
@@ -57,7 +55,7 @@ export function PlaylistProvider({ children }: PlaylistProviderProps) {
         variables: { playlistId: playlistData.playlist.id },
       })
     },
-    [me, router, playlistData],
+    [me, router, playlistData, togglePlaylistFollowMutation],
   )
 
   const setFavoritePlaylist = useCallback(
@@ -102,7 +100,7 @@ export function PlaylistProvider({ children }: PlaylistProviderProps) {
     }
 
     fetchPlaylist()
-  }, [router.query.id, playlistQuery])
+  }, [router.query.id, playlistQuery, router.query.playlistId])
 
   return (
     <PlaylistContext.Provider

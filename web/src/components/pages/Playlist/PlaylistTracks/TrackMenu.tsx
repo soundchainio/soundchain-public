@@ -6,24 +6,109 @@ import { Playlist, Track } from 'lib/graphql'
 import tw from 'tailwind-styled-components'
 import { TbPlaylistX, TbPlaylistAdd } from 'react-icons/tb'
 import { PlaylistFavoriteTrack } from './PlaylistFavoriteTrack'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { MobileModal } from 'components/common/EllipsisButton/MobileModal'
 import { Divider } from 'components/common'
 import { Button } from 'components/common/Button'
+import { useMe } from 'hooks/useMe'
+import { getPlaylistTracks, removeTrackFromPlaylist } from 'repositories/playlist/playlist'
+import { toast } from 'react-toastify'
+import { errorHandler } from 'utils/errorHandler'
+import { PaginateResult, PlaylistTracksData } from 'pages/playlists/[playlistId]'
+import { ApolloQueryResult } from '@apollo/client'
 
 interface TrackMenuProps {
   track: Track
   isPlaying: boolean
   handleOnPlayClicked: () => void
   userPlaylists?: Playlist[]
+  currentPlaylist: Playlist
+  setShowTrackMenu: React.Dispatch<React.SetStateAction<boolean>>
+  setPlaylistTracksData: React.Dispatch<React.SetStateAction<PlaylistTracksData>> | null
+  playlistTrackData: ApolloQueryResult<{
+    tracks: PaginateResult<Track>
+  }>
 }
 
-export const TrackMenu = ({ track, isPlaying, handleOnPlayClicked, userPlaylists }: TrackMenuProps) => {
+export const TrackMenu = (props: TrackMenuProps) => {
+  const {
+    track,
+    isPlaying,
+    handleOnPlayClicked,
+    userPlaylists,
+    currentPlaylist,
+    setShowTrackMenu,
+    playlistTrackData,
+    setPlaylistTracksData,
+  } = props
+
   const [showMobileModal, setShowMobileModal] = useState(false)
+  const [playlists, setPlaylists] = useState<Playlist[] | undefined[]>([])
+
+  const me = useMe()
+  const playlistId = currentPlaylist.id
+  const isMyPlaylist = userPlaylists?.some(playlist => playlist.id === playlistId)
 
   const handleAddToPlaylist = () => {
     setShowMobileModal(!showMobileModal)
   }
+
+  const handleRemoveFromPlaylist = async () => {
+    if (!setPlaylistTracksData) return
+    try {
+      if (!track.trackEditionId) return toast.error('Failed to remove track from playlist')
+      await removeTrackFromPlaylist({ playlistId, trackEditionIds: [track.trackEditionId] })
+      const filteredTrackdata = playlistTrackData.data.tracks.nodes.filter(trackData => trackData.id !== track.id)
+      const newTrackData = {
+        ...playlistTrackData,
+        data: {
+          tracks: {
+            nodes: filteredTrackdata,
+            pageInfo: playlistTrackData.data.tracks.pageInfo,
+          },
+        },
+      }
+
+      setPlaylistTracksData(newTrackData)
+    } catch (error) {
+      errorHandler(error)
+      toast.error('Failed to remove track from playlist')
+    } finally {
+      setShowTrackMenu(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!me || !track.trackEditionId || !userPlaylists) return
+
+    const fetchPlaylistTracks = async () => {
+      // Fetch all user's playerlist with selected track
+      const playlistsWithSelectedTrackPromises = userPlaylists.flatMap(async userPlaylist => {
+        const playlistTracks = await getPlaylistTracks({
+          playlistId: userPlaylist.id,
+          trackEditionId: track.trackEditionId || '',
+        })
+
+        if (!playlistTracks) return
+
+        return playlistTracks.flatMap(playlistTrack => playlistTrack.playlistId)
+      })
+
+      const [playlistsWithSelectedTrack] = await Promise.all(playlistsWithSelectedTrackPromises)
+
+      if (!playlistsWithSelectedTrack) return
+
+      // List of user's playlist that DOES NOT contain selected track
+      const playlistsWithoutSelectedTrack = userPlaylists.filter(
+        userPlaylist => !playlistsWithSelectedTrack.find(playlistId => userPlaylist.id === playlistId),
+      )
+
+      setPlaylists(playlistsWithoutSelectedTrack)
+    }
+
+    fetchPlaylistTracks()
+  }, [me, track.trackEditionId, userPlaylists])
+
   return (
     <>
       <EllipsisMenu>
@@ -66,29 +151,31 @@ export const TrackMenu = ({ track, isPlaying, handleOnPlayClicked, userPlaylists
             <TbPlaylistAdd size={27} />
             <h3 className="ml-2">Add to playlist</h3>
           </LI>
-          <LI>
-            <TbPlaylistX size={27} />
-            <h3 className="ml-2">Delete from playlist</h3>
-          </LI>
+          {isMyPlaylist && (
+            <LI onClick={handleRemoveFromPlaylist}>
+              <TbPlaylistX size={27} />
+              <h3 className="ml-2">Delete from playlist</h3>
+            </LI>
+          )}
         </ul>
       </EllipsisMenu>
 
       <MobileModal open={showMobileModal} close={handleAddToPlaylist}>
-        <UserPlaylists>
+        <UserPlaylistsContainer>
           <h2 className="mb-2 text-lg font-bold text-neutral-400">Playlists</h2>
           <Divider classnames="mb-4" />
           <Button buttonType="text" color="blue" text="Create Playlist" />
           <Divider classnames="mt-4" />
-          <div className="my-4 flex flex-col items-start gap-3">
-            {userPlaylists?.map((userPlaylist, index) => {
+          <UserPlaylists>
+            {playlists?.map((userPlaylist, index) => {
               return (
                 <h3 key={index} className="text-md text-white">
                   {userPlaylist.title}
                 </h3>
               )
             })}
-          </div>
-        </UserPlaylists>
+          </UserPlaylists>
+        </UserPlaylistsContainer>
       </MobileModal>
     </>
   )
@@ -158,7 +245,15 @@ const ArtistName = tw.h3`
   line-clamp-1
   max-w-[150px]
 `
-const UserPlaylists = tw.div`
+const UserPlaylistsContainer = tw.div`
   p-4
   min-h-[320px]
+`
+
+const UserPlaylists = tw.div`
+  my-4 
+  flex 
+  flex-col 
+  items-start
+  gap-3
 `

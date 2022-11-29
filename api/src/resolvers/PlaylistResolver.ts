@@ -1,11 +1,11 @@
 import { EditPlaylistPlayload } from './../types/EditPlaylistPlayload';
-import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from "type-graphql";
-import { CurrentUser } from "../decorators/current-user";
-import { Playlist } from "../models/Playlist";
-import { User } from "../models/User";
-import { Context } from "../types/Context";
-import { CreatePlaylistData } from "../types/CreatePlaylistInput";
-import { CreatePlaylistPayload } from "../types/CreatePlaylistPayload";
+import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { CurrentUser } from '../decorators/current-user';
+import { Playlist } from '../models/Playlist';
+import { User } from '../models/User';
+import { Context } from '../types/Context';
+import { CreatePlaylistData } from '../types/CreatePlaylistInput';
+import { CreatePlaylistPayload } from '../types/CreatePlaylistPayload';
 import { EditPlaylistData } from '../types/EditPlaylistInput';
 import { SortPlaylistInput } from '../services/SortPlaylistInput';
 import { PageInput } from '../types/PageInput';
@@ -15,15 +15,12 @@ import { CreatePlaylistTracks } from '../types/CreatePlaylistTracks';
 import { DeletePlaylistTracks } from '../types/DeletePlaylistTracks';
 import { DeletePlaylistPayload } from '../types/DeletePlaylistPayload';
 import { GetPlaylistPayload } from '../types/GetPlaylistPayload';
+import { GetPlaylistTracks } from '../types/GetPlaylistTracks';
 
 @Resolver(Playlist)
 export class PlaylistResolver {
-
   @Query(() => Playlist)
-  playlist(
-    @Ctx() { playlistService }: Context,
-    @Arg('id') id: string,
-  ): Promise<Playlist> {
+  playlist(@Ctx() { playlistService }: Context, @Arg('id') id: string): Promise<Playlist> {
     return playlistService.getPlaylist(id);
   }
 
@@ -37,6 +34,17 @@ export class PlaylistResolver {
     return playlistService.getPlaylists(profileId, sort, page);
   }
 
+  @Query(() => [PlaylistTrack])
+  async getPlaylistTracks(
+    @Ctx() { playlistService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('input') { playlistId, trackEditionId }: GetPlaylistTracks,
+  ): Promise<PlaylistTrack[]> {
+    const playlistTracks = await playlistService.getPlaylistTracks({ profileId, playlistId, trackEditionId });
+
+    return playlistTracks;
+  }
+
   @Mutation(() => CreatePlaylistPayload)
   @Authorized()
   async createPlaylist(
@@ -44,7 +52,13 @@ export class PlaylistResolver {
     @Arg('input') { title, description, artworkUrl, trackEditionIds }: CreatePlaylistData,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePlaylistPayload> {
-    const playlist = await playlistService.createPlaylist({ profileId, title, description, artworkUrl, trackEditionIds });
+    const playlist = await playlistService.createPlaylist({
+      profileId,
+      title,
+      description,
+      artworkUrl,
+      trackEditionIds,
+    });
     return { playlist };
   }
 
@@ -67,7 +81,7 @@ export class PlaylistResolver {
   ): Promise<CreatePlaylistPayload> {
     await playlistService.createPlaylistTracks({ trackEditionIds, playlistId }, profileId);
 
-    const playlist = await playlistService.findOrFail(playlistId)
+    const playlist = await playlistService.findOrFail(playlistId);
 
     return { playlist };
   }
@@ -81,7 +95,7 @@ export class PlaylistResolver {
   ): Promise<DeletePlaylistPayload> {
     await playlistService.deletePlaylistTracks({ trackEditionIds, playlistId }, profileId);
 
-    const playlist = await playlistService.findOrFail(playlistId)
+    const playlist = await playlistService.findOrFail(playlistId);
 
     return { playlist };
   }
