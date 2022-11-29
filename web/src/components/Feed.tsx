@@ -1,4 +1,5 @@
 /* eslint-disable react/display-name */
+import { LoaderAnimation } from 'components/LoaderAnimation'
 import { Post } from 'components/Post/Post'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { FeedItem, useFeedQuery } from 'lib/graphql'
@@ -7,8 +8,8 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, ListChildComponentProps, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from './NoResultFound'
+import { PostFormTimeline } from './Post/PostFormTimeline'
 import { PostSkeleton } from './Post/PostSkeleton'
 
 interface FeedProps {
@@ -38,7 +39,7 @@ export const Feed = ({ pageSize }: FeedProps) => {
       sizeMap[index] = size + GAP
       listRef?.current.resetAfterIndex(index)
     },
-    [sizeMap],
+    [sizeMap, data],
   )
 
   if (loading) {
@@ -102,6 +103,7 @@ export const Feed = ({ pageSize }: FeedProps) => {
         isItemLoaded,
       }}
     >
+      <PostFormTimeline />
       <PullToRefresh onRefresh={refetch}>
         <AutoSizer>
           {({ height, width }) => (
