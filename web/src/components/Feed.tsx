@@ -39,7 +39,7 @@ export const Feed = ({ pageSize }: FeedProps) => {
       sizeMap[index] = size + GAP
       listRef?.current.resetAfterIndex(index)
     },
-    [sizeMap],
+    [sizeMap, data],
   )
 
   if (loading) {
