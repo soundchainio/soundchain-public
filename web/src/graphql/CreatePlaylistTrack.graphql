@@ -1,0 +1,7 @@
+mutation createPlaylistTracks($input: CreatePlaylistTracks!) {
+  createPlaylistTracks(input: $input) {
+    playlist {
+      title
+    }
+  }
+}

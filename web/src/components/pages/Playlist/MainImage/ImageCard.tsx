@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react'
-import { Playlist, Profile, Track } from 'lib/graphql'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useState } from 'react'
 import tw from 'tailwind-styled-components'
@@ -10,24 +9,25 @@ import { usePlaylistContext } from 'hooks/usePlaylistContext'
 import { Divider } from 'components/common'
 import { formatDate } from 'components/utils/helpers'
 
-interface Props {
-  playlist: Playlist
-  profile: Profile
-  playlistTracks?: Track[]
-}
-
-export const ImageCard = (props: Props) => {
-  const { playlist, profile, playlistTracks } = props
-
+export const ImageCard = () => {
   const [isPlaying, setIsPlaying] = useState(false)
 
   const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
-  const { isFollowedPlaylist, toggleFollowPlaylist, likeCount, followCount, setFollowCount } = usePlaylistContext()
+  const {
+    isFollowedPlaylist,
+    toggleFollowPlaylist,
+    likeCount,
+    followCount,
+    setFollowCount,
+    playlist,
+    profile,
+    playlistTracks,
+  } = usePlaylistContext()
 
   const followState = isFollowedPlaylist ? false : true
   const isFollowedButtonText = isFollowedPlaylist ? 'Unfollow' : 'Follow'
   const isFollowedButtonColor = isFollowedPlaylist ? 'disabled' : 'blue'
-  const playlistDate = formatDate({ date: playlist.createdAt })
+  const playlistDate = formatDate({ date: playlist?.createdAt })
 
   const handleOnPlayClicked = () => {
     if (!playlistTracks) return
@@ -67,6 +67,7 @@ export const ImageCard = (props: Props) => {
     setIsPlaying(isCurrentlyPlaying(track.id))
   }, [isCurrentlyPlaying, setIsPlaying, playlistTracks])
 
+  if (!playlist) return null
   return (
     <Container>
       <InnerContainer>
@@ -84,7 +85,7 @@ export const ImageCard = (props: Props) => {
       <Button color={isFollowedButtonColor} text={isFollowedButtonText} onClick={handleFollowClick} buttonType="text" />
       <MetricsContainer>
         <Metric>
-          <MetricTitle>{playlist?.playlistTracks?.length || 0}</MetricTitle>
+          <MetricTitle>{playlist.playlistTracks?.length || 0}</MetricTitle>
           <MetricParagraph>Tracks</MetricParagraph>
         </Metric>
         <Metric>

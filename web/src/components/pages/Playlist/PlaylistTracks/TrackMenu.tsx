@@ -11,71 +11,49 @@ import { MobileModal } from 'components/common/EllipsisButton/MobileModal'
 import { Divider } from 'components/common'
 import { Button } from 'components/common/Button'
 import { useMe } from 'hooks/useMe'
-import { getPlaylistTracks, removeTrackFromPlaylist } from 'repositories/playlist/playlist'
+import { createPlaylistTracks, getPlaylistTracks, removeTrackFromPlaylist } from 'repositories/playlist/playlist'
+import { usePlaylistContext } from 'hooks/usePlaylistContext'
 import { toast } from 'react-toastify'
-import { errorHandler } from 'utils/errorHandler'
-import { PaginateResult, PlaylistTracksData } from 'pages/playlists/[playlistId]'
-import { ApolloQueryResult } from '@apollo/client'
 
 interface TrackMenuProps {
   track: Track
   isPlaying: boolean
   handleOnPlayClicked: () => void
-  userPlaylists?: Playlist[]
-  currentPlaylist: Playlist
   setShowTrackMenu: React.Dispatch<React.SetStateAction<boolean>>
-  setPlaylistTracksData: React.Dispatch<React.SetStateAction<PlaylistTracksData>> | null
-  playlistTrackData: ApolloQueryResult<{
-    tracks: PaginateResult<Track>
-  }>
 }
 
 export const TrackMenu = (props: TrackMenuProps) => {
-  const {
-    track,
-    isPlaying,
-    handleOnPlayClicked,
-    userPlaylists,
-    currentPlaylist,
-    setShowTrackMenu,
-    playlistTrackData,
-    setPlaylistTracksData,
-  } = props
+  const { track, isPlaying, handleOnPlayClicked, setShowTrackMenu } = props
+
+  const { playlistTracks, setPlaylistTracks, userPlaylists, playlist } = usePlaylistContext()
 
   const [showMobileModal, setShowMobileModal] = useState(false)
   const [playlists, setPlaylists] = useState<Playlist[] | undefined[]>([])
 
   const me = useMe()
-  const playlistId = currentPlaylist.id
-  const isMyPlaylist = userPlaylists?.some(playlist => playlist.id === playlistId)
+  const isMyPlaylist = userPlaylists?.some(currentPlaylist => currentPlaylist.id === playlist?.id)
 
-  const handleAddToPlaylist = () => {
-    setShowMobileModal(!showMobileModal)
+  const handleAddToPlaylist = async (userPlaylistId?: string) => {
+    if (!userPlaylistId || !track) return
+
+    const createdPlaylistTrack = await createPlaylistTracks({
+      playlistId: userPlaylistId,
+      trackEditionIds: [track.trackEditionId || ''],
+    })
+
+    if (!createdPlaylistTrack.title) return toast.error('Could not add track to playlist.')
+
+    return toast.success('Track added to playlist succesfully.')
   }
 
   const handleRemoveFromPlaylist = async () => {
-    if (!setPlaylistTracksData) return
-    try {
-      if (!track.trackEditionId) return toast.error('Failed to remove track from playlist')
-      await removeTrackFromPlaylist({ playlistId, trackEditionIds: [track.trackEditionId] })
-      const filteredTrackdata = playlistTrackData.data.tracks.nodes.filter(trackData => trackData.id !== track.id)
-      const newTrackData = {
-        ...playlistTrackData,
-        data: {
-          tracks: {
-            nodes: filteredTrackdata,
-            pageInfo: playlistTrackData.data.tracks.pageInfo,
-          },
-        },
-      }
+    if (!playlistTracks || !playlist || !track.trackEditionId) return
 
-      setPlaylistTracksData(newTrackData)
-    } catch (error) {
-      errorHandler(error)
-      toast.error('Failed to remove track from playlist')
-    } finally {
-      setShowTrackMenu(false)
-    }
+    await removeTrackFromPlaylist({ playlistId: playlist.id, trackEditionIds: [track.trackEditionId] })
+    const filteredTrackdata = playlistTracks.filter(trackData => trackData.id !== track.id)
+
+    setPlaylistTracks(filteredTrackdata)
+    setShowTrackMenu(false)
   }
 
   useEffect(() => {
@@ -147,7 +125,7 @@ export const TrackMenu = (props: TrackMenuProps) => {
             <PlaylistFavoriteTrack track={track} />
             <h3 className="ml-2">Like</h3>
           </LI>
-          <LI onClick={handleAddToPlaylist}>
+          <LI onClick={() => setShowMobileModal(true)}>
             <TbPlaylistAdd size={27} />
             <h3 className="ml-2">Add to playlist</h3>
           </LI>
@@ -160,20 +138,21 @@ export const TrackMenu = (props: TrackMenuProps) => {
         </ul>
       </EllipsisMenu>
 
-      <MobileModal open={showMobileModal} close={handleAddToPlaylist}>
+      <MobileModal open={showMobileModal} close={() => setShowMobileModal(false)}>
         <UserPlaylistsContainer>
           <h2 className="mb-2 text-lg font-bold text-neutral-400">Playlists</h2>
           <Divider classnames="mb-4" />
           <Button buttonType="text" color="blue" text="Create Playlist" />
           <Divider classnames="mt-4" />
           <UserPlaylists>
-            {playlists?.map((userPlaylist, index) => {
-              return (
-                <h3 key={index} className="text-md text-white">
-                  {userPlaylist.title}
-                </h3>
-              )
-            })}
+            {playlists &&
+              playlists.map((userPlaylist, index) => {
+                return (
+                  <h3 key={index} className="text-md text-white" onClick={() => handleAddToPlaylist(userPlaylist?.id)}>
+                    {userPlaylist?.title}
+                  </h3>
+                )
+              })}
           </UserPlaylists>
         </UserPlaylistsContainer>
       </MobileModal>
@@ -194,7 +173,7 @@ const LI = tw.li`
   w-full
 `
 
-const TrackContainer = tw.section`
+const TrackContainer = tw.div`
   flex
   items-center
   gap-3

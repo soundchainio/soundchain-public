@@ -1,5 +1,6 @@
 import { apolloClient, createApolloClient } from 'lib/apollo'
 import {
+  CreatePlaylistTracksDocument,
   DeletePlaylistTracksDocument,
   GetPlaylistTracksDocument,
   GetUserPlaylistsDocument,
@@ -148,8 +149,6 @@ export interface RemoveTrackFromPlaylistParams {
   trackEditionIds: string[]
 }
 
-// export type GetPlaylistTracksReturn = ApolloQueryResult<{ getPlaylistTracks: PlaylistTrack[] }>
-
 export const removeTrackFromPlaylist = async (params: RemoveTrackFromPlaylistParams) => {
   try {
     const { playlistId, trackEditionIds } = params
@@ -160,6 +159,26 @@ export const removeTrackFromPlaylist = async (params: RemoveTrackFromPlaylistPar
     })
 
     return removedTrack.data
+  } catch (error) {
+    errorHandler(error)
+  }
+}
+
+export interface CreatePlaylistTracksParams {
+  playlistId: string
+  trackEditionIds: string[]
+}
+
+export const createPlaylistTracks = async (params: CreatePlaylistTracksParams) => {
+  try {
+    const { playlistId, trackEditionIds } = params
+
+    const playlistTracks = await apolloClient.mutate({
+      mutation: CreatePlaylistTracksDocument,
+      variables: { input: { playlistId, trackEditionIds: trackEditionIds } },
+    })
+
+    return playlistTracks.data.createPlaylistTracks.playlist
   } catch (error) {
     errorHandler(error)
   }

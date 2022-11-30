@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react'
 interface Props {
   handleOnPlayClicked: () => void
   isPlaying: boolean
-  profile: Profile
+  profile: Profile | null
   playlist: Playlist
   classNames?: string
   hideTrackName?: boolean
@@ -65,8 +65,8 @@ export const PlaylistTrackPlayerControls = (props: Props) => {
             </>
           )}
 
-          {!hideArtistName && (
-            <Link href={`/profiles/${profile.displayName}` || ''}>
+          {!hideArtistName && profile && (
+            <Link href={`/profiles/${profile.displayName}`}>
               <a>
                 <ArtistName>{profile.displayName}</ArtistName>
               </a>

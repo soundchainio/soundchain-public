@@ -1,40 +1,15 @@
-import { ApolloQueryResult } from '@apollo/client'
 import Asset from 'components/Asset/Asset'
-import { Divider } from 'components/common'
 import { Button } from 'components/common/Button'
-import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { EllipsisButton } from 'components/common/EllipsisButton'
-import { Dropdown } from 'components/pages/LandingPage/Header/Navigation/Dropdown'
-import { TrackShareButton } from 'components/TrackShareButton'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
-import { CurrencyType, Playlist, Profile, Track } from 'lib/graphql'
-import { PaginateResult, PlaylistData, PlaylistTracksData, ProfileData } from 'pages/playlists/[playlistId]'
 import tw from 'tailwind-styled-components'
-import { PlaylistTrackPlayerControls } from '../MainImage/PlaylistTrackPlayerControls'
-import { TbPlaylistX, TbPlaylistAdd } from 'react-icons/tb'
 import { TrackMenu } from './TrackMenu'
 import { useState } from 'react'
+import { usePlaylistContext } from 'hooks/usePlaylistContext'
 
-interface PlaylistTracksProps {
-  playlistTrackData: ApolloQueryResult<{
-    tracks: PaginateResult<Track>
-  }>
-  isGrid?: boolean
-  playlist: Playlist
-  profile: Profile
-  userPlaylists?: Playlist[]
-  setPlaylistData: React.Dispatch<React.SetStateAction<PlaylistData>>
-  setProfileData: React.Dispatch<React.SetStateAction<ProfileData>>
-  setPlaylistTracksData: React.Dispatch<React.SetStateAction<PlaylistTracksData>> | null
-}
-
-export const PlaylistTracks = (props: PlaylistTracksProps) => {
-  const { playlistTrackData, profile, playlist, userPlaylists, setPlaylistTracksData } = props
-
-  const { data, loading } = playlistTrackData
-
-  const { nodes, pageInfo } = data.tracks
+export const PlaylistTracks = () => {
+  const { playlistTracks } = usePlaylistContext()
 
   const [showTrackMenu, setShowTrackMenu] = useState(false)
   const isPlaying = false
@@ -43,9 +18,10 @@ export const PlaylistTracks = (props: PlaylistTracksProps) => {
     console.log('play')
   }
 
+  if (!playlistTracks || playlistTracks.length < 1) return null
   return (
-    <>
-      {nodes.map((track, index) => (
+    <Card>
+      {playlistTracks.map((track, index) => (
         <Container key={index}>
           <TrackContainer>
             <TrackImage>
@@ -69,11 +45,7 @@ export const PlaylistTracks = (props: PlaylistTracksProps) => {
                 track={track}
                 isPlaying={isPlaying}
                 handleOnPlayClicked={handleOnPlayClicked}
-                userPlaylists={userPlaylists}
-                currentPlaylist={playlist}
                 setShowTrackMenu={setShowTrackMenu}
-                setPlaylistTracksData={setPlaylistTracksData}
-                playlistTrackData={playlistTrackData}
               />
             </EllipsisButton>
           </TrackContainer>
@@ -85,17 +57,26 @@ export const PlaylistTracks = (props: PlaylistTracksProps) => {
           />
         </Container>
       ))}
-    </>
+    </Card>
   )
 }
 
-const Container = tw.section`
+const Card = tw.section`
+  items-center 
+  justify-center 
+  rounded-xl 
+  bg-neutral-800
+  p-4
+  w-full
+  max-w-[350px]
+`
+const Container = tw.div`
   flex
   flex-col
   items-start
   gap-4
 `
-const TrackContainer = tw.section`
+const TrackContainer = tw.div`
   flex
   items-center
   gap-3

@@ -1,13 +1,11 @@
 import { GetServerSideProps } from 'next/types'
 import { PageInfo, Playlist, PlaylistTrack, Profile, Track } from '../../lib/graphql'
-import { ApolloQueryResult } from '@apollo/client'
 import tw from 'tailwind-styled-components'
 import { getPlaylistData, getPlaylistTracksData, getProfileData } from 'repositories/playlist'
 import { errorHandler } from 'utils/errorHandler'
 import { ImageCard } from 'components/pages/Playlist/MainImage/ImageCard'
 import { PlaylistTracks } from 'components/pages/Playlist/PlaylistTracks'
-import { useEffect, useState } from 'react'
-import { getUserPlaylists } from 'repositories/playlist/playlist'
+import { useEffect } from 'react'
 import { usePlaylistContext } from 'hooks/usePlaylistContext'
 
 export interface PaginateResult<T> {
@@ -21,20 +19,24 @@ export const getServerSideProps: GetServerSideProps = async context => {
 
     if (!playlistId || Array.isArray(playlistId)) return { notFound: true }
 
-    const playlistDataSv = await getPlaylistData({ context, playlistId })
+    const playlist = await getPlaylistData({ context, playlistId })
 
-    if (!playlistDataSv) return { notFound: true }
+    if (!playlist) return { notFound: true }
 
-    const trackEditionIds = playlistDataSv?.data?.playlist?.playlistTracks?.map(
+    const trackEditionIds = playlist?.data?.playlist?.playlistTracks?.map(
       (track: PlaylistTrack) => track.trackEditionId,
     )
 
-    const playlistTracksDataSv = await getPlaylistTracksData({ trackEditionIds, context })
+    const playlistTracks = await getPlaylistTracksData({ trackEditionIds, context })
 
-    const profileDataSv = await getProfileData({ context, profileId: playlistDataSv.data.playlist.profileId })
+    const profile = await getProfileData({ context, profileId: playlist.data.playlist.profileId })
 
     return {
-      props: { playlistDataSv, playlistTracksDataSv, profileDataSv },
+      props: {
+        playlistSV: playlist.data.playlist,
+        profileSv: profile?.data.profile,
+        playlistTracksSv: playlistTracks?.data.tracks.nodes || null,
+      },
     }
   } catch (error) {
     errorHandler(error)
@@ -42,53 +44,26 @@ export const getServerSideProps: GetServerSideProps = async context => {
   }
 }
 
-export type PlaylistData = ApolloQueryResult<{ playlist: Playlist }>
-export type ProfileData = ApolloQueryResult<{ profile: Profile }>
-export type PlaylistTracksData = ApolloQueryResult<{ tracks: PaginateResult<Track> }>
 export interface PlaylistPageProps {
-  playlistDataSv: PlaylistData
-  profileDataSv: ProfileData
-  playlistTracksDataSv?: PlaylistTracksData
+  playlistSV: Playlist
+  profileSv: Profile
+  playlistTracksSv?: Track[] | null
 }
 
-export default function PlaylistPage({ playlistDataSv, profileDataSv, playlistTracksDataSv }: PlaylistPageProps) {
-  const [userPlaylists, setUserPlaylists] = useState<Playlist[] | undefined>(undefined)
-  const [playlistData, setPlaylistData] = useState<PlaylistData>(playlistDataSv)
-  const [profileData, setProfileData] = useState<ProfileData>(profileDataSv)
-  const [playlistTracksData, setPlaylistTracksData] = useState<PlaylistTracksData | null>(playlistTracksDataSv || null)
-
-  const fetchUserPlaylists = async () => {
-    const userPlaylists = await getUserPlaylists()
-
-    setUserPlaylists(userPlaylists?.data?.getUserPlaylists?.nodes)
-  }
+export default function PlaylistPage({ playlistSV, profileSv, playlistTracksSv }: PlaylistPageProps) {
+  const { setPlaylistInitialData, playlist } = usePlaylistContext()
 
   useEffect(() => {
-    fetchUserPlaylists()
+    setPlaylistInitialData({ playlist: playlistSV, profile: profileSv, playlistTracks: playlistTracksSv || null })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (!profileData || !playlistData) return null
+  if (!playlist) return
 
   return (
     <Container data-testid="playlist-container">
-      <ImageCard
-        profile={profileData.data.profile}
-        playlist={playlistData.data.playlist}
-        playlistTracks={playlistTracksData?.data.tracks.nodes}
-      />
-      <Card>
-        {playlistTracksData && (
-          <PlaylistTracks
-            playlistTrackData={playlistTracksData}
-            profile={profileData.data.profile}
-            playlist={playlistData.data.playlist}
-            userPlaylists={userPlaylists}
-            setPlaylistData={setPlaylistData}
-            setProfileData={setProfileData}
-            setPlaylistTracksData={setPlaylistTracksData}
-          />
-        )}
-      </Card>
+      <ImageCard />
+      <PlaylistTracks />
     </Container>
   )
 }
@@ -101,14 +76,4 @@ const Container = tw.div`
   w-full
   h-full
   p-4
-`
-
-const Card = tw.div`
-  items-center 
-  justify-center 
-  rounded-xl 
-  bg-neutral-800
-  p-4
-  w-full
-  max-w-[350px]
 `

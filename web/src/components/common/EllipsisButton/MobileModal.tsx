@@ -23,9 +23,7 @@ export const MobileModal = (props: MobileModalProps) => {
             leaveFrom="transform translate-y-0 opacity-100"
             leaveTo="transform translate-y-[100%]"
           >
-            <Dialog.Panel className="rounded bg-neutral-800">
-              <Dialog.Description>{children}</Dialog.Description>
-            </Dialog.Panel>
+            <Dialog.Panel className="rounded bg-neutral-800">{children}</Dialog.Panel>
           </Transition.Child>
         </div>
       </Dialog>
