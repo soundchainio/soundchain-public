@@ -1,6 +1,6 @@
 import { BottomSheet } from 'components/BottomSheet'
-import { InboxButton } from 'components/common/Buttons/InboxButton'
 import { Comments } from 'components/Comment/Comments'
+import { InboxButton } from 'components/common/Buttons/InboxButton'
 import { NewCommentForm } from 'components/NewCommentForm'
 import { NotAvailableMessage } from 'components/NotAvailableMessage'
 import { Post } from 'components/Post/Post'
@@ -55,7 +55,7 @@ export default function PostPage({ post }: PostPageProps) {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      rightButton: me ? <InboxButton /> : undefined,
+      rightButton: me ? <InboxButton showAlertItem={false} /> : undefined,
     }),
     [me],
   )
