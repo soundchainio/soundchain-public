@@ -1,4 +1,6 @@
 /* eslint-disable react/display-name */
+import { LoaderAnimation } from 'components/LoaderAnimation'
+import { NoResultFound } from 'components/NoResultFound'
 import { Post } from 'components/Post/Post'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { Post as PostType, SortOrder, SortPostField, usePostsQuery } from 'lib/graphql'
@@ -7,8 +9,7 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { LoaderAnimation } from 'components/LoaderAnimation'
-import { NoResultFound } from 'components/NoResultFound'
+import { PostFormTimeline } from './PostFormTimeline'
 import { PostSkeleton } from './PostSkeleton'
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
@@ -92,46 +93,49 @@ export const Posts = ({ profileId }: PostsProps) => {
   }
 
   return (
-    <PullToRefresh onRefresh={refetch}>
-      <AutoSizer>
-        {({ height, width }) => (
-          <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={postsCount} loadMoreItems={loadMoreItems}>
-            {({ onItemsRendered, ref }) => (
-              <List
-                height={height}
-                width={width}
-                onItemsRendered={onItemsRendered}
-                ref={list => {
-                  typeof ref === 'function' && ref(list)
-                  listRef.current = list
-                }}
-                itemCount={postsCount}
-                itemSize={getSize}
-                itemData={nodes}
-              >
-                {memo(
-                  ({ data, index, style }) => (
-                    <div style={style}>
-                      {!isItemLoaded(index) ? (
-                        <LoaderAnimation loadingMessage="Loading..." />
-                      ) : (
-                        <Row
-                          data={data as PostType[]}
-                          index={index}
-                          setSize={setSize}
-                          handleOnPlayClicked={handleOnPlayClicked}
-                        />
-                      )}
-                    </div>
-                  ),
-                  areEqual,
-                )}
-              </List>
-            )}
-          </InfiniteLoader>
-        )}
-      </AutoSizer>
-    </PullToRefresh>
+    <>
+      <PostFormTimeline />
+      <PullToRefresh onRefresh={refetch}>
+        <AutoSizer>
+          {({ height, width }) => (
+            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={postsCount} loadMoreItems={loadMoreItems}>
+              {({ onItemsRendered, ref }) => (
+                <List
+                  height={height}
+                  width={width}
+                  onItemsRendered={onItemsRendered}
+                  ref={list => {
+                    typeof ref === 'function' && ref(list)
+                    listRef.current = list
+                  }}
+                  itemCount={postsCount}
+                  itemSize={getSize}
+                  itemData={nodes}
+                >
+                  {memo(
+                    ({ data, index, style }) => (
+                      <div style={style}>
+                        {!isItemLoaded(index) ? (
+                          <LoaderAnimation loadingMessage="Loading..." />
+                        ) : (
+                          <Row
+                            data={data as PostType[]}
+                            index={index}
+                            setSize={setSize}
+                            handleOnPlayClicked={handleOnPlayClicked}
+                          />
+                        )}
+                      </div>
+                    ),
+                    areEqual,
+                  )}
+                </List>
+              )}
+            </InfiniteLoader>
+          )}
+        </AutoSizer>
+      </PullToRefresh>
+    </>
   )
 }
 
