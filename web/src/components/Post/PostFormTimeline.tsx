@@ -38,6 +38,8 @@ export const PostFormTimeline = () => {
     try {
       await createPost({ variables: { input: newPostParams } })
       toast.success(`Post successfully created.`)
+      onLinkCancel()
+      setPostBody('')
     } catch (error) {
       // good to log the error here on console in case the transaction can't be seen in sentry
       console.log(error)
@@ -78,6 +80,7 @@ export const PostFormTimeline = () => {
   }
 
   const onLinkCancel = () => {
+    setPreviewVisible(false)
     setVideoLinkVisible(false)
     setMusicLinkVisible(false)
     resetLink()
