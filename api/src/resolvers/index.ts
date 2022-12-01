@@ -30,6 +30,7 @@ import { ReactionNotificationResolver } from './ReactionNotificationResolver';
 import { ReactionResolver } from './ReactionResolver';
 import { TrackEditionResolver } from './TrackEditionResolver';
 import { TrackResolver } from './TrackResolver';
+import { PlaylistResolver } from './PlaylistResolver';
 import { UploadResolver } from './UploadResolver';
 import { UserResolver } from './UserResolver';
 import { VerificationRequestNotificationResolver } from './VerificationRequestNotificationResolver';
@@ -67,6 +68,7 @@ export const resolvers = [
   ReactionNotificationResolver,
   ReactionResolver,
   TrackResolver,
+  PlaylistResolver,
   UploadResolver,
   UserResolver,
   VerificationRequestNotificationResolver,

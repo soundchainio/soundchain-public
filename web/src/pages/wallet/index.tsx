@@ -12,16 +12,19 @@ import { Activity } from 'icons/Activity'
 import { ArrowDown } from 'icons/ArrowDown'
 import { ArrowUpRight } from 'icons/ArrowUpRight'
 import { CreditCard } from 'icons/CreditCard'
+import { EyeSlash } from 'icons/EyeSlash'
 import { Logo } from 'icons/Logo'
 import { Matic } from 'icons/Matic'
 import { MetaMask } from 'icons/MetaMask'
+import { Warning } from 'icons/Warning'
 import { cacheFor } from 'lib/apollo'
 import { network } from 'lib/blockchainNetworks'
 import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
-import Link from 'next/link'
+import { default as Link, default as NextLink } from 'next/link'
 import React, { useEffect, useState } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
+import ReactTooltip from 'react-tooltip'
 import { currency } from 'utils/format'
 import SEO from '../../components/SEO'
 
@@ -208,6 +211,30 @@ export default function WalletPage() {
               <div className="flex flex-col items-center justify-center gap-4 p-4">
                 {getAccount && <Jazzicon address={getAccount} size={54} />}
                 <ConnectedNetwork />
+                <div className="flex items-center">
+                  <NextLink href={'https://reveal.magic.link/soundchain'}>
+                    <div className="mr-[6px] flex cursor-pointer items-center rounded-lg bg-gray-1A px-[12px] py-[6px]">
+                      <EyeSlash className="mr-[12px]" />
+                      <span className="text-xs text-gray-80">Reveal Secret Phrase</span>
+                    </div>
+                  </NextLink>
+                  <ReactTooltip id="warning-tooltip" type="dark" effect="solid" globalEventOff="click">
+                    <div className="rounded-lg bg-gray-1A p-3">
+                      <span className="text-xs font-semibold text-white">
+                        This allows for control of your wallet outside soundchain never share it with anyone.
+                      </span>
+                    </div>
+                  </ReactTooltip>
+                  <div
+                    data-tip="This allows for control of your wallet outside soundchain never share it with anyone."
+                    data-for="warning-tooltip"
+                    className="cursor-pointer"
+                    data-event="click focus"
+                  >
+                    <Warning />
+                  </div>
+                </div>
+
                 {getAccount && <CopyWalletAddress walletAddress={getAccount} />}
 
                 <div className="flex w-full flex-col items-center justify-center gap-8 sm:flex-row sm:gap-0">

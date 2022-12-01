@@ -11,11 +11,11 @@ import { Avatar } from '../Avatar'
 import { DisplayName } from '../DisplayName'
 import { MiniAudioPlayer } from '../MiniAudioPlayer'
 import { NotAvailableMessage } from '../NotAvailableMessage'
+import { Timestamp } from '../Timestamp'
 import { PostActions } from './PostActions'
 import { PostSkeleton } from './PostSkeleton'
 import { PostStats } from './PostStats'
 import { RepostPreview } from './RepostPreview'
-import { Timestamp } from '../Timestamp'
 
 interface PostProps {
   post: PostQuery['post']
@@ -95,7 +95,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
           ) : (
             <iframe
               frameBorder="0"
-              className="mt-4 w-full bg-gray-20"
+              className="mt-4 min-h-[250px] w-full bg-gray-20"
               allowFullScreen
               src={post.mediaLink}
               title="Media"
