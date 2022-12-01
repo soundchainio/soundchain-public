@@ -28,7 +28,7 @@ export const playbackCount: Handler = async () => {
       console.error(error);
       context.logErrorService.createLogError(
         'Lambda function: playbackCount - Error fetching Mux Data',
-        `URL: ${url} Error: ${error}`,
+      `URL: ${url} Error: ${error}`,
       );
     }
   };
@@ -52,6 +52,7 @@ export const playbackCount: Handler = async () => {
     const pageSize = 10000;
 
     const inputValues = await fetch(pageSize, currentPage);
+
     const totalCount = inputValues.totalCount;
     const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -62,6 +63,7 @@ export const playbackCount: Handler = async () => {
 
     console.log(`Page size: ${pageSize} - Mux data fetched: ${totalCount} tracks to be updated...`);
     const tracksUpdated = await update(inputValues, url);
+    
     console.log(
       `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
     );
