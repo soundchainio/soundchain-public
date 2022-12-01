@@ -33,6 +33,7 @@ import { TrackService } from '../services/TrackService';
 import { UploadService } from '../services/UploadService';
 import { UserService } from '../services/UserService';
 import { WhitelistEntryService } from '../services/WhitelistEntryService';
+import { PlaylistService } from '../services/PlaylistService';
 
 export class Context {
   auctionItemService = new AuctionItemService(this);
@@ -53,6 +54,7 @@ export class Context {
   pinningService = new PinningService(this);
   polygonscanService = new PolygonscanService(this);
   postService = new PostService(this);
+  playlistService = new PlaylistService(this);
   profileService = new ProfileService(this);
   proofBookService = new ProofBookService(this);
   profileVerificationRequestService = new ProfileVerificationRequestService(this);

@@ -64,7 +64,7 @@ export class TrackService extends ModelService<typeof Track> {
 
     return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
   }
-
+  
   getOwnedTracks(
     filter?: FilterOwnedTracksInput,
     sort?: SortTrackInput,
