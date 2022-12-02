@@ -1,9 +1,10 @@
-import { CameraIcon } from '@heroicons/react/solid'
+import { Camera } from 'iconsax-react'
 import { imageMimeTypes, videoMimeTypes } from 'lib/mimeTypes'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { FileRejection, useDropzone } from 'react-dropzone'
 import { toast } from 'react-toastify'
+import tw from 'tailwind-styled-components'
 
 export interface ArtworkUploaderProps {
   name: string
@@ -49,10 +50,9 @@ export const ArtworkUploader = ({ name, initialValue, onFileChange, error }: Art
   const isVideo = file?.type.startsWith('video')
 
   return (
-    <div className="flex cursor-pointer flex-col" {...getRootProps()}>
+    <div className="flex w-full cursor-pointer flex-col items-center justify-center" {...getRootProps()}>
       <Preview preview={preview} isVideo={isVideo} error={error} />
       {error && <span className="w-24 text-center text-xxs text-red-500">{error}</span>}
-      <div className="text-center text-xxs font-semibold leading-4 text-gray-80">CHANGE ARTWORK</div>
       <input name={name} {...getInputProps()} />
     </div>
   )
@@ -67,12 +67,10 @@ interface PreviewProps {
 const Preview = ({ preview, isVideo, error }: PreviewProps) => {
   if (!preview) {
     return (
-      <div className={`relative flex overflow-hidden rounded border ${error ? 'border-red-500' : 'border-gray-35'}`}>
-        <Image src="/soundchain-app-icon.png" alt="Upload preview" width={100} height={100} objectFit="fill" />
-        <div className="absolute flex h-full w-full items-center justify-center bg-gray-10 bg-opacity-60 text-white">
-          <CameraIcon width={30} />
-        </div>
-      </div>
+      <PreviewContainer error={Boolean(error)}>
+        <Camera size="30" className="text-neutral-600" />
+        <h2 className="text-md font-semibold text-neutral-600">Artwork</h2>
+      </PreviewContainer>
     )
   }
   if (isVideo) {
@@ -95,3 +93,19 @@ const Preview = ({ preview, isVideo, error }: PreviewProps) => {
     </div>
   )
 }
+
+const PreviewContainer = tw.div<{ error: boolean }>`
+  flex
+  rounded
+  border-2
+  border-dashed
+  bg-neutral-900
+  items-center
+  justify-center
+  gap-2
+  py-8
+  px-4
+  w-full
+
+  ${({ error }) => (error ? 'border-red-600' : 'border-neutral-600')}
+`

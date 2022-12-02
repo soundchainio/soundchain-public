@@ -14,11 +14,12 @@ interface ButtonProps extends ComponentProps<'button'> {
     type?: CurrencyType
     value?: number
   }
-  text?: string
+  text: string
   isLoading?: boolean
 }
 
 export const Button = (props: ButtonProps) => {
+  /// Required fields are [Color] and [buttonType]
   const { color, text, isLoading = false, buttonType, currency, ...rest } = props
 
   return (

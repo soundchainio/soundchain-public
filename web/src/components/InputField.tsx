@@ -1,5 +1,6 @@
 import { useField } from 'formik'
 import { createRef } from 'react'
+import tw from 'tailwind-styled-components'
 import { Label } from './Label'
 
 interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
@@ -12,7 +13,7 @@ interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
   alignTextCenter?: boolean
 }
 
-const commonInputClasses = `relative appearance-none block w-full p-3 rounded border bg-gray-1A border-gray-30 text-gray-200 cursor-text`
+const commonInputClasses = `relative appearance-none block w-full p-3 rounded-lg border bg-neutral-900 border-neutral-600 text-white cursor-text`
 const validInputClasses = `${commonInputClasses} border-gray-30`
 const errorInputClasses = `${commonInputClasses} border-red-500`
 
@@ -30,15 +31,7 @@ export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: Inp
             {label}
           </Label>
         )}
-        <input
-          className={`placeholder-semibold w-full border-none bg-gray-1A p-0 text-xs font-bold leading-3 text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent ${
-            alignTextCenter && 'text-center'
-          }`}
-          id={props.name}
-          {...field}
-          {...props}
-          ref={inputRef}
-        />
+        <Input id={props.name} {...field} {...props} ref={inputRef} alignTextCenter={alignTextCenter} />
         {Icon && (
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
             <Icon className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -52,3 +45,20 @@ export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: Inp
     </>
   )
 }
+
+const Input = tw.input<{ alignTextCenter?: boolean }>`
+  placeholder-semibold 
+  w-full 
+  border-none 
+  bg-neutral-900 
+  p-0 
+  text-xs 
+  font-bold 
+  leading-3 
+  text-white 
+  placeholder-neutral-600 
+  focus:outline-none 
+  focus:ring-transparent
+
+  ${({ alignTextCenter }) => alignTextCenter && 'text-center'}
+`

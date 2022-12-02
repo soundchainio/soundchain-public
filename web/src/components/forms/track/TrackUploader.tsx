@@ -2,10 +2,12 @@ import { AudioPlayer } from 'components/AudioPlayer'
 import { JellyButton } from 'components/common/Buttons/JellyButton'
 import { MusicFile } from 'icons/MusicFile'
 import { Upload as UploadIcon } from 'icons/Upload'
+import { MusicSquareAdd } from 'iconsax-react'
 import { audioMimeTypes } from 'lib/mimeTypes'
 import { useState } from 'react'
 import { FileRejection, useDropzone } from 'react-dropzone'
 import { toast } from 'react-toastify'
+import tw from 'tailwind-styled-components'
 
 export interface TrackUploaderProps {
   onFileChange: (file: File) => void
@@ -13,8 +15,6 @@ export interface TrackUploaderProps {
 }
 
 const maxSize = 1024 * 1024 * 100 // 100Mb
-
-const containerClasses = 'flex bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4'
 
 export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
   const [file, setFile] = useState<File>()
@@ -55,18 +55,32 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
   }
 
   return (
-    <div {...getRootProps()} className={containerClasses}>
-      <div className="mr-auto w-full text-gray-80">
-        <MusicFile />
-        <p className="mt-1 text-xs font-bold">Upload music...</p>
-        <p className="text-xxs font-semibold">WAV,MP3,AIFF,FLAC,OGA (Max: 100mb)</p>
+    <Container {...getRootProps()}>
+      <MusicSquareAdd size="30" />
+      <div className="flex flex-col items-start">
+        <Paragraph>Track</Paragraph>
+        <Paragraph className="text-sm font-normal">WAV,MP3,AIFF,FLAC,OGA (Max: 100mb)</Paragraph>
       </div>
-      <div className="flex flex-shrink-0 flex-col justify-center">
-        <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
-          Choose File
-        </JellyButton>
-        <input {...getInputProps()} />
-      </div>
-    </div>
+      <input {...getInputProps()} />
+    </Container>
   )
 }
+
+const Container = tw.div`
+  bg-neutral-900
+  text-neutral-600
+  border-neutral-600
+  rounded
+  border-2
+  border-dashed
+  py-8
+  px-4
+  flex
+  gap-2
+  items-center
+  w-full
+`
+const Paragraph = tw.div`
+  font-semibold
+  text-md
+`

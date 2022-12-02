@@ -2394,6 +2394,26 @@ export type CreateMultipleTracksMutation = (
   ) }
 );
 
+export type CreatePlaylistMutationVariables = Exact<{
+  input: CreatePlaylistData;
+}>;
+
+
+export type CreatePlaylistMutation = (
+  { __typename?: 'Mutation' }
+  & { createPlaylist: (
+    { __typename?: 'CreatePlaylistPayload' }
+    & { playlist: (
+      { __typename?: 'Playlist' }
+      & Pick<Playlist, 'id' | 'title' | 'description'>
+      & { playlistTracks: Maybe<Array<(
+        { __typename?: 'PlaylistTrack' }
+        & Pick<PlaylistTrack, 'playlistId'>
+      )>> }
+    ) }
+  ) }
+);
+
 export type CreatePlaylistTracksMutationVariables = Exact<{
   input: CreatePlaylistTracks;
 }>;
@@ -5288,6 +5308,46 @@ export function useCreateMultipleTracksMutation(baseOptions?: Apollo.MutationHoo
 export type CreateMultipleTracksMutationHookResult = ReturnType<typeof useCreateMultipleTracksMutation>;
 export type CreateMultipleTracksMutationResult = Apollo.MutationResult<CreateMultipleTracksMutation>;
 export type CreateMultipleTracksMutationOptions = Apollo.BaseMutationOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>;
+export const CreatePlaylistDocument = gql`
+    mutation CreatePlaylist($input: CreatePlaylistData!) {
+  createPlaylist(input: $input) {
+    playlist {
+      id
+      title
+      description
+      playlistTracks {
+        playlistId
+      }
+    }
+  }
+}
+    `;
+export type CreatePlaylistMutationFn = Apollo.MutationFunction<CreatePlaylistMutation, CreatePlaylistMutationVariables>;
+
+/**
+ * __useCreatePlaylistMutation__
+ *
+ * To run a mutation, you first call `useCreatePlaylistMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreatePlaylistMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createPlaylistMutation, { data, loading, error }] = useCreatePlaylistMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreatePlaylistMutation(baseOptions?: Apollo.MutationHookOptions<CreatePlaylistMutation, CreatePlaylistMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreatePlaylistMutation, CreatePlaylistMutationVariables>(CreatePlaylistDocument, options);
+      }
+export type CreatePlaylistMutationHookResult = ReturnType<typeof useCreatePlaylistMutation>;
+export type CreatePlaylistMutationResult = Apollo.MutationResult<CreatePlaylistMutation>;
+export type CreatePlaylistMutationOptions = Apollo.BaseMutationOptions<CreatePlaylistMutation, CreatePlaylistMutationVariables>;
 export const CreatePlaylistTracksDocument = gql`
     mutation createPlaylistTracks($input: CreatePlaylistTracks!) {
   createPlaylistTracks(input: $input) {

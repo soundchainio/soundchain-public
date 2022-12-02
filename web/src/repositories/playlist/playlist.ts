@@ -1,5 +1,6 @@
 import { apolloClient, createApolloClient } from 'lib/apollo'
 import {
+  CreatePlaylistDocument,
   CreatePlaylistTracksDocument,
   DeletePlaylistTracksDocument,
   GetPlaylistTracksDocument,
@@ -179,6 +180,27 @@ export const createPlaylistTracks = async (params: CreatePlaylistTracksParams) =
     })
 
     return playlistTracks.data.createPlaylistTracks.playlist
+  } catch (error) {
+    errorHandler(error)
+  }
+}
+
+export interface CreatePlaylistParams {
+  title: string
+  description: string
+  trackEditionIds?: string[]
+}
+
+export const createPlaylist = async (params: CreatePlaylistParams) => {
+  try {
+    const { title, description, trackEditionIds } = params
+
+    const playlistData = await apolloClient.mutate({
+      mutation: CreatePlaylistDocument,
+      variables: { input: { title, description, trackEditionIds } },
+    })
+
+    return playlistData.data.createPlaylist.playlist
   } catch (error) {
     errorHandler(error)
   }

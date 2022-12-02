@@ -14,6 +14,7 @@ import { useMe } from 'hooks/useMe'
 import { createPlaylistTracks, getPlaylistTracks, removeTrackFromPlaylist } from 'repositories/playlist/playlist'
 import { usePlaylistContext } from 'hooks/usePlaylistContext'
 import { toast } from 'react-toastify'
+import { CreatePlaylistForm } from 'components/forms/CreatePlaylistForm'
 
 interface TrackMenuProps {
   track: Track
@@ -28,6 +29,7 @@ export const TrackMenu = (props: TrackMenuProps) => {
   const { playlistTracks, setPlaylistTracks, userPlaylists, playlist } = usePlaylistContext()
 
   const [showMobileModal, setShowMobileModal] = useState(false)
+  const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false)
   const [playlists, setPlaylists] = useState<Playlist[] | undefined[]>([])
 
   const me = useMe()
@@ -142,7 +144,12 @@ export const TrackMenu = (props: TrackMenuProps) => {
         <UserPlaylistsContainer>
           <h2 className="mb-2 text-lg font-bold text-neutral-400">Playlists</h2>
           <Divider classnames="mb-4" />
-          <Button buttonType="text" color="blue" text="Create Playlist" />
+          <Button
+            buttonType="text"
+            color="blue"
+            text="Create Playlist"
+            onClick={() => setShowCreatePlaylistModal(true)}
+          />
           <Divider classnames="mt-4" />
           <UserPlaylists>
             {playlists &&
@@ -155,6 +162,10 @@ export const TrackMenu = (props: TrackMenuProps) => {
               })}
           </UserPlaylists>
         </UserPlaylistsContainer>
+      </MobileModal>
+
+      <MobileModal open={showCreatePlaylistModal} close={() => setShowCreatePlaylistModal(false)}>
+        <CreatePlaylistForm />
       </MobileModal>
     </>
   )
