@@ -1,23 +1,20 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
 import tw from 'tailwind-styled-components'
-import { PageInput, SortExploreTracksField, useExploreTracksLazyQuery } from 'lib/graphql'
 import { debounce } from 'utils/debounce'
 import Asset from 'components/Asset/Asset'
-import { ProfileCover } from 'components/ProfileCover'
-import { Avatar } from 'components/Avatar'
+import { getExploreTracksWithProfiles } from 'repositories/explore/explore'
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import { Profile, Track } from 'lib/graphql'
+import { usePlaylistContext } from 'hooks/usePlaylistContext'
 
-const pageSize = 15
+type TracksWithProfile = Track & { profile: Profile }
 
 export const SearchWithDropdown = () => {
-  const [selected, setSelected] = useState()
-  const [searchTerm, setSearchTerm] = useState('guns')
-  const firstPage: PageInput = { first: pageSize }
+  const [searchTerm, setSearchTerm] = useState('')
+  const [tracks, setTracks] = useState<TracksWithProfile[] | null>(null)
 
-  const [getTracks, { data, fetchMore }] = useExploreTracksLazyQuery({
-    variables: { sort: { field: SortExploreTracksField.CreatedAt }, search: searchTerm, page: firstPage },
-  })
-
+  const { temporaryTracks, setTemporaryTracks } = usePlaylistContext()
   const onSearchChanged = useMemo(
     () =>
       debounce((newValue: string) => {
@@ -26,16 +23,30 @@ export const SearchWithDropdown = () => {
     [setSearchTerm],
   )
 
+  const handleSetTemporaryTrack = (newTrack: TracksWithProfile) => {
+    if (temporaryTracks.includes(newTrack)) return
+
+    setTemporaryTracks(prevState => [...prevState, newTrack])
+  }
+
   useEffect(() => {
     if (!searchTerm) return
+
+    const getTracks = async () => {
+      const tracksWithProfiles = await getExploreTracksWithProfiles(searchTerm)
+
+      if (!tracksWithProfiles) return
+
+      setTracks(tracksWithProfiles)
+    }
+
     getTracks()
-    console.log(data)
-  }, [data, getTracks, searchTerm])
+  }, [searchTerm])
 
   return (
     <div className="relative z-10 w-full">
       <Border>
-        <Combobox value={selected} onChange={e => onSearchChanged(e.target.value)}>
+        <Combobox onChange={e => onSearchChanged(e.target.value)}>
           <Combobox.Input
             className="w-full rounded-lg border-none bg-neutral-900 text-white focus:ring-0"
             onChange={event => setSearchTerm(event.target.value)}
@@ -49,24 +60,21 @@ export const SearchWithDropdown = () => {
             afterLeave={() => setSearchTerm('')}
           >
             <Combobox.Options className="absolute mt-1 w-full rounded-lg border-none bg-neutral-900 p-4 text-white hover:cursor-pointer hover:bg-neutral-600 focus:ring-0">
-              {data &&
-                data.exploreTracks.nodes.map((track, index) => (
-                  <>
-                    <div key={index} className="flex items-center gap-2">
+              {tracks &&
+                tracks.map((track, index) => (
+                  <div
+                    className="flex items-center justify-between"
+                    key={index}
+                    onClick={() => handleSetTemporaryTrack(track)}
+                  >
+                    <div className="flex items-center gap-2">
                       <div className="h-10 w-10">
                         <Asset src={track.artworkUrl} sizes="5rem" disableImageWave />
                       </div>
                       <h3 className="text-md font-semibold">{track.title}</h3>
                     </div>
-                    <div className="relative h-[125px]">
-                      {/* <ProfileCover coverPicture={coverPicture || ''} className="h-[125px]" />
-                  <Avatar
-                    profile={profile}
-                    pixels={80}
-                    className="absolute left-4 bottom-0 translate-y-2/3 transform rounded-full border-4 border-gray-10"
-                  /> */}
-                    </div>
-                  </>
+                    <ProfileWithAvatar profile={track.profile} avatarSize={30} shouldRedirect={false} />
+                  </div>
                 ))}
             </Combobox.Options>
           </Transition>

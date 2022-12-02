@@ -1,6 +1,7 @@
 import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
 import { Context } from '../types/Context';
 import { ExplorePayload } from '../types/ExplorePayload';
+import { ExploreTrackPayload } from '../types/ExploreTrackPayload';
 import { PageInput } from '../types/PageInput';
 import { ProfileConnection } from '../types/ProfileConnection';
 import { SortExploreTracks } from '../types/SortExploreTracks';
@@ -26,6 +27,17 @@ export class ExploreResolver {
     @Arg('sort', { nullable: true }) sort?: SortExploreTracks,
   ): Promise<TrackConnection> {
     return exploreService.getExploreTracks(sort, search, page);
+  }
+
+  @Query(() => ExploreTrackPayload)
+  @Authorized()
+  exploreTracksWithProfiles(
+    @Ctx() { exploreService }: Context,
+    @Arg('search', { nullable: true }) search: string,
+    @Arg('page', { nullable: true }) page: PageInput,
+    @Arg('sort', { nullable: true }) sort?: SortExploreTracks,
+  ): Promise<ExploreTrackPayload> {
+    return exploreService.getExploreTracksWithProfiles(sort, search, page);
   }
 
   @Query(() => ProfileConnection)

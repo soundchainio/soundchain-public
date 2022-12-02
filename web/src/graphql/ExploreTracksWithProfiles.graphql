@@ -1,0 +1,10 @@
+query ExploreTracksWithProfiles($sort: SortExploreTracks, $search: String, $page: PageInput) {
+  exploreTracksWithProfiles(sort: $sort, search: $search, page: $page) {
+    profiles {
+      ...ProfileComponentFields
+    }
+    tracks {
+      ...TrackComponentFields
+    }
+  }
+}

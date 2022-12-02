@@ -435,6 +435,12 @@ export type ExplorePayload = {
   totalTracks: Scalars['Float'];
 };
 
+export type ExploreTrackPayload = {
+  __typename?: 'ExploreTrackPayload';
+  profiles: Array<Profile>;
+  tracks: Array<Track>;
+};
+
 export type FavoritePlaylist = {
   __typename?: 'FavoritePlaylist';
   id: Scalars['ID'];
@@ -1301,6 +1307,7 @@ export type Query = {
   comments: CommentConnection;
   explore: ExplorePayload;
   exploreTracks: TrackConnection;
+  exploreTracksWithProfiles: ExploreTrackPayload;
   exploreUsers: ProfileConnection;
   feed: FeedConnection;
   followers: FollowConnection;
@@ -1406,6 +1413,13 @@ export type QueryExploreArgs = {
 
 
 export type QueryExploreTracksArgs = {
+  sort?: Maybe<SortExploreTracks>;
+  page?: Maybe<PageInput>;
+  search?: Maybe<Scalars['String']>;
+};
+
+
+export type QueryExploreTracksWithProfilesArgs = {
   sort?: Maybe<SortExploreTracks>;
   page?: Maybe<PageInput>;
   search?: Maybe<Scalars['String']>;
@@ -2639,6 +2653,27 @@ export type ExploreTracksQuery = (
       { __typename?: 'PageInfo' }
       & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
     ) }
+  ) }
+);
+
+export type ExploreTracksWithProfilesQueryVariables = Exact<{
+  sort?: Maybe<SortExploreTracks>;
+  search?: Maybe<Scalars['String']>;
+  page?: Maybe<PageInput>;
+}>;
+
+
+export type ExploreTracksWithProfilesQuery = (
+  { __typename?: 'Query' }
+  & { exploreTracksWithProfiles: (
+    { __typename?: 'ExploreTrackPayload' }
+    & { profiles: Array<(
+      { __typename?: 'Profile' }
+      & ProfileComponentFieldsFragment
+    )>, tracks: Array<(
+      { __typename?: 'Track' }
+      & TrackComponentFieldsFragment
+    )> }
   ) }
 );
 
@@ -5820,6 +5855,49 @@ export function useExploreTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>;
 export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>;
 export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>;
+export const ExploreTracksWithProfilesDocument = gql`
+    query ExploreTracksWithProfiles($sort: SortExploreTracks, $search: String, $page: PageInput) {
+  exploreTracksWithProfiles(sort: $sort, search: $search, page: $page) {
+    profiles {
+      ...ProfileComponentFields
+    }
+    tracks {
+      ...TrackComponentFields
+    }
+  }
+}
+    ${ProfileComponentFieldsFragmentDoc}
+${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useExploreTracksWithProfilesQuery__
+ *
+ * To run a query within a React component, call `useExploreTracksWithProfilesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExploreTracksWithProfilesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExploreTracksWithProfilesQuery({
+ *   variables: {
+ *      sort: // value for 'sort'
+ *      search: // value for 'search'
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useExploreTracksWithProfilesQuery(baseOptions?: Apollo.QueryHookOptions<ExploreTracksWithProfilesQuery, ExploreTracksWithProfilesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreTracksWithProfilesQuery, ExploreTracksWithProfilesQueryVariables>(ExploreTracksWithProfilesDocument, options);
+      }
+export function useExploreTracksWithProfilesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ExploreTracksWithProfilesQuery, ExploreTracksWithProfilesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ExploreTracksWithProfilesQuery, ExploreTracksWithProfilesQueryVariables>(ExploreTracksWithProfilesDocument, options);
+        }
+export type ExploreTracksWithProfilesQueryHookResult = ReturnType<typeof useExploreTracksWithProfilesQuery>;
+export type ExploreTracksWithProfilesLazyQueryHookResult = ReturnType<typeof useExploreTracksWithProfilesLazyQuery>;
+export type ExploreTracksWithProfilesQueryResult = Apollo.QueryResult<ExploreTracksWithProfilesQuery, ExploreTracksWithProfilesQueryVariables>;
 export const ExploreUsersDocument = gql`
     query ExploreUsers($search: String, $page: PageInput) {
   exploreUsers(search: $search, page: $page) {

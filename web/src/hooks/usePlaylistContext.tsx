@@ -16,6 +16,7 @@ interface PlaylistProviderProps {
   children: ReactNode
 }
 
+type TracksWithProfile = Track & { profile: Profile }
 export interface PlaylistInitialData {
   playlist: Playlist
   profile: Profile
@@ -31,6 +32,8 @@ interface PlaylistContextData {
   likeCount: number
   setFollowCount: React.Dispatch<React.SetStateAction<number>>
   setPlaylistTracks: React.Dispatch<React.SetStateAction<Track[] | null>>
+  setTemporaryTracks: React.Dispatch<React.SetStateAction<TracksWithProfile[]>>
+  temporaryTracks: TracksWithProfile[]
   followCount: number
   playlist: Playlist | null
   userPlaylists: Playlist[] | null
@@ -47,6 +50,7 @@ export function PlaylistProvider({ children }: PlaylistProviderProps) {
   const [playlist, setPlaylist] = useState<Playlist | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [playlistTracks, setPlaylistTracks] = useState<Track[] | null>(null)
+  const [temporaryTracks, setTemporaryTracks] = useState<TracksWithProfile[]>([])
 
   const [likeCount, setLikeCount] = useState(0)
   const [followCount, setFollowCount] = useState(0)
@@ -130,6 +134,8 @@ export function PlaylistProvider({ children }: PlaylistProviderProps) {
         setFollowCount,
         setPlaylistInitialData,
         setPlaylistTracks,
+        setTemporaryTracks,
+        temporaryTracks,
       }}
     >
       {children}

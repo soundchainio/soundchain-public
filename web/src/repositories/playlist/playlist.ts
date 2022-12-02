@@ -188,16 +188,17 @@ export const createPlaylistTracks = async (params: CreatePlaylistTracksParams) =
 export interface CreatePlaylistParams {
   title: string
   description: string
+  artworkUrl: string
   trackEditionIds?: string[]
 }
 
 export const createPlaylist = async (params: CreatePlaylistParams) => {
   try {
-    const { title, description, trackEditionIds } = params
+    const { title, description, trackEditionIds, artworkUrl } = params
 
     const playlistData = await apolloClient.mutate({
       mutation: CreatePlaylistDocument,
-      variables: { input: { title, description, trackEditionIds } },
+      variables: { input: { title, description, artworkUrl, trackEditionIds } },
     })
 
     return playlistData.data.createPlaylist.playlist

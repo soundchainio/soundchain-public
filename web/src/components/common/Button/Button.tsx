@@ -5,8 +5,8 @@ import { CurrencyType } from 'lib/graphql'
 import { Matic } from 'icons/Matic'
 import { Logo as OgunIcon } from 'icons/Logo'
 
-type Colors = 'blue' | 'green' | 'disabled' | 'rainbow' | 'purple' | 'yellow'
-
+type Colors = 'blue' | 'green' | 'disabled' | 'rainbow' | 'purple' | 'yellow' | 'pink'
+type Width = 'full' | 'contain'
 interface ButtonProps extends ComponentProps<'button'> {
   color: Colors
   buttonType: 'text' | 'currency'
@@ -16,14 +16,14 @@ interface ButtonProps extends ComponentProps<'button'> {
   }
   text: string
   isLoading?: boolean
+  width?: Width
 }
 
 export const Button = (props: ButtonProps) => {
-  /// Required fields are [Color] and [buttonType]
-  const { color, text, isLoading = false, buttonType, currency, ...rest } = props
+  const { color, text, isLoading = false, buttonType, currency, width = 'full', ...rest } = props
 
   return (
-    <Border color={color}>
+    <Border color={color} width={width}>
       <ButtonContainer color={color} {...rest}>
         {buttonType === 'text' || !currency ? (
           <Text color={color}>{isLoading ? <SpinAnimation /> : text}</Text>
@@ -42,12 +42,13 @@ export const Button = (props: ButtonProps) => {
   )
 }
 
-const Border = tw.div<{ color: Colors }>`
+const Border = tw.div<{ color: Colors; width: Width }>`
   relative 
   rounded-lg
   p-[2px]
-  w-full
 
+  ${({ width }) => width === 'full' && 'w-full'}
+  ${({ width }) => width === 'contain' && ''}
 
   ${({ color }) => color === 'blue' && 'bg-blue-300'}
   ${({ color }) => color === 'disabled' && 'bg-neutral-500'}
@@ -55,6 +56,7 @@ const Border = tw.div<{ color: Colors }>`
   ${({ color }) => color === 'purple' && 'bg-fuchsia-500'}
   ${({ color }) => color === 'purple' && 'bg-yellow-400'}
   ${({ color }) => color === 'rainbow' && 'bg-rainbow-bg-gradient'}
+  ${({ color }) => color === 'pink' && 'bg-rose-400'}
 `
 const ButtonContainer = tw.button<{ color: Colors }>`
   rounded-lg
@@ -76,13 +78,15 @@ const Text = tw.span<{ color: Colors }>`
   items-center
   justify-center
   h-[30px]
+  px-4
   tracking-wide
 
   ${({ color }) => color === 'blue' && 'text-blue-300'}
   ${({ color }) => color === 'disabled' && 'text-neutral-500'}
   ${({ color }) => color === 'green' && 'text-green-400'}
   ${({ color }) => color === 'purple' && 'text-fuchsia-500'}
-  ${({ color }) => color === 'purple' && 'text-yellow-500'}
+  ${({ color }) => color === 'yellow' && 'text-yellow-500'}
+  ${({ color }) => color === 'pink' && 'text-rose-400'}
   ${({ color }) => color === 'rainbow' && 'text-transparent bg-clip-text font-blackbg-rainbow-text-gradient'}
 `
 

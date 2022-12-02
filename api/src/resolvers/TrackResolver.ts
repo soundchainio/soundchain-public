@@ -30,7 +30,6 @@ import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTrac
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 import { TrackPrice } from '../types/TrackPrice';
-import { FilterMultipleTracks } from '../types/FilterMultipleTracks';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -40,11 +39,14 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => Number)
-  playbackCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId, playbackCount }: Track): Promise<number> {
+  playbackCount(
+    @Ctx() { trackService }: Context,
+    @Root() { _id: trackId, trackEditionId, playbackCount }: Track,
+  ): Promise<number> {
     if (trackEditionId) {
       return trackService.playbackCount(trackId, trackEditionId);
     }
-    return Promise.resolve(playbackCount)
+    return Promise.resolve(playbackCount);
   }
 
   @FieldResolver(() => String)
@@ -52,26 +54,34 @@ export class TrackResolver {
     @Ctx() { trackService }: Context,
     @Root() { _id: trackId, trackEditionId, playbackCount }: Track,
   ): Promise<string> {
-    const playbackCountToUse = trackEditionId ? await trackService.playbackCount(trackId, trackEditionId) : playbackCount;
+    const playbackCountToUse = trackEditionId
+      ? await trackService.playbackCount(trackId, trackEditionId)
+      : playbackCount;
 
     return playbackCountToUse ? new Intl.NumberFormat('en-US').format(playbackCountToUse) : '';
   }
 
   @FieldResolver(() => Number)
-  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<FavoriteCount> {
+  favoriteCount(
+    @Ctx() { trackService }: Context,
+    @Root() { _id: trackId, trackEditionId }: Track,
+  ): Promise<FavoriteCount> {
     return trackService.favoriteCount(trackId, trackEditionId);
   }
 
   @FieldResolver(() => Number)
   listingCount(@Ctx() { listingCountByTrackEdition }: Context, @Root() { trackEditionId }: Track): Promise<number> {
-    if(!trackEditionId) return Promise.resolve(0)
+    if (!trackEditionId) return Promise.resolve(0);
     return listingCountByTrackEdition.load(trackEditionId);
   }
 
   @FieldResolver(() => TrackPrice)
-  price(@Ctx() { trackService, listingItemService }: Context, @Root() { trackEditionId, nftData }: Track): Promise<TrackPrice> {
-    if(trackEditionId) {
-      return listingItemService.getCheapestListingItem(trackEditionId)
+  price(
+    @Ctx() { trackService, listingItemService }: Context,
+    @Root() { trackEditionId, nftData }: Track,
+  ): Promise<TrackPrice> {
+    if (trackEditionId) {
+      return listingItemService.getCheapestListingItem(trackEditionId);
     }
     return trackService.priceToShow(nftData.tokenId, nftData.contract);
   }
@@ -95,30 +105,17 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => Number)
-  editionSize(
-    @Ctx() { trackEditionService }: Context,
-    @Root() { trackEditionId }: Track,
-  ): Promise<number> {
-    return trackEditionId
-      ? trackEditionService.getEditionSize(trackEditionId)
-      : Promise.resolve(0);
+  editionSize(@Ctx() { trackEditionService }: Context, @Root() { trackEditionId }: Track): Promise<number> {
+    return trackEditionId ? trackEditionService.getEditionSize(trackEditionId) : Promise.resolve(0);
   }
 
   @FieldResolver(() => TrackEdition)
-  trackEdition(
-    @Ctx() { trackEditionService }: Context,
-    @Root() { trackEditionId }: Track,
-  ): Promise<TrackEdition> {
-    return trackEditionId
-      ? trackEditionService.findOrFail(trackEditionId)
-      : null;
+  trackEdition(@Ctx() { trackEditionService }: Context, @Root() { trackEditionId }: Track): Promise<TrackEdition> {
+    return trackEditionId ? trackEditionService.findOrFail(trackEditionId) : null;
   }
 
   @FieldResolver(() => ListingItem, { nullable: true })
-  async listingItem(
-    @Ctx() { listingItemService }: Context,
-    @Root() { nftData }: Track,
-  ): Promise<ListingItem | void> {
+  async listingItem(@Ctx() { listingItemService }: Context, @Root() { nftData }: Track): Promise<ListingItem | void> {
     if (typeof nftData.tokenId !== 'number' || !nftData.contract) {
       return;
     }
@@ -140,7 +137,6 @@ export class TrackResolver {
     return trackService.getTracks(filter, sort, page);
   }
 
-
   @Query(() => TrackConnection)
   @Authorized()
   async ownedTracks(
@@ -148,7 +144,8 @@ export class TrackResolver {
     @Arg('filter') filter?: FilterOwnedTracksInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
-    return trackService.getOwnedTracks({
+    return trackService.getOwnedTracks(
+      {
         trackEditionId: filter.trackEditionId,
         owner: filter.owner,
       },
@@ -296,11 +293,14 @@ export class TrackResolver {
     @Ctx() { trackService }: Context,
     @Arg('filter', { nullable: true }) filter?: FilterOwnedBuyNowItemInput,
   ): Promise<ListingItemConnection> {
-    return trackService.getBuyNowlistingItems({
-      trackEdition: filter.trackEditionId,
-      nftData: {
-        owner: filter.owner,
-      }
-    }, { first: MAX_EDITION_SIZE });
+    return trackService.getBuyNowlistingItems(
+      {
+        trackEdition: filter.trackEditionId,
+        nftData: {
+          owner: filter.owner,
+        },
+      },
+      { first: MAX_EDITION_SIZE },
+    );
   }
 }
