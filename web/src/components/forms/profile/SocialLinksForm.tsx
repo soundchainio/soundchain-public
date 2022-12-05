@@ -43,7 +43,7 @@ const normalize = (value: string) => {
     return match[1]
   }
 
-  return value.replace(/[^a-zA-Z0-9-_.]/g, '')
+  return value.replace(/[^a-zA-Z0-9-_.#/]/g, '')
 }
 
 export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: SocialLinksFormProps) => {
