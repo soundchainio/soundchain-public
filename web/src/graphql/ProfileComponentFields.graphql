@@ -8,6 +8,11 @@ fragment ProfileComponentFields on Profile {
     instagram
     soundcloud
     twitter
+    linktree
+    discord
+    telegram
+    spotify
+    bandcamp
   }
   favoriteGenres
   musicianTypes
