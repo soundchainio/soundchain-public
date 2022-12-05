@@ -101,8 +101,7 @@ export const SocialMediaLink = ({ company, handle }: Props) => {
 
   return (
     <a href={getLink(handle)} className="flex items-center text-gray-50" target="_blank" rel="noreferrer">
-      <Icon className={customClassName} />
-      <span className="ml-1 text-xs font-semibold">{label}</span>
+      <Icon className={`${customClassName} h-[20px] w-[20px]`} />
     </a>
   )
 }
