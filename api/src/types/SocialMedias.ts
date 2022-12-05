@@ -19,4 +19,24 @@ export class SocialMedias {
   @Field({ nullable: true })
   @prop({ required: false })
   twitter?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  linktree?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  discord?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  telegram?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  spotify?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  bandcamp?: string;
 }
