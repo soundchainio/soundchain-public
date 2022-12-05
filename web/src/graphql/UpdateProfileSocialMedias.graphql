@@ -7,6 +7,11 @@ mutation updateSocialMedias($input: UpdateProfileInput!) {
         instagram
         soundcloud
         twitter
+        linktree
+        discord
+        telegram
+        spotify
+        bandcamp
       }
     }
   }
