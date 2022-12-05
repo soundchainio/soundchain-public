@@ -50,7 +50,7 @@ const companies = {
     label: 'Discord',
     icon: Discord,
     getLink(handle: string) {
-      return `https://discord.gg/${handle}/`
+      return `https://discord.gg/${handle}`
     },
     customClassName: '',
   },
