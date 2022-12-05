@@ -145,7 +145,7 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
           </div>
           <div className="flex items-center">
             <InputField
-              label="open.spotify.com/"
+              label="open.spotify.com/artist/"
               type="text"
               name="spotify"
               onChange={e => setFieldValue('spotify', normalize(e.target.value))}
