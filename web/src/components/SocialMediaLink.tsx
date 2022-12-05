@@ -66,7 +66,7 @@ const companies = {
     label: 'Spotify',
     icon: SpotifySquare,
     getLink(handle: string) {
-      return `https://open.spotify.com/${handle}/`
+      return `https://open.spotify.com/artist/${handle}/`
     },
     customClassName: '',
   },
