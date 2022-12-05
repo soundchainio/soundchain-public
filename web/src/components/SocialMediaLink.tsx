@@ -1,6 +1,9 @@
-import { Bandcamp } from 'icons/Bandcamp'
 import { Facebook, Instagram, Soundcloud, Twitter } from 'icons/social'
-import { Spotify } from 'icons/Spotify'
+import { BandcampSquare } from 'icons/social/BandcampSquare'
+import { Discord } from 'icons/social/Discord'
+import { LinktreeSquare } from 'icons/social/LinktreeSquare'
+import { SpotifySquare } from 'icons/social/SpotifySquare'
+import { TelegramSquare } from 'icons/social/TelegramSquare'
 
 const companies = {
   instagram: {
@@ -37,7 +40,7 @@ const companies = {
   },
   linktree: {
     label: 'Linktree',
-    icon: Soundcloud,
+    icon: LinktreeSquare,
     getLink(handle: string) {
       return `https://linktr.ee/${handle}/`
     },
@@ -45,7 +48,7 @@ const companies = {
   },
   discord: {
     label: 'Discord',
-    icon: Soundcloud,
+    icon: Discord,
     getLink(handle: string) {
       return `https://discord.gg/${handle}/`
     },
@@ -53,7 +56,7 @@ const companies = {
   },
   telegram: {
     label: 'Telegram',
-    icon: Soundcloud,
+    icon: TelegramSquare,
     getLink(handle: string) {
       return `https://t.me/${handle}/`
     },
@@ -61,7 +64,7 @@ const companies = {
   },
   spotify: {
     label: 'Spotify',
-    icon: Spotify,
+    icon: SpotifySquare,
     getLink(handle: string) {
       return `https://open.spotify.com/${handle}/`
     },
@@ -69,7 +72,7 @@ const companies = {
   },
   bandcamp: {
     label: 'Bandcamp',
-    icon: Bandcamp,
+    icon: BandcampSquare,
     getLink(handle: string) {
       return `https://bandcamp.com/${handle}/`
     },
