@@ -1,11 +1,11 @@
 import { useApolloClient } from '@apollo/client'
-import { PageInput, useCommentsQuery } from 'lib/graphql'
-import { useRouter } from 'next/router'
-import React, { useEffect, useRef, useState } from 'react'
-import { Comment } from './Comment'
-import { CommentSkeleton } from './CommentSkeleton'
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { LoaderAnimation } from 'components/LoaderAnimation'
+import { PageInput, useCommentsQuery } from 'lib/graphql'
+import { useRouter } from 'next/router'
+import { useEffect, useRef, useState } from 'react'
+import { Comment } from './Comment'
+import { CommentSkeleton } from './CommentSkeleton'
 
 interface CommentsProps {
   postId: string
@@ -13,7 +13,6 @@ interface CommentsProps {
 }
 
 export const Comments = ({ postId, pageSize = 10 }: CommentsProps) => {
-  console.log({ pageSize })
   const router = useRouter()
   const { cache } = useApolloClient()
   const [scrollToCommentId, setScrollToCommentId] = useState<string | null>(null)

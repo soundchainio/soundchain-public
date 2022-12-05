@@ -163,11 +163,16 @@ export default function ProfilePage({ profile }: ProfilePageProps) {
             <MessageButton profileId={profileId} />
           </div>
 
-          <div className="mt-2 flex space-x-4">
+          <div className="mt-2 mb-1 flex space-x-3 sm:space-x-4">
             {socialMedias.facebook && <SocialMediaLink company="facebook" handle={socialMedias.facebook} />}
             {socialMedias.instagram && <SocialMediaLink company="instagram" handle={socialMedias.instagram} />}
             {socialMedias.twitter && <SocialMediaLink company="twitter" handle={socialMedias.twitter} />}
             {socialMedias.soundcloud && <SocialMediaLink company="soundcloud" handle={socialMedias.soundcloud} />}
+            {socialMedias.linktree && <SocialMediaLink company="linktree" handle={socialMedias.linktree} />}
+            {socialMedias.discord && <SocialMediaLink company="discord" handle={socialMedias.discord} />}
+            {socialMedias.telegram && <SocialMediaLink company="telegram" handle={socialMedias.telegram} />}
+            {socialMedias.spotify && <SocialMediaLink company="spotify" handle={socialMedias.spotify} />}
+            {socialMedias.bandcamp && <SocialMediaLink company="bandcamp" handle={socialMedias.bandcamp} />}
           </div>
         </div>
         <ProfileTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
