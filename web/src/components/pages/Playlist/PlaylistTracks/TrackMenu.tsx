@@ -95,7 +95,7 @@ export const TrackMenu = (props: TrackMenuProps) => {
         <TrackContainer>
           <TrackImage>
             <Asset src={track.artworkUrl} sizes="5.625rem" disableImageWave imageClassname="rounded-xl" />
-            <PlayButton onClick={handleOnPlayClicked} aria-label={isPlaying ? 'Pause' : 'Play'}>
+            <PlayButton onClick={() => handleOnPlayClicked(0)} aria-label={isPlaying ? 'Pause' : 'Play'}>
               {isPlaying ? (
                 <Pause className="ml-[1px] scale-125 text-white" />
               ) : (

@@ -3,7 +3,7 @@ import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'
 import NextLink from 'next/link'
-import { AddLinks } from 'react-link-text'
+import { LinkItUrl } from 'react-linkify-it'
 import ReactPlayer from 'react-player'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
@@ -30,10 +30,6 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
 
   const isAuthor = post?.profile.id == me?.profile.id
   const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember)
-
-  const addLinksOptions = {
-    className: 'underline text-blue-400',
-  }
 
   const onEllipsisClick = () => {
     dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id, !isAuthor)
@@ -78,9 +74,9 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
             )}
           </div>
         </div>
-        <AddLinks options={addLinksOptions}>
+        <LinkItUrl className="text-blue-400 underline">
           <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">{post.body}</pre>
-        </AddLinks>
+        </LinkItUrl>
         {post.mediaLink &&
           (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
             <ReactPlayer

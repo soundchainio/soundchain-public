@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Asset from 'components/Asset/Asset'
 import { Button } from 'components/common/Button'
 import { EllipsisButton } from 'components/common/EllipsisButton'
@@ -7,7 +8,6 @@ import tw from 'tailwind-styled-components'
 import { TrackMenu } from './TrackMenu'
 import { useState } from 'react'
 import { usePlaylistContext } from 'hooks/usePlaylistContext'
-import { Song } from 'components/AudioPlayer'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 
 export const PlaylistTracks = () => {
@@ -27,7 +27,7 @@ export const PlaylistTracks = () => {
         title: track.title,
         artist: track.artist,
         isFavorite: track.isFavorite,
-      } as Song
+      } as unknown as any
     })
 
     playlistState(list, index)
@@ -70,6 +70,7 @@ export const PlaylistTracks = () => {
             color="green"
             buttonType="currency"
             currency={{ type: track.price.currency, value: track.price.value }}
+            text=""
           />
         </Container>
       ))}

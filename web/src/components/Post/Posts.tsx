@@ -33,7 +33,7 @@ export const Posts = ({ profileId }: PostsProps) => {
   const getSize = (index: number) => sizeMap[index] || 289
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
-    (index, size) => {
+    (index: number, size: number) => {
       sizeMap[index] = size + GAP
       listRef?.current.resetAfterIndex(index)
     },
@@ -142,7 +142,7 @@ export const Posts = ({ profileId }: PostsProps) => {
 interface RowProps {
   data: PostType[]
   index: number
-  setSize: (index: number, height?: number) => void
+  setSize: (index: number, size: number) => void
   handleOnPlayClicked: (trackId: string) => void
 }
 
@@ -152,6 +152,7 @@ const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
   useEffect(() => {
     const gapHeight = rowRef?.current?.getBoundingClientRect().height
 
+    if (!gapHeight) return
     setSize(index, gapHeight)
   }, [setSize, index])
 

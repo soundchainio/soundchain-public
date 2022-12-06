@@ -79,7 +79,7 @@ export const PlaylistTrackPlayerControls = (props: Props) => {
             <FavoritePlaylistButton />
             <TrackShareButton
               trackId={playlist.id}
-              artist={profile.displayName}
+              artist={profile?.displayName}
               title={playlist.title}
               height={25}
               width={25}

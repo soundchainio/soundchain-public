@@ -46,7 +46,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
     }
   }, [me?.profile.coverPicture])
 
-  const onUpload = useCallback(uploading => {
+  const onUpload = useCallback((uploading: boolean) => {
     setLoading(uploading)
   }, [])
 

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { ChangeEvent, Fragment, useEffect, useMemo, useState } from 'react'
 import { Combobox, Transition } from '@headlessui/react'
 import tw from 'tailwind-styled-components'
 import { debounce } from 'utils/debounce'
@@ -47,7 +47,7 @@ export const SearchWithDropdown = () => {
     <div className="relative z-10 w-full">
       <h4 className="absolute left-3 top-2 text-xxs font-bold uppercase text-gray-60">Search...</h4>
       <Border>
-        <Combobox onChange={e => onSearchChanged(e.target.value)}>
+        <Combobox onChange={(e: ChangeEvent<HTMLInputElement>) => onSearchChanged(e.target.value)}>
           <Combobox.Input
             className="w-full rounded-lg border-none bg-neutral-900 pt-6 text-white focus:ring-0"
             onChange={event => setSearchTerm(event.target.value)}

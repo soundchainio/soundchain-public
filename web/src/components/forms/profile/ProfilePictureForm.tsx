@@ -48,7 +48,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
     }
   }, [me?.profile.profilePicture])
 
-  const onUpload = useCallback(uploading => {
+  const onUpload = useCallback((uploading: boolean) => {
     setLoading(uploading)
   }, [])
 

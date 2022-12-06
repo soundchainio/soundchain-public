@@ -71,7 +71,7 @@ export const AudioPlayerModal = () => {
 
   const handleFavorite = async () => {
     if (me?.profile.id) {
-      await toggleFavorite({ variables: { trackId: currentSong.trackId }, refetchQueries: [TrackDocument] })
+      await toggleFavorite({ variables: { trackId: currentSong.trackId || '' }, refetchQueries: [TrackDocument] })
       setPlayerFavorite(!isFavorite)
     } else {
       router.push('/login')
@@ -99,7 +99,7 @@ export const AudioPlayerModal = () => {
       }
       rightButton={
         <div className="mr-6 flex justify-end">
-          <TrackShareButton trackId={currentSong.trackId} title={currentSong.title} artist={currentSong.artist} />
+          <TrackShareButton trackId={currentSong.trackId || ''} title={currentSong.title} artist={currentSong.artist} />
         </div>
       }
       onClose={handleClose}

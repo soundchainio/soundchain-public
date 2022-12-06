@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/display-name */
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { Post } from 'components/Post/Post'
@@ -19,7 +20,7 @@ interface FeedProps {
 const GAP = 8
 
 interface FeedContextData {
-  setSize: (index: number, height?: number | undefined) => void
+  setSize: (index: number, size?: number | undefined) => void
   isItemLoaded: (index: number) => boolean
   handleOnPlayClicked: (trackId: string) => void
 }
@@ -35,8 +36,8 @@ export const Feed = ({ pageSize }: FeedProps) => {
   const getSize = (index: number) => sizeMap[index] || 289
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
-    (index, size) => {
-      sizeMap[index] = size + GAP
+    (index: number, size?: number) => {
+      sizeMap[index] = size || 0 + GAP
       listRef?.current.resetAfterIndex(index)
     },
     [sizeMap, data],

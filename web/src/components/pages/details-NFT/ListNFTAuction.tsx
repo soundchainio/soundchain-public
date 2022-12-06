@@ -7,7 +7,7 @@ import { SoundchainFee } from 'components/SoundchainFee'
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik'
 import { Logo } from 'icons/Logo'
 import { Matic } from 'icons/Matic'
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { date, number, object, SchemaOf } from 'yup'
@@ -117,7 +117,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                   showTimeInput
                   className="placeholder-semibold w-full rounded-md border-2 border-gray-80 bg-gray-30 p-3 text-sm font-bold text-gray-200 placeholder-gray-60 focus:outline-none focus:ring-transparent"
                 />
-                {<div className="text-sm lowercase text-red-500">{errors.startTime}</div>}
+                {<div className="text-sm lowercase text-red-500">{errors.startTime as ReactNode}</div>}
               </div>
             </div>
             <div className="flex items-center justify-between bg-gray-20 py-3 px-5">
@@ -138,7 +138,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                   showTimeInput
                   className="placeholder-semibold w-full rounded-md border-2 border-gray-80 bg-gray-30 p-3 text-sm font-bold text-gray-200 placeholder-gray-60 focus:outline-none focus:ring-transparent"
                 />
-                {<div className="text-sm lowercase text-red-500">{errors.endTime}</div>}
+                {<div className="text-sm lowercase text-red-500">{errors.endTime as ReactNode}</div>}
               </div>
             </div>
             <div className="bg-gray-20 py-3 px-5">
