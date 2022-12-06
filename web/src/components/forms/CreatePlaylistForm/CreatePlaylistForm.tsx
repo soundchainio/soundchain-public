@@ -10,6 +10,7 @@ import Asset from 'components/Asset/Asset'
 import { createPlaylist } from 'repositories/playlist/playlist'
 import { toast } from 'react-toastify'
 import { useUpload } from 'hooks/useUpload'
+import { CloseSquare } from 'iconsax-react'
 
 const initialValues = {
   playlistName: '',
@@ -17,9 +18,15 @@ const initialValues = {
   description: '',
 }
 
-export const CreatePlaylistForm = () => {
+interface Props {
+  setShowCreatePlaylistModal: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export const CreatePlaylistForm = (props: Props) => {
+  const { setShowCreatePlaylistModal } = props
   const { temporaryTracks, setTemporaryTracks } = usePlaylistContext()
   const { upload } = useUpload()
+
   const handleOnSubmit = async (values: typeof initialValues, event?: FormEvent) => {
     event?.preventDefault()
     if (!values.artworkFile) return
@@ -50,7 +57,11 @@ export const CreatePlaylistForm = () => {
 
   return (
     <Container>
-      <h3 className="mb-4 font-bold text-white">Playlist</h3>
+      <div className="mb-4 flex w-full items-center justify-between">
+        <CloseSquare onClick={() => setShowCreatePlaylistModal(false)} color="#818181" />
+        <h3 className="mr-6 font-bold text-white">Playlist</h3>
+        <div></div>
+      </div>
       <Formik initialValues={initialValues} onSubmit={(values, { setSubmitting }) => handleOnSubmit(values)}>
         {({ values, errors, setFieldValue }) => (
           <Form onSubmit={event => handleOnSubmit(values, event)}>

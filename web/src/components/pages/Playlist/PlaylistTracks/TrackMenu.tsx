@@ -172,7 +172,7 @@ export const TrackMenu = (props: TrackMenuProps) => {
       </MobileModal>
 
       <MobileModal open={showCreatePlaylistModal} close={() => setShowCreatePlaylistModal(false)}>
-        <CreatePlaylistForm />
+        <CreatePlaylistForm setShowCreatePlaylistModal={setShowCreatePlaylistModal} />
       </MobileModal>
     </>
   )
