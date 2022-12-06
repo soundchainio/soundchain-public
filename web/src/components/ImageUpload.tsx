@@ -16,6 +16,8 @@ export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'d
   rounded?: 'rounded-full' | 'rounded-lg' | 'rounded-none'
   artwork?: boolean
   initialValue?: File
+  noStyling?: boolean
+  shouldPreview?: boolean
 }
 
 const defaultMaxFileSize = 1024 * 1024 * 30
@@ -32,6 +34,8 @@ export function ImageUpload({
   initialValue,
   artwork = false,
   accept = imageMimeTypes,
+  noStyling = false,
+  shouldPreview = true,
   ...rest
 }: ImageUploadProps) {
   const { preview, fileType, uploading, upload } = useUpload(value, onChange)
@@ -57,18 +61,22 @@ export function ImageUpload({
     >
       {({ getRootProps, getInputProps }) => (
         <div
-          className={classNames(
-            'relative flex items-center justify-center border-2 border-gray-80 bg-gray-30',
-            thumbnail,
-            rounded,
-            artwork ? 'h-24 w-24' : '',
-            className,
-          )}
+          className={
+            noStyling
+              ? ''
+              : classNames(
+                  'relative flex items-center justify-center border-2 border-gray-80 bg-gray-30',
+                  thumbnail,
+                  rounded,
+                  artwork ? 'h-24 w-24' : '',
+                  className,
+                )
+          }
           {...rest}
           {...getRootProps()}
         >
           <input {...getInputProps()} />
-          {thumbnail ? (
+          {thumbnail && shouldPreview ? (
             fileType.startsWith('video') ? (
               <video src={thumbnail} loop muted autoPlay controls={false} className="h-full w-full" />
             ) : (
@@ -80,8 +88,14 @@ export function ImageUpload({
               />
             )
           ) : (
-            <div className="flex flex-row items-baseline justify-center gap-1 p-4 text-sm font-semibold text-white">
-              <Upload />
+            <div
+              className={
+                noStyling
+                  ? ''
+                  : 'flex flex-row items-baseline justify-center gap-1 p-4 text-sm font-semibold text-white'
+              }
+            >
+              {!noStyling && <Upload />}
               {children}
             </div>
           )}

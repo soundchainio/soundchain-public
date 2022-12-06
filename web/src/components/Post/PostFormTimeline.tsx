@@ -1,7 +1,9 @@
 import { PositioningPortal } from '@codastic/react-positioning-portal'
 import { MusicNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/outline'
+import { ImageUpload } from 'components/ImageUpload'
 import { BaseEmoji, Picker } from 'emoji-mart'
 import { Edit } from 'icons/Edit'
+import { Photo } from 'icons/Photo'
 import { CreatePostInput, useCreatePostMutation } from 'lib/graphql'
 import { ChangeEvent, useState } from 'react'
 import { toast } from 'react-toastify'
@@ -136,6 +138,17 @@ export const PostFormTimeline = () => {
                 {isEmojiPickerVisible ? '❌' : '😃'}
               </div>
             </PositioningPortal>
+            <div className="mr-[8px] w-6 cursor-pointer pt-[2px] text-center">
+              <ImageUpload
+                noStyling={true}
+                shouldPreview={false}
+                onChange={readUrl => {
+                  console.log(readUrl)
+                }}
+              >
+                <Photo className="m-auto w-5 text-gray-400" />
+              </ImageUpload>
+            </div>
             <button
               className="mr-[8px] w-6 cursor-pointer text-center"
               aria-label="Embed a song to your post"
