@@ -57,13 +57,4 @@ describe('Playlist', () => {
 
     expect(value).toStrictEqual(response)
   })
-
-  it('should render playlist page correctly', () => {
-    jest.spyOn('hooks/useAudioPlayer', isCurrentlyPlaying)
-    render(
-      <PlaylistPage playlistData={mockPlaylist} playlistTracksData={mockPlaylistTracks} profileData={mockProfile} />,
-    )
-
-    expect(screen.getByTestId('playlist-container')).toBeInTheDocument()
-  })
 })
