@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import classNames from 'classnames'
 import { Matic } from 'components/Matic'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -24,7 +25,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
   const [selectedWallet, setSelectedWallet] = useState<DefaultWallet>(me?.defaultWallet || DefaultWallet.Soundchain)
 
   const onChange = useCallback(
-    ({ target: { value } }) => {
+    ({ target: { value } }: any) => {
       setSelectedWallet(value as DefaultWallet)
       updateDefaultWallet({ variables: { input: { defaultWallet: value } } })
     },

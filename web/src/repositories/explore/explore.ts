@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { apolloClient } from 'lib/apollo'
 import { ExploreTracksWithProfilesDocument, Profile, Track } from 'lib/graphql'
 import { errorHandler } from 'utils/errorHandler'
@@ -19,14 +20,16 @@ export const getExploreTracksWithProfiles = async (searchterm: string) => {
       },
     })
 
-    const tracksWithProfiles: TracksWithProfile[] = result.data.exploreTracksWithProfiles.tracks.map((track, index) => {
-      return {
-        ...track,
-        profile: {
-          ...result.data.exploreTracksWithProfiles.profiles[index],
-        },
-      }
-    })
+    const tracksWithProfiles: TracksWithProfile[] = result.data.exploreTracksWithProfiles.tracks.map(
+      (track: any, index: number) => {
+        return {
+          ...track,
+          profile: {
+            ...result.data.exploreTracksWithProfiles.profiles[index],
+          },
+        }
+      },
+    )
 
     return tracksWithProfiles
   } catch (error) {

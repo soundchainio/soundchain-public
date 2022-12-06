@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { OAuthExtension } from '@magic-ext/oauth'
 import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider'
@@ -66,7 +67,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [ogunBalance, setOgunBalance] = useState('')
   const [isRefetchingBalance, setIsRefetchingBalance] = useState(false)
 
-  const handleError = useCallback(async error => {
+  const handleError = useCallback(async (error: any) => {
     if (error.code === RPCErrorCode.InternalError) {
       await magic.user.logout()
       return setJwt()

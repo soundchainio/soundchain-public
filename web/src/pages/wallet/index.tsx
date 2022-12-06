@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { RefreshButton } from 'components/common/Buttons/RefreshButton'
 import { ConnectedNetwork } from 'components/ConnectedNetwork'
 import { CopyWalletAddress } from 'components/CopyWalletAddress'
@@ -111,7 +112,7 @@ export default function WalletPage() {
         <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />
       ),
     })
-  }, [setHideBottomNavBar, setTopNavBarProps, isRefetchingBalance])
+  }, [setHideBottomNavBar, setTopNavBarProps, isRefetchingBalance, refreshData])
 
   useEffect(() => {
     if (!account) {
