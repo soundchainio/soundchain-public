@@ -234,14 +234,22 @@ export type CreateMultipleTracksInput = {
 export type CreateMultipleTracksPayload = {
   __typename?: 'CreateMultipleTracksPayload';
   firstTrack: Track;
+<<<<<<< HEAD
   trackEditionIds: Array<Scalars['String']>;
+=======
+  trackIds: Array<Scalars['String']>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type CreatePlaylistData = {
   title: Scalars['String'];
   description?: Maybe<Scalars['String']>;
   artworkUrl?: Maybe<Scalars['String']>;
+<<<<<<< HEAD
   trackEditionIds?: Maybe<Array<Scalars['String']>>;
+=======
+  trackIds?: Maybe<Array<Scalars['String']>>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type CreatePlaylistPayload = {
@@ -251,7 +259,11 @@ export type CreatePlaylistPayload = {
 
 export type CreatePlaylistTracks = {
   playlistId: Scalars['String'];
+<<<<<<< HEAD
   trackEditionIds: Array<Scalars['String']>;
+=======
+  trackIds: Array<Scalars['String']>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type CreatePostInput = {
@@ -353,7 +365,11 @@ export type DeletePlaylistPayload = {
 
 export type DeletePlaylistTracks = {
   playlistId: Scalars['String'];
+<<<<<<< HEAD
   trackEditionIds: Array<Scalars['String']>;
+=======
+  trackIds: Array<Scalars['String']>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type DeletePostInput = {
@@ -435,12 +451,15 @@ export type ExplorePayload = {
   totalTracks: Scalars['Float'];
 };
 
+<<<<<<< HEAD
 export type ExploreTrackPayload = {
   __typename?: 'ExploreTrackPayload';
   profiles: Array<Profile>;
   tracks: Array<Track>;
 };
 
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 export type FavoritePlaylist = {
   __typename?: 'FavoritePlaylist';
   id: Scalars['ID'];
@@ -496,7 +515,10 @@ export type FilterTrackInput = {
   profileId?: Maybe<Scalars['String']>;
   trackEditionId?: Maybe<Scalars['String']>;
   nftData?: Maybe<NftDataInput>;
+<<<<<<< HEAD
   trackEditionIds?: Maybe<Array<Scalars['String']>>;
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type FilterTrackMarketplace = {
@@ -599,9 +621,16 @@ export type GetPlaylistPayload = {
   nodes: Array<Playlist>;
 };
 
+<<<<<<< HEAD
 export type GetPlaylistTracks = {
   playlistId: Scalars['String'];
   trackEditionId: Scalars['String'];
+=======
+export type GetTracksFromPlaylist = {
+  __typename?: 'GetTracksFromPlaylist';
+  pageInfo: PageInfo;
+  nodes: Maybe<Array<PlaylistTrack>>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 
@@ -1149,7 +1178,11 @@ export type Playlist = {
   id: Scalars['ID'];
   title: Scalars['String'];
   description: Maybe<Scalars['String']>;
+<<<<<<< HEAD
   artworkUrl: Scalars['String'];
+=======
+  artworkUrl: Maybe<Scalars['String']>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
   profileId: Scalars['String'];
   createdAt: Scalars['DateTime'];
   deleted: Maybe<Scalars['Boolean']>;
@@ -1157,7 +1190,11 @@ export type Playlist = {
   followCount: Scalars['Float'];
   isFavorite: Scalars['Boolean'];
   isFollowed: Scalars['Boolean'];
+<<<<<<< HEAD
   playlistTracks: Maybe<Array<PlaylistTrack>>;
+=======
+  tracks: Maybe<GetTracksFromPlaylist>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type PlaylistTrack = {
@@ -1165,7 +1202,11 @@ export type PlaylistTrack = {
   id: Scalars['ID'];
   profileId: Scalars['String'];
   playlistId: Scalars['String'];
+<<<<<<< HEAD
   trackEditionId: Scalars['String'];
+=======
+  trackId: Scalars['String'];
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type PolygonscanResult = {
@@ -1307,7 +1348,10 @@ export type Query = {
   comments: CommentConnection;
   explore: ExplorePayload;
   exploreTracks: TrackConnection;
+<<<<<<< HEAD
   exploreTracksWithProfiles: ExploreTrackPayload;
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
   exploreUsers: ProfileConnection;
   feed: FeedConnection;
   followers: FollowConnection;
@@ -1342,9 +1386,13 @@ export type Query = {
   listingItems: ListingItemConnection;
   buyNowListingItems: ListingItemConnection;
   ownedBuyNowListingItems: ListingItemConnection;
+<<<<<<< HEAD
   playlist: Playlist;
   getUserPlaylists: GetPlaylistPayload;
   getPlaylistTracks: Array<PlaylistTrack>;
+=======
+  getUserPlaylists: GetPlaylistPayload;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
   uploadUrl: UploadUrl;
   mimeType: MimeType;
   me: Maybe<User>;
@@ -1418,6 +1466,7 @@ export type QueryExploreTracksArgs = {
   search?: Maybe<Scalars['String']>;
 };
 
+<<<<<<< HEAD
 
 export type QueryExploreTracksWithProfilesArgs = {
   sort?: Maybe<SortExploreTracks>;
@@ -1425,6 +1474,8 @@ export type QueryExploreTracksWithProfilesArgs = {
   search?: Maybe<Scalars['String']>;
 };
 
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 export type QueryExploreUsersArgs = {
   page?: Maybe<PageInput>;
@@ -1604,21 +1655,27 @@ export type QueryOwnedBuyNowListingItemsArgs = {
 };
 
 
+<<<<<<< HEAD
 export type QueryPlaylistArgs = {
   id: Scalars['String'];
 };
 
 
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 export type QueryGetUserPlaylistsArgs = {
   page?: Maybe<PageInput>;
   sort?: Maybe<SortPlaylistInput>;
 };
 
+<<<<<<< HEAD
 
 export type QueryGetPlaylistTracksArgs = {
   input: GetPlaylistTracks;
 };
 
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 export type QueryUploadUrlArgs = {
   fileType: Scalars['String'];
@@ -1741,6 +1798,14 @@ export type SocialMedias = {
   instagram: Maybe<Scalars['String']>;
   soundcloud: Maybe<Scalars['String']>;
   twitter: Maybe<Scalars['String']>;
+<<<<<<< HEAD
+=======
+  linktree: Maybe<Scalars['String']>;
+  discord: Maybe<Scalars['String']>;
+  telegram: Maybe<Scalars['String']>;
+  spotify: Maybe<Scalars['String']>;
+  bandcamp: Maybe<Scalars['String']>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type SocialMediasInput = {
@@ -1748,6 +1813,14 @@ export type SocialMediasInput = {
   instagram?: Maybe<Scalars['String']>;
   soundcloud?: Maybe<Scalars['String']>;
   twitter?: Maybe<Scalars['String']>;
+<<<<<<< HEAD
+=======
+  linktree?: Maybe<Scalars['String']>;
+  discord?: Maybe<Scalars['String']>;
+  telegram?: Maybe<Scalars['String']>;
+  spotify?: Maybe<Scalars['String']>;
+  bandcamp?: Maybe<Scalars['String']>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 };
 
 export type SortExploreTracks = {
@@ -1962,7 +2035,11 @@ export type UpdateDefaultWalletPayload = {
 };
 
 export type UpdateEditionOwnedTracksInput = {
+<<<<<<< HEAD
   trackEditionIds: Array<Scalars['String']>;
+=======
+  trackIds: Array<Scalars['String']>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
   trackEditionId: Scalars['String'];
   owner: Scalars['String'];
   nftData?: Maybe<NftDataInput>;
@@ -2400,13 +2477,18 @@ export type CreateMultipleTracksMutation = (
   { __typename?: 'Mutation' }
   & { createMultipleTracks: (
     { __typename?: 'CreateMultipleTracksPayload' }
+<<<<<<< HEAD
     & Pick<CreateMultipleTracksPayload, 'trackEditionIds'>
+=======
+    & Pick<CreateMultipleTracksPayload, 'trackIds'>
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
     & { firstTrack: (
       { __typename?: 'Track' }
       & TrackComponentFieldsFragment
     ) }
   ) }
 );
+<<<<<<< HEAD
 
 export type CreatePlaylistMutationVariables = Exact<{
   input: CreatePlaylistData;
@@ -2443,6 +2525,8 @@ export type CreatePlaylistTracksMutation = (
     ) }
   ) }
 );
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 export type CreatePostMutationVariables = Exact<{
   input: CreatePostInput;
@@ -2655,6 +2739,7 @@ export type ExploreTracksQuery = (
     ) }
   ) }
 );
+<<<<<<< HEAD
 
 export type ExploreTracksWithProfilesQueryVariables = Exact<{
   sort?: Maybe<SortExploreTracks>;
@@ -2676,6 +2761,8 @@ export type ExploreTracksWithProfilesQuery = (
     )> }
   ) }
 );
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 export type ExploreUsersQueryVariables = Exact<{
   search?: Maybe<Scalars['String']>;
@@ -2843,6 +2930,7 @@ export type GetOriginalPostFromTrackQuery = (
     & PostComponentFieldsFragment
   ) }
 );
+<<<<<<< HEAD
 
 export type GetPlaylistTracksQueryVariables = Exact<{
   input: GetPlaylistTracks;
@@ -2856,6 +2944,8 @@ export type GetPlaylistTracksQuery = (
     & Pick<PlaylistTrack, 'id' | 'playlistId' | 'trackEditionId'>
   )> }
 );
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 export type GroupedTracksQueryVariables = Exact<{
   filter?: Maybe<FilterTrackInput>;
@@ -3288,6 +3378,7 @@ export type PinToIpfsMutation = (
     & Pick<PinningPayload, 'cid'>
   ) }
 );
+<<<<<<< HEAD
 
 export type PlaylistQueryVariables = Exact<{
   id: Scalars['String'];
@@ -3334,6 +3425,8 @@ export type GetUserPlaylistsQuery = (
     ) }
   ) }
 );
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 export type PolygonscanQueryVariables = Exact<{
   wallet: Scalars['String'];
@@ -3448,7 +3541,11 @@ export type ProfileComponentFieldsFragment = (
   & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'verified' | 'teamMember' | 'magicWalletAddress' | 'badges' | 'createdAt' | 'updatedAt'>
   & { socialMedias: (
     { __typename?: 'SocialMedias' }
+<<<<<<< HEAD
     & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+=======
+    & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter' | 'linktree' | 'discord' | 'telegram' | 'spotify' | 'bandcamp'>
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
   ) }
 );
 
@@ -3676,6 +3773,7 @@ export type ToggleFavoriteMutation = (
     ) }
   ) }
 );
+<<<<<<< HEAD
 
 export type TogglePlaylistFavoriteMutationVariables = Exact<{
   playlistId: Scalars['String'];
@@ -3689,6 +3787,8 @@ export type TogglePlaylistFavoriteMutation = (
     & Pick<FavoritePlaylist, 'id' | 'playlistId' | 'profileId'>
   ) }
 );
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 export type TrackQueryVariables = Exact<{
   id: Scalars['String'];
@@ -4049,7 +4149,11 @@ export type UpdateSocialMediasMutation = (
       & Pick<Profile, 'id'>
       & { socialMedias: (
         { __typename?: 'SocialMedias' }
+<<<<<<< HEAD
         & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter'>
+=======
+        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter' | 'linktree' | 'discord' | 'telegram' | 'spotify' | 'bandcamp'>
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
       ) }
     ) }
   ) }
@@ -4166,6 +4270,7 @@ export type WonAuctionNotificationFieldsFragment = (
   { __typename?: 'WonAuctionNotification' }
   & Pick<WonAuctionNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
 );
+<<<<<<< HEAD
 
 export type DeletePlaylistTracksMutationVariables = Exact<{
   input: DeletePlaylistTracks;
@@ -4195,6 +4300,8 @@ export type TogglePlaylistFollowMutation = (
     & Pick<FavoritePlaylist, 'id' | 'playlistId'>
   ) }
 );
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 export const AuctionEndedNotificationFieldsFragmentDoc = gql`
     fragment AuctionEndedNotificationFields on AuctionEndedNotification {
@@ -4491,6 +4598,7 @@ export const OutbidNotificationFieldsFragmentDoc = gql`
   price
 }
     `;
+<<<<<<< HEAD
 export const PlaylistComponentFieldsFragmentDoc = gql`
     fragment PlaylistComponentFields on Playlist {
   id
@@ -4512,6 +4620,8 @@ export const PlaylistComponentFieldsFragmentDoc = gql`
   }
 }
     `;
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 export const TrackComponentFieldsFragmentDoc = gql`
     fragment TrackComponentFields on Track {
   id
@@ -4599,6 +4709,14 @@ export const ProfileComponentFieldsFragmentDoc = gql`
     instagram
     soundcloud
     twitter
+<<<<<<< HEAD
+=======
+    linktree
+    discord
+    telegram
+    spotify
+    bandcamp
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
   }
   favoriteGenres
   musicianTypes
@@ -5310,7 +5428,11 @@ export type CountBidsQueryResult = Apollo.QueryResult<CountBidsQuery, CountBidsQ
 export const CreateMultipleTracksDocument = gql`
     mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
   createMultipleTracks(input: $input) {
+<<<<<<< HEAD
     trackEditionIds
+=======
+    trackIds
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
     firstTrack {
       ...TrackComponentFields
     }
@@ -5339,6 +5461,7 @@ export type CreateMultipleTracksMutationFn = Apollo.MutationFunction<CreateMulti
 export function useCreateMultipleTracksMutation(baseOptions?: Apollo.MutationHookOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useMutation<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>(CreateMultipleTracksDocument, options);
+<<<<<<< HEAD
       }
 export type CreateMultipleTracksMutationHookResult = ReturnType<typeof useCreateMultipleTracksMutation>;
 export type CreateMultipleTracksMutationResult = Apollo.MutationResult<CreateMultipleTracksMutation>;
@@ -5352,11 +5475,22 @@ export const CreatePlaylistDocument = gql`
       description
       playlistTracks {
         playlistId
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
       }
+export type CreateMultipleTracksMutationHookResult = ReturnType<typeof useCreateMultipleTracksMutation>;
+export type CreateMultipleTracksMutationResult = Apollo.MutationResult<CreateMultipleTracksMutation>;
+export type CreateMultipleTracksMutationOptions = Apollo.BaseMutationOptions<CreateMultipleTracksMutation, CreateMultipleTracksMutationVariables>;
+export const CreatePostDocument = gql`
+    mutation CreatePost($input: CreatePostInput!) {
+  createPost(input: $input) {
+    post {
+      id
     }
   }
 }
     `;
+<<<<<<< HEAD
 export type CreatePlaylistMutationFn = Apollo.MutationFunction<CreatePlaylistMutation, CreatePlaylistMutationVariables>;
 
 /**
@@ -5427,6 +5561,8 @@ export const CreatePostDocument = gql`
   }
 }
     `;
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 export type CreatePostMutationFn = Apollo.MutationFunction<CreatePostMutation, CreatePostMutationVariables>;
 
 /**
@@ -5855,6 +5991,7 @@ export function useExploreTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>;
 export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>;
 export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>;
+<<<<<<< HEAD
 export const ExploreTracksWithProfilesDocument = gql`
     query ExploreTracksWithProfiles($sort: SortExploreTracks, $search: String, $page: PageInput) {
   exploreTracksWithProfiles(sort: $sort, search: $search, page: $page) {
@@ -5910,6 +6047,20 @@ export const ExploreUsersDocument = gql`
     }
   }
 }
+=======
+export const ExploreUsersDocument = gql`
+    query ExploreUsers($search: String, $page: PageInput) {
+  exploreUsers(search: $search, page: $page) {
+    nodes {
+      ...ProfileComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
     ${ProfileComponentFieldsFragmentDoc}`;
 
 /**
@@ -6248,6 +6399,7 @@ export function useGetOriginalPostFromTrackLazyQuery(baseOptions?: Apollo.LazyQu
 export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>;
 export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>;
 export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>;
+<<<<<<< HEAD
 export const GetPlaylistTracksDocument = gql`
     query getPlaylistTracks($input: GetPlaylistTracks!) {
   getPlaylistTracks(input: $input) {
@@ -6285,6 +6437,8 @@ export function useGetPlaylistTracksLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type GetPlaylistTracksQueryHookResult = ReturnType<typeof useGetPlaylistTracksQuery>;
 export type GetPlaylistTracksLazyQueryHookResult = ReturnType<typeof useGetPlaylistTracksLazyQuery>;
 export type GetPlaylistTracksQueryResult = Apollo.QueryResult<GetPlaylistTracksQuery, GetPlaylistTracksQueryVariables>;
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 export const GroupedTracksDocument = gql`
     query GroupedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
   groupedTracks(filter: $filter, sort: $sort, page: $page) {
@@ -7100,6 +7254,7 @@ export type PinToIpfsMutationFn = Apollo.MutationFunction<PinToIpfsMutation, Pin
 export function usePinToIpfsMutation(baseOptions?: Apollo.MutationHookOptions<PinToIpfsMutation, PinToIpfsMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useMutation<PinToIpfsMutation, PinToIpfsMutationVariables>(PinToIpfsDocument, options);
+<<<<<<< HEAD
       }
 export type PinToIpfsMutationHookResult = ReturnType<typeof usePinToIpfsMutation>;
 export type PinToIpfsMutationResult = Apollo.MutationResult<PinToIpfsMutation>;
@@ -7147,7 +7302,37 @@ export const GetUserPlaylistsDocument = gql`
       title
       playlistTracks {
         trackEditionId
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
       }
+export type PinToIpfsMutationHookResult = ReturnType<typeof usePinToIpfsMutation>;
+export type PinToIpfsMutationResult = Apollo.MutationResult<PinToIpfsMutation>;
+export type PinToIpfsMutationOptions = Apollo.BaseMutationOptions<PinToIpfsMutation, PinToIpfsMutationVariables>;
+export const PolygonscanDocument = gql`
+    query Polygonscan($wallet: String!, $page: PageInput) {
+  getTransactionHistory(wallet: $wallet, page: $page) {
+    nextPage
+    result {
+      blockNumber
+      timeStamp
+      hash
+      nonce
+      blockHash
+      transactionIndex
+      from
+      to
+      value
+      gas
+      gasPrice
+      isError
+      txreceipt_status
+      input
+      contractAddress
+      cumulativeGasUsed
+      gasUsed
+      confirmations
+      method
+      date
     }
     pageInfo {
       hasNextPage
@@ -7156,6 +7341,7 @@ export const GetUserPlaylistsDocument = gql`
   }
 }
     `;
+<<<<<<< HEAD
 
 /**
  * __useGetUserPlaylistsQuery__
@@ -7214,6 +7400,8 @@ export const PolygonscanDocument = gql`
   }
 }
     `;
+=======
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
 
 /**
  * __usePolygonscanQuery__
@@ -7963,6 +8151,7 @@ export function useToggleFavoriteMutation(baseOptions?: Apollo.MutationHookOptio
 export type ToggleFavoriteMutationHookResult = ReturnType<typeof useToggleFavoriteMutation>;
 export type ToggleFavoriteMutationResult = Apollo.MutationResult<ToggleFavoriteMutation>;
 export type ToggleFavoriteMutationOptions = Apollo.BaseMutationOptions<ToggleFavoriteMutation, ToggleFavoriteMutationVariables>;
+<<<<<<< HEAD
 export const TogglePlaylistFavoriteDocument = gql`
     mutation togglePlaylistFavorite($playlistId: String!) {
   togglePlaylistFavorite(playlistId: $playlistId) {
@@ -8004,6 +8193,14 @@ export const TrackDocument = gql`
     ...TrackComponentFields
   }
 }
+=======
+export const TrackDocument = gql`
+    query Track($id: String!) {
+  track(id: $id) {
+    ...TrackComponentFields
+  }
+}
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
     ${TrackComponentFieldsFragmentDoc}`;
 
 /**
@@ -8737,6 +8934,14 @@ export const UpdateSocialMediasDocument = gql`
         instagram
         soundcloud
         twitter
+<<<<<<< HEAD
+=======
+        linktree
+        discord
+        telegram
+        spotify
+        bandcamp
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
       }
     }
   }
@@ -9024,6 +9229,7 @@ export function useWhitelistEntryByWalletLazyQuery(baseOptions?: Apollo.LazyQuer
         }
 export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletQuery>;
 export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
+<<<<<<< HEAD
 export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;
 export const DeletePlaylistTracksDocument = gql`
     mutation deletePlaylistTracks($input: DeletePlaylistTracks!) {
@@ -9094,3 +9300,6 @@ export function useTogglePlaylistFollowMutation(baseOptions?: Apollo.MutationHoo
 export type TogglePlaylistFollowMutationHookResult = ReturnType<typeof useTogglePlaylistFollowMutation>;
 export type TogglePlaylistFollowMutationResult = Apollo.MutationResult<TogglePlaylistFollowMutation>;
 export type TogglePlaylistFollowMutationOptions = Apollo.BaseMutationOptions<TogglePlaylistFollowMutation, TogglePlaylistFollowMutationVariables>;
+=======
+export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;
+>>>>>>> 31889f7218b4e00c74d675d9443329d001d76b64
