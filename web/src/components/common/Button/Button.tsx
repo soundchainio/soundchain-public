@@ -54,7 +54,7 @@ const Border = tw.div<{ color: Colors; width: Width }>`
   ${({ color }) => color === 'disabled' && 'bg-neutral-500'}
   ${({ color }) => color === 'green' && 'bg-green-400'}
   ${({ color }) => color === 'purple' && 'bg-fuchsia-500'}
-  ${({ color }) => color === 'purple' && 'bg-yellow-400'}
+  ${({ color }) => color === 'yellow' && 'bg-yellow-400'}
   ${({ color }) => color === 'rainbow' && 'bg-rainbow-bg-gradient'}
   ${({ color }) => color === 'pink' && 'bg-rose-400'}
 `

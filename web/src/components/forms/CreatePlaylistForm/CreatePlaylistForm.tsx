@@ -63,27 +63,28 @@ export const CreatePlaylistForm = () => {
             />
             <InputField name="description" type="text" label="Description" maxLength={250} />
             <SearchWithDropdown />
-            {temporaryTracks &&
-              temporaryTracks.map((track, index) => {
-                return (
-                  <div className="flex w-full items-center justify-between rounded-lg bg-neutral-900 p-4" key={index}>
-                    <div className="flex grow items-center gap-2">
-                      <div className="h-14 w-14">
-                        <Asset src={track.artworkUrl} sizes="5rem" disableImageWave />
+            <div className="flex max-h-[200px] w-full flex-col gap-2 overflow-scroll px-2">
+              {temporaryTracks &&
+                temporaryTracks.map((track, index) => {
+                  return (
+                    <div className="flex w-full items-center justify-between rounded-lg bg-neutral-900 p-4" key={index}>
+                      <div className="flex grow items-center gap-2">
+                        <div className="h-14 w-14">
+                          <Asset src={track.artworkUrl} sizes="5rem" disableImageWave />
+                        </div>
+                        <h3 className="text-md font-semibold text-white">{track.title}</h3>
                       </div>
-                      <h3 className="text-md font-semibold text-white">{track.title}</h3>
+                      <Button
+                        color="pink"
+                        text="Remove"
+                        buttonType="text"
+                        width="contain"
+                        onClick={() => removeTrackFromTemporaryTracks(track.id)}
+                      />
                     </div>
-                    {/* <ProfileWithAvatar profile={track.profile} avatarSize={30} shouldRedirect={false} /> */}
-                    <Button
-                      color="pink"
-                      text="Remove"
-                      buttonType="text"
-                      width="contain"
-                      onClick={() => removeTrackFromTemporaryTracks(track.id)}
-                    />
-                  </div>
-                )
-              })}
+                  )
+                })}
+            </div>
             <Button color="green" buttonType="text" text="Create Playlist" />
           </Form>
         )}
@@ -94,11 +95,11 @@ export const CreatePlaylistForm = () => {
 
 const Container = tw.div`
   p-4
-  min-h-[320px]
+  h-screen
   flex
   flex-col
   items-center
-  justify-center
+  justify-start
 `
 const Form = tw.form`
   flex

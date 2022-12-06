@@ -111,21 +111,25 @@ html {
 }
 
 /* Vendor prefix for other browsers */
-::-webkit-scrollbar {
+.scrollbar::-webkit-scrollbar {
   background-color: #292929;
   border-radius: 20px;
   width: 6px;
 }
 
-::-webkit-scrollbar-thumb {
+.scrollbar::-webkit-scrollbar-thumb {
   background-color: #4d4d4d;
   border-radius: 20px;
   width: 6px;
   height: 132px;
 }
 
+.scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #c0a0b9;
+}
+
 @media only screen and (max-width: 600px) {
-  ::-webkit-scrollbar {
+  .scrollbar::-webkit-scrollbar {
     display: none;
     width: 0;
   }
@@ -196,14 +200,20 @@ html {
 }
 
 .mobile-image-black-bottom-gradient {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 0.01%, rgba(0, 0, 0, 0) 45.31%, rgba(0, 0, 0, 0.9) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 0.01%,
+    rgba(0, 0, 0, 0) 45.31%,
+    rgba(0, 0, 0, 0.9) 100%
+  );
 }
 
 .absolute-center {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, 50%)
+  transform: translate(-50%, 50%);
 }
 
 /** TODO: tip
@@ -227,7 +237,14 @@ html {
 }
 
 .bg-rainbow-gradient {
-  background: linear-gradient(87.71deg, rgba(38, 209, 168, 0.4) 0%, rgba(172, 78, 253, 0.4) 25%, rgba(241, 65, 158, 0.4) 49.48%, rgba(254, 213, 3, 0.4) 72.4%, rgba(254, 85, 64, 0.4) 100%);;
+  background: linear-gradient(
+    87.71deg,
+    rgba(38, 209, 168, 0.4) 0%,
+    rgba(172, 78, 253, 0.4) 25%,
+    rgba(241, 65, 158, 0.4) 49.48%,
+    rgba(254, 213, 3, 0.4) 72.4%,
+    rgba(254, 85, 64, 0.4) 100%
+  );
 }
 
 .green-yellow-gradient-text {

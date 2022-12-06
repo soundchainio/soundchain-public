@@ -155,9 +155,16 @@ export const TrackMenu = (props: TrackMenuProps) => {
             {playlists &&
               playlists.map((userPlaylist, index) => {
                 return (
-                  <h3 key={index} className="text-md text-white" onClick={() => handleAddToPlaylist(userPlaylist?.id)}>
-                    {userPlaylist?.title}
-                  </h3>
+                  <div key={index} className="flex w-full items-center justify-between">
+                    <h3 className="text-md font-semibold text-white">{userPlaylist?.title}</h3>
+                    <Button
+                      onClick={() => handleAddToPlaylist(userPlaylist?.id)}
+                      color="pink"
+                      buttonType="text"
+                      text="ADD"
+                      width="contain"
+                    />
+                  </div>
                 )
               })}
           </UserPlaylists>

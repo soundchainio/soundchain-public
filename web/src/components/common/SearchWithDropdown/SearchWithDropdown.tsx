@@ -45,10 +45,11 @@ export const SearchWithDropdown = () => {
 
   return (
     <div className="relative z-10 w-full">
+      <h4 className="absolute left-3 top-2 text-xxs font-bold uppercase text-gray-60">Search...</h4>
       <Border>
         <Combobox onChange={e => onSearchChanged(e.target.value)}>
           <Combobox.Input
-            className="w-full rounded-lg border-none bg-neutral-900 text-white focus:ring-0"
+            className="w-full rounded-lg border-none bg-neutral-900 pt-6 text-white focus:ring-0"
             onChange={event => setSearchTerm(event.target.value)}
             defaultValue="Search Tracks"
           />
@@ -59,7 +60,7 @@ export const SearchWithDropdown = () => {
             leaveTo="opacity-0"
             afterLeave={() => setSearchTerm('')}
           >
-            <Combobox.Options className="absolute mt-1 w-full rounded-lg border-none bg-neutral-900 p-4 text-white hover:cursor-pointer hover:bg-neutral-600 focus:ring-0">
+            <Combobox.Options className="absolute w-full rounded-lg border-none bg-neutral-900 p-4 text-white hover:cursor-pointer hover:bg-neutral-600 focus:ring-0">
               {tracks &&
                 tracks.map((track, index) => (
                   <div
