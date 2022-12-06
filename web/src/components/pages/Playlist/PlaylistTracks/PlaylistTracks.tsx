@@ -7,18 +7,34 @@ import tw from 'tailwind-styled-components'
 import { TrackMenu } from './TrackMenu'
 import { useState } from 'react'
 import { usePlaylistContext } from 'hooks/usePlaylistContext'
+import { Song } from 'components/AudioPlayer'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 
 export const PlaylistTracks = () => {
   const { playlistTracks } = usePlaylistContext()
 
   const [showTrackMenu, setShowTrackMenu] = useState(false)
-  const isPlaying = false
+  const { playlistState, isPlaying } = useAudioPlayerContext()
 
-  const handleOnPlayClicked = () => {
-    console.log('play')
+  const handleOnPlayClicked = (index: number) => {
+    if (!playlistTracks || playlistTracks.length <= 0) return
+
+    const list = playlistTracks.map(
+      track =>
+        ({
+          trackId: track.id,
+          src: track.playbackUrl,
+          art: track.artworkUrl,
+          title: track.title,
+          artist: track.artist,
+          isFavorite: track.isFavorite,
+        } as Song),
+    )
+    playlistState(list, index)
   }
 
   if (!playlistTracks || playlistTracks.length < 1) return null
+
   return (
     <Card>
       {playlistTracks.map((track, index) => (
@@ -26,7 +42,7 @@ export const PlaylistTracks = () => {
           <TrackContainer>
             <TrackImage>
               <Asset src={track.artworkUrl} sizes="5.625rem" disableImageWave imageClassname="rounded-xl" />
-              <PlayButton onClick={handleOnPlayClicked} aria-label={isPlaying ? 'Pause' : 'Play'}>
+              <PlayButton onClick={() => handleOnPlayClicked(index)} aria-label={isPlaying ? 'Pause' : 'Play'}>
                 {isPlaying ? (
                   <Pause className="ml-[1px] scale-125 text-white" />
                 ) : (
