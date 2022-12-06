@@ -19,7 +19,7 @@ import { CreatePlaylistForm } from 'components/forms/CreatePlaylistForm'
 interface TrackMenuProps {
   track: Track
   isPlaying: boolean
-  handleOnPlayClicked: () => void
+  handleOnPlayClicked: (index: number) => void
   setShowTrackMenu: React.Dispatch<React.SetStateAction<boolean>>
 }
 

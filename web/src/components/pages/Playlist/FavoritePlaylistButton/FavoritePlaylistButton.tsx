@@ -1,11 +1,8 @@
-import { SpinAnimation } from 'components/common/SpinAnimation'
 import { usePlaylistContext } from 'hooks/usePlaylistContext'
 import { AiFillHeart, AiOutlineHeart } from 'react-icons/ai'
 
 export const FavoritePlaylistButton = () => {
-  const { isFavoritePlaylist, setFavoritePlaylist, isFetchingPlaylist, setLikeCount } = usePlaylistContext()
-
-  if (isFetchingPlaylist) return <SpinAnimation />
+  const { isFavoritePlaylist, setFavoritePlaylist, setLikeCount } = usePlaylistContext()
 
   return (
     <>

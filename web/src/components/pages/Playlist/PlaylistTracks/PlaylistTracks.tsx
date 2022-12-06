@@ -19,17 +19,17 @@ export const PlaylistTracks = () => {
   const handleOnPlayClicked = (index: number) => {
     if (!playlistTracks || playlistTracks.length <= 0) return
 
-    const list = playlistTracks.map(
-      track =>
-        ({
-          trackId: track.id,
-          src: track.playbackUrl,
-          art: track.artworkUrl,
-          title: track.title,
-          artist: track.artist,
-          isFavorite: track.isFavorite,
-        } as Song),
-    )
+    const list = playlistTracks.map(track => {
+      return {
+        trackId: track.id,
+        src: track.playbackUrl,
+        art: track.artworkUrl,
+        title: track.title,
+        artist: track.artist,
+        isFavorite: track.isFavorite,
+      } as Song
+    })
+
     playlistState(list, index)
   }
 

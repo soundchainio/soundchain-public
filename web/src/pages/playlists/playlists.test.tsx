@@ -6,7 +6,6 @@ import { mockPlaylist, mockPlaylistTracks, mockProfile } from 'components/pages/
 import { getPlaylistData, getPlaylistTracksData, getProfileData } from 'repositories/playlist'
 import { mocked } from 'jest-mock'
 import { render, screen } from '@testing-library/react'
-import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 
 jest.mock('repositories/playlist')
 const mockedGetPlaylistData = mocked(getPlaylistData)

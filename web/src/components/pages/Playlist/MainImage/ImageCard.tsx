@@ -1,6 +1,5 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { useState } from 'react'
 import tw from 'tailwind-styled-components'
 import Asset from 'components/Asset/Asset'
 import { PlaylistTrackPlayerControls } from './PlaylistTrackPlayerControls'
@@ -10,9 +9,8 @@ import { Divider } from 'components/common'
 import { formatDate } from 'components/utils/helpers'
 
 export const ImageCard = () => {
-  const [isPlaying, setIsPlaying] = useState(false)
+  const { playlistState, isPlaying } = useAudioPlayerContext()
 
-  const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
   const {
     isFollowedPlaylist,
     toggleFollowPlaylist,
@@ -30,25 +28,20 @@ export const ImageCard = () => {
   const playlistDate = formatDate({ date: playlist?.createdAt })
 
   const handleOnPlayClicked = () => {
-    if (!playlistTracks) return
+    if (!playlistTracks || playlistTracks.length <= 0) return
 
-    const track = playlistTracks[0]
-
-    if (!track) return
-
-    const list = [
-      {
+    const list = playlistTracks.map(track => {
+      return {
         trackId: track.id,
         src: track.playbackUrl,
         art: track.artworkUrl,
         title: track.title,
         artist: track.artist,
         isFavorite: track.isFavorite,
-      } as Song,
-    ]
+      } as Song
+    })
 
     playlistState(list, 0)
-    isCurrentlyPlaying(track.id)
   }
 
   const handleFollowClick = () => {
@@ -58,16 +51,8 @@ export const ImageCard = () => {
     toggleFollowPlaylist(followState)
   }
 
-  useEffect(() => {
-    if (!playlistTracks) return
-
-    const track = playlistTracks[0]
-
-    if (!track) return
-    setIsPlaying(isCurrentlyPlaying(track.id))
-  }, [isCurrentlyPlaying, setIsPlaying, playlistTracks])
-
   if (!playlist) return null
+
   return (
     <Container>
       <InnerContainer>
