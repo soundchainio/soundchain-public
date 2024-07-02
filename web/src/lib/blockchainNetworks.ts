@@ -9,7 +9,7 @@ interface BlockchainNetwork {
 
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
-  rpc: 'https://rpc-mainnet.maticvigil.com/',
+  rpc: 'https://polygon-rpc.com/',
   id: 137,
   idHex: '0x89',
   symbol: 'MATIC',
