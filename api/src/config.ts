@@ -8,7 +8,6 @@ import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
 import { JwtService, JwtUser } from './services/JwtService';
 import { Context } from './types/Context';
-import { SentryReportError } from './utils/SentryReportError';
 
 dotenv.config();
 
@@ -66,7 +65,7 @@ assertEnvVar('SENDGRID_RESET_PASSWORD_TEMPLATE', SENDGRID_RESET_PASSWORD_TEMPLAT
 
 export const config = {
   apollo: {
-    plugins: [ApolloServerPluginLandingPageDisabled(), SentryReportError],
+    plugins: [ApolloServerPluginLandingPageDisabled()],
     context(context: ExpressContext | LambdaContext): Context {
       return new Context('req' in context ? context.req.user : context.express.req.user);
     },
