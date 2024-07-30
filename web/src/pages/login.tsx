@@ -1,4 +1,5 @@
-import { isApolloError } from '@apollo/client'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
 import { Button } from 'components/common/Buttons/Button'
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { FormValues, LoginForm } from 'components/LoginForm'
@@ -15,7 +16,8 @@ import { setJwt } from 'lib/apollo'
 import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+
+import { isApolloError } from '@apollo/client'
 
 export default function LoginPage() {
   const [login] = useLoginMutation()
@@ -69,13 +71,13 @@ export default function LoginPage() {
       redirectURI: `${config.domainUrl}/login${
         router.query?.callbackUrl ? `?callbackUrl=${router.query.callbackUrl.toString()}` : ''
       }`,
-      scope: ['openid', 'https://www.googleapis.com/auth/userinfo.email'],
+      scope: ['openid'],
     })
   }
 
   useEffect(() => {
     function magicGoogle() {
-      if (magic && magicParam && magic.oauth) {
+      if (magic && router.query.magic_credential) {
         setLoggingIn(true)
         magic.oauth
           .getRedirectResult()
@@ -85,7 +87,7 @@ export default function LoginPage() {
       }
     }
     magicGoogle()
-  }, [magic, magicParam, login, handleError])
+  }, [magic, magicParam, login, handleError, router.query])
 
   async function handleSubmit(values: FormValues) {
     try {
