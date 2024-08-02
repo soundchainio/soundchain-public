@@ -1,6 +1,6 @@
 import { Fragment, useRef } from 'react'
 
-import { Dialog, Transition, TransitionChild } from '@headlessui/react'
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react'
 
 import { SideMenuContent } from './SideMenuContent'
 
@@ -34,10 +34,12 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
           leaveFrom="translate-x-0"
           leaveTo="translate-x-full"
         >
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-gray-15 pt-5 pb-4">
-            <div className="flex flex-shrink-0 items-center"></div>
-            <SideMenuContent isMobile />
-          </div>
+          <DialogPanel>
+            <div className="relative flex h-full w-full max-w-xs flex-1 flex-col bg-gray-15 pt-5 pb-4">
+              <div className="flex flex-shrink-0 items-center"></div>
+              <SideMenuContent isMobile />
+            </div>
+          </DialogPanel>
         </TransitionChild>
         <div className="w-14 flex-shrink-0" aria-hidden="true" ref={ref}></div>
       </Dialog>
