@@ -8,6 +8,7 @@ import {
   useResetNotificationCountMutation,
 } from 'lib/graphql'
 
+import CircleLoading from './CircleLoading'
 import { ClearAllNotificationsButton } from './ClearAllNotificationsButton'
 import { SoundChainPopOverChildProps } from './common/PopOverButton/PopOverButton'
 import { NoResultFound } from './NoResultFound'
@@ -16,7 +17,7 @@ import { Notification as NotificationItem } from './Notification'
 export const Notifications: React.FC<SoundChainPopOverChildProps> = ({ closePopOver }) => {
   const [resetNotificationCount] = useResetNotificationCountMutation()
 
-  const { data } = useNotificationsQuery({
+  const { data, loading } = useNotificationsQuery({
     variables: { sort: { field: SortNotificationField.CreatedAt, order: SortOrder.Desc } },
     fetchPolicy: 'no-cache',
   })
@@ -25,16 +26,31 @@ export const Notifications: React.FC<SoundChainPopOverChildProps> = ({ closePopO
     resetNotificationCount({ refetchQueries: [NotificationCountDocument] })
   }, [resetNotificationCount])
 
+  if (loading) {
+    return (
+      <div className="flex h-[300px] w-full items-center justify-center p-8">
+        <CircleLoading />
+      </div>
+    )
+  }
+
   if (!data) {
     return <NoResultFound type="alerts" />
   }
 
   if (data.notifications.nodes.length <= 0) {
-    return <h2 className="p-8 text-center font-semibold text-white">No notifications</h2>
+    return (
+      <div className="flex h-[300px] w-full items-center justify-center p-8">
+        <h2 className="p-8 text-center font-semibold text-white">No notifications</h2>
+      </div>
+    )
   }
 
   return (
     <div className="p-4">
+      <div className="bg-gray-20 py-2 px-4">
+        <h2 className="text-lg font-semibold text-white">Notifications</h2>
+      </div>
       <ClearAllNotificationsButton className="w-full text-right" />
 
       {data.notifications.nodes.map((notification, index) => (
