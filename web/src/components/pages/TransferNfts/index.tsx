@@ -1,12 +1,18 @@
-import { Listbox } from '@headlessui/react'
+import { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react'
+
+import { OrangeButton } from 'components/common/Buttons/Orange'
+import { config } from 'config'
 import { Form, Formik } from 'formik'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMetaMask } from 'hooks/useMetaMask'
 import { Checkbox } from 'icons/Checkbox'
 import { useRouter } from 'next/dist/client/router'
-import { createContext, Fragment, useContext, useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
+import tw from 'tailwind-styled-components'
 import * as yup from 'yup'
+
+import { Listbox } from '@headlessui/react'
+
 import { useModalDispatch } from '../../../contexts/providers/modal'
 import useBlockchain, { gas } from '../../../hooks/useBlockchain'
 import { useLayoutContext } from '../../../hooks/useLayoutContext'
@@ -17,13 +23,9 @@ import { Play } from '../../../icons/Play'
 import { DefaultWallet, SortOrder, SortTrackField, TracksQuery, useTracksQuery } from '../../../lib/graphql'
 import Asset from '../../Asset/Asset'
 import { Badge } from '../../common/Badges/Badge'
-import { Button } from '../../common/Buttons/Button'
 import { RefreshButton } from '../../common/Buttons/RefreshButton'
 import { InfiniteLoader } from '../../InfiniteLoader'
 import { InputField } from '../../InputField'
-import { config } from 'config'
-import tw from 'tailwind-styled-components'
-import { OrangeButton } from 'components/common/Buttons/Orange'
 
 export interface FormValues {
   recipient: string

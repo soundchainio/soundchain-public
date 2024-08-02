@@ -1,10 +1,11 @@
-import classNames from 'classnames'
-import { NewFollowerBadge } from 'icons/NewFollowerBadge'
-import { FollowerNotification } from 'lib/graphql'
-import NextLink from 'next/link'
 import React from 'react'
+
+import classNames from 'classnames'
 import { Avatar } from 'components/Avatar'
 import { Timestamp } from 'components/Timestamp'
+import { NewFollowerBadge } from 'icons/NewFollowerBadge'
+import { FollowerNotification } from 'lib/graphql'
+import Link from 'next/link'
 
 interface FollowerNotificationProps {
   notification: FollowerNotification
@@ -16,7 +17,7 @@ export const FollowerNotificationItem = ({
   index,
 }: FollowerNotificationProps) => {
   return (
-    <NextLink href={link}>
+    <Link href={link} passHref>
       <div className={classNames('flex cursor-pointer flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
         <div className="flex break-words">
           <div className="flex min-w-[50px] items-center pr-4">
@@ -35,6 +36,6 @@ export const FollowerNotificationItem = ({
           </div>
         </div>
       </div>
-    </NextLink>
+    </Link>
   )
 }

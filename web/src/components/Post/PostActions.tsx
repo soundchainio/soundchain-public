@@ -1,4 +1,6 @@
-import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid'
+import React, { useEffect, useState } from 'react'
+
+import { ReactionSelector } from 'components/ReactionSelector'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { useMe } from 'hooks/useMe'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
@@ -6,9 +8,9 @@ import { delayFocus } from 'lib/delayFocus'
 import { ReactionType } from 'lib/graphql'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { ReactionSelector } from 'components/ReactionSelector'
+
+import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid'
 
 interface PostActionsProps {
   postId: string
@@ -61,7 +63,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
     if (router.asPath.includes('#openComment')) {
       delayFocus('#commentField')
     }
-  }, [])
+  }, [postId, router.asPath])
 
   return (
     <div className="relative flex items-center overflow-hidden bg-gray-25 px-0 py-2">
@@ -78,11 +80,9 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
         setOpened={setReactionSelectorOpened}
       />
       <div className={commonClasses}>
-        <NextLink href={`/posts/${postId}#openComment`}>
-          <a className="flex items-center font-bold">
-            <ChatAltIcon className="mr-1 h-4 w-4" />
-            Comment
-          </a>
+        <NextLink href={`/posts/${postId}#openComment`} className="flex items-center font-bold">
+          <ChatAltIcon className="mr-1 h-4 w-4" />
+          Comment
         </NextLink>
       </div>
       <div className={commonClasses}>

@@ -1,11 +1,12 @@
-import tw from 'tailwind-styled-components'
-import { Pause } from 'icons/Pause'
-import { Play } from 'icons/Play'
-import Link from 'next/link'
-import { TrackQuery } from 'lib/graphql'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { TrackShareButton } from 'components/TrackShareButton'
+import { Pause } from 'icons/Pause'
+import { Play } from 'icons/Play'
+import { TrackQuery } from 'lib/graphql'
+import Link from 'next/link'
 import ReactTooltip from 'react-tooltip'
+import tw from 'tailwind-styled-components'
+
 interface MobilePlayerProps {
   handleOnPlayClicked: () => void
   isPlaying: boolean
@@ -56,10 +57,8 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
           )}
 
           {!hideArtistName && (
-            <Link href={`/profiles/${track.artist}` || ''}>
-              <a>
-                <ArtistName>{track.artist}</ArtistName>
-              </a>
+            <Link href={`/profiles/${track.artist}` || ''} passHref>
+              <ArtistName>{track.artist}</ArtistName>
             </Link>
           )}
         </span>

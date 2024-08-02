@@ -1,25 +1,25 @@
+import { useEffect } from 'react'
+
+import { ListNFTButton } from 'components/common/Buttons/ListNFT'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/link-passhref */
 import { SpinAnimation } from 'components/common/SpinAnimation'
 import { Cell } from 'components/common/Table'
+import { DisplayName } from 'components/DisplayName'
 import { Matic } from 'components/Matic'
 import { Ogun } from 'components/Ogun'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import { useTokenOwner } from 'hooks/useTokenOwner'
-import { Profile, useProfileLazyQuery } from 'lib/graphql'
-import { Matic as MaticIcon } from 'icons/Matic'
-import NextLink from 'next/link'
-import { useRouter } from 'next/router'
-import { useEffect } from 'react'
-import { FaEdit } from 'react-icons/fa'
 import { Logo as OgunIcon } from 'icons/Logo'
-import tw from 'tailwind-styled-components'
-import { isPendingRequest } from 'utils/isPendingRequest'
-import { DisplayName } from 'components/DisplayName'
+import { Matic as MaticIcon } from 'icons/Matic'
+import { Profile, useProfileLazyQuery } from 'lib/graphql'
 import Link from 'next/link'
-import { fixedDecimals } from 'utils/format'
-import { ListNFTButton } from 'components/common/Buttons/ListNFT'
+import { useRouter } from 'next/router'
+import { FaEdit } from 'react-icons/fa'
 import ReactTooltip from 'react-tooltip'
+import tw from 'tailwind-styled-components'
+import { fixedDecimals } from 'utils/format'
+import { isPendingRequest } from 'utils/isPendingRequest'
 
 interface ListingItemProps {
   listedTrack: any
@@ -66,15 +66,13 @@ export const ListingItem = (props: ListingItemProps) => {
 
               <div className="flex flex-col items-start gap-1">
                 <Link href={`/profiles/${profileData?.profile.userHandle}`}>
-                  <a>
-                    <DisplayName
-                      className="text-sm"
-                      name={profileData?.profile.displayName || ''}
-                      verified={profileData?.profile.verified}
-                      teamMember={profileData?.profile.teamMember}
-                      badges={profileData?.profile.badges}
-                    />
-                  </a>
+                  <DisplayName
+                    className="text-sm"
+                    name={profileData?.profile.displayName || ''}
+                    verified={profileData?.profile.verified}
+                    teamMember={profileData?.profile.teamMember}
+                    badges={profileData?.profile.badges}
+                  />
                 </Link>
 
                 {isPaymentOGUN && (
@@ -159,7 +157,7 @@ export const ListingItem = (props: ListingItemProps) => {
           {isProcessing ? (
             <SpinAnimation />
           ) : (
-            <NextLink
+            <Link
               href={{
                 pathname: `${router.pathname}/edit/buy-now`,
                 query: { ...router.query, isPaymentOGUN },
@@ -169,7 +167,7 @@ export const ListingItem = (props: ListingItemProps) => {
                 <FaEdit size={22} className="mb-[4px] ml-[4px]" />
                 <ButtonTitle>Edit</ButtonTitle>
               </Anchor>
-            </NextLink>
+            </Link>
           )}
         </Cell>
       ) : (
@@ -177,18 +175,17 @@ export const ListingItem = (props: ListingItemProps) => {
           {isProcessing ? (
             <SpinAnimation />
           ) : (
-            <NextLink
+            <Link
               href={{
                 pathname: `${router.pathname}/buy-now`,
                 query: { ...router.query, isPaymentOGUN },
               }}
+              passHref
             >
-              <a>
-                <ListNFTButton className="py-2 px-4">
-                  <ButtonTitle>BUY</ButtonTitle>
-                </ListNFTButton>
-              </a>
-            </NextLink>
+              <ListNFTButton className="py-2 px-4">
+                <ButtonTitle>BUY</ButtonTitle>
+              </ListNFTButton>
+            </Link>
           )}
         </Cell>
       )}

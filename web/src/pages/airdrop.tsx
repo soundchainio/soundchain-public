@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import WalletConnectProvider from '@walletconnect/web3-provider'
+import { useEffect, useState } from 'react'
+
 import { Button } from 'components/common/Buttons/Button'
 import { WalletButton } from 'components/common/Buttons/WalletButton'
 import { LoaderAnimation } from 'components/LoaderAnimation'
@@ -17,15 +17,18 @@ import {
   useUpdateOgunClaimedWhitelistMutation,
   useWhitelistEntryByWalletLazyQuery,
 } from 'lib/graphql'
+import { RPCErrorCode } from 'magic-sdk'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 import { errorHandler } from 'utils/errorHandler'
 import Web3 from 'web3'
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import WalletConnectProvider from '@walletconnect/web3-provider'
+
 import { CustomModal } from '../components/CustomModal'
 import useBlockchainV2 from '../hooks/useBlockchainV2'
-import { RPCErrorCode } from 'magic-sdk'
 
 export default function AirdropPage() {
   const router = useRouter()
@@ -293,8 +296,8 @@ export default function AirdropPage() {
       <h2 className="pt-6 text-center text-2xl font-light md:text-4xl">
         Sorry, you didn&#39;t have enough AUDIO at the time of the Airdrop. You can earn some OGUN by trading on the
         platform or through some other methods.{' '}
-        <Link href="/">
-          <a className="green-blue-gradient-text-break font-medium">Learn more here.</a>
+        <Link href="/" className="green-blue-gradient-text-break font-medium">
+          Learn more here.
         </Link>
       </h2>
     )

@@ -1,12 +1,15 @@
-import Slider from '@reach/slider'
+import { useEffect, useState } from 'react'
+
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { Cards } from 'icons/Cards'
 import { HeartFilled } from 'icons/HeartFilled'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
-import NextLink from 'next/link'
-import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
+
+import Slider from '@reach/slider'
+
 import { TrackPrice } from '../lib/graphql'
 import Asset from './Asset/Asset'
 import { PriceDisplay } from './PriceDisplay'
@@ -99,32 +102,30 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                 )}
               </button>
             </div>
-            <NextLink href={`/tracks/${trackId}`}>
-              <a className="flex w-full flex-col gap-0.5 truncate">
-                <div className="flex w-full items-start justify-between gap-0.5 truncate text-xs font-black text-white">
-                  <p className="truncate" title={title || ''}>
-                    {title ? title : 'Unknown Title'}
-                  </p>
-                  {/* <div className="flex shrink-0 flex-col items-end justify-center gap-1">
+            <Link href={`/tracks/${trackId}`} className="flex w-full flex-col gap-0.5 truncate " passHref>
+              <div className="flex w-full items-start justify-between gap-0.5 truncate text-xs font-black text-white">
+                <p className="truncate" title={title || ''}>
+                  {title ? title : 'Unknown Title'}
+                </p>
+                {/* <div className="flex shrink-0 flex-col items-end justify-center gap-1">
                     {saleType && saleType !== '' && !hideBadgeAndPrice && <BadgeTrack label={saleType.toUpperCase()} />}
                   </div> */}
-                </div>
-                <div className="flex w-full items-start justify-between gap-0.5 truncate text-xs font-black text-white">
-                  {artist && (
-                    <p className="truncate text-xs font-black text-gray-80" title={artist}>
-                      {artist}
-                    </p>
-                  )}
-                  {saleType && saleType !== '' && !hideBadgeAndPrice && editionSize > 0 && (
-                    <p className="flex shrink-0 items-center justify-between gap-2 text-xs font-black text-gray-80">
-                      <Cards width={14} height={14} />
-                      {listingCount && listingCount > 0 && `${listingCount} / `}
-                      {editionSize}
-                    </p>
-                  )}
-                </div>
-              </a>
-            </NextLink>
+              </div>
+              <div className="flex w-full items-start justify-between gap-0.5 truncate text-xs font-black text-white">
+                {artist && (
+                  <p className="truncate text-xs font-black text-gray-80" title={artist}>
+                    {artist}
+                  </p>
+                )}
+                {saleType && saleType !== '' && !hideBadgeAndPrice && editionSize > 0 && (
+                  <p className="flex shrink-0 items-center justify-between gap-2 text-xs font-black text-gray-80">
+                    <Cards width={14} height={14} />
+                    {listingCount && listingCount > 0 && `${listingCount} / `}
+                    {editionSize}
+                  </p>
+                )}
+              </div>
+            </Link>
           </div>
           <div className="mt-2 flex justify-between">
             <RenderTrackCounters />

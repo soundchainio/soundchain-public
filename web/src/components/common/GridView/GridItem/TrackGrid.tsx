@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { HeartFilled } from 'icons/HeartFilled'
@@ -7,10 +9,9 @@ import { Play } from 'icons/Play'
 import { ListingItemWithPrice, Maybe, Track, TrackWithListingItem, useMaticUsdQuery } from 'lib/graphql'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 import { currency, limitTextToNumberOfCharacters } from 'utils/format'
+
 import { Cards } from '../../../../icons/Cards'
 import { Logo } from '../../../../icons/Logo'
 import { CurrencyType } from '../../../../types/CurrenctyType'
@@ -84,29 +85,23 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
   return (
     <div className={`rounded-lg bg-transparent p-0.5 hover:bg-rainbow-gradient ${isPlaying && 'bg-rainbow-gradient'}`}>
       <div className="flex w-[300px] flex-col rounded-lg bg-black text-white sm:w-full">
-        <NextLink href={`/tracks/${trackId}`}>
-          <a>
-            <div className="h-[300px] overflow-hidden rounded-t-xl sm:h-[225px]">
-              <Asset src={art} />
-            </div>
-          </a>
-        </NextLink>
+        <Link href={`/tracks/${trackId}`} passHref>
+          <div className="h-[300px] overflow-hidden rounded-t-xl sm:h-[225px]">
+            <Asset src={art} />
+          </div>
+        </Link>
 
         <div className="my-3 flex flex-col content-center items-center decoration-gray-80">
-          <NextLink href={`/tracks/${trackId}`}>
-            <a>
-              <div className="mx-4 mb-2 text-sm font-bold" title={title || ''}>
-                {limitTextToNumberOfCharacters(title ? title : 'Unknown Title', 20)}
-              </div>
-            </a>
-          </NextLink>
-          <NextLink href={`/profiles/${artist}`}>
-            <a>
-              <div className="text-center text-sm font-bold text-gray-80 hover:text-gray-400" title={artist || ''}>
-                {artist ? artist : 'Unknown'}
-              </div>
-            </a>
-          </NextLink>
+          <Link href={`/tracks/${trackId}`} passHref>
+            <div className="mx-4 mb-2 text-sm font-bold" title={title || ''}>
+              {limitTextToNumberOfCharacters(title ? title : 'Unknown Title', 20)}
+            </div>
+          </Link>
+          <Link href={`/profiles/${artist}`} passHref>
+            <div className="text-center text-sm font-bold text-gray-80 hover:text-gray-400" title={artist || ''}>
+              {artist ? artist : 'Unknown'}
+            </div>
+          </Link>
         </div>
         <div className="mx-2">
           <WavesurferComponent
@@ -154,12 +149,11 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
                       pathname: `tracks/${track.id}/place-bid`,
                       query: { ...router.query, isPaymentOGUN: isOgunPrice },
                     }}
+                    passHref
                   >
-                    <a>
-                      <div className="auction-gradient sale-type-font-size text-sm font-bold">
-                        {saleType.toUpperCase()}
-                      </div>
-                    </a>
+                    <div className="auction-gradient sale-type-font-size text-sm font-bold">
+                      {saleType.toUpperCase()}
+                    </div>
                   </Link>
                 ) : (
                   <Link
@@ -167,12 +161,11 @@ export const TrackGrid = ({ track, handleOnPlayClicked }: TrackProps) => {
                       pathname: `tracks/${track.id}/buy-now`,
                       query: { ...router.query, isPaymentOGUN: isOgunPrice },
                     }}
+                    passHref
                   >
-                    <a>
-                      <div className="buy-now-gradient sale-type-font-size text-sm font-bold">
-                        {saleType.toUpperCase()}
-                      </div>
-                    </a>
+                    <div className="buy-now-gradient sale-type-font-size text-sm font-bold">
+                      {saleType.toUpperCase()}
+                    </div>
                   </Link>
                 )}
                 {editionSize && editionSize > 0 && (

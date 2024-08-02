@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 import { Avatar } from 'components/Avatar'
 import { Bell } from 'icons/Bell'
 import { Logo } from 'icons/Logo'
@@ -5,7 +7,7 @@ import { getJwt } from 'lib/apollo'
 import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+
 import { Button } from './common/Buttons/Button'
 import { NavBar } from './NavBar'
 import { NotificationBadge } from './NotificationBadge'
@@ -55,10 +57,8 @@ export const TopNavBar = ({
   return (
     <header>
       <div className="relative z-10 grid h-16 grid-cols-3 bg-black shadow sm:grid-cols-6">
-        <Link href="/home">
-          <a className="flex-grow-basis flex items-center pl-4 md:hidden">
-            <Logo id="logo_mobile" className="block h-8 w-auto" />
-          </a>
+        <Link href="/home" className="flex-grow-basis flex items-center pl-4 md:hidden" passHref>
+          <Logo id="logo_mobile" className="block h-8 w-auto" />
         </Link>
         {me ? (
           <div className="col-span-3 hidden w-full flex-1 items-stretch justify-start pl-4 md:flex">
