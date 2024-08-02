@@ -34,7 +34,7 @@ export const NavItem = ({ text, link }: NavItemProps) => {
 function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
   return (
     <Transition show={open} as={React.Fragment}>
-      <Dialog onClose={close} className="relative z-50">
+      <Dialog onClose={close} className="relative z-20">
         <div className="fixed inset-0 flex items-center justify-end bg-black/50 p-0">
           <TransitionChild
             as={React.Fragment}

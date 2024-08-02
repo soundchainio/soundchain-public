@@ -68,7 +68,7 @@ export const FilterComponent = (props: Props) => {
           <div className="relative">
             <ListboxButton
               className={({ open }) =>
-                `hover:gradient-select-hover transparent-border-1px darkGreyBackgroundColor relative w-[160px] cursor-default rounded-lg py-2 pl-3 pr-10 text-left font-medium  text-white shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:w-[140px] sm:text-sm ${
+                `hover:gradient-select-hover transparent-border-1px darkGreyBackgroundColor w-[160px] cursor-default rounded-lg py-2 pl-3 pr-10 text-left font-medium  text-white shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:w-[140px] sm:text-sm ${
                   open ? 'gradient-select-hover' : ''
                 }`
               }

@@ -9,8 +9,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 
 import { Button } from './common/Buttons/Button'
+import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
 import { NavBar } from './NavBar'
 import { NotificationBadge } from './NotificationBadge'
+import { Notifications } from './Notifications'
 import { Title } from './Title'
 import { TopNavBarButton } from './TopNavBarButton'
 
@@ -106,7 +108,10 @@ export const TopNavBar = ({
             {me && (
               <>
                 <div className="pr-1 pt-2">
-                  <TopNavBarButton path={'/notifications'} icon={Bell} label="" badge={NotificationBadge} />
+                  {/* <TopNavBarButton path={'/notifications'} icon={Bell} label="" badge={NotificationBadge} /> */}
+                  <SoundChainPopOver icon={Bell} badge={NotificationBadge}>
+                    <Notifications />
+                  </SoundChainPopOver>
                 </div>
                 <TopNavBarButton
                   icon={({}) => (
