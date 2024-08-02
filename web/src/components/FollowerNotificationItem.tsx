@@ -18,7 +18,12 @@ export const FollowerNotificationItem = ({
 }: FollowerNotificationProps) => {
   return (
     <Link href={link} passHref>
-      <div className={classNames('flex cursor-pointer flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+      <div
+        className={classNames(
+          'flex cursor-pointer flex-col rounded-lg p-4',
+          index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20',
+        )}
+      >
         <div className="flex break-words">
           <div className="flex min-w-[50px] items-center pr-4">
             <Avatar profile={{ profilePicture: followerPicture }} linkToProfile={false} pixels={40} />

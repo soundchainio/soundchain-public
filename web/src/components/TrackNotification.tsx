@@ -1,9 +1,11 @@
+import React from 'react'
+
 import classNames from 'classnames'
 import { Matic } from 'components/Matic'
-import NextLink from 'next/link'
-import React from 'react'
-import Asset from './Asset/Asset'
 import { Timestamp } from 'components/Timestamp'
+import NextLink from 'next/link'
+
+import Asset from './Asset/Asset'
 
 interface NotificationProps {
   artist: string
@@ -27,7 +29,12 @@ export const TrackNotification = ({
   trackName,
 }: NotificationProps) => {
   return (
-    <div className={classNames('flex cursor-pointer flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+    <div
+      className={classNames(
+        'flex cursor-pointer flex-col rounded-lg p-4',
+        index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20',
+      )}
+    >
       <div className="flex flex-col break-words">
         <div className="inline-block w-full items-center text-sm text-gray-100">{title}</div>
         <Timestamp small datetime={createdAt} className="text-sm" />
