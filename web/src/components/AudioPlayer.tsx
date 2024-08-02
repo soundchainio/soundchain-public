@@ -1,4 +1,5 @@
-import Slider from '@reach/slider'
+import { useEffect, useRef, useState } from 'react'
+
 import { config } from 'config'
 import Hls from 'hls.js'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
@@ -6,9 +7,11 @@ import { Info } from 'icons/Info'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
 import mux from 'mux-embed'
-import NextLink from 'next/link'
-import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
+
+import Slider from '@reach/slider'
+
 import Asset from './Asset/Asset'
 
 export interface Song {
@@ -91,6 +94,8 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
         hls.destroy()
       }
     }
+    // TODO: Fix this
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [src])
 
   return (
@@ -114,7 +119,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
                 )}
               </button>
             </div>
-            <NextLink href={trackId ? `/tracks/${trackId}` : '#'}>
+            <Link href={trackId ? `/tracks/${trackId}` : '#'} passHref>
               <div className={`flex w-full ${trackId && 'cursor-pointer'}`}>
                 <div>
                   <div className="text-xs font-black text-white">
@@ -128,7 +133,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
                   </div>
                 )}
               </div>
-            </NextLink>
+            </Link>
           </div>
           <div className="mt-2 flex flex-col text-white">
             <Slider className="audio-player ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />

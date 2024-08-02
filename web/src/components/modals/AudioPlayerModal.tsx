@@ -1,5 +1,5 @@
-import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid'
-import Slider from '@reach/slider'
+import { useEffect, useState } from 'react'
+
 import Asset from 'components/Asset/Asset'
 import { Modal } from 'components/Modal'
 import { TrackListItem } from 'components/TrackListItem'
@@ -20,9 +20,11 @@ import { Shuffle } from 'icons/Shuffle'
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { checkIsMobile } from 'utils/IsMobile'
+
+import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid'
+import Slider from '@reach/slider'
 
 export const AudioPlayerModal = () => {
   const router = useRouter()
@@ -80,6 +82,8 @@ export const AudioPlayerModal = () => {
 
   useEffect(() => {
     handleClose()
+    // TODO: fix this
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.asPath])
 
   useEffect(() => {
@@ -122,14 +126,12 @@ export const AudioPlayerModal = () => {
                 </div>
                 <div className="my-4 flex w-full min-w-0 justify-between">
                   <div className="flex w-full gap-4">
-                    <NextLink href={`/tracks/${currentSong.trackId}`}>
-                      <a className="flex min-w-0 flex-1 flex-col">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <h2 className="truncate font-black">{currentSong.title || 'Unknown title'}</h2>
-                          <Info className="flex-shrink-0" />
-                        </div>
-                        <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
-                      </a>
+                    <NextLink href={`/tracks/${currentSong.trackId}`} className="flex min-w-0 flex-1 flex-col">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <h2 className="truncate font-black">{currentSong.title || 'Unknown title'}</h2>
+                        <Info className="flex-shrink-0" />
+                      </div>
+                      <h3 className="font-medium">{currentSong.artist || 'Unknown artist'}</h3>
                     </NextLink>
                     <button className="flex items-center" onClick={handleFavorite}>
                       {isFavorite && <HeartFull />}

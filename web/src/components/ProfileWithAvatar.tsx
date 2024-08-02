@@ -1,7 +1,8 @@
 import classNames from 'classnames'
+import { Avatar } from 'components/Avatar'
 import { Profile } from 'lib/graphql'
 import NextLink from 'next/link'
-import { Avatar } from 'components/Avatar'
+
 import { DisplayName } from './DisplayName'
 
 interface Props {
@@ -22,17 +23,20 @@ export const ProfileWithAvatar = (props: Props) => {
     <div className={classNames('flex items-center gap-2 truncate font-bold', className)}>
       {showAvatar && <Avatar profile={profile} pixels={avatarSize} />}
 
-      <NextLink href={`/profiles/${userHandle}`} passHref>
-        <a className="flex flex-col items-start truncate" aria-label={displayName}>
-          <DisplayName
-            className="text-sm"
-            name={displayName || ''}
-            verified={verified}
-            teamMember={teamMember}
-            badges={badges}
-          />
-          <p className="text-xxs text-gray-CC">@{userHandle}</p>
-        </a>
+      <NextLink
+        href={`/profiles/${userHandle}`}
+        passHref
+        className="flex flex-col items-start truncate"
+        aria-label={displayName}
+      >
+        <DisplayName
+          className="text-sm"
+          name={displayName || ''}
+          verified={verified}
+          teamMember={teamMember}
+          badges={badges}
+        />
+        <p className="text-xxs text-gray-CC">@{userHandle}</p>
       </NextLink>
     </div>
   )

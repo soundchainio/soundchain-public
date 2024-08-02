@@ -1,5 +1,6 @@
-import { twd } from '../../utils/twd'
 import Image from 'next/image'
+
+import { twd } from '../../utils/twd'
 
 const blueishBase = twd(`text-transparent bg-clip-text bg-gradient-to-b 
 from-[#26D1A8] to-[#AC4EFD]`)
@@ -68,8 +69,8 @@ export function DiscoverTracksSection() {
                       alt=""
                       src="/landing-page/timeline-preview.png"
                       className="w-full"
-                      width="300px"
-                      height="600px"
+                      width={300}
+                      height={600}
                     />
                   </div>
                 </div>

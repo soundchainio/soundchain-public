@@ -1,9 +1,10 @@
+import { Avatar } from 'components/Avatar'
 import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton'
 import { Profile } from 'lib/graphql'
-import NextLink from 'next/link'
+import Link from 'next/link'
 import ReactTooltip from 'react-tooltip'
 import { limitTextToNumberOfCharacters } from 'utils/format'
-import { Avatar } from 'components/Avatar'
+
 import { DisplayName } from './DisplayName'
 import { FollowButton } from './FollowButton'
 import { MessageButton } from './MessageButton'
@@ -27,16 +28,14 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
         />
         <div className="mx-2 mt-6 flex items-center justify-between">
           <div className="mt-[-90px]">
-            <NextLink href={`/profiles/${profile.userHandle}`}>
-              <a>
-                <Avatar
-                  linkToProfile={false}
-                  profile={profile}
-                  pixels={76}
-                  className="h-[55px] w-[55px] flex-shrink-0 rounded-full border-2 border-gray-10"
-                />
-              </a>
-            </NextLink>
+            <Link href={`/profiles/${profile.userHandle}`} passHref>
+              <Avatar
+                linkToProfile={false}
+                profile={profile}
+                pixels={76}
+                className="h-[55px] w-[55px] flex-shrink-0 rounded-full border-2 border-gray-10"
+              />
+            </Link>
           </div>
           <div className="flex items-center">
             <span className="mr-4 flex flex-col items-center">
@@ -71,18 +70,16 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
         </div>
         <div className="mx-4 mt-8 mb-2 flex items-start justify-between">
           <span className="flex flex-col items-start">
-            <NextLink href={`/profiles/${profile.userHandle}`}>
-              <a>
-                <DisplayName
-                  name={profile.displayName}
-                  verified={profile.verified}
-                  teamMember={profile.teamMember}
-                  badges={profile.badges}
-                  className="text-md lg:text-base"
-                  maxNumberOfCharacters={10}
-                />
-              </a>
-            </NextLink>
+            <Link href={`/profiles/${profile.userHandle}`} passHref>
+              <DisplayName
+                name={profile.displayName}
+                verified={profile.verified}
+                teamMember={profile.teamMember}
+                badges={profile.badges}
+                className="text-md lg:text-base"
+                maxNumberOfCharacters={10}
+              />
+            </Link>
             <p className="text-sm font-semibold text-gray-80 lg:text-sm">{`@${limitTextToNumberOfCharacters(
               profile.userHandle,
               10,

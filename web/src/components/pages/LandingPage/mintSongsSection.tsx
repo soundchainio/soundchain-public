@@ -1,4 +1,5 @@
 import Image from 'next/image'
+
 import { twd } from '../../utils/twd'
 
 const greenishBase = twd(`text-transparent bg-clip-text bg-gradient-to-b
@@ -18,11 +19,11 @@ export function MintSongsSection() {
         <div className="pointer-events-none absolute top-40 z-10 h-[500px] w-full sm:top-32">
           <Image
             alt=""
-            className="z-30 max-h-[300px] w-full object-cover object-cover"
+            className="z-30 max-h-[300px] w-full object-cover"
             src="/landing-page/wave-bg.svg"
             layout="responsive"
-            width="1511px"
-            height="387px"
+            width={1511}
+            height={387}
           />
         </div>
       </div>

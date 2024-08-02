@@ -1,7 +1,15 @@
-import { Button } from 'components/common/Buttons/Button'
+import { useEffect, useState } from 'react'
+
+import { Avatar } from 'components/Avatar'
 import { Divider } from 'components/common'
+import { Button } from 'components/common/Buttons/Button'
+import { DisplayName } from 'components/DisplayName'
 import useBlockchain from 'hooks/useBlockchain'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
+import useMetaMask from 'hooks/useMetaMask'
+import { useTokenOwner } from 'hooks/useTokenOwner'
 import { useWalletContext } from 'hooks/useWalletContext'
+import { Matic as MaticIcon } from 'icons/Matic'
 import {
   PendingRequest,
   TrackQuery,
@@ -9,19 +17,14 @@ import {
   useCountBidsLazyQuery,
   useUserByWalletLazyQuery,
 } from 'lib/graphql'
-import { HighestBid } from 'pages/tracks/[id]/complete-auction'
-import { useEffect, useState } from 'react'
-import { priceToShow } from 'utils/format'
-import tw from 'tailwind-styled-components'
-import { Timer } from '../../../../common/Timer/Timer'
 import Link from 'next/link'
-import { DisplayName } from 'components/DisplayName'
-import { Avatar } from 'components/Avatar'
-import { Matic as MaticIcon } from 'icons/Matic'
-import useBlockchainV2 from 'hooks/useBlockchainV2'
-import useMetaMask from 'hooks/useMetaMask'
-import { useTokenOwner } from 'hooks/useTokenOwner'
+import { HighestBid } from 'pages/tracks/[id]/complete-auction'
+import tw from 'tailwind-styled-components'
+import { priceToShow } from 'utils/format'
 import { compareWallets } from 'utils/Wallet'
+
+import { Timer } from '../../../../common/Timer/Timer'
+
 interface AuctionProps {
   track: TrackQuery['track']
 }
@@ -130,10 +133,8 @@ export const Auction = (props: AuctionProps) => {
     )
 
     const SoundchainLoginLink = () => (
-      <Link href="/login">
-        <a className="mx-[2px] hover:text-white">
-          <strong>Soundchain</strong>
-        </a>
+      <Link href="/login" className="mx-[2px] hover:text-white" passHref>
+        <strong>Soundchain</strong>
       </Link>
     )
 
@@ -158,16 +159,19 @@ export const Auction = (props: AuctionProps) => {
               <Avatar profile={highestBidderData.getUserByWallet.profile} pixels={40} className="mr-2" />
 
               <div>
-                <Link href={`/profiles/${highestBidderData.getUserByWallet.profile.userHandle}`} passHref>
-                  <a className="flex items-center" aria-label={highestBidderData.getUserByWallet.profile.displayName}>
-                    <HighestBid>Highest bid by</HighestBid>
-                    <DisplayName
-                      className="text-md"
-                      name={highestBidderData.getUserByWallet.profile.displayName || ''}
-                      verified={highestBidderData.getUserByWallet.profile.verified}
-                      teamMember={highestBidderData.getUserByWallet.profile.teamMember}
-                    />
-                  </a>
+                <Link
+                  href={`/profiles/${highestBidderData.getUserByWallet.profile.userHandle}`}
+                  passHref
+                  className="flex items-center"
+                  aria-label={highestBidderData.getUserByWallet.profile.displayName}
+                >
+                  <HighestBid>Highest bid by</HighestBid>
+                  <DisplayName
+                    className="text-md"
+                    name={highestBidderData.getUserByWallet.profile.displayName || ''}
+                    verified={highestBidderData.getUserByWallet.profile.verified}
+                    teamMember={highestBidderData.getUserByWallet.profile.teamMember}
+                  />
                 </Link>
                 <div className="flex items-center">
                   <BidAmount className="text-sm text-neutral-400">{highestBid.bid}</BidAmount>
@@ -204,44 +208,36 @@ export const Auction = (props: AuctionProps) => {
 
           {!isOwner && !isAuctionOver && !isFutureSale && (
             <>
-              <Link href={`/tracks/${track.id}/place-bid?isPaymentOGUN=false`}>
-                <a className="mt-2 w-full">
-                  <Button variant="rainbow" loading={isProcessing}>
-                    <span className="p-4">PLACE BID</span>
-                  </Button>
-                </a>
+              <Link href={`/tracks/${track.id}/place-bid?isPaymentOGUN=false`} className="mt-2 w-full" passHref>
+                <Button variant="rainbow" loading={isProcessing}>
+                  <span className="p-4">PLACE BID</span>
+                </Button>
               </Link>
               <SmallParagraph>it may take several seconds for prices to update</SmallParagraph>
             </>
           )}
 
           {canEditAuction && !isAuctionOver && (
-            <Link href={`/tracks/${track.id}/edit/auction`}>
-              <a className="mt-2 w-full">
-                <Button variant="rainbow" loading={isProcessing}>
-                  <span className="p-4">EDIT AUCTION</span>
-                </Button>
-              </a>
+            <Link href={`/tracks/${track.id}/edit/auction`} className="mt-2 w-full" passHref>
+              <Button variant="rainbow" loading={isProcessing}>
+                <span className="p-4">EDIT AUCTION</span>
+              </Button>
             </Link>
           )}
 
           {canComplete && isAuctionOver && (
-            <Link href={`/tracks/${track.id}/complete-auction`}>
-              <a className="mt-2 w-full">
-                <Button variant="rainbow" loading={isProcessing}>
-                  <span className="p-4">COMPLETE AUCTION</span>
-                </Button>
-              </a>
+            <Link href={`/tracks/${track.id}/complete-auction`} className="mt-2 w-full" passHref>
+              <Button variant="rainbow" loading={isProcessing}>
+                <span className="p-4">COMPLETE AUCTION</span>
+              </Button>
             </Link>
           )}
 
           {canCancel && (
-            <Link href={`/tracks/${track.id}/cancel-auction`}>
-              <a className="mt-2 w-full">
-                <Button variant="rainbow" loading={isProcessing}>
-                  <span className="p-4">CANCEL AUCTION</span>
-                </Button>
-              </a>
+            <Link href={`/tracks/${track.id}/cancel-auction`} className="mt-2 w-full" passHref>
+              <Button variant="rainbow" loading={isProcessing}>
+                <span className="p-4">CANCEL AUCTION</span>
+              </Button>
             </Link>
           )}
         </div>
