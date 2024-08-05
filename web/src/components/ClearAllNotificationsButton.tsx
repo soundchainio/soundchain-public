@@ -4,7 +4,7 @@ import { useClearNotificationsMutation } from 'lib/graphql'
 import { Button } from './common/Buttons/Button'
 
 interface ClearAllNotificationsButtonProps {
-  className: string
+  className?: string
 }
 export const ClearAllNotificationsButton = (props: ClearAllNotificationsButtonProps) => {
   const { className } = props

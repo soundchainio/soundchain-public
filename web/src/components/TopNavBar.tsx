@@ -35,6 +35,7 @@ export const TopNavBar = ({
 }: TopNavBarProps) => {
   const router = useRouter()
   const { data, loading: loadingMe, refetch } = useMeQuery()
+
   const me = data?.me
 
   useEffect(() => {
@@ -108,7 +109,6 @@ export const TopNavBar = ({
             {me && (
               <>
                 <div className="pr-1 pt-2">
-                  {/* <TopNavBarButton path={'/notifications'} icon={Bell} label="" badge={NotificationBadge} /> */}
                   <SoundChainPopOver icon={Bell} badge={NotificationBadge}>
                     <Notifications />
                   </SoundChainPopOver>
