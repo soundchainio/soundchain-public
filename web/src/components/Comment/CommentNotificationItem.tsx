@@ -22,8 +22,9 @@ export const CommentNotificationItem = ({
     <NextLink href={link}>
       <div
         className={classNames(
-          'flex cursor-pointer flex-col rounded-lg p-4',
+          'group flex cursor-pointer flex-col rounded-lg p-4 transition-colors',
           index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20',
+          'hover:bg-gray-30',
         )}
       >
         <div className="flex break-words">
@@ -43,7 +44,9 @@ export const CommentNotificationItem = ({
           </div>
         </div>
         <div className="mt-4 flex">
-          <div className="w-full break-words rounded-xl bg-gray-30 p-4 text-sm text-gray-100">{previewBody}</div>
+          <div className="w-full break-words rounded-xl bg-gray-20 p-4 text-sm text-gray-100 transition-colors group-hover:bg-gray-25">
+            {previewBody}
+          </div>
         </div>
       </div>
     </NextLink>

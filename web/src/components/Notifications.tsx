@@ -48,14 +48,16 @@ export const Notifications: React.FC<SoundChainPopOverChildProps> = ({ closePopO
 
   return (
     <div className="p-4">
-      <div className="bg-gray-20 py-2 px-4">
+      <div className="flex items-center justify-between rounded-lg bg-gray-20 py-2 px-4">
         <h2 className="text-lg font-semibold text-white">Notifications</h2>
+        <ClearAllNotificationsButton className="text-gray-80 hover:text-white" />
       </div>
-      <ClearAllNotificationsButton className="w-full text-right" />
 
-      {data.notifications.nodes.map((notification, index) => (
-        <NotificationItem key={index} index={index} notificationId={notification.id} closePopOver={closePopOver} />
-      ))}
+      <div className="my-4 flex flex-col gap-4">
+        {data.notifications.nodes.map((notification, index) => (
+          <NotificationItem key={index} index={index} notificationId={notification.id} closePopOver={closePopOver} />
+        ))}
+      </div>
     </div>
   )
 }
