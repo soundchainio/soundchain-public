@@ -2,9 +2,15 @@ import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Comment } from '../models/Comment';
 import { Follow } from '../models/Follow';
-import { Notification, NotificationModel } from '../models/Notification';
+import {
+  Notification,
+  NotificationModel,
+} from '../models/Notification';
 import { Post } from '../models/Post';
-import { Profile, ProfileModel } from '../models/Profile';
+import {
+  Profile,
+  ProfileModel,
+} from '../models/Profile';
 import { Reaction } from '../models/Reaction';
 import { Track } from '../models/Track';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
