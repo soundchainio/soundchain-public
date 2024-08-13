@@ -9,7 +9,7 @@ interface BlockchainNetwork {
 
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
-  rpc: 'https://rpc-mainnet.maticvigil.com/',
+  rpc: 'https://polygon-rpc.com/',
   id: 137,
   idHex: '0x89',
   symbol: 'MATIC',
@@ -17,21 +17,15 @@ export const mainNetwork: BlockchainNetwork = {
 }
 
 export const testnetNetwork: BlockchainNetwork = {
-  name: 'Mumbai Testnet',
-  rpc: 'https://matic-mumbai.chainstacklabs.com',
-  // alternative testnet rpc
-  // rpc: 'https://rpc-mumbai.maticvigil.com',
-  // rpc: 'https://rpc-mumbai.matic.today',
-  // rpc: 'https://matic-testnet-archive-rpc.bwarelabs.com',
-  // rpc: 'https://polygon-mumbai.g.alchemy.com/v2/XmmFmbucl8MhC85TAsWgv6I4DcS2-VYL',
-  // rpc: 'https://rpc-mumbai.maticvigil.com',
-  id: 80001,
-  idHex: '0x13881',
+  name: 'Polygon Amoy Testnet',
+  rpc: 'https://rpc-amoy.polygon.technology',
+  id: 80002,
+  idHex: '0x13882',
   symbol: 'MATIC',
-  blockExplorer: 'https://mumbai.polygonscan.com',
+  blockExplorer: 'https://www.oklink.com/amoy',
 }
 
 export const network: BlockchainNetwork =
-  process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork
+  process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ? mainNetwork : mainNetwork
 
 export const isMainNetwork = network.id === mainNetwork.id

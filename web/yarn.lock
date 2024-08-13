@@ -1996,31 +1996,31 @@
   dependencies:
     lottie-web "^5.7.8"
 
-"@magic-ext/oauth@2.1.1":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@magic-ext/oauth/-/oauth-2.1.1.tgz#6591bca1c17a220372f67579240efac26a9a7bdc"
-  integrity sha512-JyHy8kUVFO8i5bN81MGf6wlrQ7jVC4sd890xeS3zj2QF/A4eTJxaxVOV68D+Yqr4r8xv1dq0dJknTA0WsHzATg==
+"@magic-ext/oauth@^22.4.0":
+  version "22.4.0"
+  resolved "https://registry.yarnpkg.com/@magic-ext/oauth/-/oauth-22.4.0.tgz#bdcc4885c5c8d52d0516597a32ec3f6627fda516"
+  integrity sha512-OnTqzRZNKo3/uTV95jmGKGYIXY4tupGNGwmoeVIZa6kHIez01kgpZ+ZLl6pv5NIKRcZghQq7TZA7VmiGq0DHlw==
   dependencies:
-    "@magic-sdk/types" "^7.1.1"
+    crypto-js "^3.3.0"
 
-"@magic-sdk/commons@^4.1.1":
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/@magic-sdk/commons/-/commons-4.1.1.tgz#16dc84a64cc7cafae50c4061acae46bb587c623d"
-  integrity sha512-nHbMRkssAC1z5rHpPwkiYolp3qxmtnkNaynGlreVxgtPTemJ8USRrXjg/cF0WVhRwtPTpegdTvtpJWOMd0Ratg==
+"@magic-sdk/commons@^24.4.0":
+  version "24.4.0"
+  resolved "https://registry.yarnpkg.com/@magic-sdk/commons/-/commons-24.4.0.tgz#9251552f804cd9a515affe4c270709e751c78da4"
+  integrity sha512-x9OjOpdrGK9Z0p6oqi6MbKMgpjiucBwd6XkGdeM2kgVtAe/1fYJ88fqFNStMqsQ8KQjYPMyho+lRuT5bdox94A==
 
-"@magic-sdk/provider@^8.1.1":
-  version "8.2.0"
-  resolved "https://registry.yarnpkg.com/@magic-sdk/provider/-/provider-8.2.0.tgz#50dd08ca79223f41a5f9bad5a26d0e716f20dbcf"
-  integrity sha512-gm8pHvHbXctAp393M0W8eocP7/qifpqBIIrIXiMKpdlGRKzuMvv5x1LQvb8CuOjPIK3eXxY2qdCZnvWE2qiV0A==
+"@magic-sdk/provider@^28.4.0":
+  version "28.4.0"
+  resolved "https://registry.yarnpkg.com/@magic-sdk/provider/-/provider-28.4.0.tgz#fa54593c047f6ad337735f07fbfce0c3d44858f1"
+  integrity sha512-MijBTTmH6BQKUtKD3eSRiIOfp30aS9JZXjVMFcoAS7u0U6QRVX8d5m6ay+49RGg6CSa3dMrj+GYXLmHzPbTCSg==
   dependencies:
-    "@magic-sdk/types" "^7.1.1"
+    "@magic-sdk/types" "^24.2.0"
     eventemitter3 "^4.0.4"
     web3-core "1.5.2"
 
-"@magic-sdk/types@^7.1.1":
-  version "7.2.0"
-  resolved "https://registry.yarnpkg.com/@magic-sdk/types/-/types-7.2.0.tgz#86b5a92291a892d0da40808855ef62128ceb4795"
-  integrity sha512-YpfRhY6dBjMEvW+YApoDTSVWBqb5skOyoOcAcKbQvkuV4yCBBvJXAstOPYvFp7Vgw97AQkuie7mLdx7EZahS1Q==
+"@magic-sdk/types@^24.2.0":
+  version "24.2.0"
+  resolved "https://registry.yarnpkg.com/@magic-sdk/types/-/types-24.2.0.tgz#e942841b4a3216f13994005cd19ddd97297e38a9"
+  integrity sha512-5b9YoYPxEcEZo08bCKYND30UEjL0bPwWEmRy2M5ZpLacm7vwqHiIrkJ2VfuZ675/QS2jnUG0Qa0bee9zBasXow==
 
 "@metamask/jazzicon@^2.0.0":
   version "2.0.0"
@@ -4882,6 +4882,11 @@ crypto-browserify@3.12.0:
     public-encrypt "^4.0.0"
     randombytes "^2.0.0"
     randomfill "^1.0.3"
+
+crypto-js@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-3.3.0.tgz#846dd1cce2f68aacfa156c8578f926a609b7976b"
+  integrity sha512-DIT51nX0dCfKltpRiXV+/TVZq+Qq2NgF4644+K7Ttnla7zEzqc+kjJyiB96BHNyUTBxyjzRcZYpUdZa+QAqi6Q==
 
 crypto-random-string@^2.0.0:
   version "2.0.0"
@@ -8828,14 +8833,14 @@ madge@^4.0.1:
     typescript "^3.9.5"
     walkdir "^0.4.1"
 
-magic-sdk@8.1.1:
-  version "8.1.1"
-  resolved "https://registry.yarnpkg.com/magic-sdk/-/magic-sdk-8.1.1.tgz#e2b31d492e1f574137953acaeb237558537a57d0"
-  integrity sha512-BLyAufrVM/6F7Q9rKIz1r0UZnYG4SOnr650lVsJGa5V1pc4FOWBfxr7UaxhHoP6zJ7faUvY7K/x1VWDQbmYUzw==
+magic-sdk@^28.4.0:
+  version "28.4.0"
+  resolved "https://registry.yarnpkg.com/magic-sdk/-/magic-sdk-28.4.0.tgz#4694078d845d41dbe1a5e1bc3b819e732a8c8b8d"
+  integrity sha512-u29lxRzQ85D1WJI7wDrUtqE0rVj2VZ8c9SME5lFIFTrV2sllvTNYg3ivwyJU/jUOW5m1t+9SwIcTEc3KeqYgXQ==
   dependencies:
-    "@magic-sdk/commons" "^4.1.1"
-    "@magic-sdk/provider" "^8.1.1"
-    "@magic-sdk/types" "^7.1.1"
+    "@magic-sdk/commons" "^24.4.0"
+    "@magic-sdk/provider" "^28.4.0"
+    "@magic-sdk/types" "^24.2.0"
     localforage "^1.7.4"
 
 magic-string@^0.25.0, magic-string@^0.25.7:
