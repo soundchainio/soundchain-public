@@ -1,8 +1,10 @@
-import { twd } from '../../utils/twd'
-import { Disclosure, Transition } from '@headlessui/react'
 import { ReactElement } from 'react'
+
+import { Disclosure, Transition } from '@headlessui/react'
 import { ArrowRightIcon } from '@heroicons/react/solid'
-import { roadmapColors, RoadmapStep } from './roadmap.config'
+
+import { twd } from '../../utils/twd'
+import { roadmapColors } from './roadmap.config'
 
 const RoadmapStepTitle = twd(`font-bold text-lg sm:text-3xl md:text-6xl uppercase`).h2
 const RoadmapStepStatus = twd(`font-semibold  text-sm sm:text-lg md:text-xl`).span
@@ -43,7 +45,11 @@ export function RoadmapStep({ title, status, children, styles }: RoadmapStepProp
 }
 
 interface RoadmapStepListProps {
-  steps: RoadmapStep[]
+  steps: {
+    title: string
+    status: string
+    description: string
+  }[]
 }
 
 export function RoadmapStepList({ steps }: RoadmapStepListProps) {
