@@ -15,7 +15,11 @@ export const Artist = ({ artistId }: ArtistProps) => {
       </Subtitle>
       <div className="flex items-center">
         <div className="relative ml-4 h-8 w-8 overflow-hidden rounded-lg">
-          <Image layout="fill" src="/_next/image?url=%2Fdefault-pictures%2Fprofile%2Fred.png&w=256&q=75" />
+          <Image
+            layout="fill"
+            alt="artist image"
+            src="/_next/image?url=%2Fdefault-pictures%2Fprofile%2Fred.png&w=256&q=75"
+          />
         </div>
         <div className="flex-1 px-4 font-bold">The Beatles - {artistId}</div>
         <div className="text-center text-sm">

@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 import SEO from 'components/SEO'
 import { useMe } from 'hooks/useMe'
 import { cacheFor, createApolloClient } from 'lib/apollo'
@@ -5,7 +7,6 @@ import { Badge, MeDocument, MeQuery, useClaimBadgeProfileMutation } from 'lib/gr
 import { GetServerSideProps } from 'next'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
 
 interface ClaimBadgeProfileProps {
   me?: MeQuery['me']
@@ -56,7 +57,7 @@ export default function ClaimBadgeProfilePage({}: ClaimBadgeProfileProps) {
       {!loading && me?.profile.badges?.includes(Badge.SupporterFirstEventAeSc) && !error && (
         <>
           <div className="-mt-16 flex h-full w-full flex-col items-center justify-center">
-            <Image alt="badge" src={'/badges/badge-01.svg'} width={'100%'} height={'100%'} />
+            <Image alt="badge" src={'/badges/badge-01.svg'} width={30} height={30} />
             <div className="mt-3 pl-3 text-sm font-bold text-white">Badge Claimed !!!</div>
           </div>
         </>
