@@ -2,11 +2,12 @@ import { useModalDispatch } from 'contexts/providers/modal'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'
-import NextLink from 'next/link'
+import Link from 'next/link'
 import { AddLinks } from 'react-link-text'
 import ReactPlayer from 'react-player'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+
 import { Avatar } from '../Avatar'
 import { DisplayName } from '../DisplayName'
 import { MiniAudioPlayer } from '../MiniAudioPlayer'
@@ -50,26 +51,22 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
           <Avatar profile={post.profile} pixels={34} className="flex items-center justify-center" />
           <div className="ml-2 flex min-w-0 flex-1 items-center justify-between">
             <div className="flex min-w-0 flex-col">
-              <NextLink href={`/profiles/${post.profile.userHandle}`}>
-                <a>
-                  <DisplayName
-                    name={post.profile.displayName}
-                    verified={post.profile.verified}
-                    teamMember={post.profile.teamMember}
-                    badges={post.profile.badges}
-                  />
-                </a>
-              </NextLink>
-              <NextLink href={`/posts/${post.id}`}>
-                <a className="leading-4" style={{ width: 'fit-content' }}>
-                  <Timestamp
-                    datetime={post.createdAt}
-                    edited={post.createdAt !== post.updatedAt || false}
-                    className="flex-1 text-left"
-                    small
-                  />
-                </a>
-              </NextLink>
+              <Link href={`/profiles/${post.profile.userHandle}`} passHref>
+                <DisplayName
+                  name={post.profile.displayName}
+                  verified={post.profile.verified}
+                  teamMember={post.profile.teamMember}
+                  badges={post.profile.badges}
+                />
+              </Link>
+              <Link href={`/posts/${post.id}`} className="leading-4" style={{ width: 'fit-content' }} passHref>
+                <Timestamp
+                  datetime={post.createdAt}
+                  edited={post.createdAt !== post.updatedAt || false}
+                  className="flex-1 text-left"
+                  small
+                />
+              </Link>
             </div>
             {canEdit && (
               <button aria-label="More options" className="h-7 w-14 flex-shrink-0" onClick={onEllipsisClick}>

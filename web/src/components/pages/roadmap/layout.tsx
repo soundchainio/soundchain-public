@@ -1,8 +1,10 @@
-import Image from 'next/image'
 import { ReactElement } from 'react'
+
 import LandingPageHeader from 'components/pages/LandingPage/Header/header'
-import { RoadmapStepList } from './roadmapStep'
+import Image from 'next/image'
+
 import { roadmapSteps } from './roadmap.config'
+import { RoadmapStepList } from './roadmapStep'
 
 interface RoadmapLayoutProps {
   children: ReactElement
@@ -38,7 +40,7 @@ export default function RoadmapLayout(props: RoadmapLayoutProps) {
 
       <div className="relative">
         <div
-          className={` md:max-w-screen mx-auto flex w-full w-screen max-w-15/16 flex-col 
+          className={` md:max-w-screen mx-auto flex w-screen max-w-15/16 flex-col 
         pb-10 sm:pr-2 md:max-w-full md:pb-20 2k:max-w-[1200px]`}
         >
           <RoadmapStepList steps={roadmapSteps} />

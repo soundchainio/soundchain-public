@@ -1,7 +1,8 @@
+import React from 'react'
+
 import { Profile } from 'lib/graphql'
 import Image from 'next/image'
-import NextLink from 'next/link'
-import React from 'react'
+import Link from 'next/link'
 
 interface AvatarProps extends React.ComponentPropsWithoutRef<'div'> {
   profile: Partial<Profile>
@@ -16,11 +17,9 @@ export const Avatar = ({ profile, pixels = 30, linkToProfile = true, ...props }:
   }
 
   return (
-    <NextLink href={`/profiles/${profile.userHandle}`} passHref>
-      <a className="flex-shrink-0" aria-label={profile.displayName}>
-        <Content profile={profile} pixels={pixels} {...props} />
-      </a>
-    </NextLink>
+    <Link href={`/profiles/${profile.userHandle}`} passHref className="flex-shrink-0" aria-label={profile.displayName}>
+      <Content profile={profile} pixels={pixels} {...props} />
+    </Link>
   )
 }
 

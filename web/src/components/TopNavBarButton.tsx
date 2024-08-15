@@ -1,9 +1,10 @@
+import { useEffect, useState } from 'react'
+
 import classNames from 'classnames'
 import { SVGGradientColor } from 'icons/gradients'
 import { IconProps } from 'icons/types/IconProps'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 
 interface RefreshButtonProps {
   onClick?: () => void
@@ -39,16 +40,14 @@ export const TopNavBarButton = ({
 
   if (path) {
     return (
-      <Link href={path} passHref>
-        <a className={classNames(baseClassName, className)}>
-          <div className="relative mr-1">
-            {Badge && <Badge />}
-            <Icon color={isActive ? color : undefined} />
-          </div>
-          <span className={`${isActive && `${color}-gradient-text`} pt-1 text-xs font-semibold text-gray-60 md:pt-0`}>
-            {label}
-          </span>
-        </a>
+      <Link href={path} passHref className={classNames(baseClassName, className)}>
+        <div className="relative mr-1">
+          {Badge && <Badge />}
+          <Icon color={isActive ? color : undefined} />
+        </div>
+        <span className={`${isActive && `${color}-gradient-text`} pt-1 text-xs font-semibold text-gray-60 md:pt-0`}>
+          {label}
+        </span>
       </Link>
     )
   }

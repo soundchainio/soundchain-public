@@ -1,7 +1,8 @@
-import classNames from 'classnames'
-import { DeletedCommentNotification } from 'lib/graphql'
 import React from 'react'
+
+import classNames from 'classnames'
 import { Timestamp } from 'components/Timestamp'
+import { DeletedCommentNotification } from 'lib/graphql'
 
 interface DeletedCommentNotificationProps {
   notification: DeletedCommentNotification
@@ -13,7 +14,7 @@ export const DeletedCommentNotificationItem = ({
   index,
 }: DeletedCommentNotificationProps) => {
   return (
-    <div className={classNames('flex flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+    <div className={classNames('flex flex-col rounded-lg p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
       <div className="flex break-words">
         <div>
           <div className="inline-block w-full items-center text-sm text-gray-100">

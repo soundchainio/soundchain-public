@@ -1,13 +1,14 @@
 import classNames from 'classnames'
+import { Avatar } from 'components/Avatar'
 import { Matic } from 'components/Matic'
+import { Timestamp } from 'components/Timestamp'
 import { Logo as OgunIcon } from 'icons/Logo'
 import { Matic as MaticIcon } from 'icons/Matic'
 import { NftSoldNotification, SellType } from 'lib/graphql'
 import NextLink from 'next/link'
+
 import Asset from './Asset/Asset'
-import { Avatar } from 'components/Avatar'
 import { Ogun } from './Ogun'
-import { Timestamp } from 'components/Timestamp'
 
 interface NFTSoldNotificationProps {
   notification: NftSoldNotification
@@ -30,7 +31,12 @@ export const NFTSoldNotificationItem = ({
   index,
 }: NFTSoldNotificationProps) => {
   return (
-    <div className={classNames('flex cursor-pointer flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+    <div
+      className={classNames(
+        'flex cursor-pointer flex-col rounded-lg p-4',
+        index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20',
+      )}
+    >
       <div className="flex break-words">
         <div className="flex min-w-[50px] items-center pr-4">
           <Avatar profile={{ profilePicture: buyerPicture }} linkToProfile={false} pixels={40} />

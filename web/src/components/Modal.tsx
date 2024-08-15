@@ -1,6 +1,8 @@
-import { Dialog, Transition } from '@headlessui/react'
 import 'emoji-mart/css/emoji-mart.css'
-import { default as React, Fragment, ReactNode, useRef } from 'react'
+
+import React, { Fragment, ReactNode, useRef } from 'react'
+
+import { Dialog, Transition, TransitionChild } from '@headlessui/react'
 
 interface ModalProps {
   show: boolean
@@ -14,14 +16,14 @@ interface ModalProps {
 export const Modal = ({ show, children, title, leftButton, rightButton, onClose }: ModalProps) => {
   const ref = useRef(null)
   return (
-    <Transition.Root show={show} as={Fragment}>
+    <Transition show={show} as={Fragment}>
       <Dialog
         as="div"
         className="fixed inset-0 z-40 flex h-full w-full flex-col overflow-y-scroll"
         onClose={onClose}
         initialFocus={ref}
       >
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="transition-opacity ease-linear duration-300"
           enterFrom="opacity-0"
@@ -30,10 +32,10 @@ export const Modal = ({ show, children, title, leftButton, rightButton, onClose 
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <Dialog.Overlay className="fixed inset-0 bg-gray-15 bg-opacity-75" />
-        </Transition.Child>
+          <div className="fixed inset-0 bg-gray-15 bg-opacity-75" />
+        </TransitionChild>
         <div className="h-16 flex-shrink-0" aria-hidden="true" ref={ref}></div>
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="transition ease-in-out duration-300 transform"
           enterFrom="translate-y-full"
@@ -50,8 +52,8 @@ export const Modal = ({ show, children, title, leftButton, rightButton, onClose 
             </div>
             <div className="relative flex h-full flex-col bg-gray-10">{children}</div>
           </div>
-        </Transition.Child>
+        </TransitionChild>
       </Dialog>
-    </Transition.Root>
+    </Transition>
   )
 }

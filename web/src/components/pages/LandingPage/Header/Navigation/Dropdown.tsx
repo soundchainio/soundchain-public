@@ -1,5 +1,6 @@
-import { Popover, Transition } from '@headlessui/react'
 import { Fragment, ReactChild, useState } from 'react'
+
+import { Popover, PopoverButton, PopoverPanel, Transition } from '@headlessui/react'
 
 interface Props {
   title?: string
@@ -14,7 +15,7 @@ export const Dropdown = (props: Props) => {
 
   return (
     <Popover className="relative">
-      <Popover.Button
+      <PopoverButton
         className={`relative bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text font-semibold text-gray-80 transition duration-150 ease-in-out hover:text-transparent hover:cursor-${
           cursor || 'pointer'
         }`}
@@ -28,7 +29,7 @@ export const Dropdown = (props: Props) => {
         ) : (
           title
         )}
-      </Popover.Button>
+      </PopoverButton>
       <Transition
         as={Fragment}
         enter="transition ease-out duration-200"
@@ -39,13 +40,13 @@ export const Dropdown = (props: Props) => {
         leaveTo="opacity-0 translate-y-1"
         show={alwaysVisible ? true : showDropdown}
       >
-        <Popover.Panel
+        <PopoverPanel
           className="max-content absolute top-[30px] left-[-200%] z-10 rounded-lg bg-gray-10 p-4 text-gray-80"
           onMouseEnter={() => setShowDropdown(true)}
           onMouseLeave={() => setShowDropdown(false)}
         >
           {children}
-        </Popover.Panel>
+        </PopoverPanel>
       </Transition>
     </Popover>
   )

@@ -1,3 +1,6 @@
+import { useState } from 'react'
+
+import { Avatar } from 'components/Avatar'
 import { FollowModal } from 'components/FollowersModal'
 import { Number } from 'components/Number'
 import { config } from 'config'
@@ -15,12 +18,11 @@ import { Verified } from 'icons/Verified'
 import { Wallet } from 'icons/Wallet'
 import { setJwt } from 'lib/apollo'
 import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql'
-import { default as NextLink } from 'next/link'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { FollowModalType } from 'types/FollowModalType'
-import { Avatar } from 'components/Avatar'
+
 import { InboxButton } from './common/Buttons/InboxButton'
 import { DisplayName } from './DisplayName'
 import { MenuItem } from './MenuItem'
@@ -133,9 +135,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
         </div>
       )}
       <div className="my-4 mx-8 flex h-10 flex-shrink-0 items-center justify-between text-gray-CC">
-        <NextLink href="/privacy-policy">
-          <a>PRIVACY POLICY</a>
-        </NextLink>
+        <Link href="/privacy-policy">PRIVACY POLICY</Link>
         <span>v {config.appVersion}</span>
       </div>
       <div className="mx-8 flex h-10 flex-shrink-0 flex-row items-center justify-between">

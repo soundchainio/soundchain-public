@@ -1,5 +1,6 @@
-import { twd } from '../../utils/twd'
 import Image from 'next/image'
+
+import { twd } from '../../utils/twd'
 
 const orngBash = twd(`text-transparent bg-clip-text bg-gradient-to-b 
 from-[#FED503] to-[#FE5540]`)
@@ -38,8 +39,8 @@ export function CollectMusicNFTSection() {
                 <Image
                   alt=""
                   layout="intrinsic"
-                  width="584px"
-                  height="544px"
+                  width={584}
+                  height={544}
                   className="h-full w-full object-contain"
                   src="/landing-page/laptop.png"
                 />

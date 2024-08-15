@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 import { Avatar } from 'components/Avatar'
 import { Bell } from 'icons/Bell'
 import { Logo } from 'icons/Logo'
@@ -5,10 +7,12 @@ import { getJwt } from 'lib/apollo'
 import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect } from 'react'
+
 import { Button } from './common/Buttons/Button'
+import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
 import { NavBar } from './NavBar'
 import { NotificationBadge } from './NotificationBadge'
+import { Notifications } from './Notifications'
 import { Title } from './Title'
 import { TopNavBarButton } from './TopNavBarButton'
 
@@ -31,6 +35,7 @@ export const TopNavBar = ({
 }: TopNavBarProps) => {
   const router = useRouter()
   const { data, loading: loadingMe, refetch } = useMeQuery()
+
   const me = data?.me
 
   useEffect(() => {
@@ -55,10 +60,8 @@ export const TopNavBar = ({
   return (
     <header>
       <div className="relative z-10 grid h-16 grid-cols-3 bg-black shadow sm:grid-cols-6">
-        <Link href="/home">
-          <a className="flex-grow-basis flex items-center pl-4 md:hidden">
-            <Logo id="logo_mobile" className="block h-8 w-auto" />
-          </a>
+        <Link href="/home" className="flex-grow-basis flex items-center pl-4 md:hidden" passHref>
+          <Logo id="logo_mobile" className="block h-8 w-auto" />
         </Link>
         {me ? (
           <div className="col-span-3 hidden w-full flex-1 items-stretch justify-start pl-4 md:flex">
@@ -106,7 +109,9 @@ export const TopNavBar = ({
             {me && (
               <>
                 <div className="pr-1 pt-2">
-                  <TopNavBarButton path={'/notifications'} icon={Bell} label="" badge={NotificationBadge} />
+                  <SoundChainPopOver icon={Bell} badge={NotificationBadge}>
+                    <Notifications />
+                  </SoundChainPopOver>
                 </div>
                 <TopNavBarButton
                   icon={({}) => (

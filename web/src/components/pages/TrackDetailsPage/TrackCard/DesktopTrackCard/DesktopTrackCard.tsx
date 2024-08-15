@@ -1,18 +1,19 @@
-import React from 'react'
-import Image from 'next/image'
-import { MeQuery, TrackQuery, useProfileLazyQuery } from 'lib/graphql'
-import { useEffect, useState } from 'react'
-import tw from 'tailwind-styled-components'
+import React, { useEffect, useState } from 'react'
+
+import Asset from 'components/Asset/Asset'
 import { Divider } from 'components/common'
+import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
-import Link from 'next/link'
 import { TrackShareButton } from 'components/TrackShareButton'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { MobilePlayer } from '../MobileTrackCard/components'
-import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
+import { MeQuery, TrackQuery, useProfileLazyQuery } from 'lib/graphql'
+import Link from 'next/link'
 import { LinkItUrl } from 'react-linkify-it'
-import Asset from 'components/Asset/Asset'
 import ReactTooltip from 'react-tooltip'
+import tw from 'tailwind-styled-components'
+
+import { MobilePlayer } from '../MobileTrackCard/components'
+
 interface Props {
   me?: MeQuery['me']
   track: TrackQuery['track']
@@ -82,10 +83,8 @@ export const DesktopTrackCard = (props: Props) => {
                 <TrackTitle>{track.title}</TrackTitle>
               </a>
 
-              <Link href={`/profiles/${track.artist}` || ''}>
-                <a>
-                  <ArtistName>{track.artist}</ArtistName>
-                </a>
+              <Link href={`/profiles/${track.artist}` || ''} passHref>
+                <ArtistName>{track.artist}</ArtistName>
               </Link>
             </span>
 
