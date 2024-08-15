@@ -26,6 +26,6 @@ export const testnetNetwork: BlockchainNetwork = {
 }
 
 export const network: BlockchainNetwork =
-  process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork
+  process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ? mainNetwork : mainNetwork
 
 export const isMainNetwork = network.id === mainNetwork.id
