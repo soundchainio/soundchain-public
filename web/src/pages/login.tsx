@@ -85,7 +85,7 @@ export default function LoginPage() {
       }
     }
     magicGoogle()
-  }, [magic, magicParam, login, handleError])
+  }, [magic, magicParam, login, handleError, router.query])
 
   async function handleSubmit(values: FormValues) {
     try {
