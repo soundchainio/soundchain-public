@@ -1,12 +1,17 @@
-import '01/../reflect-metadata';
+import 'reflect-metadata';
+
 import { ApolloServerPluginLandingPageDisabled } from 'apollo-server-core';
 import cors from 'cors';
 import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
 import { buildSchemaSync } from 'type-graphql';
+
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
-import { JwtService, JwtUser } from './services/JwtService';
+import {
+  JwtService,
+  JwtUser,
+} from './services/JwtService';
 import { Context } from './types/Context';
 
 dotenv.config();
@@ -50,6 +55,7 @@ export const {
   AUCTION_ADDRESS,
   AUCTION_V2_ADDRESS,
   MAILCHIMP_API_KEY,
+  MAILCHIMP_TRANSACTIONAL_API_KEY,
 } = process.env;
 
 function assertEnvVar(name: string, value: string | undefined): asserts value {
@@ -151,5 +157,6 @@ export const config = {
   },
   mailchimp: {
     apiKey: MAILCHIMP_API_KEY,
+    transactionalApiKey: MAILCHIMP_TRANSACTIONAL_API_KEY,
   },
 };

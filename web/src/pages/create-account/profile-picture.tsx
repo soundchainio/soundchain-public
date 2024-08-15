@@ -1,3 +1,5 @@
+import React, { useEffect, useMemo } from 'react'
+
 import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm'
 import SEO from 'components/SEO'
 import { StepProgressBar } from 'components/StepProgressBar'
@@ -6,7 +8,6 @@ import { config } from 'config'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
-import React, { useEffect, useMemo } from 'react'
 import { SkipButton, steps } from 'utils/createAccountUtils'
 
 export default function ProfilePicturePage() {
@@ -17,8 +18,8 @@ export default function ProfilePicturePage() {
     () => ({
       title: 'Profile Picture',
       leftButton: (
-        <NextLink href={config.redirectUrlPostLogin}>
-          <a className="flex-1 text-left font-bold text-gray-400">Cancel</a>
+        <NextLink href={config.redirectUrlPostLogin} className="flex-1 text-left font-bold text-gray-400">
+          Cancel
         </NextLink>
       ),
       rightButton: <SkipButton href="/create-account/cover-picture" />,

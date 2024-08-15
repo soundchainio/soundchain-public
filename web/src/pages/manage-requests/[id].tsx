@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 import { Avatar } from 'components/Avatar'
 import { Button } from 'components/common/Buttons/Button'
 import { Delete as DeleteButton } from 'components/common/Buttons/Delete'
@@ -24,7 +26,6 @@ import { protectPage } from 'lib/protectPage'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
-import { useEffect, useState } from 'react'
 import { ManageRequestTab } from 'types/ManageRequestTabType'
 
 export interface RequestPageProps {
@@ -106,21 +107,19 @@ export default function RequestPage({ data }: RequestPageProps) {
       <SEO title="Manage Request | SoundChain" canonicalUrl={router.asPath} description="SoundChain Manage Request" />
       <div className="flex h-full flex-col justify-between">
         <div>
-          <NextLink href={`/profiles/${data.profileId}`} passHref>
-            <a className="flex cursor-pointer flex-col text-white">
-              <div className="relative flex items-center p-4">
-                <Avatar profile={profile.profile} pixels={40} className="flex min-w-max items-center rounded-full" />
-                <div className="mx-4">
-                  <DisplayName
-                    name={profile.profile.displayName}
-                    verified={profile.profile.verified}
-                    teamMember={profile.profile.teamMember}
-                    badges={profile.profile.badges}
-                  />
-                  <p className="text-sm text-gray-80">@{profile.profile.userHandle}</p>
-                </div>
+          <NextLink href={`/profiles/${data.profileId}`} passHref className="flex cursor-pointer flex-col text-white">
+            <div className="relative flex items-center p-4">
+              <Avatar profile={profile.profile} pixels={40} className="flex min-w-max items-center rounded-full" />
+              <div className="mx-4">
+                <DisplayName
+                  name={profile.profile.displayName}
+                  verified={profile.profile.verified}
+                  teamMember={profile.profile.teamMember}
+                  badges={profile.profile.badges}
+                />
+                <p className="text-sm text-gray-80">@{profile.profile.userHandle}</p>
               </div>
-            </a>
+            </div>
           </NextLink>
           <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
           {sourceList.map(src => (

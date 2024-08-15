@@ -2,6 +2,7 @@ import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import NextLink from 'next/link'
+
 import Asset from './Asset/Asset'
 
 interface TrackProps {
@@ -26,22 +27,20 @@ export const TrackListItem = ({ song, index, variant, handleOnPlayClicked }: Tra
 
   return (
     <li className={`${lineStyle(variant)} ${isPlaying ? 'font-black' : 'font-semibold'}`}>
-      <NextLink href={`/tracks/${trackId}`}>
-        <a className="flex min-w-0 flex-1 items-center gap-2">
-          <p className={indexStyle(variant)}>{index}</p>
-          <div className="relative flex h-10 w-10 flex-shrink-0 items-center bg-gray-80">
-            <Asset src={art} sizes="2.5rem" />
-          </div>
-          <div className="min-w-0">
-            <p className="truncate">{title}</p>
-            {playbackCount && (
-              <div className="flex items-center gap-1">
-                <Play fill={'#808080'} width={7} height={8} />
-                <p className="text-xxs text-gray-80">{playbackCount}</p>
-              </div>
-            )}
-          </div>
-        </a>
+      <NextLink href={`/tracks/${trackId}`} className="flex min-w-0 flex-1 items-center gap-2">
+        <p className={indexStyle(variant)}>{index}</p>
+        <div className="relative flex h-10 w-10 flex-shrink-0 items-center bg-gray-80">
+          <Asset src={art} sizes="2.5rem" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate">{title}</p>
+          {playbackCount && (
+            <div className="flex items-center gap-1">
+              <Play fill={'#808080'} width={7} height={8} />
+              <p className="text-xxs text-gray-80">{playbackCount}</p>
+            </div>
+          )}
+        </div>
       </NextLink>
       <button
         className="flex h-10 w-10 flex-shrink-0 items-center justify-center duration-75 hover:scale-125"

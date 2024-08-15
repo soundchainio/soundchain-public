@@ -1,10 +1,11 @@
+import { useEffect, useState } from 'react'
+
 import classNames from 'classnames'
 import { SVGGradientColor } from 'icons/gradients'
 import { IconProps } from 'icons/types/IconProps'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
 
 interface NavBarButtonProps {
   badge?: () => JSX.Element
@@ -85,10 +86,8 @@ export const NavBarButton = ({
 
   if (path) {
     return (
-      <Link href={path} passHref>
-        <a className={baseClassName}>
-          <MenuContentItem />
-        </a>
+      <Link href={path} passHref className={baseClassName}>
+        <MenuContentItem />
       </Link>
     )
   }
