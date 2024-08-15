@@ -3,7 +3,7 @@ import { Fragment } from 'react'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { toast } from 'react-toastify'
 
-import { Menu, MenuButton, MenuItem, Transition } from '@headlessui/react'
+import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react'
 import { ShareIcon } from '@heroicons/react/outline'
 
 type Props = {
@@ -62,7 +62,7 @@ export const TrackShareButton = (props: Props) => {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <MenuItem
+          <MenuItems
             className={`absolute ${getPosition(
               position,
             )} z-40 flex w-32 flex-col rounded-lg bg-gray-20 text-white shadow-lg`}
@@ -87,7 +87,7 @@ export const TrackShareButton = (props: Props) => {
                 </button>
               )}
             </MenuItem>
-          </MenuItem>
+          </MenuItems>
         </Transition>
       </Menu>
     </div>
