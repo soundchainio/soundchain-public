@@ -64,6 +64,14 @@ export class NotificationService extends ModelService<typeof Notification> {
       commentId,
       authorPicture,
     };
+    console.log('sending email...');
+    const postOwner = await this.context.userService.getUserByProfileId(profileId);
+    console.log('postOwner', postOwner);
+    await this.context.mailchimpService.sendTemplateEmail(postOwner, 'Commented on Post', {
+      name: postOwner.handle,
+      content: 'test',
+    });
+
     const notification = new NotificationModel({
       type: NotificationType.Comment,
       profileId,
