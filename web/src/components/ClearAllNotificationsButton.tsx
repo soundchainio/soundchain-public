@@ -1,7 +1,14 @@
+import classNames from 'classnames'
 import { useClearNotificationsMutation } from 'lib/graphql'
+
 import { Button } from './common/Buttons/Button'
 
-export const ClearAllNotificationsButton = () => {
+interface ClearAllNotificationsButtonProps {
+  className?: string
+}
+export const ClearAllNotificationsButton = (props: ClearAllNotificationsButtonProps) => {
+  const { className } = props
+
   const [clearNotification, { loading }] = useClearNotificationsMutation({ refetchQueries: ['Notifications'] })
 
   const onClick = () => {
@@ -9,7 +16,7 @@ export const ClearAllNotificationsButton = () => {
   }
 
   return (
-    <Button className="text-white" variant="clear" onClick={onClick} disabled={loading}>
+    <Button className={classNames(className, 'text-white')} variant="clear" onClick={onClick} disabled={loading}>
       Clear All
     </Button>
   )

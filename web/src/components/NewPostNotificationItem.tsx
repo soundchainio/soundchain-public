@@ -1,11 +1,13 @@
+import React from 'react'
+
 import classNames from 'classnames'
+import { Avatar } from 'components/Avatar'
+import { Timestamp } from 'components/Timestamp'
 import { NewPostNotification as NewPostIcon } from 'icons/NewPostNotification'
 import { NewPostNotification } from 'lib/graphql'
 import NextLink from 'next/link'
-import React from 'react'
-import { Avatar } from 'components/Avatar'
+
 import { MiniAudioPlayer } from './MiniAudioPlayer'
-import { Timestamp } from 'components/Timestamp'
 
 interface NewPostNotificationProps {
   notification: NewPostNotification
@@ -18,7 +20,12 @@ export const NewPostNotificationItem = ({
 }: NewPostNotificationProps) => {
   return (
     <NextLink href={link}>
-      <div className={classNames('flex cursor-pointer flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+      <div
+        className={classNames(
+          'flex cursor-pointer flex-col rounded-lg p-4',
+          index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20',
+        )}
+      >
         <div className="flex break-words">
           <div className="flex items-center pr-4">
             <Avatar profile={{ profilePicture: authorPicture }} linkToProfile={false} pixels={40} />

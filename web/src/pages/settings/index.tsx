@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 import { Avatar } from 'components/Avatar'
 import { Label } from 'components/Label'
 import SEO from 'components/SEO'
@@ -7,7 +9,6 @@ import { useMe } from 'hooks/useMe'
 import { RightArrow } from 'icons/RightArrow'
 import Image from 'next/image'
 import NextLink from 'next/link'
-import { useEffect } from 'react'
 import { getGenreLabelByKey } from 'utils/Genres'
 import { getMusicianTypeLabelByKey } from 'utils/MusicianTypes'
 
@@ -20,28 +21,28 @@ interface LinkProps {
 
 function Link({ label, value, to }: LinkProps) {
   return (
-    <NextLink href={`/settings${to}`}>
-      <a style={{ overflowWrap: 'anywhere' }} className="flex w-full items-center justify-center px-4 py-2">
-        <div className="flex-1">
-          <span className="block text-xs font-bold uppercase text-gray-50"> {label} </span>
-          <span className="mt-1 block font-bold text-white"> {value} </span>
-        </div>
-        <RightArrow />
-      </a>
+    <NextLink
+      href={`/settings${to}`}
+      style={{ overflowWrap: 'anywhere' }}
+      className="flex w-full items-center justify-center px-4 py-2"
+    >
+      <div className="flex-1">
+        <span className="block text-xs font-bold uppercase text-gray-50"> {label} </span>
+        <span className="mt-1 block font-bold text-white"> {value} </span>
+      </div>
+      <RightArrow />
     </NextLink>
   )
 }
 
 function OTPLink({ label, value, to, secret }: LinkProps & { secret: string }) {
   return (
-    <NextLink href={`/settings${to}`}>
-      <a className="flex w-full items-center justify-center px-4 py-2">
-        <div className="flex-1">
-          <span className="block text-xs font-bold uppercase text-gray-50"> {label} </span>
-          <span className={`${secret ? 'text-green-700' : 'text-red-700'} mt-1 block font-bold`}> {value} </span>
-        </div>
-        <RightArrow />
-      </a>
+    <NextLink href={`/settings${to}`} className="flex w-full items-center justify-center px-4 py-2">
+      <div className="flex-1">
+        <span className="block text-xs font-bold uppercase text-gray-50"> {label} </span>
+        <span className={`${secret ? 'text-green-700' : 'text-red-700'} mt-1 block font-bold`}> {value} </span>
+      </div>
+      <RightArrow />
     </NextLink>
   )
 }
@@ -82,29 +83,29 @@ export default function SettingsPage() {
       <SEO title="Account Settings | SoundChain" canonicalUrl="/settings/" description="SoundChain Account Settings" />
       <div className="mt-8 flex flex-col gap-8">
         <div className="flex flex-row px-4">
-          <NextLink href="/settings/profile-picture" passHref>
-            <a className="flex w-5/12 cursor-pointer flex-col items-center justify-center space-y-2 self-center">
-              <Avatar profile={me.profile} pixels={80} className="h-[80px]" linkToProfile={false} />
-              <Label textSize="xs" className="text-center underline">
-                Change Profile Photo
-              </Label>
-            </a>
+          <NextLink
+            href="/settings/profile-picture"
+            passHref
+            className="flex w-5/12 cursor-pointer flex-col items-center justify-center space-y-2 self-center"
+          >
+            <Avatar profile={me.profile} pixels={80} className="h-[80px]" linkToProfile={false} />
+            <Label textSize="xs" className="text-center underline">
+              Change Profile Photo
+            </Label>
           </NextLink>
-          <NextLink href="/settings/cover-picture" passHref>
-            <a className="flex w-7/12 cursor-pointer flex-col space-y-2">
-              <div className="relative h-[80px]">
-                <Image
-                  src={me.profile.coverPicture || '/default-pictures/cover/fog.jpeg'}
-                  className="rounded-lg"
-                  alt="Cover pic"
-                  layout="fill"
-                  objectFit="cover"
-                />
-              </div>
-              <Label textSize="xs" className="text-center underline">
-                Change Cover Photo
-              </Label>
-            </a>
+          <NextLink href="/settings/cover-picture" passHref className="flex w-7/12 cursor-pointer flex-col space-y-2">
+            <div className="relative h-[80px]">
+              <Image
+                src={me.profile.coverPicture || '/default-pictures/cover/fog.jpeg'}
+                className="rounded-lg"
+                alt="Cover pic"
+                layout="fill"
+                objectFit="cover"
+              />
+            </div>
+            <Label textSize="xs" className="text-center underline">
+              Change Cover Photo
+            </Label>
           </NextLink>
         </div>
         <div className="grid bg-gray-15">

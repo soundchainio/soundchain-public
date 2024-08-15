@@ -11,6 +11,7 @@ import ReactTooltip from 'react-tooltip'
 import tw from 'tailwind-styled-components'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { isPendingRequest } from 'utils/isPendingRequest'
+
 interface OwnedEditionItemProps {
   ownedTrack: TrackWithListingItem
 }
@@ -81,7 +82,7 @@ const ButtonTitle = tw.span`
   leading-6
   tracking-wide
 `
-const Anchor = tw.a`
+const Anchor = tw.span`
   flex
   flex-col
   items-center

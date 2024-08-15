@@ -11,9 +11,5 @@ export default function Link({ className, href, ...rest }: LinkProps) {
     ...rest,
   }
 
-  return (
-    <NextLink href={href}>
-      <a {...anchorProps} />
-    </NextLink>
-  )
+  return <NextLink href={href} {...anchorProps}></NextLink>
 }

@@ -1,7 +1,8 @@
 import { ManageRequestCardSkeleton } from 'components/ManageRequestCardSkeleton'
 import { CircleRightArrow } from 'icons/CircleRightArrow'
 import { ProfileVerificationRequestComponentFieldsFragment, useProfileQuery } from 'lib/graphql'
-import NextLink from 'next/link'
+import Link from 'next/link'
+
 import { ProfileWithAvatar } from './ProfileWithAvatar'
 
 interface ManageRequestCardProps {
@@ -16,16 +17,14 @@ export const ManageRequestCard = ({ request }: ManageRequestCardProps) => {
 
   return (
     <div className="flex flex-col text-white odd:bg-gray-20 even:bg-gray-25">
-      <NextLink href={`/manage-requests/${request.id}`}>
-        <a className="p-4">
-          <div className="flex flex-row items-center gap-2 text-sm">
-            <ProfileWithAvatar profile={profile.profile} />
-            <div className="ml-auto">
-              <CircleRightArrow />
-            </div>
+      <Link href={`/manage-requests/${request.id}`} className="p-4" passHref>
+        <div className="flex flex-row items-center gap-2 text-sm">
+          <ProfileWithAvatar profile={profile.profile} />
+          <div className="ml-auto">
+            <CircleRightArrow />
           </div>
-        </a>
-      </NextLink>
+        </div>
+      </Link>
     </div>
   )
 }
