@@ -1,8 +1,10 @@
-import { Menu, Transition } from '@headlessui/react'
-import { ShareIcon } from '@heroicons/react/outline'
-import { useModalDispatch } from 'contexts/providers/modal'
 import { Fragment } from 'react'
+
+import { useModalDispatch } from 'contexts/providers/modal'
 import { toast } from 'react-toastify'
+
+import { Menu, MenuButton, MenuItem, Transition } from '@headlessui/react'
+import { ShareIcon } from '@heroicons/react/outline'
 
 type Props = {
   trackId: string
@@ -48,9 +50,9 @@ export const TrackShareButton = (props: Props) => {
   return (
     <div className="relative flex items-center">
       <Menu>
-        <Menu.Button aria-label="Share" className="flex h-10 w-10 items-center justify-center text-gray-80">
+        <MenuButton aria-label="Share" className="flex h-10 w-10 items-center justify-center text-gray-80">
           <ShareIcon width={width} height={height} color={color || ''} />
-        </Menu.Button>
+        </MenuButton>
         <Transition
           as={Fragment}
           enter="transition ease-out duration-100"
@@ -60,32 +62,32 @@ export const TrackShareButton = (props: Props) => {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items
+          <MenuItem
             className={`absolute ${getPosition(
               position,
             )} z-40 flex w-32 flex-col rounded-lg bg-gray-20 text-white shadow-lg`}
           >
-            <Menu.Item>
-              {({ active }) => (
+            <MenuItem>
+              {({ focus }) => (
                 <button
-                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${active && 'rounded-md bg-gray-40'}`}
+                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${focus && 'rounded-md bg-gray-40'}`}
                   onClick={handleSharing}
                 >
                   Share URL
                 </button>
               )}
-            </Menu.Item>
-            <Menu.Item>
-              {({ active }) => (
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
                 <button
-                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${active && 'rounded-md bg-gray-40'}`}
+                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${focus && 'rounded-md bg-gray-40'}`}
                   onClick={handlePost}
                 >
                   Share as Post
                 </button>
               )}
-            </Menu.Item>
-          </Menu.Items>
+            </MenuItem>
+          </MenuItem>
         </Transition>
       </Menu>
     </div>

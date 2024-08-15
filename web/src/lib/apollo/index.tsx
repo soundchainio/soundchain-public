@@ -1,3 +1,11 @@
+import { useMemo } from 'react'
+
+import { config } from 'config'
+import Cookies from 'js-cookie'
+import { isSafari } from 'lib/isSafari'
+import { GetServerSidePropsContext } from 'next'
+import { RouterContext } from 'next/dist/shared/lib/router-context.shared-runtime'
+
 import {
   ApolloClient,
   ApolloProvider as Provider,
@@ -8,12 +16,7 @@ import {
 import { setContext } from '@apollo/client/link/context'
 import { getDataFromTree } from '@apollo/client/react/ssr'
 import { mergeDeep } from '@apollo/client/utilities'
-import { config } from 'config'
-import Cookies from 'js-cookie'
-import { isSafari } from 'lib/isSafari'
-import { GetServerSidePropsContext } from 'next'
-import { RouterContext } from 'next/dist/shared/lib/router-context'
-import { useMemo } from 'react'
+
 import isBrowser from '../isBrowser'
 import { cacheConfig } from './cache-config'
 import { FakeRouter } from './fake-router'

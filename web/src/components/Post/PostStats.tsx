@@ -1,9 +1,10 @@
+import React from 'react'
+
+import { Number } from 'components/Number'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { ReactionType } from 'lib/graphql'
 import NextLink from 'next/link'
-import React from 'react'
-import { Number } from 'components/Number'
 
 interface PostStatsProps {
   totalReactions: number
@@ -37,13 +38,11 @@ export const PostStats = ({ totalReactions, topReactions, commentCount, repostCo
           </div>
           {validatePlural('like', totalReactions)}
         </button>
-        <NextLink href={`/posts/${postId}`}>
-          <a className="flex items-center text-sm text-gray-100">
-            <div className="font-bold text-white">
-              <Number value={commentCount} />
-            </div>
-            {validatePlural('comment', commentCount)}
-          </a>
+        <NextLink href={`/posts/${postId}`} className="flex items-center text-sm text-gray-100">
+          <div className="font-bold text-white">
+            <Number value={commentCount} />
+          </div>
+          {validatePlural('comment', commentCount)}
         </NextLink>
         <div className="flex items-center text-sm text-gray-100">
           <div className="font-bold text-white">

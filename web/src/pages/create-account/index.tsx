@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
@@ -10,7 +12,6 @@ import { setJwt } from 'lib/apollo'
 import { useRegisterMutation } from 'lib/graphql'
 import { useRouter } from 'next/dist/client/router'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import { formatValidationErrors } from 'utils/errorHelpers'
 import { handleRegex } from 'utils/Validation'
 import * as yup from 'yup'
@@ -54,6 +55,8 @@ export default function CreateAccountPage() {
       }
     }
     isLoggedInMagic()
+    // TODO: fix this
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const toggleTerms = () => {
@@ -122,16 +125,12 @@ export default function CreateAccountPage() {
             />
             <div className="relative">
               <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
-              <Link href={`/terms-and-conditions`} passHref>
-                <a className="relative px-2 text-white underline">
-                  <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
-                </a>
+              <Link href={`/terms-and-conditions`} passHref className="relative px-2 text-white underline">
+                <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
               </Link>
               and
-              <Link href={`/privacy-policy`} passHref>
-                <a className="relative px-2 text-white underline">
-                  <span className="after:absolute after:-inset-1">Privacy Policy.</span>
-                </a>
+              <Link href={`/privacy-policy`} passHref className="relative px-2 text-white underline">
+                <span className="after:absolute after:-inset-1">Privacy Policy.</span>
               </Link>
             </div>
           </div>
