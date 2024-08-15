@@ -1,17 +1,19 @@
+import { useEffect, useState } from 'react'
+
 import { Accordion, Badges, Cell, Row, Table } from 'components/common'
 import { config } from 'config'
 import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
+import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
-import Link from 'next/link'
 import { Pinata } from 'icons/Pinata'
 import { Token } from 'icons/Token'
 import { PendingRequest, TrackQuery } from 'lib/graphql'
-import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { BiLinkExternal } from 'react-icons/bi'
 import tw from 'tailwind-styled-components'
 import { getGenreLabelByKey } from 'utils/Genres'
-import { BiLinkExternal } from 'react-icons/bi'
-import { useMe } from 'hooks/useMe'
+
 interface TrackDetailsCardProps {
   track: TrackQuery['track']
 }
@@ -68,10 +70,8 @@ export const TrackDetailsCard = (props: TrackDetailsCardProps) => {
           </Cell>
           <Cell $roundedTopRight>
             {!royalties && !me ? (
-              <Link href="/login">
-                <a>
-                  <span className="text-indigo-100 hover:text-indigo-200">Login</span> to see royalties
-                </a>
+              <Link href="/login" passHref>
+                <span className="text-indigo-100 hover:text-indigo-200">Login</span> to see royalties
               </Link>
             ) : (
               `${royalties}%`

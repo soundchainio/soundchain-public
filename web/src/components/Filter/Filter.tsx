@@ -1,9 +1,12 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { Listbox, Transition } from '@headlessui/react'
+import { Dispatch, Fragment, SetStateAction, useEffect, useState } from 'react'
+
 import classNames from 'classnames'
 import { SortListingItem } from 'lib/apollo/sorting'
-import { Dispatch, Fragment, SetStateAction, useEffect, useState } from 'react'
 import { MdKeyboardArrowDown } from 'react-icons/md'
+
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from '@headlessui/react'
+
 interface Props {
   sorting: SortListingItem
   setSorting: Dispatch<SetStateAction<SortListingItem>>
@@ -63,9 +66,9 @@ export const FilterComponent = (props: Props) => {
       >
         <Listbox value={selected} onChange={setSelected}>
           <div className="relative">
-            <Listbox.Button
+            <ListboxButton
               className={({ open }) =>
-                `hover:gradient-select-hover transparent-border-1px darkGreyBackgroundColor relative w-[160px] cursor-default rounded-lg py-2 pl-3 pr-10 text-left font-medium  text-white shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:w-[140px] sm:text-sm ${
+                `hover:gradient-select-hover transparent-border-1px darkGreyBackgroundColor w-[160px] cursor-default rounded-lg py-2 pl-3 pr-10 text-left font-medium  text-white shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:w-[140px] sm:text-sm ${
                   open ? 'gradient-select-hover' : ''
                 }`
               }
@@ -74,19 +77,19 @@ export const FilterComponent = (props: Props) => {
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                 <MdKeyboardArrowDown className="text-grey-400 h-5 w-5" aria-hidden="true" />
               </span>
-            </Listbox.Button>
+            </ListboxButton>
             <Transition
               as={Fragment}
               leave="transition ease-in duration-100"
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Listbox.Options className="darkGreyBackgroundColor absolute mt-1 max-h-60 w-full overflow-auto rounded-md py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+              <ListboxOptions className="darkGreyBackgroundColor absolute mt-1 max-h-60 w-full overflow-auto rounded-md py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                 {options.map((option, index) => (
-                  <Listbox.Option
+                  <ListboxOption
                     key={index}
-                    className={({ active }) =>
-                      `relative cursor-default select-none py-2 pl-3 pr-4 ${active ? 'grey80BackgroundColor' : ''}`
+                    className={({ focus }) =>
+                      `relative cursor-default select-none py-2 pl-3 pr-4 ${focus ? 'grey80BackgroundColor' : ''}`
                     }
                     value={option}
                   >
@@ -97,9 +100,9 @@ export const FilterComponent = (props: Props) => {
                         </span>
                       </>
                     )}
-                  </Listbox.Option>
+                  </ListboxOption>
                 ))}
-              </Listbox.Options>
+              </ListboxOptions>
             </Transition>
           </div>
         </Listbox>

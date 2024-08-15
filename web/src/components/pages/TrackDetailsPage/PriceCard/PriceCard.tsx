@@ -1,20 +1,22 @@
+import { Divider } from 'components/common'
 /* eslint-disable @next/next/link-passhref */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from 'components/common/Buttons/Button'
 import { ListNFTButton } from 'components/common/Buttons/ListNFT'
-import { Divider } from 'components/common'
 import { Matic } from 'components/Matic'
 import { Ogun } from 'components/Ogun'
 import { Song } from 'hooks/useAudioPlayer'
 import { useTokenOwner } from 'hooks/useTokenOwner'
 import { TrackQuery, useAuctionItemQuery } from 'lib/graphql'
-import { default as Link, default as NextLink } from 'next/link'
+import Link, { default as NextLink } from 'next/link'
 import { useRouter } from 'next/router'
 import tw from 'tailwind-styled-components'
 import { isPendingRequest } from 'utils/isPendingRequest'
+
 import { Auction } from './components/Auction'
 import { Social } from './components/Social'
 import { TrackSlider } from './components/TrackSlider'
+
 interface Props {
   track: TrackQuery['track']
 }
@@ -91,12 +93,11 @@ export const PriceCard = (props: Props) => {
                   pathname: `${router.pathname}/edit/buy-now`,
                   query: { ...router.query, isPaymentOGUN: isOgunPrice },
                 }}
+                passHref
               >
-                <a>
-                  <ListNFTButton className="md:w-[170px]" loading={isProcessing}>
-                    <span className="py-4">EDIT</span>
-                  </ListNFTButton>
-                </a>
+                <ListNFTButton className="md:w-[170px]" loading={isProcessing}>
+                  <span className="py-4">EDIT</span>
+                </ListNFTButton>
               </NextLink>
             ) : (
               <NextLink
@@ -104,12 +105,11 @@ export const PriceCard = (props: Props) => {
                   pathname: `${router.pathname}/buy-now`,
                   query: { ...router.query, isPaymentOGUN: isOgunPrice },
                 }}
+                passHref
               >
-                <a>
-                  <Button variant="rainbow" loading={isProcessing}>
-                    <span className="p-4">BUY NOW</span>
-                  </Button>
-                </a>
+                <Button variant="rainbow" loading={isProcessing}>
+                  <span className="p-4">BUY NOW</span>
+                </Button>
               </NextLink>
             )}
           </PriceContainer>
@@ -122,12 +122,10 @@ export const PriceCard = (props: Props) => {
       {isUnlisted && !isMultipleEdition && !isDeleted && isOwner && (
         <>
           <PriceContainer>
-            <Link href={`${track.id}/list`}>
-              <a className="my-4 w-full">
-                <Button variant="list-nft" loading={isProcessing}>
-                  <ButtonTitle>LIST</ButtonTitle>
-                </Button>
-              </a>
+            <Link href={`${track.id}/list`} passHref className="my-4 w-full">
+              <Button variant="list-nft" loading={isProcessing}>
+                <ButtonTitle>LIST</ButtonTitle>
+              </Button>
             </Link>
           </PriceContainer>
           <Divider />

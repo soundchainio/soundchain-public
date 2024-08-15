@@ -1,5 +1,6 @@
-import { Player } from '@lottiefiles/react-lottie-player'
 import React from 'react'
+
+import { Player } from '@lottiefiles/react-lottie-player'
 
 interface LoaderProps {
   loadingMessage?: string
@@ -10,7 +11,7 @@ export const LoaderAnimation = ({ loadingMessage, ring }: LoaderProps) => {
   return (
     <>
       {ring ? (
-        <div className="lds-ring ">
+        <div className="lds-ring">
           <div></div>
           <div></div>
           <div></div>

@@ -8,6 +8,8 @@ export class FakeRouter implements NextRouter {
   route: string
   pathname: string
   query: ParsedUrlQuery
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  forward(): void {}
   asPath: string
   basePath: string
   locale?: string | undefined

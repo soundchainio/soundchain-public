@@ -1,5 +1,7 @@
-import { Dialog, Transition } from '@headlessui/react'
 import { Fragment, useRef } from 'react'
+
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react'
+
 import { SideMenuContent } from './SideMenuContent'
 
 export interface SideMenuMobileProps {
@@ -10,9 +12,9 @@ export interface SideMenuMobileProps {
 export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
   const ref = useRef(null)
   return (
-    <Transition.Root show={isOpen} as={Fragment}>
+    <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-40 flex flex-row-reverse" onClose={setOpen} initialFocus={ref}>
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="transition-opacity ease-linear duration-300"
           enterFrom="opacity-0"
@@ -21,9 +23,9 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <Dialog.Overlay className="fixed inset-0 bg-gray-15 bg-opacity-75" />
-        </Transition.Child>
-        <Transition.Child
+          <div className="fixed inset-0 bg-gray-15 bg-opacity-75" />
+        </TransitionChild>
+        <TransitionChild
           as={Fragment}
           enter="transition ease-in-out duration-300 transform"
           enterFrom="translate-x-full"
@@ -32,13 +34,15 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
           leaveFrom="translate-x-0"
           leaveTo="translate-x-full"
         >
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-gray-15 pt-5 pb-4">
-            <div className="flex flex-shrink-0 items-center"></div>
-            <SideMenuContent isMobile />
-          </div>
-        </Transition.Child>
+          <DialogPanel>
+            <div className="relative flex h-full w-full max-w-xs flex-1 flex-col bg-gray-15 pt-5 pb-4">
+              <div className="flex flex-shrink-0 items-center"></div>
+              <SideMenuContent isMobile />
+            </div>
+          </DialogPanel>
+        </TransitionChild>
         <div className="w-14 flex-shrink-0" aria-hidden="true" ref={ref}></div>
       </Dialog>
-    </Transition.Root>
+    </Transition>
   )
 }
