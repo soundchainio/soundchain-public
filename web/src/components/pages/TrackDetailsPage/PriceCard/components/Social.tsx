@@ -25,17 +25,15 @@ export const Social = (props: Props) => {
     <Container>
       <h3 className="text-xl font-bold text-white">Social</h3>
       <div className="flex flex-col items-center">
-        <NextLink href={`/posts/${post.id}`}>
-          <a className="mb-2 flex w-full items-center">
-            <div className="bg-blue-gradient w-full rounded-lg p-[2px]">
-              <button
-                type="button"
-                className="w-full rounded-lg bg-[#19191A] px-4 py-1 text-sm font-bold text-slate-50 hover:bg-transparent "
-              >
-                View Post
-              </button>
-            </div>
-          </a>
+        <NextLink href={`/posts/${post.id}`} className="mb-2 flex w-full items-center">
+          <div className="bg-blue-gradient w-full rounded-lg p-[2px]">
+            <button
+              type="button"
+              className="w-full rounded-lg bg-[#19191A] px-4 py-1 text-sm font-bold text-slate-50 hover:bg-transparent "
+            >
+              View Post
+            </button>
+          </div>
         </NextLink>
 
         <div className="flex items-center gap-2">

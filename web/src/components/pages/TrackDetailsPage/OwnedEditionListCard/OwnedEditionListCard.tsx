@@ -1,17 +1,20 @@
-import tw from 'tailwind-styled-components'
-import Link from 'next/link'
-import { Table, Row, Cell, Header, Accordion } from 'components/common'
+import { useMemo } from 'react'
+
+import { Accordion, Cell, Header, Row, Table } from 'components/common'
+import { Button } from 'components/common/Buttons/Button'
+import { SpinAnimation } from 'components/common/SpinAnimation'
+import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import { config } from 'config'
 import { useMe } from 'hooks/useMe'
+import useMetaMask from 'hooks/useMetaMask'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { Profile, TrackQuery, TrackWithListingItem, useOwnedTracksQuery } from 'lib/graphql'
-import { Button } from 'components/common/Buttons/Button'
-import { OwnedEditionItem } from './OwnedEditionItem'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useMemo } from 'react'
-import useMetaMask from 'hooks/useMetaMask'
-import { SpinAnimation } from 'components/common/SpinAnimation'
-import { config } from 'config'
-import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
+import tw from 'tailwind-styled-components'
+
+import { OwnedEditionItem } from './OwnedEditionItem'
+
 interface OwnedEditionListCardProps {
   track: TrackQuery['track']
 }
@@ -76,10 +79,8 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   if (!ownedTracks || ownedTracks.length <= 0) return null
 
   const SoundchainLoginLink = () => (
-    <Link href="/login">
-      <a className="mx-[2px] hover:text-white">
-        <strong>Soundchain</strong>
-      </a>
+    <Link href="/login" className="mx-[2px] hover:text-white" passHref>
+      <strong>Soundchain</strong>
     </Link>
   )
 
@@ -136,22 +137,18 @@ export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
       {!canList && (
         <>
           <Paragraph>You must be verified in order to sell NFT’s.</Paragraph>
-          <Link href={`/get-verified`}>
-            <a>
-              <Button variant="list-nft">
-                <ButtonTitle>GET VERIFIED</ButtonTitle>
-              </Button>
-            </a>
+          <Link href={`/get-verified`} passHref>
+            <Button variant="list-nft">
+              <ButtonTitle>GET VERIFIED</ButtonTitle>
+            </Button>
           </Link>
         </>
       )}
 
       {canList && (
         <CanListContainer>
-          <Link href={`${router.query.id}/list/buy-now-edition`}>
-            <a>
-              <ButtonTitle>LIST ALL</ButtonTitle>
-            </a>
+          <Link href={`${router.query.id}/list/buy-now-edition`} passHref>
+            <ButtonTitle>LIST ALL</ButtonTitle>
           </Link>
         </CanListContainer>
       )}

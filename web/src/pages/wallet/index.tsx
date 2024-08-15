@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from 'react'
+
 import { RefreshButton } from 'components/common/Buttons/RefreshButton'
 import { ConnectedNetwork } from 'components/ConnectedNetwork'
 import { CopyWalletAddress } from 'components/CopyWalletAddress'
@@ -21,11 +23,11 @@ import { cacheFor } from 'lib/apollo'
 import { network } from 'lib/blockchainNetworks'
 import { DefaultWallet, useMaticUsdQuery, useUpdateDefaultWalletMutation } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
-import { default as Link, default as NextLink } from 'next/link'
-import React, { useEffect, useState } from 'react'
+import Link, { default as NextLink } from 'next/link'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import ReactTooltip from 'react-tooltip'
 import { currency } from 'utils/format'
+
 import SEO from '../../components/SEO'
 
 interface WalletButtonProps {
@@ -46,13 +48,11 @@ export const getServerSideProps = protectPage(async (context, apolloClient) => {
 
 const WalletButton = ({ href, title, icon: Icon }: WalletButtonProps) => {
   return (
-    <Link href={href}>
-      <a className="flex flex-col items-center gap-2 text-xs font-bold text-gray-80">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50">
-          <Icon />
-        </div>
-        {title}
-      </a>
+    <Link href={href} className="flex flex-col items-center gap-2 text-xs font-bold text-gray-80" passHref>
+      <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-gray-50">
+        <Icon />
+      </div>
+      {title}
     </Link>
   )
 }
@@ -111,6 +111,8 @@ export default function WalletPage() {
         <RefreshButton onClick={refreshData} label="Refresh" className="text-center" refreshing={isRefetchingBalance} />
       ),
     })
+    // TODO: fix this
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setHideBottomNavBar, setTopNavBarProps, isRefetchingBalance])
 
   useEffect(() => {
@@ -306,10 +308,11 @@ export default function WalletPage() {
                 <span className="font-bold text-gray-80">Owned NFT’s</span>
                 {getAccount && (
                   <>
-                    <Link href={`/wallet/${getAccount}/transfer`}>
-                      <a className="rounded-lg border border-neutral-500 bg-black px-3 py-2 font-semibold text-neutral-500">
-                        Transfer NFT’s
-                      </a>
+                    <Link
+                      href={`/wallet/${getAccount}/transfer`}
+                      className="rounded-lg border border-neutral-500 bg-black px-3 py-2 font-semibold text-neutral-500"
+                    >
+                      Transfer NFT’s
                     </Link>
                   </>
                 )}

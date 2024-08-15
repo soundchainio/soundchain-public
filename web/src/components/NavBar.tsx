@@ -8,6 +8,7 @@ import { NewPost } from 'icons/NewPost'
 import { Search } from 'icons/Search'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+
 import { Logo } from '../icons/Logo'
 import { NavBarButton } from './common/Buttons/NavBarButton'
 
@@ -25,9 +26,7 @@ export const NavBar = () => {
     <nav className="inset-x-0 flex h-16 items-center bg-black shadow-2xl">
       <div className="flex w-full justify-center gap-6">
         <Link href="/" passHref>
-          <a>
-            <Logo className="block h-8 w-auto hover:cursor-pointer" />
-          </a>
+          <Logo className="block h-8 w-auto hover:cursor-pointer" />
         </Link>
 
         <NavBarButton label="Home" path="/home" icon={Home} color="yellow" id="top" alwaysShowLabel />

@@ -1,12 +1,14 @@
+import React from 'react'
+
 import classNames from 'classnames'
+import { Avatar } from 'components/Avatar'
+import { Timestamp } from 'components/Timestamp'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { ThumbsUpNotification } from 'icons/ThumbsUpNotification'
 import { ReactionNotification } from 'lib/graphql'
 import NextLink from 'next/link'
-import React from 'react'
-import { Avatar } from 'components/Avatar'
+
 import { PreviewPostNotification } from './PreviewPostNotification'
-import { Timestamp } from 'components/Timestamp'
 
 interface ReactionNotificationProps {
   notification: ReactionNotification
@@ -19,7 +21,12 @@ export const ReactionNotificationItem = ({
 }: ReactionNotificationProps) => {
   return (
     <NextLink href={link}>
-      <div className={classNames('flex cursor-pointer flex-col p-4', index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20')}>
+      <div
+        className={classNames(
+          'flex cursor-pointer flex-col rounded-lg p-4',
+          index % 2 === 0 ? 'bg-gray-25' : 'bg-gray-20',
+        )}
+      >
         <div className="flex break-words">
           <div className="flex min-w-[50px] items-center pr-4">
             <Avatar profile={{ profilePicture: authorPicture }} linkToProfile={false} pixels={40} />
