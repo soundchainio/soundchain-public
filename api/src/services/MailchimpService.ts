@@ -1,5 +1,5 @@
 import mailchimp from '@mailchimp/mailchimp_marketing';
-import mailchimpTransactional from '@mailchimp/mailchimp_transactional';
+import mailchimpTransactional, { MessagesSendResponse } from '@mailchimp/mailchimp_transactional';
 import * as Sentry from '@sentry/serverless';
 
 import { config } from '../config';
@@ -36,32 +36,34 @@ export class MailchimpService extends Service {
     }
   }
 
-  async sendTemplateEmail(user: User, templateName: string, templateContent: Record<string, string>): Promise<void> {
-    if (!config.env.isProduction) return;
-    if (!user) return;
-
+  async sendTemplateEmail(
+    emailAddress: string,
+    templateName: string,
+    templateContent: Record<string, string>,
+  ): Promise<MessagesSendResponse[] | unknown> {
     try {
-      const response = await this.transactionalClient.messages.sendTemplate({
+      return this.transactionalClient.messages.sendTemplate({
         template_name: templateName,
         template_content: Object.entries(templateContent).map(([name, content]) => ({ name, content })),
         message: {
-          from_email: 'admin@soundchain.io',
+          subject: templateContent.subject,
+          from_email: 'no-reply@soundchain.io',
           to: [
             {
-              email: user.email,
+              email: emailAddress,
               type: 'to',
             },
           ],
           merge_language: 'handlebars',
           global_merge_vars: Object.entries(templateContent).map(([name, content]) => ({ name, content })),
+          merge_vars: [
+            {
+              rcpt: emailAddress,
+              vars: Object.entries(templateContent).map(([name, content]) => ({ name, content })),
+            },
+          ],
         },
       });
-
-      console.log(response);
-      // const [result] = response;
-      // if (result.status !== 'sent' && result.status !== 'queued') {
-      //   throw new Error(`Failed to send email: ${result.status}`);
-      // }
     } catch (err) {
       Sentry.captureException(err);
       throw new Error('Failed to send email');

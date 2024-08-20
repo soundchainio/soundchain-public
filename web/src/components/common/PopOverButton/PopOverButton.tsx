@@ -20,7 +20,7 @@ export const SoundChainPopOver = (props: SoundChainPopOverProps) => {
   const { icon: Icon, badge: Badge, children } = props
 
   return (
-    <Popover>
+    <Popover className="relative">
       <PopoverButton className="focus:outline-none">
         <div className="relative mr-1">
           {Badge && <Badge />}
@@ -29,7 +29,7 @@ export const SoundChainPopOver = (props: SoundChainPopOverProps) => {
       </PopoverButton>
       <PopoverPanel
         anchor="bottom"
-        className="text-sm/6 data-[closed]:-translate-y-1 data-[closed]:opacity-0 z-50 mt-2 w-[400px] rounded-xl bg-gray-15 transition duration-200 ease-in-out [--anchor-gap:var(--spacing-5)]"
+        className="text-sm/6 data-[closed]:-translate-y-1 data-[closed]:opacity-0 absolute right-0 z-50 mt-2 w-[400px] translate-y-2   translate-x-[-1.5rem] transform rounded-lg bg-gray-15 transition duration-200 ease-in-out [--anchor-gap:var(--spacing-5)]"
       >
         {({ close: closePopOver }) => (
           <div className="max-h-[500px] overflow-y-auto">
