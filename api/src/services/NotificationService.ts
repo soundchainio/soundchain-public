@@ -57,6 +57,7 @@ export class NotificationService extends ModelService<typeof Notification> {
     const { body: commentBody, _id: commentId } = comment;
     const { _id: postId, profileId } = post;
     const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
+
     const metadata: CommentNotificationMetadata = {
       authorName,
       commentBody,
@@ -64,13 +65,22 @@ export class NotificationService extends ModelService<typeof Notification> {
       commentId,
       authorPicture,
     };
-    console.log('sending email...');
-    const postOwner = await this.context.userService.getUserByProfileId(profileId);
-    console.log('postOwner', postOwner);
-    await this.context.mailchimpService.sendTemplateEmail(postOwner, 'Commented on Post', {
-      name: postOwner.handle,
-      content: 'test',
-    });
+
+    // const sendTo = ['gandalf.dla@gmail.com', 'admin@soundchain.io'];
+
+    // sendTo.forEach(async email => {
+    //   await this.context.mailchimpService.sendTemplateEmail(email, 'nft-minted', {
+    //     subject: 'NFT Minted',
+    //     buyer_name: 'Randal',
+    //     buyer_profile_link: 'https://www.soundchain.io/profiles/randal923',
+    //     email_receiver_name: 'Frank',
+    //     track_name: 'Sweet Child of Mine',
+    //     track_details_link: 'https://www.soundchain.io/tracks/65ad763db7d4a40008019312',
+    //     track_src:
+    //       'https://www.soundchain.io/_next/image?url=https%3A%2F%2Fsoundchain-api-production-uploads.s3.us-east-1.amazonaws.com%2F7eec4b1d-9864-413e-8cbf-232d022ecc3f&w=3840&q=75',
+    //     nft_owner_name: 'Jeremy',
+    //   });
+    // });
 
     const notification = new NotificationModel({
       type: NotificationType.Comment,
@@ -130,13 +140,9 @@ export class NotificationService extends ModelService<typeof Notification> {
     sellType,
     isPaymentOgun,
   }: Omit<FinishBuyNowItemInput, 'tokenId'>): Promise<void> {
-    let buyerName,
-      buyerPicture = '';
-    if (buyerProfileId) {
-      const profile = await this.context.profileService.getProfile(buyerProfileId);
-      buyerName = profile.displayName;
-      buyerPicture = profile.profilePicture;
-    }
+    const buyer = await this.context.profileService.getProfile(buyerProfileId);
+    const seller = await this.context.profileService.getProfile(sellerProfileId);
+
     const notification = new NotificationModel({
       type: NotificationType.NFTSold,
       profileId: sellerProfileId,
@@ -144,8 +150,8 @@ export class NotificationService extends ModelService<typeof Notification> {
         buyerProfileId,
         trackId,
         price,
-        buyerName,
-        buyerPicture,
+        buyerName: buyer.displayName,
+        buyerPicture: buyer.profilePicture,
         artist,
         artworkUrl,
         trackName,
@@ -153,6 +159,24 @@ export class NotificationService extends ModelService<typeof Notification> {
         isPaymentOgun,
       },
     });
+
+    const trackUrl = `https://www.soundchain.io/tracks/${trackId}`;
+    const buyerProfileUrl = `https://www.soundchain.io/profiles/${buyer.displayName}`;
+    const sendTo = ['gandalf.dla@gmail.com', 'admin@soundchain.io'];
+
+    sendTo.forEach(async email => {
+      await this.context.mailchimpService.sendTemplateEmail(email, 'nft-minted', {
+        subject: 'NFT Minted',
+        buyer_name: buyer.displayName,
+        buyer_profile_link: buyerProfileUrl,
+        email_receiver_name: 'Frank',
+        track_name: trackName,
+        track_details_link: trackUrl,
+        track_src: artworkUrl,
+        nft_owner_name: seller.displayName,
+      });
+    });
+
     await notification.save();
     await this.incrementNotificationCount(sellerProfileId);
   }

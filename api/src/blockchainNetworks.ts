@@ -9,8 +9,8 @@ export const mainNetwork: BlockchainNetwork = {
 };
 
 export const testnetNetwork: BlockchainNetwork = {
-  name: 'Mumbai Testnet',
-  api: 'https://api-testnet.polygonscan.com/api',
+  name: 'Amoy Testnet',
+  api: 'https://api-amoy.polygonscan.com/api',
 };
 
 export const network: BlockchainNetwork = process.env.NODE_ENV !== 'production' ? testnetNetwork : mainNetwork;
