@@ -1,5 +1,6 @@
 import classNames from 'classnames'
 import Image from 'next/image'
+
 import { VantaEffectContainer } from './VantaEffectContainer'
 
 interface ProfileCoverProps extends React.ComponentPropsWithoutRef<'div'> {
@@ -15,12 +16,7 @@ export const ProfileCover = ({ coverPicture, className }: ProfileCoverProps) => 
       {isDefault ? (
         <VantaEffectContainer effectName={effectName as string} />
       ) : (
-        <Image
-          src={coverPicture || '/default-pictures/cover/fog.jpeg'}
-          alt="Cover pic"
-          layout="fill"
-          objectFit="cover"
-        />
+        <Image src={coverPicture || '/default-pictures/cover/fog.jpeg'} alt="Cover pic" fill objectFit="cover" />
       )}
     </div>
   )

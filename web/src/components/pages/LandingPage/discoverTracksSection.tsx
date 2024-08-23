@@ -17,12 +17,7 @@ export function DiscoverTracksSection() {
     <>
       <div className="relative h-2 md:py-10 lg:py-0">
         <div className="pointer-events-none absolute inset-0 -top-[200px] z-0 aspect-video h-[830px] max-w-[600px] sm:-top-[400px] md:w-full md:max-w-full">
-          <Image
-            alt=""
-            className="z-0 object-contain md:object-cover"
-            src="/landing-page/second-section-bg.png"
-            layout="fill"
-          />
+          <Image alt="" className="z-0 object-contain md:object-cover" src="/landing-page/second-section-bg.png" fill />
 
           <div className="relative h-full w-full">
             <div className="absolute inset-0 z-0 h-full bg-gradient-radial from-transparent to-black/25" />
@@ -82,12 +77,7 @@ export function DiscoverTracksSection() {
 
       <div className="relative h-2">
         <div className="pointer-events-none absolute inset-0 -top-[300px] z-0 aspect-video h-[830px] max-w-[600px] sm:-top-[400px] sm:w-full sm:max-w-full">
-          <Image
-            alt=""
-            className="z-0 object-contain sm:object-cover"
-            src="/landing-page/third-section-bg.png"
-            layout="fill"
-          />
+          <Image alt="" className="z-0 object-contain sm:object-cover" src="/landing-page/third-section-bg.png" fill />
 
           <div className="relative h-full w-full">
             <div className="absolute inset-0 z-0 h-full bg-gradient-radial from-transparent to-black/25" />
