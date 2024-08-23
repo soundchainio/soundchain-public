@@ -1,3 +1,5 @@
+import React, { useCallback, useEffect, useState } from 'react'
+
 import classNames from 'classnames'
 import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { ImageUploadField } from 'components/ImageUploadField'
@@ -6,7 +8,6 @@ import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
 import { useUpdateCoverPictureMutation } from 'lib/graphql'
 import Image from 'next/image'
-import React, { useCallback, useEffect, useState } from 'react'
 import * as yup from 'yup'
 
 interface CoverPictureFormProps {
@@ -102,13 +103,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
                     onClick={() => setDefaultPicture(picture)}
                   >
                     <div className="relative flex h-full w-full">
-                      <Image
-                        alt="Default cover picture"
-                        src={picture}
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-lg"
-                      />
+                      <Image alt="Default cover picture" src={picture} fill objectFit="cover" className="rounded-lg" />
                     </div>
                   </button>
                 ))}

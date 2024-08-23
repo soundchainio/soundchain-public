@@ -1,4 +1,5 @@
-import WalletConnectProvider from '@walletconnect/web3-provider'
+import { useEffect, useState } from 'react'
+
 import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import SEO from 'components/SEO'
@@ -8,9 +9,10 @@ import { Checked } from 'icons/Checked'
 import { OgunLogo } from 'icons/OgunLogo'
 import { useCreateWhitelistEntryMutation } from 'lib/graphql'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
 import Web3 from 'web3'
 import * as yup from 'yup'
+
+import WalletConnectProvider from '@walletconnect/web3-provider'
 
 interface ProductCharacteristicsProps {
   title: string
@@ -217,13 +219,13 @@ export default function OgunPage() {
 
         <section className="block w-full lg:hidden">
           <div className="relative h-[800px]">
-            <Image layout="fill" objectFit="contain" quality={100} src="/mobile-roadmap.png" alt="roadmap" />
+            <Image fill objectFit="contain" quality={100} src="/mobile-roadmap.png" alt="roadmap" />
           </div>
         </section>
 
         <section className="right-0 hidden w-full pt-24 lg:block">
           <div className="relative h-[600px]">
-            <Image layout="fill" objectFit="contain" quality={100} src="/roadmap.png" alt="roadmap" />
+            <Image fill objectFit="contain" quality={100} src="/roadmap.png" alt="roadmap" />
           </div>
         </section>
 
