@@ -99,7 +99,7 @@ export default function SettingsPage() {
                 src={me.profile.coverPicture || '/default-pictures/cover/fog.jpeg'}
                 className="rounded-lg"
                 alt="Cover pic"
-                layout="fill"
+                fill
                 objectFit="cover"
               />
             </div>

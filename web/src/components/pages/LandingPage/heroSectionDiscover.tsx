@@ -1,8 +1,10 @@
-import Image from 'next/image'
-import { twd } from '../../utils/twd'
 import React from 'react'
-import RainbowLink from '../../Links/RainbowLink'
+
+import Image from 'next/image'
+
 import OutlinedLink from '../../Links/OutlinedLink'
+import RainbowLink from '../../Links/RainbowLink'
+import { twd } from '../../utils/twd'
 
 const AnimatedBar = twd(`absolute sm:ml-0 md:-left-4 transition-all h-5/10 sm:h-6/10
 w-full sm:w-2 sm:group-hover:w-full bg-gradient-to-r group-hover:rounded-r-lg z-0`).span
@@ -28,7 +30,7 @@ export function HeroSectionDiscover() {
                     alt=""
                     className="relative aspect-video h-full w-full object-cover"
                     src="/landing-page/hero-bg.png"
-                    layout="fill"
+                    fill
                   />
                   <div className="absolute inset-0 h-full bg-gradient-radial from-transparent via-transparent to-black mix-blend-multiply" />
                   <div className="absolute inset-0 h-full bg-gradient-to-b from-transparent via-transparent to-black mix-blend-multiply" />

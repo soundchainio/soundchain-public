@@ -1,9 +1,10 @@
+import { useEffect } from 'react'
+
 import classNames from 'classnames'
 import { useUpload } from 'hooks/useUpload'
 import { Upload } from 'icons/Upload'
 import { imageMimeTypes } from 'lib/mimeTypes'
 import Image from 'next/image'
-import { useEffect } from 'react'
 import Dropzone from 'react-dropzone'
 
 export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange'> {
@@ -72,12 +73,7 @@ export function ImageUpload({
             fileType.startsWith('video') ? (
               <video src={thumbnail} loop muted autoPlay controls={false} className="h-full w-full" />
             ) : (
-              <Image
-                className={classNames('object-cover', rounded)}
-                src={thumbnail}
-                alt="Upload preview"
-                layout="fill"
-              />
+              <Image className={classNames('object-cover', rounded)} src={thumbnail} alt="Upload preview" fill />
             )
           ) : (
             <div className="flex flex-row items-baseline justify-center gap-1 p-4 text-sm font-semibold text-white">
