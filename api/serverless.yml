@@ -87,7 +87,7 @@ custom:
 provider:
   name: aws
   region: us-east-1
-  runtime: nodejs14.x
+  runtime: nodejs18.x
   lambdaHashingVersion: 20201221
   vpc:
     securityGroupIds:
