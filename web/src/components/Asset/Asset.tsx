@@ -1,6 +1,7 @@
+import React from 'react'
+
 import { useMimeTypeQuery } from 'lib/graphql'
 import Image from 'next/image'
-import React from 'react'
 import tw from 'tailwind-styled-components'
 
 interface AssetProps {
@@ -45,7 +46,7 @@ const Asset = (props: AssetProps) => {
       <Image
         src={src || '/default-pictures/album-artwork.png'}
         alt=""
-        layout="fill"
+        fill
         className="m-auto object-cover"
         priority
         sizes={sizes}
