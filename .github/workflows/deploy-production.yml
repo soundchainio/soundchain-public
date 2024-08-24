@@ -60,6 +60,7 @@ jobs:
           MUX_DATA_SECRET: ${{ secrets.MUX_TOKEN_SECRET_PRODUCTION }}
           POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_PRODUCTION }}
           MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY_PRODUCTION }}
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-production-migrate response.json
