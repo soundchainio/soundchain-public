@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [18.x]
     defaults:
       run:
         working-directory: api
@@ -60,6 +60,7 @@ jobs:
           MUX_DATA_SECRET: ${{ secrets.MUX_DATA_SECRET_STAGING }}
           POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_STAGING }}
           MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY_STAGING }}
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
       - name: Trigger migrate lambda function
         run: |
           aws lambda invoke --function-name soundchain-api-staging-migrate response.json
