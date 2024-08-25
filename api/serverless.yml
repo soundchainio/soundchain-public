@@ -3,7 +3,6 @@ variablesResolutionMode: 20210326
 useDotenv: true
 
 plugins:
-  - serverless-plugin-typescript
   - serverless-prune-plugin
 
 package:
