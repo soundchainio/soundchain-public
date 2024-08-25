@@ -53,6 +53,11 @@ functions:
       - schedule: rate(30 minutes)
 
 custom:
+  webpack:
+    webpackConfig: './webpack.config.js'
+    includeModules: false
+    packager: 'npm'
+    externals: all
   prune:
     automatic: true
     number: 20
