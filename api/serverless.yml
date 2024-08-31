@@ -52,7 +52,16 @@ functions:
     events:
       - schedule: rate(30 minutes)
 
+build:
+  external:
+    - 'electron'
+
 custom:
+  webpack:
+    webpackConfig: './webpack.config.js'
+    includeModules: false
+    packager: 'npm'
+    externals: all
   prune:
     automatic: true
     number: 20
