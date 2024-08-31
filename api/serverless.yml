@@ -57,7 +57,8 @@ custom:
     webpackConfig: './webpack.config.js'
     includeModules: false
     packager: 'npm'
-    externals: all
+    externals:
+      - electron
   prune:
     automatic: true
     number: 20
