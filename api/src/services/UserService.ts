@@ -1,5 +1,6 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
+
 import { User, UserModel } from '../models/User';
 import { Context } from '../types/Context';
 import { DefaultWallet } from '../types/DefaultWallet';
@@ -119,5 +120,4 @@ export class UserService extends ModelService<typeof User> {
 
     return ids;
   }
-
 }
