@@ -4,6 +4,7 @@ useDotenv: true
 
 plugins:
   - serverless-prune-plugin
+  - serverless-deployment-bucket
 
 package:
   include:
@@ -104,6 +105,8 @@ provider:
     subnetIds:
       - Ref: PrivateSubnetOne
       - Ref: PrivateSubnetTwo
+  deploymentBucket:
+    name: soundchain-deploymentbucket
   environment:
     NODE_ENV: ${env:NODE_ENV}
     DATABASE_URL: ${self:custom.db.url}

@@ -2519,7 +2519,7 @@ caseless@~0.12.0:
   resolved "https://registry.npmjs.org/caseless/-/caseless-0.12.0.tgz"
   integrity sha1-G2gcIf+EAzyCZUMJBolCDRhxUdw=
 
-chalk@^2.0.0:
+chalk@^2.0.0, chalk@^2.4.2:
   version "2.4.2"
   resolved "https://registry.npmjs.org/chalk/-/chalk-2.4.2.tgz"
   integrity sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==
@@ -6175,6 +6175,13 @@ serve-static@1.14.2:
     escape-html "~1.0.3"
     parseurl "~1.3.3"
     send "0.17.2"
+
+serverless-deployment-bucket@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/serverless-deployment-bucket/-/serverless-deployment-bucket-1.6.0.tgz#51bc57e832e4c849910b72d8f31b012785307c82"
+  integrity sha512-IXllFmAeMl09u5pOEv5HHYvPgWf9TBkz+4NsOac8YhXgRYL4H9N2wgEh8vN+8/H3ej/2GcE08vcJK2Zc+hmVFw==
+  dependencies:
+    chalk "^2.4.2"
 
 serverless-prune-plugin@^2.0.1:
   version "2.0.1"
