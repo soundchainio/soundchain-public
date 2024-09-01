@@ -5,7 +5,7 @@ useDotenv: true
 plugins:
   - serverless-prune-plugin
   - serverless-deployment-bucket
-
+  - serverless-webpack
 package:
   excludeDevDependencies: true
   include:
