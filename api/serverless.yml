@@ -3,7 +3,7 @@ variablesResolutionMode: 20210326
 useDotenv: true
 
 plugins:
-  - serverless-prune-plugin
+  # - serverless-prune-plugin
   - serverless-deployment-bucket
 package:
   excludeDevDependencies: true
@@ -91,14 +91,14 @@ build:
     - 'electron'
 
 custom:
-  webpack:
-    webpackConfig: './webpack.config.js'
-    includeModules: false
-    packager: 'npm'
-    externals: all
-  prune:
-    automatic: true
-    number: 20
+  # webpack:
+  #   webpackConfig: './webpack.config.js'
+  #   includeModules: false
+  #   packager: 'npm'
+  #   externals: all
+  # prune:
+  #   automatic: true
+  #   number: 20
   db:
     id: !GetAtt DBCluster.ClusterResourceId
     host: !GetAtt DBCluster.Endpoint
