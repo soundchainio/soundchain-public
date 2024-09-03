@@ -16,7 +16,7 @@ package:
   exclude:
     - src/utils/airdrop/token-holders.csv
     - src/utils/airdrop/whitelist.csv
-    - node_modules/**
+    - node_modules/aws-sdk/**
 
 functions:
   graphql:
