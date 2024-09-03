@@ -49,6 +49,7 @@ package:
     - node_modules/typechain/**
     - node_modules/typescript/**
     - node_modules/webpack/**
+    - node_modules/migrate-mongo/**
 
 functions:
   graphql:
