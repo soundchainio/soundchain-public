@@ -8,7 +8,7 @@ plugins:
 package:
   excludeDevDependencies: true
   include:
-    - src/db/global-bundle.pem
+    - db/global-bundle.pem
     - migrations
   #    - src/db
   #    - src/utils/airdrop
@@ -139,7 +139,7 @@ provider:
   environment:
     NODE_ENV: ${env:NODE_ENV}
     DATABASE_URL: ${self:custom.db.url}
-    DATABASE_SSL_PATH: src/db/global-bundle.pem
+    DATABASE_SSL_PATH: db/global-bundle.pem
     DATABASE_USERNAME: ${env:DATABASE_USERNAME}
     DATABASE_PASSWORD: ${env:DATABASE_PASSWORD}
     JWT_NAMESPACE: ${env:JWT_NAMESPACE}
