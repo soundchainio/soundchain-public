@@ -8,10 +8,7 @@ import { buildSchemaSync } from 'type-graphql';
 
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
-import {
-  JwtService,
-  JwtUser,
-} from './services/JwtService';
+import { JwtService, JwtUser } from './services/JwtService';
 import { Context } from './types/Context';
 
 dotenv.config();
@@ -101,7 +98,7 @@ export const config = {
       useUnifiedTopology: true,
       useFindAndModify: false,
       ssl: Boolean(DATABASE_SSL_PATH),
-      sslCA: DATABASE_SSL_PATH && fs.readFileSync(`${__dirname}/${DATABASE_SSL_PATH}`).toString(),
+      sslCA: DATABASE_SSL_PATH && fs.readFileSync(DATABASE_SSL_PATH).toString(),
       retryWrites: false,
     },
   },
