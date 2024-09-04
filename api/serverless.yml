@@ -195,16 +195,6 @@ provider:
                 - /*
 
 resources:
-  GlobalBundleLayer:
-    Type: AWS::Lambda::LayerVersion
-    Properties:
-      LayerName: global-bundle
-      Description: Layer containing global-bundle.pem file
-      Content:
-        S3Bucket: ${self:provider.deploymentBucket.name}
-        S3Key: layers/global-bundle.zip
-      CompatibleRuntimes:
-        - nodejs18.x
   Mappings:
     SubnetConfig:
       VPC:
@@ -218,6 +208,16 @@ resources:
       PrivateTwo:
         CIDR: 10.0.3.0/24
   Resources:
+    GlobalBundleLayer:
+      Type: AWS::Lambda::LayerVersion
+      Properties:
+        LayerName: global-bundle
+        Description: Layer containing global-bundle.pem file
+        Content:
+          S3Bucket: ${self:provider.deploymentBucket.name}
+          S3Key: layers/global-bundle.zip
+        CompatibleRuntimes:
+          - nodejs18.x
     VPC:
       Type: AWS::EC2::VPC
       Properties:
