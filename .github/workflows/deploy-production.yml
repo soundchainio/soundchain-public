@@ -25,7 +25,7 @@ jobs:
       - run: npm i -g serverless
       - run: yarn
       # - run: cd src/utils/airdrop && yarn && cd ../../../
-      - run: serverless deploy -s ${GITHUB_REF#refs/heads/}
+      - run: serverless deploy -s ${GITHUB_REF#refs/heads/} --force
         env:
           NODE_ENV: production
           BRANCH: ${GITHUB_REF#refs/heads/}
