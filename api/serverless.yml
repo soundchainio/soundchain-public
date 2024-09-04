@@ -60,7 +60,7 @@ functions:
           method: get
           cors: true
     layers:
-      - !Ref GlobalBundleLayer
+      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:1
   migrate:
     handler: src/db/migrate.handler
   # setupAirdrop:
@@ -71,25 +71,25 @@ functions:
     events:
       - schedule: rate(1 minute)
     layers:
-      - !Ref GlobalBundleLayer
+      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:1
   playbackCount:
     handler: src/lambda/playbackCount.playbackCount
     events:
       - schedule: cron(0 15 * * ? *)
     layers:
-      - !Ref GlobalBundleLayer
+      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:1
   processAuctions:
     handler: src/lambda/processAuctions.processAuctions
     events:
       - schedule: rate(5 minutes)
     layers:
-      - !Ref GlobalBundleLayer
+      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:1
   processPending:
     handler: src/lambda/processPending.processPending
     events:
       - schedule: rate(30 minutes)
     layers:
-      - !Ref GlobalBundleLayer
+      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:1
 
 build:
   external:
@@ -208,16 +208,6 @@ resources:
       PrivateTwo:
         CIDR: 10.0.3.0/24
   Resources:
-    GlobalBundleLayer:
-      Type: AWS::Lambda::LayerVersion
-      Properties:
-        LayerName: global-bundle
-        Description: Layer containing global-bundle.pem file
-        Content:
-          S3Bucket: ${self:provider.deploymentBucket.name}
-          S3Key: layers/global-bundle.zip
-        CompatibleRuntimes:
-          - nodejs18.x
     VPC:
       Type: AWS::EC2::VPC
       Properties:
