@@ -42,19 +42,15 @@ package:
     - node_modules/lint-staged/**
     - node_modules/nodemon/**
     - node_modules/prettier/**
-    - node_modules/serverless-deployment-bucket/**
-    - node_modules/serverless-prune-plugin/**
-    - node_modules/serverless-webpack/**
     - node_modules/ts-node/**
     - node_modules/typechain/**
     - node_modules/typescript/**
     - node_modules/webpack/**
-    - node_modules/migrate-mongo/**
 
 functions:
   graphql:
     handler: src/lambda/handler.handler
-    timeout: 20
+    timeout: 50
     events:
       - http:
           path: /
