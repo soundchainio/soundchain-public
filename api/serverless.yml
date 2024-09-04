@@ -8,7 +8,6 @@ plugins:
 package:
   excludeDevDependencies: true
   include:
-    - db/global-bundle.pem
     - migrations
   #    - src/db
   #    - src/utils/airdrop
@@ -60,6 +59,8 @@ functions:
           path: /
           method: get
           cors: true
+    layers:
+      - !Ref GlobalBundleLayer
   migrate:
     handler: src/db/migrate.handler
   # setupAirdrop:
@@ -69,18 +70,26 @@ functions:
     timeout: 30
     events:
       - schedule: rate(1 minute)
+    layers:
+      - !Ref GlobalBundleLayer
   playbackCount:
     handler: src/lambda/playbackCount.playbackCount
     events:
       - schedule: cron(0 15 * * ? *)
+    layers:
+      - !Ref GlobalBundleLayer
   processAuctions:
     handler: src/lambda/processAuctions.processAuctions
     events:
       - schedule: rate(5 minutes)
+    layers:
+      - !Ref GlobalBundleLayer
   processPending:
     handler: src/lambda/processPending.processPending
     events:
       - schedule: rate(30 minutes)
+    layers:
+      - !Ref GlobalBundleLayer
 
 build:
   external:
@@ -139,7 +148,7 @@ provider:
   environment:
     NODE_ENV: ${env:NODE_ENV}
     DATABASE_URL: ${self:custom.db.url}
-    DATABASE_SSL_PATH: db/global-bundle.pem
+    DATABASE_SSL_PATH: /opt/global-bundle.pem
     DATABASE_USERNAME: ${env:DATABASE_USERNAME}
     DATABASE_PASSWORD: ${env:DATABASE_PASSWORD}
     JWT_NAMESPACE: ${env:JWT_NAMESPACE}
@@ -186,6 +195,16 @@ provider:
                 - /*
 
 resources:
+  GlobalBundleLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: global-bundle
+      Description: Layer containing global-bundle.pem file
+      Content:
+        S3Bucket: ${self:provider.deploymentBucket.name}
+        S3Key: layers/global-bundle.zip
+      CompatibleRuntimes:
+        - nodejs18.x
   Mappings:
     SubnetConfig:
       VPC:
