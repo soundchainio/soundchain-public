@@ -148,7 +148,7 @@ provider:
   environment:
     NODE_ENV: ${env:NODE_ENV}
     DATABASE_URL: ${self:custom.db.url}
-    DATABASE_SSL_PATH: opt/nodejs/global-bundle.pem
+    DATABASE_SSL_PATH: /opt/nodejs/global-bundle.pem
     DATABASE_USERNAME: ${env:DATABASE_USERNAME}
     DATABASE_PASSWORD: ${env:DATABASE_PASSWORD}
     JWT_NAMESPACE: ${env:JWT_NAMESPACE}
