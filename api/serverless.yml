@@ -461,12 +461,12 @@ resources:
           Ref: DBCluster
         DBInstanceClass: db.t3.medium
       DependsOn: DBCluster
-    UploadBucket:
-      Type: AWS::S3::Bucket
-      Properties:
-        BucketName: ${self:custom.uploadsBucket.name}
-        CorsConfiguration:
-          CorsRules:
-            - AllowedHeaders: ['*']
-              AllowedMethods: [GET, PUT]
-              AllowedOrigins: ['*']
+    # UploadBucket:
+    #   Type: AWS::S3::Bucket
+    #   Properties:
+    #     BucketName: ${self:custom.uploadsBucket.name}
+    #     CorsConfiguration:
+    #       CorsRules:
+    #         - AllowedHeaders: ['*']
+    #           AllowedMethods: [GET, PUT]
+    #           AllowedOrigins: ['*']
