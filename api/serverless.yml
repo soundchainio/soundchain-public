@@ -67,35 +67,35 @@ functions:
   #   handler: src/db/migrate.handler
   #   layers:
   #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  setupAirdrop:
-    handler: src/lambda/setupAirdrop.setupAirdrop
-    layers:
-      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  watcher:
-    handler: src/lambda/blockchainWatcher.blockchainWatcher
-    timeout: 30
-    events:
-      - schedule: rate(1 minute)
-    layers:
-      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  playbackCount:
-    handler: src/lambda/playbackCount.playbackCount
-    events:
-      - schedule: cron(0 15 * * ? *)
-    layers:
-      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  processAuctions:
-    handler: src/lambda/processAuctions.processAuctions
-    events:
-      - schedule: rate(5 minutes)
-    layers:
-      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  processPending:
-    handler: src/lambda/processPending.processPending
-    events:
-      - schedule: rate(30 minutes)
-    layers:
-      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
+  # setupAirdrop:
+  #   handler: src/lambda/setupAirdrop.setupAirdrop
+  #   layers:
+  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
+  # watcher:
+  #   handler: src/lambda/blockchainWatcher.blockchainWatcher
+  #   timeout: 30
+  #   events:
+  #     - schedule: rate(1 minute)
+  #   layers:
+  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
+  # playbackCount:
+  #   handler: src/lambda/playbackCount.playbackCount
+  #   events:
+  #     - schedule: cron(0 15 * * ? *)
+  #   layers:
+  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
+  # processAuctions:
+  #   handler: src/lambda/processAuctions.processAuctions
+  #   events:
+  #     - schedule: rate(5 minutes)
+  #   layers:
+  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
+  # processPending:
+  #   handler: src/lambda/processPending.processPending
+  #   events:
+  #     - schedule: rate(30 minutes)
+  #   layers:
+  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
 
 build:
   external:
