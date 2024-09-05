@@ -6,8 +6,10 @@ const migrationConfig = {
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      ssl: Boolean(DATABASE_SSL_PATH),
-      sslCA: DATABASE_SSL_PATH && require('path').join(__dirname, 'src', DATABASE_SSL_PATH),
+      // ssl: Boolean(DATABASE_SSL_PATH),
+      // sslCA: DATABASE_SSL_PATH && require('path').join(__dirname, 'src', DATABASE_SSL_PATH),
+      ssl: true,
+      sslCA: fs.readFileSync('/opt/nodejs/global-bundle.pem').toString(),
       retryWrites: false,
     },
   },
