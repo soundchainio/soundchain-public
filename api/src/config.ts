@@ -98,7 +98,7 @@ export const config = {
       useUnifiedTopology: true,
       useFindAndModify: false,
       ssl: true,
-      sslCA: DATABASE_SSL_PATH && fs.readFileSync('/opt/nodejs/global-bundle.pem').toString(),
+      sslCA: fs.readFileSync('/opt/nodejs/global-bundle.pem').toString(),
       retryWrites: false,
     },
   },
