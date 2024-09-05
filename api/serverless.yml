@@ -182,7 +182,7 @@ provider:
     POLYGON_SCAN_API_KEY: ${env:POLYGON_SCAN_API_KEY}
     NFT_MULTIPLE_EDITION_ADDRESS: ${env:NFT_MULTIPLE_EDITION_ADDRESS}
     MARKETPLACE_MULTIPLE_EDITION_ADDRESS: ${env:MARKETPLACE_MULTIPLE_EDITION_ADDRESS}
-
+    SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
   iam:
     role:
       statements:
@@ -459,12 +459,12 @@ resources:
           Ref: DBCluster
         DBInstanceClass: db.t3.medium
       DependsOn: DBCluster
-    # UploadBucket:
-    #   Type: AWS::S3::Bucket
-    #   Properties:
-    #     BucketName: ${self:custom.uploadsBucket.name}
-    #     CorsConfiguration:
-    #       CorsRules:
-    #         - AllowedHeaders: ['*']
-    #           AllowedMethods: [GET, PUT]
-    #           AllowedOrigins: ['*']
+    UploadBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.uploadsBucket.name}
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: [GET, PUT]
+              AllowedOrigins: ['*']
