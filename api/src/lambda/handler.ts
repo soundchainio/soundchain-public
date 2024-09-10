@@ -1,3 +1,4 @@
+import fs from 'fs';
 import * as Sentry from '@sentry/serverless';
 import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
@@ -12,6 +13,12 @@ Sentry.AWSLambda.init({
 });
 
 const graphqlHandler: Handler = async (...args) => {
+  const layerPath = '/opt/nodejs/global-bundle.pem';
+
+  const buffer = fs.readFileSync(layerPath);
+  const file = buffer.toString();
+  console.log(file);
+  console.log(JSON.stringify(config.db, null, 2));
   await mongoose.connect(config.db.url, config.db.options);
 
   const server = new ApolloServer(config.apollo);
