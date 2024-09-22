@@ -6,6 +6,7 @@ on:
       - production
     paths:
       - "api/**"
+  workflow_dispatch:
 
 jobs:
   deploy-api:
