@@ -3,6 +3,7 @@ variablesResolutionMode: 20210326
 useDotenv: true
 
 plugins:
+  - serverless-plugin-typescript
   - serverless-prune-plugin
   - serverless-deployment-bucket
 package:
@@ -92,11 +93,9 @@ build:
     - 'electron'
 
 custom:
-  webpack:
-    webpackConfig: './webpack.config.js'
-    includeModules: false
-    packager: 'npm'
-    externals: all
+  typescript:
+    individually: true
+    tsconfigFileLocation: 'tsconfig.json'
   prune:
     automatic: true
     number: 20

@@ -1624,7 +1624,7 @@
   resolved "https://registry.npmjs.org/@types/faker/-/faker-5.5.9.tgz"
   integrity sha512-uCx6mP3UY5SIO14XlspxsGjgaemrxpssJI0Ol+GfhxtcKpv9pgRZYsS4eeKeHVLje6Qtc8lGszuBI461+gVZBA==
 
-"@types/glob@^7.1.3":
+"@types/glob@^7.1.1", "@types/glob@^7.1.3":
   version "7.2.0"
   resolved "https://registry.npmjs.org/@types/glob/-/glob-7.2.0.tgz"
   integrity sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==
@@ -4164,6 +4164,17 @@ fast-fifo@^1.2.0, fast-fifo@^1.3.2:
   resolved "https://registry.yarnpkg.com/fast-fifo/-/fast-fifo-1.3.2.tgz#286e31de96eb96d38a97899815740ba2a4f3640c"
   integrity sha512-/d9sfos4yxzpwkDkuN7k2SqFKtYNmCTzgfEpz82x34IM9/zc8KGxQoXg1liNC/izpRM/MBdt44Nmx41ZWqk+FQ==
 
+fast-glob@^3.0.3:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/fast-glob/-/fast-glob-3.3.2.tgz#a904501e57cfdd2ffcded45e99a54fef55e46129"
+  integrity sha512-oX2ruAFQwf/Orj8m737Y5adxDQO0LAB7/S5MnxCdTNDd4p6BsyIVsv9JQsATbTSq8KHRpLwIHbVlUNatxd+1Ow==
+  dependencies:
+    "@nodelib/fs.stat" "^2.0.2"
+    "@nodelib/fs.walk" "^1.2.3"
+    glob-parent "^5.1.2"
+    merge2 "^1.3.0"
+    micromatch "^4.0.4"
+
 fast-glob@^3.1.1:
   version "3.2.7"
   resolved "https://registry.npmjs.org/fast-glob/-/fast-glob-3.2.7.tgz"
@@ -4368,7 +4379,7 @@ fs-extra@^4.0.2:
     jsonfile "^4.0.0"
     universalify "^0.1.0"
 
-fs-extra@^7.0.0:
+fs-extra@^7.0.0, fs-extra@^7.0.1:
   version "7.0.1"
   resolved "https://registry.npmjs.org/fs-extra/-/fs-extra-7.0.1.tgz"
   integrity sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==
@@ -4525,6 +4536,20 @@ globals@^13.6.0, globals@^13.9.0:
   integrity sha512-uS8X6lSKN2JumVoXrbUz+uG4BYG+eiawqm3qFcT7ammfbUHeCBoJMlHcec/S3krSk73/AE/f0szYFmgAA3kYZg==
   dependencies:
     type-fest "^0.20.2"
+
+globby@^10.0.2:
+  version "10.0.2"
+  resolved "https://registry.yarnpkg.com/globby/-/globby-10.0.2.tgz#277593e745acaa4646c3ab411289ec47a0392543"
+  integrity sha512-7dUi7RvCoT/xast/o/dLN53oqND4yk0nsHkhRgn9w65C4PofCLOoJ39iSOg+qVDdWQPIEj+eszMHQ+aLVwwQSg==
+  dependencies:
+    "@types/glob" "^7.1.1"
+    array-union "^2.1.0"
+    dir-glob "^3.0.1"
+    fast-glob "^3.0.3"
+    glob "^7.1.3"
+    ignore "^5.1.1"
+    merge2 "^1.2.3"
+    slash "^3.0.0"
 
 globby@^11.0.3:
   version "11.0.4"
@@ -4819,6 +4844,11 @@ ignore@^4.0.6:
   version "4.0.6"
   resolved "https://registry.npmjs.org/ignore/-/ignore-4.0.6.tgz"
   integrity sha512-cyFDKrqc/YdcWFniJhzI42+AzS+gNwmUzOSFcRCQYwySuBBBy/KjuxWLZ/FHEH6Moq1NizMOBWyTcv8O4OZIMg==
+
+ignore@^5.1.1:
+  version "5.3.2"
+  resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.3.2.tgz#3cd40e729f3643fd87cb04e50bf0eb722bc596f5"
+  integrity sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==
 
 ignore@^5.1.4:
   version "5.1.8"
@@ -5579,7 +5609,7 @@ merge-stream@^2.0.0:
   resolved "https://registry.npmjs.org/merge-stream/-/merge-stream-2.0.0.tgz"
   integrity sha512-abv/qOcuPfk3URPfDzmZU1LKmuw8kT+0nIHvKrKgFrwifol/doWcdA4ZqsWQ8ENrFKkd67Mfpo/LovbIUsbt3w==
 
-merge2@^1.3.0:
+merge2@^1.2.3, merge2@^1.3.0:
   version "1.4.1"
   resolved "https://registry.npmjs.org/merge2/-/merge2-1.4.1.tgz"
   integrity sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==
@@ -6799,6 +6829,15 @@ serverless-deployment-bucket@^1.6.0:
   integrity sha512-IXllFmAeMl09u5pOEv5HHYvPgWf9TBkz+4NsOac8YhXgRYL4H9N2wgEh8vN+8/H3ej/2GcE08vcJK2Zc+hmVFw==
   dependencies:
     chalk "^2.4.2"
+
+serverless-plugin-typescript@^2.1.5:
+  version "2.1.5"
+  resolved "https://registry.yarnpkg.com/serverless-plugin-typescript/-/serverless-plugin-typescript-2.1.5.tgz#d4c4636ee6e4803d2fe773ce2bb8bf52362c836d"
+  integrity sha512-7OO6eJzv57dvfz0v9huU1JVBgdzgvvz+6GCwwkR2bfdVHKs1tifx+fSgjbQcBpXNNHf8Dx2Mo7evtYTkA/TDDA==
+  dependencies:
+    fs-extra "^7.0.1"
+    globby "^10.0.2"
+    lodash "^4.17.21"
 
 serverless-prune-plugin@^2.0.2:
   version "2.0.2"

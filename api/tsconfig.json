@@ -16,8 +16,9 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "outDir": ".build",
-    "typeRoots": ["./typings", "./node_modules/@typings"]
+    "rootDir": "./",
+    "typeRoots": ["./typings", "./node_modules/@types"]
   },
-  "include": ["**/*.ts", "migrate-mongo-config.js"],
+  "include": ["src/**/*.ts", "migrate-mongo-config.js"],
   "exclude": ["node_modules", "typings"]
 }

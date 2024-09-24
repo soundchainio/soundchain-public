@@ -55,15 +55,16 @@
     "graphql": "^15.5.1",
     "graphql-type-json": "^0.3.2",
     "jsonwebtoken": "^8.5.1",
+    "migrate-mongo": "^8.2.3",
     "mongoose": "5.10.18",
     "reflect-metadata": "^0.1.13",
-    "type-graphql": "^1.1.1",
-    "uuid": "^8.3.2",
-    "web3": "^1.6.1",
     "serverless-deployment-bucket": "^1.6.0",
+    "serverless-plugin-typescript": "^2.1.5",
     "serverless-prune-plugin": "^2.0.2",
     "serverless-webpack": "^5.14.1",
-    "migrate-mongo": "^8.2.3"
+    "type-graphql": "^1.1.1",
+    "uuid": "^8.3.2",
+    "web3": "^1.6.1"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.25.0",
