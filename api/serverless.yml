@@ -32,6 +32,8 @@ package:
     - node_modules/@types/mongoose/**
     - node_modules/@types/node/**
     - node_modules/@types/uuid/**
+    - node_modules/@typescript-eslint/eslint-plugin/**
+    - node_modules/@typescript-eslint/parser/**
     - node_modules/csvtojson/**
     - node_modules/eslint/**
     - node_modules/eslint-config-prettier/**
