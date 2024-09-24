@@ -5,6 +5,7 @@ import cors from 'cors';
 import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
 import { buildSchemaSync } from 'type-graphql';
+import path from 'path';
 
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
@@ -97,8 +98,10 @@ export const config = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useFindAndModify: false,
-      ssl: true,
-      sslCA: fs.readFileSync('/opt/nodejs/global-bundle.pem').toString(),
+      // ssl: true,
+      // sslCA: fs.readFileSync('/opt/nodejs/global-bundle.pem').toString(),
+      ssl: Boolean(DATABASE_SSL_PATH),
+      sslCA: DATABASE_SSL_PATH && path.join(__dirname, 'src', DATABASE_SSL_PATH),
       retryWrites: false,
     },
   },

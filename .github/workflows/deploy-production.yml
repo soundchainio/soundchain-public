@@ -62,11 +62,11 @@ jobs:
           POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_PRODUCTION }}
           MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY_PRODUCTION }}
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
-      # - name: Trigger migrate lambda function
-      #   run: |
-      #     aws lambda invoke --function-name soundchain-api-production-migrate response.json
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
-      #     AWS_REGION: us-east-1
+      - name: Trigger migrate lambda function
+        run: |
+          aws lambda invoke --function-name soundchain-api-production-migrate response.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          AWS_REGION: us-east-1
