@@ -32,8 +32,6 @@ package:
     - node_modules/@types/mongoose/**
     - node_modules/@types/node/**
     - node_modules/@types/uuid/**
-    - node_modules/@typescript-eslint/eslint-plugin/**
-    - node_modules/@typescript-eslint/parser/**
     - node_modules/csvtojson/**
     - node_modules/eslint/**
     - node_modules/eslint-config-prettier/**
@@ -41,9 +39,6 @@ package:
     - node_modules/lint-staged/**
     - node_modules/nodemon/**
     - node_modules/prettier/**
-    - node_modules/ts-node/**
-    - node_modules/typechain/**
-    - node_modules/typescript/**
 
 functions:
   graphql:
