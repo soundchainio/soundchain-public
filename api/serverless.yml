@@ -41,6 +41,8 @@ package:
     - node_modules/lint-staged/**
     - node_modules/nodemon/**
     - node_modules/prettier/**
+    - node_modules/ts-node/**
+    - node_modules/typechain/**
 
 functions:
   graphql:
