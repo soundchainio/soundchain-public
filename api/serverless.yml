@@ -51,7 +51,7 @@ package:
 functions:
   graphql:
     handler: src/lambda/handler.handler
-    timeout: 50
+    timeout: 30
     events:
       - http:
           path: /
@@ -59,6 +59,13 @@ functions:
           cors: true
       - http:
           path: /
+          method: get
+          cors: true
+  hello:
+    handler: src/lambda/hello.hello
+    events:
+      - http:
+          path: /hello
           method: get
           cors: true
   migrate:
