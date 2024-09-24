@@ -9,7 +9,7 @@ package:
   excludeDevDependencies: true
   include:
     - migrations
-  #    - src/db
+    - src/db/global-bundle.pem
   #    - src/utils/airdrop
   #    - src/models
   exclude:
@@ -61,41 +61,27 @@ functions:
           path: /
           method: get
           cors: true
-    layers:
-      - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  # migrate:
-  #   handler: src/db/migrate.handler
-  #   layers:
-  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  # setupAirdrop:
-  #   handler: src/lambda/setupAirdrop.setupAirdrop
-  #   layers:
-  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  # watcher:
-  #   handler: src/lambda/blockchainWatcher.blockchainWatcher
-  #   timeout: 30
-  #   events:
-  #     - schedule: rate(1 minute)
-  #   layers:
-  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  # playbackCount:
-  #   handler: src/lambda/playbackCount.playbackCount
-  #   events:
-  #     - schedule: cron(0 15 * * ? *)
-  #   layers:
-  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  # processAuctions:
-  #   handler: src/lambda/processAuctions.processAuctions
-  #   events:
-  #     - schedule: rate(5 minutes)
-  #   layers:
-  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
-  # processPending:
-  #   handler: src/lambda/processPending.processPending
-  #   events:
-  #     - schedule: rate(30 minutes)
-  #   layers:
-  #     - arn:aws:lambda:us-east-1:271937159223:layer:global-bundle:3
+  migrate:
+    handler: src/db/migrate.handler
+  setupAirdrop:
+    handler: src/lambda/setupAirdrop.setupAirdrop
+  watcher:
+    handler: src/lambda/blockchainWatcher.blockchainWatcher
+    timeout: 30
+    events:
+      - schedule: rate(1 minute)
+  playbackCount:
+    handler: src/lambda/playbackCount.playbackCount
+    events:
+      - schedule: cron(0 15 * * ? *)
+  processAuctions:
+    handler: src/lambda/processAuctions.processAuctions
+    events:
+      - schedule: rate(5 minutes)
+  processPending:
+    handler: src/lambda/processPending.processPending
+    events:
+      - schedule: rate(30 minutes)
 
 build:
   external:
@@ -154,7 +140,7 @@ provider:
   environment:
     NODE_ENV: ${env:NODE_ENV}
     DATABASE_URL: ${self:custom.db.url}
-    DATABASE_SSL_PATH: /opt/nodejs/global-bundle.pem
+    DATABASE_SSL_PATH: db/global-bundle.pem
     DATABASE_USERNAME: ${env:DATABASE_USERNAME}
     DATABASE_PASSWORD: ${env:DATABASE_PASSWORD}
     JWT_NAMESPACE: ${env:JWT_NAMESPACE}
