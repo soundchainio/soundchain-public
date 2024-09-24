@@ -59,7 +59,7 @@ functions:
           method: get
           cors: true
   hello:
-    handler: src/lambda/hello.hello
+    handler: src/lambda/hello.handler
     events:
       - http:
           path: /hello
