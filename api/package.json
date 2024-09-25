@@ -15,7 +15,7 @@
     "migrate:down": "ts-node node_modules/migrate-mongo/bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
     "migrate": "ts-node node_modules/migrate-mongo/bin/migrate-mongo up -f migrate-mongo-config.ts",
     "generate-types": "typechain --target=web3-v1 'src/contract/*.json'",
-    "build": "esbuild src/lambda/handler.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/src/lambda/handler.js"
+    "build": "esbuild src/lambda/handler.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js"
   },
   "lint-staged": {
     "*.{ts,json,md}": "prettier --write"
