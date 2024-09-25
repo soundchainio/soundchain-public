@@ -19,31 +19,31 @@ functions:
           method: get
           cors: true
   hello:
-    handler: src/lambda/hello.handler
+    image: ${env:ECR_IMAGE_URI}
     events:
       - http:
           path: /hello
           method: get
           cors: true
   migrate:
-    handler: src/db/migrate.handler
+    image: ${env:ECR_IMAGE_URI}
   setupAirdrop:
-    handler: src/lambda/setupAirdrop.setupAirdrop
+    image: ${env:ECR_IMAGE_URI}
   watcher:
-    handler: src/lambda/blockchainWatcher.blockchainWatcher
+    image: ${env:ECR_IMAGE_URI}
     timeout: 30
     events:
       - schedule: rate(1 minute)
   playbackCount:
-    handler: src/lambda/playbackCount.playbackCount
+    image: ${env:ECR_IMAGE_URI}
     events:
       - schedule: cron(0 15 * * ? *)
   processAuctions:
-    handler: src/lambda/processAuctions.processAuctions
+    image: ${env:ECR_IMAGE_URI}
     events:
       - schedule: rate(5 minutes)
   processPending:
-    handler: src/lambda/processPending.processPending
+    image: ${env:ECR_IMAGE_URI}
     events:
       - schedule: rate(30 minutes)
 
