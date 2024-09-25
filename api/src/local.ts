@@ -21,7 +21,7 @@ async function bootstrap() {
   server.applyMiddleware({ app });
 
   app.get('/', (req, res) => {
-    res.status(200).json({ status: 'OK', message: 'Server is healthy.' });
+    res.status(200).json({ status: 'OK', message: 'Server is healthy' });
   });
 
   await new Promise<void>(resolve => app.listen({ port: config.express.port }, resolve));
