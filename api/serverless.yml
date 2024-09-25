@@ -8,7 +8,7 @@ plugins:
 
 functions:
   graphql:
-    image: ${env:ECR_IMAGE_URI}
+    image: ${env:GRAPHQL_IMAGE_URI}
     events:
       - http:
           path: /
@@ -19,7 +19,7 @@ functions:
           method: get
           cors: true
   hello:
-    image: ${env:ECR_IMAGE_URI}
+    image: ${env:HELLO_IMAGE_URI}
     events:
       - http:
           path: /hello
@@ -88,9 +88,6 @@ provider:
   runtime: nodejs20.x
   ecr:
     scanOnPush: true
-    images:
-      lambda:
-        path: .
   lambdaHashingVersion: 20201221
   vpc:
     securityGroupIds:
