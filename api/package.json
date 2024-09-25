@@ -14,7 +14,8 @@
     "migrate:status": "ts-node node_modules/migrate-mongo/bin/migrate-mongo status -f migrate-mongo-config.ts",
     "migrate:down": "ts-node node_modules/migrate-mongo/bin/migrate-mongo down -f migrate-mongo-config.ts && npm run migrate:status",
     "migrate": "ts-node node_modules/migrate-mongo/bin/migrate-mongo up -f migrate-mongo-config.ts",
-    "generate-types": "typechain --target=web3-v1 'src/contract/*.json'"
+    "generate-types": "typechain --target=web3-v1 'src/contract/*.json'",
+    "build": "esbuild src/lambda/handler.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/src/lambda/handler.js"
   },
   "lint-staged": {
     "*.{ts,json,md}": "prettier --write"
@@ -36,6 +37,7 @@
     "@sendgrid/mail": "^7.4.5",
     "@sentry/serverless": "^7.10.0",
     "@typegoose/typegoose": "^7.6.3",
+    "@types/aws-lambda": "^8.10.145",
     "abi-decoder": "^2.4.0",
     "apollo-server-express": "^3.0.2",
     "apollo-server-lambda": "^3.0.2",
@@ -48,6 +50,7 @@
     "dataloader": "^2.0.0",
     "dot-object": "^2.1.4",
     "dotenv-flow": "^3.2.0",
+    "esbuild": "^0.24.0",
     "escape-string-regexp": "^4.0.0",
     "express": "^4.17.2",
     "express-jwt": "^6.0.0",
