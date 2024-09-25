@@ -95,7 +95,10 @@ jobs:
           POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_PRODUCTION }}
           MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY_PRODUCTION }}
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
-        run: serverless deploy -s ${GITHUB_REF#refs/heads/}
+          ECR_IMAGE_URI: ${{ env.ECR_IMAGE_URI }}
+        run: |
+          echo "Deploying with image: $ECR_IMAGE_URI"
+          serverless deploy -s ${GITHUB_REF#refs/heads/} --verbose
 
       - name: Trigger migrate lambda function
         run: |
