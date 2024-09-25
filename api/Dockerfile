@@ -1,6 +1,6 @@
 FROM public.ecr.aws/lambda/nodejs:20 as builder
 WORKDIR /usr/app
-COPY package.json src/lambda/handler.ts  ./
+COPY .  ./
 RUN npm install
 RUN npm run build
     
