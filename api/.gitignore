@@ -34,3 +34,5 @@ yarn-error.log*
 cache
 src/artifacts/@openzeppelin
 src/artifacts/build-info
+
+dist
