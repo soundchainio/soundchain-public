@@ -1,10 +1,10 @@
-FROM public.ecr.aws/lambda/nodejs:20
-
-# Copy function code
-COPY . ${LAMBDA_TASK_ROOT}/
-
-# Install npm dependencies
+FROM public.ecr.aws/lambda/nodejs:20 as builder
+WORKDIR /usr/app
+COPY package.json src/lambda/handler.ts  ./
 RUN npm install
-
-# Set the CMD to your handler
-CMD [ "handler.handler" ]
+RUN npm run build
+    
+FROM public.ecr.aws/lambda/nodejs:20
+WORKDIR ${LAMBDA_TASK_ROOT}
+COPY --from=builder /usr/app/dist/* ./
+CMD ["index.handler"]
