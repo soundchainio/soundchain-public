@@ -9,7 +9,6 @@ plugins:
 functions:
   graphql:
     image: ${env:ECR_IMAGE_URI}
-    handler: src/handlers/graphql.handler
     events:
       - http:
           path: /
@@ -21,7 +20,6 @@ functions:
           cors: true
   hello:
     image: ${env:ECR_IMAGE_URI}
-    handler: src/handlers/hello.handler
     events:
       - http:
           path: /hello
@@ -29,29 +27,23 @@ functions:
           cors: true
   migrate:
     image: ${env:ECR_IMAGE_URI}
-    handler: src/handlers/migrate.handler
   setupAirdrop:
     image: ${env:ECR_IMAGE_URI}
-    handler: src/handlers/setupAirdrop.handler
   watcher:
     image: ${env:ECR_IMAGE_URI}
-    handler: src/handlers/watcher.handler
     timeout: 30
     events:
       - schedule: rate(1 minute)
   playbackCount:
     image: ${env:ECR_IMAGE_URI}
-    handler: src/handlers/playbackCount.handler
     events:
       - schedule: cron(0 15 * * ? *)
   processAuctions:
     image: ${env:ECR_IMAGE_URI}
-    handler: src/handlers/processAuctions.handler
     events:
       - schedule: rate(5 minutes)
   processPending:
     image: ${env:ECR_IMAGE_URI}
-    handler: src/handlers/processPending.handler
     events:
       - schedule: rate(30 minutes)
 
