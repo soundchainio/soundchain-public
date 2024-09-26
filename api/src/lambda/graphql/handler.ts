@@ -12,6 +12,9 @@ Sentry.AWSLambda.init({
 });
 
 const graphqlHandler: Handler = async (...args) => {
+  console.log('Connecting to MongoDB');
+  console.log(config.db.url);
+  console.log(config.db.options);
   await mongoose.connect(config.db.url, config.db.options);
 
   const server = new ApolloServer(config.apollo);
