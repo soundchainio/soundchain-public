@@ -62,14 +62,6 @@ jobs:
             # Copy the built lambda code
             cp -r dist/$lambda_name temp_lambda/$lambda_name/
 
-            # Copy package.json and package-lock.json
-            cp package*.json temp_lambda/$lambda_name/
-
-            # Install production dependencies for this lambda
-            cd temp_lambda/$lambda_name
-            npm i
-            cd ../../
-
             # Create Dockerfile for this lambda
             cat << EOF > temp_lambda/$lambda_name/Dockerfile
             FROM public.ecr.aws/lambda/nodejs:20
