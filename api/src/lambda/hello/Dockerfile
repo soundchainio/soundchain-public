@@ -2,14 +2,14 @@ FROM public.ecr.aws/lambda/nodejs:20
 
 WORKDIR ${LAMBDA_TASK_ROOT}
 
-# Copy package.json and package-lock.json
+# Copy package.json and package-lock.json (if you have one)
 COPY package*.json ./
 
 # Install production dependencies
-RUN npm install --production
+RUN npm i
 
-# Copy built code
+# Copy only the bundled code
 COPY ./dist/hello ${LAMBDA_TASK_ROOT}/
 
-# Set the ENTRYPOINT and CMD
+# Set the CMD
 CMD [ "handler.handler" ]
