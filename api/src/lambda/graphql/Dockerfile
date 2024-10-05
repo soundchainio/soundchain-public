@@ -11,5 +11,5 @@ RUN npm i
 # Copy built code
 COPY . .
 
-# Set the CMD to your handler
+# CMD will be updated by the build script
 CMD [ "handler.handler" ]
