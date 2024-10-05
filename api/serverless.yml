@@ -50,11 +50,6 @@ functions:
 build:
   external:
     - 'electron'
-    - 'mongoose'
-    - 'typegoose'
-    - 'apollo-server-lambda'
-    - 'express'
-    - 'mongodb'
 
 custom:
   prune:
