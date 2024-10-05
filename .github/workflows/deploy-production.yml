@@ -27,7 +27,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install Dependencies
-        run: npm i
+        run: npm ci
 
       - name: Build Code
         run: npm run build
@@ -56,17 +56,35 @@ jobs:
             aws ecr describe-repositories --repository-names $ecr_repository || \
             aws ecr create-repository --repository-name $ecr_repository
 
-            # Copy necessary files to a temporary build context
-            mkdir -p build_context/$lambda_name
-            cp -r dist/$lambda_name build_context/$lambda_name/
-            cp package*.json build_context/$lambda_name/
-            cp ./src/lambda/$lambda_name/Dockerfile build_context/$lambda_name/
+            # Create a temporary directory for this lambda
+            mkdir -p temp_lambda/$lambda_name
 
-            # Update Dockerfile to use the correct handler path
-            sed -i 's|CMD \[ "handler.handler" \]|CMD \[ "'$lambda_name'/handler.handler" \]|' build_context/$lambda_name/Dockerfile
+            # Copy the built lambda code
+            cp -r dist/$lambda_name temp_lambda/$lambda_name/
+
+            # Copy package.json and package-lock.json
+            cp package*.json temp_lambda/$lambda_name/
+
+            # Install production dependencies for this lambda
+            cd temp_lambda/$lambda_name
+            npm i
+            cd ../../
+
+            # Create Dockerfile for this lambda
+            cat << EOF > temp_lambda/$lambda_name/Dockerfile
+            FROM public.ecr.aws/lambda/nodejs:20
+
+            WORKDIR \${LAMBDA_TASK_ROOT}
+
+            # Copy package.json, dependencies, and lambda code
+            COPY . .
+
+            # Set the CMD to your handler
+            CMD [ "$lambda_name/handler.handler" ]
+            EOF
 
             # Build, tag, and push image
-            docker build -t $ecr_repository:$image_tag -f build_context/$lambda_name/Dockerfile build_context/$lambda_name
+            docker build -t $ecr_repository:$image_tag -f temp_lambda/$lambda_name/Dockerfile temp_lambda/$lambda_name
 
             docker tag $ecr_repository:$image_tag $ECR_REGISTRY/$ecr_repository:$image_tag
             docker push $ECR_REGISTRY/$ecr_repository:$image_tag
@@ -75,11 +93,12 @@ jobs:
             echo "${lambda_name^^}_IMAGE_URI=$ECR_REGISTRY/$ecr_repository:$image_tag" >> $GITHUB_ENV
 
             # Clean up
-            rm -rf build_context/$lambda_name
+            rm -rf temp_lambda/$lambda_name
           }
 
           build_and_push "graphql"
           build_and_push "hello"
+          # Add more Lambda functions here as needed
 
       - name: Install Serverless Framework
         run: npm install -g serverless
