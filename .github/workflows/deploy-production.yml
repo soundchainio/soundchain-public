@@ -27,7 +27,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install Dependencies
-        run: npm i
+        run: npm ci
 
       - name: Build Code
         run: npm run build
@@ -61,6 +61,9 @@ jobs:
             cp -r dist/$lambda_name build_context/$lambda_name/
             cp package*.json build_context/$lambda_name/
             cp ./src/lambda/$lambda_name/Dockerfile build_context/$lambda_name/
+
+            # Update Dockerfile to use the correct handler path
+            sed -i 's|CMD \[ "handler.handler" \]|CMD \[ "'$lambda_name'/handler.handler" \]|' build_context/$lambda_name/Dockerfile
 
             # Build, tag, and push image
             docker build -t $ecr_repository:$image_tag -f build_context/$lambda_name/Dockerfile build_context/$lambda_name
