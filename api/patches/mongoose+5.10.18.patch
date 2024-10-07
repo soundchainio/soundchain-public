@@ -1,0 +1,43 @@
+diff --git a/node_modules/mongoose/lib/index.js b/node_modules/mongoose/lib/index.js
+index 80a8ca5..83ee8ef 100644
+--- a/node_modules/mongoose/lib/index.js
++++ b/node_modules/mongoose/lib/index.js
+@@ -722,23 +722,26 @@ Mongoose.prototype.__defineSetter__('connection', function(v) {
+ 
+ Mongoose.prototype.connections;
+ 
+-/*!
+- * Driver dependent APIs
+- */
++// /*!
++//  * Driver dependent APIs
++//  */
+ 
+-const driver = global.MONGOOSE_DRIVER_PATH || './drivers/node-mongodb-native';
++// const driver = global.MONGOOSE_DRIVER_PATH || './drivers/node-mongodb-native';
+ 
+-/*!
+- * Connection
+- */
++// /*!
++//  * Connection
++//  */
+ 
+-const Connection = require(driver + '/connection');
++// const Connection = require(driver + '/connection');
+ 
+-/*!
+- * Collection
+- */
++// /*!
++//  * Collection
++//  */
++
++// const Collection = require(driver + '/collection');
+ 
+-const Collection = require(driver + '/collection');
++const Connection = require('./drivers/node-mongodb-native/connection');
++const Collection = require('./drivers/node-mongodb-native/collection');
+ 
+ /**
+  * The Mongoose Aggregate constructor
