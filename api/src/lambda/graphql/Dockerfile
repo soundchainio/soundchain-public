@@ -7,14 +7,12 @@ RUN npm install -g yarn
 
 # Copy package.json, yarn.lock, and patches
 COPY package.json yarn.lock ./
-COPY patches ./patches
 
 # Install dependencies and apply patches
-RUN yarn install && yarn postinstall
+RUN yarn install
 
-# Copy the bundled code
-COPY ./dist/graphql/handler.js ${LAMBDA_TASK_ROOT}/
-COPY ./dist/graphql/handler.js.map ${LAMBDA_TASK_ROOT}/
+# Copy the entire src directory
+COPY src ${LAMBDA_TASK_ROOT}/src
 
-# Set the CMD to your handler
-CMD [ "handler.handler" ]
+# Set the CMD to use ts-node for running the TypeScript handler
+CMD ["node", "-r", "ts-node/register", "./src/lambda/graphql/handler.ts"]
