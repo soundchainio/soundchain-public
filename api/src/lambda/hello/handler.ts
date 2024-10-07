@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 import { APIGatewayProxyHandler } from 'aws-lambda';
 import { config } from '../../config';
 import { mongoose } from '@typegoose/typegoose';
