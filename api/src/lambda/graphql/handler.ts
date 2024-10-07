@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 import * as Sentry from '@sentry/serverless';
 import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
