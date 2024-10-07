@@ -36,7 +36,7 @@ export class ModelService<T extends typeof Model, KeyComponents = string> extend
       return keyComponents;
     }
 
-    return this.keyIteratee(keyComponents);
+    return this.keyIteratee(keyComponents as Partial<DocumentType<InstanceType<T>>>);
   }
 
   createDataLoader(): DataLoader<string, DocumentType<InstanceType<T>> | undefined> {
