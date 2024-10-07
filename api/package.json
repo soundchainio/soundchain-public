@@ -52,7 +52,7 @@
     "dataloader": "^2.0.0",
     "dot-object": "^2.1.4",
     "dotenv-flow": "^3.2.0",
-    "esbuild": "^0.24.0",
+    "esbuild": "~0.14.29",
     "escape-string-regexp": "^4.0.0",
     "express": "^4.17.2",
     "express-jwt": "^6.0.0",
