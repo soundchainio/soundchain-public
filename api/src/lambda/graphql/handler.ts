@@ -15,19 +15,23 @@ const graphqlHandler: Handler = async (...args) => {
   console.log('Connecting to MongoDB');
   console.log(config.db.url);
   console.log(config.db.options);
-  await mongoose.connect(config.db.url, config.db.options);
+  try {
+    await mongoose.connect(config.db.url, config.db.options);
 
-  const server = new ApolloServer(config.apollo);
-  const apolloHandler = server.createHandler({
-    expressAppFromMiddleware(middleware) {
-      const app = express();
-      app.use(config.express.middlewares);
-      app.use(middleware);
-      return app;
-    },
-  });
+    const server = new ApolloServer(config.apollo);
+    const apolloHandler = server.createHandler({
+      expressAppFromMiddleware(middleware) {
+        const app = express();
+        app.use(config.express.middlewares);
+        app.use(middleware);
+        return app;
+      },
+    });
 
-  return apolloHandler(...args);
+    return apolloHandler(...args);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const handler = Sentry.AWSLambda.wrapHandler(graphqlHandler);
