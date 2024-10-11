@@ -402,7 +402,7 @@ resources:
               - GroupId
         MasterUsername: ${env:DATABASE_USERNAME}
         MasterUserPassword: ${env:DATABASE_PASSWORD}
-        EngineVersion: '4.4.0'
+        EngineVersion: '4.0.0'
     DBInstance:
       Type: AWS::DocDB::DBInstance
       Properties:
