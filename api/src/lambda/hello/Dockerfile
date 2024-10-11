@@ -26,5 +26,9 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Build
 RUN tsc
 
+COPY global-bundle.pem ./.build/src/lambda/hello/
+
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/hello/handler.handler" ]
+
+
