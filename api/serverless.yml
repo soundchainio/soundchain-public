@@ -26,8 +26,8 @@ functions:
           path: /hello
           method: get
           cors: true
-  # migrate:
-  #   image: ${env:ECR_IMAGE_URI}
+  migrate:
+    image: ${env:ECR_IMAGE_URI}
   # setupAirdrop:
   #   image: ${env:ECR_IMAGE_URI}
   # watcher:
