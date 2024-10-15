@@ -1,6 +1,4 @@
-import path from 'path';
 import { config, DATABASE_SSL_PATH } from './src/config';
-import fs from 'fs';
 
 const migrationConfig = {
   mongodb: {
@@ -9,10 +7,7 @@ const migrationConfig = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       ssl: Boolean(DATABASE_SSL_PATH),
-      // sslCA: DATABASE_SSL_PATH && path.join(__dirname, 'src', DATABASE_SSL_PATH),
-      // ssl: true,
-      // sslCA: fs.readFileSync('/opt/nodejs/global-bundle.pem').toString(),
-      sslCA: DATABASE_SSL_PATH && `./src/${DATABASE_SSL_PATH}`,
+      sslCA: DATABASE_SSL_PATH && 'global-bundle.pem',
       retryWrites: false,
     },
   },
