@@ -27,7 +27,7 @@ functions:
           method: get
           cors: true
   migrate:
-    image: ${env:ECR_IMAGE_URI}
+    image: ${env:MIGRATE_IMAGE_URI}
   # setupAirdrop:
   #   image: ${env:ECR_IMAGE_URI}
   # watcher:
