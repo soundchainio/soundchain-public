@@ -1,9 +1,9 @@
 // import * as Sentry from '@sentry/serverless';
-import { mongoose } from '@typegoose/typegoose';
 import { ApolloServer } from 'apollo-server-lambda';
-import type { Handler } from 'aws-lambda';
+import type { APIGatewayProxyHandler } from 'aws-lambda';
 import express from 'express';
 import { config } from '../../config';
+import { mongoose } from '@typegoose/typegoose';
 
 // Sentry.AWSLambda.init({
 //   dsn: config.sentry.url,
@@ -11,13 +11,15 @@ import { config } from '../../config';
 //   environment: NODE_ENV,
 // });
 
-const graphqlHandler: Handler = async (...args) => {
+const graphqlHandler: APIGatewayProxyHandler = async (...args) => {
   console.log('Connecting to MongoDB');
   console.log(config.db.url);
   console.log(config.db.options);
 
   try {
-    await mongoose.connect(config.db.url, config.db.options);
+    const url =
+      'mongodb://production:8uV53MWUu6DPfdL5@db-soundchain-api-production.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false';
+    await mongoose.connect(url, { useUnifiedTopology: true, useNewUrlParser: true });
 
     const server = new ApolloServer(config.apollo);
     const apolloHandler = server.createHandler({

@@ -1,5 +1,7 @@
 FROM public.ecr.aws/lambda/nodejs:20
 
+WORKDIR ${LAMBDA_TASK_ROOT}
+
 # Install Python and other necessary build tools
 RUN dnf update -y && \
     dnf install -y python3 python3-devel make gcc gcc-c++ && \
@@ -23,6 +25,8 @@ COPY . ${LAMBDA_TASK_ROOT}
 
 # Build
 RUN tsc
+
+COPY global-bundle.pem ./.build/src/lambda/hello/
 
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/graphql/handler.handler" ]
