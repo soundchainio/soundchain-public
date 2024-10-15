@@ -1,12 +1,11 @@
 import { mongoose } from '@typegoose/typegoose';
 import { APIGatewayProxyHandler } from 'aws-lambda';
+import { config } from '../../config';
 
 export const handler: APIGatewayProxyHandler = async () => {
   try {
     console.log('Attempting to connect to MongoDB...');
-    const url =
-      'mongodb://production:8uV53MWUu6DPfdL5@db-soundchain-api-production.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false';
-    await mongoose.connect(url, { useUnifiedTopology: true, useNewUrlParser: true });
+    await mongoose.connect(config.db.url, config.db.options);
     console.log('Successfully connected to MongoDB');
 
     return {

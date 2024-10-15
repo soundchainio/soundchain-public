@@ -6,6 +6,7 @@ import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
 import { buildSchemaSync } from 'type-graphql';
 import path from 'path';
+import { ReadPreferenceMode } from 'mongodb';
 
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
@@ -98,11 +99,11 @@ export const config = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       useFindAndModify: false,
-      // ssl: true,
-      // sslCA: fs.readFileSync('/opt/nodejs/global-bundle.pem').toString(),
-      ssl: Boolean(DATABASE_SSL_PATH),
-      // sslCA: DATABASE_SSL_PATH && path.join(__dirname, 'src', DATABASE_SSL_PATH),
-      sslCA: DATABASE_SSL_PATH && `./src/${DATABASE_SSL_PATH}`,
+      useCreateIndex: true,
+      ssl: true,
+      sslCA: 'global-bundle.pem',
+      replicaSet: 'rs0',
+      readPreference: 'secondaryPreferred' as ReadPreferenceMode,
       retryWrites: false,
     },
   },
