@@ -6,7 +6,7 @@ export const handler: APIGatewayProxyHandler = async () => {
     console.log('Attempting to connect to MongoDB...');
     const url =
       'mongodb://production:8uV53MWUu6DPfdL5@db-soundchain-api-production.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false';
-    await mongoose.connect(url);
+    await mongoose.connect(url, { useUnifiedTopology: true, useNewUrlParser: true });
     console.log('Successfully connected to MongoDB');
 
     return {
