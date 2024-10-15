@@ -122,10 +122,10 @@ jobs:
           echo "Migrate: $MIGRATE_IMAGE_URI"
           serverless deploy -s ${GITHUB_REF#refs/heads/} --verbose
 
-      # - name: Trigger migrate lambda function
-      #   run: |
-      #     aws lambda invoke --function-name soundchain-api-production-migrate response.json
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_REGION: us-east-1
+      - name: Trigger migrate lambda function
+        run: |
+          aws lambda invoke --function-name soundchain-api-production-migrate response.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
