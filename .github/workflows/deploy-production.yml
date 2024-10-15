@@ -71,6 +71,7 @@ jobs:
 
           build_and_push "graphql"
           build_and_push "hello"
+          build_and_push "migrate"
 
       - name: Install Serverless Framework
         run: npm install -g serverless
@@ -111,15 +112,20 @@ jobs:
           POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY_PRODUCTION }}
           MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY_PRODUCTION }}
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
-          ECR_IMAGE_URI: ${{ env.ECR_IMAGE_URI }}
+          GRAPHQL_IMAGE_URI: ${{ env.GRAPHQL_IMAGE_URI }}
+          HELLO_IMAGE_URI: ${{ env.HELLO_IMAGE_URI }}
+          MIGRATE_IMAGE_URI: ${{ env.MIGRATE_IMAGE_URI }}
         run: |
-          echo "Deploying with image: $ECR_IMAGE_URI"
+          echo "Deploying with images:"
+          echo "GraphQL: $GRAPHQL_IMAGE_URI"
+          echo "Hello: $HELLO_IMAGE_URI"
+          echo "Migrate: $MIGRATE_IMAGE_URI"
           serverless deploy -s ${GITHUB_REF#refs/heads/} --verbose
 
-      # - name: Trigger migrate lambda function
-      #   run: |
-      #     aws lambda invoke --function-name soundchain-api-production-migrate response.json
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_REGION: us-east-1
+      - name: Trigger migrate lambda function
+        run: |
+          aws lambda invoke --function-name soundchain-api-production-migrate response.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1

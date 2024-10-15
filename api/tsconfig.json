@@ -19,6 +19,6 @@
     "rootDir": "./",
     "typeRoots": ["./typings", "./node_modules/@types"]
   },
-  "include": ["src/**/*.ts", "migrate-mongo-config.js"],
+  "include": ["src/**/*.ts", "migrate-mongo-config.js", "migrations/**/*"],
   "exclude": ["node_modules", "typings", "src/utils/airdrop"]
 }
