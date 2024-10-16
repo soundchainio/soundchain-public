@@ -26,7 +26,7 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Build
 RUN tsc
 
-COPY global-bundle.pem ./.build/src/lambda/playbackcount/
+COPY global-bundle.pem ./.build/src/lambda/playbackCount/
 
 # Command to run your Lambda function
-CMD [ "./.build/src/lambda/playbackcount/handler.playbackCount" ]
+CMD [ "./.build/src/lambda/playbackCount/handler.playbackCount" ]
