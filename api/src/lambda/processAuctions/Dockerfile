@@ -26,7 +26,7 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Build
 RUN tsc
 
-COPY global-bundle.pem ./.build/src/lambda/processauctions/
+COPY global-bundle.pem ./.build/src/lambda/processAuctions/
 
 # Command to run your Lambda function
-CMD [ "./.build/src/lambda/processauctions/handler.processAuctions" ]
+CMD [ "./.build/src/lambda/processAuctions/handler.processAuctions" ]
