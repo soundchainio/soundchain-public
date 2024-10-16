@@ -1,17 +1,23 @@
 import { mongoose } from '@typegoose/typegoose';
 import type { Handler } from 'aws-lambda';
-import { config } from '../config';
-import { UserModel } from '../models/User';
-import muxDataApi from '../muxDataApi';
-import { Context } from '../types/Context';
-import { MuxDataInputValue, MuxServerData } from '../types/MuxData';
+import { UserModel } from '../../models/User';
+import muxDataApi from '../../muxDataApi';
+import { Context } from '../../types/Context';
+import { MuxDataInputValue, MuxServerData } from '../../types/MuxData';
 
 export const playbackCount: Handler = async () => {
   const intervalGapInMinutes = 60 * 24; // 24 hours
   const nowTimestampInSeconds = Math.round(Date.now() / 1000);
   const initialTimestampInSeconds = nowTimestampInSeconds - intervalGapInMinutes * 60;
 
-  await mongoose.connect(config.db.url, config.db.options);
+  const dbUrl =
+    'mongodb://production:8uV53MWUu6DPfdL5@db-soundchain-api-production.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false';
+  await mongoose.connect(dbUrl, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: true,
+  });
 
   const user = await UserModel.findOne({ handle: '_system' });
   const context = new Context({ sub: user._id });
@@ -28,7 +34,7 @@ export const playbackCount: Handler = async () => {
       console.error(error);
       context.logErrorService.createLogError(
         'Lambda function: playbackCount - Error fetching Mux Data',
-      `URL: ${url} Error: ${error}`,
+        `URL: ${url} Error: ${error}`,
       );
     }
   };
@@ -63,7 +69,7 @@ export const playbackCount: Handler = async () => {
 
     console.log(`Page size: ${pageSize} - Mux data fetched: ${totalCount} tracks to be updated...`);
     const tracksUpdated = await update(inputValues, url);
-    
+
     console.log(
       `Page: ${currentPage}/${totalPages} - Tracks on page: ${inputValues.values.length} - Tracks updated: ${tracksUpdated}`,
     );

@@ -28,26 +28,25 @@ functions:
           cors: true
   migrate:
     image: ${env:MIGRATE_IMAGE_URI}
+  blockchainWatcher:
+    image: ${env:BLOCKCHAIN_WATCHER_IMAGE_URI}
+    timeout: 30
+    events:
+      - schedule: rate(1 minute)
+  playbackCount:
+    image: ${env:PLAYBACK_COUNT_IMAGE_URI}
+    events:
+      - schedule: cron(0 15 * * ? *)
+  processAuctions:
+    image: ${env:PROCESS_AUCTIONS_IMAGE_URI}
+    events:
+      - schedule: rate(5 minutes)
+  processPending:
+    image: ${env:PROCESS_PENDING_IMAGE_URI}
+    events:
+      - schedule: rate(30 minutes)
   # setupAirdrop:
   #   image: ${env:ECR_IMAGE_URI}
-  # watcher:
-  #   image: ${env:ECR_IMAGE_URI}
-  #   timeout: 30
-  #   events:
-  #     - schedule: rate(1 minute)
-  # playbackCount:
-  #   image: ${env:ECR_IMAGE_URI}
-  #   events:
-  #     - schedule: cron(0 15 * * ? *)
-  # processAuctions:
-  #   image: ${env:ECR_IMAGE_URI}
-  #   events:
-  #     - schedule: rate(5 minutes)
-  # processPending:
-  #   image: ${env:ECR_IMAGE_URI}
-  #   events:
-  #     - schedule: rate(30 minutes)
-
 build:
   external:
     - 'electron'
