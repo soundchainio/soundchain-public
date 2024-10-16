@@ -72,6 +72,10 @@ jobs:
           build_and_push "graphql"
           build_and_push "hello"
           build_and_push "migrate"
+          build_and_push "blockchainWatcher"
+          build_and_push "playbackCount"
+          build_and_push "processAuctions"
+          build_and_push "processPending"
 
       - name: Install Serverless Framework
         run: npm install -g serverless
@@ -115,11 +119,19 @@ jobs:
           GRAPHQL_IMAGE_URI: ${{ env.GRAPHQL_IMAGE_URI }}
           HELLO_IMAGE_URI: ${{ env.HELLO_IMAGE_URI }}
           MIGRATE_IMAGE_URI: ${{ env.MIGRATE_IMAGE_URI }}
+          BLOCKCHAIN_WATCHER_IMAGE_URI: ${{ env.BLOCKCHAIN_WATCHER_IMAGE_URI }}
+          PLAYBACK_COUNT_IMAGE_URI: ${{ env.PLAYBACK_COUNT_IMAGE_URI }}
+          PROCESS_AUCTIONS_IMAGE_URI: ${{ env.PROCESS_AUCTIONS_IMAGE_URI }}
+          PROCESS_PENDING_IMAGE_URI: ${{ env.PROCESS_PENDING_IMAGE_URI }}
         run: |
           echo "Deploying with images:"
           echo "GraphQL: $GRAPHQL_IMAGE_URI"
           echo "Hello: $HELLO_IMAGE_URI"
           echo "Migrate: $MIGRATE_IMAGE_URI"
+          echo "Blockchain Watcher: $BLOCKCHAIN_WATCHER_IMAGE_URI"
+          echo "Playback Count: $PLAYBACK_COUNT_IMAGE_URI"
+          echo "Process Auctions: $PROCESS_AUCTIONS_IMAGE_URI"
+          echo "Process Pending: $PROCESS_PENDING_IMAGE_URI"
           serverless deploy -s ${GITHUB_REF#refs/heads/} --verbose
 
       - name: Trigger migrate lambda function

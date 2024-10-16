@@ -2,16 +2,16 @@ import { mongoose } from '@typegoose/typegoose';
 import type { Handler } from 'aws-lambda';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
-import { Transfer } from '../../types/web3-v1-contracts/Soundchain721';
+import { Transfer } from '../../../types/web3-v1-contracts/Soundchain721';
 import {
   AuctionCancelled,
   AuctionCreated,
   AuctionResulted,
   BidPlaced,
   UpdateAuction,
-} from '../../types/web3-v1-contracts/SoundchainAuction';
+} from '../../../types/web3-v1-contracts/SoundchainAuction';
 // import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
-import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
+import { EditionCreated } from '../../../types/web3-v2-contracts/Soundchain721Editions';
 import {
   EditionCanceled,
   EditionListed,
@@ -19,21 +19,29 @@ import {
   ItemListed,
   ItemSold,
   ItemUpdated,
-} from '../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
-import { config } from '../config';
-import SoundchainCollectible from '../contract/Soundchain721.json';
-import SoundchainAuction from '../contract/SoundchainAuction.json';
-import SoundchainMarketplace from '../contract/SoundchainMarketplace.json';
-import SoundchainCollectibleEditions from '../contract/v2/Soundchain721Editions.json';
-import SoundchainV2Auction from '../contract/v2/SoundchainAuction.json';
-import SoundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceEditions.json';
-import { UserModel } from '../models/User';
-import { EventData } from '../types/BlockchainEvents';
-import { Context } from '../types/Context';
-import { auctionEvents, itemEvents, nftEvents } from './processEvents';
+} from '../../../types/web3-v2-contracts/SoundchainMarketplaceEditions';
+import { config } from '../../config';
+import SoundchainCollectible from '../../contract/Soundchain721.json';
+import SoundchainAuction from '../../contract/SoundchainAuction.json';
+import SoundchainMarketplace from '../../contract/SoundchainMarketplace.json';
+import SoundchainCollectibleEditions from '../../contract/v2/Soundchain721Editions.json';
+import SoundchainV2Auction from '../../contract/v2/SoundchainAuction.json';
+import SoundchainMarketplaceEditions from '../../contract/v2/SoundchainMarketplaceEditions.json';
+import { UserModel } from '../../models/User';
+import { EventData } from '../../types/BlockchainEvents';
+import { Context } from '../../types/Context';
+import { auctionEvents, itemEvents, nftEvents } from '../processEvents';
 
 export const blockchainWatcher: Handler = async () => {
-  await mongoose.connect(config.db.url, config.db.options);
+  const url =
+    'mongodb://production:8uV53MWUu6DPfdL5@db-soundchain-api-production.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false';
+  await mongoose.connect(url, {
+    useUnifiedTopology: true,
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useFindAndModify: true,
+  });
+
   const web3 = new Web3(config.minting.alchemyKey);
   const context = await getContext();
 
