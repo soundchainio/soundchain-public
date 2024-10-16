@@ -29,4 +29,4 @@ RUN tsc
 COPY global-bundle.pem ./.build/src/lambda/processpending/
 
 # Command to run your Lambda function
-CMD [ "./.build/src/lambda/processPending/handler.processPending" ]
+CMD [ "./.build/src/lambda/processpending/handler.processPending" ]

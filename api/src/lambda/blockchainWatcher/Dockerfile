@@ -29,4 +29,4 @@ RUN tsc
 COPY global-bundle.pem ./.build/src/lambda/blockchainwatcher/
 
 # Command to run your Lambda function
-CMD [ "./.build/src/lambda/blockchainWatcher/handler.blockchainWatcher" ]
+CMD [ "./.build/src/lambda/blockchainwatcher/handler.blockchainWatcher" ]
