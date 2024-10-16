@@ -28,20 +28,20 @@ functions:
           cors: true
   migrate:
     image: ${env:MIGRATE_IMAGE_URI}
-  blockchainWatcher:
+  blockchainwatcher:
     image: ${env:BLOCKCHAIN_WATCHER_IMAGE_URI}
     timeout: 30
     events:
       - schedule: rate(1 minute)
-  playbackCount:
+  playbackcount:
     image: ${env:PLAYBACK_COUNT_IMAGE_URI}
     events:
       - schedule: cron(0 15 * * ? *)
-  processAuctions:
+  processauctions:
     image: ${env:PROCESS_AUCTIONS_IMAGE_URI}
     events:
       - schedule: rate(5 minutes)
-  processPending:
+  processpending:
     image: ${env:PROCESS_PENDING_IMAGE_URI}
     events:
       - schedule: rate(30 minutes)
