@@ -4,7 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 
 import { config } from './config';
-import { blockchainWatcher } from './lambda/blockchainwatcher/handler';
+import { blockchainWatcher } from './lambda/blockchainwatcher-test/handler';
 import { processAuctions } from './lambda/processauctions/handler';
 import { processPending } from './lambda/processpending/handler';
 import { Context } from './types/Context';
