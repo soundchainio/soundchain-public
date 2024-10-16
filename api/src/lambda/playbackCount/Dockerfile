@@ -29,4 +29,4 @@ RUN tsc
 COPY global-bundle.pem ./.build/src/lambda/playbackcount/
 
 # Command to run your Lambda function
-CMD [ "./.build/src/lambda/playbackCount/handler.playbackCount" ]
+CMD [ "./.build/src/lambda/playbackcount/handler.playbackCount" ]
