@@ -72,10 +72,10 @@ jobs:
           build_and_push "graphql"
           build_and_push "hello"
           build_and_push "migrate"
-          build_and_push "blockchainWatcher"
-          build_and_push "playbackCount"
-          build_and_push "processAuctions"
-          build_and_push "processPending"
+          build_and_push "blockchainwatcher"
+          build_and_push "playbackcount"
+          build_and_push "processauctions"
+          build_and_push "processpending"
 
       - name: Install Serverless Framework
         run: npm install -g serverless

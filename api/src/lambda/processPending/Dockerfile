@@ -26,7 +26,7 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Build
 RUN tsc
 
-COPY global-bundle.pem ./.build/src/lambda/processPending/
+COPY global-bundle.pem ./.build/src/lambda/processpending/
 
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/processPending/handler.processPending" ]

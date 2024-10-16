@@ -26,7 +26,7 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Build
 RUN tsc
 
-COPY global-bundle.pem ./.build/src/lambda/blockchainWatcher/
+COPY global-bundle.pem ./.build/src/lambda/blockchainwatcher/
 
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/blockchainWatcher/handler.blockchainWatcher" ]
