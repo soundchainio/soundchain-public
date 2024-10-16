@@ -5,8 +5,8 @@ import mongoose from 'mongoose';
 
 import { config } from './config';
 import { blockchainWatcher } from './lambda/blockchainWatcher/handler';
-import { processAuctions } from './lambda/processAuctions';
-import { processPending } from './lambda/processPending';
+import { processAuctions } from './lambda/processAuctions/handler';
+import { processPending } from './lambda/processPending/handler';
 import { Context } from './types/Context';
 
 async function bootstrap() {
