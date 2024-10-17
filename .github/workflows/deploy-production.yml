@@ -21,14 +21,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # - name: Install Yarn
-      #   run: npm install -g yarn
+      - name: Install Yarn
+        run: npm install -g yarn
 
-      # - name: Install Dependencies
-      #   run: yarn install
+      - name: Install Dependencies
+        run: yarn install
 
-      # - name: Build Code
-      #   run: yarn build
+      - name: Build Code
+        run: yarn build
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v2
