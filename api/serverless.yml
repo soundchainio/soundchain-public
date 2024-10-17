@@ -29,20 +29,20 @@ functions:
   migrate:
     image: ${env:MIGRATE_IMAGE_URI}
   blockchainwatcher:
-    image: ${env:BLOCKCHAIN_WATCHER_IMAGE_URI}
+    image: ${env:BLOCKCHAINWATCHER_IMAGE_URI}
     timeout: 30
     events:
       - schedule: rate(1 minute)
   playbackcount:
-    image: ${env:PLAYBACK_COUNT_IMAGE_URI}
+    image: ${env:PLAYBACKCOUNT_IMAGE_URI}
     events:
       - schedule: cron(0 15 * * ? *)
   processauctions:
-    image: ${env:PROCESS_AUCTIONS_IMAGE_URI}
+    image: ${env:PROCESSAUCTIONS_IMAGE_URI}
     events:
       - schedule: rate(5 minutes)
   processpending:
-    image: ${env:PROCESS_PENDING_IMAGE_URI}
+    image: ${env:PROCESSPENDING_IMAGE_URI}
     events:
       - schedule: rate(30 minutes)
   # setupAirdrop:

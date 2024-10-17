@@ -119,19 +119,19 @@ jobs:
           GRAPHQL_IMAGE_URI: ${{ env.GRAPHQL_IMAGE_URI }}
           HELLO_IMAGE_URI: ${{ env.HELLO_IMAGE_URI }}
           MIGRATE_IMAGE_URI: ${{ env.MIGRATE_IMAGE_URI }}
-          BLOCKCHAIN_WATCHER_IMAGE_URI: ${{ env.BLOCKCHAIN_WATCHER_IMAGE_URI }}
-          PLAYBACK_COUNT_IMAGE_URI: ${{ env.PLAYBACK_COUNT_IMAGE_URI }}
-          PROCESS_AUCTIONS_IMAGE_URI: ${{ env.PROCESS_AUCTIONS_IMAGE_URI }}
-          PROCESS_PENDING_IMAGE_URI: ${{ env.PROCESS_PENDING_IMAGE_URI }}
+          BLOCKCHAINWATCHER_IMAGE_URI: ${{ env.BLOCKCHAINWATCHER_IMAGE_URI }}
+          PLAYBACKCOUNT_IMAGE_URI: ${{ env.PLAYBACKCOUNT_IMAGE_URI }}
+          PROCESSAUCTIONS_IMAGE_URI: ${{ env.PROCESSAUCTIONS_IMAGE_URI }}
+          PROCESSPENDING_IMAGE_URI: ${{ env.PROCESSPENDING_IMAGE_URI }}
         run: |
           echo "Deploying with images:"
           echo "GraphQL: $GRAPHQL_IMAGE_URI"
           echo "Hello: $HELLO_IMAGE_URI"
           echo "Migrate: $MIGRATE_IMAGE_URI"
-          echo "Blockchain Watcher: $BLOCKCHAIN_WATCHER_IMAGE_URI"
-          echo "Playback Count: $PLAYBACK_COUNT_IMAGE_URI"
-          echo "Process Auctions: $PROCESS_AUCTIONS_IMAGE_URI"
-          echo "Process Pending: $PROCESS_PENDING_IMAGE_URI"
+          echo "Blockchain Watcher: $BLOCKCHAINWATCHER_IMAGE_URI"
+          echo "Playback Count: $PLAYBACKCOUNT_IMAGE_URI"
+          echo "Process Auctions: $PROCESSAUCTIONS_IMAGE_URI"
+          echo "Process Pending: $PROCESSPENDING_IMAGE_URI"
           serverless deploy -s ${GITHUB_REF#refs/heads/} --verbose
 
       - name: Trigger migrate lambda function
