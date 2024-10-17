@@ -3,7 +3,6 @@ variablesResolutionMode: 20210326
 useDotenv: true
 
 plugins:
-  - serverless-prune-plugin
   - serverless-deployment-bucket
   - serverless-offline
 
