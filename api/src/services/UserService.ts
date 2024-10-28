@@ -22,6 +22,10 @@ export class UserService extends ModelService<typeof User> {
     return await UserModel.findOne({ profileId });
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return await UserModel.find();
+  }
+
   userExists(filter: Partial<User>): Promise<boolean> {
     return UserModel.exists(filter);
   }
