@@ -64,7 +64,7 @@ export class TrackService extends ModelService<typeof Track> {
 
     return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
   }
-  
+
   getOwnedTracks(
     filter?: FilterOwnedTracksInput,
     sort?: SortTrackInput,
@@ -187,20 +187,43 @@ export class TrackService extends ModelService<typeof Track> {
   async createTrack(profileId: string, data: Partial<Track>, asset: Asset): Promise<Track> {
     const track = new this.model({ profileId, ...data });
     track.muxAsset = { id: asset.id, playbackId: asset.playback_ids[0].id };
+
     await track.save();
     return track;
   }
 
   async createMultipleTracks(profileId: string, data: { track: Partial<Track>; batchSize: number }): Promise<Track[]> {
     const asset = await this.context.muxService.create(data.track.assetUrl, data.track._id);
-    return await Promise.all(
-      Array(data.batchSize)
-        .fill(null)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        .map(_ => {
-          return this.createTrack(profileId, data.track, asset);
+    const minter = await this.context.userService.getUserByProfileId(profileId);
+
+    const firstTrack = await this.createTrack(profileId, data.track, asset);
+
+    const remainingTracks =
+      data.batchSize > 1
+        ? await Promise.all(
+            Array(data.batchSize - 1)
+              .fill(null)
+              .map(() => this.createTrack(profileId, data.track, asset)),
+          )
+        : [];
+
+    const allUsers = await this.context.userService.getAllUsers();
+
+    await Promise.all(
+      allUsers.map(user =>
+        this.context.mailchimpService.sendTemplateEmail(user.email, 'nft-minted', {
+          subject: 'NFT Minted',
+          buyer_name: minter.handle,
+          buyer_profile_link: `https://www.soundchain.io/profiles/${minter.handle}`,
+          email_receiver_name: user.handle,
+          track_name: firstTrack.title,
+          track_details_link: `https://www.soundchain.io/tracks/${firstTrack._id}`,
+          track_src: firstTrack.artworkUrl,
         }),
+      ),
     );
+
+    return [firstTrack, ...remainingTracks];
   }
 
   async updateTrackByTransactionHash(transactionHash: string, changes: RecursivePartial<Track>): Promise<void> {
