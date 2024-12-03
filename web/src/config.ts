@@ -23,7 +23,7 @@ export const config = {
   redirectUrlPostLogin: process.env.NEXT_PUBLIC_REDIRECT_URL_POST_LOGIN || '/home',
   soundchainFee: parseFloat(process.env.NEXT_PUBLIC_SOUNDCHAIN_FEE || '0.02'),
   tokenStakeContractAddress: process.env.NEXT_PUBLIC_OGUN_STAKE_CONTRACT_ADDRESS,
-  appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '2.0.0',
+  appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '2.1.1',
   airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true',
   sentryUrl: process.env.NEXT_PUBLIC_SENTRY_URL,
   gtmId: process.env.NEXT_PUBLIC_GTM_ID,
