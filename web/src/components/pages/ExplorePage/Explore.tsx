@@ -19,7 +19,7 @@ export const Explore = () => {
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
   const { playlistState } = useAudioPlayerContext()
 
-  const pageSize = 15
+  const pageSize = 30
 
   const { data, refetch, fetchMore, loading } = useExploreTracksQuery({
     variables: {
