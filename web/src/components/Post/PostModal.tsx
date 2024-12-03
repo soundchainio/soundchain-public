@@ -12,7 +12,7 @@ import { PostForm } from './PostForm'
 const baseClasses =
   'fixed top-0 w-screen bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
 
-export const maxLength = 500
+export const maxLength = 1000
 
 const splitter = new GraphemeSplitter()
 
