@@ -44,7 +44,7 @@ const buildMarketplaceFilter = (
 }
 
 export const Marketplace = () => {
-  const pageSize = 15
+  const pageSize = 30
   const {
     genres: genresFromModal,
     filterSaleType,
