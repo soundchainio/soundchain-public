@@ -9,7 +9,7 @@ import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from './NoResultFound'
 import { ProfileListItemSkeleton } from './ProfileListItemSkeleton'
 
-const pageSize = 15
+const pageSize = 30
 
 export interface ExploreUsersProps {
   searchTerm: string
