@@ -21,7 +21,7 @@ export const PostFormTimeline = () => {
   const [isVideoLinkVisible, setVideoLinkVisible] = useState(false)
   const [isPreviewVisible, setPreviewVisible] = useState(false)
   const [link, setLink] = useState<MediaLink>()
-  const postMaxLength = 500
+  const postMaxLength = 1000
   const soundProviders = [MediaProvider.BANDCAMP, MediaProvider.SPOTIFY, MediaProvider.SOUNDCLOUD]
   const videoProviders = [MediaProvider.YOUTUBE, MediaProvider.VIMEO]
 
