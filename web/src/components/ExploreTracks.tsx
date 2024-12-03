@@ -9,7 +9,7 @@ import { LoaderAnimation } from 'components/LoaderAnimation'
 import { Track } from './Track'
 import { ExploreSearchBar } from './pages/ExplorePage/ExploreSearchBar'
 
-const pageSize = 15
+const pageSize = 30
 
 export const ExploreTracks = () => {
   const firstPage: PageInput = { first: pageSize }
