@@ -9,7 +9,7 @@ import { GridSkeleton } from '../../GridSkeleton'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import { InfiniteLoader as InfiniteLoaderLegacy } from '../../InfiniteLoader'
 
-const pageSize = 15
+const pageSize = 30
 
 export const ExploreUsersGridView = ({ searchTerm }: ExploreUsersProps) => {
   const firstPage: PageInput = { first: pageSize }
