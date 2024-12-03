@@ -15,7 +15,7 @@ interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
 }
 
-const pageSize = 10
+const pageSize = 30
 const GAP = 8
 
 export const Posts = ({ profileId }: PostsProps) => {
