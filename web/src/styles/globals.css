@@ -98,7 +98,7 @@ pre {
 body,
 html {
   height: 100%;
-  background-color: rgba(16, 16, 16);
+  background-color: #ffffff;
 
   --color-thumb: #4d4d4d;
   --color-track: #292929;
