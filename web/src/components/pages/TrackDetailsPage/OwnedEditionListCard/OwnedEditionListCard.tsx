@@ -19,7 +19,7 @@ interface OwnedEditionListCardProps {
   track: TrackQuery['track']
 }
 
-const pageSize = 5
+const pageSize = 30
 
 export const OwnedEditionListCard = (props: OwnedEditionListCardProps) => {
   const { track } = props
