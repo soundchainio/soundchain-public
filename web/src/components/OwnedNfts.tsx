@@ -14,7 +14,7 @@ interface OwnedNftsProps {
 export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
   const { playlistState } = useAudioPlayerContext()
 
-  const pageSize = 20
+  const pageSize = 30
   const { data, loading, fetchMore, refetch } = useGroupedTracksQuery({
     fetchPolicy: 'no-cache',
     variables: {
