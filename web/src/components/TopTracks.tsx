@@ -8,7 +8,7 @@ import { TrackListItemSkeleton } from './TrackListItemSkeleton'
 export const TopTracks = () => {
   const { playlistState } = useAudioPlayerContext()
 
-  const pageSize = 100
+  const pageSize = 20
   const maxSizeTopTracks = 100
 
   const { data, loading, fetchMore } = useTracksQuery({
