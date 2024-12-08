@@ -188,7 +188,7 @@ export function useTransferNftsControls() {
     gasCheck()
   }, [web3, getCurrentGasPrice])
 
-  const pageSize = 1000
+  const pageSize = 20
   const { data, loading, fetchMore, refetch } = useTracksQuery({
     variables: {
       filter: {
