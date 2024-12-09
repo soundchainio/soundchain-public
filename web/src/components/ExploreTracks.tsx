@@ -58,7 +58,7 @@ export const ExploreTracks = () => {
       <ExploreSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       {tracks.length ? (
         <AutoSizer>
-          {({ height, width }) => (
+          {({ height, width }: { height: number; width: number }) => (
             <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={tracksCount} loadMoreItems={loadMoreItems}>
               {({ onItemsRendered, ref }) => (
                 <List
