@@ -56,13 +56,10 @@
   }
 
   .marketplace-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, 250px);
-    justify-items: center;
-    justify-content: center;
-    grid-auto-flow: row;
-    align-items: center;
-    grid-row-gap: 20px;
-    grid-column-gap: 20px;
-  }
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  justify-items: center;
+  grid-auto-flow: row;
+  align-items: center;
+  gap: 16px;
 }
