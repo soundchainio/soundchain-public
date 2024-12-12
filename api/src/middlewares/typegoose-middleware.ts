@@ -18,9 +18,10 @@ export const TypegooseMiddleware: MiddlewareFn = async (_, next) => {
 function convertDocument(doc: Document) {
   const convertedDocument = doc.toObject();
 
-  // Attempt to set the prototype using Mongoose schema
-  const schemaOptions = doc.schema?.options;
-  const DocumentClass = schemaOptions?.typePojoToMixed; // Custom logic may vary
+  // Attempt to access schema options
+  const schemaOptions = doc.constructor?.schema?.options || {}; // Fallback to empty object
+  const DocumentClass = schemaOptions.class || doc.constructor;
+
   if (DocumentClass) {
     Object.setPrototypeOf(convertedDocument, DocumentClass.prototype);
   }
