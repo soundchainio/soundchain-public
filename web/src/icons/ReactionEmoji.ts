@@ -5,9 +5,11 @@ import { Hundred } from './emoji/Hundred';
 import { Rocket } from './emoji/Rocket';
 import { Sunglasses } from './emoji/Sunglasses';
 import { IconComponent } from './types/IconComponent';
+import React from 'react';
 
-interface ReactionEmojiProps extends React.SVGProps<SVGSVGElement> {
-  name: ReactionType | string; // Allow both predefined and custom emoji names
+interface ReactionEmojiProps {
+  name: ReactionType | string; // Support both predefined and custom emojis
+  [key: string]: any; // Spread for extra props
 }
 
 // Static mapping for default emojis
@@ -20,13 +22,13 @@ const emojiByName: Record<ReactionType, IconComponent> = {
 };
 
 export const ReactionEmoji = ({ name, ...props }: ReactionEmojiProps) => {
-  // Check if the reaction is a custom emoji or a default one
+  // Render predefined emoji if it exists in `emojiByName`
   if (emojiByName[name as ReactionType]) {
-    // Render predefined emoji
-    return emojiByName[name as ReactionType](props);
+    const EmojiComponent = emojiByName[name as ReactionType];
+    return <EmojiComponent {...props} />;
   }
 
-  // Render custom emoji from `emoji-mart`
+  // Render custom emoji as plain text or from `emoji-mart`
   return (
     <span role="img" aria-label="reaction" {...props}>
       {name}
