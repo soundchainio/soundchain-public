@@ -17,7 +17,10 @@
     "moduleResolution": "node",
     "outDir": ".build",
     "rootDir": "./",
-    "typeRoots": ["./typings", "./node_modules/@types"]
+    "typeRoots": ["./typings", "./node_modules/@types"],
+    "paths": {
+      "web3-eth-contract": ["./types/web3-eth-contract.d.ts"]
+    }
   },
   "include": ["src/**/*.ts", "migrate-mongo-config.js", "migrations/**/*"],
   "exclude": ["node_modules", "typings", "src/utils/airdrop"]
