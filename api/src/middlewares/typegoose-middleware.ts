@@ -1,5 +1,6 @@
 import { Document, Model } from 'mongoose';
 import { MiddlewareFn } from 'type-graphql';
+import { getClassForDocument } from '@typegoose/typegoose';
 
 export const TypegooseMiddleware: MiddlewareFn = async (_, next) => {
   const result = await next();
@@ -18,10 +19,8 @@ export const TypegooseMiddleware: MiddlewareFn = async (_, next) => {
 function convertDocument(doc: Document) {
   const convertedDocument = doc.toObject();
 
-  // Attempt to access schema options
-  const schemaOptions = doc.constructor?.schema?.options || {}; // Fallback to empty object
-  const DocumentClass = schemaOptions.class || doc.constructor;
-
+  // Use Typegoose's utility function to get the class
+  const DocumentClass = getClassForDocument(doc);
   if (DocumentClass) {
     Object.setPrototypeOf(convertedDocument, DocumentClass.prototype);
   }
