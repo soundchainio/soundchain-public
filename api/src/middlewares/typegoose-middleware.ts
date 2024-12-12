@@ -1,4 +1,3 @@
-import { getClassForDocument } from '@typegoose/typegoose';
 import { Document, Model } from 'mongoose';
 import { MiddlewareFn } from 'type-graphql';
 
@@ -18,9 +17,13 @@ export const TypegooseMiddleware: MiddlewareFn = async (_, next) => {
 
 function convertDocument(doc: Document) {
   const convertedDocument = doc.toObject();
-  const DocumentClass = getClassForDocument(doc);
+
+  // Attempt to set the prototype using Mongoose schema
+  const schemaOptions = doc.schema?.options;
+  const DocumentClass = schemaOptions?.typePojoToMixed; // Custom logic may vary
   if (DocumentClass) {
     Object.setPrototypeOf(convertedDocument, DocumentClass.prototype);
   }
+
   return convertedDocument;
 }
