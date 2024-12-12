@@ -1,36 +1,70 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import pinataClient, { PinataClient, PinataPinResponse } from '@pinata/sdk';
+import { PinataSDK } from 'pinata-web3';
 import { config } from '../config';
 import { Context } from '../types/Context';
 
 export class PinningService {
-  pinata: PinataClient;
+  pinata: PinataSDK;
 
   constructor(private context: Context) {
-    this.pinata = pinataClient(config.minting.pinataKey, config.minting.pinataSecret);
+    // Initialize Pinata SDK
+    this.pinata = new PinataSDK({
+      apiKey: config.minting.pinataKey,
+      secretApiKey: config.minting.pinataSecret,
+    });
   }
 
   /**
-   *
-   * @param key AWS S3 file key
-   * @param name file name
-   * @returns
+   * Helper function to convert a stream to a buffer
    */
-  async pinToIPFS(key: string, name: string): Promise<PinataPinResponse> {
+  private async streamToBuffer(stream: ReadableStream): Promise<Buffer> {
+    const chunks: Uint8Array[] = [];
+    const reader = stream.getReader();
+
+    let done = false;
+    while (!done) {
+      const { value, done: streamDone } = await reader.read();
+      if (value) {
+        chunks.push(value);
+      }
+      done = streamDone;
+    }
+
+    return Buffer.concat(chunks);
+  }
+
+  /**
+   * Pins an AWS S3 file to IPFS
+   * @param key AWS S3 file key
+   * @param name File name
+   */
+  async pinToIPFS(key: string, name: string): Promise<string> {
     const s3Client = new S3Client({ region: config.uploads.region, forcePathStyle: true });
     const command = new GetObjectCommand({ Bucket: config.uploads.bucket, Key: key });
     const response = await s3Client.send(command);
-    const assetResult = await this.pinata.pinFileToIPFS(response.Body, {
-      pinataMetadata: {
-        name: name,
-      },
+
+    if (!response.Body) {
+      throw new Error('Failed to retrieve file from S3: Body is null or undefined');
+    }
+
+    // Convert the S3 file stream into a buffer
+    const fileBuffer = await this.streamToBuffer(response.Body);
+
+    // Pin file to IPFS
+    const result = await this.pinata.pinFile(fileBuffer, {
+      name: name,
     });
-    return assetResult;
+
+    return result.cid; // Return the CID of the pinned file
   }
 
-  async pinJsonToIPFS(json: unknown, name: string): Promise<PinataPinResponse> {
-    const response = await this.pinata.pinJSONToIPFS(json, { pinataMetadata: { name: `${name}-metadata` } });
-
-    return response;
+  /**
+   * Pins a JSON object to IPFS
+   * @param json JSON object to pin
+   * @param name Name for the pinned JSON
+   */
+  async pinJsonToIPFS(json: unknown, name: string): Promise<string> {
+    const result = await this.pinata.pinJSON(json, { name: `${name}-metadata` });
+    return result.cid; // Return the CID of the pinned JSON
   }
 }
