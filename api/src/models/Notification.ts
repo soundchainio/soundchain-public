@@ -1,6 +1,6 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
 import { ObjectId } from 'mongodb';
-import { Field } from 'type-graphql';
+import { Field, ID } from 'type-graphql';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { DeletedCommentNotificationMetadata } from '../types/DeletedCommentNotificationMetadata';
 import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
@@ -13,8 +13,12 @@ import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetad
 import { TrackWithPriceMetadata } from '../types/TrackWithPriceMetadata';
 import { VerificationRequestNotificationMetadata } from '../types/VerificationRequestNotificationMetadata';
 import { Model } from './Model';
+
 @modelOptions({ options: { allowMixed: Severity.ALLOW } })
 export class Notification extends Model {
+  @Field(() => ID) // Explicitly expose `_id` as a GraphQL ID type
+  readonly _id!: ObjectId;
+
   @prop({ required: true })
   type: NotificationType;
 
