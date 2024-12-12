@@ -7,8 +7,7 @@ export function createTrackResolver<T>(objectTypeCls: ClassType<T>) {
   abstract class TrackWithPriceResolver {
     @FieldResolver(() => String)
     id(@Root() { _id }: Notification): string {
-      // Convert _id to string if necessary
-      return typeof _id === 'string' ? _id : _id.toString();
+      return typeof _id === 'string' ? _id : _id.toString(); // Ensure it's a string
     }
 
     @FieldResolver(() => String)
