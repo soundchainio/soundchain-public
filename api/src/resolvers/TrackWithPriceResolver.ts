@@ -7,42 +7,43 @@ export function createTrackResolver<T>(objectTypeCls: ClassType<T>) {
   abstract class TrackWithPriceResolver {
     @FieldResolver(() => String)
     id(@Root() { _id }: Notification): string {
-      return _id;
+      // Convert _id to string if necessary
+      return typeof _id === 'string' ? _id : _id.toString();
     }
 
     @FieldResolver(() => String)
     trackId(@Root() { metadata }: Notification): string {
-      const { trackId } = metadata as TrackWithPriceMetadata;
+      const { trackId } = metadata;
       return trackId;
     }
 
     @FieldResolver(() => String)
     trackName(@Root() { metadata }: Notification): string {
-      const { trackName } = metadata as TrackWithPriceMetadata;
+      const { trackName } = metadata;
       return trackName;
     }
 
     @FieldResolver(() => String)
     artist(@Root() { metadata }: Notification): string {
-      const { artist } = metadata as TrackWithPriceMetadata;
+      const { artist } = metadata;
       return artist;
     }
 
     @FieldResolver(() => String)
     artworkUrl(@Root() { metadata }: Notification): string {
-      const { artworkUrl } = metadata as TrackWithPriceMetadata;
+      const { artworkUrl } = metadata;
       return artworkUrl;
     }
 
     @FieldResolver(() => Number)
     price(@Root() { metadata }: Notification): number {
-      const { price } = metadata as TrackWithPriceMetadata;
+      const { price } = metadata;
       return price;
     }
 
     @FieldResolver(() => String)
     auctionId(@Root() { metadata }: Notification): string {
-      const { auctionId } = metadata as TrackWithPriceMetadata;
+      const { auctionId } = metadata;
       return auctionId;
     }
   }
