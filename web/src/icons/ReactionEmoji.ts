@@ -8,11 +8,11 @@ import { Sunglasses } from './emoji/Sunglasses';
 import { IconComponent } from './types/IconComponent';
 
 interface ReactionEmojiProps {
-  name: ReactionType | string; // Support both predefined and custom emojis
-  [key: string]: any; // Spread for additional props
+  name: ReactionType | string; // Allow predefined and custom emoji names
+  [key: string]: any; // Additional props
 }
 
-// Mapping of predefined emojis
+// Predefined emoji mapping
 const emojiByName: Record<ReactionType, IconComponent> = {
   HAPPY: Hundred,
   HEART: Heart,
@@ -22,13 +22,13 @@ const emojiByName: Record<ReactionType, IconComponent> = {
 };
 
 export const ReactionEmoji: React.FC<ReactionEmojiProps> = ({ name, ...props }) => {
-  // Render predefined emoji if it exists
+  // Check if the emoji name exists in predefined emojis
   if (emojiByName[name as ReactionType]) {
     const EmojiComponent = emojiByName[name as ReactionType];
     return <EmojiComponent {...props} />;
   }
 
-  // Render custom emoji (from Emoji Mart or native emoji)
+  // Fallback to rendering custom emoji
   return (
     <span role="img" aria-label={`reaction-${name}`} {...props}>
       {name}
