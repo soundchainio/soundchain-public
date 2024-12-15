@@ -45,8 +45,8 @@ export const blockchainWatcher: Handler = async () => {
   const web3 = new Web3(config.minting.alchemyKey);
   const context = await getContext();
 
-  const fromBlock = await context.blockTrackerService.getCurrentBlockNumber();
-  const toBlock = await web3.eth.getBlockNumber();
+  const fromBlock = Number(await context.blockTrackerService.getCurrentBlockNumber());
+  const toBlock = Number(await web3.eth.getBlockNumber());
 
   if (fromBlock >= toBlock) {
     return;
