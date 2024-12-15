@@ -56,7 +56,11 @@ export class PinningService {
     });
 
     return result.cid; // Return the CID of the pinned file
+  } catch (error) {
+    console.error(`Error pinning file to IPFS: ${error.message}`, error);
+    throw new Error('An error occurred while pinning the file to IPFS.');
   }
+}  
 
   /**
    * Pins a JSON object to IPFS
@@ -66,5 +70,9 @@ export class PinningService {
   async pinJsonToIPFS(json: unknown, name: string): Promise<string> {
     const result = await this.pinata.pinJSON(json, { name: `${name}-metadata` });
     return result.cid; // Return the CID of the pinned JSON
+  } catch (error) {
+    console.error(`Error pinning JSON to IPFS: ${error.message}`, error);
+    throw new Error('An error occurred while pinning the JSON to IPFS.');
   }
+}
 }
