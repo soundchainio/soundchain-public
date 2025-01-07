@@ -1,21 +1,38 @@
-import { Field, ID } from 'type-graphql';
-import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
-import { ObjectId } from 'mongodb';
+import { Field } from 'type-graphql';
+import { modelOptions, Severity, prop, getModelForClass } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Model } from './Model';
+import {
+  NotificationType,
+  CommentNotificationMetadata,
+  DeletedCommentNotificationMetadata,
+  DeletedPostNotificationMetadata,
+  FollowerNotificationMetadata,
+  NewPostNotificationMetadata,
+  NewVerificationRequestNotificationMetadata,
+  NFTSoldNotificationMetadata,
+  ReactionNotificationMetadata,
+  VerificationRequestNotificationMetadata,
+  TrackWithPriceMetadata,
+} from './types/NotificationTypes';
 
-@modelOptions({ options: { allowMixed: Severity.ALLOW } })
+@modelOptions({
+  schemaOptions: {
+    timestamps: true, // Automatically add `createdAt` and `updatedAt` fields
+  },
+  options: {
+    allowMixed: Severity.ALLOW, // Allow mixed types for metadata
+  },
+})
 export class Notification extends Model {
-  @Field(() => ID) // Exposes the `_id` field in GraphQL
-  readonly _id: ObjectId;
+  @Field(() => String) // GraphQL exposes `_id` as a string
+  readonly _id!: mongoose.Types.ObjectId; // Mongoose-compatible ObjectId
 
   @prop({ required: true })
-  type: NotificationType;
+  type!: NotificationType;
 
-  @prop({ type: ObjectId, required: true })
-  profileId: string;
-
-  @prop({ required: true })
-  metadata:
+  @prop({ type: mongoose.Schema.Types.Mixed, required: true })
+  metadata!:
     | CommentNotificationMetadata
     | DeletedCommentNotificationMetadata
     | DeletedPostNotificationMetadata
@@ -28,10 +45,12 @@ export class Notification extends Model {
     | TrackWithPriceMetadata;
 
   @Field(() => Date)
-  createdAt: Date;
+  @prop({ required: true })
+  createdAt!: Date;
 
   @Field(() => Date)
-  updatedAt: Date;
+  @prop({ required: true })
+  updatedAt!: Date;
 }
 
 export const NotificationModel = getModelForClass(Notification);

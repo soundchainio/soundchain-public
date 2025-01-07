@@ -1,71 +1,74 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { Types } from 'mongoose';
 import { Model } from './Model';
 
 @ObjectType()
 export class AuctionItem extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  readonly _id: Types.ObjectId; // Use the correct ObjectId type from mongoose
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
-  owner: string;
+  owner!: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
-  nft: string;
+  nft!: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
-  tokenId: number;
+  tokenId!: number;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
-  startingTime: number;
+  startingPrice!: number;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
-  endingTime: number;
+  ending!: number;
 
-  @Field()
-  @prop({ type: String, required: true })
-  reservePrice: string;
+  @Field(() => String)
+  @prop({ required: true })
+  reservePrice!: string;
 
-  @Field()
-  @prop({ type: Number, required: true })
-  reservePriceToShow: number;
+  @Field(() => Number)
+  @prop({ required: true })
+  reservePriceToShow!: number;
 
-  @Field()
-  @prop({ type: Boolean, required: true, default: false })
-  isPaymentOGUN: boolean;
+  @Field(() => Boolean)
+  @prop({ required: true, default: false })
+  isPaymentOGUN?: boolean;
 
   @Field(() => Date)
-  createdAt: Date;
+  @prop()
+  createdAt!: Date;
 
   @Field(() => Date)
-  updatedAt: Date;
+  @prop()
+  updatedAt!: Date;
 
-  @Field()
-  @prop({ default: true })
-  valid: boolean;
+  @Field(() => Boolean)
+  @prop()
+  valid!: boolean;
 
-  @Field()
-  @prop({ type: String })
-  highestBid: string;
+  @Field(() => String)
+  @prop()
+  highestBid!: string;
 
-  @Field()
-  @prop({ type: Number })
-  highestBidToShow: number;
+  @Field(() => Number)
+  @prop()
+  highestBidToShow!: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   contract?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   trackId?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   trackEditionId?: string;
 }

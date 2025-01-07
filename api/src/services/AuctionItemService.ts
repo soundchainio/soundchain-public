@@ -6,6 +6,7 @@ import { SellType } from '../types/NFTSoldNotificationMetadata';
 import { NotificationType } from '../types/NotificationType';
 import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
+import { ObjectId } from 'mongodb';
 
 interface NewAuctionItem {
   owner: string;
@@ -34,37 +35,31 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
   }
 
   async createAuctionItem(params: NewAuctionItem): Promise<AuctionItem> {
-    const AuctionItem = new this.model(params);
-    await AuctionItem.save();
-    return AuctionItem;
+    const auctionItem = new this.model(params);
+    await auctionItem.save();
+    return auctionItem;
   }
 
-  async findAuctionItem(tokenId: number): Promise<AuctionItem> {
-    const AuctionItem = await this.model.findOne({ tokenId, valid: true }).sort({ createdAt: -1 }).exec();
-    return AuctionItem;
+  async findAuctionItem(tokenId: number): Promise<AuctionItem | null> {
+    const auctionItem = await this.model.findOne({ tokenId, valid: true }).sort({ createdAt: -1 }).exec();
+    return auctionItem;
   }
 
-  async updateAuctionItem(tokenId: number, changes: Partial<AuctionItem>): Promise<AuctionItem> {
-    const AuctionItem = await this.model
+  async updateAuctionItem(tokenId: number, changes: Partial<AuctionItem>): Promise<AuctionItem | null> {
+    const auctionItem = await this.model
       .findOneAndUpdate({ tokenId, valid: true }, changes, { new: true })
       .sort({ createdAt: -1 })
       .exec();
-    return AuctionItem;
+    return auctionItem;
   }
 
   async getHighestBid(auctionId: string): Promise<number | undefined> {
     const res = await BidModel.aggregate([
-      {
-        $match: {
-          auctionId,
-        },
-      },
+      { $match: { auctionId: new ObjectId(auctionId) } },
       {
         $group: {
           _id: null,
-          highestBid: {
-            $max: '$amountToShow',
-          },
+          highestBid: { $max: '$amountToShow' },
         },
       },
     ]);
@@ -72,33 +67,37 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
   }
 
   async wasListedBefore(tokenId: number): Promise<boolean> {
-    const AuctionItem = await this.model.findOne({ tokenId }).exec();
-    return !!AuctionItem;
+    const auctionItem = await this.model.findOne({ tokenId }).exec();
+    return !!auctionItem;
   }
 
-  async setNotValid(tokenId: number): Promise<AuctionItem> {
-    const AuctionItem = await this.model.findOne({ tokenId }).sort({ createdAt: -1 }).exec();
-    AuctionItem.valid = false;
-    AuctionItem.save();
-    return AuctionItem;
+  async setNotValid(tokenId: number): Promise<AuctionItem | null> {
+    const auctionItem = await this.model.findOne({ tokenId }).sort({ createdAt: -1 }).exec();
+    if (auctionItem) {
+      auctionItem.valid = false;
+      await auctionItem.save();
+    }
+    return auctionItem;
   }
 
   async finishListing(
     tokenId: string,
     sellerWallet: string,
-    buyerWaller: string,
+    buyerWallet: string,
     price: number,
     contractAddress: string,
   ): Promise<void> {
     const [sellerUser, buyerUser, track, auctionItem] = await Promise.all([
       this.context.userService.getUserByWallet(sellerWallet),
-      this.context.userService.getUserByWallet(buyerWaller),
+      this.context.userService.getUserByWallet(buyerWallet),
       this.context.trackService.getTrackByTokenId(parseInt(tokenId), contractAddress),
-      this.context.auctionItemService.findAuctionItem(parseInt(tokenId)),
+      this.findAuctionItem(parseInt(tokenId)),
     ]);
-    if (!sellerUser || !buyerUser) {
+
+    if (!sellerUser || !buyerUser || !auctionItem) {
       return;
     }
+
     await Promise.all([
       this.context.trackService.updateTrack(track._id, { profileId: buyerUser.profileId }),
       this.context.notificationService.notifyNFTSold({
@@ -110,23 +109,19 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         artist: track.artist,
         artworkUrl: track.artworkUrl,
         sellType: SellType.Auction,
-        isPaymentOgun: auctionItem.isPaymentOGUN,
+        isPaymentOGUN: auctionItem.isPaymentOGUN,
       }),
     ]);
+
     await Promise.all([
-      this.context.auctionItemService.setNotValid(parseInt(tokenId)),
+      this.setNotValid(parseInt(tokenId)),
       this.context.trackService.setPendingNone(parseInt(tokenId), contractAddress),
     ]);
   }
 
   async countBids(tokenId: number): Promise<CountBids> {
     const count = await this.model.aggregate<CountBids>([
-      {
-        $match: {
-          tokenId,
-          valid: true,
-        },
-      },
+      { $match: { tokenId, valid: true } },
       {
         $lookup: {
           from: 'bids',
@@ -137,9 +132,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       },
       {
         $project: {
-          numberOfBids: {
-            $size: '$bids',
-          },
+          numberOfBids: { $size: '$bids' },
         },
       },
     ]);
@@ -147,7 +140,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
   }
 
   async haveBided(auctionId: string, bidder: string): Promise<boolean> {
-    const bid = await BidModel.findOne({ auctionId, bidder });
+    const bid = await BidModel.findOne({ auctionId: new ObjectId(auctionId), bidder });
     return !!bid;
   }
 
@@ -157,20 +150,21 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       this.pendingNotificationsEndedAuctions(now),
       this.fetchAuctionsEndingInOneHour(now),
     ]);
+
     await Promise.all([
-      ...auctionsEnded.map(auction => this.notifyAuctionIsOver(auction)),
+      ...auctionsEnded.map((auction) => this.notifyAuctionIsOver(auction)),
       ...auctionsEndingInOneHour.map(({ bids, _id }) => {
-        const bidsWithoutDuplicate = bids.filter(
-          (v, i, a) => a.findIndex(t => t.profileId.toString() === v.profileId.toString()) === i,
+        const uniqueBids = bids.filter(
+          (v, i, a) => a.findIndex((t) => t.profileId.toString() === v.profileId.toString()) === i,
         );
-        bidsWithoutDuplicate.map(bid =>
-          Promise.all([this.notifyAuctionIsEnding(bid, _id), this.setBidIsNotified(bid._id)]),
+        return uniqueBids.map((bid) =>
+          Promise.all([this.notifyAuctionIsEnding(bid, _id.toString()), this.setBidIsNotified(bid._id)]),
         );
       }),
     ]);
   }
 
-  private async setBidIsNotified(bidId: string) {
+  private async setBidIsNotified(bidId: ObjectId) {
     await BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
   }
 
@@ -187,17 +181,19 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       BidModel.findOne({ auctionId: _id, amount: highestBid }),
       this.context.trackService.getTrackByTokenId(tokenId, nft),
     ]);
+
     const promises = [this.context.userService.getUserByWallet(owner)];
     if (highestBidModel?.bidder) {
       promises.push(this.context.userService.getUserByWallet(highestBidModel.bidder));
     }
+
     const [sellerUser, buyerUser] = await Promise.all(promises);
     await this.context.notificationService.notifyAuctionIsOver({
       track,
       price: highestBidToShow || reservePriceToShow,
       sellerProfileId: sellerUser?.profileId,
       buyerProfileId: buyerUser?.profileId,
-      auctionId: _id,
+      auctionId: _id.toString(),
     });
   }
 
@@ -232,12 +228,8 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
               as: 'item',
               cond: {
                 $and: [
-                  {
-                    $eq: ['$$item.valid', true],
-                  },
-                  {
-                    $lte: ['$$item.endingTime', now],
-                  },
+                  { $eq: ['$$item.valid', true] },
+                  { $lte: ['$$item.endingTime', now] },
                 ],
               },
             },
@@ -245,9 +237,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         },
       },
       {
-        $unwind: {
-          path: '$auctionitem',
-        },
+        $unwind: { path: '$auctionitem' },
       },
       {
         $lookup: {
@@ -259,9 +249,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       },
       {
         $addFields: {
-          bidCount: {
-            $size: '$bids',
-          },
+          bidCount: { $size: '$bids' },
         },
       },
       {
@@ -280,12 +268,8 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
               as: 'item',
               cond: {
                 $and: [
-                  {
-                    $eq: ['$$item.type', NotificationType.AuctionEnded],
-                  },
-                  {
-                    $eq: ['$$item.metadata.auctionId', '$auctionitem._id'],
-                  },
+                  { $eq: ['$$item.type', NotificationType.AuctionEnded] },
+                  { $eq: ['$$item.metadata.auctionId', '$auctionitem._id'] },
                 ],
               },
             },
@@ -294,20 +278,14 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       },
       {
         $addFields: {
-          notificationCount: {
-            $size: '$notification',
-          },
+          notificationCount: { $size: '$notification' },
         },
       },
       {
-        $match: {
-          notificationCount: 0,
-        },
+        $match: { notificationCount: 0 },
       },
       {
-        $replaceRoot: {
-          newRoot: '$auctionitem',
-        },
+        $replaceRoot: { newRoot: '$auctionitem' },
       },
     ]);
   }
@@ -320,12 +298,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       {
         $addFields: {
           endingTimeInOneHour: {
-            $gte: [
-              '$endingTime',
-              {
-                $subtract: [nowInSecs, oneHourInSecs],
-              },
-            ],
+            $gte: ['$endingTime', { $subtract: [nowInSecs, oneHourInSecs] }],
           },
         },
       },
@@ -345,16 +318,12 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       },
       {
         $addFields: {
-          bidCount: {
-            $size: '$bids',
-          },
+          bidCount: { $size: '$bids' },
         },
       },
       {
         $match: {
-          bidCount: {
-            $gt: 0,
-          },
+          bidCount: { $gt: 0 },
         },
       },
       {
@@ -373,12 +342,8 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
               as: 'item',
               cond: {
                 $and: [
-                  {
-                    $eq: ['$$item.type', NotificationType.AuctionIsEnding],
-                  },
-                  {
-                    $eq: ['$$item.metadata.auctionId', '$_id'],
-                  },
+                  { $eq: ['$$item.type', NotificationType.AuctionIsEnding] },
+                  { $eq: ['$$item.metadata.auctionId', '$_id'] },
                 ],
               },
             },
@@ -387,15 +352,11 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
       },
       {
         $addFields: {
-          notificationCount: {
-            $size: '$notification',
-          },
+          notificationCount: { $size: '$notification' },
         },
       },
       {
-        $match: {
-          notificationCount: 0,
-        },
+        $match: { notificationCount: 0 },
       },
     ]);
   }

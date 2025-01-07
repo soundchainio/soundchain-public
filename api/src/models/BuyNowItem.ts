@@ -1,77 +1,76 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
+import { Types } from 'mongoose';
 import { Model } from './Model';
 
 @ObjectType()
 export class BuyNowItem extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  readonly _id!: Types.ObjectId; // MongoDB ObjectId compatibility
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
-  owner: string;
+  owner!: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   trackId?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   trackEditionId?: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
-  nft: string;
+  tokenId!: number;
 
-  @Field()
-  @prop({ required: true })
-  tokenId: number;
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  selectedCurrency?: string;
 
-  @Field({ nullable: true })
-  @prop({ type: String })
-  selectedCurrency: string;
-
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   contract?: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
-  startingTime: number;
+  startingTime!: number;
 
-  @Field()
-  @prop({ type: String, required: true })
-  pricePerItem: string;
+  @Field(() => String)
+  @prop({ required: true })
+  pricePerItem!: string;
 
-  @Field()
-  @prop({ type: Number, required: true })
-  pricePerItemToShow: number;
+  @Field(() => Number)
+  @prop({ required: true })
+  pricePerItemToShow!: number;
 
-  @Field()
-  @prop({ type: String, required: true })
-  OGUNPricePerItem: string;
+  @Field(() => String)
+  @prop({ required: true })
+  OGUNPricePerItem!: string;
 
-  @Field()
-  @prop({ type: Number, required: true })
-  OGUNPricePerItemToShow: number;
+  @Field(() => Number)
+  @prop({ required: true })
+  OGUNPricePerItemToShow!: number;
 
-  @Field()
-  @prop({ type: Boolean, required: true })
-  acceptsMATIC: boolean;
+  @Field(() => Boolean)
+  @prop({ required: true })
+  acceptsMATIC!: boolean;
 
-  @Field()
-  @prop({ type: Boolean, required: true })
-  acceptsOGUN: boolean;
-
-  @Field(() => Date)
-  createdAt: Date;
+  @Field(() => Boolean)
+  @prop({ required: true })
+  acceptsOGUN!: boolean;
 
   @Field(() => Date)
-  updatedAt: Date;
+  @prop({ required: true })
+  createdAt!: Date;
 
-  @Field()
+  @Field(() => Date)
+  @prop({ required: true })
+  updatedAt!: Date;
+
+  @Field(() => Boolean)
   @prop({ default: true })
-  valid: boolean;
+  valid!: boolean;
 }
 
 export const BuyNowItemModel = getModelForClass(BuyNowItem);
