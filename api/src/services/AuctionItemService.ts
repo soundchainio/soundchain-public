@@ -1,23 +1,16 @@
 import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
 import { Bid, BidModel } from '../models/Bid';
-import { TrackModel } from '../models/Track';
 import { Context } from '../types/Context';
 import { SellType } from '../types/NFTSoldNotificationMetadata';
-import { NotificationType } from '../types/NotificationType';
-import { getNow } from '../utils/Time';
 import { ModelService } from './ModelService';
 
 interface NewAuctionItem {
   owner: string;
   nft: string;
   tokenId: number;
-  reservePrice: string;
-  reservePriceToShow: number;
+  reservePrice: number;
   startingTime: number;
   endingTime: number;
-  contract: string;
-  trackEditionId?: string;
-  trackId?: string;
 }
 
 interface CountBids {
@@ -63,7 +56,7 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         $group: {
           _id: null,
           highestBid: {
-            $max: '$amountToShow',
+            $max: '$amount',
           },
         },
       },
@@ -83,22 +76,12 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
     return AuctionItem;
   }
 
-  async finishListing(
-    tokenId: string,
-    sellerWallet: string,
-    buyerWaller: string,
-    price: number,
-    contractAddress: string,
-  ): Promise<void> {
-    const [sellerUser, buyerUser, track, auctionItem] = await Promise.all([
+  async finishListing(tokenId: string, sellerWallet: string, buyerWaller: string, price: number): Promise<void> {
+    const [sellerUser, buyerUser, track] = await Promise.all([
       this.context.userService.getUserByWallet(sellerWallet),
       this.context.userService.getUserByWallet(buyerWaller),
-      this.context.trackService.getTrackByTokenId(parseInt(tokenId), contractAddress),
-      this.context.auctionItemService.findAuctionItem(parseInt(tokenId)),
+      this.context.trackService.getTrackByTokenId(parseInt(tokenId)),
     ]);
-    if (!sellerUser || !buyerUser) {
-      return;
-    }
     await Promise.all([
       this.context.trackService.updateTrack(track._id, { profileId: buyerUser.profileId }),
       this.context.notificationService.notifyNFTSold({
@@ -110,12 +93,11 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
         artist: track.artist,
         artworkUrl: track.artworkUrl,
         sellType: SellType.Auction,
-        isPaymentOgun: auctionItem.isPaymentOGUN,
       }),
     ]);
     await Promise.all([
       this.context.auctionItemService.setNotValid(parseInt(tokenId)),
-      this.context.trackService.setPendingNone(parseInt(tokenId), contractAddress),
+      this.context.trackService.setPendingNone(parseInt(tokenId)),
     ]);
   }
 
@@ -152,249 +134,98 @@ export class AuctionItemService extends ModelService<typeof AuctionItem> {
   }
 
   async processAuctions(): Promise<void> {
-    const now = getNow();
-    const [auctionsEnded, auctionsEndingInOneHour] = await Promise.all([
-      this.pendingNotificationsEndedAuctions(now),
-      this.fetchAuctionsEndingInOneHour(now),
-    ]);
-    await Promise.all([
-      ...auctionsEnded.map(auction => this.notifyAuctionIsOver(auction)),
-      ...auctionsEndingInOneHour.map(({ bids, _id }) => {
-        const bidsWithoutDuplicate = bids.filter(
-          (v, i, a) => a.findIndex(t => t.profileId.toString() === v.profileId.toString()) === i,
-        );
-        bidsWithoutDuplicate.map(bid =>
-          Promise.all([this.notifyAuctionIsEnding(bid, _id), this.setBidIsNotified(bid._id)]),
-        );
+    const now = Math.floor(new Date().getTime() / 1000);
+    const auctionsEnded = await this.model.find({ valid: true, endingTime: { $lte: now } });
+    const auctionsEndingInOneHour = await this.fetchAuctionsEndingInOneHour(now);
+    await Promise.all(
+      auctionsEndingInOneHour.map(({ bids }) => {
+        bids.map(async bid => {
+          await Promise.all([this.notifyAuctionIsEnding(bid), this.setBidIsNotified(bid._id)]);
+        });
       }),
-    ]);
+    );
+
+    await Promise.all(auctionsEnded.map(auction => this.notifyWinner(auction)));
+    await this.model.updateMany({ valid: true, endingTime: { $lte: now } }, { $set: { valid: false } });
   }
 
   private async setBidIsNotified(bidId: string) {
     await BidModel.findOneAndUpdate({ _id: bidId }, { notifiedEndingInOneHour: true });
   }
 
-  private async notifyAuctionIsOver({
-    _id,
-    highestBid,
-    highestBidToShow,
-    reservePriceToShow,
-    tokenId,
-    owner,
-    nft,
-  }: AuctionItem): Promise<void> {
+  private async notifyWinner({ _id, highestBid, tokenId }: AuctionItem): Promise<void> {
     const [highestBidModel, track] = await Promise.all([
       BidModel.findOne({ auctionId: _id, amount: highestBid }),
-      this.context.trackService.getTrackByTokenId(tokenId, nft),
+      this.context.trackService.getTrackByTokenId(tokenId),
     ]);
-    const promises = [this.context.userService.getUserByWallet(owner)];
-    if (highestBidModel?.bidder) {
-      promises.push(this.context.userService.getUserByWallet(highestBidModel.bidder));
-    }
-    const [sellerUser, buyerUser] = await Promise.all(promises);
-    await this.context.notificationService.notifyAuctionIsOver({
-      track,
-      price: highestBidToShow || reservePriceToShow,
-      sellerProfileId: sellerUser?.profileId,
-      buyerProfileId: buyerUser?.profileId,
-      auctionId: _id,
-    });
+    const buyerProfile = await this.context.userService.getUserByWallet(highestBidModel.bidder);
+    await this.context.notificationService.notifyWonAuction(
+      track._id,
+      highestBid,
+      track.artist,
+      track.artworkUrl,
+      track.title,
+      buyerProfile.profileId,
+    );
   }
 
-  private async notifyAuctionIsEnding({ tokenId, bidder, amountToShow, nft }: Bid, auctionId: string): Promise<void> {
+  private async notifyAuctionIsEnding({ tokenId, bidder }: Bid): Promise<void> {
     const [user, track] = await Promise.all([
       this.context.userService.getUserByWallet(bidder),
-      this.context.trackService.getTrackByTokenId(tokenId, nft),
+      this.context.trackService.getTrackByTokenId(tokenId),
     ]);
-    await this.context.notificationService.notifyAuctionIsEnding({
-      track,
-      profileId: user.profileId,
-      price: amountToShow,
-      auctionId,
-    });
-  }
-
-  private async pendingNotificationsEndedAuctions(now: number): Promise<AuctionItem[]> {
-    return await TrackModel.aggregate<AuctionItem>([
-      {
-        $lookup: {
-          from: 'auctionitems',
-          localField: 'nftData.tokenId',
-          foreignField: 'tokenId',
-          as: 'auctionitem',
-        },
-      },
-      {
-        $addFields: {
-          auctionitem: {
-            $filter: {
-              input: '$auctionitem',
-              as: 'item',
-              cond: {
-                $and: [
-                  {
-                    $eq: ['$$item.valid', true],
-                  },
-                  {
-                    $lte: ['$$item.endingTime', now],
-                  },
-                ],
-              },
-            },
-          },
-        },
-      },
-      {
-        $unwind: {
-          path: '$auctionitem',
-        },
-      },
-      {
-        $lookup: {
-          from: 'bids',
-          localField: 'auctionitem._id',
-          foreignField: 'auctionId',
-          as: 'bids',
-        },
-      },
-      {
-        $addFields: {
-          bidCount: {
-            $size: '$bids',
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: 'notifications',
-          localField: 'auctionitem._id',
-          foreignField: 'metadata.auctionId',
-          as: 'notification',
-        },
-      },
-      {
-        $addFields: {
-          notification: {
-            $filter: {
-              input: '$notification',
-              as: 'item',
-              cond: {
-                $and: [
-                  {
-                    $eq: ['$$item.type', NotificationType.AuctionEnded],
-                  },
-                  {
-                    $eq: ['$$item.metadata.auctionId', '$auctionitem._id'],
-                  },
-                ],
-              },
-            },
-          },
-        },
-      },
-      {
-        $addFields: {
-          notificationCount: {
-            $size: '$notification',
-          },
-        },
-      },
-      {
-        $match: {
-          notificationCount: 0,
-        },
-      },
-      {
-        $replaceRoot: {
-          newRoot: '$auctionitem',
-        },
-      },
-    ]);
+    await this.context.notificationService.notifyAuctionIsEnding(track._id, track.title, user.profileId);
   }
 
   private async fetchAuctionsEndingInOneHour(now: number): Promise<AuctionWithBids[]> {
     const oneHourInSecs = 60 * 60;
-    const nowInSecs = now / 1000;
 
     return await this.model.aggregate<AuctionWithBids>([
       {
-        $addFields: {
-          endingTimeInOneHour: {
-            $gte: [
-              '$endingTime',
+        $match: {
+          $expr: {
+            $and: [
               {
-                $subtract: [nowInSecs, oneHourInSecs],
+                valid: true,
+              },
+              {
+                $gte: [
+                  '$endingTime',
+                  {
+                    $subtract: [now, oneHourInSecs],
+                  },
+                ],
+              },
+              {
+                $lte: ['$endingTime', now],
               },
             ],
           },
         },
       },
       {
-        $match: {
-          valid: true,
-          endingTimeInOneHour: true,
-        },
-      },
-      {
         $lookup: {
           from: 'bids',
-          localField: '_id',
-          foreignField: 'auctionId',
           as: 'bids',
-        },
-      },
-      {
-        $addFields: {
-          bidCount: {
-            $size: '$bids',
+          let: {
+            auctionId: '$_id',
           },
-        },
-      },
-      {
-        $match: {
-          bidCount: {
-            $gt: 0,
-          },
-        },
-      },
-      {
-        $lookup: {
-          from: 'notifications',
-          localField: '_id',
-          foreignField: 'metadata.auctionId',
-          as: 'notification',
-        },
-      },
-      {
-        $addFields: {
-          notification: {
-            $filter: {
-              input: '$notification',
-              as: 'item',
-              cond: {
-                $and: [
-                  {
-                    $eq: ['$$item.type', NotificationType.AuctionIsEnding],
-                  },
-                  {
-                    $eq: ['$$item.metadata.auctionId', '$_id'],
-                  },
-                ],
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ['$auctionId', '$$auctionId'],
+                    },
+                    {
+                      $eq: ['$notifiedEndingInOneHour', false],
+                    },
+                  ],
+                },
               },
             },
-          },
-        },
-      },
-      {
-        $addFields: {
-          notificationCount: {
-            $size: '$notification',
-          },
-        },
-      },
-      {
-        $match: {
-          notificationCount: 0,
+          ],
         },
       },
     ]);
