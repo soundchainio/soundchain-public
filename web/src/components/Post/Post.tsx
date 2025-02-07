@@ -80,24 +80,24 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
         </AddLinks>
         {post.mediaLink &&
           (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-            <ReactPlayer
-              width="100%"
-              height="600px"
-              style={{ marginTop: '1rem' }}
-              url={post.mediaLink}
-              playsinline
-              controls
-              light
-            />
-          ) : (
-            <iframe
-              frameBorder="0"
-              className="mt-4 min-h-[250px] w-full bg-gray-20"
-              allowFullScreen
-              src={post.mediaLink}
-              title="Media"
-            />
-          ))}
+            <div classname="w-full aspect-video mt-4">
+              <ReactPlayer
+                width="100%"
+                height="100%"
+                url={post.mediaLink}
+                playsinline
+                controls
+                light
+              />
+            ) : (
+              <iframe
+               frameBorder="0"
+               className="mt-4 min-h-[250px] w-full bg-gray-20"
+               allowFullScreen
+               src={post.mediaLink}
+               title="Media"
+             />
+           ))}
         {post.repostId && <RepostPreview postId={post.repostId} handleOnPlayClicked={handleOnPlayClicked} />}
         {post.track && !post.track.deleted && (
           <div className="mt-4 w-full">
