@@ -21,7 +21,7 @@ const emojiByName: Record<ReactionType, IconComponent> = {
   SUNGLASSES: Sunglasses,
 };
 
-export const ReactionEmoji: React.FC<ReactionEmojiProps> = ({ name = ", ...props }) => {
+export const ReactionEmoji: React.FC<ReactionEmojiProps> = ({ name = '', ...props }) => {
   // Check if the emoji name exists in predefined emojis
   if (emojiByName[name as ReactionType]) {
     const EmojiComponent = emojiByName[name as ReactionType];
