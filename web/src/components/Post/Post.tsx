@@ -80,7 +80,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
         </AddLinks>
         {post.mediaLink &&
           (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-            <div classname="w-full aspect-video mt-4">
+            <div className="w-full aspect-video mt-4">
               <ReactPlayer
                 width="100%"
                 height="100%"
@@ -89,6 +89,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
                 controls
                 light
               />
+            </div>
             ) : (
               <iframe
                frameBorder="0"
