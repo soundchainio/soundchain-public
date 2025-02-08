@@ -32,8 +32,10 @@ interface MagicProviderProps {
 
 // Create client-side Magic instance
 const createMagic = (magicPublicKey: string) => {
-  return typeof window != 'undefined'
+  const isDev = process.env.NODE_ENV === 'development'
+  return typeof window !== 'undefined'
     ? new Magic(magicPublicKey, {
+        testMode: isDev, // Enables test mode only in development
         network: {
           rpcUrl: network.rpc,
           chainId: network.id,

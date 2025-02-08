@@ -1,5 +1,9 @@
 FROM public.ecr.aws/lambda/nodejs:18
 
+# Install Python & dependencies for node-gyp
+RUN yum install -y python3 make gcc g++ && \
+    ln -s /usr/bin/python3 /usr/bin/python
+
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 ARG AWS_DEFAULT_REGION
@@ -13,7 +17,8 @@ ENV AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
 COPY package*.json ./
 
 # Install dependencies
-RUN npm i
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY src/ ./src/

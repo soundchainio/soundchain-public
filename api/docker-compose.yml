@@ -1,9 +1,23 @@
 version: '3.1'
+
 services:
   mongo:
     image: mongo:4.4
     restart: always
     ports:
-      - 27017:27017
+      - "27017:27017"
     volumes:
       - .tmp/mongodb:/data/db
+
+  api:
+    build: .
+    container_name: api-api-1
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_URL=mongodb://mongo:27017/test
+      - NODE_ENV=development
+    depends_on:
+      - mongo
+    command: yarn dev
