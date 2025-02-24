@@ -70,7 +70,7 @@ export default function LoginPage() {
     `https://accounts.google.com/o/oauth2/auth?client_id=${config.googleClientId}&redirect_uri=${config.domainUrl}/login&response_type=code&scope=openid%20email%20profile`,
     '_blank',
     'noopener,noreferrer',
-    })
+    )
   }
 
   useEffect(() => {
