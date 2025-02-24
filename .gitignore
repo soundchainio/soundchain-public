@@ -19,3 +19,5 @@ web/public/sitemap.xml
 web/public/sitemap-0.xml
 
 dist
+api/api.log
+node_modules_backup/
