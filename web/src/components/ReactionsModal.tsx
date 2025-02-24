@@ -1,80 +1,49 @@
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
-import { DownArrow } from 'icons/DownArrow'
-import { ReactionEmoji } from 'icons/ReactionEmoji'
-import { Reaction, useReactionsLazyQuery } from 'lib/graphql'
-import React, { useEffect } from 'react'
-import { InfiniteLoader } from 'components/InfiniteLoader'
-import { LoaderAnimation } from 'components/LoaderAnimation'
-import { Modal } from './Modal'
-import { ReactionItem } from './ReactionItem'
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { DownArrow } from 'icons/DownArrow';
+import { useReactionsLazyQuery } from 'lib/graphql';
+import React, { useEffect } from 'react';
+import { InfiniteLoader } from 'components/InfiniteLoader';
+import { LoaderAnimation } from 'components/LoaderAnimation';
+import { Modal } from './Modal';
+import { ReactionItem } from './ReactionItem';
 
 export const ReactionsModal = () => {
-  const {
-    reactions: { postId, show, top, total },
-  } = useModalState()
-  const [reactions, { data, fetchMore }] = useReactionsLazyQuery({ variables: { postId: postId as string } })
-  const { dispatchReactionsModal } = useModalDispatch()
+  const { reactions: { postId, show, top, total } } = useModalState();
+  const [reactions, { data, fetchMore }] = useReactionsLazyQuery({ variables: { postId: postId as string } });
+  const { dispatchReactionsModal } = useModalDispatch();
 
   useEffect(() => {
     if (show && postId) {
-      reactions()
+      reactions();
     }
-  }, [show, postId, reactions])
+  }, [show, postId, reactions]);
 
   const onLoadMore = () => {
     if (fetchMore) {
-      fetchMore({ variables: { postId, page: { after: data?.reactions.pageInfo.endCursor } } })
+      fetchMore({ variables: { postId, page: { after: data?.reactions.pageInfo.endCursor } } });
     }
-  }
+  };
 
   const onClose = () => {
-    dispatchReactionsModal(false, undefined)
-  }
-
-  const getTitle = () => {
-    return (
-      <div className="flex flex-row items-center justify-center self-center">
-        {top?.map(reaction => (
-          <>
-            <ReactionEmoji key={reaction} name={reaction} className="mr-2 h-4 w-4" />
-          </>
-        ))}
-        <span className="pr-2">{total}</span>
-        <div className="text-sm font-normal text-gray-60">reaction{total && total > 1 ? 's' : null}</div>
-      </div>
-    )
-  }
+    dispatchReactionsModal(false, undefined);
+  };
 
   return (
-    <Modal
-      show={show}
-      title={getTitle()}
-      leftButton={
-        <div className="ml-6 flex justify-start">
-          <button aria-label="Close" className="flex h-10 w-10 items-center justify-center" onClick={onClose}>
-            <DownArrow />
-          </button>
-        </div>
-      }
-      onClose={onClose}
-    >
+    <Modal show={show} title={`Reactions (${total})`} leftButton={
+      <button className="h-10 w-10" onClick={onClose}><DownArrow /></button>
+    } onClose={onClose}>
       <div className="h-full bg-gray-25">
-        {!data && (
-          <div className="flex items-center">
-            <LoaderAnimation loadingMessage="Loading Rections" />
+        {!data ? <LoaderAnimation loadingMessage="Loading Reactions" /> : (
+          <div>
+            {data?.reactions.nodes.map(reaction => (
+              <ReactionItem key={reaction.id} reaction={reaction} onClick={onClose} />
+            ))}
           </div>
         )}
-        <div>
-          {data?.reactions.nodes.map(reaction => (
-            <ReactionItem key={reaction.id} reaction={reaction as Reaction} onClick={onClose} />
-          ))}
-        </div>
-        {data?.reactions.pageInfo.hasNextPage && (
-          <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading   Followers" />
-        )}
+        {data?.reactions.pageInfo.hasNextPage && <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading More" />}
       </div>
     </Modal>
-  )
-}
+  );
+};
 
-export default ReactionsModal
+export default ReactionsModal;
