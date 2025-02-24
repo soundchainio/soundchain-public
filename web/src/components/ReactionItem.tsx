@@ -6,17 +6,18 @@ import { useRouter } from 'next/router'
 
 import { DisplayName } from './DisplayName'
 
-interface FollowItemProps {
-  reaction: Reaction
-  onClick: () => void
+interface ReactionItemProps {
+  reaction: Reaction;
+  onClick: () => void;
 }
 
-export const ReactionItem = ({ reaction: { type, profile }, onClick }: FollowItemProps) => {
-  const router = useRouter()
+export const ReactionItem = ({ reaction: { type, profile }, onClick }: ReactionItemProps) => {
+  const router = useRouter();
+
   const onReactionClick = () => {
-    onClick()
-    router.push(`/profiles/${profile.userHandle}`)
-  }
+    onClick();
+    router.push(`/profiles/${profile.userHandle}`);
+  };
 
   return (
     <div className="flex flex-row items-center justify-between space-x-2 px-4 py-3" onClick={onReactionClick}>
@@ -33,9 +34,10 @@ export const ReactionItem = ({ reaction: { type, profile }, onClick }: FollowIte
           badges={profile.badges}
         />
       </Link>
+      {/* Keep ReactionEmoji for better UI */}
       <div className="flex items-center justify-center">
         <ReactionEmoji name={type.toUpperCase() as ReactionType} className="h-4 w-4" />
       </div>
     </div>
-  )
-}
+  );
+};
