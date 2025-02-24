@@ -1,67 +1,54 @@
-import classNames from 'classnames'
-import { ReactionEmoji } from 'icons/ReactionEmoji'
-import {
-  ReactionType,
-  useChangeReactionMutation,
-  useReactToPostMutation,
-  useRetractReactionMutation,
-} from 'lib/graphql'
+import { useState } from 'react';
+import Picker from '@emoji-mart/react';
+import { useChangeReactionMutation, useReactToPostMutation, useRetractReactionMutation } from 'lib/graphql';
 
 interface ReactionSelectorProps {
-  postId: string
-  myReaction: ReactionType | null
-  opened: boolean
-  setOpened: (val: boolean) => void
+  postId: string;
+  myReaction: string | null;
+  opened: boolean;
+  setOpened: (val: boolean) => void;
 }
-
-const reactionTypes = [
-  ReactionType.Sad,
-  ReactionType.Happy,
-  ReactionType.Horns,
-  ReactionType.Sunglasses,
-  ReactionType.Heart,
-]
-
-const baseListClasses =
-  'list-none flex absolute right-0 duration-500 ease-in-out bg-gray-25 transform-gpu transform w-3/4'
 
 export const ReactionSelector = ({ postId, myReaction, opened, setOpened }: ReactionSelectorProps) => {
-  const [reactToPost] = useReactToPostMutation()
-  const [changeReaction] = useChangeReactionMutation()
-  const [retractReaction] = useRetractReactionMutation()
+  const [reactToPost] = useReactToPostMutation();
+  const [changeReaction] = useChangeReactionMutation();
+  const [retractReaction] = useRetractReactionMutation();
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(myReaction);
 
-  const handleSelect = async (type: ReactionType) => {
-    if (type === myReaction) {
-      await retractReaction({ variables: { input: { postId } } })
+  const handleSelect = async (emoji: any) => {
+    const emojiId = emoji.native; // Get the selected emoji
+
+    if (emojiId === myReaction) {
+      await retractReaction({ variables: { input: { postId } } });
+      setSelectedEmoji(null);
     } else if (myReaction) {
       await changeReaction({
-        variables: { input: { postId, type } },
+        variables: { input: { postId, type: emojiId } },
         refetchQueries: ['Post'],
-      })
+      });
+      setSelectedEmoji(emojiId);
     } else {
       await reactToPost({
-        variables: { input: { postId, type } },
+        variables: { input: { postId, type: emojiId } },
         refetchQueries: ['Post'],
-      })
+      });
+      setSelectedEmoji(emojiId);
     }
 
-    setOpened(false)
-  }
+    setOpened(false);
+  };
 
-  const ListOptions = reactionTypes.map(reaction => {
-    return (
-      <li key={reaction} className="flex flex-1 cursor-pointer justify-center" onClick={() => handleSelect(reaction)}>
-        <div
-          className={classNames('rounded-lg px-3 py-2', {
-            'bg-gray-40': myReaction === reaction,
-            'opacity-50': myReaction && myReaction !== reaction,
-          })}
-        >
-          <ReactionEmoji name={reaction} className="h-5 w-5" />
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <span onClick={() => setOpened(!opened)} style={{ cursor: 'pointer', fontSize: '1.5rem' }}>
+        {selectedEmoji || '😊'}
+      </span>
+
+      {opened && (
+        <div style={{ position: 'absolute', zIndex: 1000 }}>
+          <Picker onEmojiSelect={handleSelect} />
         </div>
-      </li>
-    )
-  })
-
-  return <ul className={`${baseListClasses} ${opened ? 'translate-x-4/4' : 'translate-x-full'}`}>{ListOptions}</ul>
-}
+      )}
+    </div>
+  );
+};
