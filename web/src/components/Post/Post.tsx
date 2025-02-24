@@ -1,48 +1,59 @@
-import { useModalDispatch } from 'contexts/providers/modal'
-import { useMe } from 'hooks/useMe'
-import { Ellipsis } from 'icons/Ellipsis'
-import { PostQuery, Role, Track } from 'lib/graphql'
-import Link from 'next/link'
-import { AddLinks } from 'react-link-text'
-import ReactPlayer from 'react-player'
-import { AuthorActionsType } from 'types/AuthorActionsType'
-import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+import { useState } from 'react';
+import Picker from '@emoji-mart/react';
+import { useModalDispatch } from 'contexts/providers/modal';
+import { useMe } from 'hooks/useMe';
+import { Ellipsis } from 'icons/Ellipsis';
+import { PostQuery, Role, Track } from 'lib/graphql';
+import Link from 'next/link';
+import { AddLinks } from 'react-link-text';
+import ReactPlayer from 'react-player';
+import { AuthorActionsType } from 'types/AuthorActionsType';
+import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks';
 
-import { Avatar } from '../Avatar'
-import { DisplayName } from '../DisplayName'
-import { MiniAudioPlayer } from '../MiniAudioPlayer'
-import { NotAvailableMessage } from '../NotAvailableMessage'
-import { Timestamp } from '../Timestamp'
-import { PostActions } from './PostActions'
-import { PostSkeleton } from './PostSkeleton'
-import { PostStats } from './PostStats'
-import { RepostPreview } from './RepostPreview'
+import { Avatar } from '../Avatar';
+import { DisplayName } from '../DisplayName';
+import { MiniAudioPlayer } from '../MiniAudioPlayer';
+import { NotAvailableMessage } from '../NotAvailableMessage';
+import { Timestamp } from '../Timestamp';
+import { PostActions } from './PostActions';
+import { PostSkeleton } from './PostSkeleton';
+import { PostStats } from './PostStats';
+import { RepostPreview } from './RepostPreview';
 
 interface PostProps {
-  post: PostQuery['post']
-  handleOnPlayClicked: (trackId: string) => void
+  post: PostQuery['post'];
+  handleOnPlayClicked: (trackId: string) => void;
 }
 
 export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
-  const me = useMe()
-  const { dispatchShowAuthorActionsModal } = useModalDispatch()
+  const me = useMe();
+  const { dispatchShowAuthorActionsModal } = useModalDispatch();
 
-  if (!post) return <PostSkeleton />
+  if (!post) return <PostSkeleton />;
 
-  const isAuthor = post?.profile.id == me?.profile.id
-  const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember)
+  const isAuthor = post?.profile.id === me?.profile.id;
+  const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember);
 
   const addLinksOptions = {
     className: 'underline text-blue-400',
-  }
+  };
 
   const onEllipsisClick = () => {
-    dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id, !isAuthor)
-  }
+    dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id, !isAuthor);
+  };
 
   if (post?.deleted) {
-    return <NotAvailableMessage type="post" />
+    return <NotAvailableMessage type="post" />;
   }
+
+  // 🔥 New Emoji Picker Logic
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+
+  const handleEmojiSelect = (emoji: any) => {
+    setSelectedEmoji(emoji.native);
+    setIsPickerOpen(false);
+  };
 
   return (
     <div>
@@ -78,27 +89,22 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
         <AddLinks options={addLinksOptions}>
           <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">{post.body}</pre>
         </AddLinks>
+
         {post.mediaLink &&
           (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
             <div className="w-full aspect-video mt-4">
-              <ReactPlayer
-                width="100%"
-                height="100%"
-                url={post.mediaLink}
-                playsinline
-                controls
-                light
-              />
+              <ReactPlayer width="100%" height="100%" url={post.mediaLink} playsinline controls light />
             </div>
-            ) : (
-              <iframe
-               frameBorder="0"
-               className="mt-4 min-h-[250px] w-full bg-gray-20"
-               allowFullScreen
-               src={post.mediaLink}
-               title="Media"
-             />
-           ))}
+          ) : (
+            <iframe
+              frameBorder="0"
+              className="mt-4 min-h-[250px] w-full bg-gray-20"
+              allowFullScreen
+              src={post.mediaLink}
+              title="Media"
+            />
+          ))}
+
         {post.repostId && <RepostPreview postId={post.repostId} handleOnPlayClicked={handleOnPlayClicked} />}
         {post.track && !post.track.deleted && (
           <div className="mt-4 w-full">
@@ -120,6 +126,18 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
           </div>
         )}
         {post.track && post.track.deleted && <NotAvailableMessage type="track" />}
+
+        {/* 🔥 Emoji Picker UI (Added Below the Post) */}
+        <div className="mt-2 flex space-x-2">
+          <span
+            style={{ cursor: 'pointer', fontSize: '1.5rem' }}
+            onClick={() => setIsPickerOpen(!isPickerOpen)}
+          >
+            {selectedEmoji || '😊'}
+          </span>
+          {isPickerOpen && <Picker onEmojiSelect={handleEmojiSelect} />}
+        </div>
+
         <PostStats
           totalReactions={post.totalReactions}
           topReactions={post.topReactions}
