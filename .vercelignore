@@ -1,0 +1,10 @@
+node_modules/
+.yarn/
+.git/
+.vscode/
+dist/
+build/
+coverage/
+.env.local
+.env
+*.log
