@@ -29,6 +29,8 @@
     "@sentry/serverless": "^7.10.0",
     "bson": "^6.10.1",
     "emoji-mart": "5.2",
+    "eslint-config-next": "^15.1.7",
+    "eslint-plugin-react-hooks": "^5.1.0",
     "konva": "^9.3.18",
     "migrate-mongo": "^11.0.0",
     "mongodb": "^6.12.0",
