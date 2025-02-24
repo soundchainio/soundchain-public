@@ -65,11 +65,11 @@ export default function LoginPage() {
     }
   }, [me, router, setIsAuthLayout])
 
-  const handleGoogleLogin = async () => {
-    await magic.oauth.loginWithRedirect({
-      provider: 'google',
-      redirectURI: `${config.domainUrl}/login`,
-      scope: ['openid'],
+  const handleGoogleLogin = () => {
+  window.open(
+    `https://accounts.google.com/o/oauth2/auth?client_id=${config.googleClientId}&redirect_uri=${config.domainUrl}/login&response_type=code&scope=openid%20email%20profile`,
+    '_blank',
+    'noopener,noreferrer',
     })
   }
 
