@@ -9,4 +9,13 @@ module.exports = {
             'soundchain.io', // Add this line
         ],
     },
+    async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/home',
+        permanent: true, // Sends a 308 Permanent Redirect
+      },
+    ];
+  },
 };
