@@ -1,15 +1,6 @@
 module.exports = {
-  reactStrictMode: false,
-  images: {
-    domains: [
-      'placeimg.com',
-      'cdn.fakercloud.com',
-      'soundchain.mypinata.cloud',
-      ...(process.env.UPLOADS_DOMAIN ? [process.env.UPLOADS_DOMAIN] :),
-      'soundchain.io',
-    ],
-  },
-  async redirects() {
+  // ... other configurations
+  redirects() { // Removed async keyword
     return [
       {
         source: '/',
@@ -18,4 +9,5 @@ module.exports = {
       },
     ];
   },
+  // ... other configurations
 };
