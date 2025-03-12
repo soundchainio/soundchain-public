@@ -37,3 +37,6 @@ src/artifacts/build-info
 
 dist
 src/services/AuctionItemService.ts
+src/services/AuctionItemService.ts
+src/services/AuctionItemService.js
+src/types/AuctionItem*
