@@ -36,3 +36,4 @@ src/artifacts/@openzeppelin
 src/artifacts/build-info
 
 dist
+src/services/AuctionItemService.ts
