@@ -7,7 +7,7 @@ import { NFTSoldNotificationMetadata, SellType } from '../types/NFTSoldNotificat
 export class NFTSoldNotificationResolver {
   @FieldResolver(() => String)
   id(@Root() { _id }: Notification): string {
-    return _id;
+    return _id.toString();
   }
 
   @FieldResolver(() => String)
@@ -24,14 +24,14 @@ export class NFTSoldNotificationResolver {
 
   @FieldResolver(() => String)
   buyerProfileId(@Root() { metadata }: Notification): string {
-    const { buyerPicture } = metadata as NFTSoldNotificationMetadata;
-    return buyerPicture;
+    const { buyerProfileId } = metadata as NFTSoldNotificationMetadata;
+    return buyerProfileId.toString(); // Convert ObjectId to string
   }
 
   @FieldResolver(() => String)
   trackId(@Root() { metadata }: Notification): string {
     const { trackId } = metadata as NFTSoldNotificationMetadata;
-    return trackId;
+    return trackId.toString();
   }
 
   @FieldResolver(() => Number)

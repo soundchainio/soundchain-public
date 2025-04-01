@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { toPairs } from 'lodash';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { PaginateResult } from '../db/pagination/paginate';
@@ -34,22 +35,22 @@ import { UpdatePostPayload } from '../types/UpdatePostPayload';
 export class PostResolver {
   @FieldResolver(() => Profile)
   profile(@Ctx() { profileService }: Context, @Root() post: Post): Promise<Profile> {
-    return profileService.getProfile(post.profileId);
+    return profileService.getProfile(post.profileId.toString());
   }
 
   @FieldResolver(() => [Comment])
   comments(@Ctx() { commentService }: Context, @Root() post: Post): Promise<PaginateResult<Comment>> {
-    return commentService.getComments(post._id);
+    return commentService.getComments(post._id.toString());
   }
 
   @FieldResolver(() => Number)
   commentCount(@Ctx() { commentService }: Context, @Root() post: Post): Promise<number> {
-    return commentService.countComments(post._id);
+    return commentService.countComments(post._id.toString());
   }
 
   @FieldResolver(() => Number)
   repostCount(@Ctx() { postService }: Context, @Root() post: Post): Promise<number> {
-    return postService.countReposts(post._id);
+    return postService.countReposts(post._id.toString());
   }
 
   @FieldResolver(() => Number)
@@ -80,7 +81,7 @@ export class PostResolver {
   @FieldResolver(() => Track, { nullable: true })
   async track(@Ctx() { trackService }: Context, @Root() { trackId, trackEditionId }: Post): Promise<Track | null> {
     if (!trackId) return null;
-    return trackService.getTrackFromEdition(trackId, trackEditionId);
+    return trackService.getTrackFromEdition(trackId.toString(), trackEditionId?.toString());
   }
 
   @Query(() => Post)
@@ -105,7 +106,7 @@ export class PostResolver {
     @Arg('input') { body, mediaLink, trackId, trackEditionId }: CreatePostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
-    const post = await postService.createPost({ profileId, body, mediaLink, trackId, trackEditionId });
+    const post = await postService.createPost({ profileId: profileId.toString(), body, mediaLink, trackId, trackEditionId });
     return { post };
   }
 
@@ -116,7 +117,7 @@ export class PostResolver {
     @Arg('input') { body, mediaLink, postId }: UpdatePostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdatePostPayload> {
-    const post = await postService.updatePost({ postId, body, mediaLink, profileId });
+    const post = await postService.updatePost({ postId, body, mediaLink, profileId: profileId.toString() });
     return { post };
   }
 
@@ -127,7 +128,11 @@ export class PostResolver {
     @Arg('input') input: ReactToPostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<ReactToPostPayload> {
-    const post = await postService.addReactionToPost({ ...input, profileId });
+    const post = await postService.addReactionToPost({
+      ...input,
+      postId: new mongoose.Types.ObjectId(input.postId),
+      profileId,
+    });
     return { post };
   }
 
@@ -138,7 +143,7 @@ export class PostResolver {
     @Arg('input') { postId }: RetractReactionInput,
     @CurrentUser() { profileId }: User,
   ): Promise<RetractReactionPayload> {
-    const post = await postService.removeReactionFromPost({ postId, profileId });
+    const post = await postService.removeReactionFromPost({ postId, profileId: profileId.toString() });
     return { post };
   }
 
@@ -149,7 +154,11 @@ export class PostResolver {
     @Arg('input') input: ChangeReactionInput,
     @CurrentUser() { profileId }: User,
   ): Promise<ChangeReactionPayload> {
-    const post = await postService.changeReactionToPost({ profileId, ...input });
+    const post = await postService.changeReactionToPost({
+      ...input,
+      postId: new mongoose.Types.ObjectId(input.postId),
+      profileId,
+    });
     return { post };
   }
 
@@ -160,7 +169,7 @@ export class PostResolver {
     @Arg('input') { body, repostId }: CreateRepostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreateRepostPayload> {
-    const post = await postService.createRepost({ profileId, body, repostId });
+    const post = await postService.createRepost({ profileId: profileId.toString(), body, repostId });
     const originalPost = await postService.getPost(repostId);
     return { post, originalPost };
   }
@@ -175,11 +184,11 @@ export class PostResolver {
     const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER);
 
     if (isAdmin) {
-      const post = await postService.deletePostByAdmin({ profileId, ...input });
+      const post = await postService.deletePostByAdmin({ profileId: profileId.toString(), ...input });
       return { post };
     }
 
-    const post = await postService.deletePost({ profileId, ...input });
+    const post = await postService.deletePost({ profileId: profileId.toString(), ...input });
     return { post };
   }
 

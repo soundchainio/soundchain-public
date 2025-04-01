@@ -96,11 +96,6 @@ export const config = {
   db: {
     url: DATABASE_URL,
     options: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useFindAndModify: false,
-      useCreateIndex: process.env.NODE_ENV === 'production',
-      ssl: process.env.NODE_ENV === 'production',
       sslCA: process.env.NODE_ENV === 'production' ? 'global-bundle.pem' : undefined,
       replicaSet: process.env.NODE_ENV === 'production' ? 'rs0' : undefined,
       readPreference: process.env.NODE_ENV === 'production' ? ('secondaryPreferred' as ReadPreferenceMode) : undefined,

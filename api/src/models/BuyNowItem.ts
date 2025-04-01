@@ -1,11 +1,13 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
 export class BuyNowItem extends Model {
+  // Use ObjectId for _id to match the base Model
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
   @Field()
   @prop({ required: true })

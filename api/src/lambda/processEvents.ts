@@ -8,7 +8,6 @@ import {
   BidPlaced,
   UpdateAuction,
 } from '../../types/web3-v1-contracts/SoundchainAuction';
-// import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { EditionCreated } from '../../types/web3-v2-contracts/Soundchain721Editions';
 import {
   EditionCanceled,
@@ -62,7 +61,7 @@ const processItemListed = async (event: ItemListed, context: Context): Promise<v
   if (!user) {
     return;
   }
-  const profile = await context.profileService.getProfile(user.profileId);
+  const profile = await context.profileService.getProfile(user.profileId.toString());
   if (!profile.verified && !listedBefore) {
     context.trackService.setPendingNone(parseInt(tokenId), nft);
     return;
@@ -80,7 +79,7 @@ const processItemListed = async (event: ItemListed, context: Context): Promise<v
     acceptsMATIC: acceptsMATIC,
     acceptsOGUN: acceptsOGUN,
     startingTime: parseInt(startingTime),
-    trackId: track._id,
+    trackId: track._id.toString(),
     trackEditionId: track?.trackEditionId,
   });
   if (track.nftData.owner === track.nftData.minter) {
@@ -156,7 +155,7 @@ const processTransfer = async (event: Transfer, context: Context): Promise<void>
     });
   } else if (returnValues.to === zeroAddress) {
     const track = await context.trackService.getTrackByTokenId(parseInt(returnValues.tokenId), address);
-    await context.trackService.deleteTrackByAdmin(track._id);
+    await context.trackService.deleteTrackByAdmin(track._id.toString());
   } else {
     await context.trackService.updateOwnerByTokenId(parseInt(returnValues.tokenId), returnValues.to, address);
   }
@@ -190,7 +189,7 @@ const processAuctionCreated = async (event: AuctionCreated, context: Context): P
   if (!user) {
     return;
   }
-  const profile = await context.profileService.getProfile(user.profileId);
+  const profile = await context.profileService.getProfile(user.profileId.toString());
   if (!profile.verified && !listedBefore) {
     context.trackService.setPendingNone(parseInt(tokenId), nftAddress);
     return;
@@ -207,7 +206,7 @@ const processAuctionCreated = async (event: AuctionCreated, context: Context): P
     reservePrice: reservePrice,
     reservePriceToShow: getPriceToShow(reservePrice),
     contract: address,
-    trackId: track._id,
+    trackId: track._id.toString(),
     trackEditionId: track?.trackEditionId,
   });
 
@@ -219,7 +218,7 @@ const processBidPlaced = async (returnValues: BidPlaced['returnValues'], context
   const tokenIdAsNumber = parseInt(tokenId);
   const auction = await context.auctionItemService.findAuctionItem(tokenIdAsNumber);
   const [outBided, track, user, seller] = await Promise.all([
-    context.bidService.getHighestBid(auction._id),
+    context.bidService.getHighestBid(auction._id.toString()),
     context.trackService.getTrackByTokenId(tokenIdAsNumber, nftAddress),
     context.userService.getUserByWallet(bidder),
     context.userService.getUserByWallet(auction.owner),
@@ -236,17 +235,17 @@ const processBidPlaced = async (returnValues: BidPlaced['returnValues'], context
       nft: nftAddress,
       tokenId: tokenIdAsNumber,
       bidder,
-      userId: user._id,
-      profileId: user.profileId,
+      userId: user._id.toString(),
+      profileId: user.profileId.toString(),
       amount: bid,
       amountToShow: getPriceToShow(bid),
-      auctionId: auction._id,
+      auctionId: auction._id.toString(),
     }),
     context.notificationService.notifyNewBid({
       track,
-      profileId: seller.profileId,
+      profileId: seller.profileId.toString(),
       price: getPriceToShow(bid),
-      auctionId: auction._id,
+      auctionId: auction._id.toString(),
     }),
   ];
   if (outBided) {
@@ -255,7 +254,7 @@ const processBidPlaced = async (returnValues: BidPlaced['returnValues'], context
         track,
         profileId: outBided.profileId,
         price: getPriceToShow(bid),
-        auctionId: auction._id,
+        auctionId: auction._id.toString(),
       }),
     );
   }

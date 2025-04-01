@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-express';
 import { FilterQuery } from 'mongoose';
@@ -9,8 +10,8 @@ import { ReactionType } from '../types/ReactionType';
 import { ModelService } from './ModelService';
 
 interface ReactionKeyComponents {
-  profileId: string;
-  postId: string;
+  profileId: mongoose.Types.ObjectId;
+  postId: mongoose.Types.ObjectId;
 }
 
 export interface NewReactionParams extends ReactionKeyComponents {
@@ -26,15 +27,15 @@ export class ReactionService extends ModelService<typeof Reaction, ReactionKeyCo
     super(context, ReactionModel);
   }
 
-  keyIteratee = ({ profileId, postId }: Partial<DocumentType<InstanceType<typeof Reaction>>>): string => {
-    return `${profileId}:${postId}`;
+  keyIteratee = ({ profileId, postId }: Partial<DocumentType<Reaction>>): string => {
+    return `${profileId.toString()}:${postId.toString()}`;
   };
 
   getFindConditionForKeys(keys: readonly string[]): FilterQuery<Reaction> {
     return {
       $or: keys.map(key => {
         const [profileId, postId] = key.split(':');
-        return { profileId, postId };
+        return { profileId: new mongoose.Types.ObjectId(profileId), postId: new mongoose.Types.ObjectId(postId) };
       }),
     };
   }

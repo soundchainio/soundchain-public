@@ -10,7 +10,6 @@ import { Role } from '../types/Role';
 
 @Resolver(TrackEdition)
 export class TrackEditionResolver {
-
   @Query(() => TrackEdition)
   async trackEdition(
     @Arg('id') id: string,
@@ -41,6 +40,6 @@ export class TrackEditionResolver {
     if (isAdmin) {
       return trackService.deleteTrackEditionByAdmin(trackEditionId);
     }
-    return trackService.deleteEditionTrack(profileId, trackEditionId);
+    return trackService.deleteEditionTrack(profileId.toString(), trackEditionId);
   }
 }

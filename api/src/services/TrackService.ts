@@ -1,7 +1,7 @@
+import mongoose from 'mongoose';
 import { Asset } from '@mux/mux-node';
-import { DocumentType, mongoose } from '@typegoose/typegoose';
+import { DocumentType } from '@typegoose/typegoose';
 import dot from 'dot-object';
-import { ObjectId } from 'mongodb';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { FavoriteProfileTrack, FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
@@ -40,7 +40,7 @@ type RecursivePartial<T> = {
 type bulkType = {
   updateOne: {
     filter: {
-      _id: string;
+      _id: mongoose.Types.ObjectId;
     };
     update: {
       $set: {
@@ -71,7 +71,7 @@ export class TrackService extends ModelService<typeof Track> {
     page?: PageInput,
   ): Promise<PaginateResult<Track>> {
     const defaultFilter = { title: { $exists: true }, deleted: false };
-    const { owner: filterOwner, ...allFilters } = filter;
+    const { owner: filterOwner, ...allFilters } = filter || {};
     const dotNotationFilter = allFilters && dot.dot(allFilters);
     const owner = filterOwner && {
       'nftData.owner': { $regex: `^${filterOwner}$`, $options: 'i' },
@@ -80,12 +80,12 @@ export class TrackService extends ModelService<typeof Track> {
     return this.paginate({ filter: { ...defaultFilter, ...dotNotationFilter, ...owner }, sort, page });
   }
 
-  async getListableOwnedTracks(filter?: FilterOwnedTracksInput) {
+  async getListableOwnedTracks(filter?: FilterOwnedTracksInput): Promise<PaginateResult<Track>> {
     const aggregation = [
       {
         $match: {
-          trackEditionId: new ObjectId(filter.trackEditionId),
-          'nftData.owner': filter.owner,
+          trackEditionId: new mongoose.Types.ObjectId(filter?.trackEditionId),
+          'nftData.owner': filter?.owner,
         },
       },
       {
@@ -125,12 +125,12 @@ export class TrackService extends ModelService<typeof Track> {
       'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
     };
 
-    if (dotNotationFilter['trackEditionId']) {
-      dotNotationFilter['trackEditionId'] = new ObjectId(dotNotationFilter['trackEditionId']);
+    if (dotNotationFilter && dotNotationFilter['trackEditionId']) {
+      dotNotationFilter['trackEditionId'] = new mongoose.Types.ObjectId(dotNotationFilter['trackEditionId']);
     }
 
-    if (dotNotationFilter['profileId']) {
-      dotNotationFilter['profileId'] = new ObjectId(dotNotationFilter['profileId']);
+    if (dotNotationFilter && dotNotationFilter['profileId']) {
+      dotNotationFilter['profileId'] = new mongoose.Types.ObjectId(dotNotationFilter['profileId']);
     }
 
     return this.paginatePipelineAggregated({
@@ -172,7 +172,7 @@ export class TrackService extends ModelService<typeof Track> {
   async getTrackFromEdition(id: string, trackEditionId?: string): Promise<Track> {
     const ors: any[] = [{ _id: id, deleted: false }];
     if (trackEditionId) {
-      ors.push({ trackEditionId: new ObjectId(trackEditionId), deleted: false });
+      ors.push({ trackEditionId: new mongoose.Types.ObjectId(trackEditionId), deleted: false });
     }
 
     const entity = await this.model.findOne({ $or: ors });
@@ -193,45 +193,11 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async createMultipleTracks(profileId: string, data: { track: Partial<Track>; batchSize: number }): Promise<Track[]> {
-    const asset = await this.context.muxService.create(data.track.assetUrl, data.track._id);
-    // const minter = await this.context.userService.getUserByProfileId(profileId);
-
-    // const firstTrack = await this.createTrack(profileId, data.track, asset);
-
-    // const remainingTracks =
-    //   data.batchSize > 1
-    //     ? await Promise.all(
-    //         Array(data.batchSize - 1)
-    //           .fill(null)
-    //           .map(() => this.createTrack(profileId, data.track, asset)),
-    //       )
-    //     : [];
-
-    // const allUsers = await this.context.userService.getAllUsers();
-
-    // await Promise.all(
-    //   allUsers.map(user =>
-    //     this.context.mailchimpService.sendTemplateEmail(user.email, 'nft-minted', {
-    //       subject: 'NFT Minted',
-    //       buyer_name: minter.handle,
-    //       buyer_profile_link: `https://www.soundchain.io/profiles/${minter.handle}`,
-    //       email_receiver_name: user.handle,
-    //       track_name: firstTrack.title,
-    //       track_details_link: `https://www.soundchain.io/tracks/${firstTrack._id}`,
-    //       track_src: firstTrack.artworkUrl,
-    //     }),
-    //   ),
-    // );
-
-    // return [firstTrack, ...remainingTracks];
-
+    const asset = await this.context.muxService.create(data.track.assetUrl, data.track._id?.toString());
     return await Promise.all(
       Array(data.batchSize)
         .fill(null)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        .map(_ => {
-          return this.createTrack(profileId, data.track, asset);
-        }),
+        .map(() => this.createTrack(profileId, data.track, asset)),
     );
   }
 
@@ -246,30 +212,30 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $set: {
           ...data,
-          'nftData.tokenId': newNftData.tokenId,
-          'nftData.contract': newNftData.contract,
-          'nftData.pendingRequest': newNftData.pendingRequest,
+          'nftData.tokenId': newNftData?.tokenId,
+          'nftData.contract': newNftData?.contract,
+          'nftData.pendingRequest': newNftData?.pendingRequest,
         },
       },
     );
 
-    if (track.nModified === 0) {
+    if (track.modifiedCount === 0) {
       const trackPending = new PendingTrackModel({
         transactionHash,
-        tokenId: newNftData.tokenId,
-        contract: newNftData.contract,
+        tokenId: newNftData?.tokenId,
+        contract: newNftData?.contract,
       });
       await trackPending.save();
     }
   }
 
-  async updateTrack(id: string, changes: RecursivePartial<Track>): Promise<Track> {
+  async updateTrack(id: mongoose.Types.ObjectId, changes: RecursivePartial<Track>): Promise<Track> {
     const { nftData: newNftData, ...data } = changes;
 
     const track = await this.model.findByIdAndUpdate(id, data, { new: true });
 
     if (!track) {
-      throw new NotFoundError('Track', id);
+      throw new NotFoundError('Track', id.toString());
     }
     return this.updateNftData(track, newNftData);
   }
@@ -286,8 +252,8 @@ export class TrackService extends ModelService<typeof Track> {
       { _id: trackEditionId },
       {
         $set: {
-          'editinoData.pendingRequest': newNftData.pendingRequest,
-          'editionData.pendingTime': newNftData.pendingTime,
+          'editinoData.pendingRequest': newNftData?.pendingRequest,
+          'editionData.pendingTime': newNftData?.pendingTime,
         },
         $inc: {
           'editionData.pendingTrackCount': trackIds.length,
@@ -296,10 +262,10 @@ export class TrackService extends ModelService<typeof Track> {
     );
 
     await this.model.updateMany(
-      { _id: trackIds, 'nftData.owner': owner, trackEditionId: trackEditionId },
+      { _id: { $in: trackIds.map(id => new mongoose.Types.ObjectId(id)) }, 'nftData.owner': owner, trackEditionId },
       {
         ...data,
-        $set: Object.keys(newNftData).reduce((acc, key) => {
+        $set: Object.keys(newNftData || {}).reduce((acc, key) => {
           acc[`nftData.${key}`] = (newNftData as any)[key];
           return acc;
         }, {} as any),
@@ -309,11 +275,11 @@ export class TrackService extends ModelService<typeof Track> {
 
     return await this.model.find({
       'nftData.owner': owner,
-      trackEditionId: trackEditionId,
+      trackEditionId,
     });
   }
 
-  private async updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>) {
+  private async updateNftData(track: DocumentType<Track>, newNftData?: Partial<NFTData>): Promise<Track> {
     if (newNftData) {
       const trackAsData = track.toObject();
       const nftData = trackAsData.nftData;
@@ -324,7 +290,7 @@ export class TrackService extends ModelService<typeof Track> {
     return track;
   }
 
-  private updateNftDataByTransactionHash(transactionHash: string, nftData: Partial<NFTData>) {
+  private updateNftDataByTransactionHash(transactionHash: string, nftData: Partial<NFTData>): Promise<any> {
     return this.model.updateOne(
       { 'nftData.transactionHash': transactionHash },
       {
@@ -337,6 +303,9 @@ export class TrackService extends ModelService<typeof Track> {
 
   async deleteTrack(id: string, profileId: string): Promise<Track> {
     const track = await this.model.findOneAndUpdate({ _id: id, profileId }, { deleted: true });
+    if (!track) {
+      throw new NotFoundError('Track', id);
+    }
     if (track.trackEditionId) {
       const trackEditionId = track.trackEditionId;
       const hasValidTracks = await this.model.find({ trackEditionId, deleted: false }).countDocuments();
@@ -349,6 +318,9 @@ export class TrackService extends ModelService<typeof Track> {
 
   async deleteTrackByAdmin(id: string): Promise<Track> {
     const track = await this.model.findOneAndUpdate({ _id: id }, { deleted: true });
+    if (!track) {
+      throw new NotFoundError('Track', id);
+    }
     if (track.trackEditionId) {
       const trackEditionId = track.trackEditionId;
       const hasValidTracks = await this.model.find({ trackEditionId, deleted: false }).countDocuments();
@@ -362,7 +334,7 @@ export class TrackService extends ModelService<typeof Track> {
   async deleteEditionTrack(profileId: string, trackEditionId: string): Promise<Track[]> {
     const res = await this.model.updateMany({ profileId, trackEditionId }, { deleted: true });
     const trackEdition = await TrackEditionModel.findById(trackEditionId);
-    if (trackEdition.editionSize === res.nModified) {
+    if (trackEdition && trackEdition.editionSize === res.modifiedCount) {
       await TrackEditionModel.updateOne({ _id: trackEditionId }, { deleted: true });
     }
     return this.model.find({ trackEditionId });
@@ -380,12 +352,16 @@ export class TrackService extends ModelService<typeof Track> {
 
     await NotificationModel.deleteMany({ 'metadata.trackId': id });
 
-    if (posts) {
+    if (posts.length > 0) {
       await PostModel.deleteMany({ _id: { $in: postsIds } });
       await FeedItemModel.deleteMany({ postId: { $in: postsIds } });
     }
 
-    return await this.model.findOneAndDelete({ _id: id });
+    const track = await this.model.findOneAndDelete({ _id: id });
+    if (!track) {
+      throw new NotFoundError('Track', id);
+    }
+    return track;
   }
 
   async incrementPlaybackCount(values: { trackId: string; amount: number }[]): Promise<number> {
@@ -395,7 +371,10 @@ export class TrackService extends ModelService<typeof Track> {
       const element = values[index];
       if (mongoose.Types.ObjectId.isValid(element.trackId)) {
         bulkOps.push({
-          updateOne: { filter: { _id: element.trackId }, update: { $set: { playbackCount: element.amount } } },
+          updateOne: {
+            filter: { _id: new mongoose.Types.ObjectId(element.trackId) },
+            update: { $set: { playbackCount: element.amount } },
+          },
         });
       }
     }
@@ -405,18 +384,30 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async setPendingNone(tokenId: number, contractAddress: string): Promise<Track> {
-    return await this.model.findOneAndUpdate(
+    const track = await this.model.findOneAndUpdate(
       { 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress },
       { 'nftData.pendingRequest': PendingRequest.None },
     );
+    if (!track) {
+      throw new NotFoundError('Track', `tokenId: ${tokenId}, contract: ${contractAddress}`);
+    }
+    return track;
   }
 
   async getTrackByTokenId(tokenId: number, contractAddress: string): Promise<Track> {
-    return await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
+    const track = await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
+    if (!track) {
+      throw new NotFoundError('Track', `tokenId: ${tokenId}, contract: ${contractAddress}`);
+    }
+    return track;
   }
 
   async updateOwnerByTokenId(tokenId: number, owner: string, contractAddress: string): Promise<Track> {
-    const { id } = await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
+    const track = await this.model.findOne({ 'nftData.tokenId': tokenId, 'nftData.contract': contractAddress });
+    if (!track) {
+      throw new NotFoundError('Track', `tokenId: ${tokenId}, contract: ${contractAddress}`);
+    }
+    const { id } = track;
     const { profileId } = await this.context.userService.getUserByWallet(owner);
     return await this.updateTrack(id, { nftData: { owner }, profileId });
   }
@@ -427,14 +418,18 @@ export class TrackService extends ModelService<typeof Track> {
       ors.push({ trackEditionId });
     }
 
-    return await FavoriteProfileTrackModel.exists({
+    return !!(await FavoriteProfileTrackModel.exists({
       $or: ors,
       profileId,
-    });
+    }));
   }
 
   async toggleFavorite(trackId: string, profileId: string): Promise<FavoriteProfileTrack> {
     const track = await this.model.findOne({ _id: trackId });
+
+    if (!track) {
+      throw new NotFoundError('Track', trackId);
+    }
 
     const ors: any[] = [{ trackId }];
 
@@ -462,12 +457,12 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   getFavoriteTracks(
-    ids: ObjectId[],
+    ids: mongoose.Types.ObjectId[],
     search?: string,
     sort?: SortTrackInput,
     page?: PageInput,
   ): Promise<PaginateResult<Track>> {
-    const regex = new RegExp(search, 'i');
+    const regex = new RegExp(search || '', 'i');
 
     const filter = {
       $or: [{ title: regex }, { description: regex }, { artist: regex }, { album: regex }],
@@ -502,14 +497,14 @@ export class TrackService extends ModelService<typeof Track> {
         },
       },
     ]);
-    return favTrack.length ? favTrack[0].count : 0;
+    return favTrack.length ? favTrack[0] : { count: 0 };
   }
 
   async playbackCount(trackId: string, trackEditionId: string): Promise<number> {
-    const ors: any[] = [{ _id: new ObjectId(trackId) }];
+    const ors: any[] = [{ _id: new mongoose.Types.ObjectId(trackId) }];
 
     if (trackEditionId) {
-      ors.push({ trackEditionId: new ObjectId(trackEditionId) });
+      ors.push({ trackEditionId: new mongoose.Types.ObjectId(trackEditionId) });
     }
 
     const trackQuery = await this.model.aggregate([
@@ -543,8 +538,14 @@ export class TrackService extends ModelService<typeof Track> {
     if (!listing) {
       return '';
     }
-    const { endingTime, pricePerItem } = listing;
-    return (endingTime && 'auction') || (pricePerItem && 'buy now') || '';
+
+    // Type guard to distinguish between AuctionItem and BuyNowItem
+    if ('endingTime' in listing) {
+      return 'auction';
+    } else if ('pricePerItem' in listing) {
+      return 'buy now';
+    }
+    return '';
   }
 
   async priceToShow(tokenId: number, contractAddress: string): Promise<TrackPrice> {
@@ -552,10 +553,18 @@ export class TrackService extends ModelService<typeof Track> {
     if (!listing) {
       return { value: 0, currency: CurrencyType.MATIC };
     }
-    const { pricePerItemToShow, reservePriceToShow } = listing;
-    const value = reservePriceToShow
-      ? (await this.context.auctionItemService.getHighestBid(listing._id)) || reservePriceToShow
-      : pricePerItemToShow;
+
+    let value: number;
+    if ('reservePriceToShow' in listing) {
+      // AuctionItem
+      value =
+        (await this.context.auctionItemService.getHighestBid(listing._id.toString())) ||
+        (listing as any).reservePriceToShow;
+    } else {
+      // BuyNowItem
+      value = (listing as any).pricePerItemToShow;
+    }
+
     return { value, currency: CurrencyType.MATIC };
   }
 
@@ -775,7 +784,7 @@ export class TrackService extends ModelService<typeof Track> {
       },
     ];
 
-    const queryFilter: any = { deleted: false, trackEditionId: new ObjectId(filter.trackEdition) };
+    const queryFilter: any = { deleted: false, trackEditionId: new mongoose.Types.ObjectId(filter?.trackEdition) };
     const owner = filter?.nftData?.owner && {
       'nftData.owner': { $regex: `^${filter.nftData.owner}$`, $options: 'i' },
     };
@@ -789,7 +798,7 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async resetPending(beforeTime: Date): Promise<void> {
-    return this.model.updateMany(
+    await this.model.updateMany(
       {
         'nftData.pendingRequest': { $ne: PendingRequest.None },
         'nftData.pendingTime': { $lte: beforeTime },
@@ -800,15 +809,15 @@ export class TrackService extends ModelService<typeof Track> {
 
   async processPendingTrack(): Promise<void> {
     const pendingTracks = await PendingTrackModel.find({ processed: false });
-    pendingTracks.forEach(async ({ transactionHash, tokenId, contract, _id }) => {
+    for (const { transactionHash, tokenId, contract, _id } of pendingTracks) {
       const updatedTrack = await this.updateNftDataByTransactionHash(transactionHash, {
         tokenId,
         contract,
       });
       if (!updatedTrack) {
-        return;
+        continue;
       }
       await PendingTrackModel.updateOne({ _id }, { processed: true });
-    });
+    }
   }
 }

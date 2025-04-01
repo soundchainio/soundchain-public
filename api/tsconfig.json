@@ -17,8 +17,8 @@
     "moduleResolution": "node",
     "outDir": ".build",
     "rootDir": "./",
-    "typeRoots": ["./typings", "./node_modules/@types"]
+    "typeRoots": ["./types", "./node_modules/@types"]
   },
-  "include": ["src/**/*.ts", "migrate-mongo-config.js", "migrations/**/*"],
-  "exclude": ["node_modules", "typings", "src/utils/airdrop"]
+  "include": ["types/**/*.d.ts", "src/**/*.ts", "migrate-mongo-config.js", "migrations/**/*"],
+  "exclude": ["node_modules", "src/utils/airdrop"]
 }

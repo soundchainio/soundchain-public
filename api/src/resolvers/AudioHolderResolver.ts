@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { AudioHolder } from '../models/AudioHolder';
 import { Context } from '../types/Context';
@@ -19,7 +20,7 @@ export class AudioHolderResolver {
     @Ctx() { audioHolderService }: Context,
     @Arg('input') { id, ogunClaimed }: UpdateOgunClaimedInput,
   ): Promise<UpdateOgunClaimedAudioHolderPayload> {
-    const audioHolder = await audioHolderService.updateOgunClaimed(id, ogunClaimed);
+    const audioHolder = await audioHolderService.updateOgunClaimed(new mongoose.Types.ObjectId(id), ogunClaimed);
     return { audioHolder };
   }
 }

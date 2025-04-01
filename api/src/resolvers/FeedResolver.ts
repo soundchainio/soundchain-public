@@ -11,7 +11,7 @@ import { PageInput } from '../types/PageInput';
 export class FeedResolver {
   @FieldResolver(() => Post)
   post(@Ctx() { postService }: Context, @Root() { postId }: FeedItem): Promise<Post> {
-    return postService.getPost(postId);
+    return postService.getPost(postId.toString());
   }
 
   @Query(() => FeedConnection)
@@ -21,6 +21,6 @@ export class FeedResolver {
     @Arg('page', { nullable: true }) page: PageInput,
     @CurrentUser() { profileId }: User,
   ): Promise<FeedConnection> {
-    return feedService.getFeed(profileId, page);
+    return feedService.getFeed(profileId.toString(), page);
   }
 }

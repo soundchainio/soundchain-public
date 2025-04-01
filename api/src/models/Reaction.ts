@@ -1,23 +1,23 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { ReactionType } from '../types/ReactionType';
 import { Model } from './Model';
-import { ObjectId } from 'mongodb';
 
 @ObjectType()
 export class Reaction extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
-  @prop({ type: ObjectId, required: true })
-  profileId: string;
+  @Field(() => ID)
+  @prop({ type: mongoose.Types.ObjectId, required: true })
+  profileId: mongoose.Types.ObjectId;
 
-  @Field()
-  @prop({ required: true })
-  postId: string;
+  @Field(() => ID)
+  @prop({ type: mongoose.Types.ObjectId, required: true })
+  postId: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => ReactionType)
   @prop({ required: true, type: String, enum: ReactionType })
   type: ReactionType;
 

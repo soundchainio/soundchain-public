@@ -1,16 +1,17 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { ReactionStats } from '../types/ReactionStats';
 import { Model } from './Model';
-import { ObjectId } from 'mongodb';
 
 @ObjectType()
 export class Post extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
-  @prop({ type: ObjectId, required: true })
-  profileId: string;
+  @Field(() => ID)
+  @prop({ type: mongoose.Types.ObjectId, required: true })
+  profileId: mongoose.Types.ObjectId;
 
   @Field({ nullable: true })
   @prop({ required: false })
@@ -23,15 +24,17 @@ export class Post extends Model {
   @prop({ required: true, default: {}, _id: false })
   reactionStats: ReactionStats;
 
-  @Field({ nullable: true })
-  @prop({ required: false })
-  repostId?: string;
+  @Field(() => ID, { nullable: true }) // Add @Field() decorator
+  @prop({ required: false, type: mongoose.Types.ObjectId })
+  repostId?: mongoose.Types.ObjectId;
 
-  @prop({ required: false })
-  trackId?: string;
+  @Field(() => ID, { nullable: true })
+  @prop({ required: false, type: mongoose.Types.ObjectId })
+  trackId?: mongoose.Types.ObjectId;
 
-  @prop({ required: false })
-  trackEditionId?: string;
+  @Field(() => ID, { nullable: true })
+  @prop({ required: false, type: mongoose.Types.ObjectId })
+  trackEditionId?: mongoose.Types.ObjectId;
 
   @Field({ nullable: true })
   @prop({ default: false })

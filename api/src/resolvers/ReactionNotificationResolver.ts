@@ -8,7 +8,7 @@ import { ReactionType } from '../types/ReactionType';
 export class ReactionNotificationResolver {
   @FieldResolver(() => String)
   id(@Root() { _id }: Notification): string {
-    return _id;
+    return _id.toString();
   }
 
   @FieldResolver(() => String)
@@ -26,7 +26,7 @@ export class ReactionNotificationResolver {
   @FieldResolver(() => String)
   postId(@Root() { metadata }: Notification): string {
     const { postId } = metadata as ReactionNotificationMetadata;
-    return postId;
+    return postId.toString(); // Convert to string in case it's an ObjectId
   }
 
   @FieldResolver(() => ReactionType)
@@ -38,6 +38,6 @@ export class ReactionNotificationResolver {
   @FieldResolver(() => String)
   link(@Root() { metadata }: Notification): string {
     const { postId } = metadata as ReactionNotificationMetadata;
-    return `/posts/${postId}`;
+    return `/posts/${postId.toString()}`; // Convert to string in case it's an ObjectId
   }
 }

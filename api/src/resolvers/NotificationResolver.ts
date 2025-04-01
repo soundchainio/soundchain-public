@@ -19,7 +19,7 @@ export class NotificationResolver {
     @Arg('sort', { nullable: true }) sort?: SortNotificationInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<NotificationConnection> {
-    return notificationService.getNotifications(profileId, sort, page);
+    return notificationService.getNotifications(profileId.toString(), sort, page);
   }
 
   @Query(() => NotificationUnion)
@@ -34,7 +34,7 @@ export class NotificationResolver {
     @CurrentUser() { profileId }: User,
     @Ctx() { notificationService }: Context,
   ): Promise<Profile> {
-    return notificationService.resetNotificationCount(profileId);
+    return notificationService.resetNotificationCount(profileId.toString());
   }
 
   @Mutation(() => ClearNotificationsPayload)
@@ -43,7 +43,7 @@ export class NotificationResolver {
     @CurrentUser() { profileId }: User,
     @Ctx() { notificationService }: Context,
   ): Promise<ClearNotificationsPayload> {
-    const ok = await notificationService.clearNotifications(profileId);
+    const ok = await notificationService.clearNotifications(profileId.toString());
     return { ok };
   }
 }

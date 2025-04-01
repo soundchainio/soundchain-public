@@ -1,5 +1,5 @@
+import mongoose from 'mongoose';
 import { DocumentType } from '@typegoose/typegoose';
-import { ObjectId } from 'mongodb';
 import { paginate, PaginateResult } from '../db/pagination/paginate';
 import { FavoritePlaylist, FavoritePlaylistModel } from '../models/FavoritePlaylist';
 import { FollowPlaylist, FollowPlaylistModel } from '../models/FollowPlaylist';
@@ -34,35 +34,38 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     super(context, PlaylistModel);
   }
 
-  async createPlaylistTrack(trackIds: string[], profileId: string, playlist: DocumentType<Playlist>) {
-    const existingTracks = await TrackModel.find({ _id: trackIds }, '_id');
+  async createPlaylistTrack(trackIds: string[], profileId: string, playlist: DocumentType<Playlist>): Promise<void> {
+    const existingTracks = await TrackModel.find({ _id: { $in: trackIds } }, '_id');
 
-    existingTracks.forEach(track => {
+    const playlistTracks = existingTracks.map(track => {
       const playlistTrack = new PlaylistTrackModel({
         trackId: track._id,
         profileId,
         playlistId: playlist.id,
-      })
-
-      playlistTrack.save()
+      });
+      return playlistTrack.save();
     });
-  };
+
+    await Promise.all(playlistTracks);
+  }
 
   async createPlaylist(params: CreatePlaylistParams): Promise<Playlist> {
-    const { trackIds, profileId } = params;
+    const { trackIds = [], profileId } = params;
 
     const playlist = new this.model(params);
     await playlist.save();
 
-    if (trackIds.length > 0) this.createPlaylistTrack(trackIds, profileId, playlist);
+    if (trackIds.length > 0) {
+      await this.createPlaylistTrack(trackIds, profileId, playlist);
+    }
 
     return playlist;
   }
 
   async updatePlaylist(params: EditPlaylistParams): Promise<Playlist> {
-    const { playlistId, title, artworkUrl, description } = params
+    const { playlistId, title, artworkUrl, description } = params;
 
-    const playlist = this.model.findOneAndUpdate(
+    const playlist = await this.model.findOneAndUpdate(
       { _id: playlistId },
       {
         title,
@@ -72,63 +75,62 @@ export class PlaylistService extends ModelService<typeof Playlist> {
       { new: true },
     );
 
+    if (!playlist) {
+      throw new Error(`Playlist with id ${playlistId} not found`);
+    }
+
     return playlist;
   }
 
   async createPlaylistTracks(params: CreatePlaylistTracks, profileId: string): Promise<void> {
-    const { trackIds, playlistId } = params
+    const { trackIds, playlistId } = params;
 
-    const playlistTracks = trackIds.map(trackId => {
-      return {
-        updateOne: {
-          filter: {playlistId, trackId},
-          update: { $set : {
+    const playlistTracks = trackIds.map(trackId => ({
+      updateOne: {
+        filter: { playlistId, trackId },
+        update: {
+          $set: {
             trackId,
             playlistId,
-            profileId
-          }},
-          upsert: true,
-        }
-      }
-    })
+            profileId,
+          },
+        },
+        upsert: true,
+      },
+    }));
 
-    await PlaylistTrackModel.bulkWrite(playlistTracks)
+    await PlaylistTrackModel.bulkWrite(playlistTracks);
   }
 
-  async deletePlaylistTracks(params: DeletePlaylistTracks, profileId: string): Promise<PlaylistTrack> {
-    const { trackIds, playlistId } = params
+  async deletePlaylistTracks(params: DeletePlaylistTracks, profileId: string): Promise<void> {
+    const { trackIds, playlistId } = params;
 
-    const playlistTracks = trackIds.map(trackId => {
-      return {
-        deleteOne: {
-          filter: { playlistId, trackId, profileId},
-        }
-      }
-    })
+    const playlistTracks = trackIds.map(trackId => ({
+      deleteOne: {
+        filter: { playlistId, trackId, profileId },
+      },
+    }));
 
-    const deleted = await PlaylistTrackModel.bulkWrite(playlistTracks)
-
-    return deleted
+    await PlaylistTrackModel.bulkWrite(playlistTracks);
   }
 
   getPlaylists(profileId?: string, sort?: SortPlaylistInput, page?: PageInput): Promise<PaginateResult<Playlist>> {
     return this.paginate({ filter: { profileId, deleted: false }, sort, page });
   }
 
-  
   async favoriteCount(playlistId: string): Promise<number> {
-    return await FavoritePlaylistModel.countDocuments({playlistId})
+    return await FavoritePlaylistModel.countDocuments({ playlistId });
   }
 
   async followCount(playlistId: string): Promise<number> {
-    return await FollowPlaylistModel.countDocuments({playlistId})
+    return await FollowPlaylistModel.countDocuments({ playlistId });
   }
 
   async toggleFavorite(playlistId: string, profileId: string): Promise<FavoritePlaylist> {
-    const favoritePlaylist = await FavoritePlaylistModel.findOne({playlistId});
+    const favoritePlaylist = await FavoritePlaylistModel.findOne({ playlistId, profileId });
 
     if (favoritePlaylist?.id) {
-      return await FavoritePlaylistModel.findOneAndDelete({playlistId});
+      return await FavoritePlaylistModel.findOneAndDelete({ playlistId, profileId });
     }
 
     const favorite = new FavoritePlaylistModel({
@@ -141,17 +143,17 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async isFavorite(playlistId: string, profileId: string): Promise<boolean> {
-    return await FavoritePlaylistModel.exists({
+    return !!(await FavoritePlaylistModel.exists({
       playlistId,
       profileId,
-    });
+    }));
   }
 
   async togglePlaylistFollow(playlistId: string, profileId: string): Promise<FollowPlaylist> {
-    const followPlaylistModel = await FollowPlaylistModel.findOne({playlistId});
+    const followPlaylistModel = await FollowPlaylistModel.findOne({ playlistId, profileId });
 
     if (followPlaylistModel?.id) {
-      return await FollowPlaylistModel.findOneAndDelete({playlistId});
+      return await FollowPlaylistModel.findOneAndDelete({ playlistId, profileId });
     }
 
     const favorite = new FollowPlaylistModel({
@@ -164,20 +166,19 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async isFollowed(playlistId: string, profileId: string): Promise<boolean> {
-    return await FollowPlaylistModel.exists({
+    return !!(await FollowPlaylistModel.exists({
       playlistId,
       profileId,
-    });
+    }));
   }
 
-
   getFavoritePlaylists(
-    ids: ObjectId[],
+    ids: mongoose.Types.ObjectId[],
     search?: string,
     sort?: SortPlaylistInput,
     page?: PageInput,
   ): Promise<PaginateResult<Playlist>> {
-    const regex = new RegExp(search, 'i');
+    const regex = new RegExp(search || '', 'i');
 
     const filter = {
       $or: [{ title: regex }, { description: regex }, { profileId: regex }, { playbackCount: regex }],
@@ -193,12 +194,10 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   getTracksFromPlaylist(
     playlistId: string,
     sort?: any,
-    page?: PageInput
+    page?: PageInput,
   ): Promise<PaginateResult<PlaylistTrack>> {
-
     const filter = { playlistId, deleted: false };
 
-    return paginate(PlaylistTrackModel,{ filter: { ...filter }, sort, page });
+    return paginate(PlaylistTrackModel, { filter: { ...filter }, sort, page });
   }
-  
 }

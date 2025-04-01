@@ -1,5 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Genre } from '../types/Genres';
 import { MuxAsset } from '../types/MuxAsset';
@@ -10,11 +10,11 @@ import { TrackEdition } from './TrackEdition';
 @ObjectType()
 export class Track extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
-  @prop({ type: ObjectId })
-  profileId: string;
+  @Field(() => ID)
+  @prop({ type: mongoose.Types.ObjectId })
+  profileId: mongoose.Types.ObjectId;
 
   @Field({ nullable: true })
   @prop()
@@ -83,12 +83,12 @@ export class Track extends Model {
   @Field({ nullable: true })
   @prop()
   ISRC: string;
-  
+
   @Field()
   playbackCountFormatted: string;
 
   @Field({ nullable: true })
-  @prop({ type: ObjectId })
+  @prop({ type: mongoose.Types.ObjectId })
   trackEditionId: string;
 
   @Field(() => TrackEdition, { nullable: true })

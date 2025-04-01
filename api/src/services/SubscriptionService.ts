@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-errors';
 import { FilterQuery } from 'mongoose';
@@ -7,8 +8,8 @@ import { Context } from '../types/Context';
 import { ModelService } from './ModelService';
 
 interface SubscriptionKeyComponents {
-  subscriberId: string;
-  profileId: string;
+  subscriberId: mongoose.Types.ObjectId;
+  profileId: mongoose.Types.ObjectId;
 }
 
 export class SubscriptionService extends ModelService<typeof Subscription, SubscriptionKeyComponents> {
@@ -16,15 +17,15 @@ export class SubscriptionService extends ModelService<typeof Subscription, Subsc
     super(context, SubscriptionModel);
   }
 
-  keyIteratee = ({ subscriberId, profileId }: Partial<DocumentType<InstanceType<typeof Subscription>>>): string => {
-    return `${subscriberId}:${profileId}`;
+  keyIteratee = ({ subscriberId, profileId }: Partial<DocumentType<Subscription>>): string => {
+    return `${subscriberId.toString()}:${profileId.toString()}`;
   };
 
   getFindConditionForKeys(keys: readonly string[]): FilterQuery<Subscription> {
     return {
       $or: keys.map(key => {
         const [subscriberId, profileId] = key.split(':');
-        return { subscriberId, profileId };
+        return { subscriberId: new mongoose.Types.ObjectId(subscriberId), profileId: new mongoose.Types.ObjectId(profileId) };
       }),
     };
   }
@@ -36,7 +37,7 @@ export class SubscriptionService extends ModelService<typeof Subscription, Subsc
 
     const [subscribedProfile, alreadySubscribed] = await Promise.all([
       this.context.profileService.findOrFail(profileId),
-      this.exists({ subscriberId, profileId }),
+      this.exists({ subscriberId: new mongoose.Types.ObjectId(subscriberId), profileId: new mongoose.Types.ObjectId(profileId) }),
     ]);
 
     if (alreadySubscribed) {
@@ -60,13 +61,13 @@ export class SubscriptionService extends ModelService<typeof Subscription, Subsc
       throw new UserInputError(`User profile ${subscriberId} isn't subscribing profile ${profileId}.`);
     }
 
-    this.dataLoader.clear(this.getKeyFromComponents({ subscriberId, profileId }));
+    this.dataLoader.clear(this.getKeyFromComponents({ subscriberId: new mongoose.Types.ObjectId(subscriberId), profileId: new mongoose.Types.ObjectId(profileId) }));
 
     return subscribedProfile;
   }
 
   async getSubscriberIds(profileId: string): Promise<string[]> {
     const subscriptions = await this.model.find({ profileId }, { subscriberId: 1, _id: 0 });
-    return subscriptions.map(({ subscriberId }) => subscriberId);
+    return subscriptions.map(({ subscriberId }) => subscriberId.toString());
   }
 }

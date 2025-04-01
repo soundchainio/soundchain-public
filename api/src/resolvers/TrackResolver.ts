@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
@@ -41,9 +41,9 @@ export class TrackResolver {
   @FieldResolver(() => Number)
   playbackCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId, playbackCount }: Track): Promise<number> {
     if (trackEditionId) {
-      return trackService.playbackCount(trackId, trackEditionId);
+      return trackService.playbackCount(trackId.toString(), trackEditionId);
     }
-    return Promise.resolve(playbackCount)
+    return Promise.resolve(playbackCount);
   }
 
   @FieldResolver(() => String)
@@ -51,26 +51,26 @@ export class TrackResolver {
     @Ctx() { trackService }: Context,
     @Root() { _id: trackId, trackEditionId, playbackCount }: Track,
   ): Promise<string> {
-    const playbackCountToUse = trackEditionId ? await trackService.playbackCount(trackId, trackEditionId) : playbackCount;
+    const playbackCountToUse = trackEditionId ? await trackService.playbackCount(trackId.toString(), trackEditionId) : playbackCount;
 
     return playbackCountToUse ? new Intl.NumberFormat('en-US').format(playbackCountToUse) : '';
   }
 
   @FieldResolver(() => Number)
   favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<FavoriteCount> {
-    return trackService.favoriteCount(trackId, trackEditionId);
+    return trackService.favoriteCount(trackId.toString(), trackEditionId);
   }
 
   @FieldResolver(() => Number)
   listingCount(@Ctx() { listingCountByTrackEdition }: Context, @Root() { trackEditionId }: Track): Promise<number> {
-    if(!trackEditionId) return Promise.resolve(0)
+    if (!trackEditionId) return Promise.resolve(0);
     return listingCountByTrackEdition.load(trackEditionId);
   }
 
   @FieldResolver(() => TrackPrice)
   price(@Ctx() { trackService, listingItemService }: Context, @Root() { trackEditionId, nftData }: Track): Promise<TrackPrice> {
-    if(trackEditionId) {
-      return listingItemService.getCheapestListingItem(trackEditionId)
+    if (trackEditionId) {
+      return listingItemService.getCheapestListingItem(trackEditionId);
     }
     return trackService.priceToShow(nftData.tokenId, nftData.contract);
   }
@@ -89,7 +89,7 @@ export class TrackResolver {
     if (!user) {
       return Promise.resolve(false);
     }
-    return trackService.isFavorite(trackId, user.profileId, trackEditionId);
+    return trackService.isFavorite(trackId.toString(), user.profileId.toString(), trackEditionId);
   }
 
   @FieldResolver(() => Number)
@@ -120,7 +120,29 @@ export class TrackResolver {
     if (typeof nftData.tokenId !== 'number' || !nftData.contract) {
       return;
     }
-    return listingItemService.getListingItem(nftData.tokenId, nftData.contract);
+    const item = await listingItemService.getListingItem(nftData.tokenId, nftData.contract);
+    if (!item) return undefined;
+
+    // Transform AuctionItem or BuyNowItem to ListingItem
+    const isAuctionItem = 'reservePrice' in item; // Type guard for AuctionItem
+    return {
+      _id: item._id,
+      id: item._id.toString(),
+      owner: item.owner,
+      nft: item.nft,
+      tokenId: item.tokenId,
+      contract: item.nft || nftData.contract,
+      selectedCurrency: 'selectedCurrency' in item ? item.selectedCurrency : 'MATIC',
+      pricePerItem: 'pricePerItem' in item ? item.pricePerItem : item.reservePrice,
+      pricePerItemToShow: 'pricePerItemToShow' in item ? item.pricePerItemToShow : item.reservePriceToShow,
+      OGUNPricePerItem: 'OGUNPricePerItem' in item ? item.OGUNPricePerItem : '0',
+      OGUNPricePerItemToShow: 'OGUNPricePerItemToShow' in item ? item.OGUNPricePerItemToShow : 0,
+      acceptsMATIC: 'acceptsMATIC' in item ? item.acceptsMATIC : true,
+      acceptsOGUN: 'acceptsOGUN' in item ? item.acceptsOGUN : item.isPaymentOGUN,
+      startingTime: item.startingTime,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    };
   }
 
   @Query(() => Track)
@@ -180,20 +202,20 @@ export class TrackResolver {
     @CurrentUser() { profileId }: User,
     @Arg('input') input: CreateMultipleTracksInput,
   ): Promise<CreateMultipleTracksPayload> {
-    const [track, ...otherTracks] = await trackService.createMultipleTracks(profileId, {
+    const [track, ...otherTracks] = await trackService.createMultipleTracks(profileId.toString(), {
       batchSize: input.batchSize,
       track: input.track,
     });
     if (input.createPost) {
       await postService.createPost({
-        profileId,
-        trackId: track._id,
+        profileId: profileId.toString(),
+        trackId: track._id.toString(),
         trackEditionId: track.trackEditionId,
       });
     }
     return {
       firstTrack: track,
-      trackIds: [track._id, ...otherTracks.map(track => track._id)],
+      trackIds: [track._id.toString(), ...otherTracks.map(track => track._id.toString())],
     };
   }
 
@@ -203,7 +225,7 @@ export class TrackResolver {
     @Ctx() { trackService }: Context,
     @Arg('input') { trackId, ...changes }: UpdateTrackInput,
   ): Promise<UpdateTrackPayload> {
-    const track = await trackService.updateTrack(trackId, changes);
+    const track = await trackService.updateTrack(new mongoose.Types.ObjectId(trackId), changes);
     return { track };
   }
 
@@ -241,7 +263,7 @@ export class TrackResolver {
       return track;
     }
 
-    const track = await trackService.deleteTrack(trackId, profileId);
+    const track = await trackService.deleteTrack(trackId, profileId.toString());
     return track;
   }
 
@@ -252,7 +274,7 @@ export class TrackResolver {
     @CurrentUser() { profileId }: User,
     @Arg('trackId') trackId: string,
   ): Promise<ToggleFavoritePayload> {
-    const favoriteProfileTrack = await trackService.toggleFavorite(trackId, profileId);
+    const favoriteProfileTrack = await trackService.toggleFavorite(trackId, profileId.toString());
     return { favoriteProfileTrack };
   }
 
@@ -265,7 +287,7 @@ export class TrackResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
     const favorites = await FavoriteProfileTrackModel.find({ profileId });
-    const ids = favorites.map(item => new ObjectId(item.trackId));
+    const ids = favorites.map(item => new mongoose.Types.ObjectId(item.trackId.toString()));
     return trackService.getFavoriteTracks(ids, search, sort, page);
   }
 

@@ -1,17 +1,12 @@
+import mongoose from 'mongoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { Comment } from '../models/Comment';
 import { Follow } from '../models/Follow';
-import {
-  Notification,
-  NotificationModel,
-} from '../models/Notification';
+import { Notification, NotificationModel } from '../models/Notification';
 import { Post } from '../models/Post';
-import {
-  Profile,
-  ProfileModel,
-} from '../models/Profile';
-import { Reaction } from '../models/Reaction';
+import { Profile, ProfileModel } from '../models/Profile';
+import { Reaction } from '../models/Reaction'; // Fixed import path
 import { Track } from '../models/Track';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
@@ -66,58 +61,47 @@ export class NotificationService extends ModelService<typeof Notification> {
       authorPicture,
     };
 
-    // const sendTo = ['gandalf.dla@gmail.com', 'admin@soundchain.io'];
-
-    // sendTo.forEach(async email => {
-    //   await this.context.mailchimpService.sendTemplateEmail(email, 'nft-minted', {
-    //     subject: 'NFT Minted',
-    //     buyer_name: 'Randal',
-    //     buyer_profile_link: 'https://www.soundchain.io/profiles/randal923',
-    //     email_receiver_name: 'Frank',
-    //     track_name: 'Sweet Child of Mine',
-    //     track_details_link: 'https://www.soundchain.io/tracks/65ad763db7d4a40008019312',
-    //     track_src:
-    //       'https://www.soundchain.io/_next/image?url=https%3A%2F%2Fsoundchain-api-production-uploads.s3.us-east-1.amazonaws.com%2F7eec4b1d-9864-413e-8cbf-232d022ecc3f&w=3840&q=75',
-    //     nft_owner_name: 'Jeremy',
-    //   });
-    // });
-
     const notification = new NotificationModel({
       type: NotificationType.Comment,
-      profileId,
+      profileId: profileId.toString(),
       metadata,
     });
     await notification.save();
-    await this.incrementNotificationCount(profileId);
+    await this.incrementNotificationCount(profileId.toString());
   }
 
   async notifyNewReaction({ postId, profileId, type: reactionType }: Reaction): Promise<void> {
     const [{ profileId: postProfileId }, { displayName: authorName, profilePicture: authorPicture }] =
-      await Promise.all([this.context.postService.getPost(postId), this.context.profileService.getProfile(profileId)]);
+      await Promise.all([
+        this.context.postService.getPost(postId.toString()),
+        this.context.profileService.getProfile(profileId.toString()),
+      ]);
+
+    const metadata = {
+      authorName,
+      authorPicture,
+      postId,
+      reactionType,
+    };
 
     const notification = new NotificationModel({
       type: NotificationType.Reaction,
-      profileId: postProfileId,
-      metadata: {
-        authorName,
-        authorPicture,
-        postId,
-        reactionType,
-      },
+      profileId: postProfileId.toString(),
+      metadata,
     });
 
     await notification.save();
-    await this.incrementNotificationCount(postProfileId);
+    await this.incrementNotificationCount(postProfileId.toString());
   }
 
-  async notifyNewFollower({ followerId, followedId: profileId }: Follow): Promise<void> {
+  async notifyNewFollower({ followerId, followedId }: Follow): Promise<void> {
     const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
-      followerId,
+      followerId.toString(),
     );
-    const followerHandle = await this.context.profileService.getUserHandle(followerId);
+    const followerHandle = await this.context.profileService.getUserHandle(followerId.toString());
     const notification = new NotificationModel({
       type: NotificationType.Follower,
-      profileId,
+      profileId: followedId.toString(),
       metadata: {
         followerId,
         followerName,
@@ -126,7 +110,7 @@ export class NotificationService extends ModelService<typeof Notification> {
       },
     });
     await notification.save();
-    await this.incrementNotificationCount(profileId);
+    await this.incrementNotificationCount(followedId.toString());
   }
 
   async notifyNFTSold({
@@ -140,12 +124,12 @@ export class NotificationService extends ModelService<typeof Notification> {
     sellType,
     isPaymentOgun,
   }: Omit<FinishBuyNowItemInput, 'tokenId'>): Promise<void> {
-    const buyer = await this.context.profileService.getProfile(buyerProfileId);
-    const seller = await this.context.profileService.getProfile(sellerProfileId);
+    const buyer = await this.context.profileService.getProfile(buyerProfileId.toString());
+    const seller = await this.context.profileService.getProfile(sellerProfileId.toString());
 
     const notification = new NotificationModel({
       type: NotificationType.NFTSold,
-      profileId: sellerProfileId,
+      profileId: sellerProfileId.toString(),
       metadata: {
         buyerProfileId,
         trackId,
@@ -162,23 +146,25 @@ export class NotificationService extends ModelService<typeof Notification> {
 
     const trackUrl = `https://www.soundchain.io/tracks/${trackId}`;
     const buyerProfileUrl = `https://www.soundchain.io/profiles/${buyer.displayName}`;
-    const sendTo = ['gandalf.dla@gmail.com', 'admin@soundchain.io'];
+    const sendTo = ['admin@soundchain.io'];
 
-    sendTo.forEach(async email => {
-      await this.context.mailchimpService.sendTemplateEmail(email, 'nft-minted', {
-        subject: 'NFT Minted',
-        buyer_name: buyer.displayName,
-        buyer_profile_link: buyerProfileUrl,
-        email_receiver_name: 'Frank',
-        track_name: trackName,
-        track_details_link: trackUrl,
-        track_src: artworkUrl,
-        nft_owner_name: seller.displayName,
-      });
-    });
+    await Promise.all(
+      sendTo.map(email =>
+        this.context.mailchimpService.sendTemplateEmail(email, 'nft-minted', {
+          subject: 'NFT Minted',
+          buyer_name: buyer.displayName,
+          buyer_profile_link: buyerProfileUrl,
+          email_receiver_name: 'Frank',
+          track_name: trackName,
+          track_details_link: trackUrl,
+          track_src: artworkUrl,
+          nft_owner_name: seller.displayName,
+        }),
+      ),
+    );
 
     await notification.save();
-    await this.incrementNotificationCount(sellerProfileId);
+    await this.incrementNotificationCount(sellerProfileId.toString());
   }
 
   async getNotifications(
@@ -217,8 +203,8 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyNewPostForSubscribers(post: Post): Promise<void> {
-    const authorProfile = await this.context.profileService.getProfile(post.profileId);
-    const subscribersIds = await this.context.subscriptionService.getSubscriberIds(post.profileId);
+    const authorProfile = await this.context.profileService.getProfile(post.profileId.toString());
+    const subscribersIds = await this.context.subscriptionService.getSubscriberIds(post.profileId.toString());
     const metadata: NewPostNotificationMetadata = {
       authorName: authorProfile.displayName,
       authorPicture: authorProfile.profilePicture,
@@ -267,7 +253,7 @@ export class NotificationService extends ModelService<typeof Notification> {
 
   async notifyPostDeletedByAdmin(post: Post): Promise<void> {
     const { profileId } = post;
-    const authorProfile = await this.context.profileService.getProfile(profileId);
+    const authorProfile = await this.context.profileService.getProfile(profileId.toString());
     const metadata: DeletedPostNotificationMetadata = {
       authorName: authorProfile.displayName,
       authorPicture: authorProfile.profilePicture,
@@ -278,7 +264,7 @@ export class NotificationService extends ModelService<typeof Notification> {
     };
     const notification = new NotificationModel({ type: NotificationType.DeletedPost, profileId, metadata });
     await notification.save();
-    await this.incrementNotificationCount(profileId);
+    await this.incrementNotificationCount(profileId.toString());
   }
 
   async notifyCommentDeletedByAdmin({ comment, post, authorProfileId }: CommentNotificationParams): Promise<void> {

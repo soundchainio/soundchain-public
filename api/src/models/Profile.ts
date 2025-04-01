@@ -1,4 +1,5 @@
 import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { sample } from 'lodash';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Badge } from '../types/Badge';
@@ -11,7 +12,7 @@ import { Model } from './Model';
 @ObjectType()
 export class Profile extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
   @Field()
   @prop({ required: true })

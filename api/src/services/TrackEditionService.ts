@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { TrackEdition, TrackEditionModel } from '../models/TrackEdition';
 import { Context } from '../types/Context';
 import { PendingRequest } from '../types/PendingRequest';
@@ -32,8 +33,8 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
         $set: {
           'editionData.pendingRequest': PendingRequest.None,
           'editionData.pendingTime': null,
-        }
-      }
+        },
+      },
     );
   }
 
@@ -41,14 +42,17 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
     const edition = await this.subtractPendingTrackCount(id);
 
     if (edition.editionData.pendingTrackCount === 0) {
-      await TrackEditionModel.updateOne({ _id: edition._id }, {
-        listed: true,
-        marketplace,
-        $set: {
-          "editionData.pendingRequest": PendingRequest.None,
-          "editionData.pendingTime": null,
-        }
-      });
+      await TrackEditionModel.updateOne(
+        { _id: edition._id },
+        {
+          listed: true,
+          marketplace,
+          $set: {
+            'editionData.pendingRequest': PendingRequest.None,
+            'editionData.pendingTime': null,
+          },
+        },
+      );
     }
   }
 
@@ -61,8 +65,8 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
         $set: {
           'editionData.pendingRequest': PendingRequest.None,
           'editionData.pendingTime': null,
-        }
-      }
+        },
+      },
     );
   }
 
@@ -70,32 +74,36 @@ export class TrackEditionService extends ModelService<typeof TrackEdition> {
     const edition = await this.subtractPendingTrackCount(id);
 
     if (edition.editionData.pendingTrackCount === 0) {
-      await TrackEditionModel.updateOne({ _id: edition._id }, {
-        listed: false,
-        marketplace: null,
-        $set: {
-          "editionData.pendingRequest": PendingRequest.None,
-          "editionData.pendingTime": null,
-        }
-      });
+      await TrackEditionModel.updateOne(
+        { _id: edition._id },
+        {
+          listed: false,
+          marketplace: null,
+          $set: {
+            'editionData.pendingRequest': PendingRequest.None,
+            'editionData.pendingTime': null,
+          },
+        },
+      );
     }
   }
 
   async subtractPendingTrackCount(id: string): Promise<TrackEdition> {
-    await TrackEditionModel.updateOne({
-      _id: id,
-      'editionData.pendingTrackCount': { $gt: 0 }
-    },
+    await TrackEditionModel.updateOne(
       {
-        $inc: { "editionData.pendingTrackCount": -1 }
-      }
+        _id: id,
+        'editionData.pendingTrackCount': { $gt: 0 },
+      },
+      {
+        $inc: { 'editionData.pendingTrackCount': -1 },
+      },
     );
 
     return TrackEditionModel.findById(id);
   }
 
   async resetPending(beforeTime: Date): Promise<void> {
-    return this.model.updateMany(
+    await this.model.updateMany(
       {
         'editionData.pendingRequest': { $ne: PendingRequest.None },
         'editionData.pendingTime': { $lte: beforeTime },

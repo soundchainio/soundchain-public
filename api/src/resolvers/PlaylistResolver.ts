@@ -30,7 +30,7 @@ export class PlaylistResolver {
     @Arg('sort', { nullable: true }) sort?: SortPlaylistInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<GetPlaylistPayload> {
-    return playlistService.getPlaylists(profileId, sort, page);
+    return playlistService.getPlaylists(profileId.toString(), sort, page);
   }
 
   @Mutation(() => CreatePlaylistPayload)
@@ -40,7 +40,7 @@ export class PlaylistResolver {
     @Arg('input') { title, description, artworkUrl, trackIds }: CreatePlaylistData,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePlaylistPayload> {
-    const playlist = await playlistService.createPlaylist({ profileId, title, description, artworkUrl, trackIds });
+    const playlist = await playlistService.createPlaylist({ profileId: profileId.toString(), title, description, artworkUrl, trackIds });
     return { playlist };
   }
 
@@ -61,7 +61,7 @@ export class PlaylistResolver {
     @Arg('input') { trackIds, playlistId }: CreatePlaylistTracks,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePlaylistPayload> {
-    await playlistService.createPlaylistTracks({ trackIds, playlistId }, profileId);
+    await playlistService.createPlaylistTracks({ trackIds, playlistId }, profileId.toString());
 
     const playlist = await playlistService.findOrFail(playlistId)
 
@@ -75,7 +75,7 @@ export class PlaylistResolver {
     @Arg('input') { trackIds, playlistId }: DeletePlaylistTracks,
     @CurrentUser() { profileId }: User,
   ): Promise<DeletePlaylistPayload> {
-    await playlistService.deletePlaylistTracks({ trackIds, playlistId }, profileId);
+    await playlistService.deletePlaylistTracks({ trackIds, playlistId }, profileId.toString());
 
     const playlist = await playlistService.findOrFail(playlistId)
 
@@ -89,7 +89,7 @@ export class PlaylistResolver {
     @CurrentUser() { profileId }: User,
     @Arg('playlistId') playlistId: string,
   ): Promise<FavoritePlaylist> {
-    return await playlistService.toggleFavorite(playlistId, profileId);
+    return await playlistService.toggleFavorite(playlistId, profileId.toString());
   }
 
   @Mutation(() => FavoritePlaylist)
@@ -99,17 +99,17 @@ export class PlaylistResolver {
     @CurrentUser() { profileId }: User,
     @Arg('playlistId') playlistId: string,
   ): Promise<FavoritePlaylist> {
-    return await playlistService.togglePlaylistFollow(playlistId, profileId);
+    return await playlistService.togglePlaylistFollow(playlistId, profileId.toString());
   }
 
   @FieldResolver(() => Number)
   favoriteCount(@Ctx() { playlistService }: Context, @Root() { _id: playlistId }: Playlist): Promise<number> {
-    return playlistService.favoriteCount(playlistId);
+    return playlistService.favoriteCount(playlistId.toString());
   }
 
   @FieldResolver(() => Number)
   followCount(@Ctx() { playlistService }: Context, @Root() { _id: playlistId }: Playlist): Promise<number> {
-    return playlistService.followCount(playlistId);
+    return playlistService.followCount(playlistId.toString());
   }
 
   @FieldResolver(() => Boolean)
@@ -121,7 +121,7 @@ export class PlaylistResolver {
     if (!user) {
       return Promise.resolve(false);
     }
-    return playlistService.isFavorite(playlistId, user.profileId);
+    return playlistService.isFavorite(playlistId.toString(), user.profileId.toString());
   }
 
   @FieldResolver(() => Boolean)
@@ -133,7 +133,7 @@ export class PlaylistResolver {
     if (!user) {
       return Promise.resolve(false);
     }
-    return playlistService.isFollowed(playlistId, user.profileId);
+    return playlistService.isFollowed(playlistId.toString(), user.profileId.toString());
   }
 
   @FieldResolver(() => GetTracksFromPlaylist, { nullable: true })
@@ -149,7 +149,7 @@ export class PlaylistResolver {
       order: SortOrder.DESC
     };
     
-    const tracks = await playlistService.getTracksFromPlaylist(_id, sort, page);
+    const tracks = await playlistService.getTracksFromPlaylist(_id.toString(), sort, page);
 
     return tracks;
   }

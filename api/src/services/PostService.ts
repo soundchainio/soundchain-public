@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { UserInputError } from 'apollo-server-express';
 import { PaginateResult } from '../db/pagination/paginate';
 import { Post, PostModel } from '../models/Post';
@@ -93,7 +94,7 @@ export class PostService extends ModelService<typeof Post> {
 
   async addReactionToPost({ profileId, postId, type }: NewReactionParams): Promise<Post> {
     const [post, alreadyReacted] = await Promise.all([
-      this.findOrFail(postId),
+      this.findOrFail(postId.toString()),
       this.context.reactionService.exists({ postId, profileId }),
     ]);
 
@@ -108,7 +109,10 @@ export class PostService extends ModelService<typeof Post> {
   async removeReactionFromPost({ profileId, postId }: { profileId: string; postId: string }): Promise<Post> {
     const post = await this.findOrFail(postId);
 
-    const { type } = await this.context.reactionService.deleteReaction({ postId, profileId });
+    const { type } = await this.context.reactionService.deleteReaction({
+      postId: new mongoose.Types.ObjectId(postId),
+      profileId: new mongoose.Types.ObjectId(profileId),
+    });
     await this.model.updateOne(
       { _id: postId, [`reactionStats.${type}`]: { $gt: 0 } },
       { $inc: { [`reactionStats.${type}`]: -1 } },
@@ -122,7 +126,7 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async changeReactionToPost({ postId, profileId, type: newType }: NewReactionParams): Promise<Post> {
-    const post = await this.findOrFail(postId);
+    const post = await this.findOrFail(postId.toString());
 
     const { type: oldType } = await this.context.reactionService.updateReaction({ postId, profileId, type: newType });
 
@@ -146,7 +150,7 @@ export class PostService extends ModelService<typeof Post> {
   async getOriginalFromTrack(trackId: string): Promise<Post> {
     const track = await this.context.trackService.getTrack(trackId);
 
-    const ors: any[] = [{ trackId }]
+    const ors: any[] = [{ trackId }];
 
     if (track.trackEditionId) {
       ors.push({ trackEditionId: track.trackEditionId });

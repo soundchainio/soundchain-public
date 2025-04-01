@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { NotAuthorizedError } from '../errors/NotAuthorized';
@@ -12,7 +13,7 @@ import { SendMessagePayload } from '../types/SendMessagePayload';
 export class MessageResolver {
   @FieldResolver(() => Profile)
   fromProfile(@Ctx() { profileService }: Context, @Root() message: Message): Promise<Profile> {
-    return profileService.getProfile(message.fromId);
+    return profileService.getProfile(message.fromId.toString());
   }
 
   @Authorized()
@@ -23,8 +24,8 @@ export class MessageResolver {
     @Arg('id') id: string,
   ): Promise<Message> {
     const message = await messageService.getMessage(id);
-    if (!(message.fromId === profileId || message.toId === profileId))
-      throw new NotAuthorizedError('Message', id, profileId);
+    if (!(message.fromId.toString() === profileId.toString() || message.toId.toString() === profileId.toString()))
+      throw new NotAuthorizedError('Message', id, profileId.toString());
     return message;
   }
 
@@ -35,13 +36,20 @@ export class MessageResolver {
     @Arg('input') { message, toId }: SendMessageInput,
     @CurrentUser() { profileId: fromId }: User,
   ): Promise<SendMessagePayload> {
-    const newMessage = await messageService.createMessage({ fromId, toId, message });
+    const newMessage = await messageService.createMessage({
+      fromId,
+      toId: new mongoose.Types.ObjectId(toId),
+      message,
+    });
     return { message: newMessage };
   }
 
   @Mutation(() => Profile)
   @Authorized()
-  resetUnreadMessageCount(@CurrentUser() { profileId }: User, @Ctx() { profileService }: Context): Promise<Profile> {
-    return profileService.resetUnreadMessageCount(profileId);
+  resetUnreadMessageCount(
+    @CurrentUser() { profileId }: User,
+    @Ctx() { profileService }: Context,
+  ): Promise<Profile> {
+    return profileService.resetUnreadMessageCount(profileId.toString());
   }
 }

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { DocumentType } from '@typegoose/typegoose';
 import { UserInputError } from 'apollo-server-express';
 import { FilterQuery } from 'mongoose';
@@ -9,8 +10,8 @@ import { SortOrder } from '../types/SortOrder';
 import { ModelService } from './ModelService';
 
 interface FollowKeyComponents {
-  followerId: string;
-  followedId: string;
+  followerId: mongoose.Types.ObjectId;
+  followedId: mongoose.Types.ObjectId;
 }
 
 export class FollowService extends ModelService<typeof Follow, FollowKeyComponents> {
@@ -18,33 +19,39 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
     super(context, FollowModel);
   }
 
-  keyIteratee = ({ followerId, followedId }: Partial<DocumentType<InstanceType<typeof Follow>>>): string => {
-    return `${followerId}:${followedId}`;
+  keyIteratee = ({ followerId, followedId }: Partial<DocumentType<Follow>>): string => {
+    return `${followerId.toString()}:${followedId.toString()}`;
   };
 
   getFindConditionForKeys(keys: readonly string[]): FilterQuery<Follow> {
     return {
       $or: keys.map(key => {
         const [followerId, followedId] = key.split(':');
-        return { followerId, followedId };
+        return { followerId: new mongoose.Types.ObjectId(followerId), followedId: new mongoose.Types.ObjectId(followedId) };
       }),
     };
   }
 
   async createFollow(followerId: string, followedId: string): Promise<Follow> {
-    const follow = new FollowModel({ followerId, followedId });
+    const follow = new FollowModel({ 
+      followerId: new mongoose.Types.ObjectId(followerId), 
+      followedId: new mongoose.Types.ObjectId(followedId) 
+    });
     await follow.save();
-    this.dataLoader.clear(this.getKeyFromComponents(follow));
+    this.dataLoader.clear(this.getKeyFromComponents({
+      followerId: new mongoose.Types.ObjectId(followerId),
+      followedId: new mongoose.Types.ObjectId(followedId),
+    }));
     this.context.notificationService.notifyNewFollower(follow);
     this.context.feedService.addRecentPostsToFollowerFeed(follow);
     return follow;
   }
 
-  async deleteFollow(followerId: string, followedId: string): Promise<void> {
+  async deleteFollow(followerId: mongoose.Types.ObjectId, followedId: mongoose.Types.ObjectId): Promise<void> {
     const { deletedCount } = await FollowModel.deleteOne({ followerId, followedId });
 
     if (deletedCount === 0) {
-      throw new UserInputError(`User profile ${followerId} isn't following profile ${followerId}.`);
+      throw new UserInputError(`User profile ${followerId.toString()} isn't following profile ${followedId.toString()}.`);
     }
 
     this.dataLoader.clear(this.getKeyFromComponents({ followerId, followedId }));
@@ -52,7 +59,7 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
 
   async getFollowerIds(profileId: string): Promise<string[]> {
     const rest = await this.model.find({ followedId: profileId }, { followerId: 1, _id: 0 });
-    return rest.map(({ followerId }) => followerId);
+    return rest.map(({ followerId }) => followerId.toString());
   }
 
   async getFollowers(profileId: string, page: PageInput): Promise<PaginateResult<Follow>> {

@@ -1,11 +1,12 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
 export class LogError extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
   @Field({ nullable: true })
   @prop()
@@ -17,6 +18,9 @@ export class LogError extends Model {
 
   @Field(() => Date)
   createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
 }
 
 export const LogErrorModel = getModelForClass(LogError);

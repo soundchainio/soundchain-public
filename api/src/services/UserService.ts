@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 
 import { User, UserModel } from '../models/User';
 import { Context } from '../types/Context';
@@ -8,7 +8,8 @@ import { Role } from '../types/Role';
 import { validateUniqueIdentifiers } from '../utils/Validation';
 import { ModelService } from './ModelService';
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 10; // Kept at 10 as requested
+
 export class UserService extends ModelService<typeof User> {
   constructor(context: Context) {
     super(context, UserModel);
@@ -19,15 +20,19 @@ export class UserService extends ModelService<typeof User> {
   }
 
   async getUserByProfileId(profileId: string): Promise<User> {
-    return await UserModel.findOne({ profileId });
+    const user = await UserModel.findOne({ profileId });
+    if (!user) {
+      throw new Error(`User with profileId ${profileId} not found`);
+    }
+    return user;
   }
 
   async getAllUsers(): Promise<User[]> {
     return await UserModel.find();
   }
 
-  userExists(filter: Partial<User>): Promise<boolean> {
-    return UserModel.exists(filter);
+  async userExists(filter: Partial<User>): Promise<boolean> {
+    return !!(await UserModel.exists(filter));
   }
 
   async updateHandle(id: string, handle: string): Promise<User> {
@@ -48,8 +53,11 @@ export class UserService extends ModelService<typeof User> {
   }
 
   async updateMetaMaskAddresses(id: string, walletAddress: string): Promise<User> {
-    const user = (await this.model.findById(id)).toObject();
-    const wallets = new Set([...user.metaMaskWalletAddressees, walletAddress]);
+    const user = (await this.model.findById(id))?.toObject();
+    if (!user) {
+      throw new Error(`User with id ${id} not found`);
+    }
+    const wallets = new Set([...(user.metaMaskWalletAddressees || []), walletAddress]);
     const updatedUser = await UserModel.findByIdAndUpdate(
       id,
       { metaMaskWalletAddressees: [...wallets] },
@@ -92,7 +100,7 @@ export class UserService extends ModelService<typeof User> {
   }: Pick<User, '_id' | 'otpRecoveryPhrase'>): Promise<boolean> {
     const user = await UserModel.findById(_id);
 
-    if (!user) {
+    if (!user || !user.otpRecoveryPhrase) {
       return false;
     }
 
@@ -111,16 +119,19 @@ export class UserService extends ModelService<typeof User> {
 
   async getUserByHandle(handle: string): Promise<User> {
     const user = await this.model.findOne({ handle });
+    if (!user) {
+      throw new Error(`User with handle ${handle} not found`);
+    }
     return user;
   }
 
-  async getAdminsProfileIds(): Promise<ObjectId[]> {
+  async getAdminsProfileIds(): Promise<string[]> {
     const admins = await this.model.find({
       roles: {
         $in: [Role.ADMIN],
       },
     });
-    const ids = admins.map(admin => new ObjectId(admin.profileId));
+    const ids = admins.map(admin => admin.profileId.toString());
 
     return ids;
   }

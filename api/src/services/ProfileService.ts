@@ -1,5 +1,5 @@
 import { UserInputError } from 'apollo-server-express';
-import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { FollowModel } from '../models/Follow';
@@ -95,21 +95,21 @@ export class ProfileService extends ModelService<typeof Profile> {
     return user.handle;
   }
 
-  async followProfile(followerId: string, followedId: string): Promise<Profile> {
-    if (followerId === followedId) {
+  async followProfile(followerId: mongoose.Types.ObjectId, followedId: mongoose.Types.ObjectId): Promise<Profile> {
+    if (followerId.equals(followedId)) {
       throw new UserInputError('You cannot follow yourself.');
     }
 
     const [followedProfile, alreadyFollowed] = await Promise.all([
-      this.findOrFail(followedId),
+      this.findOrFail(followedId.toString()),
       this.context.followService.exists({ followerId, followedId }),
     ]);
 
     if (alreadyFollowed) {
-      throw new UserInputError(`User profile ${followerId} is already following profile ${followerId}.`);
+      throw new UserInputError(`User profile ${followerId} is already following profile ${followedId}.`);
     }
 
-    await this.context.followService.createFollow(followerId, followedId);
+    await this.context.followService.createFollow(followerId.toString(), followedId.toString());
 
     await Promise.all([
       ProfileModel.updateOne({ _id: followerId }, { $inc: { followingCount: 1 } }),
@@ -120,12 +120,12 @@ export class ProfileService extends ModelService<typeof Profile> {
     return followedProfile;
   }
 
-  async unfollowProfile(followerId: string, followedId: string): Promise<Profile> {
-    if (followerId === followedId) {
+  async unfollowProfile(followerId: mongoose.Types.ObjectId, followedId: mongoose.Types.ObjectId): Promise<Profile> {
+    if (followerId.equals(followedId)) {
       throw new UserInputError('You cannot unfollow yourself.');
     }
 
-    const followedProfile = await this.findOrFail(followedId);
+    const followedProfile = await this.findOrFail(followedId.toString());
     await this.context.followService.deleteFollow(followerId, followedId);
 
     await Promise.all([
@@ -176,7 +176,7 @@ export class ProfileService extends ModelService<typeof Profile> {
       $or: [{ displayName: regex }, { bio: regex }],
     };
     const followers = await FollowModel.find({ followerId: profileId });
-    const ids = followers.map(follower => new ObjectId(follower.followedId));
+    const ids = followers.map(follower => follower.followedId);
 
     return this.paginate({
       filter: { _id: { $in: ids }, ...filter },

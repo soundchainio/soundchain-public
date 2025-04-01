@@ -24,11 +24,15 @@ import { ValidateOTPRecoveryPhraseInput } from '../types/ValidateOTPRecoveryPhra
 export class UserResolver {
   @FieldResolver(() => Profile)
   async profile(@Ctx() { profileService }: Context, @Root() user: User): Promise<Profile> {
-    return profileService.getProfile(user.profileId);
+    console.log(`Fetching profile for user: ${user._id}`);
+    const profile = await profileService.getProfile(user.profileId.toString());
+    console.log(`Profile fetched: ${profile._id}`);
+    return profile;
   }
 
   @Query(() => User, { nullable: true })
   async me(@CurrentUser() user?: User): Promise<User | undefined> {
+    console.log(`Fetching current user: ${user ? user._id : 'none'}`);
     return user;
   }
 
@@ -37,18 +41,33 @@ export class UserResolver {
     @Ctx() { authService, jwtService }: Context,
     @Arg('input') { token, handle, displayName }: RegisterInput,
   ): Promise<AuthPayload> {
-    const magic = new Magic(config.magicLink.secretKey);
-    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
-    const magicUser = await magic.users.getMetadataByToken(did);
+    console.log('register mutation called with:', { token, handle, displayName });
+    try {
+      const magic = new Magic(config.magicLink.secretKey);
+      console.log('Parsing DID token for registration');
+      const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
+      console.log('DID token parsed:', did);
+      console.log('Fetching Magic user metadata');
+      const magicUser = await magic.users.getMetadataByToken(did);
+      console.log('Magic user metadata:', magicUser);
 
-    const user = await authService.register(
-      magicUser.email,
-      handle,
-      displayName,
-      magicUser.publicAddress,
-      magicUser.oauthProvider,
-    );
-    return { jwt: jwtService.create(user) };
+      console.log('Registering user with authService');
+      const user = await authService.register(
+        magicUser.email,
+        handle,
+        displayName,
+        magicUser.publicAddress,
+        magicUser.oauthProvider,
+      );
+      console.log('User registered:', user._id.toString());
+
+      const jwt = jwtService.create(user);
+      console.log('JWT created for registration:', jwt);
+      return { jwt };
+    } catch (error) {
+      console.error('register mutation error:', error);
+      throw error;
+    }
   }
 
   @Mutation(() => AuthPayload)
@@ -56,29 +75,45 @@ export class UserResolver {
     @Ctx() { authService, jwtService, userService }: Context,
     @Arg('input') { token }: LoginInput,
   ): Promise<AuthPayload> {
-    const magic = new Magic(config.magicLink.secretKey);
-    const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
-    const magicUser = await magic.users.getMetadataByToken(did);
-    const users = await authService.getUserFromCredentials(magicUser.email);
+    console.log('login mutation called with token:', token);
+    try {
+      const magic = new Magic(config.magicLink.secretKey);
+      console.log('Parsing DID token');
+      const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
+      console.log('DID token parsed:', did);
+      console.log('Fetching Magic user metadata');
+      const magicUser = await magic.users.getMetadataByToken(did);
+      console.log('Magic user metadata:', magicUser);
+      console.log('Fetching users by email:', magicUser.email);
+      const users = await authService.getUserFromCredentials(magicUser.email);
 
-    if (!users?.length) {
-      //no user for credentials
-      throw new UserInputError('Invalid credentials');
+      if (!users?.length) {
+        console.log('No users found for email:', magicUser.email);
+        throw new UserInputError('Invalid credentials');
+      }
+
+      const authMethod = magicUser.oauthProvider || AuthMethod.magicLink;
+      console.log('Auth method:', authMethod);
+      const user = users.find(u => u.authMethod === authMethod);
+
+      if (user && !config.env.isProduction && magicUser.publicAddress !== user.magicWalletAddress) {
+        console.log('Updating magic wallet address for user:', user._id.toString());
+        await userService.updateMagicWallet(user._id.toString(), magicUser.publicAddress);
+        console.log('Magic wallet updated');
+      }
+
+      if (!user) {
+        console.log('User not found with auth method:', authMethod, 'Existing methods:', users.map(u => u.authMethod));
+        throw new AuthenticationError('already exists', { with: users.map(u => u.authMethod) });
+      }
+      console.log('User authenticated:', user.email);
+      const jwt = jwtService.create(user);
+      console.log('JWT created:', jwt);
+      return { jwt };
+    } catch (error) {
+      console.error('login mutation error:', error);
+      throw error;
     }
-
-    const authMethod = magicUser.oauthProvider || AuthMethod.magicLink;
-    const user = users.find(u => u.authMethod === authMethod);
-
-    if (user && !config.env.isProduction && magicUser.publicAddress !== user.magicWalletAddress) {
-      userService.updateMagicWallet(user._id, magicUser.publicAddress);
-    }
-
-    if (!user) {
-      //account exists with different auth method, warn user
-      throw new AuthenticationError('already exists', { with: users.map(u => u.authMethod) });
-    }
-    //account exists for current auth method, create session
-    return { jwt: jwtService.create(user) };
   }
 
   @Mutation(() => UpdateHandlePayload)
@@ -88,7 +123,9 @@ export class UserResolver {
     @Arg('input') { handle }: UpdateHandleInput,
     @CurrentUser() { _id }: User,
   ): Promise<UpdateHandlePayload> {
-    const user = await userService.updateHandle(_id, handle);
+    console.log(`updateHandle called for user: ${_id}, new handle: ${handle}`);
+    const user = await userService.updateHandle(_id.toString(), handle);
+    console.log('Handle updated:', user.handle);
     return { user };
   }
 
@@ -99,7 +136,9 @@ export class UserResolver {
     @Arg('input') { defaultWallet }: UpdateDefaultWalletInput,
     @CurrentUser() { _id }: User,
   ): Promise<UpdateHandlePayload> {
-    const user = await userService.updateDefaultWallet(_id, defaultWallet);
+    console.log(`updateDefaultWallet called for user: ${_id}, defaultWallet: ${defaultWallet}`);
+    const user = await userService.updateDefaultWallet(_id.toString(), defaultWallet);
+    console.log('Default wallet updated:', user.defaultWallet);
     return { user };
   }
 
@@ -110,7 +149,9 @@ export class UserResolver {
     @Arg('input') { wallet }: UpdateWalletInput,
     @CurrentUser() { _id }: User,
   ): Promise<UpdateHandlePayload> {
-    const user = await userService.updateMetaMaskAddresses(_id, wallet);
+    console.log(`updateMetaMaskAddresses called for user: ${_id}, wallet: ${wallet}`);
+    const user = await userService.updateMetaMaskAddresses(_id.toString(), wallet);
+    console.log('MetaMask addresses updated:', user);
     return { user };
   }
 
@@ -121,7 +162,9 @@ export class UserResolver {
     @Arg('input') { otpSecret, otpRecoveryPhrase }: UpdateOTPInput,
     @CurrentUser() { _id }: User,
   ): Promise<UpdateHandlePayload> {
+    console.log(`updateOTP called for user: ${_id}, otpSecret: ${otpSecret}, otpRecoveryPhrase: ${otpRecoveryPhrase}`);
     const user = await userService.updateOTP({ _id, otpSecret, otpRecoveryPhrase });
+    console.log('OTP updated:', user);
     return { user };
   }
 
@@ -132,12 +175,17 @@ export class UserResolver {
     @Arg('input') { otpRecoveryPhrase }: ValidateOTPRecoveryPhraseInput,
     @CurrentUser() { _id }: User,
   ): Promise<boolean> {
-    return userService.validateOTPRecoveryPhrase({ _id, otpRecoveryPhrase });
+    console.log(`validateOTPRecoveryPhrase called for user: ${_id}, otpRecoveryPhrase: ${otpRecoveryPhrase}`);
+    const result = await userService.validateOTPRecoveryPhrase({ _id, otpRecoveryPhrase });
+    console.log('OTP recovery phrase validation result:', result);
+    return result;
   }
 
   @Query(() => User, { nullable: true })
   async getUserByWallet(@Ctx() { userService }: Context, @Arg('walletAddress') walletAddress: string): Promise<User> {
+    console.log(`getUserByWallet called with walletAddress: ${walletAddress}`);
     const user = await userService.getUserByWallet(walletAddress);
+    console.log('User by wallet:', user ? user._id : 'none');
     return user;
   }
 
@@ -146,7 +194,9 @@ export class UserResolver {
     @Ctx() { proofBookService }: Context,
     @Arg('walletAddress') walletAddress: string,
   ): Promise<ProofBookItem> {
+    console.log(`getProofBookByWallet called with walletAddress: ${walletAddress}`);
     const proofBook = await proofBookService.getUserProofBook(walletAddress);
+    console.log('Proof book by wallet:', proofBook ? proofBook._id : 'none');
     return proofBook;
   }
 }

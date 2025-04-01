@@ -9,7 +9,7 @@ import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadat
 export class NewPostNotificationResolver {
   @FieldResolver(() => String)
   id(@Root() { _id }: Notification): string {
-    return _id;
+    return _id.toString();
   }
 
   @FieldResolver(() => String)
@@ -44,13 +44,13 @@ export class NewPostNotificationResolver {
   @FieldResolver(() => String)
   link(@Root() { metadata }: Notification): string {
     const { postId } = metadata as NewPostNotificationMetadata;
-    return `/posts/${postId}`;
+    return `/posts/${postId.toString()}`;
   }
 
   @FieldResolver(() => Track, { nullable: true })
   track(@Ctx() { trackService }: Context, @Root() { metadata }: Notification): Promise<Track | null> {
     const { trackId } = metadata as NewPostNotificationMetadata;
     if (!trackId) return null;
-    return trackService.getTrack(trackId);
+    return trackService.getTrack(trackId.toString());
   }
 }

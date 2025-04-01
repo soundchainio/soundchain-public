@@ -1,4 +1,4 @@
-import abiDecoder from 'abi-decoder';
+// import abiDecoder from 'abi-decoder';
 import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
 import soundchainCollectible from '../contract/Soundchain721.json';
 import soundchainAuction from '../contract/SoundchainAuction.json';
@@ -24,22 +24,23 @@ export class PolygonscanResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<PolygonscanResult> {
     const { nextPage, result: serviceResult } = await polygonscanService.getTransactionHistory(wallet, page);
-    abiDecoder.addABI([
-      ...soundchainMarketplace.abi,
-      ...soundchainCollectible.abi,
-      ...soundchainAuction.abi,
-      ...soundchainCollectibleV2.abi,
-      ...soundchainMarketplaceV2.abi,
-    ]);
+    // Comment out abi-decoder usage since blockchainWatcher is disabled
+    // abiDecoder.addABI([
+    //   ...soundchainMarketplace.abi,
+    //   ...soundchainCollectible.abi,
+    //   ...soundchainAuction.abi,
+    //   ...soundchainCollectibleV2.abi,
+    //   ...soundchainMarketplaceV2.abi,
+    // ]);
 
     const result = serviceResult.map(trx => {
-      let decoded = abiDecoder.decodeMethod(trx.input)?.name;
-      if (!decoded && parseInt(trx.value)) {
-        decoded = 'transfer';
-      }
+      // let decoded = abiDecoder.decodeMethod(trx.input)?.name;
+      // if (!decoded && parseInt(trx.value)) {
+      //   decoded = 'transfer';
+      // }
       return {
         ...trx,
-        method: decoded,
+        // method: decoded,
         date: new Date(parseInt(trx.timeStamp) * 1000).toLocaleDateString('en-US'),
       } as PolygonscanResultObj;
     });
