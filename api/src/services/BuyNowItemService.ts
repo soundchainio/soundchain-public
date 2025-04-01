@@ -2,6 +2,7 @@ import { BuyNowItem, BuyNowItemModel } from '../models/BuyNowItem';
 import { Context } from '../types/Context';
 import { SellType } from '../types/NFTSoldNotificationMetadata';
 import { ModelService } from './ModelService';
+import mongoose from 'mongoose';
 
 interface NewBuyNowItem {
   owner: string;
@@ -95,7 +96,7 @@ export class BuyNowService extends ModelService<typeof BuyNowItem> {
       ]);
       return;
     }
-    const profileId = buyerUser?.profileId || '';
+    const profileId = buyerUser?.profileId || new mongoose.Types.ObjectId('000000000000000000000000'); // Default ObjectId
     await Promise.all([
       this.context.trackService.updateTrack(track._id, { profileId }),
       this.context.notificationService.notifyNFTSold({

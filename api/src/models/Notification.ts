@@ -1,28 +1,45 @@
-import { getModelForClass, modelOptions, prop, Severity } from '@typegoose/typegoose';
-import { ObjectId } from 'mongodb';
-import { Field } from 'type-graphql';
-import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
-import { DeletedCommentNotificationMetadata } from '../types/DeletedCommentNotificationMetadata';
-import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
-import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
-import { NewPostNotificationMetadata } from '../types/NewPostNotificationMetadata';
-import { NewVerificationRequestNotificationMetadata } from '../types/NewVerificationRequestNotificationMetadata';
-import { NFTSoldNotificationMetadata } from '../types/NFTSoldNotificationMetadata';
-import { NotificationType } from '../types/NotificationType';
-import { ReactionNotificationMetadata } from '../types/ReactionNotificationMetadata';
-import { TrackWithPriceMetadata } from '../types/TrackWithPriceMetadata';
-import { VerificationRequestNotificationMetadata } from '../types/VerificationRequestNotificationMetadata';
+import { prop, modelOptions, getModelForClass, defaultClasses, index, Severity } from '@typegoose/typegoose';
+import { Field, ObjectType, ID } from 'type-graphql';
+import GraphQLJSON from 'graphql-type-json';
+import mongoose from 'mongoose';
+import {
+  NotificationType,
+  CommentNotificationMetadata,
+  DeletedCommentNotificationMetadata,
+  DeletedPostNotificationMetadata,
+  FollowerNotificationMetadata,
+  NewPostNotificationMetadata,
+  NewVerificationRequestNotificationMetadata,
+  NFTSoldNotificationMetadata,
+  ReactionNotificationMetadata,
+  TrackWithPriceMetadata,
+  VerificationRequestNotificationMetadata
+} from '../types';
 import { Model } from './Model';
-@modelOptions({ options: { allowMixed: Severity.ALLOW } })
+
+@ObjectType()
+@index({ profileId: 1 })
+@modelOptions({
+  options: { allowMixed: Severity.ALLOW },
+  schemaOptions: { timestamps: true },
+})
 export class Notification extends Model {
-  @prop({ required: true })
-  type: NotificationType;
+  // Override the base class _id to ensure it's an ObjectId
+  @Field(() => ID)
+  public override _id!: mongoose.Types.ObjectId;
 
-  @prop({ type: ObjectId, required: true })
-  profileId: string;
+  @Field(() => NotificationType)
+  @prop({ required: true, enum: NotificationType })
+  public type!: NotificationType;
 
+  @Field(() => String)
   @prop({ required: true })
-  metadata:
+  public profileId!: string;
+
+  // Use your existing union of metadata types
+  @Field(() => GraphQLJSON, { nullable: true })
+  @prop({ required: false, type: mongoose.Schema.Types.Mixed })
+  public metadata?:
     | CommentNotificationMetadata
     | DeletedCommentNotificationMetadata
     | DeletedPostNotificationMetadata
@@ -35,10 +52,10 @@ export class Notification extends Model {
     | TrackWithPriceMetadata;
 
   @Field(() => Date)
-  createdAt: Date;
+  public createdAt!: Date;
 
   @Field(() => Date)
-  updatedAt: Date;
+  public updatedAt!: Date;
 }
 
 export const NotificationModel = getModelForClass(Notification);

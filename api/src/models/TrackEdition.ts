@@ -1,4 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { EditionData } from '../types/EditionData';
 import { Model } from './Model';
@@ -6,7 +7,7 @@ import { Model } from './Model';
 @ObjectType()
 export class TrackEdition extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
   @Field()
   @prop()

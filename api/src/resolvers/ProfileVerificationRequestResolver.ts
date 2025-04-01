@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Arg, Authorized, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { ProfileVerificationRequest } from '../models/ProfileVerificationRequest';
@@ -20,7 +21,7 @@ export class ProfileVerificationRequestResolver {
     @Arg('profileId', { nullable: true }) argProfileId: string,
     @Arg('id', { nullable: true }) id: string,
   ): Promise<ProfileVerificationRequest> {
-    return profileVerificationRequestService.getProfileVerificationRequest(id, argProfileId || profileId);
+    return profileVerificationRequestService.getProfileVerificationRequest(id, argProfileId || profileId.toString());
   }
 
   @Query(() => ProfileVerificationRequestConnection)
@@ -47,7 +48,7 @@ export class ProfileVerificationRequestResolver {
     @Arg('input') input: CreateProfileVerificationRequestInput,
   ): Promise<ProfileVerificationRequestPayload> {
     const profileVerificationRequest = await profileVerificationRequestService.createProfileVerificationRequest(
-      profileId,
+      profileId.toString(),
       { ...input },
     );
     return { profileVerificationRequest };
@@ -60,9 +61,11 @@ export class ProfileVerificationRequestResolver {
     @Arg('id') id: string,
     @Arg('input') input: CreateProfileVerificationRequestInput,
   ): Promise<ProfileVerificationRequestPayload> {
-    const profileVerificationRequest = await profileVerificationRequestService.updateProfileVerificationRequest(id, {
+    const updatedInput = {
       ...input,
-    });
+      reviewerProfileId: input.reviewerProfileId ? new mongoose.Types.ObjectId(input.reviewerProfileId) : undefined,
+    };
+    const profileVerificationRequest = await profileVerificationRequestService.updateProfileVerificationRequest(id, updatedInput);
     return { profileVerificationRequest };
   }
 

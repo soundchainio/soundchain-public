@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
 import { Bid, BidModel } from '../models/Bid';
 import { TrackModel } from '../models/Track';

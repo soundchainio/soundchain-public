@@ -18,8 +18,12 @@ export class WhitelistEntryService extends ModelService<typeof WhitelistEntry> {
     return whitelistEntry;
   }
 
-  async getWhitelistEntryByWallet(walletAdress: string): Promise<WhitelistEntry> {
-    return WhitelistEntryModel.findOne({walletAddress: walletAdress})
+  async getWhitelistEntryByWallet(walletAddress: string): Promise<WhitelistEntry> {
+    const entry = await WhitelistEntryModel.findOne({ walletAddress });
+    if (!entry) {
+      throw new Error(`Whitelist entry with walletAddress ${walletAddress} not found`);
+    }
+    return entry;
   }
 
   async updateOgunClaimed(id: string, ogunClaimed: boolean): Promise<WhitelistEntry> {

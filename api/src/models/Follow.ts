@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
@@ -5,17 +6,21 @@ import { Model } from './Model';
 @ObjectType()
 export class Follow extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
+  @Field(() => String)
   @prop({ required: true })
-  followerId: string;
+  followerId!: string;
 
+  @Field(() => String)
   @prop({ required: true })
-  followedId: string;
+  followedId!: string;
 
-  createdAt: Date;
+  @Field(() => Date)
+  createdAt!: Date;
 
-  updatedAt: Date;
+  @Field(() => Date)
+  updatedAt!: Date;
 }
 
 export const FollowModel = getModelForClass(Follow);

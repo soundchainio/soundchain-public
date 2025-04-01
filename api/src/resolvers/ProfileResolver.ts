@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
@@ -21,12 +22,12 @@ import { UpdateProfilePayload } from '../types/UpdateProfilePayload';
 export class ProfileResolver {
   @FieldResolver(() => String)
   userHandle(@Ctx() { profileService }: Context, @Root() profile: Profile): Promise<string> {
-    return profileService.getUserHandle(profile._id);
+    return profileService.getUserHandle(profile._id.toString());
   }
 
   @FieldResolver(() => Boolean)
   async teamMember(@Ctx() { userService }: Context, @Root() profile: Profile): Promise<boolean> {
-    const user = await userService.getUserByProfileId(profile._id);
+    const user = await userService.getUserByProfileId(profile._id.toString());
     return user.roles.includes(Role.TEAM_MEMBER);
   }
 
@@ -59,7 +60,7 @@ export class ProfileResolver {
   @Query(() => Profile)
   @Authorized()
   myProfile(@Ctx() { profileService }: Context, @CurrentUser() { profileId }: User): Promise<Profile> {
-    return profileService.getProfile(profileId);
+    return profileService.getProfile(profileId.toString());
   }
 
   @Query(() => Profile)
@@ -89,7 +90,7 @@ export class ProfileResolver {
     @Arg('input') input: UpdateProfileInput,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePayload> {
-    const profile = await profileService.updateProfile(profileId, { ...input });
+    const profile = await profileService.updateProfile(profileId.toString(), { ...input });
     return { profile };
   }
 
@@ -99,7 +100,7 @@ export class ProfileResolver {
     @Ctx() { profileService }: Context,
     @CurrentUser() { profileId }: User,
   ): Promise<UpdateProfilePayload> {
-    const profile = await profileService.claimBadgeProfile(profileId);
+    const profile = await profileService.claimBadgeProfile(profileId.toString());
     return { profile: profile };
   }
 
@@ -110,7 +111,7 @@ export class ProfileResolver {
     @Arg('input') { followedId }: FollowProfileInput,
     @CurrentUser() { profileId: followerId }: User,
   ): Promise<FollowProfilePayload> {
-    const followedProfile = await profileService.followProfile(followerId, followedId);
+    const followedProfile = await profileService.followProfile(followerId, new mongoose.Types.ObjectId(followedId));
     return { followedProfile };
   }
 
@@ -121,7 +122,7 @@ export class ProfileResolver {
     @Arg('input') { followedId }: UnfollowProfileInput,
     @CurrentUser() { profileId: followerId }: User,
   ): Promise<UnfollowProfilePayload> {
-    const unfollowedProfile = await profileService.unfollowProfile(followerId, followedId);
+    const unfollowedProfile = await profileService.unfollowProfile(followerId, new mongoose.Types.ObjectId(followedId));
     return { unfollowedProfile };
   }
 
@@ -132,7 +133,7 @@ export class ProfileResolver {
     @Arg('input') { profileId }: SubscribeToProfileInput,
     @CurrentUser() { profileId: subscriberId }: User,
   ): Promise<SubscribeToProfilePayload> {
-    const profile = await subscriptionService.subscribeProfile(subscriberId, profileId);
+    const profile = await subscriptionService.subscribeProfile(subscriberId.toString(), profileId.toString());
     return { profile };
   }
 
@@ -143,7 +144,7 @@ export class ProfileResolver {
     @Arg('input') { profileId }: UnsubscribeFromProfileInput,
     @CurrentUser() { profileId: subscriberId }: User,
   ): Promise<UnsubscribeFromProfilePayload> {
-    const profile = await subscriptionService.unsubscribeProfile(subscriberId, profileId);
+    const profile = await subscriptionService.unsubscribeProfile(subscriberId.toString(), profileId.toString());
     return { profile };
   }
 }

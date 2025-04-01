@@ -1,20 +1,20 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
-import { ObjectId } from 'mongodb';
 
 @ObjectType()
 export class Message extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
-  @prop({ type: ObjectId, required: true })
-  fromId: string;
+  @Field(() => ID)
+  @prop({ type: mongoose.Types.ObjectId, required: true })
+  fromId: mongoose.Types.ObjectId;
 
-  @Field()
-  @prop({ type: ObjectId, required: true })
-  toId: string;
+  @Field(() => ID)
+  @prop({ type: mongoose.Types.ObjectId, required: true })
+  toId: mongoose.Types.ObjectId;
 
   @Field()
   @prop({ required: true })

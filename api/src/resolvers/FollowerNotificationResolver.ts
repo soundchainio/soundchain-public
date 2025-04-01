@@ -1,13 +1,14 @@
-import { FieldResolver, Resolver, Root } from 'type-graphql';
+import { Ctx, FieldResolver, Resolver, Root } from 'type-graphql';
 import { Notification } from '../models/Notification';
 import { FollowerNotification } from '../types/FollowerNotification';
 import { FollowerNotificationMetadata } from '../types/FollowerNotificationMetadata';
+import { Context } from '../types/Context';
 
 @Resolver(FollowerNotification)
 export class FollowerNotificationResolver {
   @FieldResolver(() => String)
   id(@Root() { _id }: Notification): string {
-    return _id;
+    return _id.toString();
   }
 
   @FieldResolver(() => String)
@@ -20,6 +21,11 @@ export class FollowerNotificationResolver {
   followerPicture(@Root() { metadata }: Notification): string | undefined {
     const { followerPicture } = metadata as FollowerNotificationMetadata;
     return followerPicture;
+  }
+
+  @FieldResolver(() => String)
+  body(): string {
+    return 'followed you';
   }
 
   @FieldResolver(() => String)

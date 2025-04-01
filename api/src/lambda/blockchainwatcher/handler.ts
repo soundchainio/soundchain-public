@@ -10,7 +10,6 @@ import {
   BidPlaced,
   UpdateAuction,
 } from '../../../types/web3-v1-contracts/SoundchainAuction';
-// import { ItemCanceled, ItemListed, ItemSold, ItemUpdated } from '../../types/web3-v1-contracts/SoundchainMarketplace';
 import { EditionCreated } from '../../../types/web3-v2-contracts/Soundchain721Editions';
 import {
   EditionCanceled,
@@ -33,15 +32,6 @@ import { Context } from '../../types/Context';
 import { auctionEvents, itemEvents, nftEvents } from '../processEvents';
 
 export const blockchainWatcher: Handler = async () => {
-  const url =
-    'mongodb://production:8uV53MWUu6DPfdL5@db-soundchain-api-production.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false';
-  await mongoose.connect(url, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: true,
-  });
-
   const web3 = new Web3(config.minting.alchemyKey);
   const context = await getContext();
 
@@ -64,7 +54,7 @@ export const blockchainWatcher: Handler = async () => {
 
 const getContext = async () => {
   const user = await UserModel.findOne({ handle: '_system' });
-  return new Context({ sub: user._id });
+  return new Context({ sub: user._id.toString() });
 };
 
 const getAllEvents = async (web3: Web3, fromBlock: number, toBlock: number) => {

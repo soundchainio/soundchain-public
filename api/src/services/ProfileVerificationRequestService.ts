@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
 import { ProfileVerificationRequest, ProfileVerificationRequestModel } from '../models/ProfileVerificationRequest';
@@ -13,7 +14,7 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
   }
 
   async getProfileVerificationRequest(id?: string, profileId?: string): Promise<ProfileVerificationRequest> {
-    return id ? await this.model.findOne({ _id: id }) : await this.model.findOne({ profileId: profileId });
+    return id ? await this.model.findOne({ _id: id }) : await this.model.findOne({ profileId });
   }
 
   getProfileVerificationRequests(
@@ -49,11 +50,11 @@ export class ProfileVerificationRequestService extends ModelService<typeof Profi
     const profileVerificationRequest = await this.model.findByIdAndUpdate(id, changes, { new: true });
 
     if (changes.status === ProfileVerificationStatusType.APPROVED) {
-      await this.context.profileService.verifyProfile(profileVerificationRequest.profileId, true);
-      await this.context.notificationService.notifyVerificationRequestUpdate(profileVerificationRequest.profileId);
+      await this.context.profileService.verifyProfile(profileVerificationRequest.profileId.toString(), true);
+      await this.context.notificationService.notifyVerificationRequestUpdate(profileVerificationRequest.profileId.toString());
     } else if (changes.status === ProfileVerificationStatusType.DENIED) {
-      await this.context.profileService.verifyProfile(profileVerificationRequest.profileId, false);
-      await this.context.notificationService.notifyVerificationRequestUpdate(profileVerificationRequest.profileId);
+      await this.context.profileService.verifyProfile(profileVerificationRequest.profileId.toString(), false);
+      await this.context.notificationService.notifyVerificationRequestUpdate(profileVerificationRequest.profileId.toString());
     }
 
     if (!profileVerificationRequest) {

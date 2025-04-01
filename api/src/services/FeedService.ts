@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { FeedItem, FeedItemModel } from '../models/FeedItem';
 import { Follow } from '../models/Follow';
@@ -18,7 +19,7 @@ export class FeedService extends ModelService<typeof FeedItem> {
   }
 
   async addPostToFollowerFeeds(post: Post): Promise<void> {
-    const followerIds = await this.context.followService.getFollowerIds(post.profileId);
+    const followerIds = await this.context.followService.getFollowerIds(post.profileId.toString());
     const feedItems = followerIds.map(
       profileId => new this.model({ profileId, postId: post._id, postedAt: post.createdAt }),
     );
@@ -27,7 +28,7 @@ export class FeedService extends ModelService<typeof FeedItem> {
 
   async addRecentPostsToFollowerFeed({ followerId, followedId }: Follow): Promise<void> {
     const { nodes: posts } = await this.context.postService.getPosts(
-      { profileId: followedId },
+      { profileId: followedId.toString() },
       { field: SortPostField.CREATED_AT, order: SortOrder.DESC },
       { first: 20 },
     );

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Arg, Authorized, Ctx, FieldResolver, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
@@ -12,22 +13,33 @@ import { PageInput } from '../types/PageInput';
 export class ChatResolver {
   @FieldResolver(() => Profile)
   profile(@Ctx() { profileService }: Context, @Root() chat: Chat): Promise<Profile> {
-    return profileService.getProfile(chat._id);
+    return profileService.getProfile(chat._id.toString());
   }
 
   @FieldResolver()
   unread(@CurrentUser() { profileId }: User, @Root() chat: Chat): boolean {
-    return chat.fromId !== profileId && !chat.readAt;
+    return chat.fromId.toString() !== profileId.toString() && !chat.readAt;
   }
 
   @Authorized()
   @Query(() => ChatConnection)
-  chats(
+  async chats(
     @Ctx() { messageService }: Context,
     @CurrentUser() { profileId }: User,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<ChatConnection> {
-    return messageService.getChats(profileId, page);
+    const messages = await messageService.getChats(profileId.toString(), page);
+    // Transform PaginateResult<Message> to ChatConnection
+    return {
+      pageInfo: messages.pageInfo,
+      nodes: messages.nodes.map(message => ({
+        _id: message._id.toString(),
+        fromId: message.fromId.toString(),
+        readAt: message.readAt,
+        message: message.message || '',
+        createdAt: message.createdAt,
+      })),
+    };
   }
 
   @Authorized()
@@ -38,6 +50,6 @@ export class ChatResolver {
     @Arg('profileId') profileId: string,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<MessageConnection> {
-    return messageService.getMessages(currentUserProfileId, profileId, page);
+    return messageService.getMessages(currentUserProfileId.toString(), profileId, page);
   }
 }

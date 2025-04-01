@@ -7,7 +7,7 @@ import { NewVerificationRequestNotificationMetadata } from '../types/NewVerifica
 export class NewVerificationRequestNotificationResolver {
   @FieldResolver(() => String)
   id(@Root() { _id }: Notification): string {
-    return _id;
+    return _id.toString();
   }
 
   @FieldResolver(() => String)

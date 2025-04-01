@@ -1,16 +1,17 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { ProfileVerificationStatusType } from '../types/ProfileVerificationStatusType';
 import { Model } from './Model';
-import { ObjectId } from 'mongodb';
+
 @ObjectType()
 export class ProfileVerificationRequest extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
-  @Field({ nullable: false })
-  @prop({ type: ObjectId, required: true })
-  profileId: string;
+  @Field(() => ID, { nullable: false })
+  @prop({ type: mongoose.Types.ObjectId, required: true })
+  profileId: mongoose.Types.ObjectId;
 
   @Field({ nullable: true })
   @prop({ required: false })
@@ -24,17 +25,17 @@ export class ProfileVerificationRequest extends Model {
   @prop({ required: false })
   bandcamp?: string;
 
-  @Field({ nullable: true })
-  @prop({ default: false })
-  status?: ProfileVerificationStatusType;
+  @Field(() => ProfileVerificationStatusType, { nullable: true })
+  @prop({ default: ProfileVerificationStatusType.PENDING, enum: ProfileVerificationStatusType })
+  status: ProfileVerificationStatusType;
 
   @Field({ nullable: true })
-  @prop({ default: false })
+  @prop({ required: false })
   reason?: string;
 
-  @Field({ nullable: true })
-  @prop({ default: false })
-  reviewerProfileId?: string;
+  @Field(() => ID, { nullable: true })
+  @prop({ type: mongoose.Types.ObjectId, required: false })
+  reviewerProfileId?: mongoose.Types.ObjectId;
 
   @Field(() => Date)
   createdAt: Date;

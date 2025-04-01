@@ -8,7 +8,7 @@ import { Context } from '../types/Context';
 export class CommentNotificationResolver {
   @FieldResolver(() => String)
   id(@Root() { _id }: Notification): string {
-    return _id;
+    return _id.toString();
   }
 
   @FieldResolver(() => String)
@@ -37,7 +37,7 @@ export class CommentNotificationResolver {
   @FieldResolver(() => String)
   async link(@Root() { metadata }: Notification, @Ctx() { commentService }: Context): Promise<string> {
     const { postId, commentId } = metadata as CommentNotificationMetadata;
-    const cursor = await commentService.getPageCursorById(commentId, 'createdAt');
-    return `/posts/${postId}?commentId=${commentId}&cursor=${cursor}`;
+    const cursor = await commentService.getPageCursorById(commentId.toString(), 'createdAt');
+    return `/posts/${postId.toString()}?commentId=${commentId.toString()}&cursor=${cursor}`;
   }
 }

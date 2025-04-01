@@ -9,7 +9,7 @@ import { ReactionConnection } from '../types/ReactionConnection';
 export class ReactionResolver {
   @FieldResolver(() => Profile)
   profile(@Ctx() { profileService }: Context, @Root() reaction: Reaction): Promise<Profile> {
-    return profileService.getProfile(reaction.profileId);
+    return profileService.getProfile(reaction.profileId.toString());
   }
 
   @Query(() => ReactionConnection)

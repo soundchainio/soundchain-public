@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { ClassType, FieldResolver, Resolver, Root } from 'type-graphql';
 import { Notification } from '../models/Notification';
 import { TrackWithPriceMetadata } from '../types/TrackWithPriceMetadata';
@@ -5,15 +6,16 @@ import { TrackWithPriceMetadata } from '../types/TrackWithPriceMetadata';
 export function createTrackResolver<T>(objectTypeCls: ClassType<T>) {
   @Resolver(objectTypeCls, { isAbstract: true })
   abstract class TrackWithPriceResolver {
+    // 1) Convert `_id` from ObjectId to a string
     @FieldResolver(() => String)
-    id(@Root() { _id }: Notification): string {
-      return _id;
+    id(@Root() { _id }: Notification & { _id: mongoose.Types.ObjectId }): string {
+      return _id.toHexString();
     }
 
     @FieldResolver(() => String)
     trackId(@Root() { metadata }: Notification): string {
       const { trackId } = metadata as TrackWithPriceMetadata;
-      return trackId;
+      return trackId.toString(); // Convert ObjectId to string
     }
 
     @FieldResolver(() => String)
@@ -46,5 +48,6 @@ export function createTrackResolver<T>(objectTypeCls: ClassType<T>) {
       return auctionId;
     }
   }
+
   return TrackWithPriceResolver;
 }

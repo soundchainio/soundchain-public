@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { Comment, CommentModel } from '../models/Comment';
 import { PostModel } from '../models/Post';
@@ -7,19 +8,19 @@ import { SortOrder } from '../types/SortOrder';
 import { ModelService } from './ModelService';
 
 interface NewCommentParams {
-  profileId: string;
+  profileId: mongoose.Types.ObjectId;
   body: string;
-  postId: string;
+  postId: mongoose.Types.ObjectId;
 }
 
 interface DeleteCommentParams {
-  profileId: string;
-  commentId: string;
+  profileId: mongoose.Types.ObjectId;
+  commentId: mongoose.Types.ObjectId;
 }
 
 interface UpdateCommentParams {
   body: string;
-  commentId: string;
+  commentId: mongoose.Types.ObjectId;
 }
 
 export class CommentService extends ModelService<typeof Comment> {
@@ -33,12 +34,12 @@ export class CommentService extends ModelService<typeof Comment> {
 
   async createComment(params: NewCommentParams): Promise<Comment> {
     const newComment = new CommentModel(params);
-    const [post] = await Promise.all([this.context.postService.getPost(params.postId), newComment.save()]);
+    const [post] = await Promise.all([this.context.postService.getPost(params.postId.toString()), newComment.save()]);
     if (!newComment.profileId.equals(post.profileId)) {
       this.context.notificationService.notifyNewCommentOnPost({
         comment: newComment,
         post,
-        authorProfileId: params.profileId,
+        authorProfileId: params.profileId.toString(),
       });
     }
     return newComment;
@@ -63,7 +64,7 @@ export class CommentService extends ModelService<typeof Comment> {
       { new: true },
     );
 
-    const post = await PostModel.findById({ _id: deletedComment.postId });
+    const post = await PostModel.findById(deletedComment.postId);
 
     this.context.notificationService.notifyCommentDeletedByAdmin({
       comment: deletedComment,

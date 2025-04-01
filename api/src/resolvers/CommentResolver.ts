@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Comment } from '../models/Comment';
@@ -19,7 +20,7 @@ import { UpdateCommentPayload } from '../types/UpdateCommentPayload';
 export class CommentResolver {
   @FieldResolver(() => Post)
   post(@Ctx() { postService }: Context, @Root() comment: Comment): Promise<Post> {
-    return postService.getPost(comment.postId);
+    return postService.getPost(comment.postId.toString());
   }
 
   @FieldResolver(() => Profile)
@@ -39,7 +40,11 @@ export class CommentResolver {
     @Arg('input') input: AddCommentInput,
     @CurrentUser() { profileId }: User,
   ): Promise<AddCommentPayload> {
-    const comment = await commentService.createComment({ profileId, ...input });
+    const comment = await commentService.createComment({
+      profileId,
+      postId: new mongoose.Types.ObjectId(input.postId),
+      body: input.body,
+    });
     return { comment };
   }
 
@@ -49,7 +54,10 @@ export class CommentResolver {
     @Ctx() { commentService }: Context,
     @Arg('input') input: UpdateCommentInput,
   ): Promise<UpdateCommentPayload> {
-    const comment = await commentService.updateComment({ ...input });
+    const comment = await commentService.updateComment({
+      commentId: new mongoose.Types.ObjectId(input.commentId),
+      body: input.body,
+    });
     return { comment };
   }
 
@@ -62,10 +70,16 @@ export class CommentResolver {
   ): Promise<DeleteCommentPayload> {
     const isAdmin = roles.includes(Role.ADMIN) || roles.includes(Role.TEAM_MEMBER);
     if (isAdmin) {
-      const comment = await commentService.deleteCommentByAdmin({ profileId, ...input });
+      const comment = await commentService.deleteCommentByAdmin({
+        profileId,
+        commentId: new mongoose.Types.ObjectId(input.commentId),
+      });
       return { comment };
     }
-    const comment = await commentService.deleteComment({ profileId, ...input });
+    const comment = await commentService.deleteComment({
+      profileId,
+      commentId: new mongoose.Types.ObjectId(input.commentId),
+    });
     return { comment };
   }
 

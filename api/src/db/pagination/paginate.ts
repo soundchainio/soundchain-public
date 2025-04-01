@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ReturnModelType } from '@typegoose/typegoose';
-import { FilterQuery } from 'mongoose';
+import { ReturnModelType, DocumentType } from '@typegoose/typegoose';
+import * as mongoose from 'mongoose';
 import { Model } from '../../models/Model';
 import { PageInfo } from '../../types/PageInfo';
 import { SortOrder } from '../../types/SortOrder';
@@ -14,8 +14,11 @@ export interface PaginateSortParams<T extends typeof Model> {
   order?: SortOrder;
 }
 
-export interface PaginateParams<T extends typeof Model, S extends PaginateSortParams<T> = PaginateSortParams<T>> {
-  filter?: FilterQuery<T>;
+export interface PaginateParams<
+  T extends typeof Model,
+  S extends PaginateSortParams<T> = PaginateSortParams<T>
+> {
+  filter?: mongoose.FilterQuery<T>;
   sort?: S;
   page?: {
     first?: number;
@@ -24,11 +27,11 @@ export interface PaginateParams<T extends typeof Model, S extends PaginateSortPa
     before?: string;
     inclusive?: boolean;
   };
-  group?: FilterQuery<T>;
+  group?: mongoose.FilterQuery<T>;
 }
 
 export interface PaginateParamsAggregated<T extends typeof Model> {
-  filter?: FilterQuery<T>;
+  filter?: mongoose.FilterQuery<T>;
   sort?: {
     field: any;
     order?: SortOrder;
@@ -40,7 +43,7 @@ export interface PaginateParamsAggregated<T extends typeof Model> {
     before?: string;
     inclusive?: boolean;
   };
-  group?: FilterQuery<T>;
+  group?: mongoose.FilterQuery<T>;
   aggregation?: any[];
 }
 
@@ -62,14 +65,18 @@ export async function paginate<T extends typeof Model>(
   const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
 
-  const [results, totalCount] = await Promise.all([
+  // 1) Assert the .sort(...) argument
+  // 2) Assert the result of .exec() as DocumentType<InstanceType<T>>[]
+  const [rawResults, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
-      .sort(querySort)
+      .sort(querySort as Record<string, 1 | -1>)
       .limit(limit + 1)
       .exec(),
     collection.find(filter).countDocuments().exec(),
   ]);
+
+  const results = rawResults as DocumentType<InstanceType<T>>[];
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
 }
@@ -87,14 +94,17 @@ export async function paginateAggregated<T extends typeof Model>(
   const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
 
-  const [results, totalCount] = await Promise.all([
+  const [rawResults, totalCount] = await Promise.all([
     collection
       .aggregate([{ $match: filter }, { $group: group }, { $match: cursorFilter }])
-      .sort(querySort)
+      .sort(querySort as Record<string, 1 | -1>)
       .limit(limit + 1)
       .exec(),
     collection.find(filter).countDocuments().exec(),
   ]);
+
+  // Assert .exec() result to DocumentType<InstanceType<T>>[]
+  const results = rawResults as DocumentType<InstanceType<T>>[];
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
 }
@@ -113,11 +123,13 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
   const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
 
-  const results = await collection
+  // Combine aggregator stages
+  const rawResults = (await collection
     .aggregate([...aggregation, { $match: filterQuery }, { $match: cursorFilter }])
-    .sort(querySort)
+    .sort(querySort as Record<string, 1 | -1>)
     .limit(limit + 1)
-    .exec();
+    .exec()) as DocumentType<InstanceType<T>>[];
+
   const totalCount =
     (
       await collection
@@ -127,5 +139,5 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
         .exec()
     )[0]?.count ?? 0;
 
-  return prepareResult(field, last, limit, after, before, results, totalCount);
+  return prepareResult(field, last, limit, after, before, rawResults, totalCount);
 }

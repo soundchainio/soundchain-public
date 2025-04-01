@@ -1,12 +1,12 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
 export class Bid extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
   @Field()
   @prop({ required: true })
@@ -29,15 +29,15 @@ export class Bid extends Model {
   amountToShow: number;
 
   @Field()
-  @prop({ type: ObjectId, required: true })
+  @prop({ type: mongoose.Types.ObjectId, required: true })
   auctionId: string;
 
   @Field()
-  @prop({ type: ObjectId })
+  @prop({ type: mongoose.Types.ObjectId })
   profileId: string;
 
   @Field()
-  @prop({ type: ObjectId })
+  @prop({ type: mongoose.Types.ObjectId })
   userId: string;
 
   @Field(() => Date)

@@ -1,17 +1,20 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
-import { ObjectId } from 'mongodb';
+
 @ObjectType()
 export class Subscription extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
-  @prop({ required: true })
-  subscriberId: string;
+  @Field(() => ID)
+  @prop({ required: true, type: mongoose.Types.ObjectId })
+  subscriberId: mongoose.Types.ObjectId;
 
-  @prop({ type: ObjectId, required: true })
-  profileId: string;
+  @Field(() => ID)
+  @prop({ required: true, type: mongoose.Types.ObjectId })
+  profileId: mongoose.Types.ObjectId;
 
   @Field(() => Date)
   createdAt: Date;

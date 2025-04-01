@@ -9,12 +9,12 @@ import { PageInput } from '../types/PageInput';
 export class FollowResolver {
   @FieldResolver(() => Profile)
   followedProfile(@Ctx() { profileService }: Context, @Root() follow: Follow): Promise<Profile> {
-    return profileService.getProfile(follow.followedId);
+    return profileService.getProfile(follow.followedId.toString());
   }
 
   @FieldResolver(() => Profile)
   followerProfile(@Ctx() { profileService }: Context, @Root() follow: Follow): Promise<Profile> {
-    return profileService.getProfile(follow.followerId);
+    return profileService.getProfile(follow.followerId.toString());
   }
 
   @Query(() => FollowConnection)

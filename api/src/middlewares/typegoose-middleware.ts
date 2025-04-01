@@ -1,4 +1,3 @@
-import { getClassForDocument } from '@typegoose/typegoose';
 import { Document, Model } from 'mongoose';
 import { MiddlewareFn } from 'type-graphql';
 
@@ -17,8 +16,9 @@ export const TypegooseMiddleware: MiddlewareFn = async (_, next) => {
 };
 
 function convertDocument(doc: Document) {
-  const convertedDocument = doc.toObject();
-  const DocumentClass = getClassForDocument(doc);
+  const convertedDocument = (doc as any).toObject();
+  // Instead of using getClassForDocument, use the document's constructor.
+  const DocumentClass = doc.constructor;
   if (DocumentClass) {
     Object.setPrototypeOf(convertedDocument, DocumentClass.prototype);
   }

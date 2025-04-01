@@ -1,11 +1,12 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
-import { ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
+
 @ObjectType()
 export class ProofBookItem extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
   @Field()
   @prop({ required: true })
@@ -22,6 +23,12 @@ export class ProofBookItem extends Model {
   @Field(() => [String], { nullable: false })
   @prop({ type: [String], required: true })
   merkleProof: string[];
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
 }
 
 export const ProofBookItemModel = getModelForClass(ProofBookItem);

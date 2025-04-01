@@ -1,23 +1,30 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
 import { Field, ID, ObjectType } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
 export class PlaylistTrack extends Model {
   @Field(() => ID, { name: 'id' })
-  readonly _id: string;
+  public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
-  @prop({ required: true })
-  profileId: string;
+  @Field(() => ID)
+  @prop({ required: true, type: mongoose.Types.ObjectId })
+  profileId: mongoose.Types.ObjectId;
 
-  @Field()
-  @prop({ required: true })
-  playlistId: string;
+  @Field(() => ID)
+  @prop({ required: true, type: mongoose.Types.ObjectId })
+  playlistId: mongoose.Types.ObjectId;
 
-  @Field()
-  @prop({ required: true })
-  trackId: string;
+  @Field(() => ID)
+  @prop({ required: true, type: mongoose.Types.ObjectId })
+  trackId: mongoose.Types.ObjectId;
+
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
 }
 
 export const PlaylistTrackModel = getModelForClass(PlaylistTrack);
