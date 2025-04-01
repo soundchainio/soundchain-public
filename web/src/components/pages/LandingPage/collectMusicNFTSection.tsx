@@ -1,18 +1,17 @@
-import Image from 'next/image'
-
-import { twd } from '../../utils/twd'
+import Image from 'next/image';
+import { twd } from '../../utils/twd';
 
 const orngBash = twd(`text-transparent bg-clip-text bg-gradient-to-b 
-from-[#FED503] to-[#FE5540]`)
+from-[#FED503] to-[#FE5540]`);
 
-const OrngText = orngBash.span
+const OrngText = orngBash.span;
 const OrngCol = orngBash(
   `flex flex-row gap-4 sm:gap-0 sm:flex-col items-center justify-center sm:items-start sm:justify-start bg-none bg-[#FED503]`,
-).div
+).div;
 
 const SectionWrapper = twd(
   `max-w-7xl lg:max-w-full mx-auto sm:px-6 mt-56 sm:mt-0 max-h-screen flex flex-col lg:px-0`,
-).div
+).div;
 
 export function CollectMusicNFTSection() {
   return (
@@ -38,7 +37,6 @@ export function CollectMusicNFTSection() {
               <div className="-ml-10 max-w-[300px] md:ml-0 md:max-w-[584px]">
                 <Image
                   alt=""
-                  layout="intrinsic"
                   width={584}
                   height={544}
                   className="h-full w-full object-contain"
@@ -50,5 +48,5 @@ export function CollectMusicNFTSection() {
         </div>
       </SectionWrapper>
     </div>
-  )
+  );
 }
