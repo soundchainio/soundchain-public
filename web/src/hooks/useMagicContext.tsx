@@ -12,11 +12,11 @@ import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.
 import { config } from 'config'
 import { AbiItem } from 'web3-utils'
 
-const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || ''
+const magicPublicKey = 'pk_live_858EC1BFF763F101'; // Hardcode for debugging
 
 interface MagicContextData {
-  magic: InstanceWithExtensions<SDKBase, OAuthExtension[]>
-  web3: Web3
+  magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null
+  web3: Web3 | null
   account: string | undefined
   balance: string | undefined
   ogunBalance: string | undefined
@@ -24,7 +24,7 @@ interface MagicContextData {
   isRefetchingBalance: boolean
 }
 
-const MagicContext = createContext<MagicContextData>({} as MagicContextData)
+const MagicContext = createContext<MagicContextData>({} as MagicContextData);
 
 interface MagicProviderProps {
   children: ReactNode
@@ -32,7 +32,7 @@ interface MagicProviderProps {
 
 // Create client-side Magic instance
 const createMagic = (magicPublicKey: string) => {
-  return typeof window != 'undefined'
+  return typeof window !== 'undefined'
     ? new Magic(magicPublicKey, {
         network: {
           rpcUrl: network.rpc,
@@ -43,8 +43,6 @@ const createMagic = (magicPublicKey: string) => {
     : null
 }
 
-export const magic = createMagic(magicPublicKey)!
-
 // Create Web3 instance
 const createWeb3 = (
   magic:
@@ -52,33 +50,40 @@ const createWeb3 = (
     | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>
     | InstanceWithExtensions<SDKBase, OAuthExtension[]>,
 ) => {
-  //  eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return magic ? new Web3(magic.rpcProvider as any) : null
 }
 
-const web3: Web3 = createWeb3(magic)!
-const tokenAddress = config.ogunTokenAddress
-
 export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe()
+  const [magic, setMagic] = useState<InstanceWithExtensions<SDKBase, OAuthExtension[]> | null>(null)
+  const [web3, setWeb3] = useState<Web3 | null>(null)
   const [account, setAccount] = useState('')
   const [maticBalance, setMaticBalance] = useState('')
   const [ogunBalance, setOgunBalance] = useState('')
   const [isRefetchingBalance, setIsRefetchingBalance] = useState(false)
 
+  // Initialize Magic SDK on the client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const magicInstance = createMagic(magicPublicKey)
+      setMagic(magicInstance)
+      setWeb3(createWeb3(magicInstance))
+    }
+  }, [])
+
   const handleError = useCallback(async error => {
     if (error.code === RPCErrorCode.InternalError) {
-      await magic.user.logout()
+      await magic?.user.logout()
       return setJwt()
     }
 
     errorHandler(error)
-  }, [])
+  }, [magic])
 
   const refetchBalance = async () => {
     try {
       setIsRefetchingBalance(true)
-
       await handleSetBalance()
       await handleSetOgunBalance()
     } catch (error) {
@@ -90,40 +95,42 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetAccount = useCallback(async () => {
     try {
-      const [account] = await web3.eth.getAccounts()
-      setAccount(account)
+      if (web3) {
+        const [account] = await web3.eth.getAccounts()
+        setAccount(account)
+      }
     } catch (error) {
       handleError(error)
     }
-  }, [handleError])
+  }, [handleError, web3])
 
   const handleSetBalance = useCallback(async () => {
     try {
-      const maticBalance = await web3.eth.getBalance(account)
-
-      setMaticBalance(Number(web3.utils.fromWei(maticBalance, 'ether')).toFixed(6))
+      if (web3 && account) {
+        const maticBalance = await web3.eth.getBalance(account)
+        setMaticBalance(Number(web3.utils.fromWei(maticBalance, 'ether')).toFixed(6))
+      }
     } catch (error) {
       handleError(error)
     }
-  }, [account, handleError])
+  }, [account, handleError, web3])
 
   const handleSetOgunBalance = useCallback(async () => {
     try {
       if (!tokenAddress) throw Error('No token contract address found when setting Ogun balance')
-
-      const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress)
-      const tokenAmount = await ogunContract.methods.balanceOf(account).call()
-      const tokenAmountInEther = Number(web3.utils.fromWei(tokenAmount, 'ether')).toFixed(6)
-
-      setOgunBalance(tokenAmountInEther)
+      if (web3 && account) {
+        const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress)
+        const tokenAmount = await ogunContract.methods.balanceOf(account).call()
+        const tokenAmountInEther = Number(web3.utils.fromWei(tokenAmount, 'ether')).toFixed(6)
+        setOgunBalance(tokenAmountInEther)
+      }
     } catch (error) {
       handleError(error)
     }
-  }, [account, handleError])
+  }, [account, handleError, web3])
 
   const handleUseEffect = useCallback(async () => {
     if (!account) await handleSetAccount()
-
     if (account) {
       await handleSetOgunBalance()
       await handleSetBalance()
@@ -131,10 +138,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
   }, [account, handleSetAccount, handleSetBalance, handleSetOgunBalance])
 
   useEffect(() => {
-    if (!me && !web3) return
-
+    if (!me || !web3) return
     handleUseEffect()
-  }, [handleUseEffect, me])
+  }, [handleUseEffect, me, web3])
 
   return (
     <MagicContext.Provider
@@ -145,6 +151,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
   )
 }
 
-export const useMagicContext = () => useContext(MagicContext)
+export const useMagicContext = () => useContext(MagicContext);
 
-export default MagicProvider
+export default MagicProvider;
