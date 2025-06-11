@@ -49,7 +49,9 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
       return false
     }
 
-    await magic.user.logout()
+    if (magic.user) {
+      await magic.user.logout()
+    }
     setJwt()
     router.reload()
   }
