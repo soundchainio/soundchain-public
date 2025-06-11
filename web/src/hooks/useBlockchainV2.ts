@@ -1,4 +1,5 @@
-import { SDKBase } from '@magic-sdk/provider'
+import { SDKBase, InstanceWithExtensions } from '@magic-sdk/provider'
+import { OAuthExtension } from '@magic-ext/oauth'
 import { config } from 'config'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
@@ -86,7 +87,7 @@ class BlockchainFunction<Type> {
   protected receipt?: TransactionReceipt
   protected onTransactionHashFunction?: (transactionHash: string) => void
   protected onReceiptFunction?: (receipt: TransactionReceipt) => void
-  protected onErrorFunction?: (cause: Error) => void
+  protected onError?: (cause: Error) => void
   protected finallyFunction?: () => void
   protected magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null
 
@@ -113,7 +114,7 @@ class BlockchainFunction<Type> {
         this.onReceiptFunction && this.onReceiptFunction(receipt)
       })
       .catch(cause => {
-        if (this.onErrorFunction) {
+        if (this.onError) {
           const error = Object.keys(cause).includes('receipt')
             ? new Error(
                 `Transaction reverted by the Blockchain.\r\n
@@ -121,7 +122,7 @@ class BlockchainFunction<Type> {
                 ${cause}`,
               )
             : cause
-          this.onErrorFunction(error)
+          this.onError(error)
         }
       })
       .finally(this.finallyFunction)
@@ -138,7 +139,7 @@ class BlockchainFunction<Type> {
   }
 
   onError(handler: (cause: Error) => void) {
-    this.onErrorFunction = handler
+    this.onError = handler
     return this
   }
 
