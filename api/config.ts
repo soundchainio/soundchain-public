@@ -2,18 +2,19 @@ import 'reflect-metadata';
 
 import { ApolloServerPluginLandingPageDisabled } from 'apollo-server-core';
 import cors from 'cors';
-import * as dotenv from 'dotenv';
+import * as dotenv from 'dotenv-flow';
 import fs from 'fs';
 import { buildSchemaSync } from 'type-graphql';
-import path from 'path';
-import { ReadPreferenceMode } from 'mongodb';
 
 import { TypegooseMiddleware } from './middlewares/typegoose-middleware';
 import { resolvers } from './resolvers';
-import { JwtService, JwtUser } from './services/JwtService';
+import {
+  JwtService,
+  JwtUser,
+} from './services/JwtService';
 import { Context } from './types/Context';
 
-dotenv.config({ path: '.env.local' });
+dotenv.config();
 
 interface ExpressContext {
   req: { user?: JwtUser };
@@ -26,11 +27,14 @@ interface LambdaContext {
 export const {
   NODE_ENV,
   PORT = 4000,
+  DATABASE_URL = 'mongodb://localhost:27017',
+  DATABASE_SSL_PATH,
   WEB_APP_URL = 'http://localhost:3000',
   SENDGRID_SENDER_EMAIL,
+  SENTRY_URL,
   SENDGRID_VERIFICATION_TEMPLATE,
-  SENDGRID_API_KEY,
   SENDGRID_RESET_PASSWORD_TEMPLATE,
+  SENDGRID_API_KEY,
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
   WALLET_PUBLIC_KEY,
@@ -91,16 +95,13 @@ export const config = {
     bucket: UPLOADS_BUCKET_NAME,
   },
   db: {
-    url: 'mongodb://soundchainadmin:i%7CrmUvwben0gw%245D3%5B%7E0ZLw-tX%7EL@localhost:27017/test',
+    url: DATABASE_URL,
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      tls: true,
-      tlsCAFile: '/Users/soundchain/soundchain/api/global-bundle.pem',
-      authMechanism: 'SCRAM-SHA-1' as any,
-      tlsAllowInvalidHostnames: true,
-      serverSelectionTimeoutMS: 60000,
-      directConnection: true,
+      useFindAndModify: false,
+      ssl: Boolean(DATABASE_SSL_PATH),
+      sslCA: DATABASE_SSL_PATH && fs.readFileSync(`${__dirname}/${DATABASE_SSL_PATH}`).toString(),
       retryWrites: false,
     },
   },
@@ -144,6 +145,9 @@ export const config = {
   muxData: {
     tokenId: MUX_DATA_ID,
     tokenSecret: MUX_DATA_SECRET,
+  },
+  sentry: {
+    url: SENTRY_URL,
   },
   magicLink: {
     secretKey: MAGIC_PRIVATE_KEY,

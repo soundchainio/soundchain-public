@@ -1,15 +1,8 @@
-// import * as Sentry from '@sentry/serverless';
 import { ApolloServer } from 'apollo-server-lambda';
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import express from 'express';
 import { config } from '../../config';
 import { mongoose } from '@typegoose/typegoose';
-
-// Sentry.AWSLambda.init({
-//   dsn: config.sentry.url,
-//   tracesSampleRate: 1.0,
-//   environment: NODE_ENV,
-// });
 
 const graphqlHandler: APIGatewayProxyHandler = async (...args) => {
   try {

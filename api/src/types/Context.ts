@@ -1,4 +1,3 @@
-import * as Sentry from '@sentry/node';
 import { ListingCountByTrackEdition } from '../loaders/ListingCountByTrackEdition';
 import { User } from '../models/User';
 import { AuctionItemService } from '../services/AuctionItemService';
@@ -70,10 +69,6 @@ export class Context {
   audioHolderService: AudioHolderService;
   trackEditionService: TrackEditionService;
   listingCountByTrackEdition = ListingCountByTrackEdition();
-  sentryTransaction = Sentry.startTransaction({
-    op: 'gql',
-    name: 'GraphQLTransaction',
-  });
   mailchimpService: MailchimpService;
 
   constructor(jwtUser?: JwtUser) {
@@ -82,7 +77,7 @@ export class Context {
     this.blockTrackerService = new BlockTrackerService(this);
     this.buyNowItemService = new BuyNowService(this);
     this.commentService = new CommentService(this);
-    this.emailService = new EmailService(this);
+    this.emailService = new EmailService();
     this.embedService = new EmbedService(this);
     this.exploreService = new ExploreService(this);
     this.feedService = new FeedService(this);

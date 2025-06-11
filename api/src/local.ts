@@ -11,7 +11,7 @@ import { Context } from './types/Context';
 import cors from 'cors';
 
 async function bootstrap() {
-  await mongoose.connect(config.db.url);
+  await mongoose.connect(config.db.url, config.db.options);
 
   const app = express();
   app.locals.context = new Context();

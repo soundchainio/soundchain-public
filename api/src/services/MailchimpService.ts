@@ -1,6 +1,5 @@
 import mailchimp from '@mailchimp/mailchimp_marketing';
 import mailchimpTransactional, { MessagesSendResponse } from '@mailchimp/mailchimp_transactional';
-import * as Sentry from '@sentry/serverless';
 
 import { config } from '../config';
 import { User } from '../models/User';
@@ -32,7 +31,7 @@ export class MailchimpService extends Service {
         status: 'subscribed',
       });
     } catch (err) {
-      Sentry.captureException(err);
+      console.error('Mailchimp addMember Error:', err);
     }
   }
 
@@ -65,7 +64,7 @@ export class MailchimpService extends Service {
         },
       });
     } catch (err) {
-      Sentry.captureException(err);
+      console.error('Mailchimp sendTemplateEmail Error:', err);
       throw new Error('Failed to send email');
     }
   }
