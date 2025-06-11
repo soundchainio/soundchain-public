@@ -24,6 +24,7 @@ import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.
 import merkleClaimERC20 from '../contract/v2/MerkleClaimERC20.sol/MerkleClaimERC20.json'
 import soundchainAuctionV2 from '../contract/v2/SoundchainAuction.json'
 import soundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceEditions.json'
+
 export const gas = 1200000
 
 const claimOgunAddress = config.claimOgunAddress as string
@@ -79,6 +80,7 @@ interface DefaultParam {
   from: string
   contractAddresses?: ContractAddresses
 }
+
 class BlockchainFunction<Type> {
   protected params: Type
   protected me: MeQuery['me'] | undefined
@@ -87,7 +89,7 @@ class BlockchainFunction<Type> {
   protected receipt?: TransactionReceipt
   protected onTransactionHashFunction?: (transactionHash: string) => void
   protected onReceiptFunction?: (receipt: TransactionReceipt) => void
-  protected onError?: (cause: Error) => void
+  protected onErrorFunction?: (cause: Error) => void
   protected finallyFunction?: () => void
   protected magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null
 
@@ -114,7 +116,7 @@ class BlockchainFunction<Type> {
         this.onReceiptFunction && this.onReceiptFunction(receipt)
       })
       .catch(cause => {
-        if (this.onError) {
+        if (this.onErrorFunction) {
           const error = Object.keys(cause).includes('receipt')
             ? new Error(
                 `Transaction reverted by the Blockchain.\r\n
@@ -122,7 +124,7 @@ class BlockchainFunction<Type> {
                 ${cause}`,
               )
             : cause
-          this.onError(error)
+          this.onErrorFunction(error)
         }
       })
       .finally(this.finallyFunction)
@@ -139,7 +141,7 @@ class BlockchainFunction<Type> {
   }
 
   onError(handler: (cause: Error) => void) {
-    this.onError = handler
+    this.onErrorFunction = handler
     return this
   }
 
@@ -148,10 +150,12 @@ class BlockchainFunction<Type> {
     return this
   }
 }
+
 interface PlaceBidParams extends DefaultParam {
   tokenId: number
   value: string
 }
+
 class PlaceBid extends BlockchainFunction<PlaceBidParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, value, tokenId } = this.params
@@ -181,11 +185,13 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
     return this.receipt
   }
 }
+
 interface ClaimOgunParams extends DefaultParam {
   to: string
   amount: string
   proof: string[]
 }
+
 class ClaimOgun extends BlockchainFunction<ClaimOgunParams> {
   execute = async (web3: Web3) => {
     const { from, to, amount, proof } = this.params
@@ -221,6 +227,7 @@ interface BuyItemParams extends DefaultParam {
   value: string
   isPaymentOGUN: boolean
 }
+
 class BuyItem extends BlockchainFunction<BuyItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, owner, value, tokenId, isPaymentOGUN, from } = this.params
@@ -253,6 +260,7 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
     return this.receipt
   }
 }
+
 class ApproveMarketplace extends BlockchainFunction<DefaultParam> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from } = this.params
@@ -269,6 +277,7 @@ class ApproveMarketplace extends BlockchainFunction<DefaultParam> {
     return this.receipt
   }
 }
+
 class ApproveAuction extends BlockchainFunction<DefaultParam> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from } = this.params
@@ -285,9 +294,11 @@ class ApproveAuction extends BlockchainFunction<DefaultParam> {
     return this.receipt
   }
 }
+
 interface TokenParams extends DefaultParam {
   tokenId: number
 }
+
 class BurnNft extends BlockchainFunction<TokenParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId } = this.params
@@ -301,6 +312,7 @@ class BurnNft extends BlockchainFunction<TokenParams> {
     return this.receipt
   }
 }
+
 class CancelAuction extends BlockchainFunction<TokenParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId } = this.params
@@ -329,6 +341,7 @@ class CancelAuction extends BlockchainFunction<TokenParams> {
     return this.receipt
   }
 }
+
 class CancelListing extends BlockchainFunction<TokenParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId } = this.params
@@ -356,16 +369,16 @@ class CancelListing extends BlockchainFunction<TokenParams> {
     return this.receipt
   }
 }
+
 interface CreateAuctionParams extends TokenParams {
   reservePrice: string
   startTime: number
   endTime: number
 }
+
 class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, reservePrice, startTime, endTime } = this.params
-    // the price the user listed will be maintained and from the listed price the marketplace
-    // contract will take a x% fee from it during the buy process
     const totalPrice = Web3.utils.toBN(reservePrice)
     this.web3 = web3
 
@@ -398,11 +411,10 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
     return this.receipt
   }
 }
+
 class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, reservePrice, startTime, endTime } = this.params
-    // the price the user listed will be maintained and from the listed price the marketplace
-    // contract will take a x% fee from it during the buy process
     const totalPrice = Web3.utils.toBN(reservePrice)
     this.web3 = web3
 
@@ -436,6 +448,7 @@ class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
     return this.receipt
   }
 }
+
 class ResultAuction extends BlockchainFunction<TokenParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId } = this.params
@@ -458,16 +471,16 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
     return this.receipt
   }
 }
+
 interface ListItemParams extends TokenParams {
   price: string
   priceOGUN: string
   startTime: number
 }
+
 class ListItem extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, price, priceOGUN, startTime } = this.params
-    // the price the user listed will be maintained and from the listed price the marketplace
-    // contract will take a x% fee from it during the buy process
     const totalPrice = Web3.utils.toBN(price)
     const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
     this.web3 = web3
@@ -506,11 +519,10 @@ class ListItem extends BlockchainFunction<ListItemParams> {
     return this.receipt
   }
 }
+
 class UpdateListing extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, price, priceOGUN, startTime } = this.params
-    // the price the user listed will be maintained and from the listed price the marketplace
-    // contract will take a x% fee from it during the buy process
     const totalPrice = Web3.utils.toBN(price)
     const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
     this.web3 = web3
@@ -546,12 +558,14 @@ class UpdateListing extends BlockchainFunction<ListItemParams> {
     return this.receipt
   }
 }
+
 interface MintNftParams extends DefaultParam {
   uri: string
   toAddress: string
   royaltyPercentage: number
   editionQuantity: number
 }
+
 class MintNft extends BlockchainFunction<MintNftParams> {
   execute = async (web3: Web3) => {
     const { from, uri, toAddress, royaltyPercentage, editionQuantity } = this.params
@@ -569,10 +583,12 @@ class MintNft extends BlockchainFunction<MintNftParams> {
     return this.receipt
   }
 }
+
 interface SendMaticParams extends DefaultParam {
   to: string
   amount: string
 }
+
 class SendMatic extends BlockchainFunction<SendMaticParams> {
   execute = async (web3: Web3) => {
     const { from, to, amount } = this.params
@@ -598,6 +614,7 @@ interface SendOgunParams extends DefaultParam {
   to: string
   amount: string
 }
+
 class SendOgun extends BlockchainFunction<SendOgunParams> {
   execute = async (web3: Web3) => {
     const { from, to, amount } = this.params
@@ -621,6 +638,7 @@ class SendOgun extends BlockchainFunction<SendOgunParams> {
     return this.receipt
   }
 }
+
 interface MintNftTokensToEditionParams extends DefaultParam {
   uri: string
   toAddress: string
@@ -628,6 +646,7 @@ interface MintNftTokensToEditionParams extends DefaultParam {
   quantity: number
   nonce: number
 }
+
 class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionParams> {
   prepare = (web3: Web3) => {
     const { uri, toAddress, editionNumber, quantity } = this.params
@@ -665,6 +684,7 @@ interface CreateEditionParams extends DefaultParam {
   royaltyPercentage: number
   nonce: number
 }
+
 class CreateEdition extends BlockchainFunction<CreateEditionParams> {
   prepare = (web3: Web3) => {
     const { editionQuantity, toAddress, royaltyPercentage } = this.params
@@ -692,11 +712,10 @@ interface ListEditionParams extends DefaultParam {
   priceOGUN: string
   startTime: number
 }
+
 class ListEdition extends BlockchainFunction<ListEditionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, editionNumber, from, price, priceOGUN, startTime } = this.params
-    // the price the user listed will be maintained and from the listed price the marketplace
-    // contract will take a x% fee from it during the buy process
     const totalPrice = Web3.utils.toBN(price)
     const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
     this.web3 = web3
@@ -728,11 +747,10 @@ export interface ListBatchParams extends DefaultParam {
   startTime: number
   nonce?: number
 }
+
 class ListBatch extends BlockchainFunction<ListBatchParams> {
   prepare = (web3: Web3) => {
     const { contractAddresses, tokenIds, price, priceOGUN, startTime } = this.params
-    // the price the user listed will be maintained and from the listed price the marketplace
-    // contract will take a x% fee from it during the buy process
     const totalPrice = Web3.utils.toBN(price)
     const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
     const acceptsMATIC = +price > 0
@@ -769,6 +787,7 @@ export interface CancelListingBatchParams extends DefaultParam {
   tokenIds: number[]
   nonce?: number
 }
+
 class CancelListingBatch extends BlockchainFunction<CancelListingBatchParams> {
   prepare = (web3: Web3) => {
     const { contractAddresses, tokenIds } = this.params
@@ -793,6 +812,7 @@ class CancelListingBatch extends BlockchainFunction<CancelListingBatchParams> {
 interface CancelEditionListingParams extends DefaultParam {
   editionNumber: number
 }
+
 class CancelEditionListing extends BlockchainFunction<CancelEditionListingParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, editionNumber, from } = this.params
@@ -813,6 +833,7 @@ class CancelEditionListing extends BlockchainFunction<CancelEditionListingParams
 interface TransferNftTokenParams extends TokenParams {
   to: string
 }
+
 class TransferNftToken extends BlockchainFunction<TransferNftTokenParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, to, tokenId } = this.params
@@ -831,6 +852,7 @@ class TransferNftToken extends BlockchainFunction<TransferNftTokenParams> {
 interface ReadRewardsRateParams {
   contractAddress: string
 }
+
 class ReadRewardsRate extends BlockchainFunction<ReadRewardsRateParams> {
   execute = async (web3: Web3) => {
     const { contractAddress } = this.params
@@ -840,7 +862,36 @@ class ReadRewardsRate extends BlockchainFunction<ReadRewardsRateParams> {
   }
 }
 
-const useBlockchainV2 = () => {
+interface BlockchainV2 {
+  placeBid: (tokenId: number, from: string, value: string, contractAddresses: ContractAddresses) => PlaceBid;
+  claimOgun: (from: string, to: string, amount: string, proof: string[]) => ClaimOgun;
+  hasClaimedOgun: (address: string) => HasClaimedOgun;
+  buyItem: (tokenId: number, from: string, owner: string, isPaymentOGUN: boolean, value: string, contractAddresses: ContractAddresses) => BuyItem;
+  approveMarketplace: (from: string, contractAddresses: ContractAddresses) => ApproveMarketplace;
+  approveAuction: (from: string, contractAddresses: ContractAddresses) => ApproveAuction;
+  burnNftToken: (tokenId: number, from: string, contractAddresses: ContractAddresses) => BurnNft;
+  cancelAuction: (tokenId: number, from: string, contractAddresses?: ContractAddresses) => CancelAuction;
+  cancelListing: (tokenId: number, from: string, contractAddresses?: ContractAddresses) => CancelListing;
+  createAuction: (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string, contractAddresses: ContractAddresses) => CreateAuction;
+  updateAuction: (tokenId: number, reservePrice: string, startTime: number, endTime: number, from: string, contractAddresses: ContractAddresses) => UpdateAuction;
+  listItem: (tokenId: number, from: string, price: string, priceOGUN: string, startTime: number, contractAddresses: ContractAddresses) => ListItem;
+  updateListing: (tokenId: number, from: string, price: string, priceOGUN: string, startTime: number, contractAddresses: ContractAddresses) => UpdateListing;
+  mintNftToken: (uri: string, from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number) => MintNft;
+  resultAuction: (tokenId: number, from: string, contractAddresses: ContractAddresses) => ResultAuction;
+  sendMatic: (to: string, from: string, amount: string) => SendMatic;
+  sendOgun: (to: string, from: string, amount: string) => SendOgun;
+  transferNftToken: (tokenId: number, from: string, to: string, contractAddresses: ContractAddresses) => TransferNftToken;
+  mintNftTokensToEdition: (uri: string, from: string, toAddress: string, editionNumber: number, quantity: number, nonce: number) => MintNftTokensToEdition;
+  createEdition: (from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number, nonce: number) => CreateEdition;
+  listEdition: (editionNumber: number, from: string, price: string, priceOGUN: string, startTime: number, contractAddresses: ContractAddresses) => ListEdition;
+  cancelEditionListing: (editionNumber: number, from: string, contractAddresses?: ContractAddresses) => CancelEditionListing;
+  listBatch: (payload: ListBatchParams) => ListBatch;
+  cancelListingBatch: (payload: CancelListingBatchParams) => CancelListingBatch;
+  getEditionRoyalties: (web3: Web3, editionId: number) => Promise<number>;
+  getRewardsRate: (web3: Web3) => Promise<string>;
+}
+
+const useBlockchainV2 = (): BlockchainV2 => {
   const me = useMe()
   const { magic } = useMagicContext()
 
@@ -850,12 +901,14 @@ const useBlockchainV2 = () => {
     },
     [me, magic],
   )
+
   const claimOgun = useCallback(
     (from: string, to: string, amount: string, proof: string[]) => {
       return new ClaimOgun(me, { from, to, amount, proof }, magic)
     },
     [me, magic],
   )
+
   const hasClaimedOgun = useCallback(
     (address: string) => {
       return new HasClaimedOgun(me, { address }, magic)
@@ -876,36 +929,42 @@ const useBlockchainV2 = () => {
     },
     [me, magic],
   )
+
   const approveMarketplace = useCallback(
     (from: string, contractAddresses: ContractAddresses) => {
       return new ApproveMarketplace(me, { from, contractAddresses }, magic)
     },
     [me, magic],
   )
+
   const approveAuction = useCallback(
     (from: string, contractAddresses: ContractAddresses) => {
       return new ApproveAuction(me, { from, contractAddresses }, magic)
     },
     [me, magic],
   )
+
   const burnNftToken = useCallback(
     (tokenId: number, from: string, contractAddresses: ContractAddresses) => {
       return new BurnNft(me, { from, tokenId, contractAddresses }, magic)
     },
     [me, magic],
   )
+
   const cancelAuction = useCallback(
     (tokenId: number, from: string, contractAddresses?: ContractAddresses) => {
       return new CancelAuction(me, { from, tokenId, contractAddresses }, magic)
     },
     [me, magic],
   )
+
   const cancelListing = useCallback(
     (tokenId: number, from: string, contractAddresses?: ContractAddresses) => {
       return new CancelListing(me, { from, tokenId, contractAddresses }, magic)
     },
     [me, magic],
   )
+
   const createAuction = useCallback(
     (
       tokenId: number,
@@ -919,6 +978,7 @@ const useBlockchainV2 = () => {
     },
     [me, magic],
   )
+
   const updateAuction = useCallback(
     (
       tokenId: number,
@@ -932,12 +992,14 @@ const useBlockchainV2 = () => {
     },
     [me, magic],
   )
+
   const resultAuction = useCallback(
     (tokenId: number, from: string, contractAddresses: ContractAddresses) => {
       return new ResultAuction(me, { from, tokenId, contractAddresses }, magic)
     },
     [me, magic],
   )
+
   const listItem = useCallback(
     (
       tokenId: number,
@@ -951,6 +1013,7 @@ const useBlockchainV2 = () => {
     },
     [me, magic],
   )
+
   const updateListing = useCallback(
     (
       tokenId: number,
@@ -964,42 +1027,49 @@ const useBlockchainV2 = () => {
     },
     [me, magic],
   )
+
   const mintNftToken = useCallback(
     (uri: string, from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number) => {
       return new MintNft(me, { from, uri, toAddress, royaltyPercentage, editionQuantity }, magic)
     },
     [me, magic],
   )
+
   const sendMatic = useCallback(
     (to: string, from: string, amount: string) => {
       return new SendMatic(me, { from, to, amount }, magic)
     },
     [me, magic],
   )
+
   const sendOgun = useCallback(
     (to: string, from: string, amount: string) => {
       return new SendOgun(me, { from, to, amount }, magic)
     },
     [me, magic],
   )
+
   const transferNftToken = useCallback(
     (tokenId: number, from: string, to: string, contractAddresses: ContractAddresses) => {
       return new TransferNftToken(me, { from, to, tokenId, contractAddresses }, magic)
     },
     [me, magic],
   )
+
   const mintNftTokensToEdition = useCallback(
     (uri: string, from: string, toAddress: string, editionNumber: number, quantity: number, nonce: number) => {
       return new MintNftTokensToEdition(me, { from, toAddress, uri, editionNumber, quantity, nonce }, magic)
     },
     [me, magic],
   )
+
   const createEdition = useCallback(
     (from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number, nonce: number) => {
-      return new CreateEdition(me, { editionQuantity, from, royaltyPercentage, toAddress, nonce }, magic)
+      return new CreateEdition(me, { from, toAddress, royaltyPercentage, editionQuantity, nonce }, magic)
     },
     [me, magic],
   )
+
   const listEdition = useCallback(
     (
       editionNumber: number,
