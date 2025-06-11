@@ -8,7 +8,7 @@ import { useMe } from './useMe'
 import useMetaMask from './useMetaMask'
 
 interface WalletContextData {
-  web3?: Web3
+  web3?: Web3 | null
   account?: string
   balance?: string
   OGUNBalance?: string
