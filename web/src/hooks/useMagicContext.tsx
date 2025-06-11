@@ -31,27 +31,31 @@ interface MagicProviderProps {
 }
 
 // Create client-side Magic instance
-const createMagic = (magicPublicKey: string) => {
-  return typeof window !== 'undefined'
-    ? new Magic(magicPublicKey, {
-        network: {
-          rpcUrl: network.rpc,
-          chainId: network.id,
-        },
-        extensions: [new OAuthExtension()],
-      })
-    : null
+const createMagic = (magicPublicKey: string): InstanceWithExtensions<SDKBase, OAuthExtension[]> | null => {
+  try {
+    return typeof window !== 'undefined'
+      ? new Magic(magicPublicKey, {
+          network: {
+            rpcUrl: network.rpc,
+            chainId: network.id,
+          },
+          extensions: [new OAuthExtension()],
+        })
+      : null
+  } catch {
+    return null
+  }
 }
 
 // Create Web3 instance
 const createWeb3 = (
-  magic:
-    | false
-    | InstanceWithExtensions<SDKBase, MagicSDKExtensionsOption<string>>
-    | InstanceWithExtensions<SDKBase, OAuthExtension[]>,
-) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return magic ? new Web3(magic.rpcProvider as any) : null
+  magic: InstanceWithExtensions<SDKBase, OAuthExtension[]>,
+): Web3 | null => {
+  try {
+    return new Web3((magic as any).rpcProvider)
+  } catch {
+    return null
+  }
 }
 
 export function MagicProvider({ children }: MagicProviderProps) {
@@ -68,7 +72,11 @@ export function MagicProvider({ children }: MagicProviderProps) {
     if (typeof window !== 'undefined') {
       const magicInstance = createMagic(magicPublicKey)
       setMagic(magicInstance)
-      setWeb3(createWeb3(magicInstance))
+      if (magicInstance) {
+        setWeb3(createWeb3(magicInstance))
+      } else {
+        setWeb3(null)
+      }
     }
   }, [])
 
@@ -117,9 +125,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetOgunBalance = useCallback(async () => {
     try {
-      if (!tokenAddress) throw Error('No token contract address found when setting Ogun balance')
+      if (!config.ogunTokenAddress) throw Error('No token contract address found when setting Ogun balance')
       if (web3 && account) {
-        const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress)
+        const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress)
         const tokenAmount = await ogunContract.methods.balanceOf(account).call()
         const tokenAmountInEther = Number(web3.utils.fromWei(tokenAmount, 'ether')).toFixed(6)
         setOgunBalance(tokenAmountInEther)
