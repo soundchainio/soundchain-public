@@ -49,7 +49,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
       return false
     }
 
-    if (magic.user) {
+    if (magic && magic.user) {
       await magic.user.logout()
     }
     setJwt()
