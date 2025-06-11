@@ -80,7 +80,7 @@ export default function LoginPage() {
       setError(null);
       await magic.oauth.loginWithRedirect({
         provider: 'google',
-        redirectURI: `${config.domainUrl}/login`,
+        redirectURI: 'https://soundchain.io/login',
         scope: ['openid'],
       });
     } catch (error) {
@@ -89,20 +89,25 @@ export default function LoginPage() {
   };
 
   useEffect(() => {
-    async function handleMagicGoogle() {
+    async function handleMagicLink() {
       if (magic && magicParam && !loggingIn) {
         try {
           setLoggingIn(true);
           setError(null);
-          const result = await magic.oauth.getRedirectResult();
-          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+          await magic.auth.loginWithCredential(); // Complete magic link auth
+          const didToken = await magic.user.getIdToken();
+          const loginResult = await login({ variables: { input: { token: didToken } } });
           setJwt(loginResult.data?.login.jwt);
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          router.push(redirectUrl);
         } catch (error) {
           handleError(error as Error);
+        } finally {
+          setLoggingIn(false);
         }
       }
     }
-    handleMagicGoogle();
+    handleMagicLink();
   }, [magic, magicParam, login, handleError]);
 
   async function handleSubmit(values: FormValues) {
@@ -115,6 +120,7 @@ export default function LoginPage() {
 
       const didToken = await magic.auth.loginWithEmailOTP({
         email: values.email,
+        redirectURI: 'https://soundchain.io/login', // Hardcoded redirectURI
       });
       console.log('Magic loginWithEmailOTP completed, token:', didToken);
 
