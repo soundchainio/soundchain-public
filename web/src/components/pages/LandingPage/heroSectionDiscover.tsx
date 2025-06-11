@@ -28,7 +28,7 @@ export function HeroSectionDiscover() {
                     className="relative aspect-video h-full w-full object-cover"
                     src="/landing-page/hero-bg.png"
                     fill
-                    fetchpriority="high" // Use lowercase fetchpriority
+                    fetchPriority="high" // Fixed typo
                   />
                   <div className="absolute inset-0 h-full bg-gradient-radial from-transparent via-transparent to-black mix-blend-multiply" />
                   <div className="absolute inset-0 h-full bg-gradient-to-b from-transparent via-transparent to-black mix-blend-multiply" />
