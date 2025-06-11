@@ -104,13 +104,18 @@ export const RemoveListingConfirmationModal = () => {
           })
           resolve()
         }
-        cancelListingBatch(params)
-          .onReceipt(onReceipt)
-          .onError(cause => {
-            toast.error(cause.message)
-            reject(cause)
-          })
-          .execute(web3!)
+        if (cancelListingBatch && web3) {
+          cancelListingBatch(params)
+            .onReceipt(onReceipt)
+            .onError(cause => {
+              toast.error(cause.message)
+              reject(cause)
+            })
+            .execute(web3!)
+        } else {
+          toast.error('Unable to cancel listing batch')
+          reject(new Error('cancelListingBatch or web3 is undefined'))
+        }
       })
     }
 
