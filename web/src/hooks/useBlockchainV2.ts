@@ -1,6 +1,6 @@
 import { SDKBase } from '@magic-sdk/provider'
 import { config } from 'config'
-import { magic } from 'hooks/useMagicContext'
+import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
 import { MeQuery } from 'lib/graphql'
 import { useCallback } from 'react'
@@ -88,16 +88,18 @@ class BlockchainFunction<Type> {
   protected onReceiptFunction?: (receipt: TransactionReceipt) => void
   protected onErrorFunction?: (cause: Error) => void
   protected finallyFunction?: () => void
+  protected magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null
 
-  constructor(me: MeQuery['me'] | undefined, params: Type) {
+  constructor(me: MeQuery['me'] | undefined, params: Type, magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null) {
     this.me = me
     this.params = params
+    this.magic = magic
   }
 
   protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
     const { me } = this
-    if ((this.web3?.currentProvider as SDKBase['rpcProvider']).isMagic && !(await magic.user.isLoggedIn()) && me) {
-      await magic.auth.loginWithMagicLink({ email: me.email })
+    if ((this.web3?.currentProvider as SDKBase['rpcProvider']).isMagic && !(await this.magic?.user.isLoggedIn()) && me) {
+      await this.magic?.auth.loginWithMagicLink({ email: me.email })
     }
     const gasPriceString = await this.web3?.eth.getGasPrice()
     const gasPrice = Math.floor(Number(gasPriceString) * gasPriceMultiplier) ?? fallbackGasPrice
@@ -696,10 +698,9 @@ class ListEdition extends BlockchainFunction<ListEditionParams> {
     // contract will take a x% fee from it during the buy process
     const totalPrice = Web3.utils.toBN(price)
     const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
+    this.web3 = web3
     const acceptsMATIC = +price > 0
     const acceptsOGUN = +priceOGUN > 0
-
-    this.web3 = web3
 
     const transactionObject = marketplaceEditionsContract(web3).methods.listEdition(
       contractAddresses?.nft || nftAddress,
@@ -840,24 +841,25 @@ class ReadRewardsRate extends BlockchainFunction<ReadRewardsRateParams> {
 
 const useBlockchainV2 = () => {
   const me = useMe()
+  const { magic } = useMagicContext()
 
   const placeBid = useCallback(
     (tokenId: number, from: string, value: string, contractAddresses: ContractAddresses) => {
-      return new PlaceBid(me, { from, value, tokenId, contractAddresses })
+      return new PlaceBid(me, { from, value, tokenId, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const claimOgun = useCallback(
     (from: string, to: string, amount: string, proof: string[]) => {
-      return new ClaimOgun(me, { from, to, amount, proof })
+      return new ClaimOgun(me, { from, to, amount, proof }, magic)
     },
-    [me],
+    [me, magic],
   )
   const hasClaimedOgun = useCallback(
     (address: string) => {
-      return new HasClaimedOgun(me, { address })
+      return new HasClaimedOgun(me, { address }, magic)
     },
-    [me],
+    [me, magic],
   )
 
   const buyItem = useCallback(
@@ -869,39 +871,39 @@ const useBlockchainV2 = () => {
       value: string,
       contractAddresses: ContractAddresses,
     ) => {
-      return new BuyItem(me, { tokenId, from, owner, isPaymentOGUN, value, contractAddresses })
+      return new BuyItem(me, { tokenId, from, owner, isPaymentOGUN, value, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const approveMarketplace = useCallback(
     (from: string, contractAddresses: ContractAddresses) => {
-      return new ApproveMarketplace(me, { from, contractAddresses })
+      return new ApproveMarketplace(me, { from, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const approveAuction = useCallback(
     (from: string, contractAddresses: ContractAddresses) => {
-      return new ApproveAuction(me, { from, contractAddresses })
+      return new ApproveAuction(me, { from, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const burnNftToken = useCallback(
     (tokenId: number, from: string, contractAddresses: ContractAddresses) => {
-      return new BurnNft(me, { from, tokenId, contractAddresses })
+      return new BurnNft(me, { from, tokenId, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const cancelAuction = useCallback(
     (tokenId: number, from: string, contractAddresses?: ContractAddresses) => {
-      return new CancelAuction(me, { from, tokenId, contractAddresses })
+      return new CancelAuction(me, { from, tokenId, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const cancelListing = useCallback(
     (tokenId: number, from: string, contractAddresses?: ContractAddresses) => {
-      return new CancelListing(me, { from, tokenId, contractAddresses })
+      return new CancelListing(me, { from, tokenId, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const createAuction = useCallback(
     (
@@ -912,9 +914,9 @@ const useBlockchainV2 = () => {
       from: string,
       contractAddresses: ContractAddresses,
     ) => {
-      return new CreateAuction(me, { from, tokenId, reservePrice, startTime, endTime, contractAddresses })
+      return new CreateAuction(me, { from, tokenId, reservePrice, startTime, endTime, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const updateAuction = useCallback(
     (
@@ -925,15 +927,15 @@ const useBlockchainV2 = () => {
       from: string,
       contractAddresses: ContractAddresses,
     ) => {
-      return new UpdateAuction(me, { from, tokenId, reservePrice, startTime, endTime, contractAddresses })
+      return new UpdateAuction(me, { from, tokenId, reservePrice, startTime, endTime, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const resultAuction = useCallback(
     (tokenId: number, from: string, contractAddresses: ContractAddresses) => {
-      return new ResultAuction(me, { from, tokenId, contractAddresses })
+      return new ResultAuction(me, { from, tokenId, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const listItem = useCallback(
     (
@@ -944,9 +946,9 @@ const useBlockchainV2 = () => {
       startTime: number,
       contractAddresses: ContractAddresses,
     ) => {
-      return new ListItem(me, { from, tokenId, price, priceOGUN, startTime, contractAddresses })
+      return new ListItem(me, { from, tokenId, price, priceOGUN, startTime, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const updateListing = useCallback(
     (
@@ -957,45 +959,45 @@ const useBlockchainV2 = () => {
       startTime: number,
       contractAddresses: ContractAddresses,
     ) => {
-      return new UpdateListing(me, { from, tokenId, price, priceOGUN, startTime, contractAddresses })
+      return new UpdateListing(me, { from, tokenId, price, priceOGUN, startTime, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const mintNftToken = useCallback(
     (uri: string, from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number) => {
-      return new MintNft(me, { from, uri, toAddress, royaltyPercentage, editionQuantity })
+      return new MintNft(me, { from, uri, toAddress, royaltyPercentage, editionQuantity }, magic)
     },
-    [me],
+    [me, magic],
   )
   const sendMatic = useCallback(
     (to: string, from: string, amount: string) => {
-      return new SendMatic(me, { from, to, amount })
+      return new SendMatic(me, { from, to, amount }, magic)
     },
-    [me],
+    [me, magic],
   )
   const sendOgun = useCallback(
     (to: string, from: string, amount: string) => {
-      return new SendOgun(me, { from, to, amount })
+      return new SendOgun(me, { from, to, amount }, magic)
     },
-    [me],
+    [me, magic],
   )
   const transferNftToken = useCallback(
     (tokenId: number, from: string, to: string, contractAddresses: ContractAddresses) => {
-      return new TransferNftToken(me, { from, to, tokenId, contractAddresses })
+      return new TransferNftToken(me, { from, to, tokenId, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
   const mintNftTokensToEdition = useCallback(
     (uri: string, from: string, toAddress: string, editionNumber: number, quantity: number, nonce: number) => {
-      return new MintNftTokensToEdition(me, { from, toAddress, uri, editionNumber, quantity, nonce })
+      return new MintNftTokensToEdition(me, { from, toAddress, uri, editionNumber, quantity, nonce }, magic)
     },
-    [me],
+    [me, magic],
   )
   const createEdition = useCallback(
     (from: string, toAddress: string, royaltyPercentage: number, editionQuantity: number, nonce: number) => {
-      return new CreateEdition(me, { editionQuantity, from, royaltyPercentage, toAddress, nonce })
+      return new CreateEdition(me, { editionQuantity, from, royaltyPercentage, toAddress, nonce }, magic)
     },
-    [me],
+    [me, magic],
   )
   const listEdition = useCallback(
     (
@@ -1006,30 +1008,30 @@ const useBlockchainV2 = () => {
       startTime: number,
       contractAddresses: ContractAddresses,
     ) => {
-      return new ListEdition(me, { editionNumber, from, price, priceOGUN, startTime, contractAddresses })
+      return new ListEdition(me, { editionNumber, from, price, priceOGUN, startTime, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
 
   const cancelEditionListing = useCallback(
     (editionNumber: number, from: string, contractAddresses?: ContractAddresses) => {
-      return new CancelEditionListing(me, { editionNumber, from, contractAddresses })
+      return new CancelEditionListing(me, { editionNumber, from, contractAddresses }, magic)
     },
-    [me],
+    [me, magic],
   )
 
   const listBatch = useCallback(
     (payload: ListBatchParams) => {
-      return new ListBatch(me, payload)
+      return new ListBatch(me, payload, magic)
     },
-    [me],
+    [me, magic],
   )
 
   const cancelListingBatch = useCallback(
     (payload: CancelListingBatchParams) => {
-      return new CancelListingBatch(me, payload)
+      return new CancelListingBatch(me, payload, magic)
     },
-    [me],
+    [me, magic],
   )
 
   const getEditionRoyalties = useCallback(async (web3: Web3, editionId: number) => {
@@ -1039,9 +1041,9 @@ const useBlockchainV2 = () => {
 
   const getRewardsRate = useCallback(
     async (web3: Web3) => {
-      return await new ReadRewardsRate(me, { contractAddress: marketplaceEditionsAddress }).execute(web3)
+      return await new ReadRewardsRate(me, { contractAddress: marketplaceEditionsAddress }, magic).execute(web3)
     },
-    [me],
+    [me, magic],
   )
 
   return {
