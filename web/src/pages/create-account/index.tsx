@@ -23,7 +23,7 @@ interface FormValues {
 
 const topNavBarProps: TopNavBarProps = {}
 
-export const HANDLE_MAX_CHARS = 24
+export const HANDLE_MAX_CHARS = 24 // Original value, adjust to 30 or other if desired
 
 export default function CreateAccountPage() {
   const router = useRouter()
@@ -41,23 +41,25 @@ export default function CreateAccountPage() {
 
   useEffect(() => {
     async function isLoggedInMagic() {
-      const user = magic.user
-      const isLoggedIn = await user?.isLoggedIn()
+      if (magic) {
+        const user = magic.user
+        const isLoggedIn = await user?.isLoggedIn()
 
-      if (user && isLoggedIn) {
-        const token = await user.getIdToken()
-        const metaData = await user.getMetadata()
-        const email = metaData?.email
-        setToken(token)
-        email && setEmail(email)
-      } else {
-        router.push('/login')
+        if (user && isLoggedIn) {
+          const token = await user.getIdToken()
+          const metaData = await user.getMetadata()
+          const email = metaData?.email
+          setToken(token)
+          email && setEmail(email)
+        } else {
+          router.push('/login')
+        }
       }
     }
     isLoggedInMagic()
     // TODO: fix this
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [magic, router])
 
   const toggleTerms = () => {
     setTermsAccepted(!termsAccepted)
@@ -126,7 +128,7 @@ export default function CreateAccountPage() {
             <div className="relative">
               <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
               <Link href={`/terms-and-conditions`} passHref className="relative px-2 text-white underline">
-                <span className="after:absolute after:-inset-1">Terms &amp; Conditions</span>
+                <span className="after:absolute after:-inset-1">Terms & Conditions</span>
               </Link>
               and
               <Link href={`/privacy-policy`} passHref className="relative px-2 text-white underline">
