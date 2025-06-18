@@ -14,7 +14,7 @@
     "prettier": "prettier --write ./src",
     "lint-web": "lint-staged",
     "find:unused": "next-unused",
-    "vercel-build": "next build"
+    "vercel-build": "next build" // Added to ensure Vercel uses the correct build step
   },
   "lint-staged": {
     "*.{js,ts,tsx,jsx}": ["eslint --fix"],
@@ -104,7 +104,7 @@
     "@graphql-codegen/typescript": "^4.0.6",
     "@graphql-codegen/typescript-operations": "^4.2.0",
     "@graphql-codegen/typescript-react-apollo": "^4.2.1",
-    "@graphql-tools/url-loader": "^8.0.0", // Updated to latest, compatible with graphql-ws 5.16.2
+    "@graphql-tools/url-loader": "^8.0.0",
     "@types/body-scroll-lock": "^3.1.0",
     "@types/emoji-mart": "^3.0.9",
     "@types/jest": "^27.4.0",
