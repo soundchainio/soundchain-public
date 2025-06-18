@@ -4,7 +4,6 @@
   .transparent-border-1px {
     border: solid 1px transparent;
   }
-}
 
   .gradient-track-box {
     min-width: 250px;
@@ -27,7 +26,14 @@
     margin: -1px;
     border-radius: inherit;
     opacity: 60%;
-    background: linear-gradient(87.71deg, #26d1a8 0%, #ac4efd 25%, #f1419e 49.48%, #fed503 72.4%, #fe5540 100%);
+    background: linear-gradient(
+      87.71deg,
+      #26d1a8 0%,
+      #ac4efd 25%,
+      #f1419e 49.48%,
+      #fed503 72.4%,
+      #fe5540 100%
+    );
   }
 
   .gradient-select-hover {
@@ -49,7 +55,14 @@
     margin: -1px;
     border-radius: inherit;
     opacity: 60%;
-    background: linear-gradient(87.71deg, #26d1a8 0%, #ac4efd 25%, #f1419e 49.48%, #fed503 72.4%, #fe5540 100%);
+    background: linear-gradient(
+      87.71deg,
+      #26d1a8 0%,
+      #ac4efd 25%,
+      #f1419e 49.48%,
+      #fed503 72.4%,
+      #fe5540 100%
+    );
   }
 
   .sale-type-font-size {
@@ -57,10 +70,11 @@
   }
 
   .marketplace-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  justify-items: center;
-  grid-auto-flow: row;
-  align-items: center;
-  gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    justify-items: center;
+    grid-auto-flow: row;
+    align-items: center;
+    gap: 16px;
+  }
 }
