@@ -60,7 +60,7 @@ export const RequestVerificationForm = ({ handleSubmit, loading }: Props) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      <Form className="flex flex-col gap-4">
+      <Form className="flex flex-col gap-4" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
         <div className="mt-2 flex flex-1 flex-col gap-6">
           {sourceList.map(src => (
             <div key={src.name} className="flex items-center gap-2">

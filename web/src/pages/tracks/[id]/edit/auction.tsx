@@ -106,7 +106,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   }
 
   const isOwner = compareWallets(listingPayload.auctionItem?.auctionItem?.owner, account)
-  const isForSale = !!listingPayload.auctionItem?.auctionItem?.reservePrice ?? false
+  const isForSale = !!listingPayload.auctionItem?.auctionItem?.reservePrice // Removed ?? false
   const startPrice = listingPayload.auctionItem.auctionItem?.reservePriceToShow
   const startingTime = listingPayload.auctionItem.auctionItem?.startingTime
     ? new Date(listingPayload.auctionItem.auctionItem?.startingTime * 1000)

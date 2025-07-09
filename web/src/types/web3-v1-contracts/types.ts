@@ -61,4 +61,4 @@ export interface PayableTransactionObject<T> {
 }
 
 export type BlockType = 'latest' | 'pending' | 'genesis' | 'earliest' | number | BN
-export type BaseContract = Omit<Contract, 'clone' | 'once'>
+export type BaseContract = Omit<Contract<any>, 'clone' | 'once'> // Added 'any' as type argument

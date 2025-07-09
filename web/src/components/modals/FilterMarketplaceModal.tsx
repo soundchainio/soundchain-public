@@ -89,7 +89,7 @@ export const FilterModalMarketplace = () => {
         }}
       >
         {({ setFieldValue, values }) => (
-          <Form className="flex h-full flex-col gap-2 bg-gray-10 p-4">
+          <Form className="flex h-full flex-col gap-2 bg-gray-10 p-4" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
             <div className="flex flex-1 flex-col gap-2">
               <span className="text-xs font-bold text-white">Listing COIN Type</span>
               <div className="mb-6 flex gap-3">

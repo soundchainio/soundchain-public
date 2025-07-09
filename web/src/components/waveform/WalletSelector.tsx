@@ -24,9 +24,10 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
   const [selectedWallet, setSelectedWallet] = useState<DefaultWallet>(me?.defaultWallet || DefaultWallet.Soundchain)
 
   const onChange = useCallback(
-    ({ target: { value } }) => {
+    (event: React.ChangeEvent<HTMLSelectElement>) => { // Typed the event
+      const { value } = event.target
       setSelectedWallet(value as DefaultWallet)
-      updateDefaultWallet({ variables: { input: { defaultWallet: value } } })
+      updateDefaultWallet({ variables: { input: { defaultWallet: value as DefaultWallet } } })
     },
     [updateDefaultWallet],
   )

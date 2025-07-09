@@ -18,7 +18,7 @@ import {
   useUserByWalletLazyQuery,
 } from 'lib/graphql'
 import Link from 'next/link'
-import { HighestBid } from 'pages/tracks/[id]/complete-auction'
+import { type HighestBid } from 'pages/tracks/[id]/complete-auction' // Changed to type-only import
 import tw from 'tailwind-styled-components'
 import { priceToShow } from 'utils/format'
 import { compareWallets } from 'utils/Wallet'
@@ -356,7 +356,7 @@ const PriceContainer = tw.div`
 
 const PriceTitle = tw.span`
   text-xs 
-text-neutral-500
+  text-neutral-500
   uppercase
   mt-[7px]
   tracking-wide

@@ -54,7 +54,6 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   const [trackUpdate] = useUpdateTrackMutation()
   const { account, web3 } = useWalletContext()
   const { setTopNavBarProps } = useLayoutContext()
-
   const me = useMe()
 
   const nftData = track.nftData
@@ -109,7 +108,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
   }
 
   const isOwner = compareWallets(listingPayload.buyNowItem?.buyNowItem?.owner, account)
-  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem ?? false
+  const isForSale = !!listingPayload.buyNowItem?.buyNowItem?.pricePerItem // Removed ?? false
   const price = listingPayload.buyNowItem?.buyNowItem?.pricePerItemToShow
   const OGUNprice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItemToShow
 

@@ -47,7 +47,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
     }
   }, [me?.profile.coverPicture])
 
-  const onUpload = useCallback(uploading => {
+  const onUpload = useCallback((uploading: boolean) => { // Fixed type to boolean
     setLoading(uploading)
   }, [])
 
@@ -72,7 +72,7 @@ export const CoverPictureForm = ({ afterSubmit, submitText, submitProps }: Cover
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
       {({ values: { coverPicture } }) => (
-        <Form className="flex flex-1 flex-col">
+        <Form className="flex flex-1 flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <div className="flex-grow space-y-8">
             <div className="flex flex-col">
               <Label textSize="base">CUSTOM COVER PHOTO:</Label>

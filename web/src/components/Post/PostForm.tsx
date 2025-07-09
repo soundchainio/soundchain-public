@@ -107,7 +107,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
       onSubmit={onSubmit}
     >
       {({ values, setFieldValue }) => (
-        <Form className="pb-safe flex h-full flex-col">
+        <Form className="pb-safe flex h-full flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
             <button
               className="flex-1 p-2 text-center font-bold text-gray-400"

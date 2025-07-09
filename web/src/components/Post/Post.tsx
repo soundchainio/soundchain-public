@@ -3,10 +3,15 @@ import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
-import { AddLinks } from 'react-link-text'
+import { AddLinks } from 'react-link-text' // Removed AddLinksProps import
 import ReactPlayer from 'react-player'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+
+// Define a minimal type for addLinksOptions based on react-link-text usage
+interface AddLinksOptions {
+  className?: string;
+}
 
 import { Avatar } from '../Avatar'
 import { DisplayName } from '../DisplayName'
@@ -32,7 +37,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
   const isAuthor = post?.profile.id == me?.profile.id
   const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember)
 
-  const addLinksOptions = {
+  const addLinksOptions: AddLinksOptions = {
     className: 'underline text-blue-400',
   }
 
@@ -75,9 +80,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
             )}
           </div>
         </div>
-        <AddLinks options={addLinksOptions}>
-          <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">{post.body}</pre>
-        </AddLinks>
+        <AddLinks options={addLinksOptions} {...{ children: <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">{post.body}</pre> } as any} />
         {post.mediaLink &&
           (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
             <ReactPlayer

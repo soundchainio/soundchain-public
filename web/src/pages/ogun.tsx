@@ -102,7 +102,7 @@ export default function OgunPage() {
           </h2>
           <p className="py-14 text-center text-xl">
             Our native ERC-20 token that lets our users take <br className="hidden md:block" />
-            part in shaping the platform&#39;s future. <br className="hidden md:block" />
+            part in shaping the platform's future. <br className="hidden md:block" />
             We’re working on some exciting features to launch alongside the token.
             <br className="hidden md:block" />
             We launched the Ogun token in August of 2022 and we expect to launch more features soon.
@@ -126,14 +126,19 @@ export default function OgunPage() {
                     validationSchema={validationSchema}
                     onSubmit={handleCreateWhitelistEntry}
                   >
-                    <Form className="flex flex-1 flex-col justify-between">
-                      <div className="flex flex-col gap-3 pt-4">
-                        <InputField placeholder="Email address" type="email" name="email" />
-                      </div>
-                      <Button type="submit" className="mt-6 w-full">
-                        ENTER
-                      </Button>
-                    </Form>
+                    {({ values, handleChange, ...formikProps }) => (
+                      <Form
+                        className="flex flex-1 flex-col justify-between"
+                        {...(formikProps as any)} // Spread Formik props to satisfy additional HTML attributes
+                      >
+                        <div className="flex flex-col gap-3 pt-4">
+                          <InputField placeholder="Email address" type="email" name="email" />
+                        </div>
+                        <Button type="submit" className="mt-6 w-full">
+                          ENTER
+                        </Button>
+                      </Form>
+                    )}
                   </Formik>
                 </>
               )}
@@ -164,7 +169,7 @@ export default function OgunPage() {
             <span className="col-span-2 md:col-span-1">
               <hr className="h-px border-0 bg-rainbow-gradient" />
               <p className="col-span-2 max-w-md pt-14 text-left text-2xl font-light md:col-span-1 md:text-4xl">
-                Users can earn additional OGUN just by buying and selling NFT&#39;s on the SoundChain Marketplace
+                Users can earn additional OGUN just by buying and selling NFT's on the SoundChain Marketplace
               </p>
             </span>
           </span>
@@ -210,7 +215,7 @@ export default function OgunPage() {
             <span className="col-span-2 md:col-span-1">
               <hr className="h-px border-0 bg-rainbow-gradient" />
               <p className="col-span-2 max-w-md pt-14 text-left text-2xl font-light md:col-span-1 md:text-4xl">
-                Special supporter badges, priotization on the Explore page, and the ability to tip artists - OGUN is
+                Special supporter badges, prioritization on the Explore page, and the ability to tip artists - OGUN is
                 built right into the SoundChain platform
               </p>
             </span>
@@ -237,7 +242,7 @@ export default function OgunPage() {
             />
             <ProductCharacteristics
               title="Set supply"
-              content="No dilution built into the system. One billion tokens. That&#39;s it"
+              content="No dilution built into the system. One billion tokens. That's it"
             />
             <ProductCharacteristics
               title="SoundChain bonuses"

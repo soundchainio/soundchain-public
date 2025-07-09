@@ -3,24 +3,19 @@
 /* eslint-disable */
 
 import BN from 'bn.js'
-import { ContractOptions } from 'web3-eth-contract'
+import { Contract, ContractOptions, ContractEventOptions } from 'web3-eth-contract'
 import { EventLog } from 'web3-core'
 import { EventEmitter } from 'events'
+import { Abi, AbiParameter } from 'web3-types' // Using web3-types for v4.16.0
 import {
   Callback,
   PayableTransactionObject,
   NonPayableTransactionObject,
   BlockType,
   ContractEventLog,
-  BaseContract,
 } from './types'
 
-export interface EventOptions {
-  filter?: object
-  fromBlock?: BlockType
-  topics?: string[]
-}
-
+// Event types
 export type Approval = ContractEventLog<{
   owner: string
   approved: string
@@ -52,9 +47,47 @@ export type Transfer = ContractEventLog<{
   2: string
 }>
 
-export interface Soundchain721 extends BaseContract {
+// Define a custom subscription type to fully mimic ContractLogsSubscription, extending EventEmitter
+interface EventSubscription extends EventEmitter {
+  options: ContractEventOptions
+  callback?: Callback<any>
+  abi: Abi[] // Using Abi from web3-types for v4.16.0
+  jsonInterface: Abi[] // Using Abi from web3-types for v4.16.0
+  _buildSubscriptionParams(options: ContractEventOptions): any[] // Required by ContractLogsSubscription
+  formatSubscriptionResult(result: any): any // Required by ContractLogsSubscription
+  args: any // Required by ContractLogsSubscription
+  _subscriptionManager: any // Required by ContractLogsSubscription
+  _returnFormat: any // Required by ContractLogsSubscription
+  id: string | number // Required by ContractLogsSubscription
+  address: string // Required by ContractLogsSubscription
+  lastBlock: any // Required by ContractLogsSubscription
+  processSubscriptionData(data: any): any // Required by ContractLogsSubscription
+  sendSubscriptionRequest(): any // Required by ContractLogsSubscription
+  returnFormat: any // Required by ContractLogsSubscription
+  subscribe(callback?: Callback<any>): EventEmitter // Required by ContractLogsSubscription
+  subscriptionManager: any // Required by ContractLogsSubscription
+  resubscribe(): any // Required by ContractLogsSubscription
+  unsubscribe(): any // Required by ContractLogsSubscription
+  sendUnsubscribeRequest(): any // Required by ContractLogsSubscription
+  _processSubscriptionResult(result: any): any // Required by ContractLogsSubscription
+  _processSubscriptionError(error: any): any // Required by ContractLogsSubscription
+  _emitter: EventEmitter // Required by ContractLogsSubscription
+  setMaxListenerWarningThreshold(max: number): this // Required by ContractLogsSubscription
+}
+
+// Define events interface compatible with ContractEventsInterface
+interface Soundchain721Events {
+  Approval: (options?: ContractEventOptions) => EventSubscription // Returns EventSubscription
+  ApprovalForAll: (options?: ContractEventOptions) => EventSubscription // Returns EventSubscription
+  OwnershipTransferred: (options?: ContractEventOptions) => EventSubscription // Returns EventSubscription
+  Transfer: (options?: ContractEventOptions) => EventSubscription // Returns EventSubscription
+  allEvents: (options?: ContractEventOptions) => EventSubscription // Returns EventSubscription
+  [eventName: string]: (options?: ContractEventOptions) => EventSubscription // Index signature matches
+}
+
+export interface Soundchain721 extends Omit<Contract<any>, 'clone' | 'once'> { // Retained Contract<any> extension
   constructor(jsonInterface: any[], address?: string, options?: ContractOptions): Soundchain721
-  clone(): Soundchain721
+  clone(): Soundchain721 // Redefined as required
   methods: {
     approve(to: string, tokenId: number | string | BN): NonPayableTransactionObject<void>
 
@@ -127,31 +160,16 @@ export interface Soundchain721 extends BaseContract {
 
     transferOwnership(newOwner: string): NonPayableTransactionObject<void>
   }
-  events: {
-    Approval(cb?: Callback<Approval>): EventEmitter
-    Approval(options?: EventOptions, cb?: Callback<Approval>): EventEmitter
+  events: Soundchain721Events // Aligned with Contract<any> events
+}
 
-    ApprovalForAll(cb?: Callback<ApprovalForAll>): EventEmitter
-    ApprovalForAll(options?: EventOptions, cb?: Callback<ApprovalForAll>): EventEmitter
-
-    OwnershipTransferred(cb?: Callback<OwnershipTransferred>): EventEmitter
-    OwnershipTransferred(options?: EventOptions, cb?: Callback<OwnershipTransferred>): EventEmitter
-
-    Transfer(cb?: Callback<Transfer>): EventEmitter
-    Transfer(options?: EventOptions, cb?: Callback<Transfer>): EventEmitter
-
-    allEvents(options?: EventOptions, cb?: Callback<EventLog>): EventEmitter
+export interface Soundchain721Factory extends Omit<Contract<any>, 'clone' | 'once'> { // Retained consistency
+  methods: {
+    createSoundchain721(
+      _name: string,
+      _symbol: string,
+      _royaltyReceivers: string[],
+      _royaltyPercentages: (number | string | BN)[],
+    ): NonPayableTransactionObject<Soundchain721>
   }
-
-  once(event: 'Approval', cb: Callback<Approval>): void
-  once(event: 'Approval', options: EventOptions, cb: Callback<Approval>): void
-
-  once(event: 'ApprovalForAll', cb: Callback<ApprovalForAll>): void
-  once(event: 'ApprovalForAll', options: EventOptions, cb: Callback<ApprovalForAll>): void
-
-  once(event: 'OwnershipTransferred', cb: Callback<OwnershipTransferred>): void
-  once(event: 'OwnershipTransferred', options: EventOptions, cb: Callback<OwnershipTransferred>): void
-
-  once(event: 'Transfer', cb: Callback<Transfer>): void
-  once(event: 'Transfer', options: EventOptions, cb: Callback<Transfer>): void
 }

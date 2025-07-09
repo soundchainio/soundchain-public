@@ -138,7 +138,7 @@ export const CreateModal = () => {
               description: 'Track description made by the author',
               text: values.description,
               language: 'eng',
-            }).set
+            })
 
           if (values.artworkFile && imageMimeTypes.includes(values.artworkFile.type)) {
             const artWorkArrayBuffer = await values.artworkFile.arrayBuffer()
@@ -264,7 +264,7 @@ export const CreateModal = () => {
 
         const createAndMintEdition = (): Promise<Array<string>> => {
           return new Promise((resolve, reject) => {
-            createEdition(account, account, royalty, editionQuantity, nonce)
+            createEdition(account, account, royalty, editionQuantity, Number(nonce)) // Convert bigint to number
               .onReceipt(async receipt => {
                 if (!receipt.status) {
                   reject('FAIL')
@@ -309,7 +309,7 @@ export const CreateModal = () => {
               account,
               Number(editionNumber),
               quantity,
-              nonce,
+              Number(nonce), // Convert bigint to number
             )
               .onReceipt(async receipt => {
                 setMintingState('Creating your track')
@@ -397,7 +397,7 @@ export const CreateModal = () => {
         let quantityLeft = values.editionQuantity
         const promises = []
         for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
-          nonce++
+          nonce = BigInt(await web3?.eth.getTransactionCount(account)) // Update nonce for each batch
           const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE
           promises.push(createAndMintTracks(quantity, editionNumber, index === 0))
           setMintingState('Minting NFT')

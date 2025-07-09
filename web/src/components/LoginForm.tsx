@@ -18,7 +18,7 @@ export const LoginForm = ({ handleMagicLogin }: LoginFormProps) => {
   return (
     <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleMagicLogin}>
       {({ isSubmitting }) => (
-        <Form className="flex flex-1 flex-col justify-between">
+        <Form className="flex flex-1 flex-col justify-between" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <div>
             <InputField placeholder="Email address" type="email" name="email" />
           </div>

@@ -80,8 +80,8 @@ export function MagicProvider({ children }: MagicProviderProps) {
     }
   }, [])
 
-  const handleError = useCallback(async error => {
-    if (error.code === RPCErrorCode.InternalError) {
+  const handleError = useCallback(async (error: Error | { code: number }) => {
+    if ('code' in error && error.code === RPCErrorCode.InternalError) {
       await magic?.user.logout()
       return setJwt()
     }
@@ -95,7 +95,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
       await handleSetBalance()
       await handleSetOgunBalance()
     } catch (error) {
-      handleError(error)
+      handleError(error as Error | { code: number })
     } finally {
       setIsRefetchingBalance(false)
     }
@@ -108,7 +108,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
         setAccount(account)
       }
     } catch (error) {
-      handleError(error)
+      handleError(error as Error | { code: number })
     }
   }, [handleError, web3])
 
@@ -119,7 +119,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
         setMaticBalance(Number(web3.utils.fromWei(maticBalance, 'ether')).toFixed(6))
       }
     } catch (error) {
-      handleError(error)
+      handleError(error as Error | { code: number })
     }
   }, [account, handleError, web3])
 
@@ -129,11 +129,13 @@ export function MagicProvider({ children }: MagicProviderProps) {
       if (web3 && account) {
         const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress)
         const tokenAmount = await ogunContract.methods.balanceOf(account).call()
-        const tokenAmountInEther = Number(web3.utils.fromWei(tokenAmount, 'ether')).toFixed(6)
+        // Type guard to ensure tokenAmount is a valid string or number
+        const validTokenAmount = typeof tokenAmount === 'string' || typeof tokenAmount === 'number' ? tokenAmount : '0'
+        const tokenAmountInEther = Number(web3.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
         setOgunBalance(tokenAmountInEther)
       }
     } catch (error) {
-      handleError(error)
+      handleError(error as Error | { code: number })
     }
   }, [account, handleError, web3])
 

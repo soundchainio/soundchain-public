@@ -322,7 +322,7 @@ export function TransferNftsForm() {
           })
         }}
       >
-        <Form className="container mx-auto flex h-full flex-col gap-3 py-6 px-2 text-gray-80">
+        <Form className="container mx-auto flex h-full flex-col gap-3 py-6 px-2 text-gray-80" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <WalletAddressField />
           <SelectNFTsField />
 

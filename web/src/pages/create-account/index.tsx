@@ -104,48 +104,54 @@ export default function CreateAccountPage() {
         description="Create your account on SoundChain"
       />
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-1 flex-col" autoComplete="off">
-          <div className="mb-auto flex flex-col space-y-6">
-            <div className="space-y-3">
-              <InputField label="Name" type="text" name="displayName" />
-            </div>
-            <div className="space-y-3">
-              <InputField
-                label={`Enter username. (Only letters and numbers allowed. Max of ${HANDLE_MAX_CHARS} characters)`}
-                type="text"
-                name="handle"
-                maxLength={HANDLE_MAX_CHARS}
-              />
-            </div>
-          </div>
-          <div className="mb-6 flex items-start gap-4 text-center text-xs font-thin text-white sm:items-center">
-            <input
-              type="checkbox"
-              id="termsCheckbox"
-              className="h-5 w-5 rounded border-2 border-green-500 bg-black text-green-500 focus:ring-0"
-              onChange={toggleTerms}
-            />
-            <div className="relative">
-              <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
-              <Link href={`/terms-and-conditions`} passHref className="relative px-2 text-white underline">
-                <span className="after:absolute after:-inset-1">Terms & Conditions</span>
-              </Link>
-              and
-              <Link href={`/privacy-policy`} passHref className="relative px-2 text-white underline">
-                <span className="after:absolute after:-inset-1">Privacy Policy.</span>
-              </Link>
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            className={'transition ' + (termsAccepted ? 'opacity-100' : 'opacity-50')}
-            loading={loading}
-            disabled={loading || !termsAccepted}
+        {(formikProps) => (
+          <Form
+            className="flex flex-1 flex-col"
+            autoComplete="off"
+            {...(formikProps as any)} // Spread Formik props to satisfy additional HTML attributes
           >
-            CREATE ACCOUNT
-          </Button>
-        </Form>
+            <div className="mb-auto flex flex-col space-y-6">
+              <div className="space-y-3">
+                <InputField label="Name" type="text" name="displayName" />
+              </div>
+              <div className="space-y-3">
+                <InputField
+                  label={`Enter username. (Only letters and numbers allowed. Max of ${HANDLE_MAX_CHARS} characters)`}
+                  type="text"
+                  name="handle"
+                  maxLength={HANDLE_MAX_CHARS}
+                />
+              </div>
+            </div>
+            <div className="mb-6 flex items-start gap-4 text-center text-xs font-thin text-white sm:items-center">
+              <input
+                type="checkbox"
+                id="termsCheckbox"
+                className="h-5 w-5 rounded border-2 border-green-500 bg-black text-green-500 focus:ring-0"
+                onChange={toggleTerms}
+              />
+              <div className="relative">
+                <label htmlFor="termsCheckbox">I agree to the SoundChain’s</label>
+                <Link href={`/terms-and-conditions`} passHref className="relative px-2 text-white underline">
+                  <span className="after:absolute after:-inset-1">Terms & Conditions</span>
+                </Link>
+                and
+                <Link href={`/privacy-policy`} passHref className="relative px-2 text-white underline">
+                  <span className="after:absolute after:-inset-1">Privacy Policy.</span>
+                </Link>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className={'transition ' + (termsAccepted ? 'opacity-100' : 'opacity-50')}
+              loading={loading}
+              disabled={loading || !termsAccepted}
+            >
+              CREATE ACCOUNT
+            </Button>
+          </Form>
+        )}
       </Formik>
     </>
   )

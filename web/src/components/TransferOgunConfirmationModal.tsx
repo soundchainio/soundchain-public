@@ -103,7 +103,7 @@ export const TransferOgunConfirmationModal = () => {
       }
     >
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex h-full w-full flex-col justify-between" autoComplete="off">
+        <Form className="flex h-full w-full flex-col justify-between" autoComplete="off" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <div className="mb-auto flex h-full flex-col justify-between">
             <div className="flex h-full flex-col justify-around">
               <div className="px-4 text-center text-sm font-bold text-gray-80">
@@ -170,4 +170,4 @@ export const TransferOgunConfirmationModal = () => {
   )
 }
 
-export default TransferOgunConfirmationModal
+export default TransferOgunConfirmationModal // Ensure default export is the component

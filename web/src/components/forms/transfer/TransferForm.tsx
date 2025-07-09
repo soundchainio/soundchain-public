@@ -63,7 +63,7 @@ export const TransferForm = ({ handleSubmit }: Props) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      <Form className="flex h-full w-full flex-col justify-between" autoComplete="off">
+      <Form className="flex h-full w-full flex-col justify-between" autoComplete="off" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
         <div className="mb-auto flex h-full flex-col justify-between space-y-6 p-5">
           <div className="flex flex-col justify-between space-y-8">
             <div className="space-y-2">

@@ -1,78 +1,78 @@
+import { useEffect } from 'react'
+
 import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
-import { Form, Formik } from 'formik'
+import { Form, Formik, FormikHelpers } from 'formik'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
-import { useUpdateProfileDisplayNameMutation } from 'lib/graphql'
+import { useUpdateProfileBioMutation } from 'lib/graphql' // Updated to correct mutation
 import { useRouter } from 'next/router'
-import React, { useEffect } from 'react'
 import * as yup from 'yup'
 
-interface FormValues {
-  displayName: string | undefined
+const topNavBarProps: TopNavBarProps = {
+  title: 'Update Name',
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  displayName: yup.string().min(3).max(255).required().label('Name'),
-})
-
-const topNavBarProps: TopNavBarProps = {
-  title: 'Name',
+interface FormValues {
+  displayName: string
 }
 
 export default function NamePage() {
   const me = useMe()
+  const [updateProfile] = useUpdateProfileBioMutation()
   const router = useRouter()
-  const initialFormValues: FormValues = { displayName: me?.profile?.displayName }
-  const [updateDisplayName, { loading }] = useUpdateProfileDisplayNameMutation()
-  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext()
-
-  const onSubmit = async ({ displayName }: FormValues) => {
-    await updateDisplayName({ variables: { input: { displayName: displayName as string } } })
-    router.push('/settings')
-  }
+  const { setTopNavBarProps } = useLayoutContext()
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps)
-    setHideBottomNavBar(true)
-
-    return () => {
-      setHideBottomNavBar(false)
-    }
-  }, [setHideBottomNavBar, setTopNavBarProps])
+  }, [setTopNavBarProps])
 
   if (!me) return null
 
+  const initialFormValues: FormValues = {
+    displayName: me.profile.displayName || '',
+  }
+
+  const validationSchema = yup.object().shape({
+    displayName: yup.string().min(3).max(255).required('Name is required'),
+  })
+
+  const onSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
+    try {
+      await updateProfile({
+        variables: { input: { displayName: values.displayName } },
+      })
+      router.push('/settings')
+    } catch (error) {
+      console.error('Update profile error:', error)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <>
-      <SEO title="Edit Name | SoundChain" canonicalUrl="/settings/name/" description="SoundChain Edit Name" />
+      <SEO title="Update Name | SoundChain" canonicalUrl="/settings/name" description="Update your name on SoundChain" />
       <div className="flex min-h-full flex-col px-6 py-6 lg:px-8">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-          <Form className="flex flex-1 flex-col space-y-6">
-            <div>
-              <InputField
-                label="First or full name"
-                type="text"
-                name="displayName"
-                placeholder="Name"
-                maxLength={255}
-              />
-            </div>
-            <p className="flex-grow text-gray-50"> This will be displayed publically to other users. </p>
-            <div className="flex flex-col">
-              <Button
-                type="submit"
-                disabled={loading}
-                variant="outline"
-                borderColor="bg-green-gradient"
-                className="h-12"
-              >
-                SAVE
+          {({ values, handleChange, ...formikProps }) => (
+            <Form className="flex flex-1 flex-col space-y-6" {...(formikProps as any)}>
+              <div>
+                <InputField
+                  label="First or full name"
+                  type="text"
+                  name="displayName"
+                  value={values.displayName}
+                  onChange={handleChange}
+                />
+              </div>
+              <Button type="submit" className="w-full">
+                Save
               </Button>
-            </div>
-          </Form>
+            </Form>
+          )}
         </Formik>
       </div>
     </>

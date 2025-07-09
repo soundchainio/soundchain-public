@@ -102,7 +102,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
     fetchIsApproved()
   }, [account, web3, checkIsApproved, showApprove, nftData])
 
-  const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem ?? false
+  const isForSale = !!buyNowItem?.buyNowItem?.buyNowItem?.pricePerItem // Removed ?? false
 
   const handleList = (
     { price, startTime, endTime }: ListNFTAuctionFormValues,

@@ -70,31 +70,33 @@ export default function SettingsUsernamePage() {
       />
       <div className="flex min-h-full flex-col px-6 py-6 lg:px-8">
         <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
-          <Form className="flex flex-1 flex-col space-y-6">
-            <div>
-              <InputField
-                label="Username"
-                type="text"
-                name="handle"
-                placeholder="Username"
-                maxLength={HANDLE_MAX_CHARS}
-              />
-            </div>
-            <p className="flex-grow text-gray-50">
-              Usernames can only have letters and numbers and can be a max of {HANDLE_MAX_CHARS} characters.
-            </p>
-            <div className="flex flex-col">
-              <Button
-                type="submit"
-                disabled={loading}
-                variant="outline"
-                borderColor="bg-green-gradient"
-                className="h-12"
-              >
-                SAVE
-              </Button>
-            </div>
-          </Form>
+          {({ values, handleChange, ...formikProps }) => (
+            <Form className="flex flex-1 flex-col space-y-6" {...(formikProps as any)}>
+              <div>
+                <InputField
+                  label="Username"
+                  type="text"
+                  name="handle"
+                  placeholder="Username"
+                  maxLength={HANDLE_MAX_CHARS}
+                />
+              </div>
+              <p className="flex-grow text-gray-50">
+                Usernames can only have letters and numbers and can be a max of {HANDLE_MAX_CHARS} characters.
+              </p>
+              <div className="flex flex-col">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  variant="outline"
+                  borderColor="bg-green-gradient"
+                  className="h-12"
+                >
+                  SAVE
+                </Button>
+              </div>
+            </Form>
+          )}
         </Formik>
       </div>
     </>

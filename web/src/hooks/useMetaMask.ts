@@ -9,8 +9,10 @@ import { Contract } from 'web3-eth-contract'
 import { config } from 'config'
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 
-const tokenContract = (web3: Web3) =>
-  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress as string) as unknown as Contract
+// Explicitly type the token contract with ABI
+const tokenContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress as string)
+}
 
 export const useMetaMask = () => {
   const me = useMe()
@@ -76,8 +78,13 @@ export const useMetaMask = () => {
   }, [account, web3])
 
   const getOGUNBalance = async (web3: Web3) => {
-    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call()
-    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0')
+    // Explicitly type the balanceOf call return as string | undefined
+    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call() as string | undefined
+    // Robust type guard with assertion
+    const validBalance = currentBalance !== undefined && (typeof currentBalance === 'string' || typeof currentBalance === 'number')
+      ? currentBalance.toString()
+      : '0'
+    const formattedBalance = web3.utils.fromWei(validBalance, 'ether')
     setOGUNBalance(formattedBalance)
   }
 
@@ -98,11 +105,11 @@ export const useMetaMask = () => {
         method: 'wallet_addEthereumChain',
         params: [
           {
-            chainId: network.idHex, // A 0x-prefixed hexadecimal string
+            chainId: network.idHex,
             chainName: network.name,
             nativeCurrency: {
               name: network.name,
-              symbol: network.symbol, // 2-6 characters long
+              symbol: network.symbol,
               decimals: 18,
             },
             rpcUrls: [network.rpc],

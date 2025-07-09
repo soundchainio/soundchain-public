@@ -11,8 +11,8 @@ import { Matic } from 'icons/Matic'
 import { useEffect, useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import Web3 from 'web3'
 import { date, number, object, SchemaOf, string } from 'yup'
+import Web3 from 'web3' // Added Web3 import
 import { CurrencyType } from 'types/CurrenctyType'
 
 export interface ListNFTBuyNowFormValues {
@@ -77,7 +77,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTBuyNowFormValues>) => {
           return (
-            <Form>
+            <Form placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
               <div className="flex flex-col items-center justify-between gap-2">
                 <div className="flex items-center justify-center gap-3 py-3 px-5">
                   <label htmlFor="price" className="flex-shrink-0 text-xs font-bold text-gray-80 ">
@@ -120,7 +120,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between gap-3 bg-gray-15 py-3 px-5">
+              <div className="flex items-center justify-between bg-gray-15 py-3 px-5">
                 <label htmlFor="priceOGUN" className="flex-shrink-0 text-xs font-bold uppercase text-gray-80 ">
                   SALE PRICE
                 </label>
@@ -152,7 +152,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                     showTimeInput
                     className="placeholder-semibold w-full rounded-md border-2 border-gray-80 bg-gray-30 p-3 text-sm font-bold text-gray-200 placeholder-gray-60 focus:outline-none focus:ring-transparent"
                   />
-                  {<div className="text-sm lowercase text-red-500">{errors.startTime}</div>}
+                  {typeof errors.startTime === 'string' && <div className="text-sm lowercase text-red-500">{errors.startTime}</div>}
                 </div>
               </div>
               <div className="flex flex-col gap-4 bg-gray-15 px-4 py-6">

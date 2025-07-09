@@ -32,12 +32,15 @@ type Selected = 'Stake' | 'Unstake'
 const OGUNAddress = config.ogunTokenAddress as string
 const lpTokenAddress = config.lpTokenAddress as string
 const lpStakeContractAddress = config.lpStakeContractAddress as string
-const tokenContract = (web3: Web3) =>
-  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract
-const lpContract = (web3: Web3) =>
-  new web3.eth.Contract(LPToken.abi as AbiItem[], lpTokenAddress) as unknown as Contract
-const lpStakeContract = (web3: Web3) =>
-  new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], lpStakeContractAddress) as unknown as Contract
+const tokenContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress)
+}
+const lpContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(LPToken.abi as AbiItem[], lpTokenAddress)
+}
+const lpStakeContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], lpStakeContractAddress)
+}
 
 // TODO: remove before enabling the ogun token stake
 export const getServerSideProps: GetServerSideProps = ({ res }) => {
@@ -95,7 +98,7 @@ export default function Stake() {
   }, [])
 
   const connectMetaMask = () => {
-    // Metamask Wallet;
+    // Metamask Wallet
     const loadProvider = async () => {
       let provider = null
 
@@ -146,25 +149,34 @@ export default function Stake() {
   }
 
   const getOGUNBalance = async (web3: Web3) => {
-    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call()
-    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0')
+    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call() as string | undefined
+    const validBalance = currentBalance !== undefined && (typeof currentBalance === 'string' || typeof currentBalance === 'number')
+      ? currentBalance.toString()
+      : '0'
+    const formattedBalance = web3.utils.fromWei(validBalance, 'ether')
     setOGUNBalance(formattedBalance)
   }
 
   const getLPBalance = async (web3: Web3) => {
-    const currentBalance = await lpContract(web3).methods.balanceOf(account).call()
-    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0')
+    const currentBalance = await lpContract(web3).methods.balanceOf(account).call() as string | undefined
+    const validBalance = currentBalance !== undefined && (typeof currentBalance === 'string' || typeof currentBalance === 'number')
+      ? currentBalance.toString()
+      : '0'
+    const formattedBalance = web3.utils.fromWei(validBalance, 'ether')
     setLpBalance(formattedBalance)
   }
 
   const getLpStakeBalance = async (web3: Web3) => {
     try {
-      const currentBalance = await lpStakeContract(web3).methods.getBalanceOf(account).call()
-      const formattedLPBalance = web3.utils.fromWei(currentBalance[0] ?? '0')
-      const formattedRewardsBalance = web3.utils.fromWei(currentBalance[1] ?? '0')
+      const currentBalance = await lpStakeContract(web3).methods.getBalanceOf(account).call() as [string, string] | undefined
+      const formattedLPBalance = currentBalance && currentBalance[0] !== undefined
+        ? web3.utils.fromWei(currentBalance[0].toString(), 'ether')
+        : '0'
+      const formattedRewardsBalance = currentBalance && currentBalance[1] !== undefined
+        ? web3.utils.fromWei(currentBalance[1].toString(), 'ether')
+        : '0'
       setLpStakeBalance(formattedLPBalance)
       setRewardsBalance(formattedRewardsBalance)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
       if (cause.toString().includes("address hasn't stake any tokens yet")) {
         setLpStakeBalance('0')
@@ -181,17 +193,16 @@ export default function Stake() {
       return
     }
     if (values.amount > +lpBalance) {
-      toast("You can't stake an mount higher than your current LP balance.")
+      toast("You can't stake an amount higher than your current LP balance.")
       return
     }
     if (account && web3) {
       try {
-        const weiAmount = web3.utils.toWei(values.amount.toString())
+        const weiAmount = web3.utils.toWei(values.amount.toString(), 'ether')
         setLpTransactionState('Approving transaction...')
         await lpContract(web3).methods.approve(lpStakeContractAddress, weiAmount).send({ from: account })
         setLpTransactionState('Staking OGUN/MATIC...')
         await lpStakeContract(web3).methods.stake(weiAmount).send({ from: account })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (cause: any) {
         console.log('Stake Error: ', cause)
       } finally {
@@ -209,7 +220,6 @@ export default function Stake() {
       try {
         setLpTransactionState('Unstaking OGUN/MATIC...')
         await lpStakeContract(web3).methods.withdraw().send({ from: account })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (cause: any) {
         console.log('Unstake Error: ', cause)
       } finally {
@@ -270,7 +280,7 @@ export default function Stake() {
       <div className="flex w-full flex-col items-center justify-center md:justify-between">
         <p>
           To reward you for providing liquidity, we’re giving out OGUN to everyone who temporarily swaps their MATIC and
-          OGUN in at &nbsp;
+          OGUN in at  
           <span className="green-blue-diagonal-gradient-text-break">
             <a
               href="https://quickswap.exchange/#/add/ETH/0x99Db69EEe7637101FA216Ab4A3276eBedC63e146"
@@ -284,7 +294,7 @@ export default function Stake() {
         </p>
         <br />
         <p>
-          Once you add liquidity to our pool (you can do that &nbsp;
+          Once you add liquidity to our pool (you can do that  
           <span className="green-blue-diagonal-gradient-text-break">
             <a
               href="https://quickswap.exchange/#/add/ETH/0x99Db69EEe7637101FA216Ab4A3276eBedC63e146"
@@ -305,7 +315,7 @@ export default function Stake() {
         </p>
         <br />
         <p className="-ml-36 md:-ml-24">
-          The current rate per day is around{' '}
+          The current rate per day is around  
           <span className="green-blue-diagonal-gradient-text-break">1,000,000 OGUN</span>
         </p>
       </div>
@@ -316,9 +326,9 @@ export default function Stake() {
     return (
       <>
         <h1 className="text-center text-2xl font-extrabold md:text-5xl">
-          We’re giving away &nbsp;
+          We’re giving away  
           <span className="green-blue-diagonal-gradient-text-break">1,000,000 OGUN</span>
-          &nbsp;today
+           today
         </h1>
       </>
     )
@@ -357,7 +367,7 @@ export default function Stake() {
             <header className="flex w-full items-start justify-start gap-x-4">
               <button
                 className={`border-transparent bg-transparent ${
-                  lpSelected == 'Stake' && 'border-b-2 border-white font-medium'
+                  lpSelected === 'Stake' && 'border-b-2 border-white font-medium'
                 }`}
                 onClick={() => setLpSelected('Stake')}
               >
@@ -365,7 +375,7 @@ export default function Stake() {
               </button>
               <button
                 className={`border-transparent bg-transparent ${
-                  lpSelected == 'Unstake' && 'border-b-2 border-white font-medium'
+                  lpSelected === 'Unstake' && 'border-b-2 border-white font-medium'
                 }`}
                 onClick={() => setLpSelected('Unstake')}
               >
@@ -376,8 +386,11 @@ export default function Stake() {
               initialValues={{ amount: lpSelected === 'Stake' ? 0 : +lpStakeBalance, token: '' }}
               onSubmit={values => (lpSelected === 'Stake' ? lpStake(values) : lpUnstake())}
             >
-              {({ values, handleChange }) => (
-                <Form className="h-full w-full">
+              {({ values, handleChange, ...formikProps }) => (
+                <Form
+                  className="h-full w-full"
+                  {...(formikProps as any)} // Spread Formik props to satisfy additional HTML attributes
+                >
                   <div className="flex flex-col items-center justify-start gap-y-2 md:flex-row md:gap-y-0">
                     <div className="relative h-10 w-full md:w-5/12">
                       <select
@@ -452,7 +465,7 @@ export default function Stake() {
         toastStyle={{
           backgroundColor: '#202020',
           color: 'white',
-          fontSize: '12x',
+          fontSize: '12px',
           textAlign: 'center',
         }}
       />

@@ -120,6 +120,7 @@ export const RemoveListingConfirmationModal = () => {
     }
 
     let nonce = await web3!.eth.getTransactionCount(account)
+    let numNonce = Number(nonce) // Convert bigint to number
 
     const promises = []
     while (allTracks!.length > 0) {
@@ -131,7 +132,7 @@ export const RemoveListingConfirmationModal = () => {
             tokenIds: tracksToList.map(t => Number(t.nftData!.tokenId)),
             from: account,
             contractAddresses,
-            nonce: nonce++,
+            nonce: numNonce++, // Use and increment the number version
           },
         ),
       )

@@ -1,7 +1,7 @@
 /* eslint-disable react/display-name */
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from 'components/NoResultFound'
-import { Post } from 'components/Post/Post'
+import { Post } from './Post'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { Post as PostType, SortOrder, SortPostField, usePostsQuery } from 'lib/graphql'
 import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react'
@@ -11,6 +11,7 @@ import { areEqual, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
 import { PostFormTimeline } from './PostFormTimeline'
 import { PostSkeleton } from './PostSkeleton'
+
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
 }
@@ -33,7 +34,8 @@ export const Posts = ({ profileId }: PostsProps) => {
   const getSize = (index: number) => sizeMap[index] || 289
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
-    (index, size) => {
+    (index: number, height?: number | undefined) => { // Updated to match RowProps
+      const size = height || 0 // Handle undefined with default 0
       sizeMap[index] = size + GAP
       listRef?.current.resetAfterIndex(index)
     },
@@ -142,7 +144,7 @@ export const Posts = ({ profileId }: PostsProps) => {
 interface RowProps {
   data: PostType[]
   index: number
-  setSize: (index: number, height?: number) => void
+  setSize: (index: number, height?: number | undefined) => void // Updated to match setSize definition
   handleOnPlayClicked: (trackId: string) => void
 }
 

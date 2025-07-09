@@ -40,7 +40,6 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
     endTime: date()
       .min(getMinutesToDate(minEndMinutes), 'End time needs to be at least 5 minutes after start time')
       .required(),
-    // isPaymentOGUN: boolean().required(),
   })
   const defaultValues: ListNFTAuctionFormValues = {
     price: initialValues?.price || 0,
@@ -58,7 +57,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
         }}
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTAuctionFormValues>) => (
-          <Form>
+          <Form placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
             <div className="flex items-center justify-between gap-3 bg-gray-20 py-3 px-5">
               <label htmlFor="price" className="flex-shrink-0 text-xs font-bold uppercase text-gray-80 ">
                 auction start price
@@ -86,7 +85,6 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                     onChange={e => setIsPaymentOGUN(e.target.value === 'OGUN')}
                     value={isPaymentOGUN ? 'OGUN' : 'MATIC'}
                   >
-                    {/* <option value="OGUN">OGUN</option> */}
                     <option value="MATIC">MATIC</option>
                   </select>
                   <span className="pointer-events-none absolute top-2 left-2">
@@ -117,7 +115,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                   showTimeInput
                   className="placeholder-semibold w-full rounded-md border-2 border-gray-80 bg-gray-30 p-3 text-sm font-bold text-gray-200 placeholder-gray-60 focus:outline-none focus:ring-transparent"
                 />
-                {<div className="text-sm lowercase text-red-500">{errors.startTime}</div>}
+                {typeof errors.startTime === 'string' && <div className="text-sm lowercase text-red-500">{errors.startTime}</div>}
               </div>
             </div>
             <div className="flex items-center justify-between bg-gray-20 py-3 px-5">
@@ -138,7 +136,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
                   showTimeInput
                   className="placeholder-semibold w-full rounded-md border-2 border-gray-80 bg-gray-30 p-3 text-sm font-bold text-gray-200 placeholder-gray-60 focus:outline-none focus:ring-transparent"
                 />
-                {<div className="text-sm lowercase text-red-500">{errors.endTime}</div>}
+                {typeof errors.endTime === 'string' && <div className="text-sm lowercase text-red-500">{errors.endTime}</div>}
               </div>
             </div>
             <div className="bg-gray-20 py-3 px-5">

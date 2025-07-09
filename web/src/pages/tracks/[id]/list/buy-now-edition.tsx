@@ -155,7 +155,6 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     }
 
     let nonce = await web3?.eth.getTransactionCount(account)
-
     const promises = []
     while (allTracks.length > 0) {
       const tracksToList = allTracks.splice(0, LIST_BATCH_SIZE)
@@ -170,7 +169,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
             priceOGUN: (selectedCurrency === 'OGUN' && weiPrice) || '0',
             startTime: startTimestamp,
             contractAddresses: { nft: nftData.contract },
-            nonce: nonce++,
+            nonce: Number(nonce++), // Converted bigint to number
           },
         ),
       )

@@ -114,7 +114,7 @@ export const SecurityForm = ({ afterSubmit }: SecurityFormProps) => {
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema[activeStep]} onSubmit={handleSubmit}>
-      <Form className="flex flex-1 flex-col">
+      <Form className="flex flex-1 flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
         {renderForm(activeStep)}
 
         <div className="flex justify-between gap-8">

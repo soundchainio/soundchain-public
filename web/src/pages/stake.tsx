@@ -36,16 +36,20 @@ type Selected = 'Stake' | 'Unstake'
 
 const OGUNAddress = config.ogunTokenAddress as string
 const tokenStakeContractAddress = config.tokenStakeContractAddress as string
-const tokenContract = (web3: Web3) =>
-  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract
-const tokenStakeContract = (web3: Web3) =>
-  new web3.eth.Contract(StakingRewards.abi as AbiItem[], tokenStakeContractAddress) as unknown as Contract
+const tokenContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress)
+}
+const tokenStakeContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(StakingRewards.abi as AbiItem[], tokenStakeContractAddress)
+}
 const LPAddress = config.lpTokenAddress as string
 const LPtokenStakeContractAddress = config.lpStakeContractAddress as string
-const tokenContractLP = (web3: Web3) =>
-  new web3.eth.Contract(LPToken.abi as AbiItem[], LPAddress) as unknown as Contract
-const tokenStakeContractLP = (web3: Web3) =>
-  new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], LPtokenStakeContractAddress) as unknown as Contract
+const tokenContractLP = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(LPToken.abi as AbiItem[], LPAddress)
+}
+const tokenStakeContractLP = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], LPtokenStakeContractAddress)
+}
 
 // TODO: remove before enabling the ogun token stake
 export const getServerSideProps: GetServerSideProps = ({ res }) => {
@@ -188,14 +192,20 @@ export default function Stake() {
   }
 
   const getOGUNBalance = async (web3: Web3) => {
-    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call()
-    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0')
+    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call() as string | undefined
+    const validBalance = currentBalance !== undefined && (typeof currentBalance === 'string' || typeof currentBalance === 'number')
+      ? currentBalance.toString()
+      : '0'
+    const formattedBalance = web3.utils.fromWei(validBalance, 'ether')
     setOGUNBalance(formattedBalance)
   }
 
   const getLPBalance = async (web3: Web3) => {
-    const currentBalanceLP = await tokenContractLP(web3).methods.balanceOf(account).call()
-    const formattedBalanceLP = web3.utils.fromWei(currentBalanceLP ?? '0')
+    const currentBalanceLP = await tokenContractLP(web3).methods.balanceOf(account).call() as string | undefined
+    const validBalance = currentBalanceLP !== undefined && (typeof currentBalanceLP === 'string' || typeof currentBalanceLP === 'number')
+      ? currentBalanceLP.toString()
+      : '0'
+    const formattedBalanceLP = web3.utils.fromWei(validBalance, 'ether')
     setLPBalance(formattedBalanceLP)
   }
 
@@ -213,17 +223,24 @@ export default function Stake() {
 
   const getStakeBalance = async (web3: Web3) => {
     try {
-      const {
-        0: stakedBalance,
-        // 1: rewardBalance,
-        // 2: newRewardBalance
-      } = await tokenStakeContract(web3).methods.getBalanceOf(account).call()
-      const reward = await tokenStakeContract(web3).methods.getReward(account).call()
-      const formattedStakedBalance = web3.utils.fromWei(stakedBalance ?? '0')
-      const formattedRewardBalance = web3.utils.fromWei(reward ?? '0')
+      const balanceData = await tokenStakeContract(web3).methods.getBalanceOf(account).call() as [string, string, string] | undefined
+      if (!balanceData) {
+        setStakeBalance('0')
+        setOgunRewardBalance('0')
+        return
+      }
+      const [stakedBalance] = balanceData
+      const reward = await tokenStakeContract(web3).methods.getReward(account).call() as string | undefined
+      const validStakedBalance = stakedBalance !== undefined && (typeof stakedBalance === 'string' || typeof stakedBalance === 'number')
+        ? stakedBalance.toString()
+        : '0'
+      const validRewardBalance = reward !== undefined && (typeof reward === 'string' || typeof reward === 'number')
+        ? reward.toString()
+        : '0'
+      const formattedStakedBalance = web3.utils.fromWei(validStakedBalance, 'ether')
+      const formattedRewardBalance = web3.utils.fromWei(validRewardBalance, 'ether')
       setStakeBalance(formattedStakedBalance)
       setOgunRewardBalance(formattedRewardBalance)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
       if (cause.toString().includes("address hasn't stake any tokens yet")) {
         setStakeBalance('0')
@@ -236,10 +253,17 @@ export default function Stake() {
 
   const getLPStakeBalance = async (web3: Web3) => {
     try {
-      const { 0: stakedLP } = await tokenStakeContractLP(web3).methods.getBalanceOf(account).call()
-      const formattedLPBalance = web3.utils.fromWei(stakedLP ?? '0')
+      const balanceData = await tokenStakeContractLP(web3).methods.getBalanceOf(account).call() as [string, string] | undefined
+      if (!balanceData) {
+        setLPStakeBalance('0')
+        return
+      }
+      const [stakedLP] = balanceData
+      const validStakedLP = stakedLP !== undefined && (typeof stakedLP === 'string' || typeof stakedLP === 'number')
+        ? stakedLP.toString()
+        : '0'
+      const formattedLPBalance = web3.utils.fromWei(validStakedLP, 'ether')
       setLPStakeBalance(formattedLPBalance)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
       if (cause.toString().includes("address hasn't stake any tokens yet")) {
         setLPStakeBalance('0')
@@ -251,10 +275,12 @@ export default function Stake() {
 
   const getStakingLPReward = async (web3: Web3) => {
     try {
-      const currentLPReward = await tokenStakeContractLP(web3).methods.getReward(account).call()
-      const formattedLPBalance = web3.utils.fromWei(currentLPReward.toString())
+      const currentLPReward = await tokenStakeContractLP(web3).methods.getReward(account).call() as string | undefined
+      const validLPReward = currentLPReward !== undefined && (typeof currentLPReward === 'string' || typeof currentLPReward === 'number')
+        ? currentLPReward.toString()
+        : '0'
+      const formattedLPBalance = web3.utils.fromWei(validLPReward, 'ether')
       setOgunRewardLPBalance(formattedLPBalance)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (cause: any) {
       if (cause.toString().includes("address hasn't staked any tokens yet")) {
         setOgunRewardLPBalance('0')
@@ -284,22 +310,21 @@ export default function Stake() {
       try {
         const existingAllowance = await currentTokenContract(web3)
           .methods.allowance(account, stakingContractAddress)
-          .call()
+          .call() as string | undefined
+        const weiAmount = web3.utils.toWei(values.amount.toString(), 'ether')
+        const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3), 'gwei').toString()
 
-        const weiAmount = web3.utils.toWei(values.amount.toString())
-        const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3))
-
-        if (existingAllowance < parseFloat(weiAmount)) {
+        if (existingAllowance && parseFloat(existingAllowance) < parseFloat(weiAmount)) {
           setTransactionState('Approving transaction...')
           const approvalTxObj = currentTokenContract(web3).methods.approve(stakingContractAddress, weiAmount)
           const approvalTxGas = await approvalTxObj.estimateGas({ from: account })
-          await approvalTxObj.send({ from: account, gas: approvalTxGas, gasPrice })
+          await approvalTxObj.send({ from: account, gas: approvalTxGas.toString(), gasPrice })
         }
 
         setTransactionState(`Staking ${tokenName}...`)
         const stakeTxObj = currentTokenStakingContract(web3).methods.stake(weiAmount)
         const stakeTxGas = await stakeTxObj.estimateGas({ from: account })
-        await stakeTxObj.send({ from: account, gas: stakeTxGas, gasPrice })
+        await stakeTxObj.send({ from: account, gas: stakeTxGas.toString(), gasPrice })
       } catch (error: unknown) {
         console.log('Stake Error: ', error)
       } finally {
@@ -322,14 +347,13 @@ export default function Stake() {
     if (account && web3) {
       try {
         setTransactionState(`Unstaking ${tokenName}...`)
-        const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3))
+        const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3), 'gwei').toString()
 
-        const amountWei = web3.utils.toWei(String(amount))
+        const amountWei = web3.utils.toWei(String(amount), 'ether')
 
         const unstakeTxObj = currentTokenStakingContract(web3).methods.withdrawStake(amountWei)
         const unstakeTxGas = await unstakeTxObj.estimateGas({ from: account })
-
-        await unstakeTxObj.send({ from: account, gas: unstakeTxGas, gasPrice })
+        await unstakeTxObj.send({ from: account, gas: unstakeTxGas.toString(), gasPrice })
       } catch (error: unknown) {
         console.log('Stake Error: ', error)
       } finally {
@@ -346,14 +370,12 @@ export default function Stake() {
       const tokenName = isLPToken ? 'OGUN LP' : 'OGUN'
 
       setTransactionState(`Claiming ${tokenName} rewards...`)
-      const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3))
+      const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3), 'gwei').toString()
       const currentTokenStakingContract = isLPToken ? tokenStakeContractLP : tokenStakeContract
 
       const rewardsTxObj = currentTokenStakingContract(web3).methods.withdrawRewards()
       const rewardsTxGas = await rewardsTxObj.estimateGas({ from: account })
-
-      const receipt = await rewardsTxObj.send({ from: account, gas: rewardsTxGas, gasPrice })
-      console.log('receipt', receipt)
+      await rewardsTxObj.send({ from: account, gas: rewardsTxGas.toString(), gasPrice })
     } catch (error) {
       console.log('Claim rewards Error: ', error)
     } finally {
@@ -425,15 +447,15 @@ export default function Stake() {
         </p>
         <br />
         <p>
-          Phase 1 (30 days): <span className="green-blue-diagonal-gradient-text-break">2,000,000&nbsp;</span> OGUN per
-          day &nbsp;&nbsp; (Current Phase)
+          Phase 1 (30 days): <span className="green-blue-diagonal-gradient-text-break">2,000,000 </span> OGUN per
+          day    (Current Phase)
           <br />
-          Phase 2 (60 days): <span className="green-blue-diagonal-gradient-text-break">833,333&nbsp;</span> OGUN per day
+          Phase 2 (60 days): <span className="green-blue-diagonal-gradient-text-break">833,333 </span> OGUN per day
           <br />
-          Phase 3 (150 days): <span className="green-blue-diagonal-gradient-text-break">312,500&nbsp;</span> OGUN per
+          Phase 3 (150 days): <span className="green-blue-diagonal-gradient-text-break">312,500 </span> OGUN per
           day
           <br />
-          Phase 4 (120 days): <span className="green-blue-diagonal-gradient-text-break">250,000&nbsp;</span> OGUN per
+          Phase 4 (120 days): <span className="green-blue-diagonal-gradient-text-break">250,000 </span> OGUN per
           day
         </p>
       </div>
@@ -445,7 +467,7 @@ export default function Stake() {
         <h1 className="text-center text-2xl font-extrabold md:text-5xl">We’re giving away</h1>
         <h1 className="text-center text-2xl font-extrabold md:text-5xl">
           <span className="green-blue-diagonal-gradient-text-break">2,000,000 OGUN</span>
-          &nbsp;today
+           today
         </h1>
       </>
     )
@@ -490,7 +512,7 @@ export default function Stake() {
             <header className="flex w-full items-start justify-start gap-x-4">
               <button
                 className={`border-transparent bg-transparent ${
-                  selected == 'Stake' && 'border-b-2 border-white font-medium'
+                  selected === 'Stake' && 'border-b-2 border-white font-medium'
                 }`}
                 onClick={() => setSelected('Stake')}
               >
@@ -498,7 +520,7 @@ export default function Stake() {
               </button>
               <button
                 className={`border-transparent bg-transparent ${
-                  selected == 'Unstake' && 'border-b-2 border-white font-medium'
+                  selected === 'Unstake' && 'border-b-2 border-white font-medium'
                 }`}
                 onClick={() => setSelected('Unstake')}
               >
@@ -510,103 +532,47 @@ export default function Stake() {
               onSubmit={values => (selected === 'Stake' ? stake(values) : unstake(values))}
               innerRef={formRef}
             >
-              {({ values, handleChange }) => {
-                const { amount, token } = values
-
-                return (
-                  <>
-                    <Form className="h-full w-full">
-                      <div className="flex flex-col">
-                        <div className="flex flex-col items-center justify-start gap-y-2 md:flex-row md:gap-y-0">
-                          <div className="relative h-10 w-full md:w-6/12">
-                            <select
-                              className="h-10 w-full border-0 bg-gray-25 pl-8 text-xs font-bold text-gray-80"
-                              name="token"
-                              id="token"
-                              value={token}
-                              onChange={handleChange}
-                            >
-                              <option selected value="ogun">
-                                OGUN
-                              </option>
-                              <option value="lp">OGUN-LP</option>
-                            </select>
-                            <span className="pointer-events-none absolute top-3 left-2">
-                              <Logo id="soundchain-wallet" height="16" width="16" />
-                            </span>
-                          </div>
-                          <input
-                            name="amount"
-                            id="amount"
-                            type="number"
-                            placeholder="Amount"
-                            value={amount || ''}
-                            className="h-10 w-full border-transparent bg-gray-40 md:ml-2 md:w-9/12"
-                            onChange={handleChange}
-                          />
-                          <button
-                            className="h-10 w-full border-transparent bg-white py-2 px-3 font-normal text-black md:w-3/12"
-                            type="submit"
-                            disabled={Boolean(transactionState)}
-                          >
-                            {selected.toUpperCase()}
-                          </button>
-                        </div>
-                      </div>
-                    </Form>
-
-                    {selected === 'Unstake' && (hasOgunRewardBalance || hasOgunRewardLPBalance) && (
-                      <div className="flex w-full flex-col bg-gray-25 p-4 sm:flex-row sm:items-center sm:justify-between">
-                        <text className="mt-2 mb-6 self-center bg-rainbow-gradient bg-clip-text text-sm font-semibold text-transparent brightness-200 sm:mb-0">
-                          You have {getRewardBalance()} OGUN reward
-                        </text>
-                        <Button variant="rainbow" buttonClassName="sm:px-2 py-1.5" disabled={Boolean(transactionState)}>
-                          <text
-                            className="text-xs font-semibold drop-shadow-sm"
-                            onClick={() => handleClaimRewards(token)}
-                          >
-                            Claim Rewards
-                          </text>
-                        </Button>
-                      </div>
-                    )}
-                    {token === 'ogun' && (
-                      <div className="flex w-full flex-col gap-y-1 text-sm text-white text-opacity-60">
-                        <span className="flex justify-between">
-                          <text>OGUN in wallet:</text>
-                          <text>{OGUNBalance}</text>
-                        </span>
-                        <span className="flex justify-between">
-                          <text>Your staked OGUN:</text>
-                          <text>{stakeBalance}</text>
-                        </span>
-                        <span className="flex justify-between">
-                          <text>Your OGUN staking rewards:</text>
-                          <span>
-                            <text>{ogunRewardBalance}</text>
-                          </span>
+              {({ values, handleChange, ...formikProps }) => (
+                <Form className="h-full w-full" {...(formikProps as any)}>
+                  <div className="flex flex-col">
+                    <div className="flex flex-col items-center justify-start gap-y-2 md:flex-row md:gap-y-0">
+                      <div className="relative h-10 w-full md:w-6/12">
+                        <select
+                          className="h-10 w-full border-0 bg-gray-25 pl-8 text-xs font-bold text-gray-80"
+                          name="token"
+                          id="token"
+                          value={values.token}
+                          onChange={handleChange}
+                        >
+                          <option selected value="ogun">
+                            OGUN
+                          </option>
+                          <option value="lp">OGUN-LP</option>
+                        </select>
+                        <span className="pointer-events-none absolute top-3 left-2">
+                          <Logo id="soundchain-wallet" height="16" width="16" />
                         </span>
                       </div>
-                    )}
-                    {token === 'lp' && (
-                      <div className="flex w-full flex-col gap-y-1 text-sm text-white text-opacity-60">
-                        <span className="flex justify-between">
-                          <text>OGUN-LP in wallet:</text>
-                          <text>{LPBalance}</text>
-                        </span>
-                        <span className="flex justify-between">
-                          <text>Your staked OGUN-LP:</text>
-                          <text>{LPStakeBalance}</text>
-                        </span>
-                        <span className="flex justify-between">
-                          <text>Your OGUN LP rewards:</text>
-                          <text>{ogunRewardLPBalance}</text>
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )
-              }}
+                      <input
+                        name="amount"
+                        id="amount"
+                        type="number"
+                        placeholder="Amount"
+                        value={values.amount || ''} // Updated to use values.amount
+                        className="h-10 w-full border-transparent bg-gray-40 md:ml-2 md:w-9/12"
+                        onChange={handleChange}
+                      />
+                      <button
+                        className="h-10 w-full border-transparent bg-white py-2 px-3 font-normal text-black md:w-3/12"
+                        type="submit"
+                        disabled={Boolean(transactionState)}
+                      >
+                        {selected.toUpperCase()}
+                      </button>
+                    </div>
+                  </div>
+                </Form>
+              )}
             </Formik>
           </div>
           <div className="flex w-full flex-col items-center justify-center gap-y-8 py-3 md:justify-between md:py-9">

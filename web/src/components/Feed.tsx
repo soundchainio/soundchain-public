@@ -28,18 +28,19 @@ const FeedContext = createContext({} as FeedContextData)
 
 export const Feed = ({ pageSize }: FeedProps) => {
   const { playlistState } = useAudioPlayerContext()
-  pageSize = pageSize ?? 10
+  pageSize = pageSize ?? 30 // Updated to 30 as per your change
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)
   const { data, loading, fetchMore, refetch } = useFeedQuery({ variables: { page: { first: pageSize } }, ssr: false })
   const getSize = (index: number) => sizeMap[index] || 289
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
-    (index, size) => {
+    (index: number, height?: number | undefined) => {
+      const size = height || 0 // Handle undefined with default 0
       sizeMap[index] = size + GAP
       listRef?.current.resetAfterIndex(index)
     },
-    [sizeMap, data],
+    []
   )
 
   if (loading) {
@@ -149,7 +150,7 @@ const ListItem = memo(({ index, data, style }: ListChildComponentProps) => {
 interface RowProps {
   data: FeedItem[]
   index: number
-  setSize: (index: number, height?: number) => void
+  setSize: (index: number, height?: number | undefined) => void
   handleOnPlayClicked: (trackId: string) => void
 }
 

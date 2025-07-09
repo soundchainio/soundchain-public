@@ -32,6 +32,23 @@ import { AbiItem } from 'web3-utils'
 import * as yup from 'yup'
 import SoundchainOGUN20 from '../../../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 
+// Define a type compatible with Web3.js v4.x receipt event, making contractAddress optional
+interface Web3Receipt {
+  transactionHash: string;
+  transactionIndex: bigint;
+  blockHash: string;
+  blockNumber: bigint;
+  from: string;
+  to: string;
+  cumulativeGasUsed: bigint;
+  gasUsed: bigint;
+  contractAddress?: string | null | undefined; // Made optional with union type
+  logs: any[];
+  status: bigint;
+  logsBloom: string;
+  events?: any;
+}
+
 export interface TrackPageProps {
   track: TrackQuery['track']
 }
@@ -40,6 +57,7 @@ interface BuyNowTrackProps {
   track: TrackQuery['track']
   isPaymentOGUN: boolean
 }
+
 interface TrackPageParams extends ParsedUrlQuery {
   id: string
 }
@@ -50,8 +68,9 @@ interface FormValues {
 
 const marketplaceAddress = config.web3.contractsV2.marketplaceAddress as string
 const OGUNAddress = config.ogunTokenAddress as string
-const tokenContract = (web3: Web3) =>
-  new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress) as unknown as Contract
+const tokenContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], OGUNAddress)
+}
 
 export const getServerSideProps = protectPage<BuyNowTrackProps, TrackPageParams>(async (context, apolloClient) => {
   const trackId: string = context.params?.id || ''
@@ -99,8 +118,11 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   })
 
   const getOGUNBalance = async (web3: Web3) => {
-    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call()
-    const formattedBalance = web3.utils.fromWei(currentBalance ?? '0')
+    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call() as string | undefined
+    const validBalance = currentBalance !== undefined && (typeof currentBalance === 'string' || typeof currentBalance === 'number')
+      ? currentBalance.toString()
+      : '0'
+    const formattedBalance = web3.utils.fromWei(validBalance, 'ether')
     setOGUNBalance(formattedBalance)
   }
 
@@ -120,11 +142,12 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       const validateAllowance = async () => {
         const existingAllowance = await tokenContract(web3)
           .methods.allowance(account, marketplaceAddress)
-          .call()
-          .catch(console.log)
+          .call() as string | undefined
         if (listingPayload) {
           const OGUNPrice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem
-          const hasEnoughAllowance = existingAllowance >= parseFloat(OGUNPrice as string)
+          const hasEnoughAllowance = existingAllowance !== undefined && OGUNPrice !== undefined
+            ? parseFloat(existingAllowance) >= parseFloat(OGUNPrice)
+            : false // Default to false if either value is undefined
           console.log(
             `Your existing allowance for contract: ${marketplaceAddress} is ${existingAllowance} validating an amount of ${OGUNPrice}`,
           )
@@ -158,15 +181,15 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const handleApproveAllowance = async () => {
     if (listingPayload && web3) {
       const OGUNItemPrice = listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem as string
-      const fixedAmount = Web3.utils.toWei((+OGUNItemPrice * 10 ** -18).toString())
-      const amountBN = Web3.utils.toBN(fixedAmount)
+      const fixedAmount = Web3.utils.toWei((+OGUNItemPrice * 10 ** -18).toString(), 'wei')
+      const amountBN = BigInt(fixedAmount)
       const gasPriceWei = await web3.eth.getGasPrice()
       console.log(`Approving new allowance of ${amountBN} using a gas price: ${gasPriceWei}`)
       setLoading(true)
       await tokenContract(web3)
         .methods.approve(marketplaceAddress, amountBN)
-        .send({ from: account, gasPrice: gasPriceWei })
-        .on('receipt', (receipt: TransactionReceipt) => {
+        .send({ from: account, gasPrice: gasPriceWei.toString() })
+        .on('receipt', (receipt: Web3Receipt) => {
           toast.success('Successfully increased your allowance for the marketplace.')
           setHasAllowance(true)
           setLoading(false)
@@ -178,7 +201,8 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
           toast.error('We were unable to process the new allowance transaction at this moment.')
           console.log(error)
         })
-        .catch((error: Error) => {
+        .catch((reason: unknown) => { // Updated to unknown type
+          const error = reason as Error; // Cast to Error if possible
           setHasAllowance(false)
           setLoading(false)
           toast.error('We were unable to process the new allowance at this moment.')
@@ -279,62 +303,64 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
           validationSchema={validationSchema}
           onSubmit={isPaymentOGUN && !hasAllowance ? handleApproveAllowance : handleSubmit}
         >
-          <Form autoComplete="off" className="flex flex-1 flex-col justify-between">
-            <div>
-              <div className="m-4">
-                <Track track={track} />
-              </div>
-              <div className="bg-[#112011]">
-                <div className="flex items-center justify-between px-4 py-3">
-                  <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
-                  {isPaymentOGUN ? <Ogun value={priceToShow} /> : <Matic value={priceToShow} />}
+          {({ values, handleChange, ...formikProps }) => (
+            <Form autoComplete="off" className="flex flex-1 flex-col justify-between" {...(formikProps as any)}>
+              <div>
+                <div className="m-4">
+                  <Track track={track} />
                 </div>
+                <div className="bg-[#112011]">
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
+                    {isPaymentOGUN ? <Ogun value={priceToShow} /> : <Matic value={priceToShow} />}
+                  </div>
+                </div>
+                {!hasStarted && (
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div className="flex-shrink-0 text-sm font-bold text-white">SALE STARTS</div>
+                    <div className="text-md flex items-center gap-1 text-right font-bold">
+                      <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+                    </div>
+                  </div>
+                )}
               </div>
-              {!hasStarted && (
-                <div className="flex items-center justify-between px-4 py-3">
-                  <div className="flex-shrink-0 text-sm font-bold text-white">SALE STARTS</div>
-                  <div className="text-md flex items-center gap-1 text-right font-bold">
-                    <Timer date={new Date(startTime * 1000)} reloadOnEnd />
+
+              {me?.otpSecret && (
+                <div className="flex items-center bg-gray-20 px-4 py-3 uppercase">
+                  <p className="w-full text-xs font-bold text-gray-80">
+                    <Locker className="mr-2 inline h-4 w-4" fill="#303030" /> Two-factor validation
+                  </p>
+                  <div className="w-1/2">
+                    <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" value={values.token} onChange={handleChange} />
                   </div>
                 </div>
               )}
-            </div>
-
-            {me?.otpSecret && (
-              <div className="flex items-center bg-gray-20 px-4 py-3 uppercase">
-                <p className="w-full text-xs font-bold text-gray-80">
-                  <Locker className="mr-2 inline h-4 w-4" fill="#303030" /> Two-factor validation
-                </p>
-                <div className="w-1/2">
-                  <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" />
-                </div>
-              </div>
-            )}
-            {priceToShow && account && (
-              <BuyNow
-                price={priceToShow}
-                priceOGUN={priceToShow}
-                isPaymentOGUN={isPaymentOGUN}
-                ownerAddressAccount={account}
-                startTime={startTime}
-              />
-            )}
-            {hasStarted && (
-              <PlayerAwareBottomBar>
-                <TotalPrice price={priceToShow} isPaymentOGUN={isPaymentOGUN} />
-                {(!isPaymentOGUN || hasAllowance) && (
-                  <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
-                    <div className="px-4">CONFIRM</div>
-                  </Button>
-                )}
-                {isPaymentOGUN && !hasAllowance && (
-                  <Button type="submit" className="ml-auto" variant="approve-allowance" loading={loading}>
-                    <div className="p-1 md:px-6">Approve Allowance for Marketplace</div>
-                  </Button>
-                )}
-              </PlayerAwareBottomBar>
-            )}
-          </Form>
+              {priceToShow && account && (
+                <BuyNow
+                  price={priceToShow}
+                  priceOGUN={priceToShow}
+                  isPaymentOGUN={isPaymentOGUN}
+                  ownerAddressAccount={account}
+                  startTime={startTime}
+                />
+              )}
+              {hasStarted && (
+                <PlayerAwareBottomBar>
+                  <TotalPrice price={priceToShow} isPaymentOGUN={isPaymentOGUN} />
+                  {(!isPaymentOGUN || hasAllowance) && (
+                    <Button type="submit" className="ml-auto" variant="buy-nft" loading={loading}>
+                      <div className="px-4">CONFIRM</div>
+                    </Button>
+                  )}
+                  {isPaymentOGUN && !hasAllowance && (
+                    <Button type="submit" className="ml-auto" variant="approve-allowance" loading={loading}>
+                      <div className="p-1 md:px-6">Approve Allowance for Marketplace</div>
+                    </Button>
+                  )}
+                </PlayerAwareBottomBar>
+              )}
+            </Form>
+          )}
         </Formik>
       </div>
     </>

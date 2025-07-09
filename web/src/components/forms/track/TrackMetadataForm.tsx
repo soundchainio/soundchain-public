@@ -30,8 +30,8 @@ export interface FormValues {
 const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   editionQuantity: yup.number().label('# of Editions').min(1).max(1000).required('# of Editions is a required field'),
   title: yup.string().max(100).required('Title is a required field'),
-  description: yup.string().max(500).required('Description is a required field'),
-  ISRC: yup.string().min(12).max(25).optional(),
+  description: yup.string().max(2500).required('Description is a required field'),
+  ISRC: yup.string().min(12).max(50).optional(),
   utilityInfo: yup.string().max(10000),
   artist: yup.string(),
   album: yup.string().max(100),
@@ -117,7 +117,7 @@ function InnerForm(props: InnerFormProps) {
   }, [maxMintGasFee, balance])
 
   return (
-    <Form className="flex h-full flex-col gap-4">
+    <Form className="flex h-full flex-col gap-4" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
       <div className="flex items-center gap-2 px-4">
         <p className="max-w-5/10 text-xxs font-bold leading-tight text-gray-80">
           Enter the number of NFT editions to mint. This cannot be changed after minting.

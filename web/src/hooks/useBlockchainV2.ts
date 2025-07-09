@@ -16,6 +16,7 @@ import { SoundchainMarketplaceEditions } from 'types/web3-v2-contracts/Soundchai
 import Web3 from 'web3'
 import { PromiEvent, TransactionReceipt } from 'web3-core/types'
 import { AbiItem } from 'web3-utils'
+import BN from 'bn.js'
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json'
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json'
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json'
@@ -101,7 +102,7 @@ class BlockchainFunction<Type> {
 
   protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
     const { me } = this
-    if ((this.web3?.currentProvider as SDKBase['rpcProvider']).isMagic && !(await this.magic?.user.isLoggedIn()) && me) {
+    if (this.web3?.currentProvider && (this.web3.currentProvider as unknown as SDKBase['rpcProvider']).isMagic && !(await this.magic?.user.isLoggedIn()) && me) {
       await this.magic?.auth.loginWithMagicLink({ email: me.email })
     }
     const gasPriceString = await this.web3?.eth.getGasPrice()
@@ -180,7 +181,7 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
     }
 
     const gas = await transactionObject.estimateGas({ from, value })
-    await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -202,7 +203,7 @@ class ClaimOgun extends BlockchainFunction<ClaimOgunParams> {
 
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
     return this.receipt
   }
 }
@@ -254,7 +255,7 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
     const gas = await transactionObject.estimateGas({ from, value: (!isPaymentOGUN && value) || undefined })
 
     await this._execute(gasPrice =>
-      transactionObject.send({ from, gas, value: (!isPaymentOGUN && value) || undefined, gasPrice }),
+      transactionObject.send({ from, gas, value: (!isPaymentOGUN && value) || undefined, gasPrice }) as PromiEvent<TransactionReceipt>
     )
 
     return this.receipt
@@ -272,7 +273,7 @@ class ApproveMarketplace extends BlockchainFunction<DefaultParam> {
     )
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -289,7 +290,7 @@ class ApproveAuction extends BlockchainFunction<DefaultParam> {
     )
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -307,7 +308,7 @@ class BurnNft extends BlockchainFunction<TokenParams> {
     const transactionObject = nftContract(web3, contractAddresses?.nft).methods.burn(tokenId)
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -336,7 +337,7 @@ class CancelAuction extends BlockchainFunction<TokenParams> {
 
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -364,7 +365,7 @@ class CancelListing extends BlockchainFunction<TokenParams> {
     }
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -379,7 +380,7 @@ interface CreateAuctionParams extends TokenParams {
 class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, reservePrice, startTime, endTime } = this.params
-    const totalPrice = Web3.utils.toBN(reservePrice)
+    const totalPrice = new BN(reservePrice)
     this.web3 = web3
 
     const auctionContractAddress = contractAddresses?.auction || auctionV2Address
@@ -390,7 +391,7 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
         contractAddresses?.nft || nftAddress,
         tokenId,
         totalPrice,
-        false, // isPaymentOGUN
+        false,
         startTime,
         endTime,
       )
@@ -406,7 +407,7 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
 
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -415,7 +416,7 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
 class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, reservePrice, startTime, endTime } = this.params
-    const totalPrice = Web3.utils.toBN(reservePrice)
+    const totalPrice = new BN(reservePrice)
     this.web3 = web3
 
     const auctionContractAddress = contractAddresses?.auction || auctionV2Address
@@ -427,7 +428,7 @@ class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
         contractAddresses?.nft || nftAddress,
         tokenId,
         totalPrice,
-        false, // isPaymentOGUN
+        false,
         startTime,
         endTime,
       )
@@ -443,7 +444,7 @@ class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
 
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -466,7 +467,7 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
 
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -481,8 +482,8 @@ interface ListItemParams extends TokenParams {
 class ListItem extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, price, priceOGUN, startTime } = this.params
-    const totalPrice = Web3.utils.toBN(price)
-    const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
+    const totalPrice = new BN(price)
+    const totalOGUNPrice = new BN(priceOGUN)
     this.web3 = web3
     const acceptsMATIC = +price > 0
     const acceptsOGUN = +priceOGUN > 0
@@ -514,7 +515,7 @@ class ListItem extends BlockchainFunction<ListItemParams> {
 
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -523,8 +524,8 @@ class ListItem extends BlockchainFunction<ListItemParams> {
 class UpdateListing extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, price, priceOGUN, startTime } = this.params
-    const totalPrice = Web3.utils.toBN(price)
-    const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
+    const totalPrice = new BN(price)
+    const totalOGUNPrice = new BN(priceOGUN)
     this.web3 = web3
     const acceptsMATIC = +price > 0
     const acceptsOGUN = +priceOGUN > 0
@@ -553,7 +554,7 @@ class UpdateListing extends BlockchainFunction<ListItemParams> {
     }
 
     const gas = await transactionObject.estimateGas({ from })
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -578,7 +579,7 @@ class MintNft extends BlockchainFunction<MintNftParams> {
     )
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -592,7 +593,7 @@ interface SendMaticParams extends DefaultParam {
 class SendMatic extends BlockchainFunction<SendMaticParams> {
   execute = async (web3: Web3) => {
     const { from, to, amount } = this.params
-    const amountWei = web3.utils.toWei(amount)
+    const amountWei = web3.utils.toWei(amount, 'ether')
     this.web3 = web3
     const gas = 1200000
 
@@ -603,7 +604,7 @@ class SendMatic extends BlockchainFunction<SendMaticParams> {
         value: amountWei,
         gas,
         gasPrice,
-      }),
+      }) as unknown as PromiEvent<TransactionReceipt> // Enhanced type assertion
     )
 
     return this.receipt
@@ -618,7 +619,7 @@ interface SendOgunParams extends DefaultParam {
 class SendOgun extends BlockchainFunction<SendOgunParams> {
   execute = async (web3: Web3) => {
     const { from, to, amount } = this.params
-    const amountWei = web3.utils.toWei(amount)
+    const amountWei = web3.utils.toWei(amount, 'ether')
     this.web3 = web3
     const tokenAddress = config.ogunTokenAddress
     const contract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress)
@@ -633,7 +634,7 @@ class SendOgun extends BlockchainFunction<SendOgunParams> {
         gas,
         gasPrice,
         data: data,
-      }),
+      }) as unknown as PromiEvent<TransactionReceipt> // Enhanced type assertion
     )
     return this.receipt
   }
@@ -672,7 +673,7 @@ class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionPa
     }
     console.log('Gas estimated: ' + gas)
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -700,7 +701,7 @@ class CreateEdition extends BlockchainFunction<CreateEditionParams> {
     const transactionObject = this.prepare(web3)
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -716,8 +717,8 @@ interface ListEditionParams extends DefaultParam {
 class ListEdition extends BlockchainFunction<ListEditionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, editionNumber, from, price, priceOGUN, startTime } = this.params
-    const totalPrice = Web3.utils.toBN(price)
-    const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
+    const totalPrice = new BN(price)
+    const totalOGUNPrice = new BN(priceOGUN)
     this.web3 = web3
     const acceptsMATIC = +price > 0
     const acceptsOGUN = +priceOGUN > 0
@@ -734,7 +735,7 @@ class ListEdition extends BlockchainFunction<ListEditionParams> {
 
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -751,8 +752,8 @@ export interface ListBatchParams extends DefaultParam {
 class ListBatch extends BlockchainFunction<ListBatchParams> {
   prepare = (web3: Web3) => {
     const { contractAddresses, tokenIds, price, priceOGUN, startTime } = this.params
-    const totalPrice = Web3.utils.toBN(price)
-    const totalOGUNPrice = Web3.utils.toBN(priceOGUN)
+    const totalPrice = new BN(price)
+    const totalOGUNPrice = new BN(priceOGUN)
     const acceptsMATIC = +price > 0
     const acceptsOGUN = +priceOGUN > 0
 
@@ -777,7 +778,7 @@ class ListBatch extends BlockchainFunction<ListBatchParams> {
     const transactionObject = this.prepare(web3)
     const gas = await transactionObject.estimateGas({ from, nonce })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -803,7 +804,7 @@ class CancelListingBatch extends BlockchainFunction<CancelListingBatchParams> {
     const transactionObject = this.prepare(web3)
     const gas = await transactionObject.estimateGas({ from, nonce })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -824,7 +825,7 @@ class CancelEditionListing extends BlockchainFunction<CancelEditionListingParams
     )
     const gas = await transactionObject.estimateGas({ from })
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }))
+    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>)
 
     return this.receipt
   }
@@ -842,7 +843,7 @@ class TransferNftToken extends BlockchainFunction<TransferNftTokenParams> {
     const gas = await transactionObject.estimateGas({ from })
 
     await this._execute(gasPrice => {
-      return transactionObject.send({ from, gas, gasPrice })
+      return transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>
     })
 
     return this.receipt

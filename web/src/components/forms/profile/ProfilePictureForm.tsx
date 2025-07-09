@@ -1,21 +1,14 @@
+import React, { useCallback, useEffect, useState } from 'react'
+
 import classNames from 'classnames'
+import { Button, ButtonProps } from 'components/common/Buttons/Button'
 import { ImageUploadField } from 'components/ImageUploadField'
+import { Label } from 'components/Label'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { useUpdateProfilePictureMutation } from 'lib/graphql'
+import { useUpdateProfilePictureMutation } from 'lib/graphql' // Adjusted mutation
 import Image from 'next/image'
-import { useCallback, useEffect, useState } from 'react'
 import * as yup from 'yup'
-import { Button, ButtonProps } from '../../common/Buttons/Button'
-import { Label } from '../../Label'
-
-interface FormValues {
-  profilePicture?: string | undefined
-}
-
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  profilePicture: yup.string(),
-})
 
 interface ProfilePictureFormProps {
   afterSubmit: () => void
@@ -23,21 +16,25 @@ interface ProfilePictureFormProps {
   submitText: string
 }
 
+interface FormValues {
+  profilePicture?: string | undefined
+}
+
 const defaultProfilePictures = [
-  '/default-pictures/profile/red.png',
-  '/default-pictures/profile/orange.png',
-  '/default-pictures/profile/yellow.png',
-  '/default-pictures/profile/green.png',
-  '/default-pictures/profile/teal.png',
-  '/default-pictures/profile/blue.png',
-  '/default-pictures/profile/purple.png',
-  '/default-pictures/profile/pink.png',
+  '/default-pictures/profile/avatar1.jpeg',
+  '/default-pictures/profile/avatar2.jpeg',
+  '/default-pictures/profile/avatar3.jpeg',
+  '/default-pictures/profile/avatar4.jpeg',
 ]
+
+const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+  profilePicture: yup.string(),
+})
 
 export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: ProfilePictureFormProps) => {
   const me = useMe()
   const [defaultPicture, setDefaultPicture] = useState<string | null>(null)
-  const [updateProfilePicture] = useUpdateProfilePictureMutation()
+  const [updateProfilePicture] = useUpdateProfilePictureMutation() // Adjusted mutation
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -48,7 +45,7 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
     }
   }, [me?.profile.profilePicture])
 
-  const onUpload = useCallback(uploading => {
+  const onUpload = useCallback((uploading: boolean) => { // Fixed type to boolean
     setLoading(uploading)
   }, [])
 
@@ -73,10 +70,10 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
       {({ values: { profilePicture } }) => (
-        <Form className="flex flex-1 flex-col">
+        <Form className="flex flex-1 flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <div className="flex-grow space-y-8">
             <div className="flex flex-col">
-              <Label textSize="base">Custom Profile Photo:</Label>
+              <Label textSize="base">CUSTOM PROFILE PHOTO:</Label>
               {loading && !profilePicture ? (
                 <ImageUploadField name="profilePicture" className="mt-8">
                   Uploading
@@ -84,34 +81,35 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
               ) : (
                 <ImageUploadField
                   name="profilePicture"
-                  className={`${loading || profilePicture ? 'h-24 w-24 self-center' : ''} mt-8 cursor-pointer`}
                   onUpload={onUpload}
-                  rounded="rounded-full"
+                  className={`${profilePicture ? 'h-[150px]' : ''} mt-8 cursor-pointer`}
                 >
                   Upload Profile Photo
                 </ImageUploadField>
               )}
             </div>
             <div className="flex flex-col space-y-8">
-              <Label textSize="base">Default Profile Photos:</Label>
-              <div className="grid grid-cols-4 gap-4">
+              <Label textSize="base">DEFAULT PROFILE PHOTOS:</Label>
+              <div className="flex flex-col space-y-4">
                 {defaultProfilePictures.map(picture => (
                   <button
                     key={picture}
                     className={classNames(
-                      'flex h-[60px] w-[60px] justify-center justify-self-center rounded-full',
-                      defaultPicture === picture && 'ring-4 ring-white',
+                      'relative flex h-[150px] w-full justify-center justify-self-center p-2',
+                      defaultPicture === picture && 'rounded-xl border-2',
                     )}
                     onClick={() => setDefaultPicture(picture)}
                   >
-                    <Image alt="Default profile picture" src={picture} width={60} height={60} />
+                    <div className="relative flex h-full w-full">
+                      <Image alt="Default profile picture" src={picture} fill objectFit="cover" className="rounded-lg" />
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
           </div>
           <div className="flex flex-col">
-            <Button type="submit" disabled={loading} variant="outline" className="h-12" {...submitProps}>
+            <Button type="submit" disabled={loading} variant="outline" className="mt-4 h-12" {...submitProps}>
               {submitText}
             </Button>
           </div>

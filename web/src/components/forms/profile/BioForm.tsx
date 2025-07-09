@@ -20,7 +20,7 @@ const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
   bio: yup.string().label('Bio'),
 })
 
-const maxBioLength = 120
+const maxBioLength = 1000 // Updated from 120 to 1000
 
 const setMaxInputLength = (input: string) => {
   const rawValue = input.length
@@ -41,7 +41,7 @@ export const BioForm = ({ afterSubmit, submitText, submitProps }: BioFormProps) 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ values }) => (
-        <Form className="flex flex-1 flex-col space-y-6">
+        <Form className="flex flex-1 flex-col space-y-6" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <div>
             <TextareaField
               label="Bio"

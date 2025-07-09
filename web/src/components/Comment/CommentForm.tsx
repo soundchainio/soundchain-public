@@ -52,7 +52,7 @@ export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFor
       onSubmit={onSubmit}
     >
       {({ setFieldValue, isValid }) => (
-        <Form className="flex h-full flex-col">
+        <Form className="flex h-full flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
             <div className="flex-1 p-2 text-center font-bold text-gray-400" onClick={() => onCancel(setFieldValue)}>
               Cancel

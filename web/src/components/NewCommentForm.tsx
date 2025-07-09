@@ -54,7 +54,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
-        <Form>
+        <Form placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
           <div className="flex flex-row items-start space-x-3 bg-gray-25 p-3">
             <Avatar profile={me.profile} linkToProfile={false} />
             <FlexareaField id="commentField" name="body" maxLength={160} placeholder="Write a comment..." />
