@@ -96,6 +96,7 @@
     "react-virtualized-auto-sizer": "^1.0.6",
     "react-window": "^1.8.6",
     "react-window-infinite-loader": "^1.0.7",
+    "regenerator-runtime": "^0.14.1",
     "styled-components": "^5.3.6",
     "tailwind-merge": "^1.2.1",
     "tailwind-styled-components": "^2.2.0",

@@ -1,95 +1,109 @@
-import { InputField } from 'components/InputField'
-import { Modal } from 'components/Modal'
-import { Ogun } from 'components/Ogun'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
-import { Form, Formik } from 'formik'
-import useBlockchainV2 from 'hooks/useBlockchainV2'
-import { useMaxGasFee } from 'hooks/useMaxGasFee'
-import { useMe } from 'hooks/useMe'
-import { useWalletContext } from 'hooks/useWalletContext'
-import { DefaultWallet } from 'lib/graphql'
-import router from 'next/router'
-import { authenticator } from 'otplib'
-import { useState } from 'react'
-import { toast } from 'react-toastify'
-import * as yup from 'yup'
-import { Button } from './common/Buttons/Button'
-import { ConnectedNetwork } from './ConnectedNetwork'
-import { CopyWalletAddress } from './CopyWalletAddress'
-import { Label } from './Label'
-import MaxGasFee from './MaxGasFee'
-import { WalletSelected } from './WalletSelected'
+import { InputField } from 'components/InputField';
+import { Modal } from 'components/Modal';
+import { Ogun } from 'components/Ogun';
+import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { Form, Formik } from 'formik';
+import useBlockchainV2 from 'hooks/useBlockchainV2';
+import { useMaxGasFee } from 'hooks/useMaxGasFee';
+import { useMe } from 'hooks/useMe';
+import { useWalletContext } from 'hooks/useWalletContext';
+import { useMagicContext } from 'hooks/useMagicContext';
+import { DefaultWallet } from 'lib/graphql';
+import router from 'next/router';
+import { authenticator } from 'otplib';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
+import * as yup from 'yup';
+import { Button } from './common/Buttons/Button';
+import { ConnectedNetwork } from './ConnectedNetwork';
+import { CopyWalletAddress } from './CopyWalletAddress';
+import { Label } from './Label';
+import MaxGasFee from './MaxGasFee';
+import { WalletSelected } from './WalletSelected';
+import Web3 from 'web3';
 
 interface FormValues {
-  token: string
+  token: string;
 }
 
 export const TransferOgunConfirmationModal = () => {
-  const me = useMe()
-  const { showOgunTransferConfirmation, walletRecipient, amountToTransfer } = useModalState()
-  const { dispatchShowOgunTransferConfirmationModal } = useModalDispatch()
-  const [loading, setLoading] = useState(false)
-  const { sendOgun } = useBlockchainV2()
-  const { web3, account, balance, OGUNBalance, refetchBalance } = useWalletContext()
-
-  const maxGasFee = useMaxGasFee(showOgunTransferConfirmation)
+  const me = useMe();
+  const { showOgunTransferConfirmation, walletRecipient, amountToTransfer } = useModalState();
+  const { dispatchShowOgunTransferConfirmationModal } = useModalDispatch();
+  const [loading, setLoading] = useState(false);
+  const { sendOgun } = useBlockchainV2();
+  const { web3, account, balance, OGUNBalance, refetchBalance } = useWalletContext();
+  const { isLoggedIn } = useMagicContext();
+  const maxGasFee = useMaxGasFee(showOgunTransferConfirmation);
 
   const handleClose = () => {
-    dispatchShowOgunTransferConfirmationModal(false)
-  }
+    dispatchShowOgunTransferConfirmationModal(false);
+  };
 
   const handleCancel = () => {
-    handleClose()
-  }
+    handleClose();
+  };
 
   const initialValues = {
     token: '',
-  }
+  };
 
   const validationSchema = yup.object().shape({
     token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
-  })
+  });
 
   const hasEnoughFunds = () => {
-    console.log(balance, OGUNBalance, maxGasFee, amountToTransfer)
     if (balance && maxGasFee && amountToTransfer && OGUNBalance) {
-      return +balance > +maxGasFee && +OGUNBalance >= +amountToTransfer
+      return +balance > +maxGasFee && +OGUNBalance >= +amountToTransfer;
     }
-    return false
-  }
+    return false;
+  };
 
-  const handleSubmit = ({ token }: FormValues) => {
-    if (token) {
-      const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' })
+  const validateAddress = (address: string) => {
+    return Web3.utils.isAddress(address);
+  };
+
+  const handleSubmit = async ({ token }: FormValues) => {
+    if (!isLoggedIn) {
+      toast.error('Please log in to proceed');
+      return;
+    }
+
+    if (token && me?.otpSecret) {
+      const isValid = authenticator.verify({ token, secret: me.otpSecret });
       if (!isValid) {
-        toast.error('Invalid token code')
-        return
+        toast.error('Invalid token code');
+        return;
       }
     }
 
-    if (hasEnoughFunds() && web3 && refetchBalance) {
-      setLoading(true)
-      const onReceipt = () => {
-        toast.success('Transaction completed!')
-        setLoading(false)
-        handleClose()
-        refetchBalance()
-        router.push('/wallet')
-      }
-      if (account && walletRecipient && amountToTransfer) {
-        sendOgun(walletRecipient, account, amountToTransfer)
-          .onReceipt(onReceipt)
+    if (!validateAddress(walletRecipient || '')) {
+      toast.error('Invalid recipient address');
+      return;
+    }
+
+    if (hasEnoughFunds() && web3 && refetchBalance && account && walletRecipient && amountToTransfer) {
+      setLoading(true);
+      try {
+        await sendOgun(walletRecipient, account, amountToTransfer)
+          .onReceipt(() => {
+            toast.success('Transaction completed!');
+            handleClose();
+            refetchBalance();
+            router.push('/wallet');
+          })
           .onError(() => toast.error('We had some trouble, please try again later!'))
           .finally(() => setLoading(false))
-          .execute(web3)
+          .execute(web3);
+      } catch (e) {
+        toast.error('Transaction failed');
+        setLoading(false);
       }
     } else {
-      toast.error(
-        "Uh-oh, it seems you don't have enough funds for this transaction. Please select an appropriate amount",
-      )
-      handleClose()
+      toast.error("Uh-oh, it seems you don't have enough funds for this transaction.");
+      handleClose();
     }
-  }
+  };
 
   return (
     <Modal
@@ -103,7 +117,7 @@ export const TransferOgunConfirmationModal = () => {
       }
     >
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex h-full w-full flex-col justify-between" autoComplete="off" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="flex h-full w-full flex-col justify-between" autoComplete="off">
           <div className="mb-auto flex h-full flex-col justify-between">
             <div className="flex h-full flex-col justify-around">
               <div className="px-4 text-center text-sm font-bold text-gray-80">
@@ -160,14 +174,14 @@ export const TransferOgunConfirmationModal = () => {
             </div>
           </div>
           <div>
-            <Button type="submit" loading={loading}>
+            <Button type="submit" loading={loading} disabled={!isLoggedIn}>
               Confirm Transaction
             </Button>
           </div>
         </Form>
       </Formik>
     </Modal>
-  )
-}
+  );
+};
 
-export default TransferOgunConfirmationModal // Ensure default export is the component
+export default TransferOgunConfirmationModal;

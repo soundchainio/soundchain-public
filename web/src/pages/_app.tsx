@@ -1,5 +1,6 @@
 import '@reach/dialog/styles.css'
 import '@reach/slider/styles.css'
+import 'regenerator-runtime/runtime'
 
 import * as Sentry from '@sentry/react'
 import { Integrations } from '@sentry/tracing'
