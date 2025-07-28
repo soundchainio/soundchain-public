@@ -1252,7 +1252,7 @@
     "@floating-ui/utils" "^0.2.8"
     tabbable "^6.0.0"
 
-"@floating-ui/react@^0.27.3":
+"@floating-ui/react@^0.27.0", "@floating-ui/react@^0.27.3":
   version "0.27.14"
   resolved "https://registry.yarnpkg.com/@floating-ui/react/-/react-0.27.14.tgz#af291ce636aa5a57a1899408b24e4dc8395a77a7"
   integrity sha512-aSf9JXfyXpRQWMbtuW+CJQrnhzHu4Hg1Th9AkvR1o+wSW/vCUVMrtgXaRY5ToV5Fh5w3I7lXJdvlKVvYrQrppw==
@@ -4669,7 +4669,7 @@ cjs-module-lexer@^1.0.0:
   resolved "https://registry.yarnpkg.com/cjs-module-lexer/-/cjs-module-lexer-1.4.3.tgz#0f79731eb8cfe1ec72acd4066efac9d61991b00d"
   integrity sha512-9z8TZaGM1pfswYeXrUpzPrkx8UnWYdhJclsiYMm6x/w5+nN+8Tf/LnAgfLGQCm59qAOxU8WwHEq2vNwF6i4j+Q==
 
-classnames@^2.3.0, classnames@^2.5.2:
+classnames@^2.3.0, classnames@^2.5.1:
   version "2.5.1"
   resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.5.1.tgz#ba774c614be0f016da105c858e7159eae8e7687b"
   integrity sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==
@@ -7017,7 +7017,7 @@ html-parse-stringify@^3.0.1:
   dependencies:
     void-elements "3.1.0"
 
-html-react-parser@^3.0.17:
+html-react-parser@^5.2.6:
   version "5.2.6"
   resolved "https://registry.yarnpkg.com/html-react-parser/-/html-react-parser-5.2.6.tgz#547a8820be5c76bc2a10f0bb32dd9119d440438b"
   integrity sha512-qcpPWLaSvqXi+TndiHbCa+z8qt0tVzjMwFGFBAa41ggC+ZA5BHaMIeMJla9g3VSp4SmiZb9qyQbmbpHYpIfPOg==
@@ -9220,7 +9220,7 @@ os-tmpdir@~1.0.2:
   resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
   integrity sha512-D2FR03Vir7FIu45XBY20mTb+/ZSWB00sjU9jdQXt83gDrI4Ztz5Fs7/yy74g2N5SVQY4xY1qDr4rNddwYRVX0g==
 
-otplib@^14.0.0:
+otplib@^12.0.1:
   version "12.0.1"
   resolved "https://registry.yarnpkg.com/otplib/-/otplib-12.0.1.tgz#c1d3060ab7aadf041ed2960302f27095777d1f73"
   integrity sha512-xDGvUOQjop7RDgxTQ+o4pOol0/3xSZzawTiPKRrHnQWAy0WjhNs/5HdIDJCrqC4MBynmjXgULc6YfioaxZeFgg==
@@ -9849,7 +9849,7 @@ react-combine-reducers@^1.1.1:
   dependencies:
     core-js "^3.6.5"
 
-react-datepicker@*, react-datepicker@^6.10.0:
+react-datepicker@*:
   version "8.4.0"
   resolved "https://registry.yarnpkg.com/react-datepicker/-/react-datepicker-8.4.0.tgz#8db0beac6282ef72d12494bd49cc5e61362a3a42"
   integrity sha512-6nPDnj8vektWCIOy9ArS3avus9Ndsyz5XgFCJ7nBxXASSpBdSL6lG9jzNNmViPOAOPh6T5oJyGaXuMirBLECag==
@@ -9857,6 +9857,15 @@ react-datepicker@*, react-datepicker@^6.10.0:
     "@floating-ui/react" "^0.27.3"
     clsx "^2.1.1"
     date-fns "^4.1.0"
+
+react-datepicker@^7.0.0:
+  version "7.6.0"
+  resolved "https://registry.yarnpkg.com/react-datepicker/-/react-datepicker-7.6.0.tgz#6171988c6a9dbd4f49a45a06e3510035884b6b74"
+  integrity sha512-9cQH6Z/qa4LrGhzdc3XoHbhrxNcMi9MKjZmYgF/1MNNaJwvdSjv3Xd+jjvrEEbKEf71ZgCA3n7fQbdwd70qCRw==
+  dependencies:
+    "@floating-ui/react" "^0.27.0"
+    clsx "^2.1.1"
+    date-fns "^3.6.0"
 
 react-dom@^18.3.1:
   version "18.3.1"
@@ -11872,10 +11881,10 @@ walker@^1.0.8:
   dependencies:
     makeerror "1.0.12"
 
-wavesurfer.js@^7.0.4:
-  version "7.10.1"
-  resolved "https://registry.yarnpkg.com/wavesurfer.js/-/wavesurfer.js-7.10.1.tgz#c2f799a05d939cbb1e5df8aa7e0485ab44ad7594"
-  integrity sha512-tF1ptFCAi8SAqKbM1e7705zouLC3z4ulXCg15kSP5dQ7VDV30Q3x/xFRcuVIYTT5+jB/PdkhiBRCfsMshZG1Ug==
+wavesurfer.js@^6.0.12:
+  version "6.6.4"
+  resolved "https://registry.yarnpkg.com/wavesurfer.js/-/wavesurfer.js-6.6.4.tgz#45e2d613fbfd60d906362ed6e11b649f481e4485"
+  integrity sha512-nBbc0pD/3FdClxKUKL1UW2V9AJPL+JOjC8T6/YF9/FCAn4uo+H6Y8VBkXo9UJXIHoBewoc7iXj3tPeL0UCJhjA==
 
 wcwidth@^1.0.1:
   version "1.0.1"
@@ -12348,7 +12357,7 @@ web3@*:
     web3-utils "^4.3.3"
     web3-validator "^2.0.6"
 
-web3@^4.20.0:
+web3@^4.16.1-dev.fa5ce5b.0:
   version "4.16.1-dev.fa5ce5b.0"
   resolved "https://registry.yarnpkg.com/web3/-/web3-4.16.1-dev.fa5ce5b.0.tgz#c5e4da5a393fb4c11c683ad2c4d32ac54c9d734b"
   integrity sha512-4sb2qhbTh98v7FMQQCJSmyttNAW+vDqjhC4WtvTkwSLFkshKM1hRD+zYbiaIbncimVVWgzPqdyL26dkjKiUaJA==
