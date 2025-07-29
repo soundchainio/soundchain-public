@@ -2986,7 +2986,7 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react-datepicker@^6.2.3":
+"@types/react-datepicker@^7.0.0":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@types/react-datepicker/-/react-datepicker-7.0.0.tgz#1d36553a92546246f1e10d862b3cfa7d295dff01"
   integrity sha512-4tWwOUq589tozyQPBVEqGNng5DaZkomx5IVNuur868yYdgjH6RaL373/HKiVt1IDoNNXYiTGspm1F7kjrarM8Q==
