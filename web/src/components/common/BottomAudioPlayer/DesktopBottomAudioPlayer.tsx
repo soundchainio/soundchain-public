@@ -6,16 +6,16 @@ import { Slider } from '@reach/slider'
 import { config } from 'config'
 import { useModalDispatch } from 'contexts/providers/modal'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { useMe } from 'hooks/useMe'
-import { useEffect, useRef } from 'react'
-import { FavoriteTrack } from '../Buttons/FavoriteTrack/FavoriteTrack'
+import { useEffect, useRef, useState } from 'react'
+import { FavoriteTrack } from '../common/Buttons/FavoriteTrack/FavoriteTrack'
 import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
 import { Playlists } from 'icons/Playlists'
-import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid'
-import { IoIosArrowUp } from 'react-icons/io'
+import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid'
+import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 
 export const BottomAudioPlayer = () => {
   const me = useMe()
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const {
@@ -115,6 +115,10 @@ export const BottomAudioPlayer = () => {
     setIsPlaylistOpen(true)
   }
 
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed)
+  }
+
   if (!currentSong.src) {
     return null
   }
@@ -129,27 +133,29 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <Container>
-      <TrackDetails>
-        <ImageContainer>
-          <Asset src={currentSong.art} />
-        </ImageContainer>
-        <Title>
-          <h2 className="w-[100px] truncate font-medium text-white">{currentSong.title || 'Unkown Title'}</h2>
-          <p className="w-[100px] truncate font-normal text-neutral-400">{currentSong.artist || 'Unknown artist'}</p>
-        </Title>
-        <FavoriteTrack />
-      </TrackDetails>
+    <Container style={{ height: isCollapsed ? '60px' : '90px' }}>
+      {!isCollapsed && (
+        <TrackDetails>
+          <ImageContainer>
+            <Asset src={currentSong.art} />
+          </ImageContainer>
+          <Title>
+            <h2 className="w-[150px] truncate font-medium text-white">{currentSong.title || 'Unknown Title'}</h2>
+            <p className="w-[150px] truncate font-normal text-neutral-400">{currentSong.artist || 'Unknown artist'}</p>
+          </Title>
+          <FavoriteTrack />
+        </TrackDetails>
+      )}
 
       <BotttomPlayerTrackSlider song={song} playerClassNames="mr-12" />
 
       <TrackControls>
-        <button aria-label="Playlist" className="flex h-10 w-10 items-center justify-end " onClick={showPlayList}>
+        <button aria-label="Playlist" className="flex h-10 w-10 items-center justify-end" onClick={showPlayList}>
           <Playlists fillColor="white" />
         </button>
 
         <div className="flex items-center gap-2">
-          <VolumeOffIcon width={16} viewBox="-8 0 20 20" color="white" />
+          <SpeakerXMarkIcon width={16} viewBox="-8 0 20 20" color="white" />
           <div className="">
             <Slider
               className="volume-slider w-[50px]"
@@ -160,7 +166,7 @@ export const BottomAudioPlayer = () => {
               step={0.1}
             />
           </div>
-          <VolumeUpIcon width={16} color="white" className="ml-1" />
+          <SpeakerWaveIcon width={16} color="white" className="ml-1" />
         </div>
 
         <IoIosArrowUp
@@ -168,6 +174,12 @@ export const BottomAudioPlayer = () => {
           color="white"
           className="ml-2 hover:cursor-pointer"
           onClick={() => dispatchShowAudioPlayerModal(true)}
+        />
+        <IoIosArrowDown
+          size={25}
+          color="white"
+          className="ml-2 hover:cursor-pointer"
+          onClick={toggleCollapse}
         />
       </TrackControls>
       <audio
@@ -192,6 +204,7 @@ const Container = tw.div`
   bg-neutral-900 
   h-[90px]
   mt-4
+  transition-all duration-300
 `
 
 const TrackDetails = tw.div`
@@ -200,9 +213,10 @@ const TrackDetails = tw.div`
 `
 
 const ImageContainer = tw.div`
-  h-[80px]
-  w-[80px]
+  h-[120px]
+  w-[120px]
 `
+
 const Title = tw.div`
   flex
   flex-col
@@ -219,4 +233,4 @@ const TrackControls = tw.div`
   justify-center 
   gap-2 
   h-full
-`
+``
