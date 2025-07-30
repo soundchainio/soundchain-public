@@ -22,9 +22,7 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
       <div className="h-full w-full max-w-[300px] rounded-lg rounded-b-md bg-black">
         <div
           className="h-[100px] w-full rounded-t-md bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url(${profile.coverPicture})`,
-          }}
+          style={{ backgroundImage: `url(${profile.coverPicture})` }}
         />
         <div className="mx-2 mt-6 flex items-center justify-between">
           <div className="mt-[-90px]">
@@ -46,7 +44,6 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
               <span className="xl:text-md text-sm font-bold text-white">{profile.followingCount || 0}</span>
               <span className="xl:text-md text-sm font-semibold text-gray-80">Following</span>
             </span>
-
             {profile.isSubscriber ? (
               <>
                 <ReactTooltip id="unsubscribeButton" type="dark" effect="solid">
@@ -85,7 +82,6 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
               10,
             )}`}</p>
           </span>
-
           <div className="flex flex-col items-center">
             <span className="mb-2">
               <MessageButton profileId={profile.id} />
@@ -98,7 +94,6 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
             />
           </div>
         </div>
-
         <p className="text-wrap text-md max-h- mx-4 max-w-[245px] break-words pt-8 pb-6 text-justify text-gray-80">
           {profile.bio ? (
             limitTextToNumberOfCharacters(profile.bio, 45)

@@ -13,18 +13,17 @@ interface BioFormProps {
 }
 
 interface FormValues {
-  bio: string | undefined
+  bio: string // Changed from string | undefined to required string
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  bio: yup.string().label('Bio'),
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
+  bio: yup.string().label('Bio').required(), // Added .required() to match FormValues
 })
 
 const maxBioLength = 1000 // Updated from 120 to 1000
 
 const setMaxInputLength = (input: string) => {
   const rawValue = input.length
-
   return maxBioLength + (rawValue - getBodyCharacterCount(input))
 }
 
@@ -41,7 +40,7 @@ export const BioForm = ({ afterSubmit, submitText, submitProps }: BioFormProps) 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ values }) => (
-        <Form className="flex flex-1 flex-col space-y-6" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="flex flex-1 flex-col space-y-6">
           <div>
             <TextareaField
               label="Bio"

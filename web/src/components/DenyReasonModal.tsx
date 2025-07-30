@@ -19,7 +19,7 @@ interface FormValues {
   reason: string
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   reason: yup.string().required(),
 })
 
@@ -50,7 +50,7 @@ export const DenyReasonModal = ({ requestId, showReason, setShowReason }: DenyRe
   return (
     <Dialog isOpen={showReason} onDismiss={close} className="w-80 bg-gray-20" aria-label="Deny">
       <Formik initialValues={{ reason: '' }} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex flex-1 flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="flex flex-1 flex-col">
           <TextareaField label="Reason" name="reason" />
           <DeleteButton type="submit" className="mt-5 h-12 w-full text-sm text-white">
             DENY

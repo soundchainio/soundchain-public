@@ -5,9 +5,10 @@ import Hls from 'hls.js'
 import { Slider } from '@reach/slider'
 import { config } from 'config'
 import { useModalDispatch } from 'contexts/providers/modal'
+import { useMe } from 'hooks/useMe'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useEffect, useRef, useState } from 'react'
-import { FavoriteTrack } from '../common/Buttons/FavoriteTrack/FavoriteTrack'
+import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack' // Resolved via declaration file
 import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
 import { Playlists } from 'icons/Playlists'
 import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid'
@@ -36,11 +37,9 @@ export const BottomAudioPlayer = () => {
   const { dispatchShowAudioPlayerModal } = useModalDispatch()
 
   useEffect(() => {
-    if (!audioRef.current || !currentSong.src) {
-      return
-    }
+    if (!audioRef.current || !currentSong.src) return
 
-    let hls: Hls
+    let hls: Hls | null = null
 
     if (audioRef.current.canPlayType('application/vnd.apple.mpegurl')) {
       audioRef.current.src = currentSong.src
@@ -64,9 +63,7 @@ export const BottomAudioPlayer = () => {
     })
 
     return () => {
-      if (hls) {
-        hls.destroy()
-      }
+      if (hls) hls.destroy()
     }
   }, [currentSong, me?.id])
 
@@ -74,7 +71,7 @@ export const BottomAudioPlayer = () => {
     if (!audioRef.current) return
 
     if (isPlaying) audioRef.current.play()
-    if (!isPlaying) audioRef.current.pause()
+    else audioRef.current.pause()
   }, [isPlaying, currentSong])
 
   useEffect(() => {
@@ -85,29 +82,20 @@ export const BottomAudioPlayer = () => {
   }, [progressFromSlider, setProgressStateFromSlider])
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume
-    }
+    if (audioRef.current) audioRef.current.volume = volume
   }, [volume])
 
   function handleTimeUpdate() {
-    if (audioRef?.current?.currentTime) {
-      setProgressState(Math.floor(audioRef.current.currentTime))
-    }
+    if (audioRef.current?.currentTime) setProgressState(Math.floor(audioRef.current.currentTime))
   }
 
   function handleDurationChange() {
-    if (audioRef.current && audioRef.current.duration) {
-      setDurationState(audioRef.current.duration)
-    }
+    if (audioRef.current?.duration) setDurationState(audioRef.current.duration)
   }
 
   function handleEndedSong() {
-    if (hasNext) {
-      playNext()
-    } else {
-      setProgressState(0)
-    }
+    if (hasNext) playNext()
+    else setProgressState(0)
   }
 
   const showPlayList = () => {
@@ -115,13 +103,9 @@ export const BottomAudioPlayer = () => {
     setIsPlaylistOpen(true)
   }
 
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed)
-  }
+  const toggleCollapse = () => setIsCollapsed(!isCollapsed)
 
-  if (!currentSong.src) {
-    return null
-  }
+  if (!currentSong.src) return null
 
   const song: Song = {
     trackId: currentSong.trackId,
@@ -146,14 +130,11 @@ export const BottomAudioPlayer = () => {
           <FavoriteTrack />
         </TrackDetails>
       )}
-
       <BotttomPlayerTrackSlider song={song} playerClassNames="mr-12" />
-
       <TrackControls>
         <button aria-label="Playlist" className="flex h-10 w-10 items-center justify-end" onClick={showPlayList}>
           <Playlists fillColor="white" />
         </button>
-
         <div className="flex items-center gap-2">
           <SpeakerXMarkIcon width={16} viewBox="-8 0 20 20" color="white" />
           <div className="">
@@ -168,7 +149,6 @@ export const BottomAudioPlayer = () => {
           </div>
           <SpeakerWaveIcon width={16} color="white" className="ml-1" />
         </div>
-
         <IoIosArrowUp
           size={25}
           color="white"
@@ -198,39 +178,13 @@ export const BottomAudioPlayer = () => {
 export default BottomAudioPlayer
 
 const Container = tw.div`
-  flex 
-  justify-between
-  items-center
-  bg-neutral-900 
-  h-[90px]
-  mt-4
-  transition-all duration-300
+  flex justify-between items-center bg-neutral-900 h-[90px] mt-4 transition-all duration-300
 `
 
-const TrackDetails = tw.div`
-  flex
-  items-center
-`
+const TrackDetails = tw.div`flex items-center`
 
-const ImageContainer = tw.div`
-  h-[120px]
-  w-[120px]
-`
+const ImageContainer = tw.div`h-[120px] w-[120px]`
 
-const Title = tw.div`
-  flex
-  flex-col
-  items-start
-  mr-6
-  ml-3
-`
+const Title = tw.div`flex flex-col items-start mr-6 ml-3`
 
-const TrackControls = tw.div`
-  flex 
-  items-center 
-  mt-4 
-  mr-4 
-  justify-center 
-  gap-2 
-  h-full
-``
+const TrackControls = tw.div`flex items-center mt-4 mr-4 justify-center gap-2 h-full`
