@@ -6,7 +6,7 @@ import { ImageUploadField } from 'components/ImageUploadField'
 import { Label } from 'components/Label'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { useUpdateProfilePictureMutation } from 'lib/graphql' // Adjusted mutation
+import { useUpdateProfilePictureMutation } from 'lib/graphql'
 import Image from 'next/image'
 import * as yup from 'yup'
 
@@ -20,6 +20,10 @@ interface FormValues {
   profilePicture?: string | undefined
 }
 
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
+  profilePicture: yup.string(),
+})
+
 const defaultProfilePictures = [
   '/default-pictures/profile/avatar1.jpeg',
   '/default-pictures/profile/avatar2.jpeg',
@@ -27,32 +31,27 @@ const defaultProfilePictures = [
   '/default-pictures/profile/avatar4.jpeg',
 ]
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  profilePicture: yup.string(),
-})
-
 export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: ProfilePictureFormProps) => {
   const me = useMe()
   const [defaultPicture, setDefaultPicture] = useState<string | null>(null)
-  const [updateProfilePicture] = useUpdateProfilePictureMutation() // Adjusted mutation
+  const [updateProfilePicture] = useUpdateProfilePictureMutation()
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const picture = me?.profile.profilePicture
-
     if (picture && defaultProfilePictures.includes(picture)) {
       setDefaultPicture(picture)
     }
   }, [me?.profile.profilePicture])
 
-  const onUpload = useCallback((uploading: boolean) => { // Fixed type to boolean
+  const onUpload = useCallback((uploading: boolean) => {
     setLoading(uploading)
   }, [])
 
   if (!me) return null
 
   const initialFormValues: FormValues = {
-    profilePicture: '',
+    profilePicture: me?.profile.profilePicture || '',
   }
 
   const onSubmit = async ({ profilePicture }: FormValues) => {
@@ -63,14 +62,13 @@ export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: Pro
         },
       },
     })
-
     afterSubmit()
   }
 
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={onSubmit}>
       {({ values: { profilePicture } }) => (
-        <Form className="flex flex-1 flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="flex flex-1 flex-col">
           <div className="flex-grow space-y-8">
             <div className="flex flex-col">
               <Label textSize="base">CUSTOM PROFILE PHOTO:</Label>
