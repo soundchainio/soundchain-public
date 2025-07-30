@@ -50,19 +50,19 @@ interface FormValues {
   customLink: string | undefined
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
-  soundcloud: yup.string().label('Soundcloud'),
-  spotify: yup.string().label('Spotify'),
-  bandcamp: yup.string().label('Bandcamp'),
-  facebook: yup.string().label('Facebook'),
-  instagram: yup.string().label('Instagram'),
-  x: yup.string().label('X'),
-  tiktok: yup.string().label('TikTok'),
-  linktree: yup.string().label('Linktree'),
-  discord: yup.string().label('Discord'),
-  telegram: yup.string().label('Telegram'),
-  onlyfans: yup.string().label('OnlyFans'),
-  customLink: yup.string().label('Custom Link'),
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
+  soundcloud: yup.string().label('Soundcloud').required('Soundcloud is required'),
+  spotify: yup.string().label('Spotify').required('Spotify is required'),
+  bandcamp: yup.string().label('Bandcamp').required('Bandcamp is required'),
+  facebook: yup.string().label('Facebook').required('Facebook is required'),
+  instagram: yup.string().label('Instagram').required('Instagram is required'),
+  x: yup.string().label('X').required('X is required'),
+  tiktok: yup.string().label('TikTok').required('TikTok is required'),
+  linktree: yup.string().label('Linktree').required('Linktree is required'),
+  discord: yup.string().label('Discord').required('Discord is required'),
+  telegram: yup.string().label('Telegram').required('Telegram is required'),
+  onlyfans: yup.string().label('OnlyFans').required('OnlyFans is required'),
+  customLink: yup.string().label('Custom Link').required('Custom Link is required'),
 })
 
 const regex = /(?:^https?:\/\/(?:www\.)?[\w]+\.(com|ee|gg|me|org))\/([\w-]+)/
@@ -121,7 +121,7 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
   return (
     <Formik initialValues={initialFormValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ setFieldValue }: FormikProps<FormValues>) => (
-        <Form className="social-links flex flex-1 flex-col space-y-6" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="social-links flex flex-1 flex-col space-y-6">
           <div className="flex items-center">
             <InputField
               label="soundcloud.com/"
