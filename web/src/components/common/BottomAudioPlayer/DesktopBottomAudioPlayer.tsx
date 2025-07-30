@@ -8,10 +8,10 @@ import { useModalDispatch } from 'contexts/providers/modal'
 import { useMe } from 'hooks/useMe'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useEffect, useRef, useState } from 'react'
-import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack' // Resolved via declaration file
+import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
 import { Playlists } from 'icons/Playlists'
-import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid'
+import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/24/solid'
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 
 export const BottomAudioPlayer = () => {
@@ -136,7 +136,7 @@ export const BottomAudioPlayer = () => {
           <Playlists fillColor="white" />
         </button>
         <div className="flex items-center gap-2">
-          <SpeakerXMarkIcon width={16} viewBox="-8 0 20 20" color="white" />
+          <VolumeOffIcon width={16} viewBox="-8 0 20 20" color="white" />
           <div className="">
             <Slider
               className="volume-slider w-[50px]"
@@ -147,7 +147,7 @@ export const BottomAudioPlayer = () => {
               step={0.1}
             />
           </div>
-          <SpeakerWaveIcon width={16} color="white" className="ml-1" />
+          <VolumeUpIcon width={16} color="white" className="ml-1" />
         </div>
         <IoIosArrowUp
           size={25}
@@ -178,13 +178,39 @@ export const BottomAudioPlayer = () => {
 export default BottomAudioPlayer
 
 const Container = tw.div`
-  flex justify-between items-center bg-neutral-900 h-[90px] mt-4 transition-all duration-300
+  flex 
+  justify-between
+  items-center
+  bg-neutral-900 
+  h-[90px]
+  mt-4
+  transition-all duration-300
 `
 
-const TrackDetails = tw.div`flex items-center`
+const TrackDetails = tw.div`
+  flex
+  items-center
+`
 
-const ImageContainer = tw.div`h-[120px] w-[120px]`
+const ImageContainer = tw.div`
+  h-[120px]
+  w-[120px]
+`
 
-const Title = tw.div`flex flex-col items-start mr-6 ml-3`
+const Title = tw.div`
+  flex
+  flex-col
+  items-start
+  mr-6
+  ml-3
+`
 
-const TrackControls = tw.div`flex items-center mt-4 mr-4 justify-center gap-2 h-full`
+const TrackControls = tw.div`
+  flex 
+  items-center 
+  mt-4 
+  mr-4 
+  justify-center 
+  gap-2 
+  h-full
+`
