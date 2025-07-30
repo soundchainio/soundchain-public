@@ -19,7 +19,7 @@ const initialValues: FormValues = {
   recoveryPhrase: '',
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   recoveryPhrase: yup.string().required('Recovery Phrase is required'),
 })
 
@@ -48,12 +48,11 @@ export const DisableRecoveryForm = ({ afterSubmit }: Props) => {
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      <Form className="flex flex-1 flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+      <Form className="flex flex-1 flex-col">
         <div className="flex-grow">
           <p className="text-gray-80">Enter your Recovery Phrase to disable the Two-Factor</p>
           <InputField type="text" name="recoveryPhrase" label="Recovery Phrase" />
         </div>
-
         <Button
           type="submit"
           disabled={loading}
