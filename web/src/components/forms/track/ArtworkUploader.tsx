@@ -1,4 +1,4 @@
-import { CameraIcon } from '@heroicons/react/solid'
+import { CameraIcon } from '@heroicons/react/24/solid' // Updated to 24/solid for consistency
 import { imageMimeTypes, videoMimeTypes } from 'lib/mimeTypes'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
@@ -12,7 +12,7 @@ export interface ArtworkUploaderProps {
   onFileChange: (file: File) => void
 }
 
-const maxSize = 1024 * 1024 * 30 // 30Mb
+const maxSize = 1024 * 1024 * 150 // Updated to 150MB
 
 export const ArtworkUploader = ({ name, initialValue, onFileChange, error }: ArtworkUploaderProps) => {
   const [file, setFile] = useState<File>()
@@ -20,7 +20,7 @@ export const ArtworkUploader = ({ name, initialValue, onFileChange, error }: Art
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      toast.error(fileRejections[0].errors[0].message.replace(`${maxSize.toString()} bytes`, '30mb'))
+      toast.error(fileRejections[0].errors[0].message.replace(`${maxSize.toString()} bytes`, '150mb'))
       return
     }
     setPreview(URL.createObjectURL(file))
