@@ -4,14 +4,39 @@ import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'
 import { TextareaField } from 'components/TextareaField'
 import { WalletSelector } from 'components/waveform/WalletSelector'
-import { Form, Formik, FormikErrors } from 'formik'
+import { Field, Form, Formik, FormikErrors } from 'formik'
 import { useMaxMintGasFee } from 'hooks/useMaxMintGasFee'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { Genre } from 'lib/graphql'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, ReactNode } from 'react'
 import { GenreLabel, genres } from 'utils/Genres'
 import * as yup from 'yup'
 import { ArtworkUploader } from './ArtworkUploader'
+import { Modal } from 'components/Modal'
+import Typo from 'typo-js'
+import { useWalletConnect } from 'hooks/useWalletConnect'
+
+// Supported blockchain chains
+const supportedChains = ['Polygon', 'Ethereum', 'Solana', 'Base', 'Tezos'];
+
+// Role categories and sub-roles
+const collaboratorCategories = {
+  Music: ['Singer', 'Guitarist', 'Bassist', 'Drummer', 'Keyboardist', 'Pianist', 'Percussionist', 'Background Singer', 'Horns Section', 'Sound Engineer', 'Producer', 'Beatmaker'],
+  Film: ['Cinematographer', 'Photographer', 'Director', 'Editor', 'Graphics Designer', 'VFX', 'Grip'],
+  Art: ['Painter', 'Graffiti Artist'],
+}
+
+// Locally extended ModalProps to include className (though not used directly here)
+interface ModalProps {
+  show: boolean;
+  children: ReactNode;
+  title: string | JSX.Element;
+  leftButton?: JSX.Element;
+  rightButton?: JSX.Element;
+  onClose: (open: boolean) => void;
+}
+
+const dictionary = new Typo('en_US');
 
 export interface FormValues {
   editionQuantity: number
@@ -22,28 +47,53 @@ export interface FormValues {
   copyright?: string
   releaseYear?: number
   genres?: Genre[]
-  artworkFile?: File | null
+  artworkFile?: File
   royalty: number
   ISRC?: string
+  collaborators: { walletAddress: string; royaltyPercentage: number; role: string }[]
+  chain: string
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   editionQuantity: yup.number().label('# of Editions').min(1).max(1000).required('# of Editions is a required field'),
   title: yup.string().max(100).required('Title is a required field'),
   description: yup.string().max(2500).required('Description is a required field'),
+  utilityInfo: yup.string().max(10000).required('Utility info is a required field'),
   ISRC: yup.string().min(12).max(50).optional(),
-  utilityInfo: yup.string().max(10000),
-  artist: yup.string(),
   album: yup.string().max(100),
   copyright: yup.string().max(100),
   releaseYear: yup.number(),
   genres: yup.array(),
-  artworkFile: yup.mixed().required('Artwork is required'),
+  artworkFile: yup.mixed<File>()
+    .required('Artwork is required')
+    .test('isFile', 'Must be a valid file', value => {
+      if (!value) return false;
+      if (!(value instanceof File)) return false;
+      const file = value as File;
+      return (
+        file.size > 0 &&
+        typeof file.lastModified === 'number' &&
+        typeof file.name === 'string' &&
+        typeof file.size === 'number' &&
+        typeof file.type === 'string' &&
+        typeof file.webkitRelativePath === 'string'
+      );
+    }),
   royalty: yup.number().integer().min(0).max(100).required('Royalty is a required field'),
+  collaborators: yup.array().of(
+    yup.object().shape({
+      walletAddress: yup.string().required('Wallet address is required'),
+      royaltyPercentage: yup.number().min(0).max(100).required('Royalty percentage is required'),
+      role: yup.string().oneOf([...Object.values(collaboratorCategories).flat()], 'Invalid role').required('Role is required'),
+    })
+  ).required('Collaborators are required').min(1, 'At least one collaborator is required').default([]),
+  chain: yup.string().oneOf(supportedChains, 'Invalid chain').required('Chain selection is required'),
 })
 
 export interface InitialValues extends Omit<Partial<FormValues>, 'artworkUrl'> {
   artworkFile?: File
+  collaborators: { walletAddress: string; royaltyPercentage: number; role: string }[]
+  chain?: string
 }
 
 interface Props {
@@ -61,10 +111,14 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     copyright: initialValues?.copyright || '',
     releaseYear: initialValues?.releaseYear || new Date().getFullYear(),
     genres: initialValues?.genres || [],
-    artworkFile: initialValues?.artworkFile || null,
-    royalty: 0,
+    artworkFile: initialValues?.artworkFile || undefined,
+    royalty: initialValues?.royalty || 0,
     ISRC: initialValues?.ISRC || '',
+    collaborators: initialValues?.collaborators || [{ walletAddress: '', royaltyPercentage: 0, role: '' }],
+    chain: initialValues?.chain || 'Polygon',
   }
+
+  const { connect, disconnect, provider, account } = useWalletConnect();
 
   return (
     <Formik<FormValues>
@@ -74,25 +128,39 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
       onSubmit={handleSubmit}
     >
       {({ setFieldValue, values, errors }) => {
-        return <InnerForm setFieldValue={setFieldValue} values={values} errors={errors} initialValues={initialValues} />
+        return <InnerForm setFieldValue={setFieldValue} values={values} errors={errors} initialValues={initialValues} connect={connect} disconnect={disconnect} provider={provider} account={account} />
       }}
     </Formik>
   )
 }
 
 interface InnerFormProps {
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   setFieldValue: (field: string, value: any) => void
   errors: FormikErrors<FormValues>
   values: FormValues
   initialValues?: InitialValues
+  connect: () => Promise<void>
+  disconnect: () => Promise<void>
+  provider?: any
+  account?: string
 }
 
 function InnerForm(props: InnerFormProps) {
-  const { setFieldValue, errors, values, initialValues } = props
+  const { setFieldValue, errors, values, initialValues, connect, disconnect, provider, account } = props
   const maxMintGasFee = useMaxMintGasFee(values.editionQuantity)
   const [enoughFunds, setEnoughFunds] = useState<boolean>()
   const { balance } = useWalletContext()
+  const [isSideModalOpen, setIsSideModalOpen] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState<keyof typeof collaboratorCategories>('Music')
+  const [touchActive, setTouchActive] = useState(false)
+
+  useEffect(() => {
+    if (provider && account) {
+      setFieldValue('collaborators', (prev: { walletAddress: string; royaltyPercentage: number; role: string }[]) => 
+        prev.length > 0 ? prev.map(c => ({ ...c, walletAddress: account || c.walletAddress })) : [{ walletAddress: account || '', royaltyPercentage: 0, role: '' }]
+      );
+    }
+  }, [account, provider, setFieldValue]);
 
   const handleGenreClick = (
     setFieldValue: (field: string, value: Genre[]) => void,
@@ -116,8 +184,95 @@ function InnerForm(props: InnerFormProps) {
     }
   }, [maxMintGasFee, balance])
 
+  const addCollaborator = () => {
+    setFieldValue('collaborators', [...values.collaborators, { walletAddress: account || '', royaltyPercentage: 0, role: '' }])
+  }
+
+  const updateCollaborator = (index: number, field: string, value: string | number) => {
+    const newCollaborators = [...values.collaborators]
+    newCollaborators[index] = { ...newCollaborators[index], [field]: value }
+    setFieldValue('collaborators', newCollaborators)
+  }
+
+  const removeCollaborator = (index: number) => {
+    const newCollaborators = values.collaborators.filter((_, i) => i !== index)
+    setFieldValue('collaborators', newCollaborators)
+  }
+
+  const openSideModal = () => {
+    if (!touchActive) setIsSideModalOpen(true);
+  }
+  const closeSideModal = () => {
+    if (!touchActive) setIsSideModalOpen(false);
+  }
+
+  const handleTouchStart = () => {
+    setTouchActive(true);
+    setIsSideModalOpen(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    const element = e.currentTarget.getBoundingClientRect();
+    if (touch.clientX < element.left || touch.clientX > element.right || touch.clientY < element.top || touch.clientY > element.bottom) {
+      setIsSideModalOpen(false);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchActive(false);
+    setTimeout(() => setIsSideModalOpen(false), 200);
+  };
+
+  const autoCorrectText = (field: string, value: string) => {
+    const suggestions = dictionary.suggest(value);
+    if (suggestions.length > 0 && suggestions[0] !== value) {
+      setFieldValue(field, suggestions[0]);
+      return suggestions[0];
+    }
+    return value;
+  };
+
+  const handleTextareaChange = (field: string) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length <= (field === 'description' ? 2500 : 10000)) {
+      setFieldValue(field, autoCorrectText(field, value));
+    }
+  };
+
+  const renderCollaboratorErrors = (errors: FormikErrors<FormValues>) => {
+    if (errors.collaborators && Array.isArray(errors.collaborators)) {
+      return errors.collaborators.map((error, index) => {
+        const errorMessages = Object.values(error as any).filter(Boolean).join(', ');
+        return errorMessages ? <span key={index} className="text-red-500 text-xs mt-1">{errorMessages}</span> : null;
+      });
+    } else if (errors.collaborators && typeof errors.collaborators === 'string') {
+      return <span className="text-red-500 text-xs mt-1">{errors.collaborators}</span>;
+    }
+    return null;
+  };
+
   return (
-    <Form className="flex h-full flex-col gap-4" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+    <Form className="flex h-full flex-col gap-4 relative">
+      <div className="px-4">
+        <button
+          onClick={() => connect()}
+          className="p-2 bg-blue-500 text-white rounded mb-4 flex items-center"
+        >
+          <WalletConnectIcon className="mr-2" /> Connect Wallet
+        </button>
+        {account && <p>Connected: {account}</p>}
+        <select
+          value={values.chain}
+          onChange={(e) => setFieldValue('chain', e.target.value)}
+          className="p-2 border rounded w-full mb-4"
+        >
+          {supportedChains.map(chain => (
+            <option key={chain} value={chain}>{chain}</option>
+          ))}
+        </select>
+        {errors.chain && <p className="text-red-500 text-xs">{errors.chain}</p>}
+      </div>
       <div className="flex items-center gap-2 px-4">
         <p className="max-w-5/10 text-xxs font-bold leading-tight text-gray-80">
           Enter the number of NFT editions to mint. This cannot be changed after minting.
@@ -139,7 +294,14 @@ function InnerForm(props: InnerFormProps) {
         </div>
       </div>
       <div className="px-4">
-        <TextareaField rows={3} name="description" label="DESCRIPTION" maxLength={500} />
+        <Field
+          name="description"
+          as={TextareaField}
+          rows={3}
+          label="DESCRIPTION"
+          maxLength={2500}
+          onChange={handleTextareaChange('description')}
+        />
       </div>
       <div className="flex w-full gap-4 px-4">
         <InputField name="releaseYear" type="number" label="RELEASE YEAR" />
@@ -147,7 +309,14 @@ function InnerForm(props: InnerFormProps) {
         <InputField name="ISRC" type="text" label="ISRC" maxLength={25} />
       </div>
       <div className="px-4">
-        <TextareaField rows={3} name="utilityInfo" label="UTILITY" maxLength={500} />
+        <Field
+          name="utilityInfo"
+          as={TextareaField}
+          rows={3}
+          label="UTILITY"
+          maxLength={10000}
+          onChange={handleTextareaChange('utilityInfo')}
+        />
       </div>
       <div className="px-4 font-bold text-gray-80">
         Select Genres {values.genres && `(${values.genres.length} Selected)`}
@@ -163,14 +332,23 @@ function InnerForm(props: InnerFormProps) {
         ))}
       </div>
       <div>
-        <div className="flex justify-between gap-2 bg-gray-20 p-4 text-gray-80">
-          <label htmlFor="royalty">
-            <div className="text-[11px] font-bold uppercase">Royalty %</div>
-            <div className="text-[9px]">Setting a royalty % will allow you to earn a cut on all secondary sales.</div>
-          </label>
-          <div>
-            <InputField name="royalty" type="number" symbol="%" alignTextCenter step={1} />
-          </div>
+        <div
+          className="px-4 mt-2 relative hover:bg-gray-30 transition-all duration-300 ease-in-out"
+          onMouseEnter={openSideModal}
+          onMouseLeave={closeSideModal}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <h3 className="text-[11px] font-bold uppercase text-gray-80">Collaborators</h3>
+          <p className="text-[9px] text-gray-80">Tap/Hover to add collaborators (total royalty must not exceed 100%).</p>
+          {values.collaborators.map((collaborator, index) => (
+            <div key={index} className="flex items-center gap-2 mt-2">
+              <span>{collaborator.role}: {collaborator.walletAddress} ({collaborator.royaltyPercentage}%)</span>
+              <Button variant="outline" onClick={() => removeCollaborator(index)} className="h-10 w-10">-</Button>
+            </div>
+          ))}
+          {renderCollaboratorErrors(errors)}
         </div>
         <WalletSelector />
       </div>
@@ -193,6 +371,62 @@ function InnerForm(props: InnerFormProps) {
           )}
         </div>
       </div>
+
+      <Modal
+        show={isSideModalOpen}
+        onClose={closeSideModal}
+        title="Add Collaborators"
+      >
+        <select
+          value={selectedCategory}
+          onChange={e => setSelectedCategory(e.target.value as keyof typeof collaboratorCategories)}
+          className="p-2 border rounded mb-4 w-full"
+        >
+          {Object.keys(collaboratorCategories).map(category => (
+            <option key={category} value={category}>{category}</option>
+          ))}
+        </select>
+        {values.collaborators.map((collaborator, index) => (
+          <div key={index} className="flex items-center gap-2 mb-2">
+            <select
+              value={collaborator.role}
+              onChange={e => updateCollaborator(index, 'role', e.target.value)}
+              className="p-2 border rounded"
+            >
+              <option value="">Select Role</option>
+              {collaboratorCategories[selectedCategory].map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+            <InputField
+              name={`collaborators[${index}].walletAddress`} // Added name prop
+              label="Wallet Address"
+              type="text"
+              value={collaborator.walletAddress}
+              onChange={e => updateCollaborator(index, 'walletAddress', e.target.value)}
+            />
+            <InputField
+              name={`collaborators[${index}].royaltyPercentage`} // Added name prop
+              label="Royalty %"
+              type="number"
+              value={collaborator.royaltyPercentage}
+              onChange={e => updateCollaborator(index, 'royaltyPercentage', Number(e.target.value))}
+              symbol="%"
+              step={1}
+            />
+            <Button variant="outline" onClick={() => removeCollaborator(index)} className="h-10 w-10">-</Button>
+          </div>
+        ))}
+        <Button variant="outline" onClick={addCollaborator} className="mt-2 h-10 w-full">Add Another Collaborator</Button>
+        <Button variant="outline" onClick={closeSideModal} className="mt-2 h-10 w-full">Save and Close</Button>
+      </Modal>
     </Form>
   )
 }
+
+// WalletConnect Icon Component
+const WalletConnectIcon = ({ className }: { className?: string }) => (
+  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM11 16H13V14H15V12H13V10H11V12H9V14H11V16Z" fill="currentColor"/>
+  </svg>
+);
