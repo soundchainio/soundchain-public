@@ -13,6 +13,7 @@ interface ListingItem {
   saleType?: SaleType | undefined
   acceptsMATIC?: boolean | undefined
   acceptsOGUN?: boolean | undefined
+  chainId?: number | undefined // Added for multi-chain display
 }
 
 const buildMarketplaceFilter = (
@@ -20,6 +21,7 @@ const buildMarketplaceFilter = (
   saleType: SaleTypeLabel | undefined,
   acceptsMATIC: boolean | undefined,
   acceptsOGUN: boolean | undefined,
+  chainId: number | undefined
 ) => {
   const listingItem: ListingItem = {}
 
@@ -33,6 +35,10 @@ const buildMarketplaceFilter = (
 
   if (acceptsOGUN) {
     listingItem.acceptsOGUN = acceptsOGUN
+  }
+
+  if (chainId) {
+    listingItem.chainId = chainId
   }
 
   return {
@@ -56,6 +62,7 @@ export const Marketplace = () => {
   const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined)
   const [acceptsMATIC, setAcceptsMATIC] = useState<boolean | undefined>(undefined)
   const [acceptsOGUN, setAcceptsOGUN] = useState<boolean | undefined>(undefined)
+  const [chainId, setChainId] = useState<number | undefined>(undefined) // Added for chain selection
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
 
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
@@ -78,9 +85,9 @@ export const Marketplace = () => {
         first: pageSize,
       },
       sort: SelectToApolloQuery[sorting],
-      filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN),
+      filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN, chainId),
     })
-  }, [genres, saleType, refetch, sorting, acceptsMATIC, acceptsOGUN])
+  }, [genres, saleType, refetch, sorting, acceptsMATIC, acceptsOGUN, chainId])
 
   const loadMore = () => {
     fetchMore({
@@ -90,7 +97,7 @@ export const Marketplace = () => {
           after: data?.listingItems.pageInfo.endCursor,
         },
         sort: SelectToApolloQuery[sorting],
-        filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN),
+        filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN, chainId),
       },
     })
   }
@@ -109,6 +116,8 @@ export const Marketplace = () => {
         setAcceptsMATIC={setAcceptsMATIC}
         acceptsOGUN={acceptsOGUN}
         setAcceptsOGUN={setAcceptsOGUN}
+        chainId={chainId} // Added chainId to filter
+        setChainId={setChainId} // Added setChainId
         sorting={sorting}
         setSorting={setSorting}
       />
