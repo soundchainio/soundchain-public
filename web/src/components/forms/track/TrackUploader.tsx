@@ -12,7 +12,7 @@ export interface TrackUploaderProps {
   art?: string
 }
 
-const maxSize = 1024 * 1024 * 100 // 100Mb
+const maxSize = 1024 * 1024 * 500 // Updated to 500Mb
 
 const containerClasses = 'flex bg-black text-gray-30 border-gray-50 border-2 border-dashed rounded-md gap-4 p-4'
 
@@ -22,7 +22,7 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
 
   function onDrop<T extends File>([file]: T[], fileRejections: FileRejection[]) {
     if (fileRejections.length > 0) {
-      toast.error(fileRejections[0].errors[0].message.replace(`${maxSize.toString()} bytes`, '100mb'))
+      toast.error(fileRejections[0].errors[0].message.replace(`${(1024 * 1024 * 500).toString()} bytes`, '500mb'))
       return
     }
     setPreview(URL.createObjectURL(file))
@@ -33,8 +33,8 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
   const { getRootProps, getInputProps } = useDropzone({
     maxFiles: 1,
     multiple: false,
-    maxSize,
-    accept: audioMimeTypes,
+    maxSize: 1024 * 1024 * 500, // Updated to 500Mb
+    accept: { 'audio/*': audioMimeTypes, 'video/mp4': ['.mp4'] }, // Adjusted accept type
     onDrop,
   })
 
@@ -58,8 +58,8 @@ export const TrackUploader = ({ onFileChange, art }: TrackUploaderProps) => {
     <div {...getRootProps()} className={containerClasses}>
       <div className="mr-auto w-full text-gray-80">
         <MusicFile />
-        <p className="mt-1 text-xs font-bold">Upload music...</p>
-        <p className="text-xxs font-semibold">WAV,MP3,AIFF,FLAC,OGA (Max: 100mb)</p>
+        <p className="mt-1 text-xs font-bold">Upload music or video...</p>
+        <p className="text-xxs font-semibold">WAV,MP3,AIFF,FLAC,OGA,MP4 (Max: 500mb)</p> // Updated to include MP4 and 500mb
       </div>
       <div className="flex flex-shrink-0 flex-col justify-center">
         <JellyButton flavor="blueberry" icon={<UploadIcon color="blue" id="blue-gradient" />} className="text-xs">
