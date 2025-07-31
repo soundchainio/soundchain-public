@@ -13,7 +13,6 @@ import { MetaMask } from 'icons/MetaMask'
 import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 import { WalletConnect } from 'icons/WalletConnect'
 import { testnetNetwork } from 'lib/blockchainNetworks'
-import { GetServerSideProps } from 'next'
 import { useRouter } from 'next/router'
 import { useEffect, useRef, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
@@ -49,18 +48,6 @@ const tokenContractLP = (web3: Web3): Contract<AbiItem[]> => {
 }
 const tokenStakeContractLP = (web3: Web3): Contract<AbiItem[]> => {
   return new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], LPtokenStakeContractAddress)
-}
-
-// TODO: remove before enabling the ogun token stake
-export const getServerSideProps: GetServerSideProps = ({ res }) => {
-  if (res) {
-    res.statusCode = 404
-    res.end('Not found')
-  }
-
-  return Promise.resolve({
-    props: {},
-  })
 }
 
 export default function Stake() {
@@ -595,7 +582,7 @@ export default function Stake() {
         toastStyle={{
           backgroundColor: '#202020',
           color: 'white',
-          fontSize: '12x',
+          fontSize: '12px',
           textAlign: 'center',
         }}
       />

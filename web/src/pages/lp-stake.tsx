@@ -11,7 +11,6 @@ import { Matic } from 'icons/Matic'
 import { MetaMask } from 'icons/MetaMask'
 import { WalletConnect } from 'icons/WalletConnect'
 import { testnetNetwork } from 'lib/blockchainNetworks'
-import { GetServerSideProps } from 'next'
 import { useEffect, useState } from 'react'
 import { toast, ToastContainer } from 'react-toastify'
 import Web3 from 'web3'
@@ -42,19 +41,7 @@ const lpStakeContract = (web3: Web3): Contract<AbiItem[]> => {
   return new web3.eth.Contract(LiquidityPoolRewards.abi as AbiItem[], lpStakeContractAddress)
 }
 
-// TODO: remove before enabling the ogun token stake
-export const getServerSideProps: GetServerSideProps = ({ res }) => {
-  if (res) {
-    res.statusCode = 404
-    res.end('Not found')
-  }
-
-  return Promise.resolve({
-    props: {},
-  })
-}
-
-export default function Stake() {
+export default function LPStake() {
   const {
     connect: wcConnect,
     disconnect: wcDisconnect,
@@ -321,7 +308,6 @@ export default function Stake() {
       </div>
     )
   }
-
   const StakeTitle = () => {
     return (
       <>
