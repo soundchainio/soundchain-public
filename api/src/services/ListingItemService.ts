@@ -1,8 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { AuctionItem, AuctionItemModel } from '../models/AuctionItem';
 import { BuyNowItem, BuyNowItemModel } from '../models/BuyNowItem';
-// Remove or comment out if you no longer need ListingItem
-// import { ListingItem } from '../models/ListingItem';
 import { TrackModel } from '../models/Track';
 import { CurrencyType } from '../types/CurrencyType';
 import { TrackPrice } from '../types/TrackPrice';
@@ -10,42 +8,43 @@ import { getNow } from '../utils/Time';
 import { Service } from './Service';
 
 export class ListingItemService extends Service {
-  // Return AuctionItem | BuyNowItem | undefined instead of ListingItem | void
-  async getListingItem(tokenId: number, contractAddress: string): Promise<AuctionItem | BuyNowItem | undefined> {
-    // We can’t have lookup with uncorrelated queries, see AWS DocumentDB differences
-    const auctionItem = (await AuctionItemModel.findOne({ tokenId, nft: contractAddress, valid: true }))?.toObject();
-    const buyNowItem = (await BuyNowItemModel.findOne({ tokenId, nft: contractAddress, valid: true }))?.toObject();
+  // Return AuctionItem | BuyNowItem | undefined with chainId
+  async getListingItem(tokenId: number, contractAddress: string, chainId?: number): Promise<AuctionItem | BuyNowItem | undefined> {
+    const query = { tokenId, nft: contractAddress, valid: true };
+    if (chainId) query['chainId'] = chainId; // Add chainId filter
+    const auctionItem = (await AuctionItemModel.findOne(query))?.toObject();
+    const buyNowItem = (await BuyNowItemModel.findOne(query))?.toObject();
     return auctionItem ?? buyNowItem;
   }
 
-  // Same union type for getActiveListingItem
-  async getActiveListingItem(tokenId: number, contractAddress: string): Promise<AuctionItem | BuyNowItem | undefined> {
+  // Same union type for getActiveListingItem with chainId
+  async getActiveListingItem(tokenId: number, contractAddress: string, chainId?: number): Promise<AuctionItem | BuyNowItem | undefined> {
     const now = getNow();
-    const auctionItem = (
-      await AuctionItemModel.findOne({
-        tokenId,
-        nft: contractAddress,
-        valid: true,
-        endingTime: { $gte: now },
-      })
-    )?.toObject();
+    const query = { tokenId, nft: contractAddress, valid: true, endingTime: { $gte: now } };
+    if (chainId) query['chainId'] = chainId; // Add chainId filter
+    const auctionItem = (await AuctionItemModel.findOne(query))?.toObject();
     const buyNowItem = (await BuyNowItemModel.findOne({ tokenId, nft: contractAddress, valid: true }))?.toObject();
     return auctionItem ?? buyNowItem;
   }
 
-  async wasListedBefore(tokenId: number, contractAddress: string): Promise<boolean> {
-    const auctionItem = (await AuctionItemModel.findOne({ tokenId, nft: contractAddress }))?.toObject();
-    const buyNowItem = (await BuyNowItemModel.findOne({ tokenId, nft: contractAddress }))?.toObject();
+  async wasListedBefore(tokenId: number, contractAddress: string, chainId?: number): Promise<boolean> {
+    const query = { tokenId, nft: contractAddress };
+    if (chainId) query['chainId'] = chainId; // Add chainId filter
+    const auctionItem = (await AuctionItemModel.findOne(query))?.toObject();
+    const buyNowItem = (await BuyNowItemModel.findOne(query))?.toObject();
     return !!auctionItem || !!buyNowItem;
   }
 
-  // This method can remain unchanged if it doesn't need to return AuctionItem or BuyNowItem
-  async getCheapestListingItem(trackEditionId: string): Promise<TrackPrice> {
+  // Update getCheapestListingItem to include chainId
+  async getCheapestListingItem(trackEditionId: string, chainId?: number): Promise<TrackPrice> {
+    const matchQuery = {
+      trackEditionId: new ObjectId(trackEditionId),
+    };
+    if (chainId) matchQuery['chainId'] = chainId; // Add chainId filter
+
     const transactionNfts = await TrackModel.aggregate([
       {
-        $match: {
-          trackEditionId: new ObjectId(trackEditionId),
-        },
+        $match: matchQuery,
       },
       {
         $lookup: {
@@ -65,6 +64,7 @@ export class ListingItemService extends Service {
                 $and: [
                   { $eq: ['$$item.nft', '$nftData.contract'] },
                   { $eq: ['$$item.valid', true] },
+                  chainId ? { $eq: ['$$item.chainId', chainId] } : { $exists: true }, // ChainId filter
                 ],
               },
             },
