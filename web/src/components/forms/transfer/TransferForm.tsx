@@ -30,8 +30,9 @@ export interface FormValues {
   totalGasFee?: string
   isBulk?: boolean
   chainId?: number
-  listingType?: 'nft' | 'token'
+  listingType?: 'nft' | 'token' | 'bundle'
   tokenType?: string
+  bundleItems?: { type: 'nft' | 'token', amount: number, token?: string }[]
 }
 
 const validationSchema: yup.ObjectSchema<FormValues> = yup.object().shape({
@@ -51,6 +52,19 @@ const validationSchema: yup.ObjectSchema<FormValues> = yup.object().shape({
     is: 'token',
     then: yup.string().required('Select token type'),
     otherwise: yup.string().nullable(),
+  }),
+  bundleItems: yup.array().when('listingType', {
+    is: 'bundle',
+    then: yup.array().of(yup.object().shape({
+      type: yup.string().required(),
+      amount: yup.number().required(),
+      token: yup.string().when('type', {
+        is: 'token',
+        then: yup.string().required(),
+        otherwise: yup.string().nullable(),
+      }),
+    })).min(1).required(),
+    otherwise: yup.array().nullable(),
   }),
 })
 
@@ -84,7 +98,8 @@ export const TransferForm = ({ handleSubmit }: Props) => {
   const [gasPrice, setGasPrice] = useState<string>('')
   const [isGrid, setIsGrid] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const [showTokenModal, setShowTokenModal] = useState(false)
+  const [showBundleModal, setShowBundleModal] = useState(false)
+  const [bundleItems, setBundleItems] = useState<{ type: 'nft' | 'token', amount: number, token?: string }[]>([])
 
   useEffect(() => {
     if (web3) getCurrentGasPrice(web3).then(price => setGasPrice(price))
@@ -101,6 +116,7 @@ export const TransferForm = ({ handleSubmit }: Props) => {
     chainId: connectedChainId || 137,
     listingType: 'nft',
     tokenType: '',
+    bundleItems: [],
   }
 
   const copyAddress = () => {
@@ -108,15 +124,19 @@ export const TransferForm = ({ handleSubmit }: Props) => {
     alert('Wallet address copied!')
   }
 
-  const handleModalSubmit = (type: 'nft' | 'token') => {
+  const handleModalSubmit = (type: 'nft' | 'token' | 'bundle') => {
     setShowModal(false)
     setFieldValue('listingType', type)
-    if (type === 'token') setShowTokenModal(true)
+    if (type === 'bundle') setShowBundleModal(true)
   }
 
-  const handleTokenModalSubmit = (token: string) => {
-    setShowTokenModal(false)
-    setFieldValue('tokenType', token)
+  const handleBundleModalSubmit = () => {
+    setShowBundleModal(false)
+    setFieldValue('bundleItems', bundleItems)
+  }
+
+  const addBundleItem = (type: 'nft' | 'token', amount: number, token?: string) => {
+    setBundleItems([...bundleItems, { type, amount, token }])
   }
 
   return (
@@ -182,7 +202,7 @@ export const TransferForm = ({ handleSubmit }: Props) => {
                 variant="gray"
                 onClick={() => setShowModal(true)}
               >
-                {values.listingType === 'nft' ? 'NFT' : values.tokenType || 'Token'}
+                {values.listingType === 'nft' ? 'NFT' : values.listingType === 'token' ? values.tokenType || 'Token' : 'Bundle'}
               </Button>
               {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -190,25 +210,24 @@ export const TransferForm = ({ handleSubmit }: Props) => {
                     <h3>Choose Listing Type</h3>
                     <Button onClick={() => handleModalSubmit('nft')} variant="green">NFT</Button>
                     <Button onClick={() => handleModalSubmit('token')} variant="green">Token</Button>
+                    <Button onClick={() => handleModalSubmit('bundle')} variant="green">Bundle</Button>
                     <Button onClick={() => setShowModal(false)} variant="red">Cancel</Button>
                   </div>
                 </div>
               )}
-              {showTokenModal && values.listingType === 'token' && (
+              {showBundleModal && values.listingType === 'bundle' && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                   <div className="bg-white p-4 rounded">
-                    <h3>Select Token</h3>
-                    {tokens.map(token => (
-                      <Button
-                        key={token.name}
-                        onClick={() => handleTokenModalSubmit(token.name)}
-                        variant="green"
-                        className="m-1"
-                      >
-                        {token.name} <token.icon className="w-4 h-4 inline" />
-                      </Button>
-                    ))}
-                    <Button onClick={() => setShowTokenModal(false)} variant="red">Cancel</Button>
+                    <h3>Add Bundle Items</h3>
+                    <Button onClick={() => addBundleItem('nft', 1)} variant="green">Add NFT</Button>
+                    <Button onClick={() => addBundleItem('token', 1)} variant="green">Add Token</Button>
+                    <ul>
+                      {bundleItems.map((item, index) => (
+                        <li key={index}>{item.type} x{item.amount} {item.token}</li>
+                      ))}
+                    </ul>
+                    <Button onClick={handleBundleModalSubmit} variant="green">Save Bundle</Button>
+                    <Button onClick={() => setShowBundleModal(false)} variant="red">Cancel</Button>
                   </div>
                 </div>
               )}
@@ -222,7 +241,7 @@ export const TransferForm = ({ handleSubmit }: Props) => {
                 </div>
               </div>
               <p className="py-6 text-left text-xs text-gray-80">
-                Gas fees + 0.05% SoundChain fee apply. Fees fluctuate with traffic.
+                Gas fees + 0.05% SoundChain fee apply. Earn OGUN rewards on bundles!
               </p>
             </div>
             <div className="flex space-x-4">
