@@ -1,11 +1,11 @@
 import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
-import { Ogun } from 'components/Ogun'
+import { Ogun } from '/Users/soundchain/Documents/soundchain/icons/Ogun' // Adjusted path
 import { Form, Formik } from 'formik'
 import useBlockchain, { gas } from 'hooks/useBlockchain'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
-import { Logo } from 'icons/Logo'
+import { Logo } from '/Users/soundchain/Documents/soundchain/icons/IconSvgDirectory'
 import { useEffect, useState } from 'react'
 import * as yup from 'yup'
 
@@ -17,7 +17,7 @@ export interface FormValues {
   totalGasFee?: string
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema = yup.object().shape({
   recipient: yup.string().required('Please enter a valid wallet address'),
   amount: yup.string().required('Please enter an OGUN amount'),
   gasPrice: yup.string().default(''),
@@ -63,7 +63,7 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      <Form className="flex h-full w-full flex-col justify-between" autoComplete="off" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+      <Form className="flex h-full w-full flex-col justify-between" autoComplete="off">
         <div className="mb-auto flex h-full flex-col justify-between space-y-6 p-5">
           <div className="flex flex-col justify-between space-y-8">
             <div className="space-y-2">
@@ -83,12 +83,12 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
                 placeholder="00.00"
                 min="0"
                 step="0.000000000000000001"
-                icon={Logo}
+                icon={() => <Logo />}
               />
             </div>
             <div>
               <div className="space-y-3">
-                <span className="text-sm font-bold uppercase text-gray-80">Estimated Gas Fee: </span>
+                <span className="text-sm font-bold uppercase text-gray-80">Estimated Gas Fee:</span>
                 <div className="flex space-x-4">
                   <div className="space-y-1">
                     <InputField type="text" label="gas price" name="gasPrice" value={gasPrice} disabled />
@@ -110,7 +110,7 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
           </div>
         </div>
         <div className="flex justify-between bg-black p-5">
-          <Ogun value={OGUNBalance} />
+          <Logo />
           <div className="w-6/12">
             <Button className="p-1" type="submit" variant="orange">
               SEND TOKENS
