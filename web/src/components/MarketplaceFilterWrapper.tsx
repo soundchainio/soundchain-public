@@ -11,20 +11,20 @@ import { SaleTypeLabel } from 'utils/SaleTypeLabel'
 import { Badge } from './common/Badges/Badge'
 import { FilterComponent } from './Filter/Filter'
 
-type FilterWrapperProps = {
-  totalCount?: number
-  isGrid?: boolean
-  genres?: GenreLabel[]
-  saleType?: SaleTypeLabel
-  sorting: SortListingItem
-  acceptsMATIC?: boolean
-  acceptsOGUN?: boolean
-  setSorting: Dispatch<SetStateAction<SortListingItem>>
-  setSaleType: Dispatch<SetStateAction<SaleTypeLabel | undefined>>
-  setGenres: Dispatch<SetStateAction<GenreLabel[] | undefined>>
-  setAcceptsMATIC: Dispatch<SetStateAction<boolean | undefined>>
-  setAcceptsOGUN: Dispatch<SetStateAction<boolean | undefined>>
-  setIsGrid: Dispatch<SetStateAction<boolean>>
+interface FilterWrapperProps {
+  totalCount?: number; // Optional prop for total item count
+  isGrid?: boolean;
+  setIsGrid: React.Dispatch<React.SetStateAction<boolean>>;
+  genres?: GenreLabel[];
+  setGenres: React.Dispatch<React.SetStateAction<GenreLabel[] | undefined>>;
+  saleType?: SaleTypeLabel;
+  setSaleType: React.Dispatch<React.SetStateAction<SaleTypeLabel | undefined>>;
+  acceptsMATIC?: boolean;
+  setAcceptsMATIC: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+  acceptsOGUN?: boolean;
+  setAcceptsOGUN: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+  sorting: SortListingItem;
+  setSorting: React.Dispatch<React.SetStateAction<SortListingItem>>;
 }
 
 export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
