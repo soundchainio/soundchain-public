@@ -52,7 +52,7 @@ export function ImageUpload({
       maxFiles={maxNumberOfFiles}
       multiple={false}
       maxSize={maxFileSize}
-      accept={accept}
+      accept={{ 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'] }}
       onDrop={upload}
       disabled={uploading}
     >
