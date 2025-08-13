@@ -1,20 +1,25 @@
 /* eslint-disable react/display-name */
 
-import { useModalDispatch } from 'contexts/providers/modal'
-import { Filter } from 'icons/Filter'
-import { GridView as GridViewIcon } from 'icons/GridView'
-import { ListView as ListViewIcon } from 'icons/ListView'
-import { SortListingItem } from 'lib/apollo/sorting'
-import { Dispatch, memo, SetStateAction } from 'react'
-import { GenreLabel } from 'utils/Genres'
-import { SaleTypeLabel } from 'utils/SaleTypeLabel'
-import { Badge } from './common/Badges/Badge'
-import { FilterComponent } from './Filter/Filter'
+import { useModalDispatch } from 'contexts/providers/modal';
+import { Filter } from 'icons/Filter';
+import { GridView as GridViewIcon } from 'icons/GridView';
+import { ListView as ListViewIcon } from 'icons/ListView';
+import { SortListingItem } from 'lib/apollo/sorting';
+import { Dispatch, memo, SetStateAction, useEffect, useState } from 'react';
+import { GenreLabel } from 'utils/Genres';
+import { SaleTypeLabel } from 'utils/SaleTypeLabel';
+import { Badge } from './common/Badges/Badge';
+import { FilterComponent } from './Filter/Filter';
+
+const categories = ['genres', 'most popular', 'new mints', 'airdrops', 'exclusives'] as const;
+type Category = typeof categories[number];
 
 interface FilterWrapperProps {
-  totalCount?: number; // Optional prop for total item count
-  isGrid?: boolean;
-  setIsGrid: React.Dispatch<React.SetStateAction<boolean>>;
+  totalCount?: number;
+  viewMode?: 'grid' | 'list' | 'single';
+  setViewMode: React.Dispatch<React.SetStateAction<'grid' | 'list' | 'single'>>;
+  selectedCategory?: Category;
+  setSelectedCategory: React.Dispatch<React.SetStateAction<Category | undefined>>;
   genres?: GenreLabel[];
   setGenres: React.Dispatch<React.SetStateAction<GenreLabel[] | undefined>>;
   saleType?: SaleTypeLabel;
@@ -23,108 +28,150 @@ interface FilterWrapperProps {
   setAcceptsMATIC: React.Dispatch<React.SetStateAction<boolean | undefined>>;
   acceptsOGUN?: boolean;
   setAcceptsOGUN: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+  chainId?: number;
+  setChainId: React.Dispatch<React.SetStateAction<number | undefined>>;
   sorting: SortListingItem;
   setSorting: React.Dispatch<React.SetStateAction<SortListingItem>>;
 }
 
 export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
   const {
+    totalCount,
+    viewMode,
+    setViewMode,
+    selectedCategory,
+    setSelectedCategory,
     genres,
+    setGenres,
     saleType,
+    setSaleType,
     acceptsMATIC,
+    setAcceptsMATIC,
     acceptsOGUN,
+    setAcceptsOGUN,
+    chainId,
+    setChainId,
     sorting,
     setSorting,
-    setSaleType,
-    setGenres,
-    setAcceptsMATIC,
-    setAcceptsOGUN,
-    isGrid,
-    setIsGrid,
-    totalCount = 0,
-  } = props
+  } = props;
 
-  const { dispatchShowFilterMarketplaceModal } = useModalDispatch()
+  const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
+
+  const [localGenres, setLocalGenres] = useState<GenreLabel[] | undefined>(genres);
+  const [localSaleType, setLocalSaleType] = useState<SaleTypeLabel | undefined>(saleType);
+  const [localAcceptsMATIC, setLocalAcceptsMATIC] = useState<boolean | undefined>(acceptsMATIC);
+  const [localAcceptsOGUN, setLocalAcceptsOGUN] = useState<boolean | undefined>(acceptsOGUN);
+  const [localChainId, setLocalChainId] = useState<number | undefined>(chainId);
+  const [localSorting, setLocalSorting] = useState<SortListingItem>(sorting);
+  const [localViewMode, setLocalViewMode] = useState<'grid' | 'list' | 'single'>(viewMode || 'grid');
+  const [localSelectedCategory, setLocalSelectedCategory] = useState<Category | undefined>(selectedCategory);
+
+  useEffect(() => {
+    setGenres(localGenres);
+    setSaleType(localSaleType);
+    setAcceptsMATIC(localAcceptsMATIC);
+    setAcceptsOGUN(localAcceptsOGUN);
+    setChainId(localChainId);
+    setSorting(localSorting);
+    setViewMode(localViewMode);
+    setSelectedCategory(localSelectedCategory);
+  }, [localGenres, localSaleType, localAcceptsMATIC, localAcceptsOGUN, localChainId, localSorting, localViewMode, localSelectedCategory, setGenres, setSaleType, setAcceptsMATIC, setAcceptsOGUN, setChainId, setSorting, setViewMode, setSelectedCategory]);
 
   return (
     <div className="w-full">
-      <div className="flex w-full items-center justify-center gap-2 bg-gray-15 p-4">
-        <div className="flex-1">
-          <span className="text-sm font-bold text-white">{`${totalCount} `} </span>
-          <span className="text-sm text-gray-80">Tracks</span>
+      <div className="flex flex-col w-full">
+        <div className="flex overflow-x-auto space-x-2 p-2 bg-gray-200">
+          {categories.map((category) => (
+            <button
+              key={category}
+              className={`px-4 py-2 rounded ${localSelectedCategory === category ? 'bg-blue-500 text-white' : 'bg-gray-300'}`}
+              onClick={() => setLocalSelectedCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
         </div>
+        <div className="flex w-full items-center justify-center gap-2 bg-gray-15 p-4">
+          <div className="flex-1">
+            <span className="text-sm font-bold text-white">{`${totalCount || 0} `}</span>
+            <span className="text-sm text-gray-80">Tracks</span>
+          </div>
 
-        <button
-          className="hidden items-center justify-center p-2 md:flex"
-          onClick={() => dispatchShowFilterMarketplaceModal(true, genres, saleType, acceptsMATIC, acceptsOGUN)}
-        >
-          <Filter />
-          <span className="pl-1 text-xs font-bold text-white">Filter</span>
-        </button>
+          <button
+            className="hidden items-center justify-center p-2 md:flex"
+            onClick={() => dispatchShowFilterMarketplaceModal({ show: true, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN })}
+          >
+            <Filter />
+            <span className="pl-1 text-xs font-bold text-white">Filter</span>
+          </button>
 
-        <FilterComponent sorting={sorting} setSorting={setSorting} />
+          <FilterComponent sorting={localSorting} setSorting={setLocalSorting} />
 
-        <button aria-label="List view">
-          <ListViewIcon color={isGrid ? undefined : 'rainbow'} onClick={() => setIsGrid(false)} />
-        </button>
-        <button aria-label="Grid view">
-          <GridViewIcon color={isGrid ? 'rainbow' : undefined} onClick={() => setIsGrid(true)} />
-        </button>
+          <button aria-label="List view">
+            <ListViewIcon color={localViewMode === 'list' ? 'rainbow' : undefined} onClick={() => setLocalViewMode('list')} />
+          </button>
+          <button aria-label="Grid view (9 cards)">
+            <GridViewIcon color={localViewMode === 'grid' ? 'rainbow' : undefined} onClick={() => setLocalViewMode('grid')} />
+          </button>
+          <button aria-label="Single NFT view">
+            <ListViewIcon color={localViewMode === 'single' ? 'rainbow' : undefined} onClick={() => setLocalViewMode('single')} />
+          </button>
+        </div>
       </div>
 
       <div className="flex w-full items-center justify-between gap-2 bg-black p-2 md:hidden">
         <button
           className="flex items-center justify-center p-2"
-          onClick={() => dispatchShowFilterMarketplaceModal(true, genres, saleType, undefined, undefined)}
+          onClick={() => dispatchShowFilterMarketplaceModal({ show: true, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN })}
         >
           <Filter />
           <span className="pl-1 text-xs font-bold text-white">Filter</span>
         </button>
-        <FilterComponent sorting={sorting} setSorting={setSorting} mobile noMarginRight />
+        <FilterComponent sorting={localSorting} setSorting={setLocalSorting} mobile noMarginRight />
       </div>
 
-      {(saleType || Boolean(genres?.length) || acceptsMATIC || acceptsOGUN) && (
+      {(localSaleType || Boolean(localGenres?.length) || localAcceptsMATIC || localAcceptsOGUN) && (
         <div className="flex flex-wrap gap-2 p-4">
-          {saleType && (
+          {localSaleType && (
             <Badge
-              label={saleType.label}
+              label={localSaleType.label}
               onDelete={() => {
-                dispatchShowFilterMarketplaceModal(false, genres, undefined, acceptsMATIC, acceptsOGUN)
-                setSaleType(undefined)
+                setLocalSaleType(undefined);
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: undefined, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN });
               }}
             />
           )}
-          {genres?.map(genre => (
+          {localGenres?.map(genre => (
             <Badge
               key={genre.key}
               label={genre.label}
               onDelete={() => {
-                const newGenres = genres.filter(it => it !== genre)
-                dispatchShowFilterMarketplaceModal(false, newGenres, saleType, acceptsMATIC, acceptsOGUN)
-                setGenres(newGenres)
+                const newGenres = localGenres.filter(it => it !== genre);
+                setLocalGenres(newGenres);
+                dispatchShowFilterMarketplaceModal({ show: false, genres: newGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN });
               }}
             />
           ))}
-          {acceptsMATIC && (
+          {localAcceptsMATIC && (
             <Badge
               label={'MATIC'}
               onDelete={() => {
-                dispatchShowFilterMarketplaceModal(false, genres, saleType, undefined, undefined)
-                setAcceptsMATIC(undefined)
+                setLocalAcceptsMATIC(undefined);
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: undefined, acceptsOGUN: localAcceptsOGUN });
               }}
             />
           )}
-          {acceptsOGUN && (
+          {localAcceptsOGUN && (
             <Badge
               label={'OGUN'}
               onDelete={() => {
-                dispatchShowFilterMarketplaceModal(false, genres, saleType, undefined, undefined)
-                setAcceptsOGUN(undefined)
+                setLocalAcceptsOGUN(undefined);
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: undefined });
               }}
             />
           )}
         </div>
       )}
     </div>
-  )
-})
+  );
+});

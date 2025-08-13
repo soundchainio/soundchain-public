@@ -19,7 +19,7 @@ export interface FormValues {
   body: UpdateCommentInput['body']
 }
 
-const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const postSchema: yup.Schema<FormValues> = yup.object().shape({
   body: yup.string().required().max(160),
 })
 
@@ -52,7 +52,7 @@ export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFor
       onSubmit={onSubmit}
     >
       {({ setFieldValue, isValid }) => (
-        <Form className="flex h-full flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="flex h-full flex-col">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
             <div className="flex-1 p-2 text-center font-bold text-gray-400" onClick={() => onCancel(setFieldValue)}>
               Cancel
@@ -60,7 +60,7 @@ export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFor
             <div className="flex-1 text-center font-bold text-white">Edit Comment</div>
             <div className="m-2 flex-1 text-center">
               <div className="ml-6">
-                <Button className="bg-gray-30 text-sm " type="submit" disabled={!isValid} variant="rainbow-rounded">
+                <Button className="bg-gray-30 text-sm" type="submit" disabled={!isValid} variant="rainbow-rounded">
                   Save
                 </Button>
               </div>

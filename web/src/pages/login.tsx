@@ -16,6 +16,51 @@ import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { isApolloError } from '@apollo/client'
+import styled from 'styled-components'
+
+// Styled components for polished foreground
+const Overlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+  z-index: 1;
+`
+
+const ContentContainer = styled.div`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: 0 1rem;
+`
+
+const HoverableButton = styled(Button)`
+  transition: all 0.3s ease;
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5); /* Gold glow */
+    background: linear-gradient(45deg, #ffcc00, #ffeb3b);
+    color: #000;
+  }
+`
+
+const HoverableInput = styled.input`
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  &:hover {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+`
 
 export default function LoginPage() {
   const [login] = useLoginMutation()
@@ -28,9 +73,8 @@ export default function LoginPage() {
   const magicParam = router.query.magic_credential?.toString()
   const [authMethod, setAuthMethod] = useState<AuthMethod[]>()
   const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext()
-  const [isClient, setIsClient] = useState(false) // Add state to track client-side rendering
+  const [isClient, setIsClient] = useState(false)
 
-  // Ensure rendering only happens after hydration
   useEffect(() => {
     setIsClient(true)
   }, [])
@@ -96,7 +140,7 @@ export default function LoginPage() {
         try {
           setLoggingIn(true)
           setError(null)
-          await magic.auth.loginWithCredential() // Complete magic link auth
+          await magic.auth.loginWithCredential()
           const didToken = await magic.user.getIdToken()
           const loginResult = await login({ variables: { input: { token: didToken } } })
           setJwt(loginResult.data?.login.jwt)
@@ -144,18 +188,18 @@ export default function LoginPage() {
   }
 
   const GoogleButton = () => (
-    <button
+    <HoverableButton
+      variant="default"
       className="flex gap-2 rounded border border-gray-30 bg-gray-1A px-3 py-4 text-sm font-semibold text-white"
       onClick={handleGoogleLogin}
     >
       <Google className="mr-1 h-5 w-5" />
       <span>Login with Google</span>
-    </button>
+    </HoverableButton>
   )
 
-  // Avoid rendering until the client has hydrated
   if (!isClient) {
-    return null // Render nothing on the server until the client is ready
+    return null
   }
 
   if (loadingMe || (me && !loggingIn)) {
@@ -185,28 +229,30 @@ export default function LoginPage() {
     return (
       <>
         <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
-        <div className="flex justify-center pt-32 pb-6">
-          <UserWarning />
-        </div>
-        <div className="py-4 text-center text-sm text-white">
-          An account already exists with that email.
-          <br />
-          <br />
-          If you wish to login to an existing account, you must login using the same login method you used
-          previously:
-        </div>
-        {authMethod.includes(AuthMethod.Google) && <GoogleButton />}
-        {authMethod.includes(AuthMethod.MagicLink) && <LoginForm handleMagicLogin={handleSubmit} />}
-        <div className="flex h-full flex-col justify-between">
-          <div className="py-4 text-center text-sm text-white">
-            Alternatively, you may continue by creating a new account with the same email.
+        <Overlay />
+        <ContentContainer>
+          <div className="flex justify-center pt-32 pb-6">
+            <UserWarning className="text-yellow-400" />
           </div>
-          <NextLink href="/create-account">
-            <Button variant="rainbow" borderColor="bg-purple-gradient">
-              CREATE NEW ACCOUNT
-            </Button>
-          </NextLink>
-        </div>
+          <div className="py-4 text-center text-sm text-white font-semibold">
+            An account already exists with that email.
+            <br />
+            <br />
+            If you wish to login to an existing account, you must use the same method previously:
+          </div>
+          {authMethod.includes(AuthMethod.Google) && <GoogleButton />}
+          {authMethod.includes(AuthMethod.MagicLink) && <LoginForm handleMagicLogin={handleSubmit} />}
+          <div className="flex h-full flex-col justify-between">
+            <div className="py-4 text-center text-sm text-white font-semibold">
+              Or create a new account with the same email.
+            </div>
+            <NextLink href="/create-account">
+              <HoverableButton variant="rainbow" borderColor="bg-purple-gradient">
+                CREATE NEW ACCOUNT
+              </HoverableButton>
+            </NextLink>
+          </div>
+        </ContentContainer>
       </>
     )
   }
@@ -214,13 +260,25 @@ export default function LoginPage() {
   return (
     <>
       <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
-      <div className="mb-2 flex h-36 items-center justify-center">
-        <LogoAndText />
+      <div
+        className="relative flex min-h-screen w-full flex-col items-center justify-center bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url('/images/login-background.gif')` }}
+      >
+        <Overlay />
+        <ContentContainer>
+          <div className="mb-2 flex h-36 items-center justify-center">
+            <LogoAndText className="text-white filter drop-shadow-lg" />
+          </div>
+          {error && (
+            <div className="py-4 text-center text-sm text-red-500 font-semibold drop-shadow-md">
+              {error}
+            </div>
+          )}
+          <GoogleButton />
+          <div className="py-7 text-center text-sm font-bold text-gray-50 drop-shadow-md">OR</div>
+          <LoginForm handleMagicLogin={handleSubmit} />
+        </ContentContainer>
       </div>
-      {error && <div className="py-4 text-center text-sm text-red-500">{error}</div>}
-      <GoogleButton />
-      <div className="py-7 text-center text-sm font-bold text-gray-50">OR</div>
-      <LoginForm handleMagicLogin={handleSubmit} />
     </>
   )
 }
