@@ -1,33 +1,32 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button } from 'components/common/Buttons/Button'
-import { LoaderAnimation } from 'components/LoaderAnimation'
-import { FormValues, LoginForm } from 'components/LoginForm'
-import SEO from 'components/SEO'
-import { TopNavBarButton } from 'components/TopNavBarButton'
-import { config } from 'config'
-import { useLayoutContext } from 'hooks/useLayoutContext'
-import { useMagicContext } from 'hooks/useMagicContext'
-import { Google } from 'icons/Google'
-import { LeftArrow } from 'icons/LeftArrow'
-import { LogoAndText } from 'icons/LogoAndText'
-import { UserWarning } from 'icons/UserWarning'
-import { setJwt } from 'lib/apollo'
-import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql'
-import NextLink from 'next/link'
-import { useRouter } from 'next/router'
-import { isApolloError } from '@apollo/client'
-import styled from 'styled-components'
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button } from 'components/common/Buttons/Button';
+import { LoaderAnimation } from 'components/LoaderAnimation';
+import { FormValues, LoginForm } from 'components/LoginForm';
+import SEO from 'components/SEO';
+import { TopNavBarButton } from 'components/TopNavBarButton';
+import { config } from 'config';
+import { useLayoutContext } from 'hooks/useLayoutContext';
+import { useMagicContext } from 'hooks/useMagicContext';
+import { Google } from 'icons/Google';
+import { LeftArrow } from 'icons/LeftArrow';
+import { LogoAndText } from 'icons/LogoAndText';
+import { UserWarning } from 'icons/UserWarning';
+import { setJwt } from 'lib/apollo';
+import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql';
+import NextLink from 'next/link';
+import { useRouter } from 'next/router';
+import { isApolloError } from '@apollo/client';
+import styled from 'styled-components';
 
-// Styled components for polished foreground
 const Overlay = styled.div`
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+  background: rgba(0, 0, 0, 0.5);
   z-index: 1;
-`
+`;
 
 const ContentContainer = styled.div`
   position: relative;
@@ -39,17 +38,17 @@ const ContentContainer = styled.div`
   min-height: 100vh;
   width: 100%;
   padding: 0 1rem;
-`
+`;
 
 const HoverableButton = styled(Button)`
   transition: all 0.3s ease;
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5); /* Gold glow */
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
     background: linear-gradient(45deg, #ffcc00, #ffeb3b);
     color: #000;
   }
-`
+`;
 
 const HoverableInput = styled.input`
   transition: all 0.3s ease;
@@ -60,24 +59,24 @@ const HoverableInput = styled.input`
     border-color: #ffd700;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   }
-`
+`;
 
 export default function LoginPage() {
-  const [login] = useLoginMutation()
-  const [loggingIn, setLoggingIn] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const { data, loading: loadingMe } = useMeQuery()
-  const me = data?.me
-  const { magic } = useMagicContext()
-  const router = useRouter()
-  const magicParam = router.query.magic_credential?.toString()
-  const [authMethod, setAuthMethod] = useState<AuthMethod[]>()
-  const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext()
-  const [isClient, setIsClient] = useState(false)
+  const [login] = useLoginMutation();
+  const [loggingIn, setLoggingIn] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { data, loading: loadingMe } = useMeQuery();
+  const me = data?.me;
+  const { magic } = useMagicContext();
+  const router = useRouter();
+  const magicParam = router.query.magic_credential?.toString();
+  const [authMethod, setAuthMethod] = useState<AuthMethod[]>();
+  const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true)
-  }, [])
+    setIsClient(true);
+  }, []);
 
   const topNavBarProps = useMemo(
     () => ({
@@ -85,105 +84,106 @@ export default function LoginPage() {
       leftButton: <TopNavBarButton onClick={() => setAuthMethod(undefined)} label="Back" icon={LeftArrow} />,
     }),
     [],
-  )
+  );
 
   const handleError = useCallback(
     (error: Error) => {
-      setLoggingIn(false)
-      console.error('Login error:', error)
+      setLoggingIn(false);
+      console.error('Login error:', error);
       if (isApolloError(error) && error.message === 'already exists') {
-        const authMethodFromError = error.graphQLErrors?.find((err) => err.extensions?.with)?.extensions?.with
-        setAuthMethod(authMethodFromError ? [authMethodFromError] : undefined)
+        const authMethodFromError = error.graphQLErrors?.find((err) => err.extensions?.with)?.extensions?.with;
+        setAuthMethod(authMethodFromError ? [authMethodFromError] : undefined);
       } else if (error.message.toLowerCase().includes('invalid credentials')) {
-        router.push('/create-account')
+        router.push('/create-account');
       } else {
-        setError(error.message || 'An unexpected error occurred during login')
-        console.warn('Login error details:', error)
+        setError(error.message || 'An unexpected error occurred during login');
+        console.warn('Login error details:', error);
       }
     },
     [router],
-  )
+  );
 
   useEffect(() => {
-    setTopNavBarProps(authMethod ? topNavBarProps : { isLogin: true })
-    setIsAuthLayout(true)
+    setTopNavBarProps(authMethod ? topNavBarProps : { isLogin: true });
+    setIsAuthLayout(true);
     return () => {
-      setIsAuthLayout(false)
-    }
-  }, [setTopNavBarProps, setIsAuthLayout, authMethod, topNavBarProps])
+      setIsAuthLayout(false);
+    };
+  }, [setTopNavBarProps, setIsAuthLayout, authMethod, topNavBarProps]);
 
   useEffect(() => {
     if (me && !loadingMe) {
-      const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin
-      router.push(redirectUrl)
+      const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+      router.push(redirectUrl);
     }
-  }, [me, loadingMe, router])
+  }, [me, loadingMe, router]);
 
   const handleGoogleLogin = async () => {
     try {
-      if (!magic) throw new Error('Magic SDK not initialized')
-      setLoggingIn(true)
-      setError(null)
+      if (!magic) throw new Error('Magic SDK not initialized');
+      setLoggingIn(true);
+      setError(null);
       await magic.oauth.loginWithRedirect({
         provider: 'google',
         redirectURI: 'https://soundchain.io/login',
         scope: ['openid'],
-      })
+      });
     } catch (error) {
-      handleError(error as Error)
+      handleError(error as Error);
     }
-  }
+  };
 
   useEffect(() => {
     async function handleMagicLink() {
       if (magic && magicParam && !loggingIn) {
         try {
-          setLoggingIn(true)
-          setError(null)
-          await magic.auth.loginWithCredential()
-          const didToken = await magic.user.getIdToken()
-          const loginResult = await login({ variables: { input: { token: didToken } } })
-          setJwt(loginResult.data?.login.jwt)
-          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin
-          router.push(redirectUrl)
+          setLoggingIn(true);
+          setError(null);
+          await magic.auth.loginWithCredential();
+          const didToken = await magic.user.getIdToken();
+          console.log('Received didToken (credential):', didToken); // Added logging
+          localStorage.setItem('didToken', didToken); // Persist token
+          const loginResult = await login({ variables: { input: { token: didToken } } });
+          setJwt(loginResult.data?.login.jwt);
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          router.push(redirectUrl);
         } catch (error) {
-          handleError(error as Error)
+          handleError(error as Error);
         } finally {
-          setLoggingIn(false)
+          setLoggingIn(false);
         }
       }
     }
-    handleMagicLink()
-  }, [magic, magicParam, login, handleError])
+    handleMagicLink();
+  }, [magic, magicParam, login, handleError]);
 
   async function handleSubmit(values: FormValues) {
     try {
-      if (!magic) throw new Error('Magic SDK not initialized')
-      console.log('Starting login process for email:', values.email)
-      setLoggingIn(true)
-      setError(null)
-      await magic.preload()
-      console.log('Magic preload completed')
+      if (!magic) throw new Error('Magic SDK not initialized');
+      console.log('Starting login process for email:', values.email);
+      setLoggingIn(true);
+      setError(null);
+      await magic.preload();
+      console.log('Magic preload completed');
 
-      const didToken = await magic.auth.loginWithEmailOTP({
-        email: values.email,
-      })
-      console.log('Magic loginWithEmailOTP completed, token:', didToken)
+      const didToken = await magic.auth.loginWithEmailOTP({ email: values.email });
+      console.log('Received didToken (email OTP):', didToken); // Added logging
+      localStorage.setItem('didToken', didToken); // Persist token
 
       if (!didToken) {
-        throw new Error('Error connecting Magic: No token returned')
+        throw new Error('Error connecting Magic: No token returned');
       }
 
-      const result = await login({ variables: { input: { token: didToken } } })
-      console.log('GraphQL login mutation result:', result)
-      setJwt(result.data?.login.jwt)
-      const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin
-      console.log('Redirecting to:', redirectUrl)
-      router.push(redirectUrl)
+      const result = await login({ variables: { input: { token: didToken } } });
+      console.log('GraphQL login mutation result:', result);
+      setJwt(result.data?.login.jwt);
+      const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+      console.log('Redirecting to:', redirectUrl);
+      router.push(redirectUrl);
     } catch (error) {
-      console.error('Login error:', error)
-      handleError(error as Error)
-      setLoggingIn(false)
+      console.error('Login error:', error);
+      handleError(error as Error);
+      setLoggingIn(false);
     }
   }
 
@@ -196,10 +196,10 @@ export default function LoginPage() {
       <Google className="mr-1 h-5 w-5" />
       <span>Login with Google</span>
     </HoverableButton>
-  )
+  );
 
   if (!isClient) {
-    return null
+    return null;
   }
 
   if (loadingMe || (me && !loggingIn)) {
@@ -210,7 +210,7 @@ export default function LoginPage() {
           <LoaderAnimation ring />
         </div>
       </>
-    )
+    );
   }
 
   if (loggingIn) {
@@ -222,7 +222,7 @@ export default function LoginPage() {
           <span className="text-white">Logging in</span>
         </div>
       </>
-    )
+    );
   }
 
   if (authMethod) {
@@ -254,7 +254,7 @@ export default function LoginPage() {
           </div>
         </ContentContainer>
       </>
-    )
+    );
   }
 
   return (
@@ -280,5 +280,5 @@ export default function LoginPage() {
         </ContentContainer>
       </div>
     </>
-  )
+  );
 }
