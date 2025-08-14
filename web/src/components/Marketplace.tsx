@@ -1,4 +1,4 @@
-k/* eslint-disable react/display-name */
+/* eslint-disable react/display-name */
 import { GridView } from 'components/GridView/GridView';
 import { ListView } from 'components/ListView';
 import { useModalState, useModalDispatch } from 'contexts/providers/modal';
