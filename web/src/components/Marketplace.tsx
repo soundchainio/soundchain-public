@@ -143,7 +143,7 @@ const fetchAggregatorData = async (chainId: number | undefined): Promise<{ [toke
       id: 1,
     });
     const prices = priceResponse.data.result;
-    const rates = prices.reduce((acc, token) => {
+    const rates = prices.reduce((acc: { [token: string]: number }, token: { symbol: string; price?: number }) => {
       acc[token.symbol] = token.price || mockConversionRates[token.symbol] || 1;
       return acc;
     }, {} as { [token: string]: number });
