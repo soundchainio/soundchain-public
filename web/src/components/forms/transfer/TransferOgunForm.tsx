@@ -1,11 +1,11 @@
 import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
-import { Ogun } from '/Users/soundchain/Documents/soundchain/icons/Ogun' // Adjusted path
+import { Ogun } from 'icons/Ogun'
 import { Form, Formik } from 'formik'
 import useBlockchain, { gas } from 'hooks/useBlockchain'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
-import { Logo } from '/Users/soundchain/Documents/soundchain/icons/IconSvgDirectory'
+import { Logo } from 'icons/IconSvgDirectory'
 import { useEffect, useState } from 'react'
 import * as yup from 'yup'
 

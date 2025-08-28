@@ -4,6 +4,7 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
+    "types": ["node", "react", "react-dom"], // Keep for dependency support
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
@@ -13,12 +14,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "baseUrl": "./src",
+    "baseUrl": "./src", // Match legacy root
     "incremental": true,
     "paths": {
-      "*": ["*", "components/common/Buttons/FavoriteTrack/*"]
+      "*": ["*"] // Simplify paths, rely on baseUrl
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules/react-datepicker/**"]
 }

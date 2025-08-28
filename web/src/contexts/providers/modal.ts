@@ -1,22 +1,23 @@
-import { ModalActionTypes } from 'contexts/actions/modal'
-import { initialModalState, ModalState } from 'contexts/reducers/modal'
-import { ReactionType } from 'lib/graphql'
-import { useContext } from 'react'
-import { AuthorActionsType } from 'types/AuthorActionsType'
-import { SaleType } from 'types/SaleType'
-import { GenreLabel } from 'utils/Genres'
-import { SaleTypeLabel } from 'utils/SaleTypeLabel'
-import { store } from '..'
-import { ShowConfirmDeleteEdition, ShowRemoveListing, ShowTransferNftConfirmationPayload } from '../payloads/modal'
+/* eslint-disable react/display-name */
+import { ModalActionTypes } from 'contexts/actions/modal';
+import { initialModalState, ModalState } from 'contexts/reducers/modal';
+import { ReactionType } from 'lib/graphql';
+import { useContext } from 'react';
+import { AuthorActionsType } from 'types/AuthorActionsType';
+import { SaleType } from 'types/SaleType';
+import { GenreLabel } from 'utils/Genres';
+import { SaleTypeLabel } from 'utils/SaleTypeLabel';
+import { store } from '..';
+import { ShowConfirmDeleteEdition, ShowRemoveListing, ShowTransferNftConfirmationPayload } from '../payloads/modal';
 
 export const useModalState = (): ModalState => {
-  const { state } = useContext(store)
-  if (!state) return initialModalState
-  return state.modal
-}
+  const { state } = useContext(store);
+  if (!state) return initialModalState;
+  return state.modal;
+};
 
 export const useModalDispatch = () => {
-  const { dispatch } = useContext(store)
+  const { dispatch } = useContext(store);
   return {
     dispatchSetRepostId: (repostId?: string) =>
       dispatch({ type: ModalActionTypes.SET_REPOST_ID, payload: { repostId } }),
@@ -77,10 +78,60 @@ export const useModalDispatch = () => {
       filterSaleType: SaleTypeLabel | undefined,
       acceptsMATIC: boolean | undefined,
       acceptsOGUN: boolean | undefined,
+      acceptsETH: boolean | undefined,
+      acceptsUSDC: boolean | undefined,
+      acceptsUSDT: boolean | undefined,
+      acceptsSOL: boolean | undefined,
+      acceptsBNB: boolean | undefined,
+      acceptsDOGE: boolean | undefined,
+      acceptsBONK: boolean | undefined,
+      acceptsMEATEOR: boolean | undefined,
+      acceptsPEPE: boolean | undefined,
+      acceptsBASE: boolean | undefined,
+      acceptsXTZ: boolean | undefined,
+      acceptsAVAX: boolean | undefined,
+      acceptsSHIB: boolean | undefined,
+      acceptsXRP: boolean | undefined,
+      acceptsSUI: boolean | undefined,
+      acceptsHBAR: boolean | undefined,
+      acceptsLINK: boolean | undefined,
+      acceptsLTC: boolean | undefined,
+      acceptsZETA: boolean | undefined,
+      acceptsBTC: boolean | undefined,
+      acceptsPENGU: boolean | undefined,
+      acceptsYZY: boolean | undefined, // Added for YZY
     ) =>
       dispatch({
         type: ModalActionTypes.SHOW_FILTER_MARKETPLACE,
-        payload: { show, genres, filterSaleType, acceptsMATIC, acceptsOGUN },
+        payload: {
+          show,
+          genres,
+          filterSaleType,
+          acceptsMATIC,
+          acceptsOGUN,
+          acceptsETH,
+          acceptsUSDC,
+          acceptsUSDT,
+          acceptsSOL,
+          acceptsBNB,
+          acceptsDOGE,
+          acceptsBONK,
+          acceptsMEATEOR,
+          acceptsPEPE,
+          acceptsBASE,
+          acceptsXTZ,
+          acceptsAVAX,
+          acceptsSHIB,
+          acceptsXRP,
+          acceptsSUI,
+          acceptsHBAR,
+          acceptsLINK,
+          acceptsLTC,
+          acceptsZETA,
+          acceptsBTC,
+          acceptsPENGU,
+          acceptsYZY, // Added for YZY
+        },
       }),
     dispatchShowBidsHistory: (show: boolean, auctionId: string) =>
       dispatch({ type: ModalActionTypes.SHOW_BIDS_HISTORY, payload: { show, auctionId } }),
@@ -89,5 +140,9 @@ export const useModalDispatch = () => {
         type: ModalActionTypes.SHOW_TRANSFER_NFT_CONFIRMATION,
         payload,
       }),
-  }
-}
+    dispatchUpdatePurchaseType: (type: 'single' | 'sweep' | 'bundle' | undefined) =>
+      dispatch({ type: 'UPDATE_PURCHASE_TYPE', payload: type }),
+    dispatchUpdateSweepQueue: (queue: string[]) =>
+      dispatch({ type: 'UPDATE_SWEEP_QUEUE', payload: queue }),
+  };
+};

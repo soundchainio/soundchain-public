@@ -1,10 +1,10 @@
 /* eslint-disable react/display-name */
-import { ApolloQueryResult } from '@apollo/client'
-import { LoaderAnimation } from 'components/LoaderAnimation'
-import { NoResultFound } from 'components/NoResultFound'
-import { PostSkeleton } from 'components/Post/PostSkeleton'
-import { Track as TrackItem } from 'components/Track'
-import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { ApolloQueryResult } from '@apollo/client';
+import { LoaderAnimation } from 'components/LoaderAnimation';
+import { NoResultFound } from 'components/NoResultFound';
+import { PostSkeleton } from 'components/Post/PostSkeleton';
+import { Track as TrackItem } from 'components/Track';
+import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer';
 import {
   ExploreTracksQuery,
   FavoriteTracksQuery,
@@ -13,29 +13,31 @@ import {
   Track,
   TrackQuery,
   TrackWithListingItem,
-} from 'lib/graphql'
-import { memo } from 'react'
-import AutoSizer from 'react-virtualized-auto-sizer'
-import { areEqual, FixedSizeList as List } from 'react-window'
-import InfiniteLoader from 'react-window-infinite-loader'
+} from 'lib/graphql';
+import { memo } from 'react';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import { areEqual, FixedSizeList as List } from 'react-window';
+import InfiniteLoader from 'react-window-infinite-loader';
 
-interface ViewProps {
-  loading: boolean
-  loadMore: () => void
+// Custom props interface for ListView (renamed to avoid collision)
+interface ListViewProps {
+  loading: boolean;
+  loadMore: () => void;
   refetch: () => Promise<
     ApolloQueryResult<ListingItemsQuery | ExploreTracksQuery | FavoriteTracksQuery | FollowedArtistsQuery>
-  >
-  hasNextPage?: boolean
-  tracks?: TrackWithListingItem[] | Track[]
-  displaySaleBadge?: boolean
+  >;
+  hasNextPage?: boolean;
+  tracks?: TrackWithListingItem[] | Track[];
+  displaySaleBadge?: boolean;
+  children?: React.ReactNode; // Supports additional content
+  lastCardRef?: React.RefObject<HTMLDivElement>; // Added for infinite scrolling
 }
 
-export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBadge }: ViewProps) => {
-  const { playlistState } = useAudioPlayerContext()
-  const loadMoreItems = loading ? () => null : loadMore
-  const isItemLoaded = (index: number) => !hasNextPage || index < (tracks?.length || 0)
-  const tracksCount = hasNextPage ? (tracks?.length || 0) + 1 : tracks?.length || 0
-
+export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBadge, children, lastCardRef }: ListViewProps) => {
+  const { playlistState } = useAudioPlayerContext();
+  const loadMoreItems = loading ? () => null : loadMore;
+  const isItemLoaded = (index: number) => !hasNextPage || index < (tracks?.length || 0);
+  const tracksCount = hasNextPage ? (tracks?.length || 0) + 1 : tracks?.length || 0;
   const handleOnPlayClicked = (index: number) => {
     if (tracks) {
       const list = tracks.map(
@@ -48,18 +50,16 @@ export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBa
             artist: track.artist,
             isFavorite: track.isFavorite,
           } as Song),
-      )
-      playlistState(list, index)
+      );
+      playlistState(list, index);
     }
-  }
-
+  };
   return (
     <>
       {loading ? (
         <div className="space-y-2">
           <PostSkeleton />
           <PostSkeleton />
-
           <PostSkeleton />
         </div>
       ) : !tracks ? (
@@ -81,7 +81,7 @@ export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBa
                 >
                   {memo(
                     ({ data, index, style }) => (
-                      <div style={style}>
+                      <div style={style} ref={index === tracksCount - 1 ? lastCardRef : null}> {/* Assign ref to last item */}
                         {!isItemLoaded(index) ? (
                           <LoaderAnimation loadingMessage="Loading..." />
                         ) : (
@@ -102,6 +102,7 @@ export const ListView = ({ tracks, loading, hasNextPage, loadMore, displaySaleBa
           )}
         </AutoSizer>
       )}
+      {children} {/* Render additional content (e.g., TokenCard, BundleCard) outside the virtualized list */}
     </>
-  )
-}
+  );
+};

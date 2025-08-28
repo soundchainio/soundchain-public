@@ -118,6 +118,30 @@ export default function LoginPage() {
     }
   }, [me, loadingMe, router]);
 
+  useEffect(() => {
+    const validateToken = async () => {
+      const storedToken = localStorage.getItem('didToken');
+      if (storedToken && magic) {
+        try {
+          const isLoggedIn = await magic.user.isLoggedIn();
+          if (isLoggedIn) {
+            console.log('Validated stored didToken:', storedToken);
+            const loginResult = await login({ variables: { input: { token: storedToken } } });
+            setJwt(loginResult.data?.login.jwt);
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            router.push(redirectUrl);
+          } else {
+            localStorage.removeItem('didToken');
+          }
+        } catch (error) {
+          console.error('Token validation error:', error);
+          localStorage.removeItem('didToken');
+        }
+      }
+    };
+    validateToken();
+  }, [magic, login, router]);
+
   const handleGoogleLogin = async () => {
     try {
       if (!magic) throw new Error('Magic SDK not initialized');

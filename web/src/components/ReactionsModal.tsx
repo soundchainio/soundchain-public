@@ -7,6 +7,7 @@ import { InfiniteLoader } from 'components/InfiniteLoader'
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { Modal } from './Modal'
 import { ReactionItem } from './ReactionItem'
+import 'emoji-mart/css/emoji-mart.css'
 
 export const ReactionsModal = () => {
   const {

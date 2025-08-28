@@ -1,5 +1,4 @@
 /* eslint-disable react/display-name */
-
 import { useModalDispatch } from 'contexts/providers/modal';
 import { Filter } from 'icons/Filter';
 import { GridView as GridViewIcon } from 'icons/GridView';
@@ -17,21 +16,32 @@ type Category = typeof categories[number];
 interface FilterWrapperProps {
   totalCount?: number;
   viewMode?: 'grid' | 'list' | 'single';
-  setViewMode: React.Dispatch<React.SetStateAction<'grid' | 'list' | 'single'>>;
+  setViewMode: Dispatch<SetStateAction<'grid' | 'list' | 'single'>>;
   selectedCategory?: Category;
-  setSelectedCategory: React.Dispatch<React.SetStateAction<Category | undefined>>;
+  setSelectedCategory?: Dispatch<SetStateAction<Category | undefined>>;
   genres?: GenreLabel[];
-  setGenres: React.Dispatch<React.SetStateAction<GenreLabel[] | undefined>>;
+  setGenres: Dispatch<SetStateAction<GenreLabel[] | undefined>>;
   saleType?: SaleTypeLabel;
-  setSaleType: React.Dispatch<React.SetStateAction<SaleTypeLabel | undefined>>;
+  setSaleType: Dispatch<SetStateAction<SaleTypeLabel | undefined>>;
   acceptsMATIC?: boolean;
-  setAcceptsMATIC: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+  setAcceptsMATIC: Dispatch<SetStateAction<boolean | undefined>>;
   acceptsOGUN?: boolean;
-  setAcceptsOGUN: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+  setAcceptsOGUN: Dispatch<SetStateAction<boolean | undefined>>;
   chainId?: number;
-  setChainId: React.Dispatch<React.SetStateAction<number | undefined>>;
+  setChainId: Dispatch<SetStateAction<number | undefined>>;
   sorting: SortListingItem;
-  setSorting: React.Dispatch<React.SetStateAction<SortListingItem>>;
+  setSorting: Dispatch<SetStateAction<SortListingItem>>;
+  bundleSelections?: string[] | undefined;
+  setBundleSelections?: Dispatch<SetStateAction<string[] | undefined>>;
+  sweepQueue?: string[];
+  setSweepQueue?: (queue: string[]) => void;
+  purchaseType?: 'single' | 'sweep' | 'bundle' | undefined;
+  setPurchaseType?: Dispatch<SetStateAction<'single' | 'sweep' | 'bundle' | undefined>>;
+  transactionFee?: number;
+  customBundle?: { nftIds: string[]; tokenSymbol: string; tokenAmount: number; chainId: number; privateAsset?: string }[] | undefined;
+  setCustomBundle?: Dispatch<SetStateAction<{ nftIds: string[]; tokenSymbol: string; tokenAmount: number; chainId: number; privateAsset?: string }[] | undefined>>;
+  privateAssetOptions: string[];
+  className?: string;
 }
 
 export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
@@ -53,10 +63,19 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
     setChainId,
     sorting,
     setSorting,
+    bundleSelections,
+    setBundleSelections,
+    sweepQueue,
+    setSweepQueue,
+    purchaseType,
+    setPurchaseType,
+    transactionFee,
+    customBundle,
+    setCustomBundle,
+    privateAssetOptions,
+    className,
   } = props;
-
   const { dispatchShowFilterMarketplaceModal } = useModalDispatch();
-
   const [localGenres, setLocalGenres] = useState<GenreLabel[] | undefined>(genres);
   const [localSaleType, setLocalSaleType] = useState<SaleTypeLabel | undefined>(saleType);
   const [localAcceptsMATIC, setLocalAcceptsMATIC] = useState<boolean | undefined>(acceptsMATIC);
@@ -65,6 +84,9 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
   const [localSorting, setLocalSorting] = useState<SortListingItem>(sorting);
   const [localViewMode, setLocalViewMode] = useState<'grid' | 'list' | 'single'>(viewMode || 'grid');
   const [localSelectedCategory, setLocalSelectedCategory] = useState<Category | undefined>(selectedCategory);
+  const [localBundleSelections, setLocalBundleSelections] = useState<string[] | undefined>(bundleSelections);
+  const [localPurchaseType, setLocalPurchaseType] = useState<'single' | 'sweep' | 'bundle' | undefined>(purchaseType);
+  const [localCustomBundle, setLocalCustomBundle] = useState<{ nftIds: string[]; tokenSymbol: string; tokenAmount: number; chainId: number; privateAsset?: string }[] | undefined>(customBundle);
 
   useEffect(() => {
     setGenres(localGenres);
@@ -75,10 +97,18 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
     setSorting(localSorting);
     setViewMode(localViewMode);
     setSelectedCategory(localSelectedCategory);
-  }, [localGenres, localSaleType, localAcceptsMATIC, localAcceptsOGUN, localChainId, localSorting, localViewMode, localSelectedCategory, setGenres, setSaleType, setAcceptsMATIC, setAcceptsOGUN, setChainId, setSorting, setViewMode, setSelectedCategory]);
+    setBundleSelections?.(localBundleSelections);
+    setPurchaseType?.(localPurchaseType);
+    setCustomBundle?.(localCustomBundle);
+  }, [
+    localGenres, localSaleType, localAcceptsMATIC, localAcceptsOGUN, localChainId, localSorting,
+    localViewMode, localSelectedCategory, localBundleSelections, localPurchaseType, localCustomBundle,
+    setGenres, setSaleType, setAcceptsMATIC, setAcceptsOGUN, setChainId, setSorting, setViewMode,
+    setSelectedCategory, setBundleSelections, setPurchaseType, setCustomBundle,
+  ]);
 
   return (
-    <div className="w-full">
+    <div className={className}>
       <div className="flex flex-col w-full">
         <div className="flex overflow-x-auto space-x-2 p-2 bg-gray-200">
           {categories.map((category) => (
@@ -96,17 +126,23 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
             <span className="text-sm font-bold text-white">{`${totalCount || 0} `}</span>
             <span className="text-sm text-gray-80">Tracks</span>
           </div>
-
           <button
             className="hidden items-center justify-center p-2 md:flex"
-            onClick={() => dispatchShowFilterMarketplaceModal({ show: true, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN })}
+            onClick={() => dispatchShowFilterMarketplaceModal({
+              show: true,
+              genres: localGenres,
+              saleType: localSaleType,
+              acceptsMATIC: localAcceptsMATIC,
+              acceptsOGUN: localAcceptsOGUN,
+              bundleSelections: localBundleSelections,
+              purchaseType: localPurchaseType,
+              customBundle: localCustomBundle,
+            })}
           >
             <Filter />
             <span className="pl-1 text-xs font-bold text-white">Filter</span>
           </button>
-
           <FilterComponent sorting={localSorting} setSorting={setLocalSorting} />
-
           <button aria-label="List view">
             <ListViewIcon color={localViewMode === 'list' ? 'rainbow' : undefined} onClick={() => setLocalViewMode('list')} />
           </button>
@@ -118,26 +154,33 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
           </button>
         </div>
       </div>
-
       <div className="flex w-full items-center justify-between gap-2 bg-black p-2 md:hidden">
         <button
           className="flex items-center justify-center p-2"
-          onClick={() => dispatchShowFilterMarketplaceModal({ show: true, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN })}
+          onClick={() => dispatchShowFilterMarketplaceModal({
+            show: true,
+            genres: localGenres,
+            saleType: localSaleType,
+            acceptsMATIC: localAcceptsMATIC,
+            acceptsOGUN: localAcceptsOGUN,
+            bundleSelections: localBundleSelections,
+            purchaseType: localPurchaseType,
+            customBundle: localCustomBundle,
+          })}
         >
           <Filter />
           <span className="pl-1 text-xs font-bold text-white">Filter</span>
         </button>
         <FilterComponent sorting={localSorting} setSorting={setLocalSorting} mobile noMarginRight />
       </div>
-
-      {(localSaleType || Boolean(localGenres?.length) || localAcceptsMATIC || localAcceptsOGUN) && (
+      {(localSaleType || Boolean(localGenres?.length) || localAcceptsMATIC || localAcceptsOGUN || localBundleSelections?.length || localPurchaseType || localCustomBundle?.length) && (
         <div className="flex flex-wrap gap-2 p-4">
           {localSaleType && (
             <Badge
               label={localSaleType.label}
               onDelete={() => {
                 setLocalSaleType(undefined);
-                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: undefined, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN });
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: undefined, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN, bundleSelections: localBundleSelections, purchaseType: localPurchaseType, customBundle: localCustomBundle });
               }}
             />
           )}
@@ -148,7 +191,7 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
               onDelete={() => {
                 const newGenres = localGenres.filter(it => it !== genre);
                 setLocalGenres(newGenres);
-                dispatchShowFilterMarketplaceModal({ show: false, genres: newGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN });
+                dispatchShowFilterMarketplaceModal({ show: false, genres: newGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN, bundleSelections: localBundleSelections, purchaseType: localPurchaseType, customBundle: localCustomBundle });
               }}
             />
           ))}
@@ -157,7 +200,7 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
               label={'MATIC'}
               onDelete={() => {
                 setLocalAcceptsMATIC(undefined);
-                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: undefined, acceptsOGUN: localAcceptsOGUN });
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: undefined, acceptsOGUN: localAcceptsOGUN, bundleSelections: localBundleSelections, purchaseType: localPurchaseType, customBundle: localCustomBundle });
               }}
             />
           )}
@@ -166,7 +209,34 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
               label={'OGUN'}
               onDelete={() => {
                 setLocalAcceptsOGUN(undefined);
-                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: undefined });
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: undefined, bundleSelections: localBundleSelections, purchaseType: localPurchaseType, customBundle: localCustomBundle });
+              }}
+            />
+          )}
+          {localBundleSelections?.length > 0 && (
+            <Badge
+              label={'Bundles'}
+              onDelete={() => {
+                setLocalBundleSelections(undefined);
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN, bundleSelections: undefined, purchaseType: localPurchaseType, customBundle: localCustomBundle });
+              }}
+            />
+          )}
+          {localPurchaseType && (
+            <Badge
+              label={localPurchaseType}
+              onDelete={() => {
+                setLocalPurchaseType(undefined);
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN, bundleSelections: localBundleSelections, purchaseType: undefined, customBundle: localCustomBundle });
+              }}
+            />
+          )}
+          {localCustomBundle?.length > 0 && (
+            <Badge
+              label={'Custom Bundles'}
+              onDelete={() => {
+                setLocalCustomBundle(undefined);
+                dispatchShowFilterMarketplaceModal({ show: false, genres: localGenres, saleType: localSaleType, acceptsMATIC: localAcceptsMATIC, acceptsOGUN: localAcceptsOGUN, bundleSelections: localBundleSelections, purchaseType: localPurchaseType, customBundle: undefined });
               }}
             />
           )}

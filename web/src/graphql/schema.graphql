@@ -1,0 +1,6 @@
+type Query {
+mimeType(url: String!) : MimeType!
+}
+type MimeType {
+value: String!
+}

@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { useMimeTypeQuery } from 'lib/graphql'
+import { useMimeTypeQuery } from 'lib/graphql'; // Relative to ./src 
 import Image from 'next/image'
 import tw from 'tailwind-styled-components'
 

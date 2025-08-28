@@ -1,4 +1,4 @@
-import 'emoji-mart/css/emoji-mart.css'
+import 'emoji-mart/dist/css/emoji-mart.css'
 
 import React, { Fragment, ReactNode, useRef } from 'react'
 

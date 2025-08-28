@@ -4,7 +4,7 @@ import { GridView, ViewProps } from 'components/GridView/GridView';
 import { ListView } from 'components/ListView/ListView';
 import { useModalState, useModalDispatch } from 'contexts/providers/modal';
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { SaleType, useListingItemsQuery, TrackWithListingItem, Maybe } from 'lib/graphql';
+import { SaleType, useListingItemsQuery, TrackWithListingItem } from 'lib/graphql'; // Added TrackWithListingItem import
 import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
@@ -20,11 +20,33 @@ import { zetachain, polygon } from 'viem/chains';
 import axios from 'axios';
 
 // Locally define TrackPrice to support string currency for Zetachain flexibility
+// Note: Update to match lib/graphql TrackPrice post-proxy smart contract implementation
 interface LocalTrackPrice {
   value: number;
   currency: string;
 }
 
+// Standalone ExtendedTrackWithListingItem with key fields from TrackWithListingItem
+interface ExtendedTrackWithListingItem {
+  id: string;
+  title: string;
+  artist: string;
+  artworkUrl?: string | null;
+  playbackUrl?: string | null;
+  isFavorite?: boolean;
+  listingItem?: any; // Placeholder for listingItem structure
+  tokenAmount?: number;
+  tokenSymbol?: string;
+  bundleId?: string;
+  privateAsset?: string;
+  price?: LocalTrackPrice; // Use local definition
+  saleType?: SaleType; // Added to fix error
+  ISRC?: string | undefined; // Ensure ISRC is included
+  // Updated index signature to allow null
+  [key: string]: boolean | undefined | number | string | LocalTrackPrice | null;
+}
+
+// Define ArrayOneOrMore type locally
 type ArrayOneOrMore<T> = [T, ...T[]];
 
 interface ListingItem {
@@ -52,13 +74,14 @@ interface ListingItem {
   acceptsZETA?: boolean | undefined;
   acceptsBTC?: boolean | undefined;
   acceptsPENGU?: boolean | undefined;
-  acceptsYZY?: boolean | undefined;
+  acceptsYZY?: boolean | undefined; // Added for YZY
   chainId?: number | undefined;
   tokenAmount?: number | undefined;
   tokenSymbol?: string | undefined;
   bundleId?: string | undefined;
   privateAsset?: string | undefined;
-  price?: LocalTrackPrice | undefined;
+  price?: LocalTrackPrice | undefined; // Use local definition
+  ISRC?: string | undefined; // Optional for IPFS metadata, defaults to 'none' if not present
   [key: string]: boolean | undefined | number | string | LocalTrackPrice;
 }
 
@@ -71,7 +94,7 @@ type CryptoProps = {
 const cryptoCurrencies = [
   'MATIC', 'OGUN', 'ETH', 'USDC', 'USDT', 'SOL', 'BNB', 'DOGE', 'BONK',
   'MEATEOR', 'PEPE', 'BASE', 'XTZ', 'AVAX', 'SHIB', 'XRP', 'SUI', 'HBAR',
-  'LINK', 'LTC', 'ZETA', 'BTC', 'PENGU', 'YZY'
+  'LINK', 'LTC', 'ZETA', 'BTC', 'PENGU', 'YZY' // Added YZY
 ];
 
 const privateAssetOptions = ['homes', 'cars', 'clothing', 'vinyl', 'concert tickets', 'movie tickets', 'sporting event tickets'];
@@ -81,7 +104,7 @@ const mockConversionRates: { [token: string]: number } = {
   BNB: 300.00, DOGE: 0.10, BONK: 0.00001, MEATEOR: 0.50, PEPE: 0.000001,
   BASE: 1.00, XTZ: 1.50, AVAX: 20.00, SHIB: 0.00000001, XRP: 0.50, SUI: 1.00,
   HBAR: 0.05, LINK: 15.00, LTC: 70.00, ZETA: 1.00, BTC: 60000.00, PENGU: 2.00,
-  YZY: 5.00
+  YZY: 5.00 // Added YZY with a mock price
 };
 
 const getContractAddress = (token: string, chainId?: number): string => {
@@ -109,7 +132,7 @@ const getContractAddress = (token: string, chainId?: number): string => {
     LINK: { 60: '0x...' },
     LTC: { 2: '0x...' },
     BTC: { 1839: '0x...' },
-    YZY: { 101: 'DrZ26cKJDksVRWib3DVVsjo9eeXccc7hKhDJviiYEEZY' }
+    YZY: { 101: 'DrZ26cKJDksVRWib3DVVsjo9eeXccc7hKhDJviiYEEZY' } // Updated YZY to Solana address
   };
   return addresses[token]?.[chainId as number] || '0x0000000000000000000000000000000000000000';
 };
@@ -185,19 +208,14 @@ const fetchAggregatorData = async (chainId: number | undefined, retries = 3): Pr
   return { ...mockConversionRates }; // Fallback
 };
 
-// Mapping function to convert TrackWithListingItem, adding optional fields
-const mapTrackToListingItem = (track: TrackWithListingItem): TrackWithListingItem => {
+// Mapping function to convert TrackWithListingItem to ExtendedTrackWithListingItem
+const mapTrackToListingItem = (track: Partial<ExtendedTrackWithListingItem> & { ISRC?: string | undefined }): ExtendedTrackWithListingItem => {
   const price: LocalTrackPrice = track.price
-    ? { value: track.price.value ?? 0, currency: track.price?.currency || 'ETH' }
-    : { value: 0, currency: 'ETH' };
+    ? { value: track.price.value ?? 0, currency: track.price.currency || track.tokenSymbol || 'ETH' }
+    : { value: 0, currency: track.tokenSymbol || 'ETH' }; // Allow string currency for now
   return {
-    ...track,
-    tokenAmount: track.price?.value ?? 0,
-    tokenSymbol: track.price?.currency || 'ETH',
-    bundleId: undefined,
-    privateAsset: undefined,
-    saleType: track.saleType || undefined,
-    ISRC: 'none' , // Add to satisfy TrackWithListingItem schema
+    ...track, // Preserve TrackWithListingItem properties (id, title, etc.)
+    saleType: track.saleType as SaleType || undefined,
     acceptsMATIC: undefined,
     acceptsOGUN: undefined,
     acceptsETH: undefined,
@@ -221,9 +239,15 @@ const mapTrackToListingItem = (track: TrackWithListingItem): TrackWithListingIte
     acceptsZETA: undefined,
     acceptsBTC: undefined,
     acceptsPENGU: undefined,
-    acceptsYZY: undefined,
-    chainId: 137,
-  } as TrackWithListingItem;
+    acceptsYZY: undefined, // Added for YZY
+    chainId: (track.listingItem as any)?.chainId ?? 137,
+    tokenAmount: track.tokenAmount ?? undefined,
+    tokenSymbol: track.tokenSymbol ?? undefined,
+    bundleId: track.bundleId ?? undefined,
+    privateAsset: track.privateAsset ?? undefined,
+    price, // Use the safely constructed LocalTrackPrice
+    ISRC: track.ISRC ?? 'none', // Use the provided ISRC or default to 'none'
+  } as ExtendedTrackWithListingItem; // Explicit cast
 };
 
 export const Marketplace = () => {
@@ -291,7 +315,7 @@ export const Marketplace = () => {
     acceptsZETA: filterAcceptsZETA,
     acceptsBTC: filterAcceptsBTC,
     acceptsPENGU: filterAcceptsPENGU,
-    acceptsYZY: filterAcceptsYZY, // Sync YZY
+    acceptsYZY: filterAcceptsYZY, // Added for YZY
   });
   const [chainId, setChainId] = useState<number | undefined>(undefined);
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
@@ -331,15 +355,15 @@ export const Marketplace = () => {
     { tokenSymbol: 'LTC', tokenAmount: 1, chainId: 2, price: 70, usdPrice: convertToUSD(70, 'LTC'), ISRC: 'US2233445566' },
     { tokenSymbol: 'ZETA', tokenAmount: 100, chainId: 7000, price: 1, usdPrice: convertToUSD(1, 'ZETA'), ISRC: 'US3344556677' },
     { tokenSymbol: 'BTC', tokenAmount: 0.01, chainId: 1839, price: 60000, usdPrice: convertToUSD(60000, 'BTC'), ISRC: 'US4455667788' },
-    { tokenSymbol: 'YZY', tokenAmount: 10, chainId: 101, price: 5, usdPrice: convertToUSD(5, 'YZY'), ISRC: 'USYeezy1234' }
+    { tokenSymbol: 'YZY', tokenAmount: 10, chainId: 101, price: 5, usdPrice: convertToUSD(5, 'YZY'), ISRC: 'USYeezy1234' } // Updated YZY to Solana chain ID 101
   ];
   const bundleListings = [
     { nftIds: ['nft1', 'nft2'], tokenSymbol: 'ETH', tokenAmount: 10, chainId: 1, privateAsset: 'concert tickets', price: 2000, usdPrice: convertToUSD(2000, 'ETH'), ISRC: 'US5566778899' },
-    { nftIds: ['nft3', 'nft4'], tokenSymbol: 'YZY', tokenAmount: 20, chainId: 101, privateAsset: 'vinyl', price: 100, usdPrice: convertToUSD(100, 'YZY'), ISRC: 'USYeezy5678' }
+    { nftIds: ['nft3', 'nft4'], tokenSymbol: 'YZY', tokenAmount: 20, chainId: 101, privateAsset: 'vinyl', price: 100, usdPrice: convertToUSD(100, 'YZY'), ISRC: 'USYeezy5678' } // Updated YZY to Solana chain ID 101
   ];
-  // Generalized calculateFee with optional parameters, updated to accept TrackWithListingItem
+  // Generalized calculateFee with optional parameters, updated to accept ExtendedTrackWithListingItem
   const calculateFee = useCallback((
-    listings?: TrackWithListingItem[],
+    listings?: ExtendedTrackWithListingItem[],
     bundle?: { nftIds: string[]; tokenSymbol: string; tokenAmount: number; chainId: number; privateAsset?: string },
     amount?: number,
     recipientCount?: number
@@ -347,7 +371,7 @@ export const Marketplace = () => {
     let totalUSDValue = 0;
     if (listings) {
       const visibleListings = listings.slice(0, pageSize) || [];
-      totalUSDValue = visibleListings.reduce((sum, item) => sum + convertToUSD(item.price?.value || 0, item.price?.currency || 'ETH'), 0) || 0;
+      totalUSDValue = visibleListings.reduce((sum, item) => sum + convertToUSD(item.price?.value || 0, item.tokenSymbol), 0) || 0;
     } else if (bundle) {
       totalUSDValue = convertToUSD(bundle.tokenAmount, bundle.tokenSymbol) || 0; // Aggregate bundle value
     } else if (amount) {
@@ -387,7 +411,10 @@ export const Marketplace = () => {
     setAcceptsMATIC(filterAcceptsMATIC);
     setAcceptsOGUN(filterAcceptsOGUN);
     setPurchaseTypeState(purchaseType); // Sync purchaseType state
-    const mappedListings = data?.listingItems.nodes?.map((node) => mapTrackToListingItem(node as TrackWithListingItem));
+    const mappedListings = data?.listingItems.nodes?.map((node) => {
+      const trackWithISRC = { ...node, ISRC: 'none' } as ExtendedTrackWithListingItem; // Use default 'none' since ISRC isn't in TrackWithListingItem
+      return mapTrackToListingItem(trackWithISRC);
+    });
     const fee = calculateFee(mappedListings);
     if (fee !== undefined && !isNaN(fee)) {
       dispatch.dispatchShowFilterMarketplaceModal(
@@ -429,7 +456,7 @@ export const Marketplace = () => {
     filterAcceptsBONK, filterAcceptsMEATEOR, filterAcceptsPEPE, filterAcceptsBASE,
     filterAcceptsXTZ, filterAcceptsAVAX, filterAcceptsSHIB, filterAcceptsXRP,
     filterAcceptsSUI, filterAcceptsHBAR, filterAcceptsLINK, filterAcceptsLTC,
-    filterAcceptsZETA, filterAcceptsBTC, filterAcceptsPENGU, filterAcceptsYZY,
+    filterAcceptsZETA, filterAcceptsBTC, filterAcceptsPENGU, filterAcceptsYZY, // Sync YZY
     genresFromModal, filterSaleType, data, dispatch, calculateFee, purchaseType,
   ]);
   useEffect(() => {
@@ -579,7 +606,12 @@ export const Marketplace = () => {
         </GridView>
       ) : (
         <ListView
-          tracks={data?.listingItems.nodes?.map(node => mapTrackToListingItem(node)) as TrackWithListingItem[]}
+          tracks={data?.listingItems.nodes?.map(node => ({
+            ...node, // Preserve TrackWithListingItem properties
+            ...mapTrackToListingItem(node), // Add ListingItem properties
+            walletProvider,
+            getContractAddress,
+          }) as ExtendedTrackWithListingItem[])}
           loading={loading}
           refetch={refetch}
           hasNextPage={data?.listingItems.pageInfo?.hasNextPage}

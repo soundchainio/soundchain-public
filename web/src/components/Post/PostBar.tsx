@@ -1,5 +1,6 @@
 import { MusicNoteIcon, VideoCameraIcon } from '@heroicons/react/outline'
 import { BaseEmoji, Picker } from 'emoji-mart'
+import 'emoji-mart/css/emoji-mart.css'
 import { useState } from 'react'
 import { PostLinkType } from 'types/PostLinkType'
 import { LinksModal } from '../LinksModal'

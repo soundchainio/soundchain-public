@@ -2,8 +2,6 @@ import '@reach/dialog/styles.css'
 import '@reach/slider/styles.css'
 import 'regenerator-runtime/runtime'
 
-import * as Sentry from '@sentry/react'
-import { Integrations } from '@sentry/tracing'
 import { CheckBodyScroll } from 'components/CheckBodyScroll'
 import { Layout } from 'components/Layout'
 import { config } from 'config'
@@ -33,13 +31,6 @@ import 'styles/volume-slider.css'
 const WalletProvider = dynamic(import('hooks/useWalletContext'))
 const MagicProvider = dynamic(import('hooks/useMagicContext'))
 
-if (process.env.NEXT_PUBLIC_VERCEL_ENV !== 'development')
-  Sentry.init({
-    dsn: config.sentryUrl,
-    integrations: [new Integrations.BrowserTracing()],
-    tracesSampleRate: 1.0,
-    environment: `${process.env.NEXT_PUBLIC_VERCEL_ENV}`,
-  })
 
 NProgress.configure({
   showSpinner: false,

@@ -1,6 +1,5 @@
 import classNames from 'classnames'
 import { Button } from 'components/common/Buttons/Button'
-import 'emoji-mart/css/emoji-mart.css'
 import { default as React, useEffect, useState } from 'react'
 import { MediaProvider } from 'types/MediaProvider'
 import { PostLinkType } from 'types/PostLinkType'
