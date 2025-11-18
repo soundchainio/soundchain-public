@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { UnderDevelopment } from 'icons/UnderDevelopment'
 import { ModalsPortal } from './ModalsPortal'
 

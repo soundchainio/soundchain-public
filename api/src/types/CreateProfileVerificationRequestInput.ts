@@ -3,21 +3,21 @@ import { ProfileVerificationStatusType } from './ProfileVerificationStatusType';
 
 @InputType()
 export class CreateProfileVerificationRequestInput {
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   soundcloud?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   youtube?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   bandcamp?: string;
 
-  @Field({ nullable: true })
+  @Field(() => ProfileVerificationStatusType, { nullable: true })
   status?: ProfileVerificationStatusType;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   reason?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   reviewerProfileId?: string;
 }

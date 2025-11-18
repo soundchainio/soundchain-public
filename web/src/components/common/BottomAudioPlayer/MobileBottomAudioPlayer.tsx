@@ -1,5 +1,5 @@
 import { config } from 'config'
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import Hls from 'hls.js'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useMe } from 'hooks/useMe'

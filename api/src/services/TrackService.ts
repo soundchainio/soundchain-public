@@ -666,6 +666,7 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $unwind: {
           path: '$listingItem',
+          preserveNullAndEmptyArrays: true, // FIX: Keep tracks without active listings
         },
       },
       {
@@ -780,6 +781,7 @@ export class TrackService extends ModelService<typeof Track> {
       {
         $unwind: {
           path: '$listingItem',
+          preserveNullAndEmptyArrays: true, // FIX: Keep tracks without active listings
         },
       },
     ];

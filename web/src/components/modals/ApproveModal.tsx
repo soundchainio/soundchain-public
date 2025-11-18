@@ -1,7 +1,7 @@
 import { Button } from 'components/common/Buttons/Button'
 import MaxGasFee from 'components/MaxGasFee'
 import { Modal } from 'components/Modal'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { ApproveBuyNow } from 'icons/ApproveBuyNow'
@@ -10,7 +10,7 @@ import { Auction } from 'icons/Auction'
 import { CheckmarkFilled } from 'icons/CheckmarkFilled'
 import { useState } from 'react'
 import { toast } from 'react-toastify'
-import { SaleType } from 'types/SaleType'
+import { SaleType } from 'lib/graphql'
 
 export const ApproveModal = () => {
   const { account, web3 } = useWalletContext()
@@ -20,7 +20,7 @@ export const ApproveModal = () => {
   const [loading, setLoading] = useState(false)
 
   const handleClose = () => {
-    dispatchShowApproveModal(false, SaleType.CLOSE, '')
+    dispatchShowApproveModal(false, undefined, '')
   }
 
   const setApprove = () => {
@@ -29,15 +29,15 @@ export const ApproveModal = () => {
     }
     const onReceipt = () => {
       setLoading(false)
-      dispatchShowApproveModal(false, SaleType.CLOSE, '')
+      dispatchShowApproveModal(false, undefined, '')
     }
 
     setLoading(true)
 
     const approve =
-      type === SaleType.AUCTION
+      type === SaleType.Auction
         ? approveAuction(account, { nft: nftContractAddress })
-        : type === SaleType.MARKETPLACE
+        : type === SaleType.BuyNow
         ? approveMarketplace(account, { nft: nftContractAddress })
         : null
 
@@ -49,11 +49,11 @@ export const ApproveModal = () => {
   }
 
   const icon =
-    type === SaleType.AUCTION ? <Auction className="h-8 w-8" purple /> : <CheckmarkFilled className="h-6 w-6" />
+    type === SaleType.Auction ? <Auction className="h-8 w-8" purple /> : <CheckmarkFilled className="h-6 w-6" />
 
-  const title = type === SaleType.AUCTION ? 'Auction' : 'Buy Now'
+  const title = type === SaleType.Auction ? 'Auction' : 'Buy Now'
 
-  const image = type === SaleType.AUCTION ? <ApproveMarketplace /> : <ApproveBuyNow />
+  const image = type === SaleType.Auction ? <ApproveMarketplace /> : <ApproveBuyNow />
 
   return (
     <Modal

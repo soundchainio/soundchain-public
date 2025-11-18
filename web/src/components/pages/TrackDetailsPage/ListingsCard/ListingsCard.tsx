@@ -1,9 +1,9 @@
 import { Table, Row, Header } from 'components/common/Table'
 import { TrackQuery, useBuyNowListingItemsQuery } from 'lib/graphql'
-import { SaleType } from 'types/SaleType'
+import { SaleType } from 'lib/graphql'
 import tw from 'tailwind-styled-components'
 import { ListingItem } from './ListingsItem'
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { useIsMobile } from 'hooks/useIsMobile'
 import { Accordion } from 'components/common'
 interface ListingsCardProps {
@@ -52,7 +52,7 @@ export const ListingsCard = (props: ListingsCardProps) => {
     return dispatchShowRemoveListingModal({
       show: true,
       editionId: track.trackEdition?.editionId,
-      saleType: SaleType.MARKETPLACE,
+      saleType: SaleType.BuyNow,
       contractAddresses: {
         nft: track.nftData?.contract,
         marketplace: track.trackEdition?.marketplace,

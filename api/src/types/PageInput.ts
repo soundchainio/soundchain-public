@@ -8,7 +8,7 @@ export class PageInput {
   @Field(() => Int, { nullable: true })
   first?: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   after?: string;
 
   @Min(1)
@@ -16,9 +16,9 @@ export class PageInput {
   @Field(() => Int, { nullable: true })
   last?: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   before?: string;
 
-  @Field({ defaultValue: false })
+  @Field(() => Boolean, { defaultValue: false })
   inclusive?: boolean;
 }

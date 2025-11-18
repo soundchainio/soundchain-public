@@ -1,6 +1,6 @@
 import MetaMaskOnboarding from '@metamask/onboarding'
 import { network } from 'lib/blockchainNetworks'
-import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql'
+// import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql-hooks'  // BYPASSED
 import { useEffect, useRef, useState } from 'react'
 import Web3 from 'web3'
 import { useMe } from './useMe'
@@ -9,14 +9,18 @@ import { Contract } from 'web3-eth-contract'
 import { config } from 'config'
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 
-// Explicitly type the token contract with ABI
 const tokenContract = (web3: Web3): Contract<AbiItem[]> => {
   return new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress as string)
 }
 
 export const useMetaMask = () => {
   const me = useMe()
-  const [updateWallet] = useUpdateMetaMaskAddressesMutation()
+  // BYPASS mutation hook - webpack issue
+  // const [updateWallet] = useUpdateMetaMaskAddressesMutation()
+  const updateWallet = async () => {
+    console.log('updateWallet disabled - webpack issue')
+  }
+  
   const [web3, setWeb3] = useState<Web3>()
   const [loadingAccount, setLoadingAccount] = useState<boolean>(true)
   const [account, setAccount] = useState<string>()
@@ -40,7 +44,8 @@ export const useMetaMask = () => {
   useEffect(() => {
     const onSetAccount = async (newAccount: string) => {
       if (newAccount && me) {
-        await updateWallet({ variables: { input: { wallet: newAccount } } })
+        // await updateWallet({ variables: { input: { wallet: newAccount } } })
+        console.log('Wallet update bypassed')
       }
       setAccount(newAccount)
       setLoadingAccount(false)
@@ -55,7 +60,7 @@ export const useMetaMask = () => {
       window.ethereum.on('accountsChanged', ([newAccount]: string[]) => onSetAccount(newAccount))
       window.ethereum.on('chainChanged', () => window.location.reload())
     }
-  }, [me, updateWallet])
+  }, [me])
 
   useEffect(() => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
@@ -78,9 +83,7 @@ export const useMetaMask = () => {
   }, [account, web3])
 
   const getOGUNBalance = async (web3: Web3) => {
-    // Explicitly type the balanceOf call return as string | undefined
     const currentBalance = await tokenContract(web3).methods.balanceOf(account).call() as string | undefined
-    // Robust type guard with assertion
     const validBalance = currentBalance !== undefined && (typeof currentBalance === 'string' || typeof currentBalance === 'number')
       ? currentBalance.toString()
       : '0'
@@ -123,7 +126,8 @@ export const useMetaMask = () => {
   }
 
   const onSetAccount = async (newAccount: string) => {
-    await updateWallet({ variables: { input: { wallet: newAccount } } })
+    // await updateWallet({ variables: { input: { wallet: newAccount } } })
+    console.log('Wallet update bypassed')
     setAccount(newAccount)
     setLoadingAccount(false)
   }

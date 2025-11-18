@@ -1,3 +1,4 @@
+import fetch from 'cross-fetch'
 import { useMemo } from 'react'
 
 import { config } from 'config'
@@ -25,7 +26,7 @@ const jwtKey = 'token'
 
 let jwt = (isBrowser && Cookies.get(jwtKey)) || undefined
 
-const httpLink = createHttpLink({ uri: config.apiUrl ?? 'http://localhost:4000/graphql' })
+const httpLink = createHttpLink({ uri: config.apiUrl ?? 'http://localhost:4000/graphql', fetch })
 
 export function createApolloClient(context?: GetServerSidePropsContext) {
   const authLink = setContext(() => {

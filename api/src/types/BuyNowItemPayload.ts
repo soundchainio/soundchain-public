@@ -3,6 +3,6 @@ import { BuyNowItem } from '../models/BuyNowItem';
 
 @ObjectType()
 export class BuyNowPayload {
-  @Field({ nullable: true })
+  @Field(() => BuyNowItem, { nullable: true })
   buyNowItem: BuyNowItem;
 }

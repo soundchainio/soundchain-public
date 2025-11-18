@@ -13,11 +13,11 @@ export class Post extends Model {
   @prop({ type: mongoose.Types.ObjectId, required: true })
   profileId: mongoose.Types.ObjectId;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   body?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   mediaLink?: string;
 
@@ -36,7 +36,7 @@ export class Post extends Model {
   @prop({ required: false, type: mongoose.Types.ObjectId })
   trackEditionId?: mongoose.Types.ObjectId;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ default: false })
   deleted?: boolean;
 

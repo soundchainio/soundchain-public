@@ -2,9 +2,9 @@ import { Field, InputType } from 'type-graphql';
 
 @InputType()
 export class UpdateOgunClaimedInput {
-  @Field()
+  @Field(() => String)
   id: string;
 
-  @Field()
+  @Field(() => Boolean)
   ogunClaimed: boolean;
 }

@@ -3,6 +3,6 @@ import { AuctionItem } from '../models/AuctionItem';
 
 @ObjectType()
 export class AuctionItemPayload {
-  @Field({ nullable: true })
+  @Field(() => AuctionItem, { nullable: true })
   auctionItem: AuctionItem;
 }

@@ -13,23 +13,23 @@ export class ProfileVerificationRequest extends Model {
   @prop({ type: mongoose.Types.ObjectId, required: true })
   profileId: mongoose.Types.ObjectId;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   soundcloud?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   youtube?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   bandcamp?: string;
 
   @Field(() => ProfileVerificationStatusType, { nullable: true })
-  @prop({ default: ProfileVerificationStatusType.PENDING, enum: ProfileVerificationStatusType })
+  @prop({ default: ProfileVerificationStatusType.PENDING, enum: ProfileVerificationStatusType, type: String })
   status: ProfileVerificationStatusType;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   reason?: string;
 

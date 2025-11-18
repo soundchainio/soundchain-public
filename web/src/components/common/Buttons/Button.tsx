@@ -62,8 +62,9 @@ export const buttonByVariant: Record<ButtonVariant, (props: ButtonProps) => JSX.
   'approve-allowance': ApproveAllowanceButton,
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 'rainbow', ...props }, ref) => {
-  return buttonByVariant[variant]({ ...props, ref })
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ variant = "rainbow", ...props }, ref) => {
+  const Component = buttonByVariant[variant] || RainbowButton
+  return <Component {...props} ref={ref} />
 })
 
-Button.displayName = 'Button'
+Button.displayName = "Button"

@@ -2,9 +2,9 @@ import { Field, InputType } from 'type-graphql';
 
 @InputType()
 export class CreateWhitelistEntryInput {
-  @Field()
+  @Field(() => String)
   walletAddress: string;
 
-  @Field()
+  @Field(() => String)
   emailAddress: string;
 }

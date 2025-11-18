@@ -7,7 +7,6 @@ import { BidService } from '../services/BidService';
 import { BlockTrackerService } from '../services/BlockTrackerService';
 import { BuyNowService } from '../services/BuyNowItemService';
 import { CommentService } from '../services/CommentService';
-import { EmailService } from '../services/EmailService';
 import { EmbedService } from '../services/EmbedService';
 import { ExploreService } from '../services/ExploreService';
 import { FeedService } from '../services/FeedService';
@@ -40,7 +39,6 @@ export class Context {
   blockTrackerService: BlockTrackerService;
   buyNowItemService: BuyNowService;
   commentService: CommentService;
-  emailService: EmailService;
   embedService: EmbedService;
   exploreService: ExploreService;
   feedService: FeedService;
@@ -77,7 +75,6 @@ export class Context {
     this.blockTrackerService = new BlockTrackerService(this);
     this.buyNowItemService = new BuyNowService(this);
     this.commentService = new CommentService(this);
-    this.emailService = new EmailService();
     this.embedService = new EmbedService(this);
     this.exploreService = new ExploreService(this);
     this.feedService = new FeedService(this);

@@ -1,6 +1,6 @@
 import { Button } from 'components/common/Buttons/Button'
 import { network } from 'lib/blockchainNetworks'
-import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
+import { DefaultWallet } from 'lib/graphql'
 import React, { createContext, ReactNode, useContext } from 'react'
 import Web3 from 'web3'
 import { useMagicContext } from './useMagicContext'
@@ -23,7 +23,13 @@ interface WalletProviderProps {
 
 const WalletProvider = ({ children }: WalletProviderProps) => {
   const me = useMe()
-  const [updateDefaultWallet] = useUpdateDefaultWalletMutation()
+  
+  // BYPASS HOOK ISSUE - comment out mutation for now
+  // const [updateDefaultWallet] = useUpdateDefaultWalletMutation()
+  const updateDefaultWallet = () => {
+    console.log('updateDefaultWallet currently disabled due to webpack issue')
+  }
+  
   const { account, balance, chainId, addMumbaiTestnet, connect, web3, refetchBalance, loading } = useMetaMask()
   const {
     account: magicAccount,
@@ -85,15 +91,17 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
           <div>or you can select your SoundChain Wallet</div>
           <Button
             variant="rainbow-xs"
-            onClick={() =>
-              updateDefaultWallet({
-                variables: {
-                  input: {
-                    defaultWallet: DefaultWallet.Soundchain,
-                  },
-                },
-              })
-            }
+            onClick={() => {
+              console.log('Wallet switch disabled - webpack hook issue')
+              // Commented out until webpack issue resolved
+              // updateDefaultWallet({
+              //   variables: {
+              //     input: {
+              //       defaultWallet: DefaultWallet.Soundchain,
+              //     },
+              //   },
+              // })
+            }}
           >
             Select SoundChain Wallet
           </Button>

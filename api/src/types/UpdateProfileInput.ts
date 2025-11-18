@@ -6,16 +6,16 @@ import { SocialMedias } from './SocialMedias';
 
 @InputType()
 export class UpdateProfileInput {
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   displayName: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   bio?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   profilePicture?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   coverPicture?: string;
 
   @ArrayUnique()
@@ -26,6 +26,6 @@ export class UpdateProfileInput {
   @Field(() => [MusicianType], { nullable: true })
   musicianTypes: MusicianType[];
 
-  @Field({ nullable: true })
+  @Field(() => SocialMedias, { nullable: true })
   socialMedias: SocialMedias;
 }

@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { apolloClient } from 'lib/apollo'
-import { UploadUrlDocument, UploadUrlQuery } from 'lib/graphql'
+import { UploadUrlDocument, UploadUrlQuery } from 'lib/graphql-hooks'
 import { useCallback, useState } from 'react'
 
 export const useUpload = (value?: string, onChange?: (value: string) => void) => {

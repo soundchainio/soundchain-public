@@ -8,7 +8,7 @@ export class Comment extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   body: string;
 
@@ -20,7 +20,7 @@ export class Comment extends Model {
   @prop({ required: true, type: mongoose.Types.ObjectId })
   profileId: mongoose.Types.ObjectId;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ default: false })
   deleted?: boolean;
 

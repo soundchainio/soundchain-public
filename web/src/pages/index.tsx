@@ -5,26 +5,10 @@ import { Discord } from 'icons/social/Discord'
 import { Instagram } from 'icons/social/Instagram'
 import { Twitter } from 'icons/social/Twitter'
 import { YoutubeBW } from 'icons/social/YoutubeBW'
-import { cacheFor, createApolloClient } from 'lib/apollo'
-import { MeDocument, MeQuery } from 'lib/graphql'
-import { GetServerSideProps } from 'next'
 import type { ReactElement } from 'react'
 import LandingPageLayout from '../components/pages/LandingPage/layout'
 
-interface RootLandingPageProps {
-  me?: MeQuery['me']
-}
-
-export const getServerSideProps: GetServerSideProps<RootLandingPageProps> = async context => {
-  const apolloClient = createApolloClient(context)
-
-  const { data } = await apolloClient.query({
-    query: MeDocument,
-    context,
-  })
-
-  return cacheFor(Index, { me: data.me }, context, apolloClient)
-}
+// Landing page doesn't need SSR or authentication data
 
 export default function Index() {
   return (

@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/link-passhref */
 import { SpinAnimation } from 'components/common/SpinAnimation'
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { useTokenOwner } from 'hooks/useTokenOwner'
 import { Role, TrackWithListingItem } from 'lib/graphql'

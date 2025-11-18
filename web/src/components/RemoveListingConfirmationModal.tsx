@@ -1,5 +1,5 @@
 import { Modal } from 'components/Modal'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import useBlockchainV2, { CancelListingBatchParams, ContractAddresses } from 'hooks/useBlockchainV2'
 import { useMaxCancelBatchListGasFee } from 'hooks/useMaxCancelBatchListGasFee'
 import { useMaxGasFee } from 'hooks/useMaxGasFee'
@@ -14,7 +14,7 @@ import {
 import router from 'next/router'
 import { useState } from 'react'
 import { toast } from 'react-toastify'
-import { SaleType } from 'types/SaleType'
+import { SaleType } from 'lib/graphql'
 import { Button } from './common/Buttons/Button'
 import { ConnectedNetwork } from './ConnectedNetwork'
 import { CopyWalletAddress } from './CopyWalletAddress'
@@ -58,7 +58,7 @@ export const RemoveListingConfirmationModal = () => {
       show: false,
       tokenId: 0,
       trackId: '',
-      saleType: SaleType.CLOSE,
+      saleType: undefined,
       contractAddresses: {},
     })
   }
@@ -144,7 +144,7 @@ export const RemoveListingConfirmationModal = () => {
 
   const handleCancelItem = (tokenId: number, account: string, contractAddresses?: ContractAddresses) => {
     const cancel =
-      saleType === SaleType.MARKETPLACE
+      saleType === SaleType.BuyNow
         ? cancelListing(tokenId, account, contractAddresses)
         : cancelAuction(tokenId, account, contractAddresses)
 
@@ -163,7 +163,7 @@ export const RemoveListingConfirmationModal = () => {
 
       handleClose()
 
-      saleType === SaleType.MARKETPLACE
+      saleType === SaleType.BuyNow
         ? router.replace(router.asPath.replace('edit/buy-now', ''))
         : router.replace(router.asPath.replace('edit/auction', ''))
     }

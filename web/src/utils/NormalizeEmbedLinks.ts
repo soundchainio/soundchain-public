@@ -94,6 +94,8 @@ const normalizeBandcamp = async (str: string) => {
 export const getNormalizedLink = async (str: string) => {
   const link = (str.match(linksRegex) || [])[0]
 
+  if (!link) return undefined
+
   if (youtubeRegex.test(link)) return normalizeYoutube(link)
   if (soundcloudRegex.test(link)) return await normalizeSoundcloud(link)
   if (spotifyRegex.test(link)) return normalizeSpotify(link)

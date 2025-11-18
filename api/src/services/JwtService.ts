@@ -1,4 +1,4 @@
-import { expressjwt } from 'express-jwt';
+import jwt_middleware from 'express-jwt';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { Service } from './Service';
@@ -10,7 +10,7 @@ export interface JwtUser {
 }
 
 export class JwtService extends Service {
-  static middleware = expressjwt({
+  static middleware = jwt_middleware({
     secret: JWT_SECRET,
     algorithms: ['HS256'],
     credentialsRequired: false,

@@ -1,6 +1,6 @@
 import classNames from 'classnames'
 import { BottomNavBarWrapper } from 'components/BottomNavBar/BottomNavBarWrapper'
-import { useModalState } from 'contexts/providers/modal'
+import { useModalState } from 'contexts/ModalContext'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useIsMobile } from 'hooks/useIsMobile'
 import { useLayoutContext } from 'hooks/useLayoutContext'
@@ -43,7 +43,8 @@ interface LayoutProps {
 export const Layout = ({ children, className }: LayoutProps) => {
   const [sideMenuOpen, setSideMenuOpen] = useState(false)
   const { setHideBottomNavBarState } = useHideBottomNavBar()
-  const { showCommentModal } = useModalState()
+  const modalState = useModalState()
+  const showCommentModal = modalState?.showCommentModal
   const { hideBottomNavBar, isAuthLayout, topNavBarProps, isLandingLayout } = useLayoutContext()
   const { asPath } = useRouter()
   const [canInsertScript, setCanInsertScript] = useState(false)

@@ -1,41 +1,34 @@
-import { Marketplace } from 'components/Marketplace'
+import dynamic from 'next/dynamic'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'
-import { cacheFor, createApolloClient } from 'lib/apollo'
-import { MeDocument, MeQuery } from 'lib/graphql'
 import { GetServerSideProps } from 'next'
 import { useEffect, useMemo } from 'react'
 
-interface HomePageProps {
-  me?: MeQuery['me']
-}
+const Marketplace = dynamic(
+  () => import('components/Marketplace').then(mod => ({ default: mod.Marketplace })),
+  { ssr: false }
+)
+
+interface HomePageProps {}
 
 export const getServerSideProps: GetServerSideProps<HomePageProps> = async context => {
-  const apolloClient = createApolloClient(context)
-
-  const { data } = await apolloClient.query({
-    query: MeDocument,
-    context,
-  })
-
-  return cacheFor(HomePage, { me: data.me }, context, apolloClient)
+  return { props: {} }
 }
 
 export default function HomePage({}: HomePageProps) {
   const { setTopNavBarProps } = useLayoutContext()
-
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
       title: 'Marketplace',
     }),
     [],
   )
-
+  
   useEffect(() => {
     setTopNavBarProps(topNavBarProps)
   }, [setTopNavBarProps, topNavBarProps])
-
+  
   return (
     <>
       <SEO

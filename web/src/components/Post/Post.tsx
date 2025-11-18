@@ -1,4 +1,4 @@
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'

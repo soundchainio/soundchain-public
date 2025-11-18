@@ -8,35 +8,35 @@ export class Bid extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   nft: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
   tokenId: number;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   bidder: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ type: String, required: true })
   amount: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ type: String, required: true })
   amountToShow: number;
 
-  @Field()
+  @Field(() => String)
   @prop({ type: mongoose.Types.ObjectId, required: true })
   auctionId: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ type: mongoose.Types.ObjectId })
   profileId: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ type: mongoose.Types.ObjectId })
   userId: string;
 

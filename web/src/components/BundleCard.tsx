@@ -1,5 +1,5 @@
 import { Button } from 'components/common/Buttons/Button';
-import { useModalState } from 'contexts/providers/modal';
+import { useModalState } from 'contexts/ModalContext';
 import React from 'react';
 
 interface BundleCardProps {

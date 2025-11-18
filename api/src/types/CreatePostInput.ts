@@ -4,21 +4,21 @@ import { CustomTextLength } from '../validators/CustomTextLength';
 
 @InputType()
 export class CreatePostInput {
-  @Field()
+  @Field(() => String)
   @Validate(CustomTextLength, {
     message: 'Text is too long',
   })
   body: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   mediaLink?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   trackId?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @IsOptional()
   trackEditionId?: string;
 }

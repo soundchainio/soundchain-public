@@ -4,8 +4,8 @@ import { Logo } from 'icons/Logo'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
-import { Dialog, Transition, TransitionChild } from '@headlessui/react'
-import { MenuIcon } from '@heroicons/react/solid'
+import { Dialog, Transition } from '@headlessui/react'
+import { Bars3Icon } from '@heroicons/react/24/outline'
 
 import RainbowLink from './Links/RainbowLink'
 
@@ -33,11 +33,10 @@ export const NavItem = ({ text, link }: NavItemProps) => {
 
 function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
   return (
-    <Transition show={open} as={React.Fragment}>
+    <Transition show={open}>
       <Dialog onClose={close} className="relative z-20">
         <div className="fixed inset-0 flex items-center justify-end bg-black/50 p-0">
-          <TransitionChild
-            as={React.Fragment}
+          <Transition.Child
             enter="transition duration-200 ease-out"
             enterFrom="transform translate-x-[100%]"
             enterTo="transform translate-x-0 opacity-100"
@@ -54,7 +53,7 @@ function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
                 </ul>
               </div>
             </div>
-          </TransitionChild>
+          </Transition.Child>
         </div>
       </Dialog>
     </Transition>
@@ -86,7 +85,7 @@ export const Header = () => {
             </div>
 
             <button onClick={() => setDrawerOpen(true)} className="px-2 outline-0 focus:outline-0 active:outline-0">
-              <MenuIcon className="h-6 w-6 text-white md:hidden" />
+              <Bars3Icon className="h-6 w-6 text-white md:hidden" />
             </button>
           </nav>
         </div>

@@ -9,59 +9,59 @@ export class BuyNowItem extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   owner: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   trackId?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   trackEditionId?: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   nft: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
   tokenId: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ type: String })
   selectedCurrency: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   contract?: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
   startingTime: number;
 
-  @Field()
+  @Field(() => String)
   @prop({ type: String, required: true })
   pricePerItem: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ type: Number, required: true })
   pricePerItemToShow: number;
 
-  @Field()
+  @Field(() => String)
   @prop({ type: String, required: true })
   OGUNPricePerItem: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ type: Number, required: true })
   OGUNPricePerItemToShow: number;
 
-  @Field()
+  @Field(() => Boolean)
   @prop({ type: Boolean, required: true })
   acceptsMATIC: boolean;
 
-  @Field()
+  @Field(() => Boolean)
   @prop({ type: Boolean, required: true })
   acceptsOGUN: boolean;
 
@@ -71,7 +71,7 @@ export class BuyNowItem extends Model {
   @Field(() => Date)
   updatedAt: Date;
 
-  @Field()
+  @Field(() => Boolean)
   @prop({ default: true })
   valid: boolean;
 }

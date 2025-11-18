@@ -28,7 +28,7 @@ export class ProfileVerificationRequestResolver {
   @Authorized(Role.ADMIN)
   profileVerificationRequests(
     @Ctx() { profileVerificationRequestService }: Context,
-    @Arg('status', { nullable: true }) status: ProfileVerificationStatusType,
+    @Arg('status', () => ProfileVerificationStatusType, { nullable: true }) status: ProfileVerificationStatusType,
     @Arg('page', { nullable: true }) page: PageInput,
   ): Promise<ProfileVerificationRequestConnection> {
     return profileVerificationRequestService.getProfileVerificationRequests(status, page);

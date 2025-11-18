@@ -1,4 +1,4 @@
-import { useModalState } from 'contexts/providers/modal'
+import { useModalState } from 'contexts/ModalContext'
 import { Form, Formik, FormikHelpers } from 'formik'
 import {
   CreatePostInput,

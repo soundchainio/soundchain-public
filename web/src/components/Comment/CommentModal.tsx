@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import classNames from 'classnames';
 import GraphemeSplitter from 'grapheme-splitter';
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { useModalDispatch, useModalState } from 'contexts/ModalContext';
 import { useCommentQuery } from 'lib/graphql';
 import { CommentForm } from './CommentForm'; // Ensure the path is correct
 import { ModalsPortal } from '../ModalsPortal'; // Ensure the path is correct

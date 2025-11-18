@@ -1,536 +1,129 @@
 /* eslint-disable react/display-name */
-import { Dispatch, SetStateAction } from 'react';
-import { GridView, ViewProps } from 'components/GridView/GridView';
-import { ListView } from 'components/ListView/ListView';
-import { useModalState, useModalDispatch } from 'contexts/providers/modal';
-import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting';
-import { SaleType, useListingItemsQuery, TrackWithListingItem, Maybe } from 'lib/graphql';
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
-import { GenreLabel } from 'utils/Genres';
-import { SaleTypeLabel } from 'utils/SaleTypeLabel';
-import { MarketplaceFilterWrapper } from './MarketplaceFilterWrapper';
-import EthereumProvider from '@walletconnect/ethereum-provider';
-import { SingleIcon } from 'icons/SingleIcon';
-import { SweepIcon } from 'icons/SweepIcon';
-import { BundleIcon } from 'icons/BundleIcon';
-import { TokenCard } from './TokenCard';
-import { BundleCard } from './BundleCard';
-import { createPublicClient, http } from 'viem';
-import { zetachain, polygon } from 'viem/chains';
-import axios from 'axios';
-
-// Locally define TrackPrice to support string currency for Zetachain flexibility
-interface LocalTrackPrice {
-  value: number;
-  currency: string;
-}
-
-type ArrayOneOrMore<T> = [T, ...T[]];
+import { GridView } from 'components/GridView/GridView'
+import { ListView } from 'components/ListView/ListView'
+import { useModalState } from 'contexts/ModalContext'
+import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
+import { SaleType, Track, useListingItemsQuery } from 'lib/graphql'
+import { useEffect, useState, useCallback } from 'react'
+import { GenreLabel } from 'utils/Genres'
+import { SaleTypeLabel } from 'utils/SaleTypeLabel'
+import { MarketplaceFilterWrapper } from './MarketplaceFilterWrapper'
+import { OmnichainBillboard } from './OmnichainBillboard'
+import { CHAINS } from '../constants/chains'
 
 interface ListingItem {
-  saleType?: SaleType | undefined;
-  acceptsMATIC?: boolean | undefined;
-  acceptsOGUN?: boolean | undefined;
-  acceptsETH?: boolean | undefined;
-  acceptsUSDC?: boolean | undefined;
-  acceptsUSDT?: boolean | undefined;
-  acceptsSOL?: boolean | undefined;
-  acceptsBNB?: boolean | undefined;
-  acceptsDOGE?: boolean | undefined;
-  acceptsBONK?: boolean | undefined;
-  acceptsMEATEOR?: boolean | undefined;
-  acceptsPEPE?: boolean | undefined;
-  acceptsBASE?: boolean | undefined;
-  acceptsXTZ?: boolean | undefined;
-  acceptsAVAX?: boolean | undefined;
-  acceptsSHIB?: boolean | undefined;
-  acceptsXRP?: boolean | undefined;
-  acceptsSUI?: boolean | undefined;
-  acceptsHBAR?: boolean | undefined;
-  acceptsLINK?: boolean | undefined;
-  acceptsLTC?: boolean | undefined;
-  acceptsZETA?: boolean | undefined;
-  acceptsBTC?: boolean | undefined;
-  acceptsPENGU?: boolean | undefined;
-  acceptsYZY?: boolean | undefined;
-  chainId?: number | undefined;
-  tokenAmount?: number | undefined;
-  tokenSymbol?: string | undefined;
-  bundleId?: string | undefined;
-  privateAsset?: string | undefined;
-  price?: LocalTrackPrice | undefined;
-  [key: string]: boolean | undefined | number | string | LocalTrackPrice;
+  saleType?: SaleType | undefined
+  acceptsMATIC?: boolean | undefined
+  acceptsOGUN?: boolean | undefined
 }
-
-type CryptoProps = {
-  [K in `accepts${string}`]: boolean | undefined;
-} & {
-  [K in `setAccepts${string}`]: Dispatch<SetStateAction<boolean | undefined>>;
-};
-
-const cryptoCurrencies = [
-  'MATIC', 'OGUN', 'ETH', 'USDC', 'USDT', 'SOL', 'BNB', 'DOGE', 'BONK',
-  'MEATEOR', 'PEPE', 'BASE', 'XTZ', 'AVAX', 'SHIB', 'XRP', 'SUI', 'HBAR',
-  'LINK', 'LTC', 'ZETA', 'BTC', 'PENGU', 'YZY'
-];
-
-const privateAssetOptions = ['homes', 'cars', 'clothing', 'vinyl', 'concert tickets', 'movie tickets', 'sporting event tickets'];
-
-const mockConversionRates: { [token: string]: number } = {
-  MATIC: 0.50, OGUN: 10.00, ETH: 2000.00, USDC: 1.00, USDT: 1.00, SOL: 150.00,
-  BNB: 300.00, DOGE: 0.10, BONK: 0.00001, MEATEOR: 0.50, PEPE: 0.000001,
-  BASE: 1.00, XTZ: 1.50, AVAX: 20.00, SHIB: 0.00000001, XRP: 0.50, SUI: 1.00,
-  HBAR: 0.05, LINK: 15.00, LTC: 70.00, ZETA: 1.00, BTC: 60000.00, PENGU: 2.00,
-  YZY: 5.00
-};
-
-const getContractAddress = (token: string, chainId?: number): string => {
-  const addresses: { [key: string]: { [key: number]: string } } = {
-    MATIC: { 137: '0x0000000000000000000000000000000000001010' },
-    OGUN: { 1: '0x123...' },
-    ETH: { 1: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' },
-    USDC: { 137: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174' },
-    USDT: { 137: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F' },
-    ZETA: { 7000: '0x111...' },
-    PENGU: { 1: '0x456...' },
-    SOL: { 101: '0x...' },
-    BNB: { 56: '0x...' },
-    DOGE: { 250: '0x...' },
-    BONK: { 250: '0x...' },
-    MEATEOR: { 25: '0x...' },
-    PEPE: { 100: '0x...' },
-    BASE: { 8455: '0x...' },
-    XTZ: { 1284: '0x...' },
-    AVAX: { 43114: '0x...' },
-    SHIB: { 128: '0x...' },
-    XRP: { 1442: '0x...' },
-    SUI: { 784: '0x...' },
-    HBAR: { 415: '0x...' },
-    LINK: { 60: '0x...' },
-    LTC: { 2: '0x...' },
-    BTC: { 1839: '0x...' },
-    YZY: { 101: 'DrZ26cKJDksVRWib3DVVsjo9eeXccc7hKhDJviiYEEZY' }
-  };
-  return addresses[token]?.[chainId as number] || '0x0000000000000000000000000000000000000000';
-};
-
-const convertToUSD = (price: number | undefined, tokenSymbol: string | undefined): number => {
-  if (!price || !tokenSymbol) return 0;
-  return price * (mockConversionRates[tokenSymbol] || 1);
-};
 
 const buildMarketplaceFilter = (
   genres: GenreLabel[] | undefined,
   saleType: SaleTypeLabel | undefined,
-  cryptoStates: Record<string, boolean | undefined>,
-  chainId: number | undefined,
-  bundleSelections: string[] | undefined,
-  purchaseType: 'single' | 'sweep' | 'bundle' | undefined,
-  transactionFee: number | undefined,
-  customBundle?: { nftIds: string[]; tokenSymbol: string; tokenAmount: number; chainId: number; privateAsset?: string }[],
+  acceptsMATIC: boolean | undefined,
+  acceptsOGUN: boolean | undefined,
 ) => {
-  const listingItem: Partial<ListingItem> = {
-    ...Object.fromEntries(cryptoCurrencies.map(crypto => [`accepts${crypto}`, undefined])),
-  };
-  if (saleType) listingItem.saleType = saleType.key;
-  cryptoCurrencies.forEach(crypto => {
-    const value = cryptoStates[`accepts${crypto}`];
-    if (value === true) {
-      listingItem[`accepts${crypto}`] = true;
-    }
-  });
-  if (chainId) listingItem.chainId = chainId;
+  const listingItem: ListingItem = {}
+
+  if (saleType) {
+    listingItem.saleType = saleType.key
+  }
+
+  if (acceptsMATIC) {
+    listingItem.acceptsMATIC = acceptsMATIC
+  }
+
+  if (acceptsOGUN) {
+    listingItem.acceptsOGUN = acceptsOGUN
+  }
+
   return {
     ...(genres?.length && { genres: genres.map(genre => genre.key) }),
-    ...(Object.keys(listingItem).length > 0 && { listingItem }),
-    ...(bundleSelections?.length && { bundleIds: bundleSelections }),
-    ...(purchaseType && { purchaseType }),
-    ...(transactionFee && transactionFee > 0 && { transactionFee }),
-    ...(customBundle?.length && { customBundles: customBundle }),
-  };
-};
-
-const fetchAggregatorData = async (chainId: number | undefined, retries = 3): Promise<{ [token: string]: number }> => {
-  const apiKey = chainId === 137 ? '-6cS3AFE-iS1ZCnh-bNLQGRM1Gif9t-8' : 'hjUDQMyFJcZP2cTLKW2iy';
-  const chain = chainId === 137 ? polygon : zetachain;
-  const client = createPublicClient({
-    chain,
-    transport: http(`https://${chainId === 137 ? 'polygon-mainnet' : 'zetachain-mainnet'}.g.alchemy.com/v2/${apiKey}`),
-  });
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const block = await client.getBlock({ blockNumber: BigInt('latest') });
-      console.log(`${chain.name} Latest Block:`, block.number, block.timestamp);
-      const contractAddresses = cryptoCurrencies.map(token => getContractAddress(token, chainId));
-      const priceResponse = await axios.post(`https://${chainId === 137 ? 'polygon-mainnet' : 'zetachain-mainnet'}.g.alchemy.com/v2/${apiKey}`, {
-        jsonrpc: '2.0',
-        method: 'alchemy_getTokenMetadata',
-        params: [contractAddresses],
-        id: 1,
-      }, { timeout: 5000 });
-      const prices = priceResponse.data.result;
-      const rates = prices.reduce((acc: { [token: string]: number }, token: { symbol: string; price?: number }) => {
-        acc[token.symbol] = token.price || mockConversionRates[token.symbol] || 1;
-        return acc;
-      }, {} as { [token: string]: number});
-      return { ...rates, ...mockConversionRates };
-    } catch (error) {
-      if (attempt === retries) {
-        console.error('Aggregator API error after retries:', error);
-        return { ...mockConversionRates };
-      }
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
-    }
+    ...(Object.keys(listingItem).length > 0 && {
+      listingItem: listingItem,
+    }),
   }
-  return { ...mockConversionRates }; // Fallback
-};
-
-// Mapping function to convert TrackWithListingItem, adding optional fields
-const mapTrackToListingItem = (track: TrackWithListingItem): TrackWithListingItem => {
-  const price: LocalTrackPrice = track.price
-    ? { value: track.price.value ?? 0, currency: track.price?.currency || 'ETH' }
-    : { value: 0, currency: 'ETH' };
-  return {
-    ...track,
-    tokenAmount: track.price?.value ?? 0,
-    tokenSymbol: track.price?.currency || 'ETH',
-    bundleId: undefined,
-    privateAsset: undefined,
-    saleType: track.saleType || undefined,
-    ISRC: 'none' , // Add to satisfy TrackWithListingItem schema
-    acceptsMATIC: undefined,
-    acceptsOGUN: undefined,
-    acceptsETH: undefined,
-    acceptsUSDC: undefined,
-    acceptsUSDT: undefined,
-    acceptsSOL: undefined,
-    acceptsBNB: undefined,
-    acceptsDOGE: undefined,
-    acceptsBONK: undefined,
-    acceptsMEATEOR: undefined,
-    acceptsPEPE: undefined,
-    acceptsBASE: undefined,
-    acceptsXTZ: undefined,
-    acceptsAVAX: undefined,
-    acceptsSHIB: undefined,
-    acceptsXRP: undefined,
-    acceptsSUI: undefined,
-    acceptsHBAR: undefined,
-    acceptsLINK: undefined,
-    acceptsLTC: undefined,
-    acceptsZETA: undefined,
-    acceptsBTC: undefined,
-    acceptsPENGU: undefined,
-    acceptsYZY: undefined,
-    chainId: 137,
-  } as TrackWithListingItem;
-};
+}
 
 export const Marketplace = () => {
-  const pageSize = 9;
-  const [walletProvider, setWalletProvider] = useState<any | null>(null); // WalletConnect state
-  const [isLoadingMore, setIsLoadingMore] = useState(false); // New state for load more
+  const pageSize = 30
   const {
     genres: genresFromModal,
     filterSaleType,
     acceptsMATIC: filterAcceptsMATIC,
     acceptsOGUN: filterAcceptsOGUN,
-    acceptsETH: filterAcceptsETH,
-    acceptsUSDC: filterAcceptsUSDC,
-    acceptsUSDT: filterAcceptsUSDT,
-    acceptsSOL: filterAcceptsSOL,
-    acceptsBNB: filterAcceptsBNB,
-    acceptsDOGE: filterAcceptsDOGE,
-    acceptsBONK: filterAcceptsBONK,
-    acceptsMEATEOR: filterAcceptsMEATEOR,
-    acceptsPEPE: filterAcceptsPEPE,
-    acceptsBASE: filterAcceptsBASE,
-    acceptsXTZ: filterAcceptsXTZ,
-    acceptsAVAX: filterAcceptsAVAX,
-    acceptsSHIB: filterAcceptsSHIB,
-    acceptsXRP: filterAcceptsXRP,
-    acceptsSUI: filterAcceptsSUI,
-    acceptsHBAR: filterAcceptsHBAR,
-    acceptsLINK: filterAcceptsLINK,
-    acceptsLTC: filterAcceptsLTC,
-    acceptsZETA: filterAcceptsZETA,
-    acceptsBTC: filterAcceptsBTC,
-    acceptsPENGU: filterAcceptsPENGU,
-    acceptsYZY: filterAcceptsYZY, // Added for YZY
-    bundleSelections = [],
-    customBundle = [],
-    transactionFee,
-    purchaseType,
-    sweepQueue = [], // Supports sweeps
-  } = useModalState();
-  const dispatch = useModalDispatch();
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'single'>('grid');
-  const [genres, setGenres] = useState<GenreLabel[] | undefined>(genresFromModal);
-  const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(filterSaleType);
-  const [acceptsMATIC, setAcceptsMATIC] = useState<boolean | undefined>(filterAcceptsMATIC);
-  const [acceptsOGUN, setAcceptsOGUN] = useState<boolean | undefined>(filterAcceptsOGUN);
-  const [cryptoStates, setCryptoStates] = useState<Record<string, boolean | undefined>>({
-    acceptsETH: filterAcceptsETH,
-    acceptsUSDC: filterAcceptsUSDC,
-    acceptsUSDT: filterAcceptsUSDT,
-    acceptsSOL: filterAcceptsSOL,
-    acceptsBNB: filterAcceptsBNB,
-    acceptsDOGE: filterAcceptsDOGE,
-    acceptsBONK: filterAcceptsBONK,
-    acceptsMEATEOR: filterAcceptsMEATEOR,
-    acceptsPEPE: filterAcceptsPEPE,
-    acceptsBASE: filterAcceptsBASE,
-    acceptsXTZ: filterAcceptsXTZ,
-    acceptsAVAX: filterAcceptsAVAX,
-    acceptsSHIB: filterAcceptsSHIB,
-    acceptsXRP: filterAcceptsXRP,
-    acceptsSUI: filterAcceptsSUI,
-    acceptsHBAR: filterAcceptsHBAR,
-    acceptsLINK: filterAcceptsLINK,
-    acceptsLTC: filterAcceptsLTC,
-    acceptsZETA: filterAcceptsZETA,
-    acceptsBTC: filterAcceptsBTC,
-    acceptsPENGU: filterAcceptsPENGU,
-    acceptsYZY: filterAcceptsYZY, // Sync YZY
-  });
-  const [chainId, setChainId] = useState<number | undefined>(undefined);
-  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt);
-  const [selectedBundle, setSelectedBundle] = useState<string[] | undefined>(bundleSelections);
-  const [customBundleState, setCustomBundleState] = useState<{ nftIds: string[]; tokenSymbol: string; tokenAmount: number; chainId: number; privateAsset?: string }[] | undefined>(customBundle);
-  const [purchaseTypeState, setPurchaseTypeState] = useState<'single' | 'sweep' | 'bundle' | undefined>(purchaseType);
-  const lastCardRef = useRef<HTMLDivElement>(null);
+  } = useModalState() || {}
+
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined)
+  const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined)
+  const [acceptsMATIC, setAcceptsMATIC] = useState<boolean | undefined>(undefined)
+  const [acceptsOGUN, setAcceptsOGUN] = useState<boolean | undefined>(undefined)
+  const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
+  const [selectedChains, setSelectedChains] = useState<string[]>(['polygon'])
+
   const { data, refetch, fetchMore, loading } = useListingItemsQuery({
-    variables: { page: { first: pageSize }, sort: SelectToApolloQuery[sorting], filter: {} },
-    ssr: false,
-  });
-  const projectId = 'YOUR_WALLETCONNECT_PROJECT_ID';
-  const chains = [1, 137, 7000, 56, 8455, 43114, 101, 250, 1284, 25, 100, 128, 1442, 784, 415, 60, 2, 1839]; // Mutable array
-  const optionalChains = [...chains] as ArrayOneOrMore<number>; // Create mutable copy and assert non-empty
-  // Mock data for tokenListings and bundleListings with ISRC and YZY
-  const tokenListings = [
-    { tokenSymbol: 'MATIC', tokenAmount: 5, chainId: 137, price: 0.5, usdPrice: convertToUSD(0.5, 'MATIC'), ISRC: 'US1234567890' },
-    { tokenSymbol: 'OGUN', tokenAmount: 3, chainId: 1, price: 10, usdPrice: convertToUSD(10, 'OGUN'), ISRC: 'US0987654321' },
-    { tokenSymbol: 'PENGU', tokenAmount: 7, chainId: 1, price: 2, usdPrice: convertToUSD(2, 'PENGU'), ISRC: 'US1122334455' },
-    { tokenSymbol: 'ETH', tokenAmount: 1, chainId: 1, price: 2000, usdPrice: convertToUSD(2000, 'ETH'), ISRC: 'US5566778899' },
-    { tokenSymbol: 'USDC', tokenAmount: 100, chainId: 1, price: 100, usdPrice: convertToUSD(100, 'USDC'), ISRC: 'US6677889900' },
-    { tokenSymbol: 'USDT', tokenAmount: 100, chainId: 1, price: 100, usdPrice: convertToUSD(100, 'USDT'), ISRC: 'US7788990011' },
-    { tokenSymbol: 'SOL', tokenAmount: 1, chainId: 101, price: 150, usdPrice: convertToUSD(150, 'SOL'), ISRC: 'US8899001122' },
-    { tokenSymbol: 'BNB', tokenAmount: 1, chainId: 56, price: 300, usdPrice: convertToUSD(300, 'BNB'), ISRC: 'US9900112233' },
-    { tokenSymbol: 'DOGE', tokenAmount: 1000, chainId: 250, price: 0.1, usdPrice: convertToUSD(0.1, 'DOGE'), ISRC: 'US0011223344' },
-    { tokenSymbol: 'BONK', tokenAmount: 1000000, chainId: 250, price: 0.00001, usdPrice: convertToUSD(0.00001, 'BONK'), ISRC: 'US1122334455' },
-    { tokenSymbol: 'MEATEOR', tokenAmount: 50, chainId: 25, price: 0.5, usdPrice: convertToUSD(0.5, 'MEATEOR'), ISRC: 'US2233445566' },
-    { tokenSymbol: 'PEPE', tokenAmount: 1000000, chainId: 100, price: 0.000001, usdPrice: convertToUSD(0.000001, 'PEPE'), ISRC: 'US3344556677' },
-    { tokenSymbol: 'BASE', tokenAmount: 10, chainId: 8455, price: 1, usdPrice: convertToUSD(1, 'BASE'), ISRC: 'US4455667788' },
-    { tokenSymbol: 'XTZ', tokenAmount: 10, chainId: 1284, price: 1.5, usdPrice: convertToUSD(1.5, 'XTZ'), ISRC: 'US5566778899' },
-    { tokenSymbol: 'AVAX', tokenAmount: 5, chainId: 43114, price: 20, usdPrice: convertToUSD(20, 'AVAX'), ISRC: 'US6677889900' },
-    { tokenSymbol: 'SHIB', tokenAmount: 1000000000, chainId: 128, price: 0.00000001, usdPrice: convertToUSD(0.00000001, 'SHIB'), ISRC: 'US7788990011' },
-    { tokenSymbol: 'XRP', tokenAmount: 100, chainId: 1442, price: 0.50, usdPrice: convertToUSD(0.50, 'XRP'), ISRC: 'US8899001122' },
-    { tokenSymbol: 'SUI', tokenAmount: 10, chainId: 784, price: 1, usdPrice: convertToUSD(1, 'SUI'), ISRC: 'US9900112233' },
-    { tokenSymbol: 'HBAR', tokenAmount: 200, chainId: 415, price: 0.05, usdPrice: convertToUSD(0.05, 'HBAR'), ISRC: 'US0011223344' },
-    { tokenSymbol: 'LINK', tokenAmount: 10, chainId: 60, price: 15, usdPrice: convertToUSD(15, 'LINK'), ISRC: 'US1122334455' },
-    { tokenSymbol: 'LTC', tokenAmount: 1, chainId: 2, price: 70, usdPrice: convertToUSD(70, 'LTC'), ISRC: 'US2233445566' },
-    { tokenSymbol: 'ZETA', tokenAmount: 100, chainId: 7000, price: 1, usdPrice: convertToUSD(1, 'ZETA'), ISRC: 'US3344556677' },
-    { tokenSymbol: 'BTC', tokenAmount: 0.01, chainId: 1839, price: 60000, usdPrice: convertToUSD(60000, 'BTC'), ISRC: 'US4455667788' },
-    { tokenSymbol: 'YZY', tokenAmount: 10, chainId: 101, price: 5, usdPrice: convertToUSD(5, 'YZY'), ISRC: 'USYeezy1234' }
-  ];
-  const bundleListings = [
-    { nftIds: ['nft1', 'nft2'], tokenSymbol: 'ETH', tokenAmount: 10, chainId: 1, privateAsset: 'concert tickets', price: 2000, usdPrice: convertToUSD(2000, 'ETH'), ISRC: 'US5566778899' },
-    { nftIds: ['nft3', 'nft4'], tokenSymbol: 'YZY', tokenAmount: 20, chainId: 101, privateAsset: 'vinyl', price: 100, usdPrice: convertToUSD(100, 'YZY'), ISRC: 'USYeezy5678' }
-  ];
-  // Generalized calculateFee with optional parameters, updated to accept TrackWithListingItem
-  const calculateFee = useCallback((
-    listings?: TrackWithListingItem[],
-    bundle?: { nftIds: string[]; tokenSymbol: string; tokenAmount: number; chainId: number; privateAsset?: string },
-    amount?: number,
-    recipientCount?: number
-  ) => {
-    let totalUSDValue = 0;
-    if (listings) {
-      const visibleListings = listings.slice(0, pageSize) || [];
-      totalUSDValue = visibleListings.reduce((sum, item) => sum + convertToUSD(item.price?.value || 0, item.price?.currency || 'ETH'), 0) || 0;
-    } else if (bundle) {
-      totalUSDValue = convertToUSD(bundle.tokenAmount, bundle.tokenSymbol) || 0; // Aggregate bundle value
-    } else if (amount) {
-      totalUSDValue = convertToUSD(amount, 'ETH') || 0; // Default to ETH for transfers
-      if (recipientCount) totalUSDValue += recipientCount * 0.01; // Flat fee per recipient for airdrops
-    }
-    return totalUSDValue * 0.0005; // 0.05% fee
-  }, [pageSize]);
-  useEffect(() => {
-    let isMounted = true;
-    setCryptoStates({
-      acceptsETH: filterAcceptsETH,
-      acceptsUSDC: filterAcceptsUSDC,
-      acceptsUSDT: filterAcceptsUSDT,
-      acceptsSOL: filterAcceptsSOL,
-      acceptsBNB: filterAcceptsBNB,
-      acceptsDOGE: filterAcceptsDOGE,
-      acceptsBONK: filterAcceptsBONK,
-      acceptsMEATEOR: filterAcceptsMEATEOR,
-      acceptsPEPE: filterAcceptsPEPE,
-      acceptsBASE: filterAcceptsBASE,
-      acceptsXTZ: filterAcceptsXTZ,
-      acceptsAVAX: filterAcceptsAVAX,
-      acceptsSHIB: filterAcceptsSHIB,
-      acceptsXRP: filterAcceptsXRP,
-      acceptsSUI: filterAcceptsSUI,
-      acceptsHBAR: filterAcceptsHBAR,
-      acceptsLINK: filterAcceptsLINK,
-      acceptsLTC: filterAcceptsLTC,
-      acceptsZETA: filterAcceptsZETA,
-      acceptsBTC: filterAcceptsBTC,
-      acceptsPENGU: filterAcceptsPENGU,
-      acceptsYZY: filterAcceptsYZY, // Sync YZY
-    });
-    setGenres(genresFromModal);
-    setSaleType(filterSaleType);
-    setAcceptsMATIC(filterAcceptsMATIC);
-    setAcceptsOGUN(filterAcceptsOGUN);
-    setPurchaseTypeState(purchaseType); // Sync purchaseType state
-    const mappedListings = data?.listingItems.nodes?.map((node) => mapTrackToListingItem(node as TrackWithListingItem));
-    const fee = calculateFee(mappedListings);
-    if (fee !== undefined && !isNaN(fee)) {
-      dispatch.dispatchShowFilterMarketplaceModal(
-        false, // State update only, no modal show
-        genres,
-        saleType,
-        filterAcceptsMATIC,
-        filterAcceptsOGUN,
-        filterAcceptsETH,
-        filterAcceptsUSDC,
-        filterAcceptsUSDT,
-        filterAcceptsSOL,
-        filterAcceptsBNB,
-        filterAcceptsDOGE,
-        filterAcceptsBONK,
-        filterAcceptsMEATEOR,
-        filterAcceptsPEPE,
-        filterAcceptsBASE,
-        filterAcceptsXTZ,
-        filterAcceptsAVAX,
-        filterAcceptsSHIB,
-        filterAcceptsXRP,
-        filterAcceptsSUI,
-        filterAcceptsHBAR,
-        filterAcceptsLINK,
-        filterAcceptsLTC,
-        filterAcceptsZETA,
-        filterAcceptsBTC,
-        filterAcceptsPENGU,
-        filterAcceptsYZY, // Added for YZY
-      );
-    } else {
-      console.warn('Invalid transaction fee calculated:', fee);
-    }
-    return () => { isMounted = false; }; // Cleanup
-  }, [
-    filterAcceptsMATIC, filterAcceptsOGUN, filterAcceptsETH, filterAcceptsUSDC,
-    filterAcceptsUSDT, filterAcceptsSOL, filterAcceptsBNB, filterAcceptsDOGE,
-    filterAcceptsBONK, filterAcceptsMEATEOR, filterAcceptsPEPE, filterAcceptsBASE,
-    filterAcceptsXTZ, filterAcceptsAVAX, filterAcceptsSHIB, filterAcceptsXRP,
-    filterAcceptsSUI, filterAcceptsHBAR, filterAcceptsLINK, filterAcceptsLTC,
-    filterAcceptsZETA, filterAcceptsBTC, filterAcceptsPENGU, filterAcceptsYZY,
-    genresFromModal, filterSaleType, data, dispatch, calculateFee, purchaseType,
-  ]);
-  useEffect(() => {
-    let isMounted = true;
-    const initWalletConnect = async () => {
-      try {
-        const provider = await EthereumProvider.init({
-          projectId,
-          chains,
-          optionalChains,
-          showQrModal: true,
-        });
-        if (isMounted) {
-          setWalletProvider(provider);
-          console.log('WalletConnect initialized:', provider);
-          // Sync wallet-owned NFTs (e.g., PENGU, YZY) with marketplace
-          if (provider) {
-            const accounts = await provider.enable();
-            // Fetch user NFTs and update listings (implement with your blockchain SDK)
-            // Example: dispatch.updateListings(accounts[0], cryptoCurrencies);
-          }
-        }
-      } catch (error) {
-        if (isMounted) console.error('WalletConnect initialization error:', error);
-      }
-    };
-    initWalletConnect();
-    return () => { isMounted = false; }; // Cleanup
-  }, [projectId, chains, optionalChains]);
-  const handlePurchaseTypeChange = (type: 'single' | 'sweep' | 'bundle' | undefined) => {
-    dispatch.dispatchUpdatePurchaseType(type); // Sync with modal state
-  };
-  const loadMore = useCallback(() => {
-    if (!isLoadingMore && data?.listingItems.pageInfo?.hasNextPage) {
-      let lastCall = Date.now();
-      const debounceDelay = 500;
-      if (Date.now() - lastCall > debounceDelay) {
-        setIsLoadingMore(true);
-        fetchMore({
-          variables: {
-            page: { first: pageSize, after: data.listingItems.pageInfo.endCursor },
-            sort: SelectToApolloQuery[sorting],
-            filter: buildMarketplaceFilter(genres, saleType, cryptoStates, chainId, selectedBundle, purchaseTypeState, transactionFee, customBundleState),
-          },
-        }).finally(() => setIsLoadingMore(false));
-        lastCall = Date.now();
-      }
-    }
-  }, [data?.listingItems.pageInfo?.hasNextPage, sorting, genres, saleType, cryptoStates, chainId, fetchMore, selectedBundle, purchaseTypeState, transactionFee, customBundleState, isLoadingMore]);
-  useEffect(() => {
-    refetch({
+    variables: {
       page: { first: pageSize },
       sort: SelectToApolloQuery[sorting],
-      filter: buildMarketplaceFilter(genres, saleType, cryptoStates, chainId, selectedBundle, purchaseTypeState, transactionFee, customBundleState),
-    });
-  }, [genres, saleType, cryptoStates, chainId, sorting, refetch, selectedBundle, purchaseTypeState, transactionFee, customBundleState]);
+      filter: {},
+    },
+    ssr: false,
+  })
+
+  useEffect(() => genresFromModal && setGenres(genresFromModal), [genresFromModal])
+  useEffect(() => filterSaleType && setSaleType(filterSaleType), [filterSaleType])
+  useEffect(() => setAcceptsMATIC(filterAcceptsMATIC), [filterAcceptsMATIC])
+  useEffect(() => setAcceptsOGUN(filterAcceptsOGUN), [filterAcceptsOGUN])
+
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && data?.listingItems.pageInfo?.hasNextPage && !loading) {
-          loadMore();
-        }
+    refetch({
+      page: {
+        first: pageSize,
       },
-      { threshold: 1 },
-    );
-    if (lastCardRef.current) observer.observe(lastCardRef.current);
-    return () => observer.disconnect();
-  }, [data?.listingItems.pageInfo?.hasNextPage, loading, loadMore]);
-  const handleList = useCallback(() => {
-    console.log('Listing action triggered');
-    // Implement listing logic, e.g., dispatch modal action
-    // dispatch({ type: 'SHOW_LIST_MODAL', payload: { nftIds: [] } });
-  }, []);
-  const memoizedTokenListings = useMemo(() => tokenListings.map((token, index) => (
-    <TokenCard
-      key={`token-${index}`}
-      tokenSymbol={token.tokenSymbol}
-      tokenAmount={token.tokenAmount}
-      chainId={token.chainId}
-      price={token.price}
-      usdPrice={token.usdPrice}
-      isrc={token.ISRC || 'none'} // Valid with ISRC
-    />
-  )), [tokenListings]);
-  const memoizedBundleListings = useMemo(() => bundleListings.map((bundle, index) => (
-    <BundleCard
-      key={`bundle-${index}`}
-      nftIds={bundle.nftIds}
-      tokenSymbol={bundle.tokenSymbol}
-      tokenAmount={bundle.tokenAmount}
-      chainId={bundle.chainId}
-      privateAsset={bundle.privateAsset}
-      onList={handleList}
-      privateAssetOptions={privateAssetOptions}
-      price={bundle.price}
-      usdPrice={bundle.usdPrice}
-      isrc={bundle.ISRC || 'none'} // Valid with ISRC
-    />
-  )), [bundleListings, handleList]);
+      sort: SelectToApolloQuery[sorting],
+      filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN),
+    })
+  }, [genres, saleType, refetch, sorting, acceptsMATIC, acceptsOGUN])
+
+  const loadMore = () => {
+    fetchMore({
+      variables: {
+        page: {
+          first: pageSize,
+          after: data?.listingItems.pageInfo.endCursor,
+        },
+        sort: SelectToApolloQuery[sorting],
+        filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN),
+      },
+    })
+  }
+
+  const handleChainToggle = useCallback((chainId: string) => {
+    setSelectedChains(prev =>
+      prev.includes(chainId)
+        ? prev.filter(id => id !== chainId)
+        : [...prev, chainId]
+    )
+  }, [])
+
+  const handleClearAllChains = useCallback(() => {
+    setSelectedChains([])
+  }, [])
+
+  const handleSelectAllChains = useCallback(() => {
+    const allChainIds = Object.keys(CHAINS)
+    setSelectedChains(allChainIds)
+  }, [])
+
   return (
     <>
+      <OmnichainBillboard
+        selectedChains={selectedChains}
+        onChainToggle={handleChainToggle}
+        onSelectAll={handleSelectAllChains}
+        onClearAll={handleClearAllChains}
+      />
       <MarketplaceFilterWrapper
         totalCount={data?.listingItems.pageInfo.totalCount}
         viewMode={viewMode}
@@ -539,61 +132,32 @@ export const Marketplace = () => {
         setGenres={setGenres}
         saleType={saleType}
         setSaleType={setSaleType}
-        acceptsMATIC={acceptsMATIC}
-        setAcceptsMATIC={setAcceptsMATIC}
-        acceptsOGUN={acceptsOGUN}
-        setAcceptsOGUN={setAcceptsOGUN}
-        {...cryptoCurrencies.reduce((acc, crypto) => ({
-          ...acc,
-          [`accepts${crypto}`]: cryptoStates[`accepts${crypto}`],
-          [`setAccepts${crypto}`]: (value: boolean | undefined) =>
-            setCryptoStates(prev => ({ ...prev, [`accepts${crypto}`]: value })),
-        }), {} as CryptoProps)}
-        chainId={chainId}
-        setChainId={setChainId}
+        acceptedTokens={[]}
+        setAcceptedTokens={() => {}}
+        chainId={undefined}
+        setChainId={() => {}}
         sorting={sorting}
         setSorting={setSorting}
-        bundleSelections={selectedBundle}
-        setBundleSelections={setSelectedBundle}
-        sweepQueue={sweepQueue}
-        setSweepQueue={(queue: string[]) => dispatch.dispatchUpdateSweepQueue(queue)}
-        purchaseType={purchaseTypeState}
-        setPurchaseType={setPurchaseTypeState}
-        transactionFee={transactionFee}
-        customBundle={customBundleState}
-        setCustomBundle={setCustomBundleState}
-        privateAssetOptions={privateAssetOptions}
         className="sm:flex-col md:flex-row"
       />
       {viewMode === 'grid' ? (
         <GridView
-          tracks={data?.listingItems.nodes as TrackWithListingItem[]}
           loading={loading}
-          refetch={refetch}
-          hasNextPage={data?.listingItems.pageInfo?.hasNextPage}
+          hasNextPage={data?.listingItems.pageInfo.hasNextPage}
           loadMore={loadMore}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"
-        >
-          {memoizedTokenListings}
-          {memoizedBundleListings}
-        </GridView>
+          tracks={data?.listingItems.nodes as Track[]}
+          refetch={refetch}
+          className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-4 py-6"
+        />
       ) : (
         <ListView
-          tracks={data?.listingItems.nodes?.map(node => mapTrackToListingItem(node)) as TrackWithListingItem[]}
           loading={loading}
-          refetch={refetch}
-          hasNextPage={data?.listingItems.pageInfo?.hasNextPage}
+          hasNextPage={data?.listingItems.pageInfo.hasNextPage}
           loadMore={loadMore}
-          lastCardRef={lastCardRef}
-          className="flex flex-col sm:flex-row flex-wrap"
-        >
-          {memoizedTokenListings}
-          {memoizedBundleListings}
-        </ListView>
-      )}
-      {transactionFee > 0 && (
-        <div className="text-white text-center sm:text-left md:text-right">Transaction Fee: ${transactionFee.toFixed(2)}</div>
+          tracks={data?.listingItems.nodes as Track[]}
+          refetch={refetch}
+        />
       )}
     </>
-  );
-};
+  )
+}

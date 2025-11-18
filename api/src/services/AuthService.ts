@@ -31,6 +31,7 @@ export class AuthService extends Service {
     });
 
     const soundChainUser = await this.getSoundChainUser();
+    console.log("soundChainUser lookup result:", soundChainUser);
 
     try {
       await user.save();

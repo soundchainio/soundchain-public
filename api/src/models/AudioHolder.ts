@@ -8,15 +8,15 @@ export class AudioHolder extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field({ nullable: false })
+  @Field(() => String, { nullable: false })
   @prop({ required: true })
   walletAddress: string;
 
-  @Field({ nullable: false })
+  @Field(() => Number, { nullable: false })
   @prop({ required: true })
   amount: number; // Changed from string to number to match NewAudioHolderParams
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ default: false })
   ogunClaimed?: boolean;
 

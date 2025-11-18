@@ -1,4 +1,4 @@
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { DownArrow } from 'icons/DownArrow'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { Reaction, useReactionsLazyQuery } from 'lib/graphql'
@@ -7,20 +7,20 @@ import { InfiniteLoader } from 'components/InfiniteLoader'
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { Modal } from './Modal'
 import { ReactionItem } from './ReactionItem'
-import 'emoji-mart/css/emoji-mart.css'
 
 export const ReactionsModal = () => {
-  const {
-    reactions: { postId, show, top, total },
-  } = useModalState()
-  const [reactions, { data, fetchMore }] = useReactionsLazyQuery({ variables: { postId: postId as string } })
+  const modalState = useModalState()
+  const reactions = modalState?.reactions || { postId: undefined, show: false, top: [], total: 0 }
+  const { postId, show, top, total } = reactions
+  
+  const [reactionsData, { data, fetchMore }] = useReactionsLazyQuery({ variables: { postId: postId as string } })
   const { dispatchReactionsModal } = useModalDispatch()
 
   useEffect(() => {
     if (show && postId) {
-      reactions()
+      reactionsData()
     }
-  }, [show, postId, reactions])
+  }, [show, postId, reactionsData])
 
   const onLoadMore = () => {
     if (fetchMore) {
@@ -62,7 +62,7 @@ export const ReactionsModal = () => {
       <div className="h-full bg-gray-25">
         {!data && (
           <div className="flex items-center">
-            <LoaderAnimation loadingMessage="Loading Rections" />
+            <LoaderAnimation loadingMessage="Loading Reactions" />
           </div>
         )}
         <div>
@@ -71,7 +71,7 @@ export const ReactionsModal = () => {
           ))}
         </div>
         {data?.reactions.pageInfo.hasNextPage && (
-          <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading   Followers" />
+          <InfiniteLoader loadMore={onLoadMore} loadingMessage="Loading Followers" />
         )}
       </div>
     </Modal>

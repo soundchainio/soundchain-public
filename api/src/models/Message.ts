@@ -16,7 +16,7 @@ export class Message extends Model {
   @prop({ type: mongoose.Types.ObjectId, required: true })
   toId: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   message: string;
 

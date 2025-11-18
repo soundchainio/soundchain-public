@@ -30,7 +30,7 @@ async function bootstrap() {
     plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
   });
   await server.start();
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app: app as any });
 
   app.get('/', (req: Request, res: Response) => {
     res.status(200).json({ status: 'OK', message: 'Server is healthy.' });

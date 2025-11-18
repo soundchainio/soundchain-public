@@ -1,5 +1,5 @@
 import { Modal } from 'components/Modal'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'

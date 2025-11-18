@@ -8,7 +8,6 @@ query Me {
     defaultWallet
     isApprovedOnMarketplace
     roles
-    otpSecret
     profile {
       ...ProfileComponentFields
     }

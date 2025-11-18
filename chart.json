@@ -1,0 +1,199 @@
+{
+  "type": "bubble",
+  "data": {
+    "labels": [
+      "Root",
+      "request.json",
+      "commit_history.txt",
+      ".husky",
+      ".vercel",
+      ".DS_Store",
+      "vercel.json",
+      "api-source.tar.gz",
+      "web",
+      "soundchain",
+      "node_modules",
+      "README.md",
+      ".gitignore",
+      "package-lock.json",
+      "soundchain_toc.json",
+      "package.json",
+      ".env",
+      ".github",
+      "temp_yarn.lock",
+      "api",
+      "venv",
+      "agentide_venv",
+      "lerna.json",
+      ".git",
+      "soundchain-contracts",
+      "src"
+    ],
+    "datasets": [
+      {
+        "label": "Soundchain Structure",
+        "data": [
+          {
+            "x": 0,
+            "y": 0,
+            "r": 10
+          },
+          {
+            "x": 1,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 2,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 3,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 4,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 5,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 6,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 7,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 8,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 9,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 10,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 11,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 12,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 13,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 14,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 15,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 16,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 17,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 18,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 19,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 20,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 21,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 22,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 23,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 24,
+            "y": 1,
+            "r": 5
+          },
+          {
+            "x": 25,
+            "y": 1,
+            "r": 5
+          }
+        ],
+        "backgroundColor": [
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
+          "#4BC0C0",
+          "#9966FF"
+        ],
+        "borderColor": "#fff"
+      }
+    ]
+  },
+  "options": {
+    "plugins": {
+      "legend": {
+        "position": "top"
+      }
+    },
+    "scales": {
+      "x": {
+        "title": {
+          "display": true,
+          "text": "Components"
+        }
+      },
+      "y": {
+        "title": {
+          "display": true,
+          "text": "Levels"
+        }
+      }
+    }
+  }
+}

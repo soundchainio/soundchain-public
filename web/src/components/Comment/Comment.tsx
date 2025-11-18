@@ -1,5 +1,5 @@
 import { NotAvailableMessage } from 'components/NotAvailableMessage'
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
 import { Role, useCommentQuery } from 'lib/graphql'

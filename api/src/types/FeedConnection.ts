@@ -4,7 +4,7 @@ import { PageInfo } from './PageInfo';
 
 @ObjectType()
 export class FeedConnection {
-  @Field()
+  @Field(() => PageInfo)
   pageInfo: PageInfo;
 
   @Field(() => [FeedItem])

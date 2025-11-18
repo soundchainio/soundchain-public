@@ -1,17 +1,13 @@
 import classNames from 'classnames'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import {
-  ReactionType,
   useChangeReactionMutation,
   useReactToPostMutation,
   useRetractReactionMutation,
-} from 'lib/graphql'
+  ReactionType,
+} from 'lib/graphql-hooks'
 
 interface ReactionSelectorProps {
-  postId: string
-  myReaction: ReactionType | null
-  opened: boolean
-  setOpened: (val: boolean) => void
 }
 
 const reactionTypes = [

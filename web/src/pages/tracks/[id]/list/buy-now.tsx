@@ -1,7 +1,7 @@
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/pages/details-NFT/ListNFTBuyNow'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { FormikHelpers } from 'formik'
 import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
@@ -15,7 +15,7 @@ import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import { SaleType } from 'types/SaleType'
+import { SaleType } from 'lib/graphql'
 import SEO from '../../../../components/SEO'
 export interface TrackPageProps {
   track: TrackQuery['track']
@@ -148,7 +148,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     if (isApproved) {
       handleListSingleNft(values, helper)
     } else {
-      me ? dispatchShowApproveModal(true, SaleType.MARKETPLACE, nftData.contract) : router.push('/login')
+      me ? dispatchShowApproveModal(true, SaleType.BuyNow, nftData.contract) : router.push('/login')
       helper.setSubmitting(false)
     }
   }

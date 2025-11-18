@@ -1,19 +1,12 @@
-const { DATABASE_URL_PATH = 'mongodb://localhost:27017', DATABASE_SSL_PATH } = process.env;
+require('dotenv').config();
 
-const migrationConfig = {
+module.exports = {
   mongodb: {
-    url: DATABASE_URL_PATH,
-    options: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      ssl: Boolean(DATABASE_SSL_PATH),
-      sslCA: DATABASE_SSL_PATH && 'global-bundle.pem',
-      retryWrites: false,
-    },
+    url: process.env.MONGODB_URI || process.env.DATABASE_URL || 'mongodb://localhost:27017/soundchain',
+    databaseName: 'soundchain',
   },
-  migrationsDir: 'migrations',
+  migrationsDir: './migrations',
   changelogCollectionName: 'changelog',
+  migrationFileExtension: '.ts',
   useFileHash: false,
 };
-
-module.exports = migrationConfig;

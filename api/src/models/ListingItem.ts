@@ -9,61 +9,61 @@ export class ListingItem extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   owner?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   nft?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   tokenId?: number;
 
-  @Field()
+  @Field(() => String)
   contract!: string;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   startingTime?: number;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   endingTime?: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ type: String })
   reservePrice?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ type: String })
   selectedCurrency?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   @prop({ type: Number })
   reservePriceToShow?: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ type: String })
   pricePerItem?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   @prop({ type: Number })
   pricePerItemToShow?: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ type: String })
   OGUNPricePerItem?: string;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   @prop({ type: Number })
   OGUNPricePerItemToShow?: number;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ type: Boolean })
   acceptsMATIC?: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ type: Boolean })
   acceptsOGUN?: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ type: Boolean })
   isPaymentOGUN?: boolean;
 
@@ -78,7 +78,7 @@ export const ListingItemModel = getModelForClass(ListingItem);
 
 @ObjectType()
 export class ListingItemWithPrice extends ListingItem {
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   @prop({ type: Number })
   priceToShow?: number;
 }

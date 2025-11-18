@@ -1,7 +1,7 @@
+import { ModalProvider } from "../contexts/ModalContext";
 import '@reach/dialog/styles.css'
 import '@reach/slider/styles.css'
 import 'regenerator-runtime/runtime'
-
 import { CheckBodyScroll } from 'components/CheckBodyScroll'
 import { Layout } from 'components/Layout'
 import { config } from 'config'
@@ -18,7 +18,6 @@ import Router from 'next/router'
 import Script from 'next/script'
 import NProgress from 'nprogress'
 import { ReactElement } from 'react'
-
 import 'react-toastify/dist/ReactToastify.css'
 import 'styles/audio-player.css'
 import 'styles/bottom-audio-player.css'
@@ -28,9 +27,8 @@ import 'styles/nprogress.css'
 import 'styles/track-card.css'
 import 'styles/volume-slider.css'
 
-const WalletProvider = dynamic(import('hooks/useWalletContext'))
-const MagicProvider = dynamic(import('hooks/useMagicContext'))
-
+const WalletProvider = dynamic(() => import('hooks/useWalletContext'), { ssr: false })
+const MagicProvider = dynamic(() => import('hooks/useMagicContext'), { ssr: false })
 
 NProgress.configure({
   showSpinner: false,
@@ -51,32 +49,39 @@ interface CustomAppProps extends Pick<AppProps, 'Component' | 'pageProps'> {
 function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
   return (
     <ApolloProvider pageProps={pageProps}>
-      <StateProvider>
-        <MagicProvider>
-          <WalletProvider>
-            <AudioPlayerProvider>
-              <TrackProvider>
-                <HideBottomNavBarProvider>
-                  <LayoutContextProvider>
-                    <CheckBodyScroll />
-                    <Layout>
-                      <Component {...pageProps} />
-                    </Layout>
-                  </LayoutContextProvider>
-                </HideBottomNavBarProvider>
-              </TrackProvider>
-            </AudioPlayerProvider>
-          </WalletProvider>
-        </MagicProvider>
-      </StateProvider>
+      <ModalProvider>
+        <StateProvider>
+          <MagicProvider>
+            <WalletProvider>
+              <AudioPlayerProvider>
+                <TrackProvider>
+                  <HideBottomNavBarProvider>
+                    <LayoutContextProvider>
+                      <CheckBodyScroll />
+                      <Layout>
+                        <Component {...pageProps} />
+                      </Layout>
+                    </LayoutContextProvider>
+                  </HideBottomNavBarProvider>
+                </TrackProvider>
+              </AudioPlayerProvider>
+            </WalletProvider>
+          </MagicProvider>
+        </StateProvider>
+      </ModalProvider>
     </ApolloProvider>
   )
 }
 
 function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   if (!Component.getLayout) return <></>
-
-  return <ApolloProvider pageProps={pageProps}>{Component.getLayout(<Component {...pageProps} />)}</ApolloProvider>
+  return (
+    <ApolloProvider pageProps={pageProps}>
+      <ModalProvider>
+        {Component.getLayout(<Component {...pageProps} />)}
+      </ModalProvider>
+    </ApolloProvider>
+  )
 }
 
 function SoundchainApp({ Component, pageProps }: CustomAppProps) {
@@ -118,4 +123,5 @@ function SoundchainApp({ Component, pageProps }: CustomAppProps) {
     </>
   )
 }
+
 export default SoundchainApp

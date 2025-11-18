@@ -1,6 +1,11 @@
 import { useMeQuery } from 'lib/graphql'
 
 export const useMe = () => {
-  const result = useMeQuery()
-  return result.data?.me
+  try {
+    const result = useMeQuery()
+    return result.data?.me
+  } catch (error) {
+    console.error('useMe error:', error)
+    return undefined
+  }
 }

@@ -1,6 +1,5 @@
 import classNames from 'classnames'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
-import 'emoji-mart/css/emoji-mart.css'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import GraphemeSplitter from 'grapheme-splitter'
 import { usePostLazyQuery } from 'lib/graphql'
 import { useCallback, useEffect, useState } from 'react'

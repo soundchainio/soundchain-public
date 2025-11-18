@@ -1,4 +1,4 @@
-import { XCircleIcon } from '@heroicons/react/outline'
+import { XCircleIcon } from '@heroicons/react/24/outline'
 import { Bandcamp } from 'icons/Bandcamp'
 import { Soundcloud } from 'icons/Soundcloud'
 import { Spotify } from 'icons/Spotify'

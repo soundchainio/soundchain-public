@@ -1,7 +1,7 @@
 import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/pages/details-NFT/ListNFTAuction'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
@@ -13,7 +13,7 @@ import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
 import { useCallback, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import { SaleType } from 'types/SaleType'
+import { SaleType } from 'lib/graphql'
 import { compareWallets } from 'utils/Wallet'
 import SEO from '../../../../components/SEO'
 
@@ -74,7 +74,7 @@ export default function EditBuyNowPage({ track }: TrackPageProps) {
       show: true,
       tokenId: listingPayload.auctionItem?.auctionItem?.tokenId,
       trackId: track.id,
-      saleType: SaleType.AUCTION,
+      saleType: SaleType.Auction,
       contractAddresses: { nft: nftData.contract },
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps

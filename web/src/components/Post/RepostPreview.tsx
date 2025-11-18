@@ -1,4 +1,4 @@
-import { RefreshIcon } from '@heroicons/react/solid'
+import { RefreshIcon } from '@heroicons/react/24/outline'
 import { Track, usePostQuery } from 'lib/graphql'
 import { Avatar } from '../Avatar'
 import { DisplayName } from '../DisplayName'

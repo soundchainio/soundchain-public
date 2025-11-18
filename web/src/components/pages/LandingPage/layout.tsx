@@ -1,11 +1,14 @@
 import { ReactNode } from 'react'
+import dynamic from 'next/dynamic'
 import { HeroSectionDiscover } from './heroSectionDiscover'
 import { MintSongsSection } from './mintSongsSection'
 import { DiscoverTracksSection } from './discoverTracksSection'
 import { CollectMusicNFTSection } from './collectMusicNFTSection'
 import { RoadmapSection } from './roadmapSection'
 import { SocialMediaMenu } from './SocialMediaMenu'
-import LandingPageHeader from './Header/header'
+
+// Load header client-side only to avoid GraphQL hook SSR issues
+const LandingPageHeader = dynamic(() => import('./Header/header'), { ssr: false })
 
 export interface LayoutProps {
   children: ReactNode | undefined

@@ -14,11 +14,11 @@ import { Cards } from '../../../../icons/Cards';
 import { Logo } from 'icons/Logo';
 import { CurrencyType } from '../../../../types/CurrenctyType';
 import Asset from '../../../Asset/Asset';
-import { useModalDispatch } from 'contexts/providers/modal';
+import { useModalDispatch } from 'contexts/ModalContext';
 import { createPublicClient, http } from 'viem';
 import { zetachain, polygon } from 'viem/chains';
 import { ShowRemoveListing } from 'contexts/payloads/modal';
-import { SaleType } from 'types/SaleType';
+import { SaleType } from 'lib/graphql';
 const WavesurferComponent = dynamic(() => import('../../../wavesurfer'), { ssr: false });
 
 // Mock icon component for all tokens

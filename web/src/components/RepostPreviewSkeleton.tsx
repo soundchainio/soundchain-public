@@ -1,4 +1,4 @@
-import { RefreshIcon } from '@heroicons/react/solid'
+import { RefreshIcon } from '@heroicons/react/24/outline'
 
 export const RepostPreviewSkeleton = () => (
   <div className=" my-4 bg-gray-20">

@@ -8,11 +8,11 @@ export class LogError extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   title: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   description: string;
 

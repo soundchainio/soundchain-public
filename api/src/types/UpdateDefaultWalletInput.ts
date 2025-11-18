@@ -3,6 +3,6 @@ import { DefaultWallet } from './DefaultWallet';
 
 @InputType()
 export class UpdateDefaultWalletInput {
-  @Field()
+  @Field(() => DefaultWallet)
   defaultWallet: DefaultWallet;
 }

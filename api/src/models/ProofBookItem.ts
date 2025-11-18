@@ -8,15 +8,15 @@ export class ProofBookItem extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   root: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true, unique: true })
   address: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   value: string;
 

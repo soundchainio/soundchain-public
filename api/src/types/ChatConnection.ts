@@ -4,7 +4,7 @@ import { PageInfo } from './PageInfo';
 
 @ObjectType()
 export class ChatConnection {
-  @Field()
+  @Field(() => PageInfo)
   pageInfo: PageInfo;
 
   @Field(() => [Chat])

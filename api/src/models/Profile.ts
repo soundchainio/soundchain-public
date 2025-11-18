@@ -14,15 +14,15 @@ export class Profile extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   displayName: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: true, default: randomDefaultProfilePicture() })
   profilePicture: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: true, default: randomDefaultCoverPicture() })
   coverPicture: string;
 
@@ -38,7 +38,7 @@ export class Profile extends Model {
   @prop({ required: true, type: [String], enum: MusicianType })
   musicianTypes: MusicianType[];
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   bio?: string;
 
@@ -58,11 +58,11 @@ export class Profile extends Model {
   @prop({ required: true, default: 0 })
   unreadMessageCount: number;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ required: true, default: false })
   verified: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   magicWalletAddress?: string;
 
   @Field(() => [Badge], { nullable: true })

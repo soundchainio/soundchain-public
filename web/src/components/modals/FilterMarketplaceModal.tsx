@@ -1,7 +1,7 @@
 import { Badge } from 'components/common/Badges/Badge'
 import { Button } from 'components/common/Buttons/Button'
 import { Modal } from 'components/Modal'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { Form, Formik } from 'formik'
 import { DownArrow } from 'icons/DownArrow'
 import { useState } from 'react'

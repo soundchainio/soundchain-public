@@ -4,7 +4,7 @@ import Asset from 'components/Asset/Asset'
 import { Modal } from 'components/Modal'
 import { TrackListItem } from 'components/TrackListItem'
 import { TrackShareButton } from 'components/TrackShareButton'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useMe } from 'hooks/useMe'
 import { DownArrow } from 'icons/DownArrow'
@@ -23,7 +23,7 @@ import { useRouter } from 'next/router'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { checkIsMobile } from 'utils/IsMobile'
 
-import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/solid'
+import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/24/outline'
 import Slider from '@reach/slider'
 
 export const AudioPlayerModal = () => {

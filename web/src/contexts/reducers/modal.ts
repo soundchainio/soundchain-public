@@ -26,7 +26,7 @@ import {
 import { ContractAddresses } from 'hooks/useBlockchainV2';
 import { ReactionType, TracksQuery } from 'lib/graphql';
 import { AuthorActionsType } from 'types/AuthorActionsType';
-import { SaleType } from 'types/SaleType';
+import { SaleType } from 'lib/graphql';
 import { GenreLabel } from 'utils/Genres';
 import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 

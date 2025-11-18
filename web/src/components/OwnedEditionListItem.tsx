@@ -3,7 +3,7 @@ import NextLink from 'next/link'
 import { Button } from './common/Buttons/Button'
 import { AuthorActionsType } from '../types/AuthorActionsType'
 import { Ellipsis } from '../icons/Ellipsis'
-import { useModalDispatch } from '../contexts/providers/modal'
+import { useModalDispatch } from '../contexts/ModalContext'
 import { useTokenOwner } from 'hooks/useTokenOwner'
 
 interface OwnedEditionListItemProps {

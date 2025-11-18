@@ -5,7 +5,7 @@ import { SortListingItem } from 'lib/apollo/sorting'
 import { MdKeyboardArrowDown } from 'react-icons/md'
 
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Listbox, ListboxButton, ListboxOption, ListboxOptions, Transition } from '@headlessui/react'
+import { Listbox, Transition } from '@headlessui/react'
 
 interface Props {
   sorting: SortListingItem
@@ -65,46 +65,46 @@ export const FilterComponent = (props: Props) => {
         })}
       >
         <Listbox value={selected} onChange={setSelected}>
-          <div className="relative">
-            <ListboxButton
-              className={({ open }) =>
-                `hover:gradient-select-hover transparent-border-1px darkGreyBackgroundColor w-[160px] cursor-default rounded-lg py-2 pl-3 pr-10 text-left font-medium  text-white shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:w-[140px] sm:text-sm ${
+          {({ open }) => (
+            <div className="relative">
+              <Listbox.Button
+                className={`hover:gradient-select-hover transparent-border-1px darkGreyBackgroundColor w-[160px] cursor-default rounded-lg py-2 pl-3 pr-10 text-left font-medium  text-white shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:w-[140px] sm:text-sm ${
                   open ? 'gradient-select-hover' : ''
-                }`
-              }
-            >
-              <span className="block truncate">{selected?.name}</span>
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <MdKeyboardArrowDown className="text-grey-400 h-5 w-5" aria-hidden="true" />
-              </span>
-            </ListboxButton>
-            <Transition
-              as={Fragment}
-              leave="transition ease-in duration-100"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <ListboxOptions className="darkGreyBackgroundColor absolute mt-1 max-h-60 w-full overflow-auto rounded-md py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {options.map((option, index) => (
-                  <ListboxOption
-                    key={index}
-                    className={({ focus }) =>
-                      `relative cursor-default select-none py-2 pl-3 pr-4 ${focus ? 'grey80BackgroundColor' : ''}`
-                    }
-                    value={option}
-                  >
-                    {({ selected }) => (
-                      <>
-                        <span className={`block truncate ${selected ? 'font-bold' : 'font-medium'} text-white`}>
-                          {option.name}
-                        </span>
-                      </>
-                    )}
-                  </ListboxOption>
-                ))}
-              </ListboxOptions>
-            </Transition>
-          </div>
+                }`}
+              >
+                <span className="block truncate">{selected?.name}</span>
+                <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <MdKeyboardArrowDown className="text-grey-400 h-5 w-5" aria-hidden="true" />
+                </span>
+              </Listbox.Button>
+              <Transition
+                as={Fragment}
+                leave="transition ease-in duration-100"
+                leaveFrom="opacity-100"
+                leaveTo="opacity-0"
+              >
+                <Listbox.Options className="darkGreyBackgroundColor absolute mt-1 max-h-60 w-full overflow-auto rounded-md py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                  {options.map((option, index) => (
+                    <Listbox.Option
+                      key={index}
+                      className={({ active }) =>
+                        `relative cursor-default select-none py-2 pl-3 pr-4 ${active ? 'grey80BackgroundColor' : ''}`
+                      }
+                      value={option}
+                    >
+                      {({ selected }) => (
+                        <>
+                          <span className={`block truncate ${selected ? 'font-bold' : 'font-medium'} text-white`}>
+                            {option.name}
+                          </span>
+                        </>
+                      )}
+                    </Listbox.Option>
+                  ))}
+                </Listbox.Options>
+              </Transition>
+            </div>
+          )}
         </Listbox>
       </div>
     </div>

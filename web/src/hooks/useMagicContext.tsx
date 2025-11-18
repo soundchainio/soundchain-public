@@ -12,8 +12,7 @@ import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.
 import { config } from 'config'
 import { AbiItem } from 'web3-utils'
 
-const magicPublicKey = 'pk_live_858EC1BFF763F101'; // Hardcode for debugging
-
+const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
 interface MagicContextData {
   magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null
   web3: Web3 | null
@@ -71,7 +70,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const magicInstance = createMagic(magicPublicKey)
+      console.log("Magic instance created:", magicInstance);
       setMagic(magicInstance)
+      if (magicInstance) (window as any).magic = magicInstance;
       if (magicInstance) {
         setWeb3(createWeb3(magicInstance))
       } else {

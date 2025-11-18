@@ -1,4 +1,4 @@
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useMe } from 'hooks/useMe'
 import { Home } from 'icons/Home'

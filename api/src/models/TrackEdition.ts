@@ -9,23 +9,23 @@ export class TrackEdition extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop()
   transactionHash: string;
 
-  @Field()
+  @Field(() => Number)
   @prop()
   editionId: number;
 
-  @Field()
+  @Field(() => Boolean)
   @prop({ default: false })
   listed: boolean;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   contract?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   marketplace?: string;
 
@@ -33,11 +33,11 @@ export class TrackEdition extends Model {
   @prop()
   editionData?: EditionData;
 
-  @Field()
+  @Field(() => Number)
   @prop()
   editionSize: number;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ default: false })
   deleted?: boolean;
 

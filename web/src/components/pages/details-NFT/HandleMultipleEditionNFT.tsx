@@ -1,10 +1,10 @@
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { ContractAddresses } from 'hooks/useBlockchainV2'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { CheckmarkFilled } from 'icons/CheckmarkFilled'
 import { useRouter } from 'next/router'
 import { useCallback } from 'react'
-import { SaleType } from 'types/SaleType'
+import { SaleType } from 'lib/graphql'
 import { ListedAction, ListingAction } from './HandleNFT'
 
 interface HandleMultipleEditionNFTProps {
@@ -46,7 +46,7 @@ export const HandleMultipleEditionNFT = ({
     dispatchShowRemoveListingModal({
       show: true,
       editionId,
-      saleType: SaleType.MARKETPLACE,
+      saleType: SaleType.BuyNow,
       contractAddresses,
       trackEditionId,
     })

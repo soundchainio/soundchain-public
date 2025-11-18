@@ -2,7 +2,7 @@ import React from 'react'
 
 import { IconProps } from 'icons/types/IconProps'
 
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react'
+import { Popover } from '@headlessui/react'
 
 interface SoundChainPopOverProps {
   icon: (props: IconProps) => JSX.Element
@@ -21,15 +21,14 @@ export const SoundChainPopOver = (props: SoundChainPopOverProps) => {
 
   return (
     <Popover className="relative">
-      <PopoverButton className="focus:outline-none">
+      <Popover.Button className="focus:outline-none">
         <div className="relative mr-1">
           {Badge && <Badge />}
           <Icon />
         </div>
-      </PopoverButton>
-      <PopoverPanel
-        anchor="bottom"
-        className="text-sm/6 data-[closed]:-translate-y-1 data-[closed]:opacity-0 absolute right-0 z-50 mt-2 w-[400px] translate-y-2   translate-x-[-1.5rem] transform rounded-lg bg-gray-15 transition duration-200 ease-in-out [--anchor-gap:var(--spacing-5)]"
+      </Popover.Button>
+      <Popover.Panel
+        className="text-sm/6 data-[closed]:-translate-y-1 data-[closed]:opacity-0 absolute right-0 z-50 mt-2 w-[400px] translate-y-2   translate-x-[-1.5rem] transform rounded-lg bg-gray-15 transition duration-200 ease-in-out"
       >
         {({ close: closePopOver }) => (
           <div className="max-h-[500px] overflow-y-auto">
@@ -41,7 +40,7 @@ export const SoundChainPopOver = (props: SoundChainPopOverProps) => {
             })}
           </div>
         )}
-      </PopoverPanel>
+      </Popover.Panel>
     </Popover>
   )
 }

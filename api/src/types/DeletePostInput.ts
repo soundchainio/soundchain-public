@@ -2,6 +2,6 @@ import { Field, InputType } from 'type-graphql';
 
 @InputType()
 export class DeletePostInput {
-  @Field()
+  @Field(() => String)
   postId: string;
 }

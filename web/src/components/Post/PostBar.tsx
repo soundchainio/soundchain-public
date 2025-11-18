@@ -1,6 +1,6 @@
-import { MusicNoteIcon, VideoCameraIcon } from '@heroicons/react/outline'
-import { BaseEmoji, Picker } from 'emoji-mart'
-import 'emoji-mart/css/emoji-mart.css'
+import { MusicalNoteIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
+import Picker from '@emoji-mart/react'
+import type { Emoji } from '@emoji-mart/data'
 import { useState } from 'react'
 import { PostLinkType } from 'types/PostLinkType'
 import { LinksModal } from '../LinksModal'
@@ -35,7 +35,7 @@ export const PostBar = ({
   const charCounter = `${getBodyCharacterCount(values.body)} / ${maxLength}`
 
   const handleSelectEmoji = (
-    emoji: BaseEmoji,
+    emoji: Emoji,
     values: FormValues,
     setFieldValue: (val: string, newVal: string) => void,
   ) => {
@@ -64,7 +64,7 @@ export const PostBar = ({
             aria-label="Embed a song to your post"
             onClick={onAddMusicClick}
           >
-            <MusicNoteIcon className="m-auto w-5 text-gray-400" />
+            <MusicalNoteIcon className="m-auto w-5 text-gray-400" />
           </button>
           <button
             className="w-16 cursor-pointer text-center"
@@ -100,7 +100,7 @@ export const PostBar = ({
       <div className="flex-1 justify-self-end text-right text-gray-400">{charCounter}</div>
       {isEmojiPickerVisible && (
         <div className="fixed left-16 bottom-0">
-          <Picker theme="dark" perLine={8} onSelect={(e: BaseEmoji) => handleSelectEmoji(e, values, setFieldValue)} />
+          <Picker theme="dark" perLine={8} onSelect={(e: Emoji) => handleSelectEmoji(e, values, setFieldValue)} />
         </div>
       )}
     </div>

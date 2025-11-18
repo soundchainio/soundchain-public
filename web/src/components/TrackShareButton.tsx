@@ -1,10 +1,10 @@
 import { Fragment } from 'react'
 
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { toast } from 'react-toastify'
 
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react'
-import { ShareIcon } from '@heroicons/react/outline'
+import { ShareIcon } from '@heroicons/react/24/outline'
 
 type Props = {
   trackId: string
@@ -54,7 +54,6 @@ export const TrackShareButton = (props: Props) => {
           <ShareIcon width={width} height={height} color={color || ''} />
         </MenuButton>
         <Transition
-          as={Fragment}
           enter="transition ease-out duration-100"
           enterFrom="transform opacity-0 scale-95"
           enterTo="transform opacity-100 scale-100"

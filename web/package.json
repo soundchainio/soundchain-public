@@ -38,7 +38,9 @@
   "dependencies": {
     "@apollo/client": "^3.10.11",
     "@codastic/react-positioning-portal": "^0.5.0",
-    "@headlessui/react": "^2.2.6",
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
+    "@headlessui/react": "^1.7.19",
     "@heroicons/react": "^2.1.5",
     "@lottiefiles/react-lottie-player": "^3.4.10",
     "@magic-ext/oauth": "^23.4.0",
@@ -59,6 +61,7 @@
     "body-scroll-lock": "^4.0.0-beta.0",
     "browser-id3-writer": "^4.4.0",
     "classnames": "^2.5.1",
+    "cross-fetch": "^4.1.0",
     "date-fns": "^3.6.0",
     "decimal.js": "^10.4.3",
     "emoji-mart": "5.6.0",
@@ -66,7 +69,7 @@
     "grapheme-splitter": "^1.0.4",
     "graphql": "^16.9.0",
     "graphql-ws": "^5.16.2",
-    "hls.js": "^1.5.7",
+    "hls.js": "^1.6.14",
     "html-react-parser": "^5.2.6",
     "i18next": "^23.15.1",
     "js-cookie": "^3.0.5",
@@ -108,6 +111,7 @@
     "vercel": "^44.7.3",
     "wavesurfer.js": "^6.0.12",
     "web3": "^4.16.1-dev.fa5ce5b.0",
+    "webtorrent": "^2.8.4",
     "yup": "^1.7.0"
   },
   "devDependencies": {

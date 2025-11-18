@@ -1,11 +1,14 @@
-import { Genre } from 'lib/graphql'
+import * as GraphQL from '../lib/graphql';
 
 export type GenreLabel = {
-  key: Genre
+  key: GraphQL.Genre
   label: string
 }
 
-export const genres: GenreLabel[] = [
+// Safe access to Genre enum with fallback for SSR
+const Genre = GraphQL.Genre || {};
+
+export const genres: GenreLabel[] = Genre.Acoustic ? [
   { key: Genre.Acoustic, label: 'Acoustic' },
   { key: Genre.Alternative, label: 'Alternative' },
   { key: Genre.Ambient, label: 'Ambient' },
@@ -53,8 +56,8 @@ export const genres: GenreLabel[] = [
   { key: Genre.Bpm, label: 'BPM' },
   { key: Genre.DeepHouse, label: 'Deep House' },
   { key: Genre.Jungle, label: 'Jungle' },
-]
+] : [];
 
-export function getGenreLabelByKey(key: Genre): string | undefined {
+export function getGenreLabelByKey(key: GraphQL.Genre): string | undefined {
   return genres.find(g => g.key === key)?.label
 }

@@ -3,15 +3,15 @@ import { NFTData } from './NFTData';
 
 @InputType()
 export class UpdateTrackInput {
-  @Field()
+  @Field(() => String)
   trackId: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   profileId: string;
 
   @Field(() => NFTData, { nullable: true })
   nftData: Partial<NFTData>;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   playbackCount: number;
 }

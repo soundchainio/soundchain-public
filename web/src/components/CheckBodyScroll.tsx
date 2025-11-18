@@ -1,7 +1,12 @@
-import { useModalState } from 'contexts/providers/modal'
+import { useModalState } from 'contexts/ModalContext'
 
 export const CheckBodyScroll = () => {
-  const { anyModalOpened } = useModalState()
+  const modalState = useModalState()
+  
+  // Safe fallback if ModalProvider isn't mounted yet
+  if (!modalState) return null
+  
+  const { anyModalOpened } = modalState
 
   return anyModalOpened ? (
     <style jsx global>{`

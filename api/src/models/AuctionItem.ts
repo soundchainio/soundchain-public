@@ -10,35 +10,35 @@ export class AuctionItem extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   owner!: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   nft!: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
   tokenId!: number;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
   startingTime!: number;
 
-  @Field()
+  @Field(() => Number)
   @prop({ required: true })
   endingTime!: number;
 
-  @Field()
+  @Field(() => String)
   @prop({ type: String, required: true })
   reservePrice!: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ type: Number, required: true })
   reservePriceToShow!: number;
 
-  @Field()
+  @Field(() => Boolean)
   @prop({ type: Boolean, required: true, default: false })
   isPaymentOGUN!: boolean;
 
@@ -48,27 +48,27 @@ export class AuctionItem extends Model {
   @Field(() => Date)
   updatedAt!: Date;
 
-  @Field()
+  @Field(() => Boolean)
   @prop({ default: true })
   valid!: boolean;
 
-  @Field()
+  @Field(() => String)
   @prop({ type: String })
   highestBid?: string;
 
-  @Field()
+  @Field(() => Number)
   @prop({ type: Number })
   highestBidToShow?: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   contract?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   trackId?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   trackEditionId?: string;
 }

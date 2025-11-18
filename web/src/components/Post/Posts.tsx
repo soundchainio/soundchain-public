@@ -3,7 +3,7 @@ import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from 'components/NoResultFound'
 import { Post } from './Post'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { Post as PostType, SortOrder, SortPostField, usePostsQuery } from 'lib/graphql'
+import { Post as PostType, usePostsQuery, SortOrder, SortPostField } from 'lib/graphql'
 import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
@@ -25,7 +25,7 @@ export const Posts = ({ profileId }: PostsProps) => {
     variables: {
       filter: profileId ? { profileId } : undefined,
       page: { first: pageSize },
-      sort: { field: SortPostField.CreatedAt, order: SortOrder.Desc },
+      sort: { field: SortPostField.CreatedAt, order: SortOrder.DESC },
     },
     ssr: false,
   })

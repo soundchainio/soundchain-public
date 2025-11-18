@@ -1,7 +1,7 @@
 import { InputField } from 'components/InputField';
 import { Modal } from 'components/Modal';
 import { Ogun } from 'components/Ogun';
-import { useModalDispatch, useModalState } from 'contexts/providers/modal';
+import { useModalDispatch, useModalState } from 'contexts/ModalContext';
 import { Form, Formik } from 'formik';
 import useBlockchainV2 from 'hooks/useBlockchainV2';
 import { useMaxGasFee } from 'hooks/useMaxGasFee';

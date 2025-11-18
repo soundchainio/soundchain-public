@@ -47,7 +47,7 @@ export default function CreateAccountPage() {
 
         if (user && isLoggedIn) {
           const token = await user.getIdToken()
-          const metaData = await user.getMetadata()
+          const metaData = await magic.user.getInfo()
           const email = metaData?.email
           setToken(token)
           email && setEmail(email)

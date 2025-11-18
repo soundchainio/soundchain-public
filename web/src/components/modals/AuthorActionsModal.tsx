@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import {
   CommentsDocument,

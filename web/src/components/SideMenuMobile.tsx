@@ -12,10 +12,9 @@ export interface SideMenuMobileProps {
 export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
   const ref = useRef(null)
   return (
-    <Transition show={isOpen} as={Fragment}>
+    <Transition show={isOpen}>
       <Dialog as="div" className="fixed inset-0 z-40 flex flex-row-reverse" onClose={setOpen} initialFocus={ref}>
         <TransitionChild
-          as={Fragment}
           enter="transition-opacity ease-linear duration-300"
           enterFrom="opacity-0"
           enterTo="opacity-100"
@@ -26,7 +25,6 @@ export const SideMenuMobile = ({ setOpen, isOpen }: SideMenuMobileProps) => {
           <div className="fixed inset-0 bg-gray-15 bg-opacity-75" />
         </TransitionChild>
         <TransitionChild
-          as={Fragment}
           enter="transition ease-in-out duration-300 transform"
           enterFrom="translate-x-full"
           enterTo="translate-x-0"

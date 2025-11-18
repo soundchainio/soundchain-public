@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import { Badge } from 'components/common/Badges/Badge'
 import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
@@ -13,7 +14,6 @@ import { GenreLabel, genres } from 'utils/Genres'
 import * as yup from 'yup'
 import { ArtworkUploader } from './ArtworkUploader'
 import { Modal } from 'components/Modal'
-import Typo from 'typo-js'
 import { useWalletConnect } from 'hooks/useWalletConnect'
 
 // Supported blockchain chains
@@ -36,7 +36,6 @@ interface ModalProps {
   onClose: (open: boolean) => void;
 }
 
-const dictionary = new Typo('en_US');
 
 export interface FormValues {
   editionQuantity: number
@@ -149,6 +148,16 @@ function InnerForm(props: InnerFormProps) {
   const { setFieldValue, errors, values, initialValues, connect, disconnect, provider, account } = props
   const maxMintGasFee = useMaxMintGasFee(values.editionQuantity)
   const [enoughFunds, setEnoughFunds] = useState<boolean>()
+
+  const [dictionary, setDictionary] = useState<any>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('typo-js').then((Typo) => {
+        setDictionary(new Typo.default('en_US'))
+      })
+    }
+  }, [])
   const { balance } = useWalletContext()
   const [isSideModalOpen, setIsSideModalOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<keyof typeof collaboratorCategories>('Music')
@@ -225,6 +234,7 @@ function InnerForm(props: InnerFormProps) {
   };
 
   const autoCorrectText = (field: string, value: string) => {
+    if (!dictionary) return value;
     const suggestions = dictionary.suggest(value);
     if (suggestions.length > 0 && suggestions[0] !== value) {
       setFieldValue(field, suggestions[0]);

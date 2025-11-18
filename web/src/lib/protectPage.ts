@@ -7,7 +7,7 @@ import { MeDocument, MeQuery } from './graphql'
 
 export type GetServerSidePropsWithContext<
   P extends { [key: string]: any } = { [key: string]: any },
-  Q extends ParsedUrlQuery = ParsedUrlQuery,
+  Q extends ParsedUrlQuery = ParsedUrlQuery
 > = (
   context: GetProtectedServerSidePropsContext<Q>,
   apolloClient: ApolloClient<NormalizedCacheObject>,
@@ -22,17 +22,35 @@ export const protectPage = <P extends { [key: string]: any }, Q extends ParsedUr
   getServerSideProps: GetServerSidePropsWithContext<P, Q>,
 ): GetServerSideProps<P, Q> => {
   return async context => {
-    const apolloClient = createApolloClient(context)
-    const {
-      data: { me },
-    } = await apolloClient.query<MeQuery>({ query: MeDocument, context })
-    if (me) return getServerSideProps({ ...context, user: me }, apolloClient)
-    return {
-      redirect: {
-        permanent: false,
-        // TODO support redirect url
-        destination: '/login',
-      },
+    try {
+      const apolloClient = createApolloClient(context)
+
+      // Debug: Check if MeDocument is defined
+      if (!MeDocument) {
+        console.error('[protectPage] MeDocument is undefined!')
+        throw new Error('MeDocument is undefined')
+      }
+
+      const {
+        data: { me },
+      } = await apolloClient.query<MeQuery>({ query: MeDocument })
+
+      if (me) return getServerSideProps({ ...context, user: me }, apolloClient)
+
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/login',
+        },
+      }
+    } catch (error) {
+      console.error('[protectPage] Error:', error)
+      return {
+        redirect: {
+          permanent: false,
+          destination: '/login',
+        },
+      }
     }
   }
 }

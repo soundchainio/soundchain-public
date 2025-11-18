@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 
 import { ReactionSelector } from 'components/ReactionSelector'
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { delayFocus } from 'lib/delayFocus'
@@ -10,7 +10,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 
-import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/solid'
+import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/24/outline'
 
 interface PostActionsProps {
   postId: string

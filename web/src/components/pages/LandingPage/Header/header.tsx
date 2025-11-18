@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { BsArrowRightShort } from 'react-icons/bs'
 import { svgGradientFromPurpleToGreen } from 'styles/svgGradientFromPurpleToGreen'
 
-import { MenuIcon } from '@heroicons/react/solid'
+import { Bars3Icon } from '@heroicons/react/24/outline'
 
 import { Logo } from '../../../../icons/Logo'
 import { HeaderDrawer } from './drawer'
@@ -14,7 +14,7 @@ import { Navigation } from './Navigation'
 
 export default function LandingPageHeader() {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const { data } = useMeQuery()
+  const { data } = useMeQuery({ ssr: false })
   const me = data?.me
 
   return (
@@ -50,7 +50,7 @@ export default function LandingPageHeader() {
           onClick={() => setDrawerOpen(true)}
           className="p-4 outline-0 focus:outline-0 active:outline-0 md:hidden"
         >
-          <MenuIcon className="h-8 w-8 text-white md:hidden" />
+          <Bars3Icon className="h-8 w-8 text-white md:hidden" />
         </button>
 
         <HeaderDrawer open={drawerOpen} close={() => setDrawerOpen(false)} />

@@ -8,15 +8,15 @@ export class WhitelistEntry extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field({ nullable: false })
+  @Field(() => String, { nullable: false })
   @prop({ required: true })
   walletAddress: string;
 
-  @Field({ nullable: false })
+  @Field(() => String, { nullable: false })
   @prop({ required: true })
   emailAddress: string;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ default: false })
   ogunClaimed?: boolean;
 

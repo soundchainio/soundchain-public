@@ -1,6 +1,7 @@
 import { PositioningPortal } from '@codastic/react-positioning-portal'
-import { MusicNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/outline'
-import { BaseEmoji, Picker } from 'emoji-mart'
+import { MusicalNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import Picker from '@emoji-mart/react'
+import type { Emoji } from '@emoji-mart/data'
 import { Edit } from 'icons/Edit'
 import { CreatePostInput, useCreatePostMutation } from 'lib/graphql'
 import { ChangeEvent, useState } from 'react'
@@ -69,7 +70,7 @@ export const PostFormTimeline = () => {
     resetLink()
   }
 
-  const handleSelectEmoji = (emoji: BaseEmoji) => {
+  const handleSelectEmoji = (emoji: Emoji) => {
     setPostBody(currentBody => {
       return `${currentBody}${emoji.native}`
     })
@@ -141,7 +142,7 @@ export const PostFormTimeline = () => {
               aria-label="Embed a song to your post"
               onClick={onMusicLinkClick}
             >
-              <MusicNoteIcon className="m-auto w-5 text-gray-400" />
+              <MusicalNoteIcon className="m-auto w-5 text-gray-400" />
             </button>
             <button
               className="w-6 cursor-pointer text-center"

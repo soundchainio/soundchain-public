@@ -2,7 +2,7 @@ import { Button } from 'components/common/Buttons/Button'
 import { Modal } from 'components/Modal'
 import { Track as TrackComponent } from 'components/Track'
 import { TrackListItemSkeleton } from 'components/TrackListItemSkeleton'
-import { useModalDispatch, useModalState } from 'contexts/providers/modal'
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import {
   ExploreTracksDocument,
   ExploreTracksQuery,
@@ -15,7 +15,8 @@ import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 
 export const ConfirmDeleteEditionModal = () => {
-  const { showConfirmDeleteEdition, trackId, trackEditionId } = useModalState()
+  const modalState = useModalState() || {}
+  const { showConfirmDeleteEdition, trackId, trackEditionId } = modalState
   const { dispatchShowConfirmDeleteEditionModal } = useModalDispatch()
   const [loading, setLoading] = useState(false)
   const [getTrack, { data: trackData }] = useTrackLazyQuery()

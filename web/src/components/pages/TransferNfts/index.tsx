@@ -13,7 +13,7 @@ import * as yup from 'yup'
 
 import { Listbox } from '@headlessui/react'
 
-import { useModalDispatch } from '../../../contexts/providers/modal'
+import { useModalDispatch } from '../../../contexts/ModalContext'
 import useBlockchain, { gas } from '../../../hooks/useBlockchain'
 import { useLayoutContext } from '../../../hooks/useLayoutContext'
 import { useMe } from '../../../hooks/useMe'

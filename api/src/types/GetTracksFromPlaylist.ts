@@ -5,7 +5,7 @@ import { PageInfo } from './PageInfo';
 
 @ObjectType()
 export class GetTracksFromPlaylist {
-  @Field()
+  @Field(() => PageInfo)
   pageInfo: PageInfo;
 
   @Field(() => [PlaylistTrack], { nullable: true })

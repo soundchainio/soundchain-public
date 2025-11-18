@@ -3,6 +3,6 @@ import { ProfileVerificationRequest } from '../models/ProfileVerificationRequest
 
 @ObjectType()
 export class ProfileVerificationRequestPayload {
-  @Field()
+  @Field(() => ProfileVerificationRequest)
   profileVerificationRequest?: ProfileVerificationRequest;
 }

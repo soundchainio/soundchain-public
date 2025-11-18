@@ -21,8 +21,8 @@ export default function RoadmapLayout(props: RoadmapLayoutProps) {
         <div className="relative h-[400px] w-full sm:h-[500px] md:h-[600px] lg:h-[700]">
           <Image
             src="/landing-page/roadmap-background.svg"
-            width={1488}
-            height={952}
+            
+            
             fill
             className="object-cover "
             alt="roadmap background"

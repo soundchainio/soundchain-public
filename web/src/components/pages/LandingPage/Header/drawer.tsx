@@ -10,15 +10,14 @@ import { Description, Dialog, Transition, TransitionChild } from '@headlessui/re
 import { Logo } from '../../../../icons/Logo'
 
 export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void }) => {
-  const { data } = useMeQuery()
+  const { data } = useMeQuery({ ssr: false })
   const me = data?.me
 
   return (
-    <Transition show={open} as={React.Fragment}>
+    <Transition show={open}>
       <Dialog onClose={close} className="relative z-50">
         <div className="fixed inset-0 flex items-center justify-end bg-black/50 p-0">
           <TransitionChild
-            as={React.Fragment}
             enter="transition duration-200 ease-out"
             enterFrom="transform translate-x-[100%]"
             enterTo="transform translate-x-0 opacity-100"

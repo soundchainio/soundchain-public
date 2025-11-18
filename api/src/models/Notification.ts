@@ -29,7 +29,7 @@ export class Notification extends Model {
   public override _id!: mongoose.Types.ObjectId;
 
   @Field(() => NotificationType)
-  @prop({ required: true, enum: NotificationType })
+  @prop({ required: true, enum: NotificationType, type: String })
   public type!: NotificationType;
 
   @Field(() => String)

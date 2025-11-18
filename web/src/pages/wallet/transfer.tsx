@@ -1,7 +1,7 @@
 import { FormValues, TransferForm } from 'components/forms/transfer/TransferForm'
 import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { cacheFor } from 'lib/apollo'

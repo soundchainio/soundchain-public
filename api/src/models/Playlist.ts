@@ -8,15 +8,15 @@ export class Playlist extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   title: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   description?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   artworkUrl?: string;
 
@@ -33,7 +33,7 @@ export class Playlist extends Model {
   @Field(() => Date)
   updatedAt: Date;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ default: false })
   deleted?: boolean;
 }

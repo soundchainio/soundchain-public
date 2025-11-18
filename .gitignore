@@ -1,2 +1,8 @@
 .vercel
 api-source.tar.gz
+
+# Large files - don't commit
+soundchain_toc.json
+api-source.tar.gz
+soundchain/
+soundchain-contracts/

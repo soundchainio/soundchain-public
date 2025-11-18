@@ -16,47 +16,47 @@ export class Track extends Model {
   @prop({ type: mongoose.Types.ObjectId })
   profileId: mongoose.Types.ObjectId;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   title: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   description: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   utilityInfo?: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   assetUrl: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   artworkUrl: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   artist: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   artistId: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   artistProfileId: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   album: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   copyright: string;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   @prop()
   releaseYear: number;
 
@@ -80,21 +80,21 @@ export class Track extends Model {
   @prop()
   saleType: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop()
   ISRC: string;
 
-  @Field()
+  @Field(() => String)
   playbackCountFormatted: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ type: mongoose.Types.ObjectId })
   trackEditionId: string;
 
   @Field(() => TrackEdition, { nullable: true })
   trackEdition: TrackEdition;
 
-  @Field({ nullable: true })
+  @Field(() => Boolean, { nullable: true })
   @prop({ default: false })
   deleted?: boolean;
 

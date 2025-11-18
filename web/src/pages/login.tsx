@@ -65,7 +65,7 @@ export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { data, loading: loadingMe } = useMeQuery();
+  const { data, loading: loadingMe } = useMeQuery({ skip: true });
   const me = data?.me;
   const { magic } = useMagicContext();
   const router = useRouter();
@@ -187,9 +187,11 @@ export default function LoginPage() {
       console.log('Starting login process for email:', values.email);
       setLoggingIn(true);
       setError(null);
-      await magic.preload();
+      console.log("About to call magic.preload()...");
+      // await magic.preload(); // SKIPPED - was causing hang
       console.log('Magic preload completed');
 
+      console.log("About to call loginWithEmailOTP...");
       const didToken = await magic.auth.loginWithEmailOTP({ email: values.email });
       console.log('Received didToken (email OTP):', didToken); // Added logging
       localStorage.setItem('didToken', didToken); // Persist token
@@ -284,10 +286,16 @@ export default function LoginPage() {
   return (
     <>
       <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
-      <div
-        className="relative flex min-h-screen w-full flex-col items-center justify-center bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('/images/login-background.gif')` }}
-      >
+      <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden">
+        {/* Background GIF with proper scaling */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/images/login-background.gif"
+            alt="Login background"
+            className="h-full w-full object-cover"
+            style={{ objectFit: 'cover' }}
+          />
+        </div>
         <Overlay />
         <ContentContainer>
           <div className="mb-2 flex h-36 items-center justify-center">

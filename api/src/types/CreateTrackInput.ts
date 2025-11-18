@@ -4,46 +4,46 @@ import { NFTData } from './NFTData';
 
 @InputType()
 export class CreateTrackInput {
-  @Field()
+  @Field(() => String)
   title: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   description: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   utilityInfo: string;
 
-  @Field()
+  @Field(() => String)
   assetUrl: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   artworkUrl: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   artist: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   artistId: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   artistProfileId: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   album: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   ISRC: string;
 
-  @Field({ nullable: true })
+  @Field(() => Number, { nullable: true })
   releaseYear: number;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   copyright: string;
 
   @Field(() => [Genre], { nullable: true })
   genres: Genre[];
 
-  @Field()
+  @Field(() => String)
   trackEditionId: string;
 
   @Field(() => NFTData, { nullable: true })

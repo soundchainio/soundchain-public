@@ -1,4 +1,4 @@
-import { ExclamationCircleIcon } from '@heroicons/react/solid'
+import { ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { Matic } from 'icons/Matic'
 import { network } from 'lib/blockchainNetworks'
 import { PolygonscanResultObj } from 'lib/graphql'

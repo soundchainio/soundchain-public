@@ -3,10 +3,10 @@ import { NFTData } from './NFTData';
 
 @InputType()
 export class FilterTrackInput {
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   profileId?: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   trackEditionId?: string;
 
   @Field(() => NFTData, { nullable: true })

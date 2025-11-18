@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { Number } from 'components/Number'
-import { useModalDispatch } from 'contexts/providers/modal'
+import { useModalDispatch } from 'contexts/ModalContext'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { ReactionType } from 'lib/graphql'
 import NextLink from 'next/link'
