@@ -15,15 +15,15 @@ export class User extends Model {
   @prop({ type: mongoose.Types.ObjectId, required: true })
   profileId: mongoose.Types.ObjectId;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true })
   email: string;
 
-  @Field()
+  @Field(() => String)
   @prop({ required: true, unique: true })
   handle: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   @prop({ required: false })
   magicWalletAddress: string;
 
@@ -42,7 +42,7 @@ export class User extends Model {
   @prop({ required: false })
   emailVerificationToken?: string;
 
-  @Field()
+  @Field(() => Boolean)
   @prop({ default: false })
   isApprovedOnMarketplace: boolean;
 
@@ -50,13 +50,12 @@ export class User extends Model {
   @prop({ type: [String], enum: Role, default: [Role.USER] })
   roles: string[];
 
-  @Field({ nullable: true })
-  @prop({ required: false })
-  otpSecret: string;
+  // OTP fields - stored in DB but not exposed to frontend (no @Field decorator)
+  @prop({ required: false, default: undefined })
+  otpSecret?: string;
 
-  @Field({ nullable: true })
-  @prop({ required: false })
-  otpRecoveryPhrase: string;
+  @prop({ required: false, default: undefined })
+  otpRecoveryPhrase?: string;
 
   @Field(() => Date)
   createdAt: Date;

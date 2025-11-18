@@ -27,10 +27,6 @@ export const {
   NODE_ENV,
   PORT = 4000,
   WEB_APP_URL = 'http://localhost:3000',
-  SENDGRID_SENDER_EMAIL,
-  SENDGRID_VERIFICATION_TEMPLATE,
-  SENDGRID_API_KEY,
-  SENDGRID_RESET_PASSWORD_TEMPLATE,
   UPLOADS_BUCKET_REGION,
   UPLOADS_BUCKET_NAME,
   WALLET_PUBLIC_KEY,
@@ -60,10 +56,7 @@ function assertEnvVar(name: string, value: string | undefined): asserts value {
   }
 }
 
-assertEnvVar('SENDGRID_SENDER_EMAIL', SENDGRID_SENDER_EMAIL);
-assertEnvVar('SENDGRID_VERIFICATION_TEMPLATE', SENDGRID_VERIFICATION_TEMPLATE);
-assertEnvVar('SENDGRID_API_KEY', SENDGRID_API_KEY);
-assertEnvVar('SENDGRID_RESET_PASSWORD_TEMPLATE', SENDGRID_RESET_PASSWORD_TEMPLATE);
+// SENDGRID REMOVED - No longer using SendGrid for emails
 
 export const config = {
   apollo: {
@@ -91,30 +84,31 @@ export const config = {
     bucket: UPLOADS_BUCKET_NAME,
   },
   db: {
-    url: 'mongodb://soundchainadmin:i%7CrmUvwben0gw%245D3%5B%7E0ZLw-tX%7EL@localhost:27017/test',
-    options: {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      tls: true,
-      tlsCAFile: '/Users/soundchain/soundchain/api/global-bundle.pem',
-      authMechanism: 'SCRAM-SHA-1' as any,
-      tlsAllowInvalidHostnames: true,
-      serverSelectionTimeoutMS: 60000,
-      directConnection: true,
-      retryWrites: false,
-    },
+    url: process.env.MONGODB_URI ||
+      (process.env.NODE_ENV === 'production'
+        ? 'mongodb://soundchainadmin:i%7CrmUvwben0gw%245D3%5B%7E0ZLw-tX%7EL@localhost:27017/test'
+        : 'mongodb://localhost:27017/soundchain'),
+    options: process.env.MONGODB_URI || process.env.NODE_ENV === 'production'
+      ? {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+          tls: true,
+          tlsCAFile: path.join(__dirname, '..', 'global-bundle.pem'),
+          authMechanism: 'SCRAM-SHA-1' as any,
+          tlsAllowInvalidHostnames: true,
+          tlsAllowInvalidCertificates: true,
+          serverSelectionTimeoutMS: 60000,
+          directConnection: true,
+          retryWrites: false,
+        }
+      : {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        },
   },
   express: {
     port: PORT,
     middlewares: [cors({ credentials: true }), JwtService.middleware],
-  },
-  sendgrid: {
-    apiKey: SENDGRID_API_KEY,
-    sender: SENDGRID_SENDER_EMAIL,
-    templates: {
-      userEmailVerification: SENDGRID_VERIFICATION_TEMPLATE,
-      passwordReset: SENDGRID_RESET_PASSWORD_TEMPLATE,
-    },
   },
   web: {
     url: WEB_APP_URL,
