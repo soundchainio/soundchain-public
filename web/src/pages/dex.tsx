@@ -69,12 +69,10 @@ const mockBundles = [
 ]
 
 // Navigation pages (Create removed - rendered separately with modal functionality)
+// Removed Feed, Market, DEX duplicates - those are now tabs in the main DEX view
 const navigationPages = [
-  { name: 'Feed', href: '/home', icon: Home },
   { name: 'Explore', href: '/explore', icon: Search },
   { name: 'Library', href: '/library', icon: Library },
-  { name: 'Market', href: '/marketplace', icon: ShoppingBag },
-  { name: 'DEX', href: '/dex', icon: Globe },
 ]
 
 // WalletConnect Modal Component
@@ -874,34 +872,7 @@ function DEXDashboard() {
                 </div>
               </div>
 
-              {/* Portfolio Panel */}
-              <Card className="retro-card p-6">
-                <h2 className="retro-title text-lg mb-4">Portfolio</h2>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="metadata-section p-4">
-                    <div className="metadata-label">Total Value</div>
-                    <div className="retro-text text-xl">24,567.89 Ξ</div>
-                    <div className="text-sm text-green-400">+5.24%</div>
-                  </div>
-                  <div className="metadata-section p-4">
-                    <div className="metadata-label">NFTs Owned</div>
-                    <div className="retro-text text-xl">47</div>
-                    <div className="text-sm text-cyan-400">12 Collections</div>
-                  </div>
-                </div>
-                <h3 className="metadata-label mb-2">Recent Activity</h3>
-                <div className="space-y-2">
-                  {[{ type: 'buy', item: 'Track #234', price: '12.5 OGUN' }, { type: 'sell', item: 'NFT #1234', price: '45.6 MATIC' }].map((a, i) => (
-                    <div key={i} className="flex items-center justify-between p-2 bg-black/20 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${a.type === 'buy' ? 'bg-green-400' : 'bg-red-400'}`} />
-                        <span className="text-sm">{a.item}</span>
-                      </div>
-                      <span className="retro-text text-sm">{a.price}</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
+              {/* Portfolio Panel - Moved to protected wallet page for privacy */}
             </div>
           </div>
         </div>
