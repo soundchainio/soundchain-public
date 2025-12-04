@@ -14,8 +14,8 @@ export {
   useRetractReactionMutation,
   DefaultWallet,
   ReactionType,
+  UploadUrlDocument,  // This is a value (gql document), not just a type!
   type MeQuery,
   type TrackQuery,
-  type UploadUrlDocument,
   type UploadUrlQuery
 } from './graphql';
