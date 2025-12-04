@@ -217,7 +217,7 @@ export default function LoginPage() {
   const GoogleButton = () => (
     <HoverableButton
       variant="default"
-      className="flex gap-2 rounded border border-gray-30 bg-gray-1A px-3 py-4 text-sm font-semibold text-white"
+      className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white"
       onClick={handleGoogleLogin}
     >
       <Google className="mr-1 h-5 w-5" />

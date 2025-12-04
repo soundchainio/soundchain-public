@@ -12,8 +12,8 @@ interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
   alignTextCenter?: boolean
 }
 
-const commonInputClasses = `relative appearance-none block w-full p-3 rounded border bg-gray-1A border-gray-30 text-gray-200 cursor-text`
-const validInputClasses = `${commonInputClasses} border-gray-30`
+const commonInputClasses = `relative appearance-none block w-full p-3 rounded border bg-black/30 backdrop-blur-sm border-white/20 text-gray-200 cursor-text`
+const validInputClasses = `${commonInputClasses} border-white/20`
 const errorInputClasses = `${commonInputClasses} border-red-500`
 
 export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: InputFieldProps) => {
@@ -31,7 +31,7 @@ export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: Inp
           </Label>
         )}
         <input
-          className={`placeholder-semibold w-full border-none bg-gray-1A p-0 text-xs font-bold leading-3 text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent ${
+          className={`placeholder-semibold w-full border-none bg-transparent p-0 text-xs font-bold leading-3 text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent ${
             alignTextCenter && 'text-center'
           }`}
           id={props.name}
