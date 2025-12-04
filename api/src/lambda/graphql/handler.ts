@@ -6,14 +6,10 @@ import { mongoose } from '@typegoose/typegoose';
 
 const graphqlHandler: APIGatewayProxyHandler = async (...args) => {
   try {
-    const url =
-      'mongodb://production:8uV53MWUu6DPfdL5@db-soundchain-api-production.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false';
-    await mongoose.connect(url, {
-      useUnifiedTopology: true,
-      useNewUrlParser: true,
-      useCreateIndex: true,
-      useFindAndModify: true,
-    });
+    // Use DATABASE_URL from serverless.yml environment variables
+    const url = process.env.DATABASE_URL || config.db.url;
+    console.log('Connecting to database...');
+    await mongoose.connect(url, config.db.options);
 
     const server = new ApolloServer(config.apollo);
     const apolloHandler = server.createHandler({
