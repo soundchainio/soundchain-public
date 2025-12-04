@@ -876,11 +876,11 @@ function DEXDashboard() {
         {/* Main Content */}
         <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8">
           {/* View Tabs - LEGACY UI PATTERN WITH GRADIENT TEXT */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
             <Button
               variant="ghost"
               onClick={() => setSelectedView('dashboard')}
-              className={`transition-all duration-300 hover:bg-cyan-500/10 ${selectedView === 'dashboard' ? 'bg-cyan-500/10' : ''}`}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${selectedView === 'dashboard' ? 'bg-cyan-500/10' : ''}`}
             >
               <Home className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'dashboard' ? 'text-cyan-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'dashboard' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
@@ -890,7 +890,7 @@ function DEXDashboard() {
             <Button
               variant="ghost"
               onClick={() => setSelectedView('marketplace')}
-              className={`transition-all duration-300 hover:bg-purple-500/10 ${selectedView === 'marketplace' ? 'bg-purple-500/10' : ''}`}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-purple-500/10 ${selectedView === 'marketplace' ? 'bg-purple-500/10' : ''}`}
             >
               <ShoppingBag className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'marketplace' ? 'text-purple-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'marketplace' ? 'purple-green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
@@ -900,7 +900,7 @@ function DEXDashboard() {
             <Button
               variant="ghost"
               onClick={() => setSelectedView('feed')}
-              className={`transition-all duration-300 hover:bg-green-500/10 ${selectedView === 'feed' ? 'bg-green-500/10' : ''}`}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${selectedView === 'feed' ? 'bg-green-500/10' : ''}`}
             >
               <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'feed' ? 'text-green-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'feed' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
@@ -910,7 +910,7 @@ function DEXDashboard() {
             <Button
               variant="ghost"
               onClick={() => setSelectedView('explore')}
-              className={`transition-all duration-300 hover:bg-orange-500/10 ${selectedView === 'explore' ? 'bg-orange-500/10' : ''}`}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-orange-500/10 ${selectedView === 'explore' ? 'bg-orange-500/10' : ''}`}
             >
               <Compass className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'explore' ? 'text-orange-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'explore' ? 'orange-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
@@ -920,7 +920,7 @@ function DEXDashboard() {
             <Button
               variant="ghost"
               onClick={() => setSelectedView('library')}
-              className={`transition-all duration-300 hover:bg-blue-500/10 ${selectedView === 'library' ? 'bg-blue-500/10' : ''}`}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-blue-500/10 ${selectedView === 'library' ? 'bg-blue-500/10' : ''}`}
             >
               <Library className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'library' ? 'text-blue-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'library' ? 'blue-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
@@ -930,7 +930,7 @@ function DEXDashboard() {
             <Button
               variant="ghost"
               onClick={() => setSelectedView('playlist')}
-              className={`transition-all duration-300 hover:bg-pink-500/10 ${selectedView === 'playlist' ? 'bg-pink-500/10' : ''}`}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-pink-500/10 ${selectedView === 'playlist' ? 'bg-pink-500/10' : ''}`}
             >
               <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'playlist' ? 'text-pink-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'playlist' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>

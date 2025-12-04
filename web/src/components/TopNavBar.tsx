@@ -60,7 +60,7 @@ export const TopNavBar = ({
   return (
     <header>
       <div className="relative z-10 grid h-16 grid-cols-3 bg-black shadow sm:grid-cols-6">
-        <Link href="/home" className="flex-grow-basis flex items-center pl-4 md:hidden" passHref>
+        <Link href="/dex" className="flex-grow-basis flex items-center pl-4 md:hidden" passHref>
           <Logo id="logo_mobile" className="block h-8 w-auto" />
         </Link>
         {me ? (

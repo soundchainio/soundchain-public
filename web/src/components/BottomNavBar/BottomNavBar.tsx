@@ -41,7 +41,7 @@ export const BottomNavBar = () => {
     <nav id="bottom-nav-bar" className="inset-x-0 flex items-center bg-black py-3 shadow-2xl md:hidden">
       <div className="w-full">
         <div className="flex w-full items-end">
-          <NavBarButton label="" path="/home" icon={Home} color="yellow" alwaysShowLabel />
+          <NavBarButton label="" path="/dex" icon={Home} color="yellow" alwaysShowLabel />
           <NavBarButton
             id="nav-explore-"
             label=""

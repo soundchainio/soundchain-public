@@ -30,7 +30,7 @@ export const NavBar = () => {
           <Logo className="block h-8 w-auto hover:cursor-pointer" />
         </Link>
 
-        <NavBarButton label="Home" path="/home" icon={Home} color="yellow" id="top" alwaysShowLabel />
+        <NavBarButton label="Home" path="/dex" icon={Home} color="yellow" id="top" alwaysShowLabel />
         <NavBarButton
           id="top-explore-"
           label="Explore"
