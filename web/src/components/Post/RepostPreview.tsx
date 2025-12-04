@@ -1,5 +1,7 @@
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import { Track, usePostQuery } from 'lib/graphql'
+import { MediaProvider } from 'types/MediaProvider'
+import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { Avatar } from '../Avatar'
 import { DisplayName } from '../DisplayName'
 import { MiniAudioPlayer } from '../MiniAudioPlayer'
@@ -39,15 +41,139 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
               <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
             </div>
             <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">{post.body}</pre>
-            {post.mediaLink && (
-              <iframe
-                frameBorder="0"
-                className="mt-4 w-full bg-gray-20"
-                allowFullScreen
-                src={post.mediaLink}
-                title="Media preview"
-              />
-            )}
+            {post.mediaLink && (() => {
+              const mediaSource = IdentifySource(post.mediaLink)
+              const mediaType = mediaSource.type
+              let enhancedUrl = post.mediaLink
+
+              // Platform-specific enhancements
+              if (mediaType === MediaProvider.YOUTUBE) {
+                const url = new URL(enhancedUrl)
+                url.searchParams.set('iv_load_policy', '3')
+                url.searchParams.set('modestbranding', '1')
+                url.searchParams.set('rel', '0')
+                enhancedUrl = url.toString()
+
+                return (
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-gray-20 aspect-video"
+                    allowFullScreen
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  />
+                )
+              }
+
+              if (mediaType === MediaProvider.VIMEO) {
+                const url = new URL(enhancedUrl)
+                url.searchParams.set('autopause', '0')
+                enhancedUrl = url.toString()
+
+                return (
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-gray-20 aspect-video"
+                    allowFullScreen
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                  />
+                )
+              }
+
+              if (mediaType === MediaProvider.INSTAGRAM) {
+                return (
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[700px]"
+                    allowFullScreen
+                    scrolling="no"
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  />
+                )
+              }
+
+              if (mediaType === MediaProvider.TIKTOK) {
+                return (
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-gray-20 h-[80vh] max-h-[650px] md:h-[650px]"
+                    allowFullScreen
+                    scrolling="no"
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="autoplay; encrypted-media; accelerometer; gyroscope"
+                  />
+                )
+              }
+
+              if (mediaType === MediaProvider.X) {
+                return (
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-gray-20 h-[70vh] max-h-[700px] md:h-[700px]"
+                    allowFullScreen
+                    scrolling="no"
+                    src={enhancedUrl}
+                    title="Media preview"
+                  />
+                )
+              }
+
+              if (mediaType === MediaProvider.BANDCAMP) {
+                return (
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-gray-20 h-[500px] md:h-[600px]"
+                    allowFullScreen
+                    seamless
+                    src={enhancedUrl}
+                    title="Media preview"
+                  />
+                )
+              }
+
+              if (mediaType === MediaProvider.TWITCH) {
+                return (
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-gray-20 aspect-video"
+                    allowFullScreen
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                  />
+                )
+              }
+
+              if (mediaType === MediaProvider.DISCORD) {
+                return (
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-gray-20 h-[500px] md:h-[600px]"
+                    src={enhancedUrl}
+                    title="Media preview"
+                    sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                  />
+                )
+              }
+
+              // Default iframe for SoundCloud, Spotify, Custom HTML
+              return (
+                <iframe
+                  frameBorder="0"
+                  className="mt-4 w-full bg-gray-20 aspect-video"
+                  allowFullScreen
+                  src={enhancedUrl}
+                  title="Media preview"
+                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                />
+              )
+            })()}
             {post.track && !post.track.deleted && (
               <MiniAudioPlayer
                 song={{
