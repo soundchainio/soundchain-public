@@ -1,4 +1,4 @@
-import { Arg, Authorized, Ctx, Query, Resolver } from 'type-graphql';
+import { Arg, Ctx, Query, Resolver } from 'type-graphql';
 import { Context } from '../types/Context';
 import { ExplorePayload } from '../types/ExplorePayload';
 import { PageInput } from '../types/PageInput';
@@ -8,8 +8,8 @@ import { TrackConnection } from '../types/TrackConnection';
 
 @Resolver()
 export class ExploreResolver {
+  // Public - no auth required for discovery
   @Query(() => ExplorePayload)
-  @Authorized()
   explore(
     @Ctx() { exploreService }: Context,
     @Arg('search', { nullable: true }) search: string,
@@ -17,8 +17,8 @@ export class ExploreResolver {
     return exploreService.getExplore(search);
   }
 
+  // Public - no auth required for discovery
   @Query(() => TrackConnection)
-  @Authorized()
   exploreTracks(
     @Ctx() { exploreService }: Context,
     @Arg('search', { nullable: true }) search: string,
@@ -28,8 +28,8 @@ export class ExploreResolver {
     return exploreService.getExploreTracks(sort, search, page);
   }
 
+  // Public - no auth required for discovery
   @Query(() => ProfileConnection)
-  @Authorized()
   exploreUsers(
     @Ctx() { exploreService }: Context,
     @Arg('search', { nullable: true }) search: string,

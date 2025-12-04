@@ -1215,39 +1215,69 @@ function DEXDashboard() {
 
           {selectedPurchaseType === 'nft' && (
             <>
-              {/* Real NFT listings from database - tracks with listing prices */}
-              {marketTracks.filter((t: any) => t.listingItem?.price).length > 0 ? (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
-                  {marketTracks
-                    .filter((t: any) => t.listingItem?.price)
-                    .map((track: any) => (
-                      <NFTCard
-                        key={track.id}
-                        nft={{
-                          id: track.id,
-                          name: track.title,
-                          collection: track.artist || 'SoundChain',
-                          tokenId: track.id,
-                          chainId: 137, // Polygon
-                          price: { value: parseFloat(track.listingItem?.price || 0), currency: track.listingItem?.acceptsOGUN ? 'OGUN' : 'MATIC' },
-                          usdPrice: parseFloat(track.listingItem?.price || 0) * 0.5, // Estimate
-                          image: track.artworkUrl || '',
-                          rarity: 'rare' as const,
-                          attributes: [],
-                          creator: track.artistWallet || '',
-                          owner: track.ownerWallet || '',
-                        }}
-                        onPurchase={() => {}}
-                        isWalletConnected={isWalletConnected}
-                        listView={viewMode === 'list'}
-                      />
-                    ))}
-                </div>
+              {/* Real NFT listings from database - all marketplace tracks as NFT cards */}
+              {marketTracks.length > 0 ? (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="retro-title">NFT Collection ({listingData?.listingItems?.pageInfo?.totalCount || marketTracks.length})</h2>
+                    {listingLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading...</Badge>}
+                  </div>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
+                    {marketTracks.map((track: any) => {
+                      // Get price from track-level price or listingItem price fields
+                      const priceValue = track.price?.value || track.listingItem?.pricePerItemToShow || track.listingItem?.pricePerItem || 0
+                      const currency = track.price?.currency || (track.listingItem?.acceptsOGUN ? 'OGUN' : 'MATIC')
+                      return (
+                        <NFTCard
+                          key={track.id}
+                          nft={{
+                            id: track.id,
+                            name: track.title || 'Untitled',
+                            collection: track.artist || 'SoundChain',
+                            tokenId: track.nftData?.tokenId || track.id,
+                            chainId: 137, // Polygon
+                            price: { value: parseFloat(priceValue) || 0, currency },
+                            usdPrice: parseFloat(priceValue) * 0.5, // Estimate
+                            image: track.artworkUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop',
+                            rarity: track.playbackCount > 1000 ? 'legendary' : track.playbackCount > 100 ? 'epic' : track.playbackCount > 10 ? 'rare' : 'common' as const,
+                            attributes: [
+                              { trait_type: 'Plays', value: track.playbackCountFormatted || '0' },
+                              { trait_type: 'Favorites', value: track.favoriteCount || 0 },
+                              { trait_type: 'Genre', value: track.genres?.[0] || 'Music' },
+                            ],
+                            creator: track.nftData?.minter || track.artistId || '',
+                            owner: track.nftData?.owner || '',
+                          }}
+                          onPurchase={() => {}}
+                          isWalletConnected={isWalletConnected}
+                          listView={viewMode === 'list'}
+                        />
+                      )
+                    })}
+                  </div>
+                  {/* Load More NFTs Button */}
+                  {listingData?.listingItems?.pageInfo?.hasNextPage && (
+                    <div className="flex justify-center mt-6">
+                      <Button
+                        onClick={handleLoadMoreListings}
+                        disabled={loadingMoreListings}
+                        className="retro-button px-8"
+                      >
+                        {loadingMoreListings ? 'Loading...' : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Load More NFTs ({(listingData?.listingItems?.pageInfo?.totalCount || 0) - marketTracks.length} remaining)
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <Card className="retro-card p-8 text-center">
                   <ImageIcon className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
-                  <h3 className="retro-title mb-2">No NFTs Listed</h3>
-                  <p className="text-gray-400 text-sm">NFTs with sale prices will appear here. List your tracks for sale to see them as NFT cards!</p>
+                  <h3 className="retro-title mb-2">No NFTs Found</h3>
+                  <p className="text-gray-400 text-sm">{listingLoading ? 'Loading NFTs from blockchain...' : 'NFT marketplace is empty. Mint your first music NFT!'}</p>
                 </Card>
               )}
             </>
