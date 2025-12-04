@@ -10,13 +10,17 @@ export const playbackCount: Handler = async () => {
   const nowTimestampInSeconds = Math.round(Date.now() / 1000);
   const initialTimestampInSeconds = nowTimestampInSeconds - intervalGapInMinutes * 60;
 
-  const dbUrl =
-    'mongodb://production:8uV53MWUu6DPfdL5@db-soundchain-api-production.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false';
+  // Use DATABASE_URL from serverless.yml environment variables
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    throw new Error('DATABASE_URL environment variable is not set');
+  }
   await mongoose.connect(dbUrl, {
     useUnifiedTopology: true,
     useNewUrlParser: true,
-    useCreateIndex: true,
-    useFindAndModify: true,
+    tls: true,
+    tlsCAFile: 'global-bundle.pem',
+    retryWrites: false,
   });
 
   const user = await UserModel.findOne({ handle: '_system' });

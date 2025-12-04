@@ -84,11 +84,9 @@ export const config = {
     bucket: UPLOADS_BUCKET_NAME,
   },
   db: {
-    url: process.env.MONGODB_URI ||
-      (process.env.NODE_ENV === 'production'
-        ? 'mongodb://soundchainadmin:i%7CrmUvwben0gw%245D3%5B%7E0ZLw-tX%7EL@localhost:27017/test'
-        : 'mongodb://localhost:27017/soundchain'),
-    options: process.env.MONGODB_URI || process.env.NODE_ENV === 'production'
+    // DATABASE_URL is set by serverless.yml from CloudFormation
+    url: process.env.DATABASE_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/soundchain',
+    options: process.env.DATABASE_URL || process.env.MONGODB_URI || process.env.NODE_ENV === 'production'
       ? {
           useNewUrlParser: true,
           useUnifiedTopology: true,

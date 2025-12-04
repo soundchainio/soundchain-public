@@ -4,10 +4,12 @@ import { config } from '../../config';
 
 export const handler: APIGatewayProxyHandler = async () => {
   try {
+    // Use DATABASE_URL from serverless.yml environment variables
+    const dbUrl = process.env.DATABASE_URL || config.db.url;
     console.log('Attempting to connect to MongoDB...');
-    console.log(config.db.url);
+    console.log('DB URL set:', !!dbUrl);
     console.log(config.db.options);
-    await mongoose.connect(config.db.url, config.db.options);
+    await mongoose.connect(dbUrl, config.db.options);
     console.log('Successfully connected to MongoDB');
 
     return {
