@@ -14,7 +14,7 @@
     "prettier": "prettier --write ./src",
     "lint-web": "lint-staged",
     "find:unused": "next-unused",
-    "vercel-build": "next build && next export",
+    "vercel-build": "next build",
     "e2e": "cypress run",
     "typecheck": "tsc --noEmit"
   },
