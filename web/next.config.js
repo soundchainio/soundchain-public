@@ -1,6 +1,5 @@
 module.exports = {
   reactStrictMode: false,
-  output: 'export',
   images: {
     domains: [
       'placeimg.com',
