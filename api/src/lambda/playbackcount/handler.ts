@@ -24,7 +24,7 @@ export const playbackCount: Handler = async () => {
   });
 
   const user = await UserModel.findOne({ handle: '_system' });
-  const context = new Context({ sub: user._id });
+  const context = new Context({ sub: user._id.toString() });
 
   let url: string;
   const fetch = async (pageSize: number, currentPage: number): Promise<MuxDataInputValue> => {

@@ -174,7 +174,7 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
             return (
               <iframe
                 frameBorder="0"
-                className="mt-4 w-full bg-gray-20 h-[500px] md:h-[600px]"
+                className="mt-4 w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[600px]"
                 allowFullScreen
                 seamless
                 src={enhancedUrl}

@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://soundchain.fm
+
+# Sitemaps
+Sitemap: https://soundchain.fm/sitemap.xml

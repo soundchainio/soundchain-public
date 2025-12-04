@@ -98,46 +98,35 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft, onPurchase, isWalletConne
   return (
     <div className="nft-flip-card-container cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
       <div className={`nft-flip-card ${isFlipped ? 'flipped' : ''}`}>
-        {/* Front Side */}
+        {/* Front Side - Rarible-style compact */}
         <div className="nft-flip-card-front">
-          <Card className="retro-card transition-all duration-200 hover:scale-105 h-full">
-            <div className="flip-hint"><RotateCcw className="w-3 h-3" /></div>
-            <CardHeader className="pb-2">
-              <div className="aspect-square bg-gray-700 rounded-lg overflow-hidden mb-3 analog-glow relative">
-                <img src={nft.image} alt={nft.name} className="w-full h-full object-cover" />
+          <Card className="retro-card transition-all duration-200 hover:scale-[1.02] h-full border-0 bg-gray-900/80 rounded-xl overflow-hidden">
+            <div className="flip-hint"><RotateCcw className="w-2.5 h-2.5" /></div>
+            {/* Image takes most of card - Rarible style */}
+            <div className="aspect-square bg-gray-800 overflow-hidden relative">
+              <img src={nft.image} alt={nft.name} className="w-full h-full object-cover" loading="lazy" />
+              {/* Rarity badge overlay */}
+              <Badge className={`${getRarityColor(nft.rarity)} absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0.5`}>{nft.rarity}</Badge>
+            </div>
+            {/* Compact info section */}
+            <div className="p-2 space-y-1">
+              <h3 className="text-white text-xs font-semibold truncate leading-tight">{nft.name}</h3>
+              <p className="text-gray-400 text-[10px] truncate">{nft.collection}</p>
+              <div className="flex items-center justify-between pt-1">
+                <div>
+                  <div className="text-white text-xs font-bold">{formatNumber(nft.price.value)} {nft.price.currency}</div>
+                  <div className="text-[9px] text-gray-500">${formatNumber(nft.usdPrice)}</div>
+                </div>
+                <Button
+                  onClick={(e) => { e.stopPropagation(); onPurchase(nft.id) }}
+                  disabled={!isWalletConnected}
+                  size="sm"
+                  className="h-6 px-2 text-[10px] bg-cyan-500 hover:bg-cyan-600 text-black font-bold rounded-md"
+                >
+                  Buy
+                </Button>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <h3 className="retro-title text-sm truncate">{nft.name}</h3>
-                  <p className="retro-json text-xs truncate">{nft.collection}</p>
-                </div>
-                <Badge className={`${getRarityColor(nft.rarity)} ml-2`}>{nft.rarity}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                <div className="metadata-section">
-                  <div className="metadata-label">Price</div>
-                  <div className="metadata-value">{formatNumber(nft.price.value)} {nft.price.currency}</div>
-                  <div className="text-sm text-gray-400">≈ ${formatNumber(nft.usdPrice)} USD</div>
-                </div>
-                <div className="metadata-section">
-                  <div className="metadata-label">Details</div>
-                  <div className="text-xs text-gray-300 space-y-1">
-                    <div>Token ID: {nft.tokenId}</div>
-                    <div>Chain: {chainNames[nft.chainId] || `Chain ${nft.chainId}`}</div>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button onClick={(e) => { e.stopPropagation(); onPurchase(nft.id) }} disabled={!isWalletConnected} className="flex-1 retro-button">
-                    {isWalletConnected ? 'Buy Now' : 'Connect'}
-                  </Button>
-                  <Button variant="outline" size="sm" className="border-gray-600" onClick={(e) => e.stopPropagation()}>
-                    <Heart className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
+            </div>
           </Card>
         </div>
 

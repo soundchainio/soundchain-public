@@ -26,7 +26,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar'
 import { ScrollArea } from '../components/ui/scroll-area'
 import { Separator } from '../components/ui/separator'
 import { useAudioPlayerContext, Song } from '../hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -45,28 +45,13 @@ import {
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
+const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
 
-// Mock NFT data
-const mockNFTs = [
-  { id: 'nft1', name: 'Cosmic Voyager #1247', collection: 'Cosmic Voyagers', tokenId: '1247', chainId: 1, price: { value: 0.5, currency: 'ETH' }, usdPrice: 1000, image: 'https://images.unsplash.com/photo-1634193295627-1cdddf751ebf?w=400&h=400&fit=crop', rarity: 'rare' as const, attributes: [{ trait_type: 'Background', value: 'Nebula' }], creator: '0x1234567890abcdef', owner: '0xabcdef1234567890' },
-  { id: 'nft2', name: 'Pixel Punk #892', collection: 'Pixel Punks', tokenId: '892', chainId: 1, price: { value: 1.2, currency: 'ETH' }, usdPrice: 2400, image: 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=400&h=400&fit=crop', rarity: 'epic' as const, attributes: [{ trait_type: 'Type', value: 'Alien' }], creator: '0x2345678901bcdef2', owner: '0xbcdef23456789012' },
-  { id: 'nft3', name: 'Digital Dragon #456', collection: 'Mythical Creatures', tokenId: '456', chainId: 137, price: { value: 150, currency: 'MATIC' }, usdPrice: 75, image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=400&fit=crop', rarity: 'legendary' as const, attributes: [{ trait_type: 'Element', value: 'Fire' }], creator: '0x3456789012cdef45', owner: '0xcdef456789012def' },
-]
-
-// Mock Token data - Token listings for sale
-const mockTokens = [
-  { id: 'token1', tokenSymbol: 'OGUN', tokenAmount: 10000, chainId: 137, price: { value: 0.15, currency: 'MATIC' }, usdPrice: 1500, ISRC: 'US1234567890', saleType: 'fixed' as const, acceptedCurrencies: ['MATIC', 'USDC', 'ETH'] },
-  { id: 'token2', tokenSymbol: 'SOUND', tokenAmount: 5000, chainId: 1, price: { value: 0.01, currency: 'ETH' }, usdPrice: 20, ISRC: 'US0987654321', saleType: 'auction' as const, acceptedCurrencies: ['ETH', 'USDC'] },
-  { id: 'token3', tokenSymbol: 'BEAT', tokenAmount: 25000, chainId: 137, price: { value: 0.05, currency: 'MATIC' }, usdPrice: 1250, ISRC: 'US5555666677', saleType: 'fixed' as const, acceptedCurrencies: ['MATIC', 'USDT', 'USDC', 'ETH'] },
-  { id: 'token4', tokenSymbol: 'MELODY', tokenAmount: 3000, chainId: 8453, price: { value: 0.5, currency: 'ETH' }, usdPrice: 1000, ISRC: 'US9988776655', saleType: 'bundle' as const, acceptedCurrencies: ['ETH', 'USDC'] },
-]
-
-// Mock Bundle data
-const mockBundles = [
-  { id: 'bundle1', nftIds: ['nft1', 'nft2'], tokenSymbol: 'ETH', tokenAmount: 10, chainId: 1, privateAsset: 'concert tickets', price: { value: 2, currency: 'ETH' }, usdPrice: 4000, ISRC: 'US5566778899' },
-  { id: 'bundle2', nftIds: ['nft3'], tokenSymbol: 'MATIC', tokenAmount: 50, chainId: 137, privateAsset: 'vinyl', price: { value: 25, currency: 'MATIC' }, usdPrice: 12.50, ISRC: 'US8899001122' },
-]
+// Real NFT data comes from the database via listingItems query
+// NFT listings with prices will be shown in the NFT tab
+// Tracks without listings are streaming-only (no price)
+// This is what makes SoundChain unique - dual purpose NFTs!
 
 // Navigation pages removed - all tabs now in main DEX view
 const navigationPages: { name: string; href: string; icon: React.ComponentType<{ className?: string }> }[] = []
@@ -312,6 +297,8 @@ function DEXDashboard() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [profileImageError, setProfileImageError] = useState(false)
   const [coverImageError, setCoverImageError] = useState(false)
+  const [exploreSearchQuery, setExploreSearchQuery] = useState('')
+  const [exploreTab, setExploreTab] = useState<'tracks' | 'users'>('users')
 
   // Audio Player Context
   const { play, playlistState, isPlaying, currentSong, togglePlay } = useAudioPlayerContext()
@@ -333,17 +320,54 @@ function DEXDashboard() {
     fetchPolicy: 'cache-and-network',
   })
 
-  // Fetch ALL unique tracks (618 tracks from 8,236 NFT editions)
-  const { data: tracksData, loading: tracksLoading, error: tracksError, refetch: refetchTracks } = useGroupedTracksQuery({
+  // Fetch ALL unique tracks (618 tracks from 8,236 NFT editions) with pagination
+  const { data: tracksData, loading: tracksLoading, error: tracksError, refetch: refetchTracks, fetchMore: fetchMoreTracks } = useGroupedTracksQuery({
     variables: {
       filter: {}, // Empty filter to get ALL tracks
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
-      page: { first: 30 }, // Safe limit - API max is 50
+      page: { first: 50 }, // Start with 50 tracks (API max)
     },
     skip: false, // Always fetch
-    fetchPolicy: 'network-only', // Always fetch fresh data
+    fetchPolicy: 'cache-and-network', // Use cache but also fetch fresh
     notifyOnNetworkStatusChange: true, // Get updates on refetch
   })
+
+  // Track if we're loading more
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  // Load more tracks using cursor pagination
+  const handleLoadMore = useCallback(async () => {
+    if (!tracksData?.groupedTracks?.pageInfo?.hasNextPage || loadingMore) return
+
+    setLoadingMore(true)
+    try {
+      await fetchMoreTracks({
+        variables: {
+          page: {
+            first: 50,
+            after: tracksData.groupedTracks.pageInfo.endCursor,
+          },
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev
+          return {
+            ...fetchMoreResult,
+            groupedTracks: {
+              ...fetchMoreResult.groupedTracks,
+              nodes: [
+                ...(prev.groupedTracks?.nodes || []),
+                ...(fetchMoreResult.groupedTracks?.nodes || []),
+              ],
+            },
+          }
+        },
+      })
+    } catch (err) {
+      console.error('Error loading more tracks:', err)
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [tracksData, fetchMoreTracks, loadingMore])
 
   // FORCE REFETCH on mount to bypass any cache issues
   useEffect(() => {
@@ -372,12 +396,69 @@ function DEXDashboard() {
     }
   }, [tracksData, tracksLoading, tracksError])
 
-  // Fetch all listing items for marketplace
-  const { data: listingData, loading: listingLoading, error: listingError } = useListingItemsQuery({
-    variables: { page: { first: 30 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} },
+  // Fetch all listing items for marketplace with pagination
+  const { data: listingData, loading: listingLoading, error: listingError, fetchMore: fetchMoreListings } = useListingItemsQuery({
+    variables: { page: { first: 50 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} },
     ssr: false,
     fetchPolicy: 'cache-and-network',
   })
+
+  // Load more listings
+  const [loadingMoreListings, setLoadingMoreListings] = useState(false)
+  const handleLoadMoreListings = useCallback(async () => {
+    if (!listingData?.listingItems?.pageInfo?.hasNextPage || loadingMoreListings) return
+    setLoadingMoreListings(true)
+    try {
+      await fetchMoreListings({
+        variables: {
+          page: { first: 50, after: listingData.listingItems.pageInfo.endCursor },
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev
+          return {
+            ...fetchMoreResult,
+            listingItems: {
+              ...fetchMoreResult.listingItems,
+              nodes: [...(prev.listingItems?.nodes || []), ...(fetchMoreResult.listingItems?.nodes || [])],
+            },
+          }
+        },
+      })
+    } catch (err) {
+      console.error('Error loading more listings:', err)
+    } finally {
+      setLoadingMoreListings(false)
+    }
+  }, [listingData, fetchMoreListings, loadingMoreListings])
+
+  // Explore Users Query - search for users/profiles
+  const { data: exploreUsersData, loading: exploreUsersLoading } = useExploreUsersQuery({
+    variables: { search: exploreSearchQuery || '', page: { first: 50 } },
+    skip: selectedView !== 'explore',
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Explore Tracks Query - search for tracks
+  const { data: exploreTracksData, loading: exploreTracksLoading } = useExploreTracksQuery({
+    variables: { search: exploreSearchQuery || '', page: { first: 50 } },
+    skip: selectedView !== 'explore',
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Follow/Unfollow mutations
+  const [followProfile, { loading: followLoading }] = useFollowProfileMutation()
+  const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation()
+
+  // Handle follow toggle
+  const handleFollowToggle = async (profileId: string, isFollowed: boolean, handle: string) => {
+    if (!me) {
+      router.push('/login')
+      return
+    }
+    if (followLoading || unfollowLoading) return
+    const mutation = isFollowed ? unfollowProfile : followProfile
+    await mutation({ variables: { input: { followedId: profileId } } })
+  }
 
   // Posts are now handled by the Posts component directly - no need for custom query
 
@@ -517,16 +598,11 @@ function DEXDashboard() {
     }
   }
 
-  const filteredNFTs = mockNFTs.filter(nft =>
-    !searchQuery || nft.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  const filteredBundles = mockBundles.filter(bundle =>
-    !searchQuery || bundle.privateAsset?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  const filteredTokens = mockTokens.filter(token =>
-    !searchQuery || token.tokenSymbol.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter marketplace tracks by search query
+  const filteredMarketTracks = marketTracks.filter((track: any) =>
+    !searchQuery ||
+    track.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    track.artist?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -967,8 +1043,9 @@ function DEXDashboard() {
           {/* Filters */}
           <Card className="retro-card mb-6">
             <CardContent className="p-4">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex space-x-2">
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                {/* Scrollable tabs container on mobile */}
+                <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0 -mx-1 px-1 flex-shrink-0">
                   {(['tracks', 'nft', 'token', 'bundle'] as const).map((type) => {
                     const isActive = selectedPurchaseType === type
                     const config = {
@@ -984,7 +1061,7 @@ function DEXDashboard() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setSelectedPurchaseType(type)}
-                        className={`transition-all duration-300 ${config.hoverBg} ${isActive ? config.bgColor : ''}`}
+                        className={`flex-shrink-0 transition-all duration-300 ${config.hoverBg} ${isActive ? config.bgColor : ''}`}
                       >
                         <IconComponent className={`w-4 h-4 mr-2 transition-colors duration-300 ${isActive ? config.iconColor : 'text-gray-400'}`} />
                         <span className={`text-xs font-black transition-all duration-300 ${isActive ? `${config.gradient} text-transparent bg-clip-text` : 'text-gray-400'}`}>
@@ -996,8 +1073,15 @@ function DEXDashboard() {
                 </div>
                 <div className="relative flex-1 min-w-[200px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-black/50 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-2 text-sm" />
+                  <input type="text" placeholder="Search tracks, artists, users..." value={searchQuery} onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    // Also update explore search and switch to explore view for deep search
+                    if (e.target.value.length >= 2) {
+                      setExploreSearchQuery(e.target.value)
+                      setSelectedView('explore')
+                    }
+                  }}
+                    className="w-full bg-black/50 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-400" />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
@@ -1058,23 +1142,44 @@ function DEXDashboard() {
                   </Link>
                 </Card>
               ) : (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-                  {userTracks.map((track: any, index: number) => (
-                    <TrackCard
-                      key={track.id}
-                      track={track}
-                      onPlay={() => handlePlayTrack(track, index, userTracks)}
-                      isPlaying={isPlaying}
-                      isCurrentTrack={currentSong?.trackId === track.id}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+                    {userTracks.map((track: any, index: number) => (
+                      <TrackCard
+                        key={track.id}
+                        track={track}
+                        onPlay={() => handlePlayTrack(track, index, userTracks)}
+                        isPlaying={isPlaying}
+                        isCurrentTrack={currentSong?.trackId === track.id}
+                      />
+                    ))}
+                  </div>
+                  {/* Load More Button */}
+                  {tracksData?.groupedTracks?.pageInfo?.hasNextPage && (
+                    <div className="flex justify-center mt-6">
+                      <Button
+                        onClick={handleLoadMore}
+                        disabled={loadingMore}
+                        className="retro-button px-8"
+                      >
+                        {loadingMore ? (
+                          <>Loading...</>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Load More Tracks ({tracksData?.groupedTracks?.pageInfo?.totalCount - userTracks.length} remaining)
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
 
               {marketTracks.length > 0 && (
                 <>
                   <Separator className="my-8" />
-                  <h2 className="retro-title">Marketplace Tracks ({marketTracks.length})</h2>
+                  <h2 className="retro-title">Marketplace Tracks ({listingData?.listingItems?.pageInfo?.totalCount || marketTracks.length})</h2>
                   <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
                     {marketTracks.map((track: any, index: number) => (
                       <TrackCard
@@ -1086,33 +1191,82 @@ function DEXDashboard() {
                       />
                     ))}
                   </div>
+                  {/* Load More Marketplace Button */}
+                  {listingData?.listingItems?.pageInfo?.hasNextPage && (
+                    <div className="flex justify-center mt-6">
+                      <Button
+                        onClick={handleLoadMoreListings}
+                        disabled={loadingMoreListings}
+                        className="retro-button px-8"
+                      >
+                        {loadingMoreListings ? 'Loading...' : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Load More ({(listingData?.listingItems?.pageInfo?.totalCount || 0) - marketTracks.length} remaining)
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
           )}
 
           {selectedPurchaseType === 'nft' && (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
-              {filteredNFTs.map((nft) => (
-                <NFTCard key={nft.id} nft={nft} onPurchase={() => {}} isWalletConnected={isWalletConnected} listView={viewMode === 'list'} />
-              ))}
-            </div>
+            <>
+              {/* Real NFT listings from database - tracks with listing prices */}
+              {marketTracks.filter((t: any) => t.listingItem?.price).length > 0 ? (
+                <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
+                  {marketTracks
+                    .filter((t: any) => t.listingItem?.price)
+                    .map((track: any) => (
+                      <NFTCard
+                        key={track.id}
+                        nft={{
+                          id: track.id,
+                          name: track.title,
+                          collection: track.artist || 'SoundChain',
+                          tokenId: track.id,
+                          chainId: 137, // Polygon
+                          price: { value: parseFloat(track.listingItem?.price || 0), currency: track.listingItem?.acceptsOGUN ? 'OGUN' : 'MATIC' },
+                          usdPrice: parseFloat(track.listingItem?.price || 0) * 0.5, // Estimate
+                          image: track.artworkUrl || '',
+                          rarity: 'rare' as const,
+                          attributes: [],
+                          creator: track.artistWallet || '',
+                          owner: track.ownerWallet || '',
+                        }}
+                        onPurchase={() => {}}
+                        isWalletConnected={isWalletConnected}
+                        listView={viewMode === 'list'}
+                      />
+                    ))}
+                </div>
+              ) : (
+                <Card className="retro-card p-8 text-center">
+                  <ImageIcon className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
+                  <h3 className="retro-title mb-2">No NFTs Listed</h3>
+                  <p className="text-gray-400 text-sm">NFTs with sale prices will appear here. List your tracks for sale to see them as NFT cards!</p>
+                </Card>
+              )}
+            </>
           )}
 
           {selectedPurchaseType === 'token' && (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
-              {filteredTokens.map((token) => (
-                <TokenCard key={token.id} token={token} onPurchase={() => {}} isWalletConnected={isWalletConnected} listView={viewMode === 'list'} />
-              ))}
-            </div>
+            <Card className="retro-card p-8 text-center">
+              <Coins className="w-12 h-12 mx-auto mb-4 text-green-400 opacity-50" />
+              <h3 className="retro-title mb-2">Token Listings Coming Soon</h3>
+              <p className="text-gray-400 text-sm">OGUN and music token listings will be available here. Stay tuned!</p>
+            </Card>
           )}
 
           {selectedPurchaseType === 'bundle' && (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-              {filteredBundles.map((bundle) => (
-                <BundleCard key={bundle.id} bundle={bundle} onPurchase={() => {}} listView={viewMode === 'list'} />
-              ))}
-            </div>
+            <Card className="retro-card p-8 text-center">
+              <Package className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
+              <h3 className="retro-title mb-2">Bundle Listings Coming Soon</h3>
+              <p className="text-gray-400 text-sm">NFT + Token bundles with exclusive perks will be available here. Stay tuned!</p>
+            </Card>
           )}
           </>
           )}
@@ -1143,13 +1297,14 @@ function DEXDashboard() {
               </div>
 
               <Card className="retro-card p-4">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input type="text" placeholder="Search marketplace..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full bg-black/50 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-2 text-sm" />
                   </div>
-                  <div className="flex space-x-2">
+                  {/* Scrollable tabs container on mobile */}
+                  <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0 -mx-1 px-1 flex-shrink-0">
                     {(['tracks', 'nft', 'token', 'bundle'] as const).map((type) => {
                       const isActive = selectedPurchaseType === type
                       const config = {
@@ -1165,7 +1320,7 @@ function DEXDashboard() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setSelectedPurchaseType(type)}
-                          className={`transition-all duration-300 ${config.hoverBg} ${isActive ? config.bgColor : ''}`}
+                          className={`flex-shrink-0 transition-all duration-300 ${config.hoverBg} ${isActive ? config.bgColor : ''}`}
                         >
                           <IconComponent className={`w-4 h-4 mr-2 transition-colors duration-300 ${isActive ? config.iconColor : 'text-gray-400'}`} />
                           <span className={`text-xs font-black transition-all duration-300 ${isActive ? `${config.gradient} text-transparent bg-clip-text` : 'text-gray-400'}`}>
@@ -1193,27 +1348,59 @@ function DEXDashboard() {
               )}
 
               {selectedPurchaseType === 'nft' && (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
-                  {mockNFTs.filter(nft => !searchQuery || nft.name.toLowerCase().includes(searchQuery.toLowerCase())).map((nft) => (
-                    <NFTCard key={nft.id} nft={nft} onPurchase={() => {}} isWalletConnected={isWalletConnected} listView={viewMode === 'list'} />
-                  ))}
-                </div>
+                <>
+                  {/* Real NFT listings from marketplace */}
+                  {filteredMarketTracks.filter((t: any) => t.listingItem?.price).length > 0 ? (
+                    <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
+                      {filteredMarketTracks
+                        .filter((t: any) => t.listingItem?.price)
+                        .map((track: any) => (
+                          <NFTCard
+                            key={track.id}
+                            nft={{
+                              id: track.id,
+                              name: track.title,
+                              collection: track.artist || 'SoundChain',
+                              tokenId: track.id,
+                              chainId: 137,
+                              price: { value: parseFloat(track.listingItem?.price || 0), currency: track.listingItem?.acceptsOGUN ? 'OGUN' : 'MATIC' },
+                              usdPrice: parseFloat(track.listingItem?.price || 0) * 0.5,
+                              image: track.artworkUrl || '',
+                              rarity: 'rare' as const,
+                              attributes: [],
+                              creator: track.artistWallet || '',
+                              owner: track.ownerWallet || '',
+                            }}
+                            onPurchase={() => {}}
+                            isWalletConnected={isWalletConnected}
+                            listView={viewMode === 'list'}
+                          />
+                        ))}
+                    </div>
+                  ) : (
+                    <Card className="retro-card p-8 text-center">
+                      <ImageIcon className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
+                      <h3 className="retro-title mb-2">No NFTs Listed</h3>
+                      <p className="text-gray-400 text-sm">NFTs with sale prices will appear here.</p>
+                    </Card>
+                  )}
+                </>
               )}
 
               {selectedPurchaseType === 'token' && (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
-                  {filteredTokens.map((token) => (
-                    <TokenCard key={token.id} token={token} onPurchase={() => {}} isWalletConnected={isWalletConnected} listView={viewMode === 'list'} />
-                  ))}
-                </div>
+                <Card className="retro-card p-8 text-center">
+                  <Coins className="w-12 h-12 mx-auto mb-4 text-green-400 opacity-50" />
+                  <h3 className="retro-title mb-2">Token Marketplace Coming Soon</h3>
+                  <p className="text-gray-400 text-sm">OGUN and music token trading will be available here.</p>
+                </Card>
               )}
 
               {selectedPurchaseType === 'bundle' && (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
-                  {mockBundles.filter(bundle => !searchQuery || bundle.privateAsset?.toLowerCase().includes(searchQuery.toLowerCase())).map((bundle) => (
-                    <BundleCard key={bundle.id} bundle={bundle} onPurchase={() => {}} listView={viewMode === 'list'} />
-                  ))}
-                </div>
+                <Card className="retro-card p-8 text-center">
+                  <Package className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
+                  <h3 className="retro-title mb-2">Bundle Marketplace Coming Soon</h3>
+                  <p className="text-gray-400 text-sm">NFT + Token bundles will be tradeable here.</p>
+                </Card>
               )}
 
               {selectedPurchaseType === 'tracks' && marketTracks.length === 0 && (
@@ -1237,12 +1424,180 @@ function DEXDashboard() {
             </div>
           )}
 
-          {/* Explore View */}
+          {/* Explore View - Deep Search for Tracks AND Users */}
           {selectedView === 'explore' && (
             <div className="space-y-6">
-              <Card className="retro-card p-6">
-                <h2 className="retro-title text-xl mb-4">Explore</h2>
-                <p className="text-gray-400 mb-6">Discover new artists, tracks, and trending content from the SoundChain community.</p>
+              {/* Search Bar */}
+              <Card className="retro-card p-4">
+                <div className="flex items-center gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search tracks, artists, users..."
+                      value={exploreSearchQuery}
+                      onChange={(e) => setExploreSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 retro-text"
+                    />
+                  </div>
+                </div>
+                {/* Tabs */}
+                <div className="flex space-x-2 mt-4">
+                  <Button
+                    onClick={() => setExploreTab('users')}
+                    className={`px-4 py-2 rounded-lg transition-all ${exploreTab === 'users' ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Users ({exploreUsersData?.exploreUsers?.pageInfo?.totalCount || 0})
+                  </Button>
+                  <Button
+                    onClick={() => setExploreTab('tracks')}
+                    className={`px-4 py-2 rounded-lg transition-all ${exploreTab === 'tracks' ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                  >
+                    <Music className="w-4 h-4 mr-2" />
+                    Tracks ({exploreTracksData?.exploreTracks?.pageInfo?.totalCount || 0})
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Users Results */}
+              {exploreTab === 'users' && (
+                <div className="space-y-4">
+                  {exploreUsersLoading && (
+                    <div className="text-center py-8">
+                      <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <p className="text-gray-400">Searching users...</p>
+                    </div>
+                  )}
+                  {!exploreUsersLoading && exploreUsersData?.exploreUsers?.nodes?.length === 0 && (
+                    <Card className="retro-card p-8 text-center">
+                      <Users className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+                      <h3 className="text-white font-bold mb-2">No users found</h3>
+                      <p className="text-gray-400 text-sm">Try a different search term</p>
+                    </Card>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {exploreUsersData?.exploreUsers?.nodes?.map((user: any) => (
+                      <Card key={user.id} className="retro-card p-4 hover:border-cyan-500/50 transition-all">
+                        <div className="flex items-start gap-4">
+                          {/* Avatar with Online Status */}
+                          <div className="relative flex-shrink-0">
+                            <Link href={`/${user.userHandle || user.id}`}>
+                              <Avatar className="w-16 h-16 border-2 border-cyan-500/30">
+                                <AvatarImage src={user.profilePicture || '/default-avatar.png'} alt={user.displayName} className="object-cover" />
+                                <AvatarFallback className="bg-gray-700 text-white">{user.displayName?.charAt(0) || '?'}</AvatarFallback>
+                              </Avatar>
+                            </Link>
+                            {/* Online Status Indicator (Green Dot) */}
+                            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full" title="Online"></div>
+                          </div>
+                          {/* User Info */}
+                          <div className="flex-1 min-w-0">
+                            <Link href={`/${user.userHandle || user.id}`}>
+                              <h3 className="text-white font-bold truncate hover:text-cyan-400 transition-colors flex items-center gap-1">
+                                {user.displayName || 'Unknown User'}
+                                {user.isVerified && <BadgeCheck className="w-4 h-4 text-cyan-400" />}
+                              </h3>
+                            </Link>
+                            <p className="text-gray-400 text-sm truncate">@{user.userHandle || user.id?.slice(0, 8)}</p>
+                            <p className="text-gray-500 text-xs mt-1">{user.followerCount || 0} followers</p>
+                          </div>
+                        </div>
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 mt-4">
+                          {me?.profile?.id !== user.id && (
+                            <>
+                              <Button
+                                onClick={() => handleFollowToggle(user.id, user.isFollowed, user.userHandle || '')}
+                                disabled={followLoading || unfollowLoading}
+                                className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${user.isFollowed ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-cyan-500 text-black hover:bg-cyan-600'}`}
+                              >
+                                {user.isFollowed ? 'Following' : 'Follow'}
+                              </Button>
+                              <Link href={me ? '/messages' : '/login'} className="flex-1">
+                                <Button className="w-full py-2 rounded-lg text-sm bg-gray-700 text-white hover:bg-gray-600">
+                                  <MessageCircle className="w-4 h-4 mr-1" />
+                                  Message
+                                </Button>
+                              </Link>
+                            </>
+                          )}
+                          {me?.profile?.id === user.id && (
+                            <Badge className="bg-cyan-500/20 text-cyan-400 px-3 py-1">You</Badge>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tracks Results */}
+              {exploreTab === 'tracks' && (
+                <div className="space-y-4">
+                  {exploreTracksLoading && (
+                    <div className="text-center py-8">
+                      <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <p className="text-gray-400">Searching tracks...</p>
+                    </div>
+                  )}
+                  {!exploreTracksLoading && exploreTracksData?.exploreTracks?.nodes?.length === 0 && (
+                    <Card className="retro-card p-8 text-center">
+                      <Music className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+                      <h3 className="text-white font-bold mb-2">No tracks found</h3>
+                      <p className="text-gray-400 text-sm">Try a different search term</p>
+                    </Card>
+                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {exploreTracksData?.exploreTracks?.nodes?.map((track: any, index: number) => {
+                      const isCurrentTrack = currentSong.trackId === track.id
+                      const isTrackPlaying = isPlaying && isCurrentTrack
+                      const exploreTracks = exploreTracksData?.exploreTracks?.nodes || []
+                      return (
+                        <Card key={track.id} className="retro-card overflow-hidden hover:border-cyan-500/50 transition-all group">
+                          <div className="relative aspect-square">
+                            <img
+                              src={track.artworkUrl || track.nft?.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'}
+                              alt={track.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <Button
+                              onClick={() => {
+                                if (isCurrentTrack) {
+                                  togglePlay()
+                                } else {
+                                  // Set up full playlist for continuous autoplay
+                                  const playlist: Song[] = exploreTracks.map((t: any) => ({
+                                    trackId: t.id,
+                                    src: t.audioUrl || t.playbackUrl || '',
+                                    title: t.title || 'Untitled',
+                                    artist: t.nft?.creator?.profile?.displayName || 'Unknown',
+                                    art: t.artworkUrl || t.nft?.imageUrl || '',
+                                    isFavorite: t.isFavorite,
+                                  }))
+                                  playlistState(playlist, index)
+                                }
+                              }}
+                              className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              {isTrackPlaying ? <Pause className="w-10 h-10 text-white" /> : <Play className="w-10 h-10 text-white" />}
+                            </Button>
+                          </div>
+                          <div className="p-3">
+                            <h3 className="text-white text-sm font-bold truncate">{track.title || 'Untitled'}</h3>
+                            <p className="text-gray-400 text-xs truncate">{track.nft?.creator?.profile?.displayName || 'Unknown Artist'}</p>
+                            <p className="text-cyan-400 text-xs mt-1">{track.playbackCountFormatted || '0'} plays</p>
+                          </div>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick Discovery Section */}
+              <Card className="retro-card p-4">
+                <h3 className="retro-title text-lg mb-4">Quick Discovery</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card className="metadata-section p-4 hover:border-orange-500/50 transition-all cursor-pointer">
                     <Flame className="w-8 h-8 text-orange-400 mb-2" />
@@ -1349,6 +1704,7 @@ DEXDashboard.getLayout = (page: ReactElement) => {
             <AudioPlayerProvider>
               <TrackProvider>
                 {page}
+                <AudioEngine />
                 <MobileBottomAudioPlayer />
                 <DesktopBottomAudioPlayer />
                 <ToastContainer

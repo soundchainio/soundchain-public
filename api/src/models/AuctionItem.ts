@@ -11,7 +11,7 @@ export class AuctionItem extends Model {
   public override _id!: mongoose.Types.ObjectId;
 
   @Field(() => String)
-  @prop({ required: true })
+  @prop({ type: String, required: true })
   owner!: string;
 
   @Field(() => String)

@@ -31,6 +31,7 @@ const UnderDevelopmentModal = dynamic(import('./UnderDevelopmentModal'))
 const NftTransferConfirmationModal = dynamic(import('./modals/NftTransferConfirmationModal'))
 const MobileBottomAudioPlayer = dynamic(import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
+const AudioEngine = dynamic(import('components/common/BottomAudioPlayer/AudioEngine'))
 const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'))
 const CreateModal = dynamic(import('components/modals/CreateModal'))
 
@@ -116,6 +117,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
           </div>
         </div>
       </div>
+      <AudioEngine />
       {isMobileOrTablet ? <MobileBottomAudioPlayer /> : <DesktopBottomAudioPlayer />}
       <BottomNavBarWrapper />
       <RightSideNav />

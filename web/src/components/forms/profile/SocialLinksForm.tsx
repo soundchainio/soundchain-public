@@ -51,18 +51,18 @@ interface FormValues {
 }
 
 const validationSchema: yup.Schema<FormValues> = yup.object().shape({
-  soundcloud: yup.string().label('Soundcloud').required('Soundcloud is required'),
-  spotify: yup.string().label('Spotify').required('Spotify is required'),
-  bandcamp: yup.string().label('Bandcamp').required('Bandcamp is required'),
-  facebook: yup.string().label('Facebook').required('Facebook is required'),
-  instagram: yup.string().label('Instagram').required('Instagram is required'),
-  x: yup.string().label('X').required('X is required'),
-  tiktok: yup.string().label('TikTok').required('TikTok is required'),
-  linktree: yup.string().label('Linktree').required('Linktree is required'),
-  discord: yup.string().label('Discord').required('Discord is required'),
-  telegram: yup.string().label('Telegram').required('Telegram is required'),
-  onlyfans: yup.string().label('OnlyFans').required('OnlyFans is required'),
-  customLink: yup.string().label('Custom Link').required('Custom Link is required'),
+  soundcloud: yup.string().label('Soundcloud').optional(),
+  spotify: yup.string().label('Spotify').optional(),
+  bandcamp: yup.string().label('Bandcamp').optional(),
+  facebook: yup.string().label('Facebook').optional(),
+  instagram: yup.string().label('Instagram').optional(),
+  x: yup.string().label('X').optional(),
+  tiktok: yup.string().label('TikTok').optional(),
+  linktree: yup.string().label('Linktree').optional(),
+  discord: yup.string().label('Discord').optional(),
+  telegram: yup.string().label('Telegram').optional(),
+  onlyfans: yup.string().label('OnlyFans').optional(),
+  customLink: yup.string().label('Custom Link').optional(),
 })
 
 const regex = /(?:^https?:\/\/(?:www\.)?[\w]+\.(com|ee|gg|me|org))\/([\w-]+)/
