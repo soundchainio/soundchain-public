@@ -11,7 +11,7 @@ export const roadmapSteps: RoadmapStep[] = [
   {
     title: 'SoundChain Production Push',
     status: 'Completed - Dec 2025',
-    description: 'Pushed major updates to production including DEX dashboard, panel system, Twitch/Discord embeds, and landing page improvements. SoundChain is back online after 13-15 months!',
+    description: 'Pushed major updates to production including DEX dashboard, panel system, Twitch/Discord embeds, and landing page improvements. SoundChain is back online after 9 months!',
   },
   {
     title: 'Custom Sticker System + Emoji Mart',
