@@ -669,11 +669,11 @@ function DEXDashboard() {
                               {user.profilePicture && !profileImageError ? (
                                 <AvatarImage src={user.profilePicture} />
                               ) : null}
-                              <AvatarFallback className="text-lg">{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                              <AvatarFallback className="text-lg">{(user.displayName || user.userHandle)?.charAt(0) || 'U'}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
                               <div className="retro-text text-base truncate flex items-center gap-2">
-                                {user.displayName || 'User'}
+                                {user.displayName || user.userHandle || 'User'}
                                 {user.teamMember && <SoundchainGoldLogo className="w-5 h-5 flex-shrink-0" />}
                                 {!user.teamMember && user.verified && <VerifiedIcon className="w-5 h-5 flex-shrink-0" />}
                               </div>
@@ -795,7 +795,7 @@ function DEXDashboard() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-6xl text-white font-bold">
-                        {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                        {(user?.displayName || user?.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
                     )}
                   </div>
@@ -809,7 +809,7 @@ function DEXDashboard() {
                     {/* Username with inline badges - EXACT legacy UI */}
                     <div className="flex items-center gap-2">
                       <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace" }}>
-                        {userLoading ? 'Loading...' : (user?.displayName || 'User')}
+                        {userLoading ? 'Loading...' : (user?.displayName || user?.userHandle || 'User')}
                       </h1>
                       {/* Team Member Badge (Gold SoundChain Logo) */}
                       {user?.teamMember && (

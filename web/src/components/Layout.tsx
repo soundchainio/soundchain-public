@@ -16,7 +16,6 @@ import ConfirmDeleteEditionModal from './modals/ConfirmDeleteEditionModal'
 import { TagManager } from './TagManager'
 import { TopNavBar, TopNavBarProps } from './TopNavBar'
 
-const SideMenu = dynamic(() => import('./SideMenu'))
 const PostModal = dynamic(import('./Post/PostModal'))
 const ReactionsModal = dynamic(import('./ReactionsModal'))
 const CommentModal = dynamic(import('./Comment/CommentModal'))
@@ -43,7 +42,6 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children, className }: LayoutProps) => {
-  const [sideMenuOpen, setSideMenuOpen] = useState(false)
   const { setHideBottomNavBarState } = useHideBottomNavBar()
   const modalState = useModalState()
   const showCommentModal = modalState?.showCommentModal
@@ -54,7 +52,6 @@ export const Layout = ({ children, className }: LayoutProps) => {
   const isMobileOrTablet = useIsMobile(breakpointsNumber.tablet)
 
   useEffect(() => {
-    setSideMenuOpen(false)
     setCanInsertScript(true)
   }, [asPath])
 
@@ -92,9 +89,8 @@ export const Layout = ({ children, className }: LayoutProps) => {
       {canInsertScript && <TagManager />}
       <div className="max-h-full flex-1 overflow-y-auto">
         <div className="flex h-full flex-1 overflow-hidden">
-          <SideMenu isOpen={sideMenuOpen} setOpen={setSideMenuOpen} />
           <div className="flex w-0 flex-1 flex-col overflow-hidden">
-            <TopNavBar setSideMenuOpen={setSideMenuOpen} {...topNavBarProps} />
+            <TopNavBar {...topNavBarProps} />
             <div id="top-sheet"></div>
             <main id="main" className="relative flex-1 overflow-y-auto bg-gray-10 focus:outline-none">
               <div className={classNames('h-full', className)}>{children}</div>

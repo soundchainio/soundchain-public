@@ -25,7 +25,7 @@ export const Posts = ({ profileId }: PostsProps) => {
     variables: {
       filter: profileId ? { profileId } : undefined,
       page: { first: pageSize },
-      sort: { field: SortPostField.CreatedAt, order: SortOrder.DESC },
+      sort: { field: SortPostField.CreatedAt, order: SortOrder.Desc },
     },
     ssr: false,
     errorPolicy: 'all', // Return partial data even if some fields have errors
