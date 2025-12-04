@@ -1215,18 +1215,20 @@ function DEXDashboard() {
 
           {selectedPurchaseType === 'nft' && (
             <>
-              {/* Real NFT listings from database - all marketplace tracks as NFT cards */}
-              {marketTracks.length > 0 ? (
+              {/* All tracks shown as NFT cards - Rarible inspired grid */}
+              {userTracks.length > 0 ? (
                 <>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="retro-title">NFT Collection ({listingData?.listingItems?.pageInfo?.totalCount || marketTracks.length})</h2>
-                    {listingLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading...</Badge>}
+                    <h2 className="retro-title">NFT Collection ({tracksData?.groupedTracks?.pageInfo?.totalCount || userTracks.length})</h2>
+                    {tracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading...</Badge>}
                   </div>
                   <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
-                    {marketTracks.map((track: any) => {
-                      // Get price from track-level price or listingItem price fields
-                      const priceValue = track.price?.value || track.listingItem?.pricePerItemToShow || track.listingItem?.pricePerItem || 0
-                      const currency = track.price?.currency || (track.listingItem?.acceptsOGUN ? 'OGUN' : 'MATIC')
+                    {userTracks.map((track: any) => {
+                      // Check if track has active listing for price
+                      const listing = marketTracks.find((l: any) => l.track?.id === track.id)
+                      const priceValue = listing?.pricePerItemToShow || listing?.pricePerItem || track.price?.value || 0
+                      const currency = listing?.acceptsOGUN ? 'OGUN' : track.price?.currency || 'MATIC'
+                      const isListed = !!listing
                       return (
                         <NFTCard
                           key={track.id}
@@ -1244,6 +1246,7 @@ function DEXDashboard() {
                               { trait_type: 'Plays', value: track.playbackCountFormatted || '0' },
                               { trait_type: 'Favorites', value: track.favoriteCount || 0 },
                               { trait_type: 'Genre', value: track.genres?.[0] || 'Music' },
+                              ...(isListed ? [{ trait_type: 'Status', value: 'FOR SALE' }] : []),
                             ],
                             creator: track.nftData?.minter || track.artistId || '',
                             owner: track.nftData?.owner || '',
@@ -1256,17 +1259,17 @@ function DEXDashboard() {
                     })}
                   </div>
                   {/* Load More NFTs Button */}
-                  {listingData?.listingItems?.pageInfo?.hasNextPage && (
+                  {tracksData?.groupedTracks?.pageInfo?.hasNextPage && (
                     <div className="flex justify-center mt-6">
                       <Button
-                        onClick={handleLoadMoreListings}
-                        disabled={loadingMoreListings}
+                        onClick={() => fetchMoreTracks({ variables: { page: { first: 50, after: tracksData?.groupedTracks?.pageInfo?.endCursor } } })}
+                        disabled={tracksLoading}
                         className="retro-button px-8"
                       >
-                        {loadingMoreListings ? 'Loading...' : (
+                        {tracksLoading ? 'Loading...' : (
                           <>
                             <Plus className="w-4 h-4 mr-2" />
-                            Load More NFTs ({(listingData?.listingItems?.pageInfo?.totalCount || 0) - marketTracks.length} remaining)
+                            Load More NFTs ({(tracksData?.groupedTracks?.pageInfo?.totalCount || 0) - userTracks.length} remaining)
                           </>
                         )}
                       </Button>
@@ -1277,7 +1280,7 @@ function DEXDashboard() {
                 <Card className="retro-card p-8 text-center">
                   <ImageIcon className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
                   <h3 className="retro-title mb-2">No NFTs Found</h3>
-                  <p className="text-gray-400 text-sm">{listingLoading ? 'Loading NFTs from blockchain...' : 'NFT marketplace is empty. Mint your first music NFT!'}</p>
+                  <p className="text-gray-400 text-sm">{tracksLoading ? 'Loading NFTs from blockchain...' : 'NFT marketplace is empty. Mint your first music NFT!'}</p>
                 </Card>
               )}
             </>
