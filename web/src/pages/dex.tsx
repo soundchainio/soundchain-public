@@ -40,7 +40,7 @@ import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
-  Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck
+  Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass
 } from 'lucide-react'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
@@ -68,12 +68,8 @@ const mockBundles = [
   { id: 'bundle2', nftIds: ['nft3'], tokenSymbol: 'MATIC', tokenAmount: 50, chainId: 137, privateAsset: 'vinyl', price: { value: 25, currency: 'MATIC' }, usdPrice: 12.50, ISRC: 'US8899001122' },
 ]
 
-// Navigation pages (Create removed - rendered separately with modal functionality)
-// Removed Feed, Market, DEX duplicates - those are now tabs in the main DEX view
-const navigationPages = [
-  { name: 'Explore', href: '/explore', icon: Search },
-  { name: 'Library', href: '/library', icon: Library },
-]
+// Navigation pages removed - all tabs now in main DEX view
+const navigationPages: { name: string; href: string; icon: React.ComponentType<{ className?: string }> }[] = []
 
 // WalletConnect Modal Component
 function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; onClose: () => void; onConnect: (address: string, walletType: string) => void }) {
@@ -305,7 +301,7 @@ function DEXDashboard() {
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   // Start with marketplace view for non-logged-in users, dashboard for logged-in users
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard'>('marketplace')
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist'>('dashboard')
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -911,6 +907,36 @@ function DEXDashboard() {
                 Feed
               </span>
             </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedView('explore')}
+              className={`transition-all duration-300 hover:bg-orange-500/10 ${selectedView === 'explore' ? 'bg-orange-500/10' : ''}`}
+            >
+              <Compass className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'explore' ? 'text-orange-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'explore' ? 'orange-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Explore
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedView('library')}
+              className={`transition-all duration-300 hover:bg-blue-500/10 ${selectedView === 'library' ? 'bg-blue-500/10' : ''}`}
+            >
+              <Library className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'library' ? 'text-blue-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'library' ? 'blue-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Library
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedView('playlist')}
+              className={`transition-all duration-300 hover:bg-pink-500/10 ${selectedView === 'playlist' ? 'bg-pink-500/10' : ''}`}
+            >
+              <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'playlist' ? 'text-pink-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'playlist' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Playlist
+              </span>
+            </Button>
           </div>
 
           {/* Stats */}
@@ -1208,6 +1234,90 @@ function DEXDashboard() {
           {selectedView === 'feed' && (
             <div style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
               <Posts />
+            </div>
+          )}
+
+          {/* Explore View */}
+          {selectedView === 'explore' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <h2 className="retro-title text-xl mb-4">Explore</h2>
+                <p className="text-gray-400 mb-6">Discover new artists, tracks, and trending content from the SoundChain community.</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="metadata-section p-4 hover:border-orange-500/50 transition-all cursor-pointer">
+                    <Flame className="w-8 h-8 text-orange-400 mb-2" />
+                    <h3 className="font-bold text-white">Trending</h3>
+                    <p className="text-xs text-gray-400">Hot tracks this week</p>
+                  </Card>
+                  <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                    <Rocket className="w-8 h-8 text-cyan-400 mb-2" />
+                    <h3 className="font-bold text-white">New Releases</h3>
+                    <p className="text-xs text-gray-400">Fresh drops from artists</p>
+                  </Card>
+                  <Card className="metadata-section p-4 hover:border-purple-500/50 transition-all cursor-pointer">
+                    <Trophy className="w-8 h-8 text-purple-400 mb-2" />
+                    <h3 className="font-bold text-white">Top Charts</h3>
+                    <p className="text-xs text-gray-400">Most played tracks</p>
+                  </Card>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Library View */}
+          {selectedView === 'library' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <h2 className="retro-title text-xl mb-4">Your Library</h2>
+                <p className="text-gray-400 mb-6">Your saved tracks, playlists, and purchased NFTs.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="metadata-section p-4 hover:border-blue-500/50 transition-all cursor-pointer">
+                    <Heart className="w-8 h-8 text-red-400 mb-2" />
+                    <h3 className="font-bold text-white">Liked Tracks</h3>
+                    <p className="text-xs text-gray-400">Your favorite songs</p>
+                  </Card>
+                  <Card className="metadata-section p-4 hover:border-green-500/50 transition-all cursor-pointer">
+                    <ListMusic className="w-8 h-8 text-green-400 mb-2" />
+                    <h3 className="font-bold text-white">Playlists</h3>
+                    <p className="text-xs text-gray-400">Your curated collections</p>
+                  </Card>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Playlist View - Ready for OGUN rewards integration */}
+          {selectedView === 'playlist' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <ListMusic className="w-8 h-8 text-pink-400" />
+                  <h2 className="retro-title text-xl">Playlist DEX</h2>
+                  <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs">Coming Soon</Badge>
+                </div>
+                <p className="text-gray-400 mb-6">Create and trade playlists. Earn OGUN rewards for curating fire playlists that others enjoy!</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <Card className="metadata-section p-4 text-center">
+                    <div className="text-3xl font-bold text-pink-400">🎵</div>
+                    <h3 className="font-bold text-white mt-2">Create Playlists</h3>
+                    <p className="text-xs text-gray-400">Curate your best tracks</p>
+                  </Card>
+                  <Card className="metadata-section p-4 text-center">
+                    <div className="text-3xl font-bold text-purple-400">💰</div>
+                    <h3 className="font-bold text-white mt-2">Earn OGUN</h3>
+                    <p className="text-xs text-gray-400">Get rewarded for plays</p>
+                  </Card>
+                  <Card className="metadata-section p-4 text-center">
+                    <div className="text-3xl font-bold text-cyan-400">🔥</div>
+                    <h3 className="font-bold text-white mt-2">Trade & Collect</h3>
+                    <p className="text-xs text-gray-400">Buy/sell top playlists</p>
+                  </Card>
+                </div>
+                <Button disabled className="retro-button opacity-50 cursor-not-allowed">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Playlist (Coming Soon)
+                </Button>
+              </Card>
             </div>
           )}
         </div>
