@@ -9,10 +9,10 @@ interface BlockchainNetwork {
 
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
-  rpc: 'https://polygon-rpc.com/',
+  rpc: 'https://polygon-bor-rpc.publicnode.com',
   id: 137,
   idHex: '0x89',
-  symbol: 'MATIC',
+  symbol: 'POL',
   blockExplorer: 'https://polygonscan.com/',
 }
 
@@ -21,7 +21,7 @@ export const testnetNetwork: BlockchainNetwork = {
   rpc: 'https://rpc-amoy.polygon.technology',
   id: 80002,
   idHex: '0x13882',
-  symbol: 'MATIC',
+  symbol: 'POL',
   blockExplorer: 'https://www.oklink.com/amoy',
 }
 
