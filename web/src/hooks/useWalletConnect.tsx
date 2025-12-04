@@ -14,11 +14,11 @@ export const useWalletConnect = () => {
       //  Create WalletConnect Provider
       const walletProvider = new WalletConnectProvider({
         rpc: {
-          1: mainNetwork.rpc,
-          80001: testnetNetwork.rpc,
+          137: mainNetwork.rpc,
+          80002: testnetNetwork.rpc,
         },
       })
-      walletProvider.updateRpcUrl(80001)
+      walletProvider.updateRpcUrl(137)
       setProvider(walletProvider)
     }
     if (provider) {
@@ -35,7 +35,7 @@ export const useWalletConnect = () => {
     if (provider) {
       //  Enable session (triggers QR Code modal)
       await provider.enable()
-      provider.updateRpcUrl(80001)
+      provider.updateRpcUrl(137)
 
       //  eslint-disable-next-line @typescript-eslint/no-explicit-any
       const newWeb3 = new Web3(provider as any)
