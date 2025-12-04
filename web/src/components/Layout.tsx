@@ -1,5 +1,7 @@
 import classNames from 'classnames'
 import { BottomNavBarWrapper } from 'components/BottomNavBar/BottomNavBarWrapper'
+import { RightSideNav } from 'components/RightSideNav'
+import { PanelTaskbar } from 'components/PanelTaskbar'
 import { useModalState } from 'contexts/ModalContext'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useIsMobile } from 'hooks/useIsMobile'
@@ -120,6 +122,8 @@ export const Layout = ({ children, className }: LayoutProps) => {
       </div>
       {isMobileOrTablet ? <MobileBottomAudioPlayer /> : <DesktopBottomAudioPlayer />}
       <BottomNavBarWrapper />
+      <RightSideNav />
+      <PanelTaskbar />
       <ToastContainer
         position="top-center"
         autoClose={6 * 1000}

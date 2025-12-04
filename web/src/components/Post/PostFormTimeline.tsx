@@ -24,7 +24,15 @@ export const PostFormTimeline = () => {
   const [link, setLink] = useState<MediaLink>()
   const postMaxLength = 1000
   const soundProviders = [MediaProvider.BANDCAMP, MediaProvider.SPOTIFY, MediaProvider.SOUNDCLOUD]
-  const videoProviders = [MediaProvider.YOUTUBE, MediaProvider.VIMEO]
+  const videoProviders = [
+    MediaProvider.YOUTUBE,
+    MediaProvider.VIMEO,
+    MediaProvider.INSTAGRAM,
+    MediaProvider.TIKTOK,
+    MediaProvider.FACEBOOK,
+    MediaProvider.X,
+  ]
+  const customProvider = MediaProvider.CUSTOM_HTML
 
   const onPostSubmit = async () => {
     if (postBody.length > postMaxLength) {
@@ -113,6 +121,10 @@ export const PostFormTimeline = () => {
     setPreviewVisible(false)
     if (soundProviders.includes(link.type)) setMusicLinkVisible(true)
     if (videoProviders.includes(link.type)) setVideoLinkVisible(true)
+    if (link.type === customProvider) {
+      // Custom HTML can go to either music or video, default to video
+      setVideoLinkVisible(true)
+    }
   }
 
   return (
@@ -163,6 +175,9 @@ export const PostFormTimeline = () => {
       {isMusicLinkVisible && !isVideoLinkVisible && !isPreviewVisible && (
         <PostFormLinkContainer>
           <div className="mb-[12px] flex">
+            <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.CUSTOM_HTML} />
+          </div>
+          <div className="mb-[12px] flex">
             <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.SOUNDCLOUD} />
           </div>
           <div className="mb-[12px] flex">
@@ -178,10 +193,25 @@ export const PostFormTimeline = () => {
       {isVideoLinkVisible && !isMusicLinkVisible && !isPreviewVisible && (
         <PostFormLinkContainer>
           <div className="mb-[12px] flex">
-            <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.VIMEO} />
+            <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.CUSTOM_HTML} />
           </div>
           <div className="mb-[12px] flex">
             <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.YOUTUBE} />
+          </div>
+          <div className="mb-[12px] flex">
+            <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.VIMEO} />
+          </div>
+          <div className="mb-[12px] flex">
+            <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.INSTAGRAM} />
+          </div>
+          <div className="mb-[12px] flex">
+            <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.TIKTOK} />
+          </div>
+          <div className="mb-[12px] flex">
+            <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.FACEBOOK} />
+          </div>
+          <div className="mb-[12px] flex">
+            <LinkItem setLink={setLink} link={link} linkItemType={MediaProvider.X} />
           </div>
           <LinkFormFooter onLinkCancel={onLinkCancel} onSaveClick={onSaveClick} />
         </PostFormLinkContainer>
@@ -198,7 +228,12 @@ export const PostFormTimeline = () => {
             </button>
           </div>
           <iframe
-            className="min-h-[500px] w-full bg-gray-20"
+            className="w-full bg-gray-20"
+            style={{
+              minHeight: link?.type === MediaProvider.BANDCAMP ? '600px' : '500px',
+              height: link?.type === MediaProvider.BANDCAMP ? 'auto' : '500px',
+              aspectRatio: link?.type === MediaProvider.BANDCAMP ? 'auto' : '16/9',
+            }}
             frameBorder="0"
             allowFullScreen
             src={link?.value}

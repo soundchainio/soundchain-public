@@ -25,9 +25,9 @@ export class TrackEdition extends Model {
   @prop({ required: false })
   contract?: string;
 
-  @Field(() => String, { nullable: true })
-  @prop({ required: false })
-  marketplace?: string;
+  @Field(() => String)
+  @prop({ required: false, default: '' })
+  marketplace: string;
 
   @Field(() => EditionData, { nullable: true })
   @prop()

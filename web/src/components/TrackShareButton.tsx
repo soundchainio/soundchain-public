@@ -3,7 +3,7 @@ import { Fragment } from 'react'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { toast } from 'react-toastify'
 
-import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react'
+import { Menu, Transition } from '@headlessui/react'
 import { ShareIcon } from '@heroicons/react/24/outline'
 
 type Props = {
@@ -50,9 +50,9 @@ export const TrackShareButton = (props: Props) => {
   return (
     <div className="relative flex items-center">
       <Menu>
-        <MenuButton aria-label="Share" className="flex h-10 w-10 items-center justify-center text-gray-80">
+        <Menu.Button aria-label="Share" className="flex h-10 w-10 items-center justify-center text-gray-80">
           <ShareIcon width={width} height={height} color={color || ''} />
-        </MenuButton>
+        </Menu.Button>
         <Transition
           enter="transition ease-out duration-100"
           enterFrom="transform opacity-0 scale-95"
@@ -61,12 +61,12 @@ export const TrackShareButton = (props: Props) => {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <MenuItems
+          <Menu.Items
             className={`absolute ${getPosition(
               position,
             )} z-40 flex w-32 flex-col rounded-lg bg-gray-20 text-white shadow-lg`}
           >
-            <MenuItem>
+            <Menu.Item>
               {({ focus }) => (
                 <button
                   className={`w-full px-5 py-4 text-left text-xs font-semibold ${focus && 'rounded-md bg-gray-40'}`}
@@ -75,8 +75,8 @@ export const TrackShareButton = (props: Props) => {
                   Share URL
                 </button>
               )}
-            </MenuItem>
-            <MenuItem>
+            </Menu.Item>
+            <Menu.Item>
               {({ focus }) => (
                 <button
                   className={`w-full px-5 py-4 text-left text-xs font-semibold ${focus && 'rounded-md bg-gray-40'}`}
@@ -85,8 +85,8 @@ export const TrackShareButton = (props: Props) => {
                   Share as Post
                 </button>
               )}
-            </MenuItem>
-          </MenuItems>
+            </Menu.Item>
+          </Menu.Items>
         </Transition>
       </Menu>
     </div>

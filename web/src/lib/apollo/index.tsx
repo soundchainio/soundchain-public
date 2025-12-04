@@ -60,7 +60,12 @@ export async function setJwt(newJwt?: string) {
       Cookies.remove(jwtKey)
       await apolloClient.clearStore()
     }
-    await apolloClient.resetStore()
+    try {
+      await apolloClient.resetStore()
+    } catch (error) {
+      // Ignore errors from resetStore - queries will refetch naturally
+      console.warn('Apollo resetStore warning:', error)
+    }
   }
 }
 

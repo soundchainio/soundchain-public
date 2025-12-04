@@ -23,7 +23,7 @@ import { useRouter } from 'next/router'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { checkIsMobile } from 'utils/IsMobile'
 
-import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/24/outline'
+import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
 import Slider from '@reach/slider'
 
 export const AudioPlayerModal = () => {
@@ -212,7 +212,7 @@ export const AudioPlayerModal = () => {
               </div>
               {!isMobile && (
                 <div className="flex items-center gap-4 pt-8">
-                  <VolumeOffIcon width={16} viewBox="-8 0 20 20" />
+                  <SpeakerXMarkIcon className="h-4 w-4" />
                   <div className="flex-1">
                     <Slider
                       className="volume-slider"
@@ -223,7 +223,7 @@ export const AudioPlayerModal = () => {
                       step={0.1}
                     />
                   </div>
-                  <VolumeUpIcon width={16} />
+                  <SpeakerWaveIcon className="h-4 w-4" />
                 </div>
               )}
             </div>

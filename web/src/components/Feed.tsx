@@ -31,7 +31,11 @@ export const Feed = ({ pageSize }: FeedProps) => {
   pageSize = pageSize ?? 30 // Updated to 30 as per your change
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)
-  const { data, loading, fetchMore, refetch } = useFeedQuery({ variables: { page: { first: pageSize } }, ssr: false })
+  const { data, loading, fetchMore, refetch } = useFeedQuery({
+    variables: { page: { first: pageSize } },
+    ssr: false,
+    errorPolicy: 'all', // Return partial data even if some fields have errors
+  })
   const getSize = (index: number) => sizeMap[index] || 289
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(

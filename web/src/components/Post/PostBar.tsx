@@ -4,6 +4,7 @@ import type { Emoji } from '@emoji-mart/data'
 import { useState } from 'react'
 import { PostLinkType } from 'types/PostLinkType'
 import { LinksModal } from '../LinksModal'
+import { StickerPicker } from '../StickerPicker'
 import { FormValues } from './PostForm'
 import { getBodyCharacterCount, maxLength } from './PostModal'
 
@@ -32,6 +33,7 @@ export const PostBar = ({
 }: PostBarProps) => {
   const [showAddMusicLink, setShowAddMusicLink] = useState(false)
   const [showAddVideoLink, setShowAddVideoLink] = useState(false)
+  const [isStickerPickerVisible, setStickerPickerVisible] = useState(false)
   const charCounter = `${getBodyCharacterCount(values.body)} / ${maxLength}`
 
   const handleSelectEmoji = (
@@ -42,6 +44,17 @@ export const PostBar = ({
     if (getBodyCharacterCount(values.body) < maxLength) {
       setFieldValue('body', `${values.body}${emoji.native}`)
     }
+  }
+
+  const handleSelectSticker = (sticker: string) => {
+    if (getBodyCharacterCount(values.body) < maxLength) {
+      setFieldValue('body', `${values.body}${sticker}`)
+    }
+  }
+
+  const onStickerPickerClick = () => {
+    setStickerPickerVisible(!isStickerPickerVisible)
+    if (isEmojiPickerVisible) onEmojiPickerClick() // Close emoji picker if open
   }
 
   const onAddMusicClick = () => {
@@ -56,6 +69,9 @@ export const PostBar = ({
     <div className="flex items-center bg-gray-15 p-4">
       <div className="w-16 cursor-pointer text-center" onClick={onEmojiPickerClick}>
         {isEmojiPickerVisible ? '❌' : '😃'}
+      </div>
+      <div className="w-16 cursor-pointer text-center" onClick={onStickerPickerClick}>
+        {isStickerPickerVisible ? '❌' : '🎵'}
       </div>
       {!isRepost && (
         <>
@@ -99,8 +115,13 @@ export const PostBar = ({
       )}
       <div className="flex-1 justify-self-end text-right text-gray-400">{charCounter}</div>
       {isEmojiPickerVisible && (
-        <div className="fixed left-16 bottom-0">
+        <div className="fixed left-16 bottom-0 z-50">
           <Picker theme="dark" perLine={8} onSelect={(e: Emoji) => handleSelectEmoji(e, values, setFieldValue)} />
+        </div>
+      )}
+      {isStickerPickerVisible && (
+        <div className="fixed left-32 bottom-0 z-50">
+          <StickerPicker theme="dark" onSelect={handleSelectSticker} />
         </div>
       )}
     </div>

@@ -4,9 +4,8 @@ fragment DeletedPostNotificationFields on DeletedPostNotification {
   authorName
   authorPicture
   body
-  link
   previewBody
-  previewLink
+  mediaLink
   createdAt
   track {
     title

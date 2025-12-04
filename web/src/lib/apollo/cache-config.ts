@@ -257,9 +257,17 @@ export const cacheConfig: InMemoryCacheConfig = {
           },
         },
         listingItems: {
-          keyArgs: ['sort'],
-          merge(existing = { nodes: [] }, { nodes, pageInfo }): ListingItemConnection {
-            return filterNodeDuplicates(existing.nodes, nodes, pageInfo)
+          keyArgs: ['sort', 'filter'],
+          merge(existing = { nodes: [] }, incoming, { args }): ListingItemConnection {
+            // If this is a refetch (no cursor/after), replace data entirely
+            if (!args?.page?.after) {
+              return {
+                nodes: incoming.nodes,
+                pageInfo: incoming.pageInfo,
+              }
+            }
+            // Otherwise, merge for pagination (fetchMore)
+            return filterNodeDuplicates(existing.nodes, incoming.nodes, incoming.pageInfo)
           },
         },
         buyNowListingItems: {

@@ -118,7 +118,7 @@ export class TrackService extends ModelService<typeof Track> {
     });
   }
 
-  getGroupedTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
+  async getGroupedTracks(filter?: FilterTrackInput, sort?: SortTrackInput, page?: PageInput): Promise<PaginateResult<Track>> {
     const defaultFilter = { title: { $exists: true }, deleted: false };
     const dotNotationFilter = filter && dot.dot(filter);
     const owner = filter?.nftData?.owner && {
@@ -133,36 +133,38 @@ export class TrackService extends ModelService<typeof Track> {
       dotNotationFilter['profileId'] = new mongoose.Types.ObjectId(dotNotationFilter['profileId']);
     }
 
-    return this.paginatePipelineAggregated({
-      aggregation: [
-        { $match: { ...defaultFilter, ...dotNotationFilter, ...owner } },
-        {
-          $group: {
-            _id: {
-              $ifNull: ['$trackEditionId', '$_id'],
-            },
-            sumPlaybackCount: { $sum: '$playbackCount' },
-            sumFavoriteCount: { $sum: '$favoriteCount' },
-            first: { $first: '$$ROOT' },
-          },
-        },
-        {
-          $replaceRoot: {
-            newRoot: {
-              $mergeObjects: [
-                '$first',
-                {
-                  playbackCount: '$sumPlaybackCount',
-                  favoriteCount: '$sumFavoriteCount',
-                },
-              ],
-            },
-          },
-        },
-      ],
-      sort,
-      page,
-    });
+    // Use normal query - trackEdition is handled by @FieldResolver in TrackResolver
+    const { first = 25 } = page || {};
+
+    const tracks = await this.model
+      .find({ ...defaultFilter, ...dotNotationFilter, ...owner })
+      .sort({ createdAt: -1 })
+      .limit(first)
+      .exec();
+
+    // Group tracks by trackEditionId
+    const groupedMap = new Map<string, any>();
+
+    for (const track of tracks) {
+      const key = track.trackEditionId?.toString() || track._id.toString();
+
+      if (!groupedMap.has(key)) {
+        groupedMap.set(key, track);
+      }
+    }
+
+    const nodes = Array.from(groupedMap.values()).slice(0, first);
+    const totalCount = await this.model.find({ ...defaultFilter, ...dotNotationFilter, ...owner }).countDocuments();
+
+    return {
+      nodes,
+      pageInfo: {
+        totalCount,
+        hasNextPage: nodes.length >= first,
+        hasPreviousPage: false,
+        endCursor: nodes.length > 0 ? btoa(nodes[nodes.length - 1]._id.toString()) : undefined,
+      },
+    };
   }
 
   getTrack(id: string): Promise<Track> {
@@ -298,7 +300,7 @@ export class TrackService extends ModelService<typeof Track> {
         'nftData.contract': nftData.contract,
         'nftData.pendingRequest': PendingRequest.None,
       },
-    );
+    ).exec();
   }
 
   async deleteTrack(id: string, profileId: string): Promise<Track> {

@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from 'react'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
 import { Playlists } from 'icons/Playlists'
-import { VolumeOffIcon, VolumeUpIcon } from '@heroicons/react/24/solid'
+import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid'
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 
 export const BottomAudioPlayer = () => {
@@ -136,7 +136,7 @@ export const BottomAudioPlayer = () => {
           <Playlists fillColor="white" />
         </button>
         <div className="flex items-center gap-2">
-          <VolumeOffIcon width={16} viewBox="-8 0 20 20" color="white" />
+          <SpeakerXMarkIcon className="h-4 w-4 text-white" />
           <div className="">
             <Slider
               className="volume-slider w-[50px]"
@@ -147,7 +147,7 @@ export const BottomAudioPlayer = () => {
               step={0.1}
             />
           </div>
-          <VolumeUpIcon width={16} color="white" className="ml-1" />
+          <SpeakerWaveIcon className="h-4 w-4 text-white ml-1" />
         </div>
         <IoIosArrowUp
           size={25}

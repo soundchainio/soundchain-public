@@ -20,10 +20,10 @@ const Asset = (props: AssetProps) => {
     skip: !src || isLocalFile,
   })
 
-  const mimeType = data?.mimeType.value
+  const mimeType = data?.mimeType?.value
+  const isLoading = !isLocalFile && src && !data
 
-  if (src && !mimeType && !isLocalFile) return null
-
+  // Show video if detected as video type
   if (src && mimeType?.startsWith('video')) {
     return (
       <video
@@ -47,10 +47,10 @@ const Asset = (props: AssetProps) => {
         src={src || '/default-pictures/album-artwork.png'}
         alt=""
         fill
-        className="m-auto object-cover"
+        className={`m-auto ${objectFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+        style={{ objectFit: objectFit }}
         priority
-        sizes={sizes}
-        objectFit={objectFit}
+        sizes={sizes || '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'}
       />
     </ImageContainer>
   )

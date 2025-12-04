@@ -13,12 +13,12 @@ export const ReactionsModal = () => {
   const reactions = modalState?.reactions || { postId: undefined, show: false, top: [], total: 0 }
   const { postId, show, top, total } = reactions
   
-  const [reactionsData, { data, fetchMore }] = useReactionsLazyQuery({ variables: { postId: postId as string } })
+  const [reactionsData, { data, fetchMore }] = useReactionsLazyQuery()
   const { dispatchReactionsModal } = useModalDispatch()
 
   useEffect(() => {
     if (show && postId) {
-      reactionsData()
+      reactionsData({ variables: { postId } })
     }
   }, [show, postId, reactionsData])
 

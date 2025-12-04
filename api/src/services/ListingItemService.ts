@@ -10,7 +10,7 @@ import { Service } from './Service';
 export class ListingItemService extends Service {
   // Return AuctionItem | BuyNowItem | undefined with chainId
   async getListingItem(tokenId: number, contractAddress: string, chainId?: number): Promise<AuctionItem | BuyNowItem | undefined> {
-    const query = { tokenId, nft: contractAddress, valid: true };
+    const query: any = { tokenId, nft: contractAddress, valid: true };
     if (chainId) query['chainId'] = chainId; // Add chainId filter
     const auctionItem = (await AuctionItemModel.findOne(query))?.toObject();
     const buyNowItem = (await BuyNowItemModel.findOne(query))?.toObject();
@@ -20,7 +20,7 @@ export class ListingItemService extends Service {
   // Same union type for getActiveListingItem with chainId
   async getActiveListingItem(tokenId: number, contractAddress: string, chainId?: number): Promise<AuctionItem | BuyNowItem | undefined> {
     const now = getNow();
-    const query = { tokenId, nft: contractAddress, valid: true, endingTime: { $gte: now } };
+    const query: any = { tokenId, nft: contractAddress, valid: true, endingTime: { $gte: now } };
     if (chainId) query['chainId'] = chainId; // Add chainId filter
     const auctionItem = (await AuctionItemModel.findOne(query))?.toObject();
     const buyNowItem = (await BuyNowItemModel.findOne({ tokenId, nft: contractAddress, valid: true }))?.toObject();
@@ -28,7 +28,7 @@ export class ListingItemService extends Service {
   }
 
   async wasListedBefore(tokenId: number, contractAddress: string, chainId?: number): Promise<boolean> {
-    const query = { tokenId, nft: contractAddress };
+    const query: any = { tokenId, nft: contractAddress };
     if (chainId) query['chainId'] = chainId; // Add chainId filter
     const auctionItem = (await AuctionItemModel.findOne(query))?.toObject();
     const buyNowItem = (await BuyNowItemModel.findOne(query))?.toObject();
@@ -37,7 +37,7 @@ export class ListingItemService extends Service {
 
   // Update getCheapestListingItem to include chainId
   async getCheapestListingItem(trackEditionId: string, chainId?: number): Promise<TrackPrice> {
-    const matchQuery = {
+    const matchQuery: any = {
       trackEditionId: new ObjectId(trackEditionId),
     };
     if (chainId) matchQuery['chainId'] = chainId; // Add chainId filter
@@ -64,7 +64,7 @@ export class ListingItemService extends Service {
                 $and: [
                   { $eq: ['$$item.nft', '$nftData.contract'] },
                   { $eq: ['$$item.valid', true] },
-                  chainId ? { $eq: ['$$item.chainId', chainId] } : { $exists: true }, // ChainId filter
+                  chainId ? { $eq: ['$$item.chainId', chainId] } : { $literal: true }, // ChainId filter - use $literal for DocumentDB compatibility
                 ],
               },
             },

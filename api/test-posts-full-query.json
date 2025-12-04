@@ -1,0 +1,7 @@
+{
+  "query": "query Posts($filter: FilterPostInput, $sort: SortPostInput, $page: PageInput) { posts(filter: $filter, sort: $sort, page: $page) { nodes { id body mediaLink repostId createdAt updatedAt commentCount repostCount totalReactions topReactions(top: 2) myReaction deleted profile { id displayName profilePicture verified teamMember userHandle badges } track { id title artist artworkUrl playbackUrl deleted isFavorite } } pageInfo { hasNextPage endCursor totalCount } } }",
+  "variables": {
+    "page": { "first": 5 },
+    "sort": { "field": "CREATED_AT", "order": "DESC" }
+  }
+}

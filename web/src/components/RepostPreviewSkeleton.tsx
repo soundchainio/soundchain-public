@@ -1,9 +1,9 @@
-import { RefreshIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon } from '@heroicons/react/24/outline'
 
 export const RepostPreviewSkeleton = () => (
   <div className=" my-4 bg-gray-20">
     <div className="flex items-center bg-gray-20 text-sm font-bold text-gray-400">
-      <RefreshIcon className="mr-1 h-4 w-4" /> Repost
+      <ArrowPathIcon className="mr-1 h-4 w-4" /> Repost
     </div>
     <div className="mb-2 space-y-6 rounded-lg bg-gray-30 p-4">
       <div className="flex animate-pulse items-center space-x-6 ">

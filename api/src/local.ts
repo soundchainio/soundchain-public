@@ -11,7 +11,21 @@ import { Context } from './types/Context';
 import cors from 'cors';
 
 async function bootstrap() {
-  await mongoose.connect(config.db.url, config.db.options);
+  // Connect to MongoDB using environment variable
+  const mongoUrl = process.env.MONGODB_URI || process.env.MONGO_URL || 'mongodb://localhost:27017/soundchain';
+  console.log(`📡 Connecting to MongoDB: ${mongoUrl.includes('localhost:27017') ? 'LOCAL (development)' : 'PRODUCTION DocumentDB'}`);
+
+  // Configure connection options
+  const connectOptions: any = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 30000,
+    socketTimeoutMS: 30000,
+    connectTimeoutMS: 30000,
+    directConnection: true
+  };
+
+  await mongoose.connect(mongoUrl, connectOptions);
 
   const app = express();
   app.locals.context = new Context();

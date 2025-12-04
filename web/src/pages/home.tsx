@@ -41,7 +41,7 @@ export default function HomePage({ me }: HomePageProps) {
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
-      title: 'Home',
+      title: 'Feed',
     }),
     [],
   )

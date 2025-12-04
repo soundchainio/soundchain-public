@@ -124,11 +124,14 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
   const querySort = buildQuerySort(field, ascending);
 
   // Combine aggregator stages
-  const rawResults = (await collection
+  const rawResults = await collection
     .aggregate([...aggregation, { $match: filterQuery }, { $match: cursorFilter }])
     .sort(querySort as Record<string, 1 | -1>)
     .limit(limit + 1)
-    .exec()) as DocumentType<InstanceType<T>>[];
+    .exec();
+
+  // Hydrate plain aggregation results into proper mongoose documents
+  const hydratedResults = rawResults.map((doc: any) => collection.hydrate(doc)) as DocumentType<InstanceType<T>>[];
 
   const totalCount =
     (
@@ -139,5 +142,5 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
         .exec()
     )[0]?.count ?? 0;
 
-  return prepareResult(field, last, limit, after, before, rawResults, totalCount);
+  return prepareResult(field, last, limit, after, before, hydratedResults, totalCount);
 }

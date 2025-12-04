@@ -5,7 +5,7 @@ import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { BsArrowRightShort } from 'react-icons/bs'
 
-import { Description, Dialog, Transition, TransitionChild } from '@headlessui/react'
+import { Dialog, Transition } from '@headlessui/react'
 
 import { Logo } from '../../../../icons/Logo'
 
@@ -17,7 +17,7 @@ export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void
     <Transition show={open}>
       <Dialog onClose={close} className="relative z-50">
         <div className="fixed inset-0 flex items-center justify-end bg-black/50 p-0">
-          <TransitionChild
+          <Transition.Child
             enter="transition duration-200 ease-out"
             enterFrom="transform translate-x-[100%]"
             enterTo="transform translate-x-0 opacity-100"
@@ -26,14 +26,14 @@ export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void
             leaveTo="transform translate-x-[100%]"
           >
             <div className="h-screen w-full max-w-[300px] rounded bg-black">
-              <Description>
+              <Dialog.Description>
                 <div className="mt-4 flex flex-col">
                   <div className="flex w-full items-center justify-center border-b-[1px] border-gray-30 pb-6">
                     <Logo className="block h-8 w-auto" />
                   </div>
                   <ul className="mt-4 flex flex-col">
                     <li className="text-md mb-4 cursor-pointer border-b-[1px] border-gray-30 bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text pl-6 pb-4 font-normal text-gray-80 transition duration-150 ease-in-out hover:text-transparent">
-                      <Link href="/marketplace">Marketplace</Link>
+                      <Link href="/dex">Marketplace</Link>
                     </li>
                     <li className="text-md mb-4 cursor-pointer border-b-[1px] border-gray-30 bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text pl-6 pb-4 font-normal text-gray-80 transition duration-150 ease-in-out hover:text-transparent">
                       <Link href="/airdrop">Airdrop</Link>
@@ -75,9 +75,9 @@ export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void
                     </li>
                   </ul>
                 </div>
-              </Description>
+              </Dialog.Description>
             </div>
-          </TransitionChild>
+          </Transition.Child>
         </div>
       </Dialog>
     </Transition>

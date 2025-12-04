@@ -9,7 +9,7 @@ export function createTrackResolver<T>(objectTypeCls: ClassType<T>) {
     // 1) Convert `_id` from ObjectId to a string
     @FieldResolver(() => String)
     id(@Root() { _id }: Notification & { _id: mongoose.Types.ObjectId }): string {
-      return _id.toHexString();
+      return _id.toString();
     }
 
     @FieldResolver(() => String)

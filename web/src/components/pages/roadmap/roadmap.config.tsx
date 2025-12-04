@@ -7,11 +7,85 @@ export interface RoadmapStep {
 }
 
 export const roadmapSteps: RoadmapStep[] = [
+  // PHASE 1 - IMMEDIATE (December 2025)
+  {
+    title: 'SoundChain Production Push',
+    status: 'Completed - Dec 2025',
+    description: 'Pushed major updates to production including DEX dashboard, panel system, Twitch/Discord embeds, and landing page improvements. SoundChain is back online after 13-15 months!',
+  },
+  {
+    title: 'Custom Sticker System + Emoji Mart',
+    status: 'Completed - Dec 2025',
+    description: 'Integrated SoundChain custom stickers, Twitch emotes (Kappa, PogChamp, LUL, KEKW), and Kick.com stickers into posts and comments. Full Emoji Mart integration for expressive communication.',
+  },
+  {
+    title: 'Create+ and Library Header Tabs',
+    status: 'Completed - Dec 2025',
+    description: 'Enhanced navigation with Create+ and Library tabs in the main header for improved content creation workflow.',
+  },
+
+  // PHASE 2 - CORE FEATURES (This Week)
+  {
+    title: 'Playlist DEX Modal - OGUN Rewards Driver',
+    status: 'In Progress - Dec 2025',
+    description: 'Unified playlist modal driving OGUN streaming rewards for creators AND listeners. Revolutionary feature activating the full token economy - earn while you create, earn while you listen!',
+  },
+  {
+    title: '23 Token Rendering from Figma',
+    status: 'In Progress - Dec 2025',
+    description: 'Implementing proper rendering for all 23 marketplace tokens from Figma design specifications.',
+  },
+  {
+    title: 'Discord-style 59 Pages Modal',
+    status: 'Planned - Dec 2025',
+    description: 'Community hub integration with Discord-style modal navigation for enhanced social features.',
+  },
+
+  // PHASE 3 - BLOCKCHAIN (1-2 Weeks)
+  {
+    title: '23+ Omnichain Token Integration - EXCLUSIVE',
+    status: 'Planned - Jan 2026',
+    description: 'Deploying proxy contracts for 23+ blockchain networks exclusively available on SoundChain.io! Including Bitcoin, Ethereum, Solana, Polygon, Base, Arbitrum, ZetaChain, ApeChain, Berachain, Unichain, Zora, and more. True cross-chain NFT aggregation - one platform, all chains. Private use only on SoundChain.',
+  },
+  {
+    title: 'SCid Code Generator',
+    status: 'Planned - Jan 2026',
+    description: 'Unique identifier system for all SoundChain NFTs - generating SCid codes for permanent on-chain asset tracking.',
+  },
+  {
+    title: 'BitTorrent DEX Integration',
+    status: 'Planned - Jan 2026',
+    description: 'Decentralized file distribution for music assets via BitTorrent integration on DEX backend.',
+  },
+
+  // PHASE 4 - STANDALONE APP (2-4 Weeks)
+  {
+    title: 'Electron Wrapper (.dmg, .exe, .AppImage)',
+    status: 'Planned - Jan 2026',
+    description: 'Cross-platform desktop application using Electron for macOS, Windows, and Linux distribution.',
+  },
+  {
+    title: 'Native macOS/iOS Apps',
+    status: 'Planned - Feb 2026',
+    description: 'Native Apple ecosystem apps for App Store distribution with full platform integration.',
+  },
+  {
+    title: 'Native Android App',
+    status: 'Planned - Feb 2026',
+    description: 'Native Android application for Google Play distribution.',
+  },
+  {
+    title: 'Native Windows App',
+    status: 'Planned - Feb 2026',
+    description: 'Native Windows application for Microsoft Store distribution.',
+  },
+
+  // LEGACY ITEMS
   {
     title: 'UI/UX updates',
     status: 'Completed',
-    description: `We’re improving the UI/UX of the whole platform, focusing on high traffic
-    areas of the site as well as improvements to shared components. There’s also a conscious
+    description: `We're improving the UI/UX of the whole platform, focusing on high traffic
+    areas of the site as well as improvements to shared components. There's also a conscious
     focus on improving the desktop experience as well. The changes include improvements to
     the marketplace page, the track listing pages, the users page, the music player, and
     the general layout of the site`,

@@ -10,7 +10,9 @@ import {
 } from 'lib/graphql'
 import { useEffect, useState } from 'react'
 import { PostFormType } from 'types/PostFormType'
+import { MediaProvider } from 'types/MediaProvider'
 import * as yup from 'yup'
+import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { Button } from '../common/Buttons/Button'
 import { MiniAudioPlayer } from '../MiniAudioPlayer'
 import { PostBar } from './PostBar'
@@ -156,15 +158,156 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               }}
             />
           )}
-          {props.postLink && props.type !== PostFormType.REPOST && (
-            <iframe
-              className="min-h-[500px] w-full bg-gray-20"
-              frameBorder="0"
-              allowFullScreen
-              src={props.postLink}
-              title="Media preview"
-            />
-          )}
+          {props.postLink && props.type !== PostFormType.REPOST && (() => {
+            const mediaSource = IdentifySource(props.postLink)
+            const mediaType = mediaSource.type
+
+            // Enhanced URL with autoplay and no restrictions
+            let enhancedUrl = props.postLink
+
+            // Platform-specific enhancements
+            if (mediaType === MediaProvider.YOUTUBE) {
+              const url = new URL(enhancedUrl)
+              url.searchParams.set('autoplay', '1')
+              url.searchParams.set('mute', '1')
+              url.searchParams.set('iv_load_policy', '3') // Remove age restrictions
+              url.searchParams.set('modestbranding', '1')
+              url.searchParams.set('rel', '0')
+              enhancedUrl = url.toString()
+
+              // Return responsive YouTube embed
+              return (
+                <iframe
+                  className="w-full bg-gray-20 aspect-video"
+                  frameBorder="0"
+                  allowFullScreen
+                  src={enhancedUrl}
+                  title="Media preview"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                />
+              )
+            }
+
+            if (mediaType === MediaProvider.VIMEO) {
+              const url = new URL(enhancedUrl)
+              url.searchParams.set('autoplay', '1')
+              url.searchParams.set('muted', '1')
+              enhancedUrl = url.toString()
+
+              // Return responsive Vimeo embed
+              return (
+                <iframe
+                  className="w-full bg-gray-20 aspect-video"
+                  frameBorder="0"
+                  allowFullScreen
+                  src={enhancedUrl}
+                  title="Media preview"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                />
+              )
+            }
+
+            if (mediaType === MediaProvider.INSTAGRAM) {
+              // Instagram embeds - responsive
+              return (
+                <iframe
+                  className="w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[700px]"
+                  frameBorder="0"
+                  allowFullScreen
+                  scrolling="no"
+                  src={enhancedUrl}
+                  title="Media preview"
+                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                />
+              )
+            }
+
+            if (mediaType === MediaProvider.TIKTOK) {
+              // TikTok vertical video - responsive
+              return (
+                <iframe
+                  className="w-full bg-gray-20 h-[80vh] max-h-[650px] md:h-[650px]"
+                  frameBorder="0"
+                  allowFullScreen
+                  scrolling="no"
+                  src={enhancedUrl}
+                  title="Media preview"
+                  allow="autoplay; encrypted-media; accelerometer; gyroscope"
+                />
+              )
+            }
+
+            if (mediaType === MediaProvider.X) {
+              // X (Twitter) embeds - responsive
+              return (
+                <iframe
+                  className="w-full bg-gray-20 h-[70vh] max-h-[700px] md:h-[700px]"
+                  frameBorder="0"
+                  allowFullScreen
+                  scrolling="no"
+                  src={enhancedUrl}
+                  title="Media preview"
+                />
+              )
+            }
+
+            if (mediaType === MediaProvider.BANDCAMP) {
+              // Bandcamp with tracklist visible - responsive
+              return (
+                <iframe
+                  className="w-full bg-gray-20 h-[500px] md:h-[600px]"
+                  frameBorder="0"
+                  allowFullScreen
+                  seamless
+                  src={enhancedUrl}
+                  title="Media preview"
+                />
+              )
+            }
+
+            if (mediaType === MediaProvider.TWITCH) {
+              // Twitch livestream/VOD - responsive with autoplay
+              const url = new URL(enhancedUrl)
+              url.searchParams.set('muted', '1')
+              enhancedUrl = url.toString()
+
+              return (
+                <iframe
+                  className="w-full bg-gray-20 aspect-video"
+                  frameBorder="0"
+                  allowFullScreen
+                  src={enhancedUrl}
+                  title="Media preview"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                />
+              )
+            }
+
+            if (mediaType === MediaProvider.DISCORD) {
+              // Discord server widget - responsive
+              return (
+                <iframe
+                  className="w-full bg-gray-20 h-[500px] md:h-[600px]"
+                  frameBorder="0"
+                  src={enhancedUrl}
+                  title="Media preview"
+                  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                />
+              )
+            }
+
+            // Default iframe for SoundCloud, Spotify, and Custom HTML
+            return (
+              <iframe
+                className="w-full bg-gray-20 aspect-video"
+                frameBorder="0"
+                allowFullScreen
+                src={enhancedUrl}
+                title="Media preview"
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+              />
+            )
+          })()}
           <PostBar
             onEmojiPickerClick={onEmojiPickerClick}
             isEmojiPickerVisible={isEmojiPickerVisible}

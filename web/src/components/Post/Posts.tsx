@@ -28,6 +28,7 @@ export const Posts = ({ profileId }: PostsProps) => {
       sort: { field: SortPostField.CreatedAt, order: SortOrder.DESC },
     },
     ssr: false,
+    errorPolicy: 'all', // Return partial data even if some fields have errors
   })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)

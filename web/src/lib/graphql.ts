@@ -1,26 +1,27 @@
 import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
 export type Maybe<T> = T | null;
+export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-const defaultOptions =  {}
+export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
+export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+const defaultOptions = {} as const;
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  /** The javascript `Date` as string. Type represents date and time as the ISO Date string. */
-  DateTime: string;
-  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
-  JSON: unknown;
+  ID: { input: string; output: string; }
+  String: { input: string; output: string; }
+  Boolean: { input: boolean; output: boolean; }
+  Int: { input: number; output: number; }
+  Float: { input: number; output: number; }
+  DateTime: { input: string; output: string; }
+  JSON: { input: unknown; output: unknown; }
 };
 
 export type AddCommentInput = {
-  postId: Scalars['String'];
-  body: Scalars['String'];
+  body: Scalars['String']['input'];
+  postId: Scalars['String']['input'];
 };
 
 export type AddCommentPayload = {
@@ -30,51 +31,51 @@ export type AddCommentPayload = {
 
 export type AuctionEndedNotification = {
   __typename?: 'AuctionEndedNotification';
+  artist: Scalars['String']['output'];
+  artworkUrl: Scalars['String']['output'];
+  auctionId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  trackId: Scalars['String']['output'];
+  trackName: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type AuctionIsEndingNotification = {
   __typename?: 'AuctionIsEndingNotification';
+  artist: Scalars['String']['output'];
+  artworkUrl: Scalars['String']['output'];
+  auctionId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  trackId: Scalars['String']['output'];
+  trackName: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type AuctionItem = {
   __typename?: 'AuctionItem';
-  id: Scalars['ID'];
-  owner: Scalars['String'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  startingTime: Scalars['Float'];
-  endingTime: Scalars['Float'];
-  reservePrice: Scalars['String'];
-  reservePriceToShow: Scalars['Float'];
-  isPaymentOGUN: Scalars['Boolean'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  valid: Scalars['Boolean'];
-  highestBid: Scalars['String'];
-  highestBidToShow: Scalars['Float'];
-  contract: Maybe<Scalars['String']>;
-  trackId: Maybe<Scalars['String']>;
-  trackEditionId: Maybe<Scalars['String']>;
+  contract: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  endingTime: Scalars['Float']['output'];
+  highestBid: Scalars['String']['output'];
+  highestBidToShow: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  isPaymentOGUN: Scalars['Boolean']['output'];
+  nft: Scalars['String']['output'];
+  owner: Scalars['String']['output'];
+  reservePrice: Scalars['String']['output'];
+  reservePriceToShow: Scalars['Float']['output'];
+  startingTime: Scalars['Float']['output'];
+  tokenId: Scalars['Float']['output'];
+  trackEditionId: Maybe<Scalars['String']['output']>;
+  trackId: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  valid: Scalars['Boolean']['output'];
 };
 
 export type AuctionItemPayload = {
@@ -84,20 +85,22 @@ export type AuctionItemPayload = {
 
 export type AudioHolder = {
   __typename?: 'AudioHolder';
-  id: Scalars['ID'];
-  walletAddress: Scalars['String'];
-  amount: Scalars['String'];
-  ogunClaimed: Maybe<Scalars['Boolean']>;
+  amount: Scalars['Float']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  ogunClaimed: Maybe<Scalars['Boolean']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  walletAddress: Scalars['String']['output'];
 };
 
 export enum AuthMethod {
-  MagicLink = 'magicLink',
-  Google = 'google'
+  Google = 'google',
+  MagicLink = 'magicLink'
 }
 
 export type AuthPayload = {
   __typename?: 'AuthPayload';
-  jwt: Scalars['String'];
+  jwt: Scalars['String']['output'];
 };
 
 export enum Badge {
@@ -106,22 +109,22 @@ export enum Badge {
 
 export type Bided = {
   __typename?: 'Bided';
-  bided: Maybe<Scalars['Boolean']>;
+  bided: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type BidsWithInfo = {
   __typename?: 'BidsWithInfo';
-  id: Scalars['ID'];
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  bidder: Scalars['String'];
-  amount: Scalars['String'];
-  amountToShow: Scalars['Float'];
-  auctionId: Scalars['String'];
-  profileId: Scalars['String'];
-  userId: Scalars['String'];
-  createdAt: Scalars['DateTime'];
+  amount: Scalars['String']['output'];
+  amountToShow: Scalars['Float']['output'];
+  auctionId: Scalars['String']['output'];
+  bidder: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  nft: Scalars['String']['output'];
   profile: Profile;
+  profileId: Scalars['String']['output'];
+  tokenId: Scalars['Float']['output'];
+  userId: Scalars['String']['output'];
 };
 
 export type BidsWithInfoPayload = {
@@ -131,24 +134,24 @@ export type BidsWithInfoPayload = {
 
 export type BuyNowItem = {
   __typename?: 'BuyNowItem';
-  id: Scalars['ID'];
-  owner: Scalars['String'];
-  trackId: Maybe<Scalars['String']>;
-  trackEditionId: Maybe<Scalars['String']>;
-  nft: Scalars['String'];
-  tokenId: Scalars['Float'];
-  selectedCurrency: Maybe<Scalars['String']>;
-  contract: Maybe<Scalars['String']>;
-  startingTime: Scalars['Float'];
-  pricePerItem: Scalars['String'];
-  pricePerItemToShow: Scalars['Float'];
-  OGUNPricePerItem: Scalars['String'];
-  OGUNPricePerItemToShow: Scalars['Float'];
-  acceptsMATIC: Scalars['Boolean'];
-  acceptsOGUN: Scalars['Boolean'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  valid: Scalars['Boolean'];
+  OGUNPricePerItem: Scalars['String']['output'];
+  OGUNPricePerItemToShow: Scalars['Float']['output'];
+  acceptsMATIC: Scalars['Boolean']['output'];
+  acceptsOGUN: Scalars['Boolean']['output'];
+  contract: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  nft: Scalars['String']['output'];
+  owner: Scalars['String']['output'];
+  pricePerItem: Scalars['String']['output'];
+  pricePerItemToShow: Scalars['Float']['output'];
+  selectedCurrency: Maybe<Scalars['String']['output']>;
+  startingTime: Scalars['Float']['output'];
+  tokenId: Scalars['Float']['output'];
+  trackEditionId: Maybe<Scalars['String']['output']>;
+  trackId: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  valid: Scalars['Boolean']['output'];
 };
 
 export type BuyNowPayload = {
@@ -157,7 +160,7 @@ export type BuyNowPayload = {
 };
 
 export type ChangeReactionInput = {
-  postId: Scalars['String'];
+  postId: Scalars['String']['input'];
   type: ReactionType;
 };
 
@@ -168,80 +171,80 @@ export type ChangeReactionPayload = {
 
 export type Chat = {
   __typename?: 'Chat';
-  id: Scalars['ID'];
-  message: Scalars['String'];
-  fromId: Scalars['String'];
-  readAt: Scalars['DateTime'];
-  createdAt: Scalars['DateTime'];
+  createdAt: Scalars['DateTime']['output'];
+  fromId: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
   profile: Profile;
-  unread: Scalars['Boolean'];
+  readAt: Scalars['DateTime']['output'];
+  unread: Scalars['Boolean']['output'];
 };
 
 export type ChatConnection = {
   __typename?: 'ChatConnection';
-  pageInfo: PageInfo;
   nodes: Array<Chat>;
+  pageInfo: PageInfo;
 };
 
 export type ClearNotificationsPayload = {
   __typename?: 'ClearNotificationsPayload';
-  ok: Scalars['Boolean'];
+  ok: Scalars['Boolean']['output'];
 };
 
 export type Comment = {
   __typename?: 'Comment';
-  id: Scalars['ID'];
-  body: Scalars['String'];
-  postId: Scalars['String'];
-  profileId: Scalars['String'];
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  deleted: Maybe<Scalars['Boolean']['output']>;
+  id: Scalars['ID']['output'];
   post: Post;
+  postId: Scalars['ID']['output'];
   profile: Profile;
+  profileId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type CommentConnection = {
   __typename?: 'CommentConnection';
-  pageInfo: PageInfo;
   nodes: Array<Comment>;
+  pageInfo: PageInfo;
 };
 
 export type CommentNotification = {
   __typename?: 'CommentNotification';
+  authorName: Scalars['String']['output'];
+  authorPicture: Maybe<Scalars['String']['output']>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  link: Scalars['String']['output'];
+  previewBody: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  link: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type CountBidsPayload = {
   __typename?: 'CountBidsPayload';
-  numberOfBids: Maybe<Scalars['Float']>;
+  numberOfBids: Maybe<Scalars['Float']['output']>;
 };
 
 export type CreateMultipleTracksInput = {
-  batchSize: Scalars['Float'];
+  batchSize: Scalars['Float']['input'];
+  createPost: Scalars['Boolean']['input'];
   track: CreateTrackInput;
-  createPost: Scalars['Boolean'];
 };
 
 export type CreateMultipleTracksPayload = {
   __typename?: 'CreateMultipleTracksPayload';
   firstTrack: Track;
-  trackIds: Array<Scalars['String']>;
+  trackIds: Array<Scalars['String']['output']>;
 };
 
 export type CreatePlaylistData = {
-  title: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  artworkUrl?: Maybe<Scalars['String']>;
-  trackIds?: Maybe<Array<Scalars['String']>>;
+  artworkUrl?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+  trackIds?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type CreatePlaylistPayload = {
@@ -250,15 +253,15 @@ export type CreatePlaylistPayload = {
 };
 
 export type CreatePlaylistTracks = {
-  playlistId: Scalars['String'];
-  trackIds: Array<Scalars['String']>;
+  playlistId: Scalars['String']['input'];
+  trackIds: Array<Scalars['String']['input']>;
 };
 
 export type CreatePostInput = {
-  body: Scalars['String'];
-  mediaLink?: Maybe<Scalars['String']>;
-  trackId?: Maybe<Scalars['String']>;
-  trackEditionId?: Maybe<Scalars['String']>;
+  body: Scalars['String']['input'];
+  mediaLink?: InputMaybe<Scalars['String']['input']>;
+  trackEditionId?: InputMaybe<Scalars['String']['input']>;
+  trackId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreatePostPayload = {
@@ -267,30 +270,30 @@ export type CreatePostPayload = {
 };
 
 export type CreateProfileVerificationRequestInput = {
-  soundcloud?: Maybe<Scalars['String']>;
-  youtube?: Maybe<Scalars['String']>;
-  bandcamp?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  reason?: Maybe<Scalars['String']>;
-  reviewerProfileId?: Maybe<Scalars['String']>;
+  bandcamp?: InputMaybe<Scalars['String']['input']>;
+  reason?: InputMaybe<Scalars['String']['input']>;
+  reviewerProfileId?: InputMaybe<Scalars['String']['input']>;
+  soundcloud?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<ProfileVerificationStatusType>;
+  youtube?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateRepostInput = {
-  body: Scalars['String'];
-  repostId: Scalars['String'];
+  body: Scalars['String']['input'];
+  repostId: Scalars['String']['input'];
 };
 
 export type CreateRepostPayload = {
   __typename?: 'CreateRepostPayload';
-  post: Post;
   originalPost: Post;
+  post: Post;
 };
 
 export type CreateTrackEditionInput = {
-  transactionHash: Scalars['String'];
-  editionId: Scalars['Float'];
-  editionSize: Scalars['Int'];
-  editionData?: Maybe<EditionDataInput>;
+  editionData?: InputMaybe<EditionDataInput>;
+  editionId: Scalars['Float']['input'];
+  editionSize: Scalars['Int']['input'];
+  transactionHash: Scalars['String']['input'];
 };
 
 export type CreateTrackEditionPayload = {
@@ -299,26 +302,26 @@ export type CreateTrackEditionPayload = {
 };
 
 export type CreateTrackInput = {
-  title: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  utilityInfo?: Maybe<Scalars['String']>;
-  assetUrl: Scalars['String'];
-  artworkUrl?: Maybe<Scalars['String']>;
-  artist?: Maybe<Scalars['String']>;
-  artistId?: Maybe<Scalars['String']>;
-  artistProfileId?: Maybe<Scalars['String']>;
-  album?: Maybe<Scalars['String']>;
-  ISRC?: Maybe<Scalars['String']>;
-  releaseYear?: Maybe<Scalars['Float']>;
-  copyright?: Maybe<Scalars['String']>;
-  genres?: Maybe<Array<Genre>>;
-  trackEditionId: Scalars['String'];
-  nftData?: Maybe<NftDataInput>;
+  ISRC?: InputMaybe<Scalars['String']['input']>;
+  album?: InputMaybe<Scalars['String']['input']>;
+  artist?: InputMaybe<Scalars['String']['input']>;
+  artistId?: InputMaybe<Scalars['String']['input']>;
+  artistProfileId?: InputMaybe<Scalars['String']['input']>;
+  artworkUrl?: InputMaybe<Scalars['String']['input']>;
+  assetUrl: Scalars['String']['input'];
+  copyright?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  genres?: InputMaybe<Array<Genre>>;
+  nftData?: InputMaybe<NftDataInput>;
+  releaseYear?: InputMaybe<Scalars['Float']['input']>;
+  title: Scalars['String']['input'];
+  trackEditionId: Scalars['String']['input'];
+  utilityInfo?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreateWhitelistEntryInput = {
-  walletAddress: Scalars['String'];
-  emailAddress: Scalars['String'];
+  emailAddress: Scalars['String']['input'];
+  walletAddress: Scalars['String']['input'];
 };
 
 export type CreateWhitelistEntryPayload = {
@@ -327,18 +330,17 @@ export type CreateWhitelistEntryPayload = {
 };
 
 export enum CurrencyType {
-  Ogun = 'OGUN',
-  Matic = 'MATIC'
+  Matic = 'MATIC',
+  Ogun = 'OGUN'
 }
 
-
 export enum DefaultWallet {
-  Soundchain = 'Soundchain',
-  MetaMask = 'MetaMask'
+  MetaMask = 'MetaMask',
+  Soundchain = 'Soundchain'
 }
 
 export type DeleteCommentInput = {
-  commentId: Scalars['String'];
+  commentId: Scalars['String']['input'];
 };
 
 export type DeleteCommentPayload = {
@@ -352,12 +354,12 @@ export type DeletePlaylistPayload = {
 };
 
 export type DeletePlaylistTracks = {
-  playlistId: Scalars['String'];
-  trackIds: Array<Scalars['String']>;
+  playlistId: Scalars['String']['input'];
+  trackIds: Array<Scalars['String']['input']>;
 };
 
 export type DeletePostInput = {
-  postId: Scalars['String'];
+  postId: Scalars['String']['input'];
 };
 
 export type DeletePostPayload = {
@@ -366,41 +368,40 @@ export type DeletePostPayload = {
 };
 
 export type DeleteTrackInput = {
-  trackId: Scalars['String'];
+  trackId: Scalars['String']['input'];
 };
 
 export type DeletedCommentNotification = {
   __typename?: 'DeletedCommentNotification';
+  authorName: Scalars['String']['output'];
+  authorPicture: Maybe<Scalars['String']['output']>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  link: Scalars['String']['output'];
+  previewBody: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  link: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type DeletedPostNotification = {
   __typename?: 'DeletedPostNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  previewLink: Maybe<Scalars['String']>;
-  link: Scalars['String'];
+  authorName: Scalars['String']['output'];
+  authorPicture: Maybe<Scalars['String']['output']>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  mediaLink: Maybe<Scalars['String']['output']>;
+  previewBody: Scalars['String']['output'];
   track: Maybe<Track>;
+  type: NotificationType;
 };
 
 export type EditPlaylistData = {
-  playlistId: Scalars['String'];
-  title: Scalars['String'];
-  description?: Maybe<Scalars['String']>;
-  artworkUrl?: Maybe<Scalars['String']>;
+  artworkUrl?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  playlistId: Scalars['String']['input'];
+  title: Scalars['String']['input'];
 };
 
 export type EditPlaylistPlayload = {
@@ -409,109 +410,122 @@ export type EditPlaylistPlayload = {
 };
 
 export type EditionDataInput = {
-  transactionHash?: Maybe<Scalars['String']>;
-  pendingRequest?: Maybe<PendingRequest>;
-  pendingTime?: Maybe<Scalars['DateTime']>;
-  pendingTrackCount?: Maybe<Scalars['Float']>;
-  contract?: Maybe<Scalars['String']>;
-  owner?: Maybe<Scalars['String']>;
+  contract?: InputMaybe<Scalars['String']['input']>;
+  owner?: InputMaybe<Scalars['String']['input']>;
+  pendingRequest?: InputMaybe<PendingRequest>;
+  pendingTime?: InputMaybe<Scalars['DateTime']['input']>;
+  pendingTrackCount?: InputMaybe<Scalars['Float']['input']>;
+  transactionHash?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type EditionDataType = {
   __typename?: 'EditionDataType';
-  transactionHash: Maybe<Scalars['String']>;
+  contract: Maybe<Scalars['String']['output']>;
+  owner: Maybe<Scalars['String']['output']>;
   pendingRequest: Maybe<PendingRequest>;
-  pendingTime: Maybe<Scalars['DateTime']>;
-  pendingTrackCount: Maybe<Scalars['Float']>;
-  contract: Maybe<Scalars['String']>;
-  owner: Maybe<Scalars['String']>;
+  pendingTime: Maybe<Scalars['DateTime']['output']>;
+  pendingTrackCount: Maybe<Scalars['Float']['output']>;
+  transactionHash: Maybe<Scalars['String']['output']>;
 };
 
 export type ExplorePayload = {
   __typename?: 'ExplorePayload';
   profiles: Array<Profile>;
+  totalProfiles: Scalars['Float']['output'];
+  totalTracks: Scalars['Float']['output'];
   tracks: Array<Track>;
-  totalProfiles: Scalars['Float'];
-  totalTracks: Scalars['Float'];
 };
 
 export type FavoritePlaylist = {
   __typename?: 'FavoritePlaylist';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  playlistId: Scalars['String'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  playlistId: Scalars['ID']['output'];
+  profileId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type FavoriteProfileTrack = {
   __typename?: 'FavoriteProfileTrack';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  trackId: Scalars['String'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  profileId: Scalars['ID']['output'];
+  trackEditionId: Maybe<Scalars['ID']['output']>;
+  trackId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type FeedConnection = {
   __typename?: 'FeedConnection';
-  pageInfo: PageInfo;
   nodes: Array<FeedItem>;
+  pageInfo: PageInfo;
 };
 
 export type FeedItem = {
   __typename?: 'FeedItem';
-  id: Scalars['ID'];
-  postedAt: Scalars['DateTime'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
   post: Post;
+  postId: Scalars['ID']['output'];
+  postedAt: Scalars['DateTime']['output'];
+  profileId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type FilterBuyNowItemInput = {
-  trackEdition: Scalars['String'];
-  nftData?: Maybe<NftDataInput>;
+  nftData?: InputMaybe<NftDataInput>;
+  trackEdition: Scalars['String']['input'];
 };
 
 export type FilterListingItemInput = {
-  tokenId: Scalars['Float'];
-  contractAddress: Scalars['String'];
+  contractAddress: Scalars['String']['input'];
+  tokenId: Scalars['Float']['input'];
 };
 
 export type FilterOwnedBuyNowItemInput = {
-  trackEditionId: Scalars['String'];
-  owner: Scalars['String'];
+  owner: Scalars['String']['input'];
+  trackEditionId: Scalars['String']['input'];
 };
 
 export type FilterOwnedTracksInput = {
-  trackEditionId: Scalars['String'];
-  owner: Scalars['String'];
+  owner: Scalars['String']['input'];
+  trackEditionId: Scalars['String']['input'];
 };
 
 export type FilterPostInput = {
-  profileId?: Maybe<Scalars['String']>;
+  profileId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type FilterTrackInput = {
-  profileId?: Maybe<Scalars['String']>;
-  trackEditionId?: Maybe<Scalars['String']>;
-  nftData?: Maybe<NftDataInput>;
+  nftData?: InputMaybe<NftDataInput>;
+  profileId?: InputMaybe<Scalars['String']['input']>;
+  trackEditionId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type FilterTrackMarketplace = {
-  genres?: Maybe<Array<Genre>>;
-  listingItem?: Maybe<ListingItemInput>;
+  genres?: InputMaybe<Array<Genre>>;
+  listingItem?: InputMaybe<ListingItemInput>;
 };
 
 export type Follow = {
   __typename?: 'Follow';
-  id: Scalars['ID'];
+  createdAt: Scalars['DateTime']['output'];
+  followedId: Scalars['String']['output'];
   followedProfile: Profile;
+  followerId: Scalars['String']['output'];
   followerProfile: Profile;
+  id: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type FollowConnection = {
   __typename?: 'FollowConnection';
-  pageInfo: PageInfo;
   nodes: Array<Follow>;
+  pageInfo: PageInfo;
 };
 
 export type FollowProfileInput = {
-  followedId: Scalars['String'];
+  followedId: Scalars['String']['input'];
 };
 
 export type FollowProfilePayload = {
@@ -521,18 +535,19 @@ export type FollowProfilePayload = {
 
 export type FollowedArtistsConnection = {
   __typename?: 'FollowedArtistsConnection';
-  pageInfo: PageInfo;
   nodes: Array<Profile>;
+  pageInfo: PageInfo;
 };
 
 export type FollowerNotification = {
   __typename?: 'FollowerNotification';
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  followerName: Scalars['String']['output'];
+  followerPicture: Maybe<Scalars['String']['output']>;
+  id: Scalars['String']['output'];
+  link: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  followerName: Scalars['String'];
-  followerPicture: Maybe<Scalars['String']>;
-  link: Scalars['String'];
 };
 
 export enum Genre {
@@ -541,13 +556,15 @@ export enum Genre {
   Ambient = 'AMBIENT',
   Americana = 'AMERICANA',
   Blues = 'BLUES',
-  CPop = 'C_POP',
+  Bpm = 'BPM',
   Cannabis = 'CANNABIS',
   Christian = 'CHRISTIAN',
-  ClassicRock = 'CLASSIC_ROCK',
   Classical = 'CLASSICAL',
+  ClassicRock = 'CLASSIC_ROCK',
   Country = 'COUNTRY',
+  CPop = 'C_POP',
   Dance = 'DANCE',
+  DeepHouse = 'DEEP_HOUSE',
   Devotional = 'DEVOTIONAL',
   Electronic = 'ELECTRONIC',
   Experimental = 'EXPERIMENTAL',
@@ -558,8 +575,9 @@ export enum Genre {
   Indie = 'INDIE',
   Instrumental = 'INSTRUMENTAL',
   Jazz = 'JAZZ',
-  KPop = 'K_POP',
+  Jungle = 'JUNGLE',
   KidsAndFamily = 'KIDS_AND_FAMILY',
+  KPop = 'K_POP',
   Latin = 'LATIN',
   Lofi = 'LOFI',
   Metal = 'METAL',
@@ -569,191 +587,182 @@ export enum Genre {
   Pop = 'POP',
   PopLatino = 'POP_LATINO',
   Punk = 'PUNK',
-  RAndB = 'R_AND_B',
   Reggae = 'REGGAE',
   Reggaeton = 'REGGAETON',
+  RAndB = 'R_AND_B',
   Salsa = 'SALSA',
   Samples = 'SAMPLES',
   SoulFunk = 'SOUL_FUNK',
   Soundbath = 'SOUNDBATH',
   Soundtrack = 'SOUNDTRACK',
   Spoken = 'SPOKEN',
-  UrbanLatino = 'URBAN_LATINO',
-  World = 'WORLD',
   Techno = 'TECHNO',
-  Bpm = 'BPM',
-  DeepHouse = 'DEEP_HOUSE',
-  Jungle = 'JUNGLE'
+  UrbanLatino = 'URBAN_LATINO',
+  World = 'WORLD'
 }
 
 export type GetPlaylistPayload = {
   __typename?: 'GetPlaylistPayload';
-  pageInfo: PageInfo;
   nodes: Array<Playlist>;
+  pageInfo: PageInfo;
 };
 
 export type GetTracksFromPlaylist = {
   __typename?: 'GetTracksFromPlaylist';
-  pageInfo: PageInfo;
   nodes: Maybe<Array<PlaylistTrack>>;
+  pageInfo: PageInfo;
 };
-
 
 export type ListingItem = {
   __typename?: 'ListingItem';
-  id: Scalars['ID'];
-  owner: Maybe<Scalars['String']>;
-  nft: Maybe<Scalars['String']>;
-  tokenId: Maybe<Scalars['Float']>;
-  contract: Scalars['String'];
-  startingTime: Maybe<Scalars['Float']>;
-  endingTime: Maybe<Scalars['Float']>;
-  reservePrice: Maybe<Scalars['String']>;
-  selectedCurrency: Maybe<Scalars['String']>;
-  reservePriceToShow: Maybe<Scalars['Float']>;
-  pricePerItem: Maybe<Scalars['String']>;
-  pricePerItemToShow: Maybe<Scalars['Float']>;
-  OGUNPricePerItem: Maybe<Scalars['String']>;
-  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
-  acceptsMATIC: Maybe<Scalars['Boolean']>;
-  acceptsOGUN: Maybe<Scalars['Boolean']>;
-  isPaymentOGUN: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+  OGUNPricePerItem: Maybe<Scalars['String']['output']>;
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']['output']>;
+  acceptsMATIC: Maybe<Scalars['Boolean']['output']>;
+  acceptsOGUN: Maybe<Scalars['Boolean']['output']>;
+  contract: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  endingTime: Maybe<Scalars['Float']['output']>;
+  id: Scalars['ID']['output'];
+  isPaymentOGUN: Maybe<Scalars['Boolean']['output']>;
+  nft: Maybe<Scalars['String']['output']>;
+  owner: Maybe<Scalars['String']['output']>;
+  pricePerItem: Maybe<Scalars['String']['output']>;
+  pricePerItemToShow: Maybe<Scalars['Float']['output']>;
+  reservePrice: Maybe<Scalars['String']['output']>;
+  reservePriceToShow: Maybe<Scalars['Float']['output']>;
+  selectedCurrency: Maybe<Scalars['String']['output']>;
+  startingTime: Maybe<Scalars['Float']['output']>;
+  tokenId: Maybe<Scalars['Float']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type ListingItemConnection = {
   __typename?: 'ListingItemConnection';
-  pageInfo: PageInfo;
   nodes: Array<TrackWithListingItem>;
+  pageInfo: PageInfo;
 };
 
 export type ListingItemInput = {
-  saleType?: Maybe<SaleType>;
-  acceptsMATIC?: Maybe<Scalars['Boolean']>;
-  acceptsOGUN?: Maybe<Scalars['Boolean']>;
+  acceptsMATIC?: InputMaybe<Scalars['Boolean']['input']>;
+  acceptsOGUN?: InputMaybe<Scalars['Boolean']['input']>;
+  saleType?: InputMaybe<SaleType>;
 };
 
 export type ListingItemWithPrice = {
   __typename?: 'ListingItemWithPrice';
-  id: Scalars['ID'];
-  owner: Maybe<Scalars['String']>;
-  nft: Maybe<Scalars['String']>;
-  tokenId: Maybe<Scalars['Float']>;
-  contract: Scalars['String'];
-  startingTime: Maybe<Scalars['Float']>;
-  endingTime: Maybe<Scalars['Float']>;
-  reservePrice: Maybe<Scalars['String']>;
-  selectedCurrency: Maybe<Scalars['String']>;
-  reservePriceToShow: Maybe<Scalars['Float']>;
-  pricePerItem: Maybe<Scalars['String']>;
-  pricePerItemToShow: Maybe<Scalars['Float']>;
-  OGUNPricePerItem: Maybe<Scalars['String']>;
-  OGUNPricePerItemToShow: Maybe<Scalars['Float']>;
-  acceptsMATIC: Maybe<Scalars['Boolean']>;
-  acceptsOGUN: Maybe<Scalars['Boolean']>;
-  isPaymentOGUN: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  priceToShow: Maybe<Scalars['Float']>;
+  OGUNPricePerItem: Maybe<Scalars['String']['output']>;
+  OGUNPricePerItemToShow: Maybe<Scalars['Float']['output']>;
+  acceptsMATIC: Maybe<Scalars['Boolean']['output']>;
+  acceptsOGUN: Maybe<Scalars['Boolean']['output']>;
+  contract: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  endingTime: Maybe<Scalars['Float']['output']>;
+  id: Scalars['ID']['output'];
+  isPaymentOGUN: Maybe<Scalars['Boolean']['output']>;
+  nft: Maybe<Scalars['String']['output']>;
+  owner: Maybe<Scalars['String']['output']>;
+  pricePerItem: Maybe<Scalars['String']['output']>;
+  pricePerItemToShow: Maybe<Scalars['Float']['output']>;
+  priceToShow: Maybe<Scalars['Float']['output']>;
+  reservePrice: Maybe<Scalars['String']['output']>;
+  reservePriceToShow: Maybe<Scalars['Float']['output']>;
+  selectedCurrency: Maybe<Scalars['String']['output']>;
+  startingTime: Maybe<Scalars['Float']['output']>;
+  tokenId: Maybe<Scalars['Float']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type LoginInput = {
-  token: Scalars['String'];
+  token: Scalars['String']['input'];
 };
 
 export type Message = {
   __typename?: 'Message';
-  id: Scalars['ID'];
-  fromId: Scalars['String'];
-  toId: Scalars['String'];
-  message: Scalars['String'];
-  readAt: Maybe<Scalars['DateTime']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+  createdAt: Scalars['DateTime']['output'];
+  fromId: Scalars['ID']['output'];
   fromProfile: Profile;
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+  readAt: Maybe<Scalars['DateTime']['output']>;
+  toId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type MessageConnection = {
   __typename?: 'MessageConnection';
-  pageInfo: PageInfo;
   nodes: Array<Message>;
+  pageInfo: PageInfo;
 };
 
 export type MimeType = {
   __typename?: 'MimeType';
-  value: Scalars['String'];
+  value: Scalars['String']['output'];
 };
 
 export enum MusicianType {
-  Singer = 'SINGER',
-  Drummer = 'DRUMMER',
-  Guitarist = 'GUITARIST',
-  Producer = 'PRODUCER',
-  Emcee = 'EMCEE',
   BeatMaker = 'BEAT_MAKER',
   Dj = 'DJ',
+  Drummer = 'DRUMMER',
+  Emcee = 'EMCEE',
   Engineer = 'ENGINEER',
+  Guitarist = 'GUITARIST',
   Instrumentalist = 'INSTRUMENTALIST',
-  NotAnArtist = 'NOT_AN_ARTIST'
+  NotAnArtist = 'NOT_AN_ARTIST',
+  Producer = 'PRODUCER',
+  Singer = 'SINGER'
 }
 
 export type Mutation = {
   __typename?: 'Mutation';
-  updateOgunClaimedAudioHolder: UpdateOgunClaimedAudioHolderPayload;
   addComment: AddCommentPayload;
-  updateComment: UpdateCommentPayload;
-  deleteComment: DeleteCommentPayload;
-  sendMessage: SendMessagePayload;
-  resetUnreadMessageCount: Profile;
-  resetNotificationCount: Profile;
-  clearNotifications: ClearNotificationsPayload;
-  pinToIPFS: PinningPayload;
-  pinJsonToIPFS: PinningPayload;
-  createPost: CreatePostPayload;
-  updatePost: UpdatePostPayload;
-  reactToPost: ReactToPostPayload;
-  retractReaction: RetractReactionPayload;
   changeReaction: ChangeReactionPayload;
-  createRepost: CreateRepostPayload;
-  deletePost: DeletePostPayload;
-  updateProfile: UpdateProfilePayload;
   claimBadgeProfile: UpdateProfilePayload;
-  followProfile: FollowProfilePayload;
-  unfollowProfile: UnfollowProfilePayload;
-  subscribeToProfile: SubscribeToProfilePayload;
-  unsubscribeFromProfile: UnsubscribeFromProfilePayload;
-  createProfileVerificationRequest: ProfileVerificationRequestPayload;
-  updateProfileVerificationRequest: ProfileVerificationRequestPayload;
-  removeProfileVerificationRequest: ProfileVerificationRequestPayload;
-  createTrackEdition: CreateTrackEditionPayload;
-  deleteTrackEdition: Array<Track>;
+  clearNotifications: ClearNotificationsPayload;
   createMultipleTracks: CreateMultipleTracksPayload;
-  updateTrack: UpdateTrackPayload;
-  updateEditionOwnedTracks: UpdateEditionOwnedTracksPayload;
-  deleteTrackOnError: UpdateTrackPayload;
-  deleteTrack: Track;
-  toggleFavorite: ToggleFavoritePayload;
   createPlaylist: CreatePlaylistPayload;
-  updatePlaylist: EditPlaylistPlayload;
   createPlaylistTracks: CreatePlaylistPayload;
+  createPost: CreatePostPayload;
+  createProfileVerificationRequest: ProfileVerificationRequestPayload;
+  createRepost: CreateRepostPayload;
+  createTrackEdition: CreateTrackEditionPayload;
+  createWhitelistEntry: CreateWhitelistEntryPayload;
+  deleteComment: DeleteCommentPayload;
   deletePlaylistTracks: DeletePlaylistPayload;
+  deletePost: DeletePostPayload;
+  deleteTrack: Track;
+  deleteTrackEdition: Array<Track>;
+  deleteTrackOnError: UpdateTrackPayload;
+  followProfile: FollowProfilePayload;
+  login: AuthPayload;
+  pinJsonToIPFS: PinningPayload;
+  pinToIPFS: PinningPayload;
+  reactToPost: ReactToPostPayload;
+  register: AuthPayload;
+  removeProfileVerificationRequest: ProfileVerificationRequestPayload;
+  resetNotificationCount: Profile;
+  resetUnreadMessageCount: Profile;
+  retractReaction: RetractReactionPayload;
+  sendMessage: SendMessagePayload;
+  subscribeToProfile: SubscribeToProfilePayload;
+  toggleFavorite: ToggleFavoritePayload;
   togglePlaylistFavorite: FavoritePlaylist;
   togglePlaylistFollow: FavoritePlaylist;
-  register: AuthPayload;
-  login: AuthPayload;
-  updateHandle: UpdateHandlePayload;
+  unfollowProfile: UnfollowProfilePayload;
+  unsubscribeFromProfile: UnsubscribeFromProfilePayload;
+  updateComment: UpdateCommentPayload;
   updateDefaultWallet: UpdateDefaultWalletPayload;
+  updateEditionOwnedTracks: UpdateEditionOwnedTracksPayload;
+  updateHandle: UpdateHandlePayload;
   updateMetaMaskAddresses: UpdateDefaultWalletPayload;
   updateOTP: UpdateOtpPayload;
-  validateOTPRecoveryPhrase: Scalars['Boolean'];
-  createWhitelistEntry: CreateWhitelistEntryPayload;
+  updateOgunClaimedAudioHolder: UpdateOgunClaimedAudioHolderPayload;
   updateOgunClaimedWhitelist: UpdateWhitelistEntryPayload;
-};
-
-
-export type MutationUpdateOgunClaimedAudioHolderArgs = {
-  input: UpdateOgunClaimedInput;
+  updatePlaylist: EditPlaylistPlayload;
+  updatePost: UpdatePostPayload;
+  updateProfile: UpdateProfilePayload;
+  updateProfileVerificationRequest: ProfileVerificationRequestPayload;
+  updateTrack: UpdateTrackPayload;
+  validateOTPRecoveryPhrase: Scalars['Boolean']['output'];
 };
 
 
@@ -762,114 +771,8 @@ export type MutationAddCommentArgs = {
 };
 
 
-export type MutationUpdateCommentArgs = {
-  input: UpdateCommentInput;
-};
-
-
-export type MutationDeleteCommentArgs = {
-  input: DeleteCommentInput;
-};
-
-
-export type MutationSendMessageArgs = {
-  input: SendMessageInput;
-};
-
-
-export type MutationPinToIpfsArgs = {
-  input: PinToIpfsInput;
-};
-
-
-export type MutationPinJsonToIpfsArgs = {
-  input: PinJsonToIpfsInput;
-};
-
-
-export type MutationCreatePostArgs = {
-  input: CreatePostInput;
-};
-
-
-export type MutationUpdatePostArgs = {
-  input: UpdatePostInput;
-};
-
-
-export type MutationReactToPostArgs = {
-  input: ReactToPostInput;
-};
-
-
-export type MutationRetractReactionArgs = {
-  input: RetractReactionInput;
-};
-
-
 export type MutationChangeReactionArgs = {
   input: ChangeReactionInput;
-};
-
-
-export type MutationCreateRepostArgs = {
-  input: CreateRepostInput;
-};
-
-
-export type MutationDeletePostArgs = {
-  input: DeletePostInput;
-};
-
-
-export type MutationUpdateProfileArgs = {
-  input: UpdateProfileInput;
-};
-
-
-export type MutationFollowProfileArgs = {
-  input: FollowProfileInput;
-};
-
-
-export type MutationUnfollowProfileArgs = {
-  input: UnfollowProfileInput;
-};
-
-
-export type MutationSubscribeToProfileArgs = {
-  input: SubscribeToProfileInput;
-};
-
-
-export type MutationUnsubscribeFromProfileArgs = {
-  input: UnsubscribeFromProfileInput;
-};
-
-
-export type MutationCreateProfileVerificationRequestArgs = {
-  input: CreateProfileVerificationRequestInput;
-};
-
-
-export type MutationUpdateProfileVerificationRequestArgs = {
-  input: CreateProfileVerificationRequestInput;
-  id: Scalars['String'];
-};
-
-
-export type MutationRemoveProfileVerificationRequestArgs = {
-  id: Scalars['String'];
-};
-
-
-export type MutationCreateTrackEditionArgs = {
-  input: CreateTrackEditionInput;
-};
-
-
-export type MutationDeleteTrackEditionArgs = {
-  trackEditionId: Scalars['String'];
 };
 
 
@@ -878,38 +781,8 @@ export type MutationCreateMultipleTracksArgs = {
 };
 
 
-export type MutationUpdateTrackArgs = {
-  input: UpdateTrackInput;
-};
-
-
-export type MutationUpdateEditionOwnedTracksArgs = {
-  input: UpdateEditionOwnedTracksInput;
-};
-
-
-export type MutationDeleteTrackOnErrorArgs = {
-  input: DeleteTrackInput;
-};
-
-
-export type MutationDeleteTrackArgs = {
-  trackId: Scalars['String'];
-};
-
-
-export type MutationToggleFavoriteArgs = {
-  trackId: Scalars['String'];
-};
-
-
 export type MutationCreatePlaylistArgs = {
   input: CreatePlaylistData;
-};
-
-
-export type MutationUpdatePlaylistArgs = {
-  input: EditPlaylistData;
 };
 
 
@@ -918,23 +791,63 @@ export type MutationCreatePlaylistTracksArgs = {
 };
 
 
+export type MutationCreatePostArgs = {
+  input: CreatePostInput;
+};
+
+
+export type MutationCreateProfileVerificationRequestArgs = {
+  input: CreateProfileVerificationRequestInput;
+};
+
+
+export type MutationCreateRepostArgs = {
+  input: CreateRepostInput;
+};
+
+
+export type MutationCreateTrackEditionArgs = {
+  input: CreateTrackEditionInput;
+};
+
+
+export type MutationCreateWhitelistEntryArgs = {
+  input: CreateWhitelistEntryInput;
+};
+
+
+export type MutationDeleteCommentArgs = {
+  input: DeleteCommentInput;
+};
+
+
 export type MutationDeletePlaylistTracksArgs = {
   input: DeletePlaylistTracks;
 };
 
 
-export type MutationTogglePlaylistFavoriteArgs = {
-  playlistId: Scalars['String'];
+export type MutationDeletePostArgs = {
+  input: DeletePostInput;
 };
 
 
-export type MutationTogglePlaylistFollowArgs = {
-  playlistId: Scalars['String'];
+export type MutationDeleteTrackArgs = {
+  trackId: Scalars['String']['input'];
 };
 
 
-export type MutationRegisterArgs = {
-  input: RegisterInput;
+export type MutationDeleteTrackEditionArgs = {
+  trackEditionId: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteTrackOnErrorArgs = {
+  input: DeleteTrackInput;
+};
+
+
+export type MutationFollowProfileArgs = {
+  input: FollowProfileInput;
 };
 
 
@@ -943,13 +856,88 @@ export type MutationLoginArgs = {
 };
 
 
-export type MutationUpdateHandleArgs = {
-  input: UpdateHandleInput;
+export type MutationPinJsonToIpfsArgs = {
+  input: PinJsonToIpfsInput;
+};
+
+
+export type MutationPinToIpfsArgs = {
+  input: PinToIpfsInput;
+};
+
+
+export type MutationReactToPostArgs = {
+  input: ReactToPostInput;
+};
+
+
+export type MutationRegisterArgs = {
+  input: RegisterInput;
+};
+
+
+export type MutationRemoveProfileVerificationRequestArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type MutationRetractReactionArgs = {
+  input: RetractReactionInput;
+};
+
+
+export type MutationSendMessageArgs = {
+  input: SendMessageInput;
+};
+
+
+export type MutationSubscribeToProfileArgs = {
+  input: SubscribeToProfileInput;
+};
+
+
+export type MutationToggleFavoriteArgs = {
+  trackId: Scalars['String']['input'];
+};
+
+
+export type MutationTogglePlaylistFavoriteArgs = {
+  playlistId: Scalars['String']['input'];
+};
+
+
+export type MutationTogglePlaylistFollowArgs = {
+  playlistId: Scalars['String']['input'];
+};
+
+
+export type MutationUnfollowProfileArgs = {
+  input: UnfollowProfileInput;
+};
+
+
+export type MutationUnsubscribeFromProfileArgs = {
+  input: UnsubscribeFromProfileInput;
+};
+
+
+export type MutationUpdateCommentArgs = {
+  input: UpdateCommentInput;
 };
 
 
 export type MutationUpdateDefaultWalletArgs = {
   input: UpdateDefaultWalletInput;
+};
+
+
+export type MutationUpdateEditionOwnedTracksArgs = {
+  input: UpdateEditionOwnedTracksInput;
+};
+
+
+export type MutationUpdateHandleArgs = {
+  input: UpdateHandleInput;
 };
 
 
@@ -963,13 +951,8 @@ export type MutationUpdateOtpArgs = {
 };
 
 
-export type MutationValidateOtpRecoveryPhraseArgs = {
-  input: ValidateOtpRecoveryPhraseInput;
-};
-
-
-export type MutationCreateWhitelistEntryArgs = {
-  input: CreateWhitelistEntryInput;
+export type MutationUpdateOgunClaimedAudioHolderArgs = {
+  input: UpdateOgunClaimedInput;
 };
 
 
@@ -977,103 +960,134 @@ export type MutationUpdateOgunClaimedWhitelistArgs = {
   input: UpdateOgunClaimedInput;
 };
 
+
+export type MutationUpdatePlaylistArgs = {
+  input: EditPlaylistData;
+};
+
+
+export type MutationUpdatePostArgs = {
+  input: UpdatePostInput;
+};
+
+
+export type MutationUpdateProfileArgs = {
+  input: UpdateProfileInput;
+};
+
+
+export type MutationUpdateProfileVerificationRequestArgs = {
+  id: Scalars['String']['input'];
+  input: CreateProfileVerificationRequestInput;
+};
+
+
+export type MutationUpdateTrackArgs = {
+  input: UpdateTrackInput;
+};
+
+
+export type MutationValidateOtpRecoveryPhraseArgs = {
+  input: ValidateOtpRecoveryPhraseInput;
+};
+
 export type NftDataInput = {
-  transactionHash?: Maybe<Scalars['String']>;
-  pendingRequest?: Maybe<PendingRequest>;
-  pendingTime?: Maybe<Scalars['DateTime']>;
-  ipfsCid?: Maybe<Scalars['String']>;
-  tokenId?: Maybe<Scalars['Float']>;
-  contract?: Maybe<Scalars['String']>;
-  minter?: Maybe<Scalars['String']>;
-  owner?: Maybe<Scalars['String']>;
+  contract?: InputMaybe<Scalars['String']['input']>;
+  ipfsCid?: InputMaybe<Scalars['String']['input']>;
+  minter?: InputMaybe<Scalars['String']['input']>;
+  owner?: InputMaybe<Scalars['String']['input']>;
+  pendingRequest?: InputMaybe<PendingRequest>;
+  pendingTime?: InputMaybe<Scalars['DateTime']['input']>;
+  tokenId?: InputMaybe<Scalars['Float']['input']>;
+  transactionHash?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type NftDataType = {
   __typename?: 'NFTDataType';
-  transactionHash: Maybe<Scalars['String']>;
+  contract: Maybe<Scalars['String']['output']>;
+  ipfsCid: Maybe<Scalars['String']['output']>;
+  minter: Maybe<Scalars['String']['output']>;
+  owner: Maybe<Scalars['String']['output']>;
   pendingRequest: Maybe<PendingRequest>;
-  pendingTime: Maybe<Scalars['DateTime']>;
-  ipfsCid: Maybe<Scalars['String']>;
-  tokenId: Maybe<Scalars['Float']>;
-  contract: Maybe<Scalars['String']>;
-  minter: Maybe<Scalars['String']>;
-  owner: Maybe<Scalars['String']>;
+  pendingTime: Maybe<Scalars['DateTime']['output']>;
+  tokenId: Maybe<Scalars['Float']['output']>;
+  transactionHash: Maybe<Scalars['String']['output']>;
 };
 
 export type NftSoldNotification = {
   __typename?: 'NFTSoldNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  buyerName: Scalars['String'];
-  buyerPicture: Scalars['String'];
-  buyerProfileId: Scalars['String'];
-  trackId: Scalars['String'];
-  price: Scalars['Float'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
+  artist: Scalars['String']['output'];
+  artworkUrl: Scalars['String']['output'];
+  buyerName: Scalars['String']['output'];
+  buyerPicture: Scalars['String']['output'];
+  buyerProfileId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  isPaymentOgun: Maybe<Scalars['Boolean']['output']>;
+  price: Scalars['Float']['output'];
   sellType: SellType;
-  isPaymentOgun: Maybe<Scalars['Boolean']>;
+  trackId: Scalars['String']['output'];
+  trackName: Scalars['String']['output'];
+  type: NotificationType;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type NewBidNotification = {
   __typename?: 'NewBidNotification';
+  artist: Scalars['String']['output'];
+  artworkUrl: Scalars['String']['output'];
+  auctionId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  trackId: Scalars['String']['output'];
+  trackName: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type NewPostNotification = {
   __typename?: 'NewPostNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  body: Scalars['String'];
-  previewBody: Scalars['String'];
-  previewLink: Maybe<Scalars['String']>;
-  link: Scalars['String'];
+  authorName: Scalars['String']['output'];
+  authorPicture: Maybe<Scalars['String']['output']>;
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  link: Scalars['String']['output'];
+  previewBody: Scalars['String']['output'];
+  previewLink: Maybe<Scalars['String']['output']>;
   track: Maybe<Track>;
+  type: NotificationType;
 };
 
 export type NewVerificationRequestNotification = {
   __typename?: 'NewVerificationRequestNotification';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  verificationRequestId: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
+  verificationRequestId: Scalars['String']['output'];
 };
 
-export type Notification = AuctionIsEndingNotification | AuctionEndedNotification | CommentNotification | DeletedCommentNotification | DeletedPostNotification | FollowerNotification | NewBidNotification | NewPostNotification | NewVerificationRequestNotification | NftSoldNotification | OutbidNotification | ReactionNotification | VerificationRequestNotification | WonAuctionNotification;
+export type Notification = AuctionEndedNotification | AuctionIsEndingNotification | CommentNotification | DeletedCommentNotification | DeletedPostNotification | FollowerNotification | NftSoldNotification | NewBidNotification | NewPostNotification | NewVerificationRequestNotification | OutbidNotification | ReactionNotification | VerificationRequestNotification | WonAuctionNotification;
 
 export type NotificationConnection = {
   __typename?: 'NotificationConnection';
-  pageInfo: PageInfo;
   nodes: Array<Notification>;
+  pageInfo: PageInfo;
 };
 
 export enum NotificationType {
-  AuctionIsEnding = 'AuctionIsEnding',
   AuctionEnded = 'AuctionEnded',
+  AuctionIsEnding = 'AuctionIsEnding',
   Comment = 'Comment',
   DeletedComment = 'DeletedComment',
   DeletedPost = 'DeletedPost',
   Follower = 'Follower',
+  NftSold = 'NFTSold',
   NewBid = 'NewBid',
   NewPost = 'NewPost',
   NewVerificationRequest = 'NewVerificationRequest',
-  NftSold = 'NFTSold',
   Outbid = 'Outbid',
   Reaction = 'Reaction',
   VerificationRequestUpdate = 'VerificationRequestUpdate',
@@ -1082,195 +1096,201 @@ export enum NotificationType {
 
 export type OutbidNotification = {
   __typename?: 'OutbidNotification';
+  artist: Scalars['String']['output'];
+  artworkUrl: Scalars['String']['output'];
+  auctionId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  trackId: Scalars['String']['output'];
+  trackName: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PageInfo = {
   __typename?: 'PageInfo';
-  totalCount: Scalars['Float'];
-  hasPreviousPage: Scalars['Boolean'];
-  hasNextPage: Scalars['Boolean'];
-  startCursor: Maybe<Scalars['String']>;
-  endCursor: Maybe<Scalars['String']>;
+  endCursor: Maybe<Scalars['String']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+  hasPreviousPage: Scalars['Boolean']['output'];
+  startCursor: Maybe<Scalars['String']['output']>;
+  totalCount: Scalars['Float']['output'];
 };
 
 export type PageInput = {
-  first?: Maybe<Scalars['Int']>;
-  after?: Maybe<Scalars['String']>;
-  last?: Maybe<Scalars['Int']>;
-  before?: Maybe<Scalars['String']>;
-  inclusive?: Maybe<Scalars['Boolean']>;
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  inclusive?: InputMaybe<Scalars['Boolean']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export enum PendingRequest {
-  Mint = 'Mint',
-  List = 'List',
   Buy = 'Buy',
-  CancelListing = 'CancelListing',
-  UpdateListing = 'UpdateListing',
-  PlaceBid = 'PlaceBid',
-  CompleteAuction = 'CompleteAuction',
   CancelAuction = 'CancelAuction',
-  None = 'None'
+  CancelListing = 'CancelListing',
+  CompleteAuction = 'CompleteAuction',
+  List = 'List',
+  Mint = 'Mint',
+  None = 'None',
+  PlaceBid = 'PlaceBid',
+  UpdateListing = 'UpdateListing'
 }
 
 export type PinJsonToIpfsInput = {
-  fileName: Scalars['String'];
-  json: Scalars['JSON'];
+  fileName: Scalars['String']['input'];
+  json: Scalars['JSON']['input'];
 };
 
 export type PinToIpfsInput = {
-  fileName: Scalars['String'];
-  fileKey: Scalars['String'];
+  fileKey: Scalars['String']['input'];
+  fileName: Scalars['String']['input'];
 };
 
 export type PinningPayload = {
   __typename?: 'PinningPayload';
-  cid: Scalars['String'];
+  cid: Scalars['String']['output'];
 };
 
 export type Playlist = {
   __typename?: 'Playlist';
-  id: Scalars['ID'];
-  title: Scalars['String'];
-  description: Maybe<Scalars['String']>;
-  artworkUrl: Maybe<Scalars['String']>;
-  profileId: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  deleted: Maybe<Scalars['Boolean']>;
-  favoriteCount: Scalars['Float'];
-  followCount: Scalars['Float'];
-  isFavorite: Scalars['Boolean'];
-  isFollowed: Scalars['Boolean'];
+  artworkUrl: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  deleted: Maybe<Scalars['Boolean']['output']>;
+  description: Maybe<Scalars['String']['output']>;
+  favoriteCount: Scalars['Float']['output'];
+  followCount: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  isFavorite: Scalars['Boolean']['output'];
+  isFollowed: Scalars['Boolean']['output'];
+  profileId: Scalars['ID']['output'];
+  title: Scalars['String']['output'];
   tracks: Maybe<GetTracksFromPlaylist>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PlaylistTrack = {
   __typename?: 'PlaylistTrack';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  playlistId: Scalars['String'];
-  trackId: Scalars['String'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  playlistId: Scalars['ID']['output'];
+  profileId: Scalars['ID']['output'];
+  trackId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type PolygonscanResult = {
   __typename?: 'PolygonscanResult';
+  nextPage: Maybe<Scalars['String']['output']>;
   result: Array<PolygonscanResultObj>;
-  nextPage: Maybe<Scalars['String']>;
 };
 
 export type PolygonscanResultObj = {
   __typename?: 'PolygonscanResultObj';
-  blockNumber: Scalars['String'];
-  timeStamp: Scalars['String'];
-  hash: Scalars['String'];
-  nonce: Scalars['String'];
-  blockHash: Scalars['String'];
-  transactionIndex: Scalars['String'];
-  from: Scalars['String'];
-  to: Scalars['String'];
-  value: Scalars['String'];
-  gas: Scalars['String'];
-  gasPrice: Scalars['String'];
-  isError: Scalars['String'];
-  txreceipt_status: Scalars['String'];
-  input: Scalars['String'];
-  contractAddress: Scalars['String'];
-  cumulativeGasUsed: Scalars['String'];
-  gasUsed: Scalars['String'];
-  confirmations: Scalars['String'];
-  method: Maybe<Scalars['String']>;
-  date: Scalars['String'];
+  blockHash: Scalars['String']['output'];
+  blockNumber: Scalars['String']['output'];
+  confirmations: Scalars['String']['output'];
+  contractAddress: Scalars['String']['output'];
+  cumulativeGasUsed: Scalars['String']['output'];
+  date: Scalars['String']['output'];
+  from: Scalars['String']['output'];
+  gas: Scalars['String']['output'];
+  gasPrice: Scalars['String']['output'];
+  gasUsed: Scalars['String']['output'];
+  hash: Scalars['String']['output'];
+  input: Scalars['String']['output'];
+  isError: Scalars['String']['output'];
+  method: Maybe<Scalars['String']['output']>;
+  nonce: Scalars['String']['output'];
+  timeStamp: Scalars['String']['output'];
+  to: Scalars['String']['output'];
+  transactionIndex: Scalars['String']['output'];
+  txreceipt_status: Scalars['String']['output'];
+  value: Scalars['String']['output'];
 };
 
 export type Post = {
   __typename?: 'Post';
-  id: Scalars['ID'];
-  body: Maybe<Scalars['String']>;
-  mediaLink: Maybe<Scalars['String']>;
-  repostId: Maybe<Scalars['String']>;
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  profile: Profile;
+  body: Maybe<Scalars['String']['output']>;
+  commentCount: Scalars['Float']['output'];
   comments: Array<Comment>;
-  commentCount: Scalars['Float'];
-  repostCount: Scalars['Float'];
-  totalReactions: Scalars['Float'];
-  topReactions: Array<ReactionType>;
+  createdAt: Scalars['DateTime']['output'];
+  deleted: Maybe<Scalars['Boolean']['output']>;
+  id: Scalars['ID']['output'];
+  mediaLink: Maybe<Scalars['String']['output']>;
   myReaction: Maybe<ReactionType>;
+  profile: Profile;
+  profileId: Scalars['ID']['output'];
+  repostCount: Scalars['Float']['output'];
+  repostId: Maybe<Scalars['ID']['output']>;
+  topReactions: Array<ReactionType>;
+  totalReactions: Scalars['Float']['output'];
   track: Maybe<Track>;
+  trackEditionId: Maybe<Scalars['ID']['output']>;
+  trackId: Maybe<Scalars['ID']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 
 export type PostTopReactionsArgs = {
-  top: Scalars['Float'];
+  top: Scalars['Float']['input'];
 };
 
 export type PostConnection = {
   __typename?: 'PostConnection';
-  pageInfo: PageInfo;
   nodes: Array<Post>;
+  pageInfo: PageInfo;
 };
 
 export type Profile = {
   __typename?: 'Profile';
-  id: Scalars['ID'];
-  displayName: Scalars['String'];
-  profilePicture: Maybe<Scalars['String']>;
-  coverPicture: Maybe<Scalars['String']>;
-  socialMedias: SocialMedias;
-  favoriteGenres: Maybe<Array<Genre>>;
-  musicianTypes: Maybe<Array<MusicianType>>;
-  bio: Maybe<Scalars['String']>;
-  followerCount: Scalars['Float'];
-  followingCount: Scalars['Float'];
-  unreadNotificationCount: Scalars['Float'];
-  unreadMessageCount: Scalars['Float'];
-  verified: Maybe<Scalars['Boolean']>;
-  magicWalletAddress: Maybe<Scalars['String']>;
   badges: Maybe<Array<Badge>>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  userHandle: Scalars['String'];
-  teamMember: Scalars['Boolean'];
-  isFollowed: Scalars['Boolean'];
-  isSubscriber: Scalars['Boolean'];
+  bio: Maybe<Scalars['String']['output']>;
+  coverPicture: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  displayName: Scalars['String']['output'];
+  favoriteGenres: Maybe<Array<Genre>>;
+  followerCount: Scalars['Float']['output'];
+  followingCount: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  isFollowed: Scalars['Boolean']['output'];
+  isSubscriber: Scalars['Boolean']['output'];
+  magicWalletAddress: Maybe<Scalars['String']['output']>;
+  musicianTypes: Maybe<Array<MusicianType>>;
+  profilePicture: Maybe<Scalars['String']['output']>;
+  socialMedias: SocialMedias;
+  teamMember: Scalars['Boolean']['output'];
+  unreadMessageCount: Scalars['Float']['output'];
+  unreadNotificationCount: Scalars['Float']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  userHandle: Scalars['String']['output'];
+  verified: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type ProfileConnection = {
   __typename?: 'ProfileConnection';
-  pageInfo: PageInfo;
   nodes: Array<Profile>;
+  pageInfo: PageInfo;
 };
 
 export type ProfileVerificationRequest = {
   __typename?: 'ProfileVerificationRequest';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  soundcloud: Maybe<Scalars['String']>;
-  youtube: Maybe<Scalars['String']>;
-  bandcamp: Maybe<Scalars['String']>;
-  status: Maybe<Scalars['String']>;
-  reason: Maybe<Scalars['String']>;
-  reviewerProfileId: Maybe<Scalars['String']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+  bandcamp: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  profileId: Scalars['ID']['output'];
+  reason: Maybe<Scalars['String']['output']>;
+  reviewerProfileId: Maybe<Scalars['ID']['output']>;
+  soundcloud: Maybe<Scalars['String']['output']>;
+  status: Maybe<ProfileVerificationStatusType>;
+  updatedAt: Scalars['DateTime']['output'];
+  youtube: Maybe<Scalars['String']['output']>;
 };
 
 export type ProfileVerificationRequestConnection = {
   __typename?: 'ProfileVerificationRequestConnection';
-  pageInfo: PageInfo;
   nodes: Array<ProfileVerificationRequest>;
+  pageInfo: PageInfo;
 };
 
 export type ProfileVerificationRequestPayload = {
@@ -1278,96 +1298,98 @@ export type ProfileVerificationRequestPayload = {
   profileVerificationRequest: ProfileVerificationRequest;
 };
 
+export enum ProfileVerificationStatusType {
+  Approved = 'APPROVED',
+  Denied = 'DENIED',
+  Pending = 'PENDING'
+}
+
 export type ProofBookItem = {
   __typename?: 'ProofBookItem';
-  id: Scalars['ID'];
-  root: Scalars['String'];
-  address: Scalars['String'];
-  value: Scalars['String'];
-  merkleProof: Array<Scalars['String']>;
+  address: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  merkleProof: Array<Scalars['String']['output']>;
+  root: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  value: Scalars['String']['output'];
 };
 
 export type Query = {
   __typename?: 'Query';
   auctionItem: AuctionItemPayload;
-  countBids: CountBidsPayload;
-  haveBided: Bided;
   audioHolderByWallet: AudioHolder;
+  bandcampLink: Scalars['String']['output'];
   bidsWithInfo: BidsWithInfoPayload;
   buyNowItem: BuyNowPayload;
-  chats: ChatConnection;
+  buyNowListingItems: ListingItemConnection;
   chatHistory: MessageConnection;
+  chats: ChatConnection;
+  cheapestListingItem: Maybe<TrackPrice>;
   comment: Comment;
   comments: CommentConnection;
+  countBids: CountBidsPayload;
   explore: ExplorePayload;
   exploreTracks: TrackConnection;
   exploreUsers: ProfileConnection;
+  favoriteTracks: TrackConnection;
   feed: FeedConnection;
+  followedArtists: FollowedArtistsConnection;
   followers: FollowConnection;
   following: FollowConnection;
-  listingItem: Maybe<ListingItem>;
-  cheapestListingItem: Maybe<TrackPrice>;
-  message: Message;
-  notifications: NotificationConnection;
-  notification: Notification;
-  maticUsd: Scalars['String'];
-  getTransactionHistory: PolygonscanResult;
   getInternalTransactionHistory: PolygonscanResult;
+  getOriginalPostFromTrack: Post;
+  getProofBookByWallet: Maybe<ProofBookItem>;
+  getTransactionHistory: PolygonscanResult;
+  getUserByWallet: Maybe<User>;
+  getUserPlaylists: GetPlaylistPayload;
+  groupedTracks: TrackConnection;
+  haveBided: Bided;
+  listableOwnedTracks: TrackConnection;
+  listingItem: Maybe<ListingItem>;
+  listingItems: ListingItemConnection;
+  maticUsd: Scalars['String']['output'];
+  me: Maybe<User>;
+  message: Message;
+  mimeType: MimeType;
+  myProfile: Profile;
+  notification: Notification;
+  notifications: NotificationConnection;
+  ownedBuyNowListingItems: ListingItemConnection;
+  ownedTracks: TrackConnection;
+  pendingRequestsBadgeNumber: Scalars['Float']['output'];
   post: Post;
   posts: PostConnection;
-  reactions: ReactionConnection;
-  bandcampLink: Scalars['String'];
-  getOriginalPostFromTrack: Post;
-  myProfile: Profile;
   profile: Profile;
   profileByHandle: Profile;
-  followedArtists: FollowedArtistsConnection;
   profileVerificationRequest: ProfileVerificationRequest;
   profileVerificationRequests: ProfileVerificationRequestConnection;
-  pendingRequestsBadgeNumber: Scalars['Float'];
-  trackEdition: TrackEdition;
+  reactions: ReactionConnection;
   track: Track;
+  trackEdition: TrackEdition;
   tracks: TrackConnection;
-  ownedTracks: TrackConnection;
-  listableOwnedTracks: TrackConnection;
-  groupedTracks: TrackConnection;
-  favoriteTracks: TrackConnection;
-  listingItems: ListingItemConnection;
-  buyNowListingItems: ListingItemConnection;
-  ownedBuyNowListingItems: ListingItemConnection;
-  getUserPlaylists: GetPlaylistPayload;
   uploadUrl: UploadUrl;
-  mimeType: MimeType;
-  me: Maybe<User>;
-  getUserByWallet: Maybe<User>;
-  getProofBookByWallet: Maybe<ProofBookItem>;
   whitelistEntryByWallet: WhitelistEntry;
 };
 
 
 export type QueryAuctionItemArgs = {
-  tokenId: Scalars['Float'];
-};
-
-
-export type QueryCountBidsArgs = {
-  tokenId: Scalars['Float'];
-};
-
-
-export type QueryHaveBidedArgs = {
-  bidder: Scalars['String'];
-  auctionId: Scalars['String'];
+  tokenId: Scalars['Float']['input'];
 };
 
 
 export type QueryAudioHolderByWalletArgs = {
-  walletAdress: Scalars['String'];
+  walletAdress: Scalars['String']['input'];
+};
+
+
+export type QueryBandcampLinkArgs = {
+  url: Scalars['String']['input'];
 };
 
 
 export type QueryBidsWithInfoArgs = {
-  auctionId: Scalars['String'];
+  auctionId: Scalars['String']['input'];
 };
 
 
@@ -1376,178 +1398,136 @@ export type QueryBuyNowItemArgs = {
 };
 
 
-export type QueryChatsArgs = {
-  page?: Maybe<PageInput>;
+export type QueryBuyNowListingItemsArgs = {
+  filter?: InputMaybe<FilterBuyNowItemInput>;
+  page?: InputMaybe<PageInput>;
 };
 
 
 export type QueryChatHistoryArgs = {
-  page?: Maybe<PageInput>;
-  profileId: Scalars['String'];
+  page?: InputMaybe<PageInput>;
+  profileId: Scalars['String']['input'];
 };
 
 
-export type QueryCommentArgs = {
-  id: Scalars['String'];
-};
-
-
-export type QueryCommentsArgs = {
-  postId?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
-};
-
-
-export type QueryExploreArgs = {
-  search?: Maybe<Scalars['String']>;
-};
-
-
-export type QueryExploreTracksArgs = {
-  sort?: Maybe<SortExploreTracks>;
-  page?: Maybe<PageInput>;
-  search?: Maybe<Scalars['String']>;
-};
-
-
-export type QueryExploreUsersArgs = {
-  page?: Maybe<PageInput>;
-  search?: Maybe<Scalars['String']>;
-};
-
-
-export type QueryFeedArgs = {
-  page?: Maybe<PageInput>;
-};
-
-
-export type QueryFollowersArgs = {
-  page?: Maybe<PageInput>;
-  id: Scalars['String'];
-};
-
-
-export type QueryFollowingArgs = {
-  page?: Maybe<PageInput>;
-  id: Scalars['String'];
-};
-
-
-export type QueryListingItemArgs = {
-  input: FilterListingItemInput;
+export type QueryChatsArgs = {
+  page?: InputMaybe<PageInput>;
 };
 
 
 export type QueryCheapestListingItemArgs = {
-  trackEditionId: Scalars['String'];
+  trackEditionId: Scalars['String']['input'];
 };
 
 
-export type QueryMessageArgs = {
-  id: Scalars['String'];
+export type QueryCommentArgs = {
+  id: Scalars['String']['input'];
 };
 
 
-export type QueryNotificationsArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortNotificationInput>;
+export type QueryCommentsArgs = {
+  page?: InputMaybe<PageInput>;
+  postId?: InputMaybe<Scalars['String']['input']>;
 };
 
 
-export type QueryNotificationArgs = {
-  id: Scalars['String'];
+export type QueryCountBidsArgs = {
+  tokenId: Scalars['Float']['input'];
 };
 
 
-export type QueryGetTransactionHistoryArgs = {
-  page?: Maybe<PageInput>;
-  wallet: Scalars['String'];
+export type QueryExploreArgs = {
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
-export type QueryGetInternalTransactionHistoryArgs = {
-  page?: Maybe<PageInput>;
-  wallet: Scalars['String'];
+export type QueryExploreTracksArgs = {
+  page?: InputMaybe<PageInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<SortExploreTracks>;
 };
 
 
-export type QueryPostArgs = {
-  id: Scalars['String'];
+export type QueryExploreUsersArgs = {
+  page?: InputMaybe<PageInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
-export type QueryPostsArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortPostInput>;
-  filter?: Maybe<FilterPostInput>;
+export type QueryFavoriteTracksArgs = {
+  page?: InputMaybe<PageInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sort?: InputMaybe<SortTrackInput>;
 };
 
 
-export type QueryReactionsArgs = {
-  page?: Maybe<PageInput>;
-  postId: Scalars['String'];
-};
-
-
-export type QueryBandcampLinkArgs = {
-  url: Scalars['String'];
-};
-
-
-export type QueryGetOriginalPostFromTrackArgs = {
-  trackId: Scalars['String'];
-};
-
-
-export type QueryProfileArgs = {
-  id: Scalars['String'];
-};
-
-
-export type QueryProfileByHandleArgs = {
-  handle: Scalars['String'];
+export type QueryFeedArgs = {
+  page?: InputMaybe<PageInput>;
 };
 
 
 export type QueryFollowedArtistsArgs = {
-  page?: Maybe<PageInput>;
-  search?: Maybe<Scalars['String']>;
-  profileId: Scalars['String'];
+  page?: InputMaybe<PageInput>;
+  profileId: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
 };
 
 
-export type QueryProfileVerificationRequestArgs = {
-  id?: Maybe<Scalars['String']>;
-  profileId?: Maybe<Scalars['String']>;
+export type QueryFollowersArgs = {
+  id: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 };
 
 
-export type QueryProfileVerificationRequestsArgs = {
-  page?: Maybe<PageInput>;
-  status?: Maybe<Scalars['String']>;
+export type QueryFollowingArgs = {
+  id: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 };
 
 
-export type QueryTrackEditionArgs = {
-  id: Scalars['String'];
+export type QueryGetInternalTransactionHistoryArgs = {
+  page?: InputMaybe<PageInput>;
+  wallet: Scalars['String']['input'];
 };
 
 
-export type QueryTrackArgs = {
-  id: Scalars['String'];
+export type QueryGetOriginalPostFromTrackArgs = {
+  trackId: Scalars['String']['input'];
 };
 
 
-export type QueryTracksArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortTrackInput>;
-  filter?: Maybe<FilterTrackInput>;
+export type QueryGetProofBookByWalletArgs = {
+  walletAddress: Scalars['String']['input'];
 };
 
 
-export type QueryOwnedTracksArgs = {
-  page?: Maybe<PageInput>;
-  filter: FilterOwnedTracksInput;
+export type QueryGetTransactionHistoryArgs = {
+  page?: InputMaybe<PageInput>;
+  wallet: Scalars['String']['input'];
+};
+
+
+export type QueryGetUserByWalletArgs = {
+  walletAddress: Scalars['String']['input'];
+};
+
+
+export type QueryGetUserPlaylistsArgs = {
+  page?: InputMaybe<PageInput>;
+  sort?: InputMaybe<SortPlaylistInput>;
+};
+
+
+export type QueryGroupedTracksArgs = {
+  filter?: InputMaybe<FilterTrackInput>;
+  page?: InputMaybe<PageInput>;
+  sort?: InputMaybe<SortTrackInput>;
+};
+
+
+export type QueryHaveBidedArgs = {
+  auctionId: Scalars['String']['input'];
+  bidder: Scalars['String']['input'];
 };
 
 
@@ -1556,70 +1536,118 @@ export type QueryListableOwnedTracksArgs = {
 };
 
 
-export type QueryGroupedTracksArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortTrackInput>;
-  filter?: Maybe<FilterTrackInput>;
-};
-
-
-export type QueryFavoriteTracksArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortTrackInput>;
-  search?: Maybe<Scalars['String']>;
+export type QueryListingItemArgs = {
+  input: FilterListingItemInput;
 };
 
 
 export type QueryListingItemsArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortListingItemInput>;
-  filter?: Maybe<FilterTrackMarketplace>;
+  filter?: InputMaybe<FilterTrackMarketplace>;
+  page?: InputMaybe<PageInput>;
+  sort?: InputMaybe<SortListingItemInput>;
 };
 
 
-export type QueryBuyNowListingItemsArgs = {
-  page?: Maybe<PageInput>;
-  filter?: Maybe<FilterBuyNowItemInput>;
-};
-
-
-export type QueryOwnedBuyNowListingItemsArgs = {
-  filter?: Maybe<FilterOwnedBuyNowItemInput>;
-};
-
-
-export type QueryGetUserPlaylistsArgs = {
-  page?: Maybe<PageInput>;
-  sort?: Maybe<SortPlaylistInput>;
-};
-
-
-export type QueryUploadUrlArgs = {
-  fileType: Scalars['String'];
+export type QueryMessageArgs = {
+  id: Scalars['String']['input'];
 };
 
 
 export type QueryMimeTypeArgs = {
-  url: Scalars['String'];
+  url: Scalars['String']['input'];
 };
 
 
-export type QueryGetUserByWalletArgs = {
-  walletAddress: Scalars['String'];
+export type QueryNotificationArgs = {
+  id: Scalars['String']['input'];
 };
 
 
-export type QueryGetProofBookByWalletArgs = {
-  walletAddress: Scalars['String'];
+export type QueryNotificationsArgs = {
+  page?: InputMaybe<PageInput>;
+  sort?: InputMaybe<SortNotificationInput>;
+};
+
+
+export type QueryOwnedBuyNowListingItemsArgs = {
+  filter?: InputMaybe<FilterOwnedBuyNowItemInput>;
+};
+
+
+export type QueryOwnedTracksArgs = {
+  filter: FilterOwnedTracksInput;
+  page?: InputMaybe<PageInput>;
+};
+
+
+export type QueryPostArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryPostsArgs = {
+  filter?: InputMaybe<FilterPostInput>;
+  page?: InputMaybe<PageInput>;
+  sort?: InputMaybe<SortPostInput>;
+};
+
+
+export type QueryProfileArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryProfileByHandleArgs = {
+  handle: Scalars['String']['input'];
+};
+
+
+export type QueryProfileVerificationRequestArgs = {
+  id?: InputMaybe<Scalars['String']['input']>;
+  profileId?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryProfileVerificationRequestsArgs = {
+  page?: InputMaybe<PageInput>;
+  status?: InputMaybe<ProfileVerificationStatusType>;
+};
+
+
+export type QueryReactionsArgs = {
+  page?: InputMaybe<PageInput>;
+  postId: Scalars['String']['input'];
+};
+
+
+export type QueryTrackArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryTrackEditionArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryTracksArgs = {
+  filter?: InputMaybe<FilterTrackInput>;
+  page?: InputMaybe<PageInput>;
+  sort?: InputMaybe<SortTrackInput>;
+};
+
+
+export type QueryUploadUrlArgs = {
+  fileType: Scalars['String']['input'];
 };
 
 
 export type QueryWhitelistEntryByWalletArgs = {
-  walletAdress: Scalars['String'];
+  walletAdress: Scalars['String']['input'];
 };
 
 export type ReactToPostInput = {
-  postId: Scalars['String'];
+  postId: Scalars['String']['input'];
   type: ReactionType;
 };
 
@@ -1630,32 +1658,32 @@ export type ReactToPostPayload = {
 
 export type Reaction = {
   __typename?: 'Reaction';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  postId: Scalars['String'];
-  type: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  postId: Scalars['ID']['output'];
   profile: Profile;
+  profileId: Scalars['ID']['output'];
+  type: ReactionType;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type ReactionConnection = {
   __typename?: 'ReactionConnection';
-  pageInfo: PageInfo;
   nodes: Array<Reaction>;
+  pageInfo: PageInfo;
 };
 
 export type ReactionNotification = {
   __typename?: 'ReactionNotification';
-  type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  authorName: Scalars['String'];
-  authorPicture: Maybe<Scalars['String']>;
-  postId: Scalars['String'];
+  authorName: Scalars['String']['output'];
+  authorPicture: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  link: Scalars['String']['output'];
+  postId: Scalars['String']['output'];
   reactionType: ReactionType;
-  link: Scalars['String'];
+  type: NotificationType;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export enum ReactionType {
@@ -1667,13 +1695,13 @@ export enum ReactionType {
 }
 
 export type RegisterInput = {
-  token: Scalars['String'];
-  displayName: Scalars['String'];
-  handle: Scalars['String'];
+  displayName: Scalars['String']['input'];
+  handle: Scalars['String']['input'];
+  token: Scalars['String']['input'];
 };
 
 export type RetractReactionInput = {
-  postId: Scalars['String'];
+  postId: Scalars['String']['input'];
 };
 
 export type RetractReactionPayload = {
@@ -1682,11 +1710,11 @@ export type RetractReactionPayload = {
 };
 
 export enum Role {
-  System = 'SYSTEM',
   Admin = 'ADMIN',
-  User = 'USER',
+  SoundchainAccount = 'SOUNDCHAIN_ACCOUNT',
+  System = 'SYSTEM',
   TeamMember = 'TEAM_MEMBER',
-  SoundchainAccount = 'SOUNDCHAIN_ACCOUNT'
+  User = 'USER'
 }
 
 export enum SaleType {
@@ -1695,13 +1723,13 @@ export enum SaleType {
 }
 
 export enum SellType {
-  BuyNow = 'BuyNow',
-  Auction = 'Auction'
+  Auction = 'Auction',
+  BuyNow = 'BuyNow'
 }
 
 export type SendMessageInput = {
-  message: Scalars['String'];
-  toId: Scalars['String'];
+  message: Scalars['String']['input'];
+  toId: Scalars['String']['input'];
 };
 
 export type SendMessagePayload = {
@@ -1711,32 +1739,32 @@ export type SendMessagePayload = {
 
 export type SocialMedias = {
   __typename?: 'SocialMedias';
-  facebook: Maybe<Scalars['String']>;
-  instagram: Maybe<Scalars['String']>;
-  soundcloud: Maybe<Scalars['String']>;
-  twitter: Maybe<Scalars['String']>;
-  linktree: Maybe<Scalars['String']>;
-  discord: Maybe<Scalars['String']>;
-  telegram: Maybe<Scalars['String']>;
-  spotify: Maybe<Scalars['String']>;
-  bandcamp: Maybe<Scalars['String']>;
+  bandcamp: Maybe<Scalars['String']['output']>;
+  discord: Maybe<Scalars['String']['output']>;
+  facebook: Maybe<Scalars['String']['output']>;
+  instagram: Maybe<Scalars['String']['output']>;
+  linktree: Maybe<Scalars['String']['output']>;
+  soundcloud: Maybe<Scalars['String']['output']>;
+  spotify: Maybe<Scalars['String']['output']>;
+  telegram: Maybe<Scalars['String']['output']>;
+  twitter: Maybe<Scalars['String']['output']>;
 };
 
 export type SocialMediasInput = {
-  facebook?: Maybe<Scalars['String']>;
-  instagram?: Maybe<Scalars['String']>;
-  soundcloud?: Maybe<Scalars['String']>;
-  twitter?: Maybe<Scalars['String']>;
-  linktree?: Maybe<Scalars['String']>;
-  discord?: Maybe<Scalars['String']>;
-  telegram?: Maybe<Scalars['String']>;
-  spotify?: Maybe<Scalars['String']>;
-  bandcamp?: Maybe<Scalars['String']>;
+  bandcamp?: InputMaybe<Scalars['String']['input']>;
+  discord?: InputMaybe<Scalars['String']['input']>;
+  facebook?: InputMaybe<Scalars['String']['input']>;
+  instagram?: InputMaybe<Scalars['String']['input']>;
+  linktree?: InputMaybe<Scalars['String']['input']>;
+  soundcloud?: InputMaybe<Scalars['String']['input']>;
+  spotify?: InputMaybe<Scalars['String']['input']>;
+  telegram?: InputMaybe<Scalars['String']['input']>;
+  twitter?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SortExploreTracks = {
   field: SortExploreTracksField;
-  order?: Maybe<SortOrder>;
+  order?: InputMaybe<SortOrder>;
 };
 
 export enum SortExploreTracksField {
@@ -1745,14 +1773,14 @@ export enum SortExploreTracksField {
 }
 
 export enum SortListingItemField {
-  PlaybackCount = 'PLAYBACK_COUNT',
   CreatedAt = 'CREATED_AT',
+  PlaybackCount = 'PLAYBACK_COUNT',
   Price = 'PRICE'
 }
 
 export type SortListingItemInput = {
   field: SortListingItemField;
-  order?: Maybe<SortOrder>;
+  order?: InputMaybe<SortOrder>;
 };
 
 export enum SortNotificationField {
@@ -1761,7 +1789,7 @@ export enum SortNotificationField {
 
 export type SortNotificationInput = {
   field: SortNotificationField;
-  order?: Maybe<SortOrder>;
+  order?: InputMaybe<SortOrder>;
 };
 
 export enum SortOrder {
@@ -1775,7 +1803,7 @@ export enum SortPlaylistField {
 
 export type SortPlaylistInput = {
   field: SortPlaylistField;
-  order?: Maybe<SortOrder>;
+  order?: InputMaybe<SortOrder>;
 };
 
 export enum SortPostField {
@@ -1784,21 +1812,21 @@ export enum SortPostField {
 
 export type SortPostInput = {
   field: SortPostField;
-  order?: Maybe<SortOrder>;
+  order?: InputMaybe<SortOrder>;
 };
 
 export enum SortTrackField {
-  PlaybackCount = 'PLAYBACK_COUNT',
-  CreatedAt = 'CREATED_AT'
+  CreatedAt = 'CREATED_AT',
+  PlaybackCount = 'PLAYBACK_COUNT'
 }
 
 export type SortTrackInput = {
   field: SortTrackField;
-  order?: Maybe<SortOrder>;
+  order?: InputMaybe<SortOrder>;
 };
 
 export type SubscribeToProfileInput = {
-  profileId: Scalars['String'];
+  profileId: Scalars['String']['input'];
 };
 
 export type SubscribeToProfilePayload = {
@@ -1813,103 +1841,103 @@ export type ToggleFavoritePayload = {
 
 export type Track = {
   __typename?: 'Track';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  title: Maybe<Scalars['String']>;
-  description: Maybe<Scalars['String']>;
-  utilityInfo: Maybe<Scalars['String']>;
-  assetUrl: Scalars['String'];
-  artworkUrl: Maybe<Scalars['String']>;
-  artist: Maybe<Scalars['String']>;
-  artistId: Maybe<Scalars['String']>;
-  artistProfileId: Maybe<Scalars['String']>;
-  album: Maybe<Scalars['String']>;
-  copyright: Maybe<Scalars['String']>;
-  releaseYear: Maybe<Scalars['Float']>;
+  ISRC: Maybe<Scalars['String']['output']>;
+  album: Maybe<Scalars['String']['output']>;
+  artist: Maybe<Scalars['String']['output']>;
+  artistId: Maybe<Scalars['String']['output']>;
+  artistProfileId: Maybe<Scalars['String']['output']>;
+  artworkUrl: Maybe<Scalars['String']['output']>;
+  assetUrl: Scalars['String']['output'];
+  copyright: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  deleted: Maybe<Scalars['Boolean']['output']>;
+  description: Maybe<Scalars['String']['output']>;
+  editionSize: Scalars['Float']['output'];
+  favoriteCount: Scalars['Float']['output'];
   genres: Maybe<Array<Genre>>;
-  nftData: Maybe<NftDataType>;
-  ISRC: Maybe<Scalars['String']>;
-  playbackCountFormatted: Scalars['String'];
-  trackEditionId: Maybe<Scalars['String']>;
-  trackEdition: Maybe<TrackEdition>;
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  playbackUrl: Scalars['String'];
-  playbackCount: Scalars['Float'];
-  favoriteCount: Scalars['Float'];
-  listingCount: Scalars['Float'];
-  price: TrackPrice;
-  saleType: Scalars['String'];
-  isFavorite: Scalars['Boolean'];
-  editionSize: Scalars['Float'];
+  id: Scalars['ID']['output'];
+  isFavorite: Scalars['Boolean']['output'];
+  listingCount: Scalars['Float']['output'];
   listingItem: Maybe<ListingItem>;
+  nftData: Maybe<NftDataType>;
+  playbackCount: Scalars['Float']['output'];
+  playbackCountFormatted: Scalars['String']['output'];
+  playbackUrl: Scalars['String']['output'];
+  price: TrackPrice;
+  profileId: Scalars['ID']['output'];
+  releaseYear: Maybe<Scalars['Float']['output']>;
+  saleType: Scalars['String']['output'];
+  title: Maybe<Scalars['String']['output']>;
+  trackEdition: Maybe<TrackEdition>;
+  trackEditionId: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  utilityInfo: Maybe<Scalars['String']['output']>;
 };
 
 export type TrackConnection = {
   __typename?: 'TrackConnection';
-  pageInfo: PageInfo;
   nodes: Array<Track>;
+  pageInfo: PageInfo;
 };
 
 export type TrackEdition = {
   __typename?: 'TrackEdition';
-  id: Scalars['ID'];
-  transactionHash: Scalars['String'];
-  editionId: Scalars['Float'];
-  listed: Scalars['Boolean'];
-  contract: Maybe<Scalars['String']>;
-  marketplace: Maybe<Scalars['String']>;
+  contract: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  deleted: Maybe<Scalars['Boolean']['output']>;
   editionData: Maybe<EditionDataType>;
-  editionSize: Scalars['Float'];
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+  editionId: Scalars['Float']['output'];
+  editionSize: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  listed: Scalars['Boolean']['output'];
+  marketplace: Maybe<Scalars['String']['output']>;
+  transactionHash: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type TrackPrice = {
   __typename?: 'TrackPrice';
-  value: Scalars['Float'];
   currency: CurrencyType;
+  value: Scalars['Float']['output'];
 };
 
 export type TrackWithListingItem = {
   __typename?: 'TrackWithListingItem';
-  id: Scalars['ID'];
-  profileId: Scalars['String'];
-  title: Maybe<Scalars['String']>;
-  description: Maybe<Scalars['String']>;
-  utilityInfo: Maybe<Scalars['String']>;
-  assetUrl: Scalars['String'];
-  artworkUrl: Maybe<Scalars['String']>;
-  artist: Maybe<Scalars['String']>;
-  artistId: Maybe<Scalars['String']>;
-  artistProfileId: Maybe<Scalars['String']>;
-  album: Maybe<Scalars['String']>;
-  copyright: Maybe<Scalars['String']>;
-  releaseYear: Maybe<Scalars['Float']>;
+  ISRC: Maybe<Scalars['String']['output']>;
+  album: Maybe<Scalars['String']['output']>;
+  artist: Maybe<Scalars['String']['output']>;
+  artistId: Maybe<Scalars['String']['output']>;
+  artistProfileId: Maybe<Scalars['String']['output']>;
+  artworkUrl: Maybe<Scalars['String']['output']>;
+  assetUrl: Scalars['String']['output'];
+  copyright: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  deleted: Maybe<Scalars['Boolean']['output']>;
+  description: Maybe<Scalars['String']['output']>;
+  editionSize: Scalars['Float']['output'];
+  favoriteCount: Scalars['Float']['output'];
   genres: Maybe<Array<Genre>>;
-  nftData: Maybe<NftDataType>;
-  ISRC: Maybe<Scalars['String']>;
-  playbackCountFormatted: Scalars['String'];
-  trackEditionId: Maybe<Scalars['String']>;
-  trackEdition: Maybe<TrackEdition>;
-  deleted: Maybe<Scalars['Boolean']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  playbackUrl: Scalars['String'];
-  playbackCount: Scalars['Float'];
-  favoriteCount: Scalars['Float'];
-  listingCount: Scalars['Float'];
-  price: TrackPrice;
-  saleType: Scalars['String'];
-  isFavorite: Scalars['Boolean'];
-  editionSize: Scalars['Float'];
+  id: Scalars['ID']['output'];
+  isFavorite: Scalars['Boolean']['output'];
+  listingCount: Scalars['Float']['output'];
   listingItem: Maybe<ListingItemWithPrice>;
+  nftData: Maybe<NftDataType>;
+  playbackCount: Scalars['Float']['output'];
+  playbackCountFormatted: Scalars['String']['output'];
+  playbackUrl: Scalars['String']['output'];
+  price: TrackPrice;
+  profileId: Scalars['ID']['output'];
+  releaseYear: Maybe<Scalars['Float']['output']>;
+  saleType: Scalars['String']['output'];
+  title: Maybe<Scalars['String']['output']>;
+  trackEdition: Maybe<TrackEdition>;
+  trackEditionId: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  utilityInfo: Maybe<Scalars['String']['output']>;
 };
 
 export type UnfollowProfileInput = {
-  followedId: Scalars['String'];
+  followedId: Scalars['String']['input'];
 };
 
 export type UnfollowProfilePayload = {
@@ -1918,7 +1946,7 @@ export type UnfollowProfilePayload = {
 };
 
 export type UnsubscribeFromProfileInput = {
-  profileId: Scalars['String'];
+  profileId: Scalars['String']['input'];
 };
 
 export type UnsubscribeFromProfilePayload = {
@@ -1927,8 +1955,8 @@ export type UnsubscribeFromProfilePayload = {
 };
 
 export type UpdateCommentInput = {
-  commentId: Scalars['String'];
-  body: Scalars['String'];
+  body: Scalars['String']['input'];
+  commentId: Scalars['String']['input'];
 };
 
 export type UpdateCommentPayload = {
@@ -1937,7 +1965,7 @@ export type UpdateCommentPayload = {
 };
 
 export type UpdateDefaultWalletInput = {
-  defaultWallet: Scalars['String'];
+  defaultWallet: DefaultWallet;
 };
 
 export type UpdateDefaultWalletPayload = {
@@ -1946,10 +1974,10 @@ export type UpdateDefaultWalletPayload = {
 };
 
 export type UpdateEditionOwnedTracksInput = {
-  trackIds: Array<Scalars['String']>;
-  trackEditionId: Scalars['String'];
-  owner: Scalars['String'];
-  nftData?: Maybe<NftDataInput>;
+  nftData?: InputMaybe<NftDataInput>;
+  owner: Scalars['String']['input'];
+  trackEditionId: Scalars['String']['input'];
+  trackIds: Array<Scalars['String']['input']>;
 };
 
 export type UpdateEditionOwnedTracksPayload = {
@@ -1958,7 +1986,7 @@ export type UpdateEditionOwnedTracksPayload = {
 };
 
 export type UpdateHandleInput = {
-  handle: Scalars['String'];
+  handle: Scalars['String']['input'];
 };
 
 export type UpdateHandlePayload = {
@@ -1967,8 +1995,8 @@ export type UpdateHandlePayload = {
 };
 
 export type UpdateOtpInput = {
-  otpSecret: Scalars['String'];
-  otpRecoveryPhrase: Scalars['String'];
+  otpRecoveryPhrase: Scalars['String']['input'];
+  otpSecret: Scalars['String']['input'];
 };
 
 export type UpdateOtpPayload = {
@@ -1982,14 +2010,14 @@ export type UpdateOgunClaimedAudioHolderPayload = {
 };
 
 export type UpdateOgunClaimedInput = {
-  id: Scalars['String'];
-  ogunClaimed: Scalars['Boolean'];
+  id: Scalars['String']['input'];
+  ogunClaimed: Scalars['Boolean']['input'];
 };
 
 export type UpdatePostInput = {
-  postId: Scalars['String'];
-  body: Scalars['String'];
-  mediaLink?: Maybe<Scalars['String']>;
+  body: Scalars['String']['input'];
+  mediaLink?: InputMaybe<Scalars['String']['input']>;
+  postId: Scalars['String']['input'];
 };
 
 export type UpdatePostPayload = {
@@ -1998,13 +2026,13 @@ export type UpdatePostPayload = {
 };
 
 export type UpdateProfileInput = {
-  displayName?: Maybe<Scalars['String']>;
-  bio?: Maybe<Scalars['String']>;
-  profilePicture?: Maybe<Scalars['String']>;
-  coverPicture?: Maybe<Scalars['String']>;
-  favoriteGenres?: Maybe<Array<Genre>>;
-  musicianTypes?: Maybe<Array<MusicianType>>;
-  socialMedias?: Maybe<SocialMediasInput>;
+  bio?: InputMaybe<Scalars['String']['input']>;
+  coverPicture?: InputMaybe<Scalars['String']['input']>;
+  displayName?: InputMaybe<Scalars['String']['input']>;
+  favoriteGenres?: InputMaybe<Array<Genre>>;
+  musicianTypes?: InputMaybe<Array<MusicianType>>;
+  profilePicture?: InputMaybe<Scalars['String']['input']>;
+  socialMedias?: InputMaybe<SocialMediasInput>;
 };
 
 export type UpdateProfilePayload = {
@@ -2013,10 +2041,10 @@ export type UpdateProfilePayload = {
 };
 
 export type UpdateTrackInput = {
-  trackId: Scalars['String'];
-  profileId?: Maybe<Scalars['String']>;
-  nftData?: Maybe<NftDataInput>;
-  playbackCount?: Maybe<Scalars['Float']>;
+  nftData?: InputMaybe<NftDataInput>;
+  playbackCount?: InputMaybe<Scalars['Float']['input']>;
+  profileId?: InputMaybe<Scalars['String']['input']>;
+  trackId: Scalars['String']['input'];
 };
 
 export type UpdateTrackPayload = {
@@ -2025,7 +2053,7 @@ export type UpdateTrackPayload = {
 };
 
 export type UpdateWalletInput = {
-  wallet: Scalars['String'];
+  wallet: Scalars['String']['input'];
 };
 
 export type UpdateWhitelistEntryPayload = {
@@ -2035,62 +2063,63 @@ export type UpdateWhitelistEntryPayload = {
 
 export type UploadUrl = {
   __typename?: 'UploadUrl';
-  uploadUrl: Scalars['String'];
-  fileName: Scalars['String'];
-  readUrl: Scalars['String'];
+  fileName: Scalars['String']['output'];
+  readUrl: Scalars['String']['output'];
+  uploadUrl: Scalars['String']['output'];
 };
 
 export type User = {
   __typename?: 'User';
-  id: Scalars['ID'];
-  email: Scalars['String'];
-  handle: Scalars['String'];
-  magicWalletAddress: Maybe<Scalars['String']>;
-  metaMaskWalletAddressees: Maybe<Array<Scalars['String']>>;
-  defaultWallet: DefaultWallet;
   authMethod: AuthMethod;
-  isApprovedOnMarketplace: Scalars['Boolean'];
-  roles: Array<Role>;
-  otpSecret: Maybe<Scalars['String']>;
-  otpRecoveryPhrase: Maybe<Scalars['String']>;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
+  createdAt: Scalars['DateTime']['output'];
+  defaultWallet: DefaultWallet;
+  email: Scalars['String']['output'];
+  handle: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  isApprovedOnMarketplace: Scalars['Boolean']['output'];
+  magicWalletAddress: Maybe<Scalars['String']['output']>;
+  metaMaskWalletAddressees: Maybe<Array<Scalars['String']['output']>>;
   profile: Profile;
+  profileId: Scalars['ID']['output'];
+  roles: Array<Role>;
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type ValidateOtpRecoveryPhraseInput = {
-  otpRecoveryPhrase: Scalars['String'];
+  otpRecoveryPhrase: Scalars['String']['input'];
 };
 
 export type VerificationRequestNotification = {
   __typename?: 'VerificationRequestNotification';
+  body: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  body: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type WhitelistEntry = {
   __typename?: 'WhitelistEntry';
-  id: Scalars['ID'];
-  walletAddress: Scalars['String'];
-  emailAddress: Scalars['String'];
-  ogunClaimed: Maybe<Scalars['Boolean']>;
+  createdAt: Scalars['DateTime']['output'];
+  emailAddress: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  ogunClaimed: Maybe<Scalars['Boolean']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  walletAddress: Scalars['String']['output'];
 };
 
 export type WonAuctionNotification = {
   __typename?: 'WonAuctionNotification';
+  artist: Scalars['String']['output'];
+  artworkUrl: Scalars['String']['output'];
+  auctionId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  price: Scalars['Float']['output'];
+  trackId: Scalars['String']['output'];
+  trackName: Scalars['String']['output'];
   type: NotificationType;
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-  id: Scalars['String'];
-  trackId: Scalars['String'];
-  trackName: Scalars['String'];
-  artist: Scalars['String'];
-  artworkUrl: Scalars['String'];
-  price: Scalars['Float'];
-  auctionId: Scalars['String'];
+  updatedAt: Scalars['DateTime']['output'];
 };
 
 export type AddCommentMutationVariables = Exact<{
@@ -2098,1929 +2127,784 @@ export type AddCommentMutationVariables = Exact<{
 }>;
 
 
-export type AddCommentMutation = (
-  { __typename?: 'Mutation' }
-  & { addComment: (
-    { __typename?: 'AddCommentPayload' }
-    & { comment: (
-      { __typename?: 'Comment' }
-      & { post: (
-        { __typename?: 'Post' }
-        & Pick<Post, 'id' | 'commentCount'>
-      ) }
-      & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
+export type AddCommentMutation = { __typename?: 'Mutation', addComment: { __typename?: 'AddCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, post: { __typename?: 'Post', id: string, commentCount: number }, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } } } };
 
-export type AuctionEndedNotificationFieldsFragment = (
-  { __typename?: 'AuctionEndedNotification' }
-  & Pick<AuctionEndedNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type AuctionEndedNotificationFieldsFragment = { __typename?: 'AuctionEndedNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number };
 
-export type AuctionIsEndingNotificationFieldsFragment = (
-  { __typename?: 'AuctionIsEndingNotification' }
-  & Pick<AuctionIsEndingNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type AuctionIsEndingNotificationFieldsFragment = { __typename?: 'AuctionIsEndingNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number };
 
 export type AuctionItemQueryVariables = Exact<{
-  tokenId: Scalars['Float'];
+  tokenId: Scalars['Float']['input'];
 }>;
 
 
-export type AuctionItemQuery = (
-  { __typename?: 'Query' }
-  & { auctionItem: (
-    { __typename?: 'AuctionItemPayload' }
-    & { auctionItem: Maybe<(
-      { __typename?: 'AuctionItem' }
-      & Pick<AuctionItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow'>
-    )> }
-  ) }
-);
+export type AuctionItemQuery = { __typename?: 'Query', auctionItem: { __typename?: 'AuctionItemPayload', auctionItem: { __typename?: 'AuctionItem', id: string, owner: string, nft: string, tokenId: number, contract: string | null, startingTime: number, endingTime: number, reservePrice: string, reservePriceToShow: number } | null } };
 
 export type AudioHolderByWalletQueryVariables = Exact<{
-  walletAdress: Scalars['String'];
+  walletAdress: Scalars['String']['input'];
 }>;
 
 
-export type AudioHolderByWalletQuery = (
-  { __typename?: 'Query' }
-  & { audioHolderByWallet: (
-    { __typename?: 'AudioHolder' }
-    & Pick<AudioHolder, 'id' | 'amount' | 'ogunClaimed'>
-  ) }
-);
+export type AudioHolderByWalletQuery = { __typename?: 'Query', audioHolderByWallet: { __typename?: 'AudioHolder', id: string, amount: number, ogunClaimed: boolean | null } };
 
 export type BandcampLinkQueryVariables = Exact<{
-  url: Scalars['String'];
+  url: Scalars['String']['input'];
 }>;
 
 
-export type BandcampLinkQuery = (
-  { __typename?: 'Query' }
-  & Pick<Query, 'bandcampLink'>
-);
+export type BandcampLinkQuery = { __typename?: 'Query', bandcampLink: string };
 
 export type BidsWithInfoQueryVariables = Exact<{
-  auctionId: Scalars['String'];
+  auctionId: Scalars['String']['input'];
 }>;
 
 
-export type BidsWithInfoQuery = (
-  { __typename?: 'Query' }
-  & { bidsWithInfo: (
-    { __typename?: 'BidsWithInfoPayload' }
-    & { bids: Maybe<Array<(
-      { __typename?: 'BidsWithInfo' }
-      & Pick<BidsWithInfo, 'amount' | 'amountToShow' | 'userId' | 'profileId' | 'createdAt'>
-      & { profile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'profilePicture' | 'displayName' | 'userHandle' | 'verified' | 'teamMember' | 'badges'>
-      ) }
-    )>> }
-  ) }
-);
+export type BidsWithInfoQuery = { __typename?: 'Query', bidsWithInfo: { __typename?: 'BidsWithInfoPayload', bids: Array<{ __typename?: 'BidsWithInfo', amount: string, amountToShow: number, userId: string, profileId: string, createdAt: string, profile: { __typename?: 'Profile', profilePicture: string | null, displayName: string, userHandle: string, verified: boolean | null, teamMember: boolean, badges: Array<Badge> | null } }> | null } };
 
 export type BuyNowItemQueryVariables = Exact<{
   input: FilterListingItemInput;
 }>;
 
 
-export type BuyNowItemQuery = (
-  { __typename?: 'Query' }
-  & { buyNowItem: (
-    { __typename?: 'BuyNowPayload' }
-    & { buyNowItem: Maybe<(
-      { __typename?: 'BuyNowItem' }
-      & Pick<BuyNowItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'selectedCurrency' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'acceptsMATIC' | 'acceptsOGUN' | 'startingTime'>
-    )> }
-  ) }
-);
+export type BuyNowItemQuery = { __typename?: 'Query', buyNowItem: { __typename?: 'BuyNowPayload', buyNowItem: { __typename?: 'BuyNowItem', id: string, owner: string, nft: string, tokenId: number, contract: string | null, pricePerItem: string, selectedCurrency: string | null, pricePerItemToShow: number, OGUNPricePerItem: string, OGUNPricePerItemToShow: number, acceptsMATIC: boolean, acceptsOGUN: boolean, startingTime: number } | null } };
 
 export type BuyNowListingItemsQueryVariables = Exact<{
-  filter?: Maybe<FilterBuyNowItemInput>;
-  page?: Maybe<PageInput>;
+  filter?: InputMaybe<FilterBuyNowItemInput>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type BuyNowListingItemsQuery = (
-  { __typename?: 'Query' }
-  & { buyNowListingItems: (
-    { __typename?: 'ListingItemConnection' }
-    & { nodes: Array<(
-      { __typename?: 'TrackWithListingItem' }
-      & ListingItemComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type BuyNowListingItemsQuery = { __typename?: 'Query', buyNowListingItems: { __typename?: 'ListingItemConnection', nodes: Array<{ __typename?: 'TrackWithListingItem', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, playbackCount: number, listingCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null, listingItem: { __typename?: 'ListingItemWithPrice', id: string, owner: string | null, nft: string | null, tokenId: number | null, contract: string, pricePerItem: string | null, pricePerItemToShow: number | null, OGUNPricePerItem: string | null, OGUNPricePerItemToShow: number | null, isPaymentOGUN: boolean | null, startingTime: number | null, endingTime: number | null, reservePrice: string | null, reservePriceToShow: number | null, createdAt: string, updatedAt: string, priceToShow: number | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type ChangeReactionMutationVariables = Exact<{
   input: ChangeReactionInput;
 }>;
 
 
-export type ChangeReactionMutation = (
-  { __typename?: 'Mutation' }
-  & { changeReaction: (
-    { __typename?: 'ChangeReactionPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
-    ) }
-  ) }
-);
+export type ChangeReactionMutation = { __typename?: 'Mutation', changeReaction: { __typename?: 'ChangeReactionPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null } } };
 
 export type ChatHistoryQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  page?: Maybe<PageInput>;
+  profileId: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type ChatHistoryQuery = (
-  { __typename?: 'Query' }
-  & { chatHistory: (
-    { __typename?: 'MessageConnection' }
-    & { pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'startCursor'>
-    ), nodes: Array<(
-      { __typename?: 'Message' }
-      & MessageComponentFieldsFragment
-    )> }
-  ) }
-);
+export type ChatHistoryQuery = { __typename?: 'Query', chatHistory: { __typename?: 'MessageConnection', pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, startCursor: string | null }, nodes: Array<{ __typename?: 'Message', id: string, message: string, fromId: string, toId: string, createdAt: string, fromProfile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, userHandle: string, badges: Array<Badge> | null } }> } };
 
 export type ChatsQueryVariables = Exact<{
-  page?: Maybe<PageInput>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type ChatsQuery = (
-  { __typename?: 'Query' }
-  & { chats: (
-    { __typename?: 'ChatConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Chat' }
-      & Pick<Chat, 'id' | 'message' | 'unread' | 'createdAt'>
-      & { profile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'>
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type ChatsQuery = { __typename?: 'Query', chats: { __typename?: 'ChatConnection', nodes: Array<{ __typename?: 'Chat', id: string, message: string, unread: boolean, createdAt: string, profile: { __typename?: 'Profile', displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type CheapestListingItemQueryVariables = Exact<{
-  trackEditionId: Scalars['String'];
+  trackEditionId: Scalars['String']['input'];
 }>;
 
 
-export type CheapestListingItemQuery = (
-  { __typename?: 'Query' }
-  & { cheapestListingItem: Maybe<(
-    { __typename?: 'TrackPrice' }
-    & Pick<TrackPrice, 'currency' | 'value'>
-  )> }
-);
+export type CheapestListingItemQuery = { __typename?: 'Query', cheapestListingItem: { __typename?: 'TrackPrice', currency: CurrencyType, value: number } | null };
 
 export type ClaimBadgeProfileMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ClaimBadgeProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { claimBadgeProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    ) }
-  ) }
-);
+export type ClaimBadgeProfileMutation = { __typename?: 'Mutation', claimBadgeProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } } };
 
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ClearNotificationsMutation = (
-  { __typename?: 'Mutation' }
-  & { clearNotifications: (
-    { __typename?: 'ClearNotificationsPayload' }
-    & Pick<ClearNotificationsPayload, 'ok'>
-  ) }
-);
+export type ClearNotificationsMutation = { __typename?: 'Mutation', clearNotifications: { __typename?: 'ClearNotificationsPayload', ok: boolean } };
 
 export type CommentQueryVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type CommentQuery = (
-  { __typename?: 'Query' }
-  & { comment: (
-    { __typename?: 'Comment' }
-    & CommentComponentFieldsFragment
-  ) }
-);
+export type CommentQuery = { __typename?: 'Query', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } } };
 
-export type CommentComponentFieldsFragment = (
-  { __typename?: 'Comment' }
-  & Pick<Comment, 'id' | 'body' | 'createdAt' | 'deleted'>
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'>
-  ) }
-);
+export type CommentComponentFieldsFragment = { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } };
 
-export type CommentNotificationFieldsFragment = (
-  { __typename?: 'CommentNotification' }
-  & Pick<CommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
-);
+export type CommentNotificationFieldsFragment = { __typename?: 'CommentNotification', id: string, type: NotificationType, body: string, previewBody: string, link: string, createdAt: string, authorName: string, authorPicture: string | null };
 
 export type CommentsQueryVariables = Exact<{
-  postId: Scalars['String'];
-  page?: Maybe<PageInput>;
+  postId: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type CommentsQuery = (
-  { __typename?: 'Query' }
-  & { comments: (
-    { __typename?: 'CommentConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Comment' }
-      & CommentComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasPreviousPage' | 'hasNextPage' | 'startCursor' | 'endCursor'>
-    ) }
-  ) }
-);
+export type CommentsQuery = { __typename?: 'Query', comments: { __typename?: 'CommentConnection', nodes: Array<{ __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } }>, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null } } };
 
 export type CountBidsQueryVariables = Exact<{
-  tokenId: Scalars['Float'];
+  tokenId: Scalars['Float']['input'];
 }>;
 
 
-export type CountBidsQuery = (
-  { __typename?: 'Query' }
-  & { countBids: (
-    { __typename?: 'CountBidsPayload' }
-    & Pick<CountBidsPayload, 'numberOfBids'>
-  ) }
-);
+export type CountBidsQuery = { __typename?: 'Query', countBids: { __typename?: 'CountBidsPayload', numberOfBids: number | null } };
 
 export type CreateMultipleTracksMutationVariables = Exact<{
   input: CreateMultipleTracksInput;
 }>;
 
 
-export type CreateMultipleTracksMutation = (
-  { __typename?: 'Mutation' }
-  & { createMultipleTracks: (
-    { __typename?: 'CreateMultipleTracksPayload' }
-    & Pick<CreateMultipleTracksPayload, 'trackIds'>
-    & { firstTrack: (
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    ) }
-  ) }
-);
+export type CreateMultipleTracksMutation = { __typename?: 'Mutation', createMultipleTracks: { __typename?: 'CreateMultipleTracksPayload', trackIds: Array<string>, firstTrack: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } } };
 
 export type CreatePostMutationVariables = Exact<{
   input: CreatePostInput;
 }>;
 
 
-export type CreatePostMutation = (
-  { __typename?: 'Mutation' }
-  & { createPost: (
-    { __typename?: 'CreatePostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id'>
-    ) }
-  ) }
-);
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string } } };
 
 export type CreateProfileVerificationRequestMutationVariables = Exact<{
   input: CreateProfileVerificationRequestInput;
 }>;
 
 
-export type CreateProfileVerificationRequestMutation = (
-  { __typename?: 'Mutation' }
-  & { createProfileVerificationRequest: (
-    { __typename?: 'ProfileVerificationRequestPayload' }
-    & { profileVerificationRequest: (
-      { __typename?: 'ProfileVerificationRequest' }
-      & ProfileVerificationRequestComponentFieldsFragment
-    ) }
-  ) }
-);
+export type CreateProfileVerificationRequestMutation = { __typename?: 'Mutation', createProfileVerificationRequest: { __typename?: 'ProfileVerificationRequestPayload', profileVerificationRequest: { __typename?: 'ProfileVerificationRequest', id: string, profileId: string, soundcloud: string | null, youtube: string | null, bandcamp: string | null, status: ProfileVerificationStatusType | null, reason: string | null, reviewerProfileId: string | null, createdAt: string, updatedAt: string } } };
 
 export type CreateRepostMutationVariables = Exact<{
   input: CreateRepostInput;
 }>;
 
 
-export type CreateRepostMutation = (
-  { __typename?: 'Mutation' }
-  & { createRepost: (
-    { __typename?: 'CreateRepostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id'>
-    ), originalPost: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'repostCount'>
-    ) }
-  ) }
-);
+export type CreateRepostMutation = { __typename?: 'Mutation', createRepost: { __typename?: 'CreateRepostPayload', post: { __typename?: 'Post', id: string }, originalPost: { __typename?: 'Post', id: string, repostCount: number } } };
 
 export type CreateTrackEditionMutationVariables = Exact<{
   input: CreateTrackEditionInput;
 }>;
 
 
-export type CreateTrackEditionMutation = (
-  { __typename?: 'Mutation' }
-  & { createTrackEdition: (
-    { __typename?: 'CreateTrackEditionPayload' }
-    & { trackEdition: (
-      { __typename?: 'TrackEdition' }
-      & Pick<TrackEdition, 'id'>
-    ) }
-  ) }
-);
+export type CreateTrackEditionMutation = { __typename?: 'Mutation', createTrackEdition: { __typename?: 'CreateTrackEditionPayload', trackEdition: { __typename?: 'TrackEdition', id: string } } };
 
 export type CreateWhitelistEntryMutationVariables = Exact<{
   input: CreateWhitelistEntryInput;
 }>;
 
 
-export type CreateWhitelistEntryMutation = (
-  { __typename?: 'Mutation' }
-  & { createWhitelistEntry: (
-    { __typename?: 'CreateWhitelistEntryPayload' }
-    & { whitelistEntry: (
-      { __typename?: 'WhitelistEntry' }
-      & Pick<WhitelistEntry, 'id'>
-    ) }
-  ) }
-);
+export type CreateWhitelistEntryMutation = { __typename?: 'Mutation', createWhitelistEntry: { __typename?: 'CreateWhitelistEntryPayload', whitelistEntry: { __typename?: 'WhitelistEntry', id: string } } };
 
 export type DeleteCommentMutationVariables = Exact<{
   input: DeleteCommentInput;
 }>;
 
 
-export type DeleteCommentMutation = (
-  { __typename?: 'Mutation' }
-  & { deleteComment: (
-    { __typename?: 'DeleteCommentPayload' }
-    & { comment: (
-      { __typename?: 'Comment' }
-      & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
+export type DeleteCommentMutation = { __typename?: 'Mutation', deleteComment: { __typename?: 'DeleteCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } } } };
 
 export type DeletePostMutationVariables = Exact<{
   input: DeletePostInput;
 }>;
 
 
-export type DeletePostMutation = (
-  { __typename?: 'Mutation' }
-  & { deletePost: (
-    { __typename?: 'DeletePostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & PostComponentFieldsFragment
-    ) }
-  ) }
-);
+export type DeletePostMutation = { __typename?: 'Mutation', deletePost: { __typename?: 'DeletePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } } };
 
 export type DeleteTrackMutationVariables = Exact<{
-  trackId: Scalars['String'];
+  trackId: Scalars['String']['input'];
 }>;
 
 
-export type DeleteTrackMutation = (
-  { __typename?: 'Mutation' }
-  & { deleteTrack: (
-    { __typename?: 'Track' }
-    & TrackComponentFieldsFragment
-  ) }
-);
+export type DeleteTrackMutation = { __typename?: 'Mutation', deleteTrack: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } };
 
 export type DeleteTrackEditionMutationVariables = Exact<{
-  trackEditionId: Scalars['String'];
+  trackEditionId: Scalars['String']['input'];
 }>;
 
 
-export type DeleteTrackEditionMutation = (
-  { __typename?: 'Mutation' }
-  & { deleteTrackEdition: Array<(
-    { __typename?: 'Track' }
-    & Pick<Track, 'id'>
-  )> }
-);
+export type DeleteTrackEditionMutation = { __typename?: 'Mutation', deleteTrackEdition: Array<{ __typename?: 'Track', id: string }> };
 
 export type DeleteTrackOnErrorMutationVariables = Exact<{
   input: DeleteTrackInput;
 }>;
 
 
-export type DeleteTrackOnErrorMutation = (
-  { __typename?: 'Mutation' }
-  & { deleteTrackOnError: (
-    { __typename?: 'UpdateTrackPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    ) }
-  ) }
-);
+export type DeleteTrackOnErrorMutation = { __typename?: 'Mutation', deleteTrackOnError: { __typename?: 'UpdateTrackPayload', track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } } };
 
-export type DeletedCommentNotificationFieldsFragment = (
-  { __typename?: 'DeletedCommentNotification' }
-  & Pick<DeletedCommentNotification, 'id' | 'type' | 'body' | 'previewBody' | 'link' | 'createdAt' | 'authorName' | 'authorPicture'>
-);
+export type DeletedCommentNotificationFieldsFragment = { __typename?: 'DeletedCommentNotification', id: string, type: NotificationType, body: string, previewBody: string, link: string, createdAt: string, authorName: string, authorPicture: string | null };
 
-export type DeletedPostNotificationFieldsFragment = (
-  { __typename?: 'DeletedPostNotification' }
-  & Pick<DeletedPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
-  & { track: Maybe<(
-    { __typename?: 'Track' }
-    & Pick<Track, 'title' | 'playbackUrl'>
-  )> }
-);
+export type DeletedPostNotificationFieldsFragment = { __typename?: 'DeletedPostNotification', id: string, type: NotificationType, authorName: string, authorPicture: string | null, body: string, previewBody: string, mediaLink: string | null, createdAt: string, track: { __typename?: 'Track', title: string | null, playbackUrl: string } | null };
 
 export type ExploreQueryVariables = Exact<{
-  search?: Maybe<Scalars['String']>;
+  search?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type ExploreQuery = (
-  { __typename?: 'Query' }
-  & { explore: (
-    { __typename?: 'ExplorePayload' }
-    & Pick<ExplorePayload, 'totalTracks' | 'totalProfiles'>
-    & { tracks: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, profiles: Array<(
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    )> }
-  ) }
-);
+export type ExploreQuery = { __typename?: 'Query', explore: { __typename?: 'ExplorePayload', totalTracks: number, totalProfiles: number, tracks: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, profiles: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } }> } };
 
 export type ExploreTracksQueryVariables = Exact<{
-  sort?: Maybe<SortExploreTracks>;
-  search?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
+  sort?: InputMaybe<SortExploreTracks>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type ExploreTracksQuery = (
-  { __typename?: 'Query' }
-  & { exploreTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type ExploreTracksQuery = { __typename?: 'Query', exploreTracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type ExploreUsersQueryVariables = Exact<{
-  search?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type ExploreUsersQuery = (
-  { __typename?: 'Query' }
-  & { exploreUsers: (
-    { __typename?: 'ProfileConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type ExploreUsersQuery = { __typename?: 'Query', exploreUsers: { __typename?: 'ProfileConnection', nodes: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type FavoriteTracksQueryVariables = Exact<{
-  sort?: Maybe<SortTrackInput>;
-  search?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
+  sort?: InputMaybe<SortTrackInput>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type FavoriteTracksQuery = (
-  { __typename?: 'Query' }
-  & { favoriteTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type FavoriteTracksQuery = { __typename?: 'Query', favoriteTracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type FeedQueryVariables = Exact<{
-  page?: Maybe<PageInput>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type FeedQuery = (
-  { __typename?: 'Query' }
-  & { feed: (
-    { __typename?: 'FeedConnection' }
-    & { nodes: Array<(
-      { __typename?: 'FeedItem' }
-      & Pick<FeedItem, 'id'>
-      & { post: (
-        { __typename?: 'Post' }
-        & PostComponentFieldsFragment
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type FeedQuery = { __typename?: 'Query', feed: { __typename?: 'FeedConnection', nodes: Array<{ __typename?: 'FeedItem', id: string, post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type FollowProfileMutationVariables = Exact<{
   input: FollowProfileInput;
 }>;
 
 
-export type FollowProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { followProfile: (
-    { __typename?: 'FollowProfilePayload' }
-    & { followedProfile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
-    ) }
-  ) }
-);
+export type FollowProfileMutation = { __typename?: 'Mutation', followProfile: { __typename?: 'FollowProfilePayload', followedProfile: { __typename?: 'Profile', id: string, followerCount: number, isFollowed: boolean } } };
 
 export type FollowedArtistsQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  search?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
+  profileId: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type FollowedArtistsQuery = (
-  { __typename?: 'Query' }
-  & { followedArtists: (
-    { __typename?: 'FollowedArtistsConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type FollowedArtistsQuery = { __typename?: 'Query', followedArtists: { __typename?: 'FollowedArtistsConnection', nodes: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
-export type FollowerNotificationFieldsFragment = (
-  { __typename?: 'FollowerNotification' }
-  & Pick<FollowerNotification, 'id' | 'type' | 'link' | 'createdAt' | 'followerName' | 'followerPicture'>
-);
+export type FollowerNotificationFieldsFragment = { __typename?: 'FollowerNotification', id: string, type: NotificationType, link: string, createdAt: string, followerName: string, followerPicture: string | null };
 
 export type FollowersQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  page?: Maybe<PageInput>;
+  profileId: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type FollowersQuery = (
-  { __typename?: 'Query' }
-  & { followers: (
-    { __typename?: 'FollowConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Follow' }
-      & Pick<Follow, 'id'>
-      & { followerProfile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember' | 'badges'>
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type FollowersQuery = { __typename?: 'Query', followers: { __typename?: 'FollowConnection', nodes: Array<{ __typename?: 'Follow', id: string, followerProfile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, userHandle: string, teamMember: boolean, badges: Array<Badge> | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type FollowingQueryVariables = Exact<{
-  profileId: Scalars['String'];
-  page?: Maybe<PageInput>;
+  profileId: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type FollowingQuery = (
-  { __typename?: 'Query' }
-  & { following: (
-    { __typename?: 'FollowConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Follow' }
-      & Pick<Follow, 'id'>
-      & { followedProfile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'teamMember' | 'badges'>
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type FollowingQuery = { __typename?: 'Query', following: { __typename?: 'FollowConnection', nodes: Array<{ __typename?: 'Follow', id: string, followedProfile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, userHandle: string, teamMember: boolean, badges: Array<Badge> | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type GetOriginalPostFromTrackQueryVariables = Exact<{
-  trackId: Scalars['String'];
+  trackId: Scalars['String']['input'];
 }>;
 
 
-export type GetOriginalPostFromTrackQuery = (
-  { __typename?: 'Query' }
-  & { getOriginalPostFromTrack: (
-    { __typename?: 'Post' }
-    & PostComponentFieldsFragment
-  ) }
-);
+export type GetOriginalPostFromTrackQuery = { __typename?: 'Query', getOriginalPostFromTrack: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
 
 export type GroupedTracksQueryVariables = Exact<{
-  filter?: Maybe<FilterTrackInput>;
-  sort?: Maybe<SortTrackInput>;
-  page?: Maybe<PageInput>;
+  filter?: InputMaybe<FilterTrackInput>;
+  sort?: InputMaybe<SortTrackInput>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type GroupedTracksQuery = (
-  { __typename?: 'Query' }
-  & { groupedTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type GroupedTracksQuery = { __typename?: 'Query', groupedTracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type HaveBidedQueryVariables = Exact<{
-  auctionId: Scalars['String'];
-  bidder: Scalars['String'];
+  auctionId: Scalars['String']['input'];
+  bidder: Scalars['String']['input'];
 }>;
 
 
-export type HaveBidedQuery = (
-  { __typename?: 'Query' }
-  & { haveBided: (
-    { __typename?: 'Bided' }
-    & Pick<Bided, 'bided'>
-  ) }
-);
+export type HaveBidedQuery = { __typename?: 'Query', haveBided: { __typename?: 'Bided', bided: boolean | null } };
 
 export type ListableOwnedTrackIdsQueryVariables = Exact<{
   filter: FilterOwnedTracksInput;
 }>;
 
 
-export type ListableOwnedTrackIdsQuery = (
-  { __typename?: 'Query' }
-  & { listableOwnedTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & Pick<Track, 'id'>
-      & { nftData: Maybe<(
-        { __typename?: 'NFTDataType' }
-        & Pick<NftDataType, 'tokenId'>
-      )> }
-    )> }
-  ) }
-);
+export type ListableOwnedTrackIdsQuery = { __typename?: 'Query', listableOwnedTracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, nftData: { __typename?: 'NFTDataType', tokenId: number | null } | null }> } };
 
 export type ListingItemQueryVariables = Exact<{
   input: FilterListingItemInput;
 }>;
 
 
-export type ListingItemQuery = (
-  { __typename?: 'Query' }
-  & { listingItem: Maybe<(
-    { __typename?: 'ListingItem' }
-    & ListingItemViewComponentFieldsFragment
-  )> }
-);
+export type ListingItemQuery = { __typename?: 'Query', listingItem: { __typename?: 'ListingItem', id: string, owner: string | null, nft: string | null, tokenId: number | null, contract: string, pricePerItem: string | null, pricePerItemToShow: number | null, OGUNPricePerItem: string | null, OGUNPricePerItemToShow: number | null, isPaymentOGUN: boolean | null, startingTime: number | null, endingTime: number | null, reservePrice: string | null, reservePriceToShow: number | null, createdAt: string, updatedAt: string } | null };
 
-export type ListingItemComponentFieldsFragment = (
-  { __typename?: 'TrackWithListingItem' }
-  & Pick<TrackWithListingItem, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'playbackCount' | 'listingCount' | 'saleType' | 'trackEditionId' | 'editionSize'>
-  & { price: (
-    { __typename?: 'TrackPrice' }
-    & Pick<TrackPrice, 'value' | 'currency'>
-  ), nftData: Maybe<(
-    { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
-  )>, trackEdition: Maybe<(
-    { __typename?: 'TrackEdition' }
-    & TrackEditionFieldsFragment
-  )>, listingItem: Maybe<(
-    { __typename?: 'ListingItemWithPrice' }
-    & Pick<ListingItemWithPrice, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt' | 'priceToShow'>
-  )> }
-);
+export type ListingItemComponentFieldsFragment = { __typename?: 'TrackWithListingItem', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, playbackCount: number, listingCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null, listingItem: { __typename?: 'ListingItemWithPrice', id: string, owner: string | null, nft: string | null, tokenId: number | null, contract: string, pricePerItem: string | null, pricePerItemToShow: number | null, OGUNPricePerItem: string | null, OGUNPricePerItemToShow: number | null, isPaymentOGUN: boolean | null, startingTime: number | null, endingTime: number | null, reservePrice: string | null, reservePriceToShow: number | null, createdAt: string, updatedAt: string, priceToShow: number | null } | null };
 
-export type ListingItemViewComponentFieldsFragment = (
-  { __typename?: 'ListingItem' }
-  & Pick<ListingItem, 'id' | 'owner' | 'nft' | 'tokenId' | 'contract' | 'pricePerItem' | 'pricePerItemToShow' | 'OGUNPricePerItem' | 'OGUNPricePerItemToShow' | 'isPaymentOGUN' | 'startingTime' | 'endingTime' | 'reservePrice' | 'reservePriceToShow' | 'createdAt' | 'updatedAt'>
-);
+export type ListingItemViewComponentFieldsFragment = { __typename?: 'ListingItem', id: string, owner: string | null, nft: string | null, tokenId: number | null, contract: string, pricePerItem: string | null, pricePerItemToShow: number | null, OGUNPricePerItem: string | null, OGUNPricePerItemToShow: number | null, isPaymentOGUN: boolean | null, startingTime: number | null, endingTime: number | null, reservePrice: string | null, reservePriceToShow: number | null, createdAt: string, updatedAt: string };
 
 export type ListingItemsQueryVariables = Exact<{
-  filter?: Maybe<FilterTrackMarketplace>;
-  sort?: Maybe<SortListingItemInput>;
-  page?: Maybe<PageInput>;
+  filter?: InputMaybe<FilterTrackMarketplace>;
+  sort?: InputMaybe<SortListingItemInput>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type ListingItemsQuery = (
-  { __typename?: 'Query' }
-  & { listingItems: (
-    { __typename?: 'ListingItemConnection' }
-    & { nodes: Array<(
-      { __typename?: 'TrackWithListingItem' }
-      & ListingItemComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type ListingItemsQuery = { __typename?: 'Query', listingItems: { __typename?: 'ListingItemConnection', nodes: Array<{ __typename?: 'TrackWithListingItem', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, playbackCount: number, listingCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null, listingItem: { __typename?: 'ListingItemWithPrice', id: string, owner: string | null, nft: string | null, tokenId: number | null, contract: string, pricePerItem: string | null, pricePerItemToShow: number | null, OGUNPricePerItem: string | null, OGUNPricePerItemToShow: number | null, isPaymentOGUN: boolean | null, startingTime: number | null, endingTime: number | null, reservePrice: string | null, reservePriceToShow: number | null, createdAt: string, updatedAt: string, priceToShow: number | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type LoginMutationVariables = Exact<{
   input: LoginInput;
 }>;
 
 
-export type LoginMutation = (
-  { __typename?: 'Mutation' }
-  & { login: (
-    { __typename?: 'AuthPayload' }
-    & Pick<AuthPayload, 'jwt'>
-  ) }
-);
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthPayload', jwt: string } };
 
 export type MaticUsdQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MaticUsdQuery = (
-  { __typename?: 'Query' }
-  & Pick<Query, 'maticUsd'>
-);
+export type MaticUsdQuery = { __typename?: 'Query', maticUsd: string };
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeQuery = (
-  { __typename?: 'Query' }
-  & { me: Maybe<(
-    { __typename?: 'User' }
-    & Pick<User, 'id' | 'handle' | 'email' | 'magicWalletAddress' | 'metaMaskWalletAddressees' | 'defaultWallet' | 'isApprovedOnMarketplace' | 'roles' | 'otpSecret'>
-    & { profile: (
-      { __typename?: 'Profile' }
-      & ProfileComponentFieldsFragment
-    ) }
-  )> }
-);
+export type MeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, handle: string, email: string, magicWalletAddress: string | null, metaMaskWalletAddressees: Array<string> | null, defaultWallet: DefaultWallet, isApprovedOnMarketplace: boolean, roles: Array<Role>, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } } | null };
 
 export type MessageQueryVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type MessageQuery = (
-  { __typename?: 'Query' }
-  & { message: (
-    { __typename?: 'Message' }
-    & MessageComponentFieldsFragment
-  ) }
-);
+export type MessageQuery = { __typename?: 'Query', message: { __typename?: 'Message', id: string, message: string, fromId: string, toId: string, createdAt: string, fromProfile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, userHandle: string, badges: Array<Badge> | null } } };
 
-export type MessageComponentFieldsFragment = (
-  { __typename?: 'Message' }
-  & Pick<Message, 'id' | 'message' | 'fromId' | 'toId' | 'createdAt'>
-  & { fromProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'userHandle' | 'badges'>
-  ) }
-);
+export type MessageComponentFieldsFragment = { __typename?: 'Message', id: string, message: string, fromId: string, toId: string, createdAt: string, fromProfile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, userHandle: string, badges: Array<Badge> | null } };
 
 export type MimeTypeQueryVariables = Exact<{
-  url: Scalars['String'];
+  url: Scalars['String']['input'];
 }>;
 
 
-export type MimeTypeQuery = (
-  { __typename?: 'Query' }
-  & { mimeType: (
-    { __typename?: 'MimeType' }
-    & Pick<MimeType, 'value'>
-  ) }
-);
+export type MimeTypeQuery = { __typename?: 'Query', mimeType: { __typename?: 'MimeType', value: string } };
 
-export type NftSoldNotificationFieldsFragment = (
-  { __typename?: 'NFTSoldNotification' }
-  & Pick<NftSoldNotification, 'id' | 'type' | 'createdAt' | 'buyerName' | 'buyerPicture' | 'buyerProfileId' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price' | 'sellType' | 'isPaymentOgun'>
-);
+export type NftSoldNotificationFieldsFragment = { __typename?: 'NFTSoldNotification', id: string, type: NotificationType, createdAt: string, buyerName: string, buyerPicture: string, buyerProfileId: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number, sellType: SellType, isPaymentOgun: boolean | null };
 
-export type NewBidNotificationFieldsFragment = (
-  { __typename?: 'NewBidNotification' }
-  & Pick<NewBidNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type NewBidNotificationFieldsFragment = { __typename?: 'NewBidNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number };
 
-export type NewPostNotificationFieldsFragment = (
-  { __typename?: 'NewPostNotification' }
-  & Pick<NewPostNotification, 'id' | 'type' | 'authorName' | 'authorPicture' | 'body' | 'link' | 'previewBody' | 'previewLink' | 'createdAt'>
-  & { track: Maybe<(
-    { __typename?: 'Track' }
-    & Pick<Track, 'id' | 'title' | 'playbackUrl' | 'artworkUrl' | 'artist' | 'isFavorite' | 'playbackCountFormatted' | 'favoriteCount' | 'saleType'>
-    & { price: (
-      { __typename?: 'TrackPrice' }
-      & Pick<TrackPrice, 'value' | 'currency'>
-    ) }
-  )> }
-);
+export type NewPostNotificationFieldsFragment = { __typename?: 'NewPostNotification', id: string, type: NotificationType, authorName: string, authorPicture: string | null, body: string, link: string, previewBody: string, previewLink: string | null, createdAt: string, track: { __typename?: 'Track', id: string, title: string | null, playbackUrl: string, artworkUrl: string | null, artist: string | null, isFavorite: boolean, playbackCountFormatted: string, favoriteCount: number, saleType: string, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType } } | null };
 
-export type NewVerificationRequestNotificationFieldsFragment = (
-  { __typename?: 'NewVerificationRequestNotification' }
-  & Pick<NewVerificationRequestNotification, 'id' | 'type' | 'verificationRequestId' | 'createdAt'>
-);
+export type NewVerificationRequestNotificationFieldsFragment = { __typename?: 'NewVerificationRequestNotification', id: string, type: NotificationType, verificationRequestId: string, createdAt: string };
 
 export type NotificationQueryVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type NotificationQuery = (
-  { __typename?: 'Query' }
-  & { notification: (
-    { __typename?: 'AuctionIsEndingNotification' }
-    & AuctionIsEndingNotificationFieldsFragment
-  ) | (
-    { __typename?: 'AuctionEndedNotification' }
-    & AuctionEndedNotificationFieldsFragment
-  ) | (
-    { __typename?: 'CommentNotification' }
-    & CommentNotificationFieldsFragment
-  ) | (
-    { __typename?: 'DeletedCommentNotification' }
-    & DeletedCommentNotificationFieldsFragment
-  ) | (
-    { __typename?: 'DeletedPostNotification' }
-    & DeletedPostNotificationFieldsFragment
-  ) | (
-    { __typename?: 'FollowerNotification' }
-    & FollowerNotificationFieldsFragment
-  ) | (
-    { __typename?: 'NewBidNotification' }
-    & NewBidNotificationFieldsFragment
-  ) | (
-    { __typename?: 'NewPostNotification' }
-    & NewPostNotificationFieldsFragment
-  ) | (
-    { __typename?: 'NewVerificationRequestNotification' }
-    & NewVerificationRequestNotificationFieldsFragment
-  ) | (
-    { __typename?: 'NFTSoldNotification' }
-    & NftSoldNotificationFieldsFragment
-  ) | (
-    { __typename?: 'OutbidNotification' }
-    & OutbidNotificationFieldsFragment
-  ) | (
-    { __typename?: 'ReactionNotification' }
-    & ReactionNotificationFieldsFragment
-  ) | (
-    { __typename?: 'VerificationRequestNotification' }
-    & VerificationRequestNotificationFieldsFragment
-  ) | (
-    { __typename?: 'WonAuctionNotification' }
-    & WonAuctionNotificationFieldsFragment
-  ) }
-);
+export type NotificationQuery = { __typename?: 'Query', notification: { __typename?: 'AuctionEndedNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } | { __typename?: 'AuctionIsEndingNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } | { __typename?: 'CommentNotification', id: string, type: NotificationType, body: string, previewBody: string, link: string, createdAt: string, authorName: string, authorPicture: string | null } | { __typename?: 'DeletedCommentNotification', id: string, type: NotificationType, body: string, previewBody: string, link: string, createdAt: string, authorName: string, authorPicture: string | null } | { __typename?: 'DeletedPostNotification', id: string, type: NotificationType, authorName: string, authorPicture: string | null, body: string, previewBody: string, mediaLink: string | null, createdAt: string, track: { __typename?: 'Track', title: string | null, playbackUrl: string } | null } | { __typename?: 'FollowerNotification', id: string, type: NotificationType, link: string, createdAt: string, followerName: string, followerPicture: string | null } | { __typename?: 'NFTSoldNotification', id: string, type: NotificationType, createdAt: string, buyerName: string, buyerPicture: string, buyerProfileId: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number, sellType: SellType, isPaymentOgun: boolean | null } | { __typename?: 'NewBidNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } | { __typename?: 'NewPostNotification', id: string, type: NotificationType, authorName: string, authorPicture: string | null, body: string, link: string, previewBody: string, previewLink: string | null, createdAt: string, track: { __typename?: 'Track', id: string, title: string | null, playbackUrl: string, artworkUrl: string | null, artist: string | null, isFavorite: boolean, playbackCountFormatted: string, favoriteCount: number, saleType: string, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType } } | null } | { __typename?: 'NewVerificationRequestNotification', id: string, type: NotificationType, verificationRequestId: string, createdAt: string } | { __typename?: 'OutbidNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } | { __typename?: 'ReactionNotification', id: string, type: NotificationType, reactionType: ReactionType, link: string, authorName: string, authorPicture: string | null, createdAt: string, postId: string } | { __typename?: 'VerificationRequestNotification', id: string, type: NotificationType, body: string, createdAt: string } | { __typename?: 'WonAuctionNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } };
 
 export type NotificationCountQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type NotificationCountQuery = (
-  { __typename?: 'Query' }
-  & { myProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadNotificationCount'>
-  ) }
-);
+export type NotificationCountQuery = { __typename?: 'Query', myProfile: { __typename?: 'Profile', id: string, unreadNotificationCount: number } };
 
 export type NotificationsQueryVariables = Exact<{
-  sort?: Maybe<SortNotificationInput>;
+  sort?: InputMaybe<SortNotificationInput>;
 }>;
 
 
-export type NotificationsQuery = (
-  { __typename?: 'Query' }
-  & { notifications: (
-    { __typename?: 'NotificationConnection' }
-    & { nodes: Array<(
-      { __typename?: 'AuctionIsEndingNotification' }
-      & AuctionIsEndingNotificationFieldsFragment
-    ) | (
-      { __typename?: 'AuctionEndedNotification' }
-      & AuctionEndedNotificationFieldsFragment
-    ) | (
-      { __typename?: 'CommentNotification' }
-      & CommentNotificationFieldsFragment
-    ) | (
-      { __typename?: 'DeletedCommentNotification' }
-      & DeletedCommentNotificationFieldsFragment
-    ) | (
-      { __typename?: 'DeletedPostNotification' }
-      & DeletedPostNotificationFieldsFragment
-    ) | (
-      { __typename?: 'FollowerNotification' }
-      & FollowerNotificationFieldsFragment
-    ) | (
-      { __typename?: 'NewBidNotification' }
-      & NewBidNotificationFieldsFragment
-    ) | (
-      { __typename?: 'NewPostNotification' }
-      & NewPostNotificationFieldsFragment
-    ) | (
-      { __typename?: 'NewVerificationRequestNotification' }
-      & NewVerificationRequestNotificationFieldsFragment
-    ) | (
-      { __typename?: 'NFTSoldNotification' }
-      & NftSoldNotificationFieldsFragment
-    ) | (
-      { __typename?: 'OutbidNotification' }
-      & OutbidNotificationFieldsFragment
-    ) | (
-      { __typename?: 'ReactionNotification' }
-      & ReactionNotificationFieldsFragment
-    ) | (
-      { __typename?: 'VerificationRequestNotification' }
-      & VerificationRequestNotificationFieldsFragment
-    ) | (
-      { __typename?: 'WonAuctionNotification' }
-      & WonAuctionNotificationFieldsFragment
-    )> }
-  ) }
-);
+export type NotificationsQuery = { __typename?: 'Query', notifications: { __typename?: 'NotificationConnection', nodes: Array<{ __typename?: 'AuctionEndedNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } | { __typename?: 'AuctionIsEndingNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } | { __typename?: 'CommentNotification', id: string, type: NotificationType, body: string, previewBody: string, link: string, createdAt: string, authorName: string, authorPicture: string | null } | { __typename?: 'DeletedCommentNotification', id: string, type: NotificationType, body: string, previewBody: string, link: string, createdAt: string, authorName: string, authorPicture: string | null } | { __typename?: 'DeletedPostNotification', id: string, type: NotificationType, authorName: string, authorPicture: string | null, body: string, previewBody: string, mediaLink: string | null, createdAt: string, track: { __typename?: 'Track', title: string | null, playbackUrl: string } | null } | { __typename?: 'FollowerNotification', id: string, type: NotificationType, link: string, createdAt: string, followerName: string, followerPicture: string | null } | { __typename?: 'NFTSoldNotification', id: string, type: NotificationType, createdAt: string, buyerName: string, buyerPicture: string, buyerProfileId: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number, sellType: SellType, isPaymentOgun: boolean | null } | { __typename?: 'NewBidNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } | { __typename?: 'NewPostNotification', id: string, type: NotificationType, authorName: string, authorPicture: string | null, body: string, link: string, previewBody: string, previewLink: string | null, createdAt: string, track: { __typename?: 'Track', id: string, title: string | null, playbackUrl: string, artworkUrl: string | null, artist: string | null, isFavorite: boolean, playbackCountFormatted: string, favoriteCount: number, saleType: string, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType } } | null } | { __typename?: 'NewVerificationRequestNotification', id: string, type: NotificationType, verificationRequestId: string, createdAt: string } | { __typename?: 'OutbidNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number } | { __typename?: 'ReactionNotification', id: string, type: NotificationType, reactionType: ReactionType, link: string, authorName: string, authorPicture: string | null, createdAt: string, postId: string } | { __typename?: 'VerificationRequestNotification', id: string, type: NotificationType, body: string, createdAt: string } | { __typename?: 'WonAuctionNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number }> } };
 
-export type OutbidNotificationFieldsFragment = (
-  { __typename?: 'OutbidNotification' }
-  & Pick<OutbidNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type OutbidNotificationFieldsFragment = { __typename?: 'OutbidNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number };
 
 export type OwnedBuyNowTrackIdsQueryVariables = Exact<{
   filter: FilterOwnedBuyNowItemInput;
 }>;
 
 
-export type OwnedBuyNowTrackIdsQuery = (
-  { __typename?: 'Query' }
-  & { ownedBuyNowListingItems: (
-    { __typename?: 'ListingItemConnection' }
-    & { nodes: Array<(
-      { __typename?: 'TrackWithListingItem' }
-      & Pick<TrackWithListingItem, 'id'>
-      & { nftData: Maybe<(
-        { __typename?: 'NFTDataType' }
-        & Pick<NftDataType, 'tokenId'>
-      )> }
-    )> }
-  ) }
-);
+export type OwnedBuyNowTrackIdsQuery = { __typename?: 'Query', ownedBuyNowListingItems: { __typename?: 'ListingItemConnection', nodes: Array<{ __typename?: 'TrackWithListingItem', id: string, nftData: { __typename?: 'NFTDataType', tokenId: number | null } | null }> } };
 
 export type OwnedTrackIdsQueryVariables = Exact<{
   filter: FilterOwnedTracksInput;
 }>;
 
 
-export type OwnedTrackIdsQuery = (
-  { __typename?: 'Query' }
-  & { ownedTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & Pick<Track, 'id'>
-      & { nftData: Maybe<(
-        { __typename?: 'NFTDataType' }
-        & Pick<NftDataType, 'tokenId'>
-      )> }
-    )> }
-  ) }
-);
+export type OwnedTrackIdsQuery = { __typename?: 'Query', ownedTracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, nftData: { __typename?: 'NFTDataType', tokenId: number | null } | null }> } };
 
 export type OwnedTracksQueryVariables = Exact<{
   filter: FilterOwnedTracksInput;
-  page?: Maybe<PageInput>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type OwnedTracksQuery = (
-  { __typename?: 'Query' }
-  & { ownedTracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & { listingItem: Maybe<(
-        { __typename?: 'ListingItem' }
-        & ListingItemViewComponentFieldsFragment
-      )> }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type OwnedTracksQuery = { __typename?: 'Query', ownedTracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, listingItem: { __typename?: 'ListingItem', id: string, owner: string | null, nft: string | null, tokenId: number | null, contract: string, pricePerItem: string | null, pricePerItemToShow: number | null, OGUNPricePerItem: string | null, OGUNPricePerItemToShow: number | null, isPaymentOGUN: boolean | null, startingTime: number | null, endingTime: number | null, reservePrice: string | null, reservePriceToShow: number | null, createdAt: string, updatedAt: string } | null, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type PendingRequestsBadgeNumberQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PendingRequestsBadgeNumberQuery = (
-  { __typename?: 'Query' }
-  & Pick<Query, 'pendingRequestsBadgeNumber'>
-);
+export type PendingRequestsBadgeNumberQuery = { __typename?: 'Query', pendingRequestsBadgeNumber: number };
 
 export type PinJsonToIpfsMutationVariables = Exact<{
   input: PinJsonToIpfsInput;
 }>;
 
 
-export type PinJsonToIpfsMutation = (
-  { __typename?: 'Mutation' }
-  & { pinJsonToIPFS: (
-    { __typename?: 'PinningPayload' }
-    & Pick<PinningPayload, 'cid'>
-  ) }
-);
+export type PinJsonToIpfsMutation = { __typename?: 'Mutation', pinJsonToIPFS: { __typename?: 'PinningPayload', cid: string } };
 
 export type PinToIpfsMutationVariables = Exact<{
   input: PinToIpfsInput;
 }>;
 
 
-export type PinToIpfsMutation = (
-  { __typename?: 'Mutation' }
-  & { pinToIPFS: (
-    { __typename?: 'PinningPayload' }
-    & Pick<PinningPayload, 'cid'>
-  ) }
-);
+export type PinToIpfsMutation = { __typename?: 'Mutation', pinToIPFS: { __typename?: 'PinningPayload', cid: string } };
 
 export type PolygonscanQueryVariables = Exact<{
-  wallet: Scalars['String'];
-  page?: Maybe<PageInput>;
+  wallet: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type PolygonscanQuery = (
-  { __typename?: 'Query' }
-  & { getTransactionHistory: (
-    { __typename?: 'PolygonscanResult' }
-    & Pick<PolygonscanResult, 'nextPage'>
-    & { result: Array<(
-      { __typename?: 'PolygonscanResultObj' }
-      & Pick<PolygonscanResultObj, 'blockNumber' | 'timeStamp' | 'hash' | 'nonce' | 'blockHash' | 'transactionIndex' | 'from' | 'to' | 'value' | 'gas' | 'gasPrice' | 'isError' | 'txreceipt_status' | 'input' | 'contractAddress' | 'cumulativeGasUsed' | 'gasUsed' | 'confirmations' | 'method' | 'date'>
-    )> }
-  ) }
-);
+export type PolygonscanQuery = { __typename?: 'Query', getTransactionHistory: { __typename?: 'PolygonscanResult', nextPage: string | null, result: Array<{ __typename?: 'PolygonscanResultObj', blockNumber: string, timeStamp: string, hash: string, nonce: string, blockHash: string, transactionIndex: string, from: string, to: string, value: string, gas: string, gasPrice: string, isError: string, txreceipt_status: string, input: string, contractAddress: string, cumulativeGasUsed: string, gasUsed: string, confirmations: string, method: string | null, date: string }> } };
 
 export type PolygonscanInternalTrxQueryVariables = Exact<{
-  wallet: Scalars['String'];
-  page?: Maybe<PageInput>;
+  wallet: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type PolygonscanInternalTrxQuery = (
-  { __typename?: 'Query' }
-  & { getInternalTransactionHistory: (
-    { __typename?: 'PolygonscanResult' }
-    & Pick<PolygonscanResult, 'nextPage'>
-    & { result: Array<(
-      { __typename?: 'PolygonscanResultObj' }
-      & Pick<PolygonscanResultObj, 'blockNumber' | 'timeStamp' | 'hash' | 'from' | 'to' | 'value' | 'gas' | 'isError' | 'input' | 'contractAddress' | 'gasUsed' | 'date'>
-    )> }
-  ) }
-);
+export type PolygonscanInternalTrxQuery = { __typename?: 'Query', getInternalTransactionHistory: { __typename?: 'PolygonscanResult', nextPage: string | null, result: Array<{ __typename?: 'PolygonscanResultObj', blockNumber: string, timeStamp: string, hash: string, from: string, to: string, value: string, gas: string, isError: string, input: string, contractAddress: string, gasUsed: string, date: string }> } };
 
 export type PostQueryVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type PostQuery = (
-  { __typename?: 'Query' }
-  & { post: (
-    { __typename?: 'Post' }
-    & PostComponentFieldsFragment
-  ) }
-);
+export type PostQuery = { __typename?: 'Query', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
 
-export type PostComponentFieldsFragment = (
-  { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'body' | 'mediaLink' | 'repostId' | 'createdAt' | 'updatedAt' | 'commentCount' | 'repostCount' | 'totalReactions' | 'topReactions' | 'myReaction' | 'deleted'>
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'verified' | 'teamMember' | 'userHandle' | 'badges'>
-  ), track: Maybe<(
-    { __typename?: 'Track' }
-    & TrackComponentFieldsFragment
-  )> }
-);
+export type PostComponentFieldsFragment = { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null };
 
 export type PostsQueryVariables = Exact<{
-  filter?: Maybe<FilterPostInput>;
-  sort?: Maybe<SortPostInput>;
-  page?: Maybe<PageInput>;
+  filter?: InputMaybe<FilterPostInput>;
+  sort?: InputMaybe<SortPostInput>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type PostsQuery = (
-  { __typename?: 'Query' }
-  & { posts: (
-    { __typename?: 'PostConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Post' }
-      & PostComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PostConnection', nodes: Array<{ __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type ProfileQueryVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type ProfileQuery = (
-  { __typename?: 'Query' }
-  & { profile: (
-    { __typename?: 'Profile' }
-    & ProfileComponentFieldsFragment
-  ) }
-);
+export type ProfileQuery = { __typename?: 'Query', profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } };
 
 export type ProfileByHandleQueryVariables = Exact<{
-  handle: Scalars['String'];
+  handle: Scalars['String']['input'];
 }>;
 
 
-export type ProfileByHandleQuery = (
-  { __typename?: 'Query' }
-  & { profileByHandle: (
-    { __typename?: 'Profile' }
-    & ProfileComponentFieldsFragment
-  ) }
-);
+export type ProfileByHandleQuery = { __typename?: 'Query', profileByHandle: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } };
 
-export type ProfileComponentFieldsFragment = (
-  { __typename?: 'Profile' }
-  & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'coverPicture' | 'favoriteGenres' | 'musicianTypes' | 'bio' | 'followerCount' | 'followingCount' | 'userHandle' | 'isFollowed' | 'isSubscriber' | 'unreadNotificationCount' | 'unreadMessageCount' | 'verified' | 'teamMember' | 'magicWalletAddress' | 'badges' | 'createdAt' | 'updatedAt'>
-  & { socialMedias: (
-    { __typename?: 'SocialMedias' }
-    & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter' | 'linktree' | 'discord' | 'telegram' | 'spotify' | 'bandcamp'>
-  ) }
-);
+export type ProfileComponentFieldsFragment = { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } };
 
 export type ProfileDisplayNameQueryVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type ProfileDisplayNameQuery = (
-  { __typename?: 'Query' }
-  & { profile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'displayName' | 'verified'>
-  ) }
-);
+export type ProfileDisplayNameQuery = { __typename?: 'Query', profile: { __typename?: 'Profile', displayName: string, verified: boolean | null } };
 
 export type ProfileVerificationRequestQueryVariables = Exact<{
-  id?: Maybe<Scalars['String']>;
-  profileId?: Maybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['String']['input']>;
+  profileId?: InputMaybe<Scalars['String']['input']>;
 }>;
 
 
-export type ProfileVerificationRequestQuery = (
-  { __typename?: 'Query' }
-  & { profileVerificationRequest: (
-    { __typename?: 'ProfileVerificationRequest' }
-    & ProfileVerificationRequestComponentFieldsFragment
-  ) }
-);
+export type ProfileVerificationRequestQuery = { __typename?: 'Query', profileVerificationRequest: { __typename?: 'ProfileVerificationRequest', id: string, profileId: string, soundcloud: string | null, youtube: string | null, bandcamp: string | null, status: ProfileVerificationStatusType | null, reason: string | null, reviewerProfileId: string | null, createdAt: string, updatedAt: string } };
 
-export type ProfileVerificationRequestComponentFieldsFragment = (
-  { __typename?: 'ProfileVerificationRequest' }
-  & Pick<ProfileVerificationRequest, 'id' | 'profileId' | 'soundcloud' | 'youtube' | 'bandcamp' | 'status' | 'reason' | 'reviewerProfileId' | 'createdAt' | 'updatedAt'>
-);
+export type ProfileVerificationRequestComponentFieldsFragment = { __typename?: 'ProfileVerificationRequest', id: string, profileId: string, soundcloud: string | null, youtube: string | null, bandcamp: string | null, status: ProfileVerificationStatusType | null, reason: string | null, reviewerProfileId: string | null, createdAt: string, updatedAt: string };
 
 export type ProfileVerificationRequestsQueryVariables = Exact<{
-  status?: Maybe<Scalars['String']>;
-  page?: Maybe<PageInput>;
+  status?: InputMaybe<ProfileVerificationStatusType>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type ProfileVerificationRequestsQuery = (
-  { __typename?: 'Query' }
-  & { profileVerificationRequests: (
-    { __typename?: 'ProfileVerificationRequestConnection' }
-    & { nodes: Array<(
-      { __typename?: 'ProfileVerificationRequest' }
-      & ProfileVerificationRequestComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor'>
-    ) }
-  ) }
-);
+export type ProfileVerificationRequestsQuery = { __typename?: 'Query', profileVerificationRequests: { __typename?: 'ProfileVerificationRequestConnection', nodes: Array<{ __typename?: 'ProfileVerificationRequest', id: string, profileId: string, soundcloud: string | null, youtube: string | null, bandcamp: string | null, status: ProfileVerificationStatusType | null, reason: string | null, reviewerProfileId: string | null, createdAt: string, updatedAt: string }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type ProofBookByWalletQueryVariables = Exact<{
-  walletAddress: Scalars['String'];
+  walletAddress: Scalars['String']['input'];
 }>;
 
 
-export type ProofBookByWalletQuery = (
-  { __typename?: 'Query' }
-  & { getProofBookByWallet: Maybe<(
-    { __typename?: 'ProofBookItem' }
-    & Pick<ProofBookItem, 'root' | 'address' | 'value' | 'merkleProof'>
-  )> }
-);
+export type ProofBookByWalletQuery = { __typename?: 'Query', getProofBookByWallet: { __typename?: 'ProofBookItem', root: string, address: string, value: string, merkleProof: Array<string> } | null };
 
 export type ReactToPostMutationVariables = Exact<{
   input: ReactToPostInput;
 }>;
 
 
-export type ReactToPostMutation = (
-  { __typename?: 'Mutation' }
-  & { reactToPost: (
-    { __typename?: 'ReactToPostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
-    ) }
-  ) }
-);
+export type ReactToPostMutation = { __typename?: 'Mutation', reactToPost: { __typename?: 'ReactToPostPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null } } };
 
-export type ReactionNotificationFieldsFragment = (
-  { __typename?: 'ReactionNotification' }
-  & Pick<ReactionNotification, 'id' | 'type' | 'reactionType' | 'link' | 'authorName' | 'authorPicture' | 'createdAt' | 'postId'>
-);
+export type ReactionNotificationFieldsFragment = { __typename?: 'ReactionNotification', id: string, type: NotificationType, reactionType: ReactionType, link: string, authorName: string, authorPicture: string | null, createdAt: string, postId: string };
 
 export type ReactionsQueryVariables = Exact<{
-  postId: Scalars['String'];
-  page?: Maybe<PageInput>;
+  postId: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type ReactionsQuery = (
-  { __typename?: 'Query' }
-  & { reactions: (
-    { __typename?: 'ReactionConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Reaction' }
-      & Pick<Reaction, 'id' | 'type'>
-      & { profile: (
-        { __typename?: 'Profile' }
-        & Pick<Profile, 'id' | 'userHandle' | 'displayName' | 'profilePicture' | 'verified' | 'badges'>
-      ) }
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type ReactionsQuery = { __typename?: 'Query', reactions: { __typename?: 'ReactionConnection', nodes: Array<{ __typename?: 'Reaction', id: string, type: ReactionType, profile: { __typename?: 'Profile', id: string, userHandle: string, displayName: string, profilePicture: string | null, verified: boolean | null, badges: Array<Badge> | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type RegisterMutationVariables = Exact<{
   input: RegisterInput;
 }>;
 
 
-export type RegisterMutation = (
-  { __typename?: 'Mutation' }
-  & { register: (
-    { __typename?: 'AuthPayload' }
-    & Pick<AuthPayload, 'jwt'>
-  ) }
-);
+export type RegisterMutation = { __typename?: 'Mutation', register: { __typename?: 'AuthPayload', jwt: string } };
 
 export type RemoveProfileVerificationRequestMutationVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type RemoveProfileVerificationRequestMutation = (
-  { __typename?: 'Mutation' }
-  & { removeProfileVerificationRequest: (
-    { __typename?: 'ProfileVerificationRequestPayload' }
-    & { profileVerificationRequest: (
-      { __typename?: 'ProfileVerificationRequest' }
-      & Pick<ProfileVerificationRequest, 'id'>
-    ) }
-  ) }
-);
+export type RemoveProfileVerificationRequestMutation = { __typename?: 'Mutation', removeProfileVerificationRequest: { __typename?: 'ProfileVerificationRequestPayload', profileVerificationRequest: { __typename?: 'ProfileVerificationRequest', id: string } } };
 
 export type ResetNotificationCountMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ResetNotificationCountMutation = (
-  { __typename?: 'Mutation' }
-  & { resetNotificationCount: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadNotificationCount'>
-  ) }
-);
+export type ResetNotificationCountMutation = { __typename?: 'Mutation', resetNotificationCount: { __typename?: 'Profile', id: string, unreadNotificationCount: number } };
 
 export type ResetUnreadMessageCountMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ResetUnreadMessageCountMutation = (
-  { __typename?: 'Mutation' }
-  & { resetUnreadMessageCount: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadMessageCount'>
-  ) }
-);
+export type ResetUnreadMessageCountMutation = { __typename?: 'Mutation', resetUnreadMessageCount: { __typename?: 'Profile', id: string, unreadMessageCount: number } };
 
 export type RetractReactionMutationVariables = Exact<{
   input: RetractReactionInput;
 }>;
 
 
-export type RetractReactionMutation = (
-  { __typename?: 'Mutation' }
-  & { retractReaction: (
-    { __typename?: 'RetractReactionPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'totalReactions' | 'topReactions' | 'myReaction'>
-    ) }
-  ) }
-);
+export type RetractReactionMutation = { __typename?: 'Mutation', retractReaction: { __typename?: 'RetractReactionPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null } } };
 
 export type SendMessageMutationVariables = Exact<{
   input: SendMessageInput;
 }>;
 
 
-export type SendMessageMutation = (
-  { __typename?: 'Mutation' }
-  & { sendMessage: (
-    { __typename?: 'SendMessagePayload' }
-    & { message: (
-      { __typename?: 'Message' }
-      & MessageComponentFieldsFragment
-    ) }
-  ) }
-);
+export type SendMessageMutation = { __typename?: 'Mutation', sendMessage: { __typename?: 'SendMessagePayload', message: { __typename?: 'Message', id: string, message: string, fromId: string, toId: string, createdAt: string, fromProfile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, userHandle: string, badges: Array<Badge> | null } } } };
 
 export type SubscribeToProfileMutationVariables = Exact<{
   input: SubscribeToProfileInput;
 }>;
 
 
-export type SubscribeToProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { subscribeToProfile: (
-    { __typename?: 'SubscribeToProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'isSubscriber'>
-    ) }
-  ) }
-);
+export type SubscribeToProfileMutation = { __typename?: 'Mutation', subscribeToProfile: { __typename?: 'SubscribeToProfilePayload', profile: { __typename?: 'Profile', id: string, isSubscriber: boolean } } };
 
 export type ToggleFavoriteMutationVariables = Exact<{
-  trackId: Scalars['String'];
+  trackId: Scalars['String']['input'];
 }>;
 
 
-export type ToggleFavoriteMutation = (
-  { __typename?: 'Mutation' }
-  & { toggleFavorite: (
-    { __typename?: 'ToggleFavoritePayload' }
-    & { favoriteProfileTrack: (
-      { __typename?: 'FavoriteProfileTrack' }
-      & Pick<FavoriteProfileTrack, 'id' | 'trackId' | 'profileId'>
-    ) }
-  ) }
-);
+export type ToggleFavoriteMutation = { __typename?: 'Mutation', toggleFavorite: { __typename?: 'ToggleFavoritePayload', favoriteProfileTrack: { __typename?: 'FavoriteProfileTrack', id: string, trackId: string, profileId: string } } };
 
 export type TrackQueryVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type TrackQuery = (
-  { __typename?: 'Query' }
-  & { track: (
-    { __typename?: 'Track' }
-    & TrackComponentFieldsFragment
-  ) }
-);
+export type TrackQuery = { __typename?: 'Query', track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } };
 
-export type TrackComponentFieldsFragment = (
-  { __typename?: 'Track' }
-  & Pick<Track, 'id' | 'profileId' | 'title' | 'assetUrl' | 'artworkUrl' | 'description' | 'utilityInfo' | 'artist' | 'ISRC' | 'artistId' | 'artistProfileId' | 'album' | 'releaseYear' | 'copyright' | 'genres' | 'playbackUrl' | 'createdAt' | 'updatedAt' | 'deleted' | 'playbackCountFormatted' | 'isFavorite' | 'favoriteCount' | 'listingCount' | 'playbackCount' | 'saleType' | 'trackEditionId' | 'editionSize'>
-  & { price: (
-    { __typename?: 'TrackPrice' }
-    & Pick<TrackPrice, 'value' | 'currency'>
-  ), nftData: Maybe<(
-    { __typename?: 'NFTDataType' }
-    & Pick<NftDataType, 'transactionHash' | 'tokenId' | 'contract' | 'minter' | 'ipfsCid' | 'pendingRequest' | 'owner' | 'pendingTime'>
-  )>, trackEdition: Maybe<(
-    { __typename?: 'TrackEdition' }
-    & TrackEditionFieldsFragment
-  )> }
-);
+export type TrackComponentFieldsFragment = { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null };
 
 export type TrackEditionQueryVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
 }>;
 
 
-export type TrackEditionQuery = (
-  { __typename?: 'Query' }
-  & { trackEdition: (
-    { __typename?: 'TrackEdition' }
-    & TrackEditionFieldsFragment
-  ) }
-);
+export type TrackEditionQuery = { __typename?: 'Query', trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } };
 
-export type TrackEditionFieldsFragment = (
-  { __typename?: 'TrackEdition' }
-  & Pick<TrackEdition, 'id' | 'editionId' | 'transactionHash' | 'contract' | 'listed' | 'marketplace' | 'editionSize' | 'deleted' | 'createdAt' | 'updatedAt'>
-  & { editionData: Maybe<(
-    { __typename?: 'EditionDataType' }
-    & Pick<EditionDataType, 'pendingRequest' | 'pendingTime' | 'pendingTrackCount' | 'transactionHash' | 'contract' | 'owner'>
-  )> }
-);
+export type TrackEditionFieldsFragment = { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null };
 
 export type TracksQueryVariables = Exact<{
-  filter?: Maybe<FilterTrackInput>;
-  sort?: Maybe<SortTrackInput>;
-  page?: Maybe<PageInput>;
+  filter?: InputMaybe<FilterTrackInput>;
+  sort?: InputMaybe<SortTrackInput>;
+  page?: InputMaybe<PageInput>;
 }>;
 
 
-export type TracksQuery = (
-  { __typename?: 'Query' }
-  & { tracks: (
-    { __typename?: 'TrackConnection' }
-    & { nodes: Array<(
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    )>, pageInfo: (
-      { __typename?: 'PageInfo' }
-      & Pick<PageInfo, 'hasNextPage' | 'endCursor' | 'totalCount'>
-    ) }
-  ) }
-);
+export type TracksQuery = { __typename?: 'Query', tracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type UnfollowProfileMutationVariables = Exact<{
   input: UnfollowProfileInput;
 }>;
 
 
-export type UnfollowProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { unfollowProfile: (
-    { __typename?: 'UnfollowProfilePayload' }
-    & { unfollowedProfile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'followerCount' | 'isFollowed'>
-    ) }
-  ) }
-);
+export type UnfollowProfileMutation = { __typename?: 'Mutation', unfollowProfile: { __typename?: 'UnfollowProfilePayload', unfollowedProfile: { __typename?: 'Profile', id: string, followerCount: number, isFollowed: boolean } } };
 
 export type UnreadMessageCountQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UnreadMessageCountQuery = (
-  { __typename?: 'Query' }
-  & { myProfile: (
-    { __typename?: 'Profile' }
-    & Pick<Profile, 'id' | 'unreadMessageCount'>
-  ) }
-);
+export type UnreadMessageCountQuery = { __typename?: 'Query', myProfile: { __typename?: 'Profile', id: string, unreadMessageCount: number } };
 
 export type UnsubscribeFromProfileMutationVariables = Exact<{
   input: UnsubscribeFromProfileInput;
 }>;
 
 
-export type UnsubscribeFromProfileMutation = (
-  { __typename?: 'Mutation' }
-  & { unsubscribeFromProfile: (
-    { __typename?: 'UnsubscribeFromProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'isSubscriber'>
-    ) }
-  ) }
-);
+export type UnsubscribeFromProfileMutation = { __typename?: 'Mutation', unsubscribeFromProfile: { __typename?: 'UnsubscribeFromProfilePayload', profile: { __typename?: 'Profile', id: string, isSubscriber: boolean } } };
 
 export type UpdateAllOwnedTracksMutationVariables = Exact<{
   input: UpdateEditionOwnedTracksInput;
 }>;
 
 
-export type UpdateAllOwnedTracksMutation = (
-  { __typename?: 'Mutation' }
-  & { updateEditionOwnedTracks: (
-    { __typename?: 'UpdateEditionOwnedTracksPayload' }
-    & { tracks: Array<(
-      { __typename?: 'Track' }
-      & Pick<Track, 'id'>
-      & { nftData: Maybe<(
-        { __typename?: 'NFTDataType' }
-        & Pick<NftDataType, 'pendingRequest'>
-      )>, trackEdition: Maybe<(
-        { __typename?: 'TrackEdition' }
-        & TrackEditionFieldsFragment
-      )> }
-    )> }
-  ) }
-);
+export type UpdateAllOwnedTracksMutation = { __typename?: 'Mutation', updateEditionOwnedTracks: { __typename?: 'UpdateEditionOwnedTracksPayload', tracks: Array<{ __typename?: 'Track', id: string, nftData: { __typename?: 'NFTDataType', pendingRequest: PendingRequest | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }> } };
 
 export type UpdateCommentMutationVariables = Exact<{
   input: UpdateCommentInput;
 }>;
 
 
-export type UpdateCommentMutation = (
-  { __typename?: 'Mutation' }
-  & { updateComment: (
-    { __typename?: 'UpdateCommentPayload' }
-    & { comment: (
-      { __typename?: 'Comment' }
-      & CommentComponentFieldsFragment
-    ) }
-  ) }
-);
+export type UpdateCommentMutation = { __typename?: 'Mutation', updateComment: { __typename?: 'UpdateCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } } } };
 
 export type UpdateCoverPictureMutationVariables = Exact<{
   input: UpdateProfileInput;
 }>;
 
 
-export type UpdateCoverPictureMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'coverPicture'>
-    ) }
-  ) }
-);
+export type UpdateCoverPictureMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, coverPicture: string | null } } };
 
 export type UpdateDefaultWalletMutationVariables = Exact<{
   input: UpdateDefaultWalletInput;
 }>;
 
 
-export type UpdateDefaultWalletMutation = (
-  { __typename?: 'Mutation' }
-  & { updateDefaultWallet: (
-    { __typename?: 'UpdateDefaultWalletPayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'defaultWallet'>
-    ) }
-  ) }
-);
+export type UpdateDefaultWalletMutation = { __typename?: 'Mutation', updateDefaultWallet: { __typename?: 'UpdateDefaultWalletPayload', user: { __typename?: 'User', id: string, defaultWallet: DefaultWallet } } };
 
 export type UpdateFavoriteGenresMutationVariables = Exact<{
   input: UpdateProfileInput;
 }>;
 
 
-export type UpdateFavoriteGenresMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'favoriteGenres'>
-    ) }
-  ) }
-);
+export type UpdateFavoriteGenresMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, favoriteGenres: Array<Genre> | null } } };
 
 export type UpdateHandleMutationVariables = Exact<{
   input: UpdateHandleInput;
 }>;
 
 
-export type UpdateHandleMutation = (
-  { __typename?: 'Mutation' }
-  & { updateHandle: (
-    { __typename?: 'UpdateHandlePayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'handle'>
-    ) }
-  ) }
-);
+export type UpdateHandleMutation = { __typename?: 'Mutation', updateHandle: { __typename?: 'UpdateHandlePayload', user: { __typename?: 'User', id: string, handle: string } } };
 
 export type UpdateMusicianTypeMutationVariables = Exact<{
   input: UpdateProfileInput;
 }>;
 
 
-export type UpdateMusicianTypeMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'musicianTypes'>
-    ) }
-  ) }
-);
+export type UpdateMusicianTypeMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, musicianTypes: Array<MusicianType> | null } } };
 
 export type UpdateOtpMutationVariables = Exact<{
   input: UpdateOtpInput;
 }>;
 
 
-export type UpdateOtpMutation = (
-  { __typename?: 'Mutation' }
-  & { updateOTP: (
-    { __typename?: 'UpdateOTPPayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'otpSecret' | 'otpRecoveryPhrase'>
-    ) }
-  ) }
-);
+export type UpdateOtpMutation = { __typename?: 'Mutation', updateOTP: { __typename?: 'UpdateOTPPayload', user: { __typename?: 'User', id: string } } };
 
 export type UpdateOgunClaimedAudioHolderMutationVariables = Exact<{
   input: UpdateOgunClaimedInput;
 }>;
 
 
-export type UpdateOgunClaimedAudioHolderMutation = (
-  { __typename?: 'Mutation' }
-  & { updateOgunClaimedAudioHolder: (
-    { __typename?: 'UpdateOgunClaimedAudioHolderPayload' }
-    & { audioHolder: (
-      { __typename?: 'AudioHolder' }
-      & Pick<AudioHolder, 'id'>
-    ) }
-  ) }
-);
+export type UpdateOgunClaimedAudioHolderMutation = { __typename?: 'Mutation', updateOgunClaimedAudioHolder: { __typename?: 'UpdateOgunClaimedAudioHolderPayload', audioHolder: { __typename?: 'AudioHolder', id: string } } };
 
 export type UpdateOgunClaimedWhitelistMutationVariables = Exact<{
   input: UpdateOgunClaimedInput;
 }>;
 
 
-export type UpdateOgunClaimedWhitelistMutation = (
-  { __typename?: 'Mutation' }
-  & { updateOgunClaimedWhitelist: (
-    { __typename?: 'UpdateWhitelistEntryPayload' }
-    & { whitelistEntry: (
-      { __typename?: 'WhitelistEntry' }
-      & Pick<WhitelistEntry, 'id'>
-    ) }
-  ) }
-);
+export type UpdateOgunClaimedWhitelistMutation = { __typename?: 'Mutation', updateOgunClaimedWhitelist: { __typename?: 'UpdateWhitelistEntryPayload', whitelistEntry: { __typename?: 'WhitelistEntry', id: string } } };
 
 export type UpdatePostMutationVariables = Exact<{
   input: UpdatePostInput;
 }>;
 
 
-export type UpdatePostMutation = (
-  { __typename?: 'Mutation' }
-  & { updatePost: (
-    { __typename?: 'UpdatePostPayload' }
-    & { post: (
-      { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'body'>
-    ) }
-  ) }
-);
+export type UpdatePostMutation = { __typename?: 'Mutation', updatePost: { __typename?: 'UpdatePostPayload', post: { __typename?: 'Post', id: string, body: string | null } } };
 
 export type UpdateProfileBioMutationVariables = Exact<{
   input: UpdateProfileInput;
 }>;
 
 
-export type UpdateProfileBioMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'bio'>
-    ) }
-  ) }
-);
+export type UpdateProfileBioMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, bio: string | null } } };
 
 export type UpdateProfileDisplayNameMutationVariables = Exact<{
   input: UpdateProfileInput;
 }>;
 
 
-export type UpdateProfileDisplayNameMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName'>
-    ) }
-  ) }
-);
+export type UpdateProfileDisplayNameMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, displayName: string } } };
 
 export type UpdateProfilePictureMutationVariables = Exact<{
   input: UpdateProfileInput;
 }>;
 
 
-export type UpdateProfilePictureMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'profilePicture'>
-    ) }
-  ) }
-);
+export type UpdateProfilePictureMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, profilePicture: string | null } } };
 
 export type UpdateSocialMediasMutationVariables = Exact<{
   input: UpdateProfileInput;
 }>;
 
 
-export type UpdateSocialMediasMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfile: (
-    { __typename?: 'UpdateProfilePayload' }
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id'>
-      & { socialMedias: (
-        { __typename?: 'SocialMedias' }
-        & Pick<SocialMedias, 'facebook' | 'instagram' | 'soundcloud' | 'twitter' | 'linktree' | 'discord' | 'telegram' | 'spotify' | 'bandcamp'>
-      ) }
-    ) }
-  ) }
-);
+export type UpdateSocialMediasMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } } };
 
 export type UpdateProfileVerificationRequestMutationVariables = Exact<{
-  id: Scalars['String'];
+  id: Scalars['String']['input'];
   input: CreateProfileVerificationRequestInput;
 }>;
 
 
-export type UpdateProfileVerificationRequestMutation = (
-  { __typename?: 'Mutation' }
-  & { updateProfileVerificationRequest: (
-    { __typename?: 'ProfileVerificationRequestPayload' }
-    & { profileVerificationRequest: (
-      { __typename?: 'ProfileVerificationRequest' }
-      & ProfileVerificationRequestComponentFieldsFragment
-    ) }
-  ) }
-);
+export type UpdateProfileVerificationRequestMutation = { __typename?: 'Mutation', updateProfileVerificationRequest: { __typename?: 'ProfileVerificationRequestPayload', profileVerificationRequest: { __typename?: 'ProfileVerificationRequest', id: string, profileId: string, soundcloud: string | null, youtube: string | null, bandcamp: string | null, status: ProfileVerificationStatusType | null, reason: string | null, reviewerProfileId: string | null, createdAt: string, updatedAt: string } } };
 
 export type UpdateTrackMutationVariables = Exact<{
   input: UpdateTrackInput;
 }>;
 
 
-export type UpdateTrackMutation = (
-  { __typename?: 'Mutation' }
-  & { updateTrack: (
-    { __typename?: 'UpdateTrackPayload' }
-    & { track: (
-      { __typename?: 'Track' }
-      & TrackComponentFieldsFragment
-    ) }
-  ) }
-);
+export type UpdateTrackMutation = { __typename?: 'Mutation', updateTrack: { __typename?: 'UpdateTrackPayload', track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } } };
 
 export type UpdateMetaMaskAddressesMutationVariables = Exact<{
   input: UpdateWalletInput;
 }>;
 
 
-export type UpdateMetaMaskAddressesMutation = (
-  { __typename?: 'Mutation' }
-  & { updateMetaMaskAddresses: (
-    { __typename?: 'UpdateDefaultWalletPayload' }
-    & { user: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'metaMaskWalletAddressees'>
-    ) }
-  ) }
-);
+export type UpdateMetaMaskAddressesMutation = { __typename?: 'Mutation', updateMetaMaskAddresses: { __typename?: 'UpdateDefaultWalletPayload', user: { __typename?: 'User', id: string, metaMaskWalletAddressees: Array<string> | null } } };
 
 export type UploadUrlQueryVariables = Exact<{
-  fileType: Scalars['String'];
+  fileType: Scalars['String']['input'];
 }>;
 
 
-export type UploadUrlQuery = (
-  { __typename?: 'Query' }
-  & { uploadUrl: (
-    { __typename?: 'UploadUrl' }
-    & Pick<UploadUrl, 'uploadUrl' | 'fileName' | 'readUrl'>
-  ) }
-);
+export type UploadUrlQuery = { __typename?: 'Query', uploadUrl: { __typename?: 'UploadUrl', uploadUrl: string, fileName: string, readUrl: string } };
 
 export type UserByWalletQueryVariables = Exact<{
-  walletAddress: Scalars['String'];
+  walletAddress: Scalars['String']['input'];
 }>;
 
 
-export type UserByWalletQuery = (
-  { __typename?: 'Query' }
-  & { getUserByWallet: Maybe<(
-    { __typename?: 'User' }
-    & Pick<User, 'id'>
-    & { profile: (
-      { __typename?: 'Profile' }
-      & Pick<Profile, 'id' | 'displayName' | 'profilePicture' | 'userHandle' | 'followerCount' | 'followingCount' | 'verified' | 'teamMember' | 'badges'>
-    ) }
-  )> }
-);
+export type UserByWalletQuery = { __typename?: 'Query', getUserByWallet: { __typename?: 'User', id: string, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, userHandle: string, followerCount: number, followingCount: number, verified: boolean | null, teamMember: boolean, badges: Array<Badge> | null } } | null };
 
 export type ValidateOtpRecoveryPhraseMutationVariables = Exact<{
   input: ValidateOtpRecoveryPhraseInput;
 }>;
 
 
-export type ValidateOtpRecoveryPhraseMutation = (
-  { __typename?: 'Mutation' }
-  & Pick<Mutation, 'validateOTPRecoveryPhrase'>
-);
+export type ValidateOtpRecoveryPhraseMutation = { __typename?: 'Mutation', validateOTPRecoveryPhrase: boolean };
 
-export type VerificationRequestNotificationFieldsFragment = (
-  { __typename?: 'VerificationRequestNotification' }
-  & Pick<VerificationRequestNotification, 'id' | 'type' | 'body' | 'createdAt'>
-);
+export type VerificationRequestNotificationFieldsFragment = { __typename?: 'VerificationRequestNotification', id: string, type: NotificationType, body: string, createdAt: string };
 
 export type WhitelistEntryByWalletQueryVariables = Exact<{
-  walletAdress: Scalars['String'];
+  walletAdress: Scalars['String']['input'];
 }>;
 
 
-export type WhitelistEntryByWalletQuery = (
-  { __typename?: 'Query' }
-  & { whitelistEntryByWallet: (
-    { __typename?: 'WhitelistEntry' }
-    & Pick<WhitelistEntry, 'id' | 'ogunClaimed'>
-  ) }
-);
+export type WhitelistEntryByWalletQuery = { __typename?: 'Query', whitelistEntryByWallet: { __typename?: 'WhitelistEntry', id: string, ogunClaimed: boolean | null } };
 
-export type WonAuctionNotificationFieldsFragment = (
-  { __typename?: 'WonAuctionNotification' }
-  & Pick<WonAuctionNotification, 'id' | 'type' | 'createdAt' | 'trackId' | 'trackName' | 'artist' | 'artworkUrl' | 'price'>
-);
+export type WonAuctionNotificationFieldsFragment = { __typename?: 'WonAuctionNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number };
 
 export const AuctionEndedNotificationFieldsFragmentDoc = gql`
     fragment AuctionEndedNotificationFields on AuctionEndedNotification {
@@ -4094,9 +2978,8 @@ export const DeletedPostNotificationFieldsFragmentDoc = gql`
   authorName
   authorPicture
   body
-  link
   previewBody
-  previewLink
+  mediaLink
   createdAt
   track {
     title
@@ -4547,7 +3430,7 @@ export const AuctionItemDocument = gql`
  *   },
  * });
  */
-export function useAuctionItemQuery(baseOptions: Apollo.QueryHookOptions<AuctionItemQuery, AuctionItemQueryVariables>) {
+export function useAuctionItemQuery(baseOptions: Apollo.QueryHookOptions<AuctionItemQuery, AuctionItemQueryVariables> & ({ variables: AuctionItemQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options);
       }
@@ -4555,8 +3438,13 @@ export function useAuctionItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options);
         }
+export function useAuctionItemSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<AuctionItemQuery, AuctionItemQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<AuctionItemQuery, AuctionItemQueryVariables>(AuctionItemDocument, options);
+        }
 export type AuctionItemQueryHookResult = ReturnType<typeof useAuctionItemQuery>;
 export type AuctionItemLazyQueryHookResult = ReturnType<typeof useAuctionItemLazyQuery>;
+export type AuctionItemSuspenseQueryHookResult = ReturnType<typeof useAuctionItemSuspenseQuery>;
 export type AuctionItemQueryResult = Apollo.QueryResult<AuctionItemQuery, AuctionItemQueryVariables>;
 export const AudioHolderByWalletDocument = gql`
     query AudioHolderByWallet($walletAdress: String!) {
@@ -4584,7 +3472,7 @@ export const AudioHolderByWalletDocument = gql`
  *   },
  * });
  */
-export function useAudioHolderByWalletQuery(baseOptions: Apollo.QueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>) {
+export function useAudioHolderByWalletQuery(baseOptions: Apollo.QueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables> & ({ variables: AudioHolderByWalletQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(AudioHolderByWalletDocument, options);
       }
@@ -4592,8 +3480,13 @@ export function useAudioHolderByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHo
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(AudioHolderByWalletDocument, options);
         }
+export function useAudioHolderByWalletSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>(AudioHolderByWalletDocument, options);
+        }
 export type AudioHolderByWalletQueryHookResult = ReturnType<typeof useAudioHolderByWalletQuery>;
 export type AudioHolderByWalletLazyQueryHookResult = ReturnType<typeof useAudioHolderByWalletLazyQuery>;
+export type AudioHolderByWalletSuspenseQueryHookResult = ReturnType<typeof useAudioHolderByWalletSuspenseQuery>;
 export type AudioHolderByWalletQueryResult = Apollo.QueryResult<AudioHolderByWalletQuery, AudioHolderByWalletQueryVariables>;
 export const BandcampLinkDocument = gql`
     query BandcampLink($url: String!) {
@@ -4617,7 +3510,7 @@ export const BandcampLinkDocument = gql`
  *   },
  * });
  */
-export function useBandcampLinkQuery(baseOptions: Apollo.QueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>) {
+export function useBandcampLinkQuery(baseOptions: Apollo.QueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables> & ({ variables: BandcampLinkQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
       }
@@ -4625,8 +3518,13 @@ export function useBandcampLinkLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
         }
+export function useBandcampLinkSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<BandcampLinkQuery, BandcampLinkQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<BandcampLinkQuery, BandcampLinkQueryVariables>(BandcampLinkDocument, options);
+        }
 export type BandcampLinkQueryHookResult = ReturnType<typeof useBandcampLinkQuery>;
 export type BandcampLinkLazyQueryHookResult = ReturnType<typeof useBandcampLinkLazyQuery>;
+export type BandcampLinkSuspenseQueryHookResult = ReturnType<typeof useBandcampLinkSuspenseQuery>;
 export type BandcampLinkQueryResult = Apollo.QueryResult<BandcampLinkQuery, BandcampLinkQueryVariables>;
 export const BidsWithInfoDocument = gql`
     query BidsWithInfo($auctionId: String!) {
@@ -4666,7 +3564,7 @@ export const BidsWithInfoDocument = gql`
  *   },
  * });
  */
-export function useBidsWithInfoQuery(baseOptions: Apollo.QueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables>) {
+export function useBidsWithInfoQuery(baseOptions: Apollo.QueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables> & ({ variables: BidsWithInfoQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options);
       }
@@ -4674,8 +3572,13 @@ export function useBidsWithInfoLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options);
         }
+export function useBidsWithInfoSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<BidsWithInfoQuery, BidsWithInfoQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<BidsWithInfoQuery, BidsWithInfoQueryVariables>(BidsWithInfoDocument, options);
+        }
 export type BidsWithInfoQueryHookResult = ReturnType<typeof useBidsWithInfoQuery>;
 export type BidsWithInfoLazyQueryHookResult = ReturnType<typeof useBidsWithInfoLazyQuery>;
+export type BidsWithInfoSuspenseQueryHookResult = ReturnType<typeof useBidsWithInfoSuspenseQuery>;
 export type BidsWithInfoQueryResult = Apollo.QueryResult<BidsWithInfoQuery, BidsWithInfoQueryVariables>;
 export const BuyNowItemDocument = gql`
     query BuyNowItem($input: FilterListingItemInput!) {
@@ -4715,7 +3618,7 @@ export const BuyNowItemDocument = gql`
  *   },
  * });
  */
-export function useBuyNowItemQuery(baseOptions: Apollo.QueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
+export function useBuyNowItemQuery(baseOptions: Apollo.QueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables> & ({ variables: BuyNowItemQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
       }
@@ -4723,8 +3626,13 @@ export function useBuyNowItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
         }
+export function useBuyNowItemSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<BuyNowItemQuery, BuyNowItemQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<BuyNowItemQuery, BuyNowItemQueryVariables>(BuyNowItemDocument, options);
+        }
 export type BuyNowItemQueryHookResult = ReturnType<typeof useBuyNowItemQuery>;
 export type BuyNowItemLazyQueryHookResult = ReturnType<typeof useBuyNowItemLazyQuery>;
+export type BuyNowItemSuspenseQueryHookResult = ReturnType<typeof useBuyNowItemSuspenseQuery>;
 export type BuyNowItemQueryResult = Apollo.QueryResult<BuyNowItemQuery, BuyNowItemQueryVariables>;
 export const BuyNowListingItemsDocument = gql`
     query BuyNowListingItems($filter: FilterBuyNowItemInput, $page: PageInput) {
@@ -4766,8 +3674,13 @@ export function useBuyNowListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHoo
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options);
         }
+export function useBuyNowListingItemsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>(BuyNowListingItemsDocument, options);
+        }
 export type BuyNowListingItemsQueryHookResult = ReturnType<typeof useBuyNowListingItemsQuery>;
 export type BuyNowListingItemsLazyQueryHookResult = ReturnType<typeof useBuyNowListingItemsLazyQuery>;
+export type BuyNowListingItemsSuspenseQueryHookResult = ReturnType<typeof useBuyNowListingItemsSuspenseQuery>;
 export type BuyNowListingItemsQueryResult = Apollo.QueryResult<BuyNowListingItemsQuery, BuyNowListingItemsQueryVariables>;
 export const ChangeReactionDocument = gql`
     mutation ChangeReaction($input: ChangeReactionInput!) {
@@ -4838,7 +3751,7 @@ export const ChatHistoryDocument = gql`
  *   },
  * });
  */
-export function useChatHistoryQuery(baseOptions: Apollo.QueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>) {
+export function useChatHistoryQuery(baseOptions: Apollo.QueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables> & ({ variables: ChatHistoryQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
       }
@@ -4846,8 +3759,13 @@ export function useChatHistoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
         }
+export function useChatHistorySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ChatHistoryQuery, ChatHistoryQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ChatHistoryQuery, ChatHistoryQueryVariables>(ChatHistoryDocument, options);
+        }
 export type ChatHistoryQueryHookResult = ReturnType<typeof useChatHistoryQuery>;
 export type ChatHistoryLazyQueryHookResult = ReturnType<typeof useChatHistoryLazyQuery>;
+export type ChatHistorySuspenseQueryHookResult = ReturnType<typeof useChatHistorySuspenseQuery>;
 export type ChatHistoryQueryResult = Apollo.QueryResult<ChatHistoryQuery, ChatHistoryQueryVariables>;
 export const ChatsDocument = gql`
     query Chats($page: PageInput) {
@@ -4898,8 +3816,13 @@ export function useChatsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Chat
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options);
         }
+export function useChatsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ChatsQuery, ChatsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ChatsQuery, ChatsQueryVariables>(ChatsDocument, options);
+        }
 export type ChatsQueryHookResult = ReturnType<typeof useChatsQuery>;
 export type ChatsLazyQueryHookResult = ReturnType<typeof useChatsLazyQuery>;
+export type ChatsSuspenseQueryHookResult = ReturnType<typeof useChatsSuspenseQuery>;
 export type ChatsQueryResult = Apollo.QueryResult<ChatsQuery, ChatsQueryVariables>;
 export const CheapestListingItemDocument = gql`
     query CheapestListingItem($trackEditionId: String!) {
@@ -4926,7 +3849,7 @@ export const CheapestListingItemDocument = gql`
  *   },
  * });
  */
-export function useCheapestListingItemQuery(baseOptions: Apollo.QueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables>) {
+export function useCheapestListingItemQuery(baseOptions: Apollo.QueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables> & ({ variables: CheapestListingItemQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(CheapestListingItemDocument, options);
       }
@@ -4934,8 +3857,13 @@ export function useCheapestListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHo
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(CheapestListingItemDocument, options);
         }
+export function useCheapestListingItemSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CheapestListingItemQuery, CheapestListingItemQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CheapestListingItemQuery, CheapestListingItemQueryVariables>(CheapestListingItemDocument, options);
+        }
 export type CheapestListingItemQueryHookResult = ReturnType<typeof useCheapestListingItemQuery>;
 export type CheapestListingItemLazyQueryHookResult = ReturnType<typeof useCheapestListingItemLazyQuery>;
+export type CheapestListingItemSuspenseQueryHookResult = ReturnType<typeof useCheapestListingItemSuspenseQuery>;
 export type CheapestListingItemQueryResult = Apollo.QueryResult<CheapestListingItemQuery, CheapestListingItemQueryVariables>;
 export const ClaimBadgeProfileDocument = gql`
     mutation claimBadgeProfile {
@@ -5027,7 +3955,7 @@ export const CommentDocument = gql`
  *   },
  * });
  */
-export function useCommentQuery(baseOptions: Apollo.QueryHookOptions<CommentQuery, CommentQueryVariables>) {
+export function useCommentQuery(baseOptions: Apollo.QueryHookOptions<CommentQuery, CommentQueryVariables> & ({ variables: CommentQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
       }
@@ -5035,8 +3963,13 @@ export function useCommentLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Co
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
         }
+export function useCommentSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CommentQuery, CommentQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CommentQuery, CommentQueryVariables>(CommentDocument, options);
+        }
 export type CommentQueryHookResult = ReturnType<typeof useCommentQuery>;
 export type CommentLazyQueryHookResult = ReturnType<typeof useCommentLazyQuery>;
+export type CommentSuspenseQueryHookResult = ReturnType<typeof useCommentSuspenseQuery>;
 export type CommentQueryResult = Apollo.QueryResult<CommentQuery, CommentQueryVariables>;
 export const CommentsDocument = gql`
     query Comments($postId: String!, $page: PageInput) {
@@ -5071,7 +4004,7 @@ export const CommentsDocument = gql`
  *   },
  * });
  */
-export function useCommentsQuery(baseOptions: Apollo.QueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
+export function useCommentsQuery(baseOptions: Apollo.QueryHookOptions<CommentsQuery, CommentsQueryVariables> & ({ variables: CommentsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
       }
@@ -5079,8 +4012,13 @@ export function useCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<C
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
         }
+export function useCommentsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CommentsQuery, CommentsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CommentsQuery, CommentsQueryVariables>(CommentsDocument, options);
+        }
 export type CommentsQueryHookResult = ReturnType<typeof useCommentsQuery>;
 export type CommentsLazyQueryHookResult = ReturnType<typeof useCommentsLazyQuery>;
+export type CommentsSuspenseQueryHookResult = ReturnType<typeof useCommentsSuspenseQuery>;
 export type CommentsQueryResult = Apollo.QueryResult<CommentsQuery, CommentsQueryVariables>;
 export const CountBidsDocument = gql`
     query CountBids($tokenId: Float!) {
@@ -5106,7 +4044,7 @@ export const CountBidsDocument = gql`
  *   },
  * });
  */
-export function useCountBidsQuery(baseOptions: Apollo.QueryHookOptions<CountBidsQuery, CountBidsQueryVariables>) {
+export function useCountBidsQuery(baseOptions: Apollo.QueryHookOptions<CountBidsQuery, CountBidsQueryVariables> & ({ variables: CountBidsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options);
       }
@@ -5114,8 +4052,13 @@ export function useCountBidsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options);
         }
+export function useCountBidsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<CountBidsQuery, CountBidsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<CountBidsQuery, CountBidsQueryVariables>(CountBidsDocument, options);
+        }
 export type CountBidsQueryHookResult = ReturnType<typeof useCountBidsQuery>;
 export type CountBidsLazyQueryHookResult = ReturnType<typeof useCountBidsLazyQuery>;
+export type CountBidsSuspenseQueryHookResult = ReturnType<typeof useCountBidsSuspenseQuery>;
 export type CountBidsQueryResult = Apollo.QueryResult<CountBidsQuery, CountBidsQueryVariables>;
 export const CreateMultipleTracksDocument = gql`
     mutation CreateMultipleTracks($input: CreateMultipleTracksInput!) {
@@ -5543,8 +4486,13 @@ export function useExploreLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ex
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
         }
+export function useExploreSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ExploreQuery, ExploreQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ExploreQuery, ExploreQueryVariables>(ExploreDocument, options);
+        }
 export type ExploreQueryHookResult = ReturnType<typeof useExploreQuery>;
 export type ExploreLazyQueryHookResult = ReturnType<typeof useExploreLazyQuery>;
+export type ExploreSuspenseQueryHookResult = ReturnType<typeof useExploreSuspenseQuery>;
 export type ExploreQueryResult = Apollo.QueryResult<ExploreQuery, ExploreQueryVariables>;
 export const ExploreTracksDocument = gql`
     query ExploreTracks($sort: SortExploreTracks, $search: String, $page: PageInput) {
@@ -5587,8 +4535,13 @@ export function useExploreTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
         }
+export function useExploreTracksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ExploreTracksQuery, ExploreTracksQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ExploreTracksQuery, ExploreTracksQueryVariables>(ExploreTracksDocument, options);
+        }
 export type ExploreTracksQueryHookResult = ReturnType<typeof useExploreTracksQuery>;
 export type ExploreTracksLazyQueryHookResult = ReturnType<typeof useExploreTracksLazyQuery>;
+export type ExploreTracksSuspenseQueryHookResult = ReturnType<typeof useExploreTracksSuspenseQuery>;
 export type ExploreTracksQueryResult = Apollo.QueryResult<ExploreTracksQuery, ExploreTracksQueryVariables>;
 export const ExploreUsersDocument = gql`
     query ExploreUsers($search: String, $page: PageInput) {
@@ -5629,8 +4582,13 @@ export function useExploreUsersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options);
         }
+export function useExploreUsersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ExploreUsersQuery, ExploreUsersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ExploreUsersQuery, ExploreUsersQueryVariables>(ExploreUsersDocument, options);
+        }
 export type ExploreUsersQueryHookResult = ReturnType<typeof useExploreUsersQuery>;
 export type ExploreUsersLazyQueryHookResult = ReturnType<typeof useExploreUsersLazyQuery>;
+export type ExploreUsersSuspenseQueryHookResult = ReturnType<typeof useExploreUsersSuspenseQuery>;
 export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, ExploreUsersQueryVariables>;
 export const FavoriteTracksDocument = gql`
     query FavoriteTracks($sort: SortTrackInput, $search: String, $page: PageInput) {
@@ -5673,8 +4631,13 @@ export function useFavoriteTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOpt
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<FavoriteTracksQuery, FavoriteTracksQueryVariables>(FavoriteTracksDocument, options);
         }
+export function useFavoriteTracksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<FavoriteTracksQuery, FavoriteTracksQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<FavoriteTracksQuery, FavoriteTracksQueryVariables>(FavoriteTracksDocument, options);
+        }
 export type FavoriteTracksQueryHookResult = ReturnType<typeof useFavoriteTracksQuery>;
 export type FavoriteTracksLazyQueryHookResult = ReturnType<typeof useFavoriteTracksLazyQuery>;
+export type FavoriteTracksSuspenseQueryHookResult = ReturnType<typeof useFavoriteTracksSuspenseQuery>;
 export type FavoriteTracksQueryResult = Apollo.QueryResult<FavoriteTracksQuery, FavoriteTracksQueryVariables>;
 export const FeedDocument = gql`
     query Feed($page: PageInput) {
@@ -5717,8 +4680,13 @@ export function useFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<FeedQ
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
         }
+export function useFeedSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<FeedQuery, FeedQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<FeedQuery, FeedQueryVariables>(FeedDocument, options);
+        }
 export type FeedQueryHookResult = ReturnType<typeof useFeedQuery>;
 export type FeedLazyQueryHookResult = ReturnType<typeof useFeedLazyQuery>;
+export type FeedSuspenseQueryHookResult = ReturnType<typeof useFeedSuspenseQuery>;
 export type FeedQueryResult = Apollo.QueryResult<FeedQuery, FeedQueryVariables>;
 export const FollowProfileDocument = gql`
     mutation FollowProfile($input: FollowProfileInput!) {
@@ -5790,7 +4758,7 @@ export const FollowedArtistsDocument = gql`
  *   },
  * });
  */
-export function useFollowedArtistsQuery(baseOptions: Apollo.QueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables>) {
+export function useFollowedArtistsQuery(baseOptions: Apollo.QueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables> & ({ variables: FollowedArtistsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options);
       }
@@ -5798,8 +4766,13 @@ export function useFollowedArtistsLazyQuery(baseOptions?: Apollo.LazyQueryHookOp
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options);
         }
+export function useFollowedArtistsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<FollowedArtistsQuery, FollowedArtistsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<FollowedArtistsQuery, FollowedArtistsQueryVariables>(FollowedArtistsDocument, options);
+        }
 export type FollowedArtistsQueryHookResult = ReturnType<typeof useFollowedArtistsQuery>;
 export type FollowedArtistsLazyQueryHookResult = ReturnType<typeof useFollowedArtistsLazyQuery>;
+export type FollowedArtistsSuspenseQueryHookResult = ReturnType<typeof useFollowedArtistsSuspenseQuery>;
 export type FollowedArtistsQueryResult = Apollo.QueryResult<FollowedArtistsQuery, FollowedArtistsQueryVariables>;
 export const FollowersDocument = gql`
     query Followers($profileId: String!, $page: PageInput) {
@@ -5842,7 +4815,7 @@ export const FollowersDocument = gql`
  *   },
  * });
  */
-export function useFollowersQuery(baseOptions: Apollo.QueryHookOptions<FollowersQuery, FollowersQueryVariables>) {
+export function useFollowersQuery(baseOptions: Apollo.QueryHookOptions<FollowersQuery, FollowersQueryVariables> & ({ variables: FollowersQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options);
       }
@@ -5850,8 +4823,13 @@ export function useFollowersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options);
         }
+export function useFollowersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<FollowersQuery, FollowersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<FollowersQuery, FollowersQueryVariables>(FollowersDocument, options);
+        }
 export type FollowersQueryHookResult = ReturnType<typeof useFollowersQuery>;
 export type FollowersLazyQueryHookResult = ReturnType<typeof useFollowersLazyQuery>;
+export type FollowersSuspenseQueryHookResult = ReturnType<typeof useFollowersSuspenseQuery>;
 export type FollowersQueryResult = Apollo.QueryResult<FollowersQuery, FollowersQueryVariables>;
 export const FollowingDocument = gql`
     query Following($profileId: String!, $page: PageInput) {
@@ -5894,7 +4872,7 @@ export const FollowingDocument = gql`
  *   },
  * });
  */
-export function useFollowingQuery(baseOptions: Apollo.QueryHookOptions<FollowingQuery, FollowingQueryVariables>) {
+export function useFollowingQuery(baseOptions: Apollo.QueryHookOptions<FollowingQuery, FollowingQueryVariables> & ({ variables: FollowingQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options);
       }
@@ -5902,8 +4880,13 @@ export function useFollowingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options);
         }
+export function useFollowingSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<FollowingQuery, FollowingQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<FollowingQuery, FollowingQueryVariables>(FollowingDocument, options);
+        }
 export type FollowingQueryHookResult = ReturnType<typeof useFollowingQuery>;
 export type FollowingLazyQueryHookResult = ReturnType<typeof useFollowingLazyQuery>;
+export type FollowingSuspenseQueryHookResult = ReturnType<typeof useFollowingSuspenseQuery>;
 export type FollowingQueryResult = Apollo.QueryResult<FollowingQuery, FollowingQueryVariables>;
 export const GetOriginalPostFromTrackDocument = gql`
     query GetOriginalPostFromTrack($trackId: String!) {
@@ -5929,7 +4912,7 @@ export const GetOriginalPostFromTrackDocument = gql`
  *   },
  * });
  */
-export function useGetOriginalPostFromTrackQuery(baseOptions: Apollo.QueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>) {
+export function useGetOriginalPostFromTrackQuery(baseOptions: Apollo.QueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables> & ({ variables: GetOriginalPostFromTrackQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
       }
@@ -5937,8 +4920,13 @@ export function useGetOriginalPostFromTrackLazyQuery(baseOptions?: Apollo.LazyQu
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
         }
+export function useGetOriginalPostFromTrackSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>(GetOriginalPostFromTrackDocument, options);
+        }
 export type GetOriginalPostFromTrackQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackQuery>;
 export type GetOriginalPostFromTrackLazyQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackLazyQuery>;
+export type GetOriginalPostFromTrackSuspenseQueryHookResult = ReturnType<typeof useGetOriginalPostFromTrackSuspenseQuery>;
 export type GetOriginalPostFromTrackQueryResult = Apollo.QueryResult<GetOriginalPostFromTrackQuery, GetOriginalPostFromTrackQueryVariables>;
 export const GroupedTracksDocument = gql`
     query GroupedTracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
@@ -5981,8 +4969,13 @@ export function useGroupedTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options);
         }
+export function useGroupedTracksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GroupedTracksQuery, GroupedTracksQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GroupedTracksQuery, GroupedTracksQueryVariables>(GroupedTracksDocument, options);
+        }
 export type GroupedTracksQueryHookResult = ReturnType<typeof useGroupedTracksQuery>;
 export type GroupedTracksLazyQueryHookResult = ReturnType<typeof useGroupedTracksLazyQuery>;
+export type GroupedTracksSuspenseQueryHookResult = ReturnType<typeof useGroupedTracksSuspenseQuery>;
 export type GroupedTracksQueryResult = Apollo.QueryResult<GroupedTracksQuery, GroupedTracksQueryVariables>;
 export const HaveBidedDocument = gql`
     query HaveBided($auctionId: String!, $bidder: String!) {
@@ -6009,7 +5002,7 @@ export const HaveBidedDocument = gql`
  *   },
  * });
  */
-export function useHaveBidedQuery(baseOptions: Apollo.QueryHookOptions<HaveBidedQuery, HaveBidedQueryVariables>) {
+export function useHaveBidedQuery(baseOptions: Apollo.QueryHookOptions<HaveBidedQuery, HaveBidedQueryVariables> & ({ variables: HaveBidedQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options);
       }
@@ -6017,8 +5010,13 @@ export function useHaveBidedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options);
         }
+export function useHaveBidedSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<HaveBidedQuery, HaveBidedQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<HaveBidedQuery, HaveBidedQueryVariables>(HaveBidedDocument, options);
+        }
 export type HaveBidedQueryHookResult = ReturnType<typeof useHaveBidedQuery>;
 export type HaveBidedLazyQueryHookResult = ReturnType<typeof useHaveBidedLazyQuery>;
+export type HaveBidedSuspenseQueryHookResult = ReturnType<typeof useHaveBidedSuspenseQuery>;
 export type HaveBidedQueryResult = Apollo.QueryResult<HaveBidedQuery, HaveBidedQueryVariables>;
 export const ListableOwnedTrackIdsDocument = gql`
     query ListableOwnedTrackIds($filter: FilterOwnedTracksInput!) {
@@ -6049,7 +5047,7 @@ export const ListableOwnedTrackIdsDocument = gql`
  *   },
  * });
  */
-export function useListableOwnedTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>) {
+export function useListableOwnedTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables> & ({ variables: ListableOwnedTrackIdsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(ListableOwnedTrackIdsDocument, options);
       }
@@ -6057,8 +5055,13 @@ export function useListableOwnedTrackIdsLazyQuery(baseOptions?: Apollo.LazyQuery
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(ListableOwnedTrackIdsDocument, options);
         }
+export function useListableOwnedTrackIdsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>(ListableOwnedTrackIdsDocument, options);
+        }
 export type ListableOwnedTrackIdsQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsQuery>;
 export type ListableOwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsLazyQuery>;
+export type ListableOwnedTrackIdsSuspenseQueryHookResult = ReturnType<typeof useListableOwnedTrackIdsSuspenseQuery>;
 export type ListableOwnedTrackIdsQueryResult = Apollo.QueryResult<ListableOwnedTrackIdsQuery, ListableOwnedTrackIdsQueryVariables>;
 export const ListingItemDocument = gql`
     query ListingItem($input: FilterListingItemInput!) {
@@ -6084,7 +5087,7 @@ export const ListingItemDocument = gql`
  *   },
  * });
  */
-export function useListingItemQuery(baseOptions: Apollo.QueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
+export function useListingItemQuery(baseOptions: Apollo.QueryHookOptions<ListingItemQuery, ListingItemQueryVariables> & ({ variables: ListingItemQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
       }
@@ -6092,8 +5095,13 @@ export function useListingItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
         }
+export function useListingItemSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ListingItemQuery, ListingItemQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ListingItemQuery, ListingItemQueryVariables>(ListingItemDocument, options);
+        }
 export type ListingItemQueryHookResult = ReturnType<typeof useListingItemQuery>;
 export type ListingItemLazyQueryHookResult = ReturnType<typeof useListingItemLazyQuery>;
+export type ListingItemSuspenseQueryHookResult = ReturnType<typeof useListingItemSuspenseQuery>;
 export type ListingItemQueryResult = Apollo.QueryResult<ListingItemQuery, ListingItemQueryVariables>;
 export const ListingItemsDocument = gql`
     query ListingItems($filter: FilterTrackMarketplace, $sort: SortListingItemInput, $page: PageInput) {
@@ -6136,8 +5144,13 @@ export function useListingItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
         }
+export function useListingItemsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ListingItemsQuery, ListingItemsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ListingItemsQuery, ListingItemsQueryVariables>(ListingItemsDocument, options);
+        }
 export type ListingItemsQueryHookResult = ReturnType<typeof useListingItemsQuery>;
 export type ListingItemsLazyQueryHookResult = ReturnType<typeof useListingItemsLazyQuery>;
+export type ListingItemsSuspenseQueryHookResult = ReturnType<typeof useListingItemsSuspenseQuery>;
 export type ListingItemsQueryResult = Apollo.QueryResult<ListingItemsQuery, ListingItemsQueryVariables>;
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
@@ -6201,8 +5214,13 @@ export function useMaticUsdLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<M
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<MaticUsdQuery, MaticUsdQueryVariables>(MaticUsdDocument, options);
         }
+export function useMaticUsdSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<MaticUsdQuery, MaticUsdQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<MaticUsdQuery, MaticUsdQueryVariables>(MaticUsdDocument, options);
+        }
 export type MaticUsdQueryHookResult = ReturnType<typeof useMaticUsdQuery>;
 export type MaticUsdLazyQueryHookResult = ReturnType<typeof useMaticUsdLazyQuery>;
+export type MaticUsdSuspenseQueryHookResult = ReturnType<typeof useMaticUsdSuspenseQuery>;
 export type MaticUsdQueryResult = Apollo.QueryResult<MaticUsdQuery, MaticUsdQueryVariables>;
 export const MeDocument = gql`
     query Me {
@@ -6215,7 +5233,6 @@ export const MeDocument = gql`
     defaultWallet
     isApprovedOnMarketplace
     roles
-    otpSecret
     profile {
       ...ProfileComponentFields
     }
@@ -6246,8 +5263,13 @@ export function useMeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MeQuery
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<MeQuery, MeQueryVariables>(MeDocument, options);
         }
+export function useMeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<MeQuery, MeQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<MeQuery, MeQueryVariables>(MeDocument, options);
+        }
 export type MeQueryHookResult = ReturnType<typeof useMeQuery>;
 export type MeLazyQueryHookResult = ReturnType<typeof useMeLazyQuery>;
+export type MeSuspenseQueryHookResult = ReturnType<typeof useMeSuspenseQuery>;
 export type MeQueryResult = Apollo.QueryResult<MeQuery, MeQueryVariables>;
 export const MessageDocument = gql`
     query Message($id: String!) {
@@ -6273,7 +5295,7 @@ export const MessageDocument = gql`
  *   },
  * });
  */
-export function useMessageQuery(baseOptions: Apollo.QueryHookOptions<MessageQuery, MessageQueryVariables>) {
+export function useMessageQuery(baseOptions: Apollo.QueryHookOptions<MessageQuery, MessageQueryVariables> & ({ variables: MessageQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
       }
@@ -6281,8 +5303,13 @@ export function useMessageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Me
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
         }
+export function useMessageSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<MessageQuery, MessageQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<MessageQuery, MessageQueryVariables>(MessageDocument, options);
+        }
 export type MessageQueryHookResult = ReturnType<typeof useMessageQuery>;
 export type MessageLazyQueryHookResult = ReturnType<typeof useMessageLazyQuery>;
+export type MessageSuspenseQueryHookResult = ReturnType<typeof useMessageSuspenseQuery>;
 export type MessageQueryResult = Apollo.QueryResult<MessageQuery, MessageQueryVariables>;
 export const MimeTypeDocument = gql`
     query MimeType($url: String!) {
@@ -6308,7 +5335,7 @@ export const MimeTypeDocument = gql`
  *   },
  * });
  */
-export function useMimeTypeQuery(baseOptions: Apollo.QueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables>) {
+export function useMimeTypeQuery(baseOptions: Apollo.QueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables> & ({ variables: MimeTypeQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
       }
@@ -6316,8 +5343,13 @@ export function useMimeTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<M
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
         }
+export function useMimeTypeSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<MimeTypeQuery, MimeTypeQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<MimeTypeQuery, MimeTypeQueryVariables>(MimeTypeDocument, options);
+        }
 export type MimeTypeQueryHookResult = ReturnType<typeof useMimeTypeQuery>;
 export type MimeTypeLazyQueryHookResult = ReturnType<typeof useMimeTypeLazyQuery>;
+export type MimeTypeSuspenseQueryHookResult = ReturnType<typeof useMimeTypeSuspenseQuery>;
 export type MimeTypeQueryResult = Apollo.QueryResult<MimeTypeQuery, MimeTypeQueryVariables>;
 export const NotificationDocument = gql`
     query Notification($id: String!) {
@@ -6397,7 +5429,7 @@ ${AuctionEndedNotificationFieldsFragmentDoc}`;
  *   },
  * });
  */
-export function useNotificationQuery(baseOptions: Apollo.QueryHookOptions<NotificationQuery, NotificationQueryVariables>) {
+export function useNotificationQuery(baseOptions: Apollo.QueryHookOptions<NotificationQuery, NotificationQueryVariables> & ({ variables: NotificationQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
       }
@@ -6405,8 +5437,13 @@ export function useNotificationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
         }
+export function useNotificationSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<NotificationQuery, NotificationQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<NotificationQuery, NotificationQueryVariables>(NotificationDocument, options);
+        }
 export type NotificationQueryHookResult = ReturnType<typeof useNotificationQuery>;
 export type NotificationLazyQueryHookResult = ReturnType<typeof useNotificationLazyQuery>;
+export type NotificationSuspenseQueryHookResult = ReturnType<typeof useNotificationSuspenseQuery>;
 export type NotificationQueryResult = Apollo.QueryResult<NotificationQuery, NotificationQueryVariables>;
 export const NotificationCountDocument = gql`
     query NotificationCount {
@@ -6440,8 +5477,13 @@ export function useNotificationCountLazyQuery(baseOptions?: Apollo.LazyQueryHook
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<NotificationCountQuery, NotificationCountQueryVariables>(NotificationCountDocument, options);
         }
+export function useNotificationCountSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<NotificationCountQuery, NotificationCountQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<NotificationCountQuery, NotificationCountQueryVariables>(NotificationCountDocument, options);
+        }
 export type NotificationCountQueryHookResult = ReturnType<typeof useNotificationCountQuery>;
 export type NotificationCountLazyQueryHookResult = ReturnType<typeof useNotificationCountLazyQuery>;
+export type NotificationCountSuspenseQueryHookResult = ReturnType<typeof useNotificationCountSuspenseQuery>;
 export type NotificationCountQueryResult = Apollo.QueryResult<NotificationCountQuery, NotificationCountQueryVariables>;
 export const NotificationsDocument = gql`
     query Notifications($sort: SortNotificationInput) {
@@ -6531,8 +5573,13 @@ export function useNotificationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
         }
+export function useNotificationsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<NotificationsQuery, NotificationsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<NotificationsQuery, NotificationsQueryVariables>(NotificationsDocument, options);
+        }
 export type NotificationsQueryHookResult = ReturnType<typeof useNotificationsQuery>;
 export type NotificationsLazyQueryHookResult = ReturnType<typeof useNotificationsLazyQuery>;
+export type NotificationsSuspenseQueryHookResult = ReturnType<typeof useNotificationsSuspenseQuery>;
 export type NotificationsQueryResult = Apollo.QueryResult<NotificationsQuery, NotificationsQueryVariables>;
 export const OwnedBuyNowTrackIdsDocument = gql`
     query OwnedBuyNowTrackIds($filter: FilterOwnedBuyNowItemInput!) {
@@ -6563,7 +5610,7 @@ export const OwnedBuyNowTrackIdsDocument = gql`
  *   },
  * });
  */
-export function useOwnedBuyNowTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>) {
+export function useOwnedBuyNowTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables> & ({ variables: OwnedBuyNowTrackIdsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(OwnedBuyNowTrackIdsDocument, options);
       }
@@ -6571,8 +5618,13 @@ export function useOwnedBuyNowTrackIdsLazyQuery(baseOptions?: Apollo.LazyQueryHo
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(OwnedBuyNowTrackIdsDocument, options);
         }
+export function useOwnedBuyNowTrackIdsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>(OwnedBuyNowTrackIdsDocument, options);
+        }
 export type OwnedBuyNowTrackIdsQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsQuery>;
 export type OwnedBuyNowTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsLazyQuery>;
+export type OwnedBuyNowTrackIdsSuspenseQueryHookResult = ReturnType<typeof useOwnedBuyNowTrackIdsSuspenseQuery>;
 export type OwnedBuyNowTrackIdsQueryResult = Apollo.QueryResult<OwnedBuyNowTrackIdsQuery, OwnedBuyNowTrackIdsQueryVariables>;
 export const OwnedTrackIdsDocument = gql`
     query OwnedTrackIds($filter: FilterOwnedTracksInput!) {
@@ -6603,7 +5655,7 @@ export const OwnedTrackIdsDocument = gql`
  *   },
  * });
  */
-export function useOwnedTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>) {
+export function useOwnedTrackIdsQuery(baseOptions: Apollo.QueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables> & ({ variables: OwnedTrackIdsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options);
       }
@@ -6611,8 +5663,13 @@ export function useOwnedTrackIdsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options);
         }
+export function useOwnedTrackIdsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>(OwnedTrackIdsDocument, options);
+        }
 export type OwnedTrackIdsQueryHookResult = ReturnType<typeof useOwnedTrackIdsQuery>;
 export type OwnedTrackIdsLazyQueryHookResult = ReturnType<typeof useOwnedTrackIdsLazyQuery>;
+export type OwnedTrackIdsSuspenseQueryHookResult = ReturnType<typeof useOwnedTrackIdsSuspenseQuery>;
 export type OwnedTrackIdsQueryResult = Apollo.QueryResult<OwnedTrackIdsQuery, OwnedTrackIdsQueryVariables>;
 export const OwnedTracksDocument = gql`
     query OwnedTracks($filter: FilterOwnedTracksInput!, $page: PageInput) {
@@ -6650,7 +5707,7 @@ ${ListingItemViewComponentFieldsFragmentDoc}`;
  *   },
  * });
  */
-export function useOwnedTracksQuery(baseOptions: Apollo.QueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>) {
+export function useOwnedTracksQuery(baseOptions: Apollo.QueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables> & ({ variables: OwnedTracksQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options);
       }
@@ -6658,8 +5715,13 @@ export function useOwnedTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options);
         }
+export function useOwnedTracksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<OwnedTracksQuery, OwnedTracksQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<OwnedTracksQuery, OwnedTracksQueryVariables>(OwnedTracksDocument, options);
+        }
 export type OwnedTracksQueryHookResult = ReturnType<typeof useOwnedTracksQuery>;
 export type OwnedTracksLazyQueryHookResult = ReturnType<typeof useOwnedTracksLazyQuery>;
+export type OwnedTracksSuspenseQueryHookResult = ReturnType<typeof useOwnedTracksSuspenseQuery>;
 export type OwnedTracksQueryResult = Apollo.QueryResult<OwnedTracksQuery, OwnedTracksQueryVariables>;
 export const PendingRequestsBadgeNumberDocument = gql`
     query PendingRequestsBadgeNumber {
@@ -6690,8 +5752,13 @@ export function usePendingRequestsBadgeNumberLazyQuery(baseOptions?: Apollo.Lazy
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>(PendingRequestsBadgeNumberDocument, options);
         }
+export function usePendingRequestsBadgeNumberSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>(PendingRequestsBadgeNumberDocument, options);
+        }
 export type PendingRequestsBadgeNumberQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberQuery>;
 export type PendingRequestsBadgeNumberLazyQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberLazyQuery>;
+export type PendingRequestsBadgeNumberSuspenseQueryHookResult = ReturnType<typeof usePendingRequestsBadgeNumberSuspenseQuery>;
 export type PendingRequestsBadgeNumberQueryResult = Apollo.QueryResult<PendingRequestsBadgeNumberQuery, PendingRequestsBadgeNumberQueryVariables>;
 export const PinJsonToIpfsDocument = gql`
     mutation pinJsonToIPFS($input: PinJsonToIPFSInput!) {
@@ -6806,7 +5873,7 @@ export const PolygonscanDocument = gql`
  *   },
  * });
  */
-export function usePolygonscanQuery(baseOptions: Apollo.QueryHookOptions<PolygonscanQuery, PolygonscanQueryVariables>) {
+export function usePolygonscanQuery(baseOptions: Apollo.QueryHookOptions<PolygonscanQuery, PolygonscanQueryVariables> & ({ variables: PolygonscanQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options);
       }
@@ -6814,8 +5881,13 @@ export function usePolygonscanLazyQuery(baseOptions?: Apollo.LazyQueryHookOption
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options);
         }
+export function usePolygonscanSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PolygonscanQuery, PolygonscanQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<PolygonscanQuery, PolygonscanQueryVariables>(PolygonscanDocument, options);
+        }
 export type PolygonscanQueryHookResult = ReturnType<typeof usePolygonscanQuery>;
 export type PolygonscanLazyQueryHookResult = ReturnType<typeof usePolygonscanLazyQuery>;
+export type PolygonscanSuspenseQueryHookResult = ReturnType<typeof usePolygonscanSuspenseQuery>;
 export type PolygonscanQueryResult = Apollo.QueryResult<PolygonscanQuery, PolygonscanQueryVariables>;
 export const PolygonscanInternalTrxDocument = gql`
     query PolygonscanInternalTrx($wallet: String!, $page: PageInput) {
@@ -6856,7 +5928,7 @@ export const PolygonscanInternalTrxDocument = gql`
  *   },
  * });
  */
-export function usePolygonscanInternalTrxQuery(baseOptions: Apollo.QueryHookOptions<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>) {
+export function usePolygonscanInternalTrxQuery(baseOptions: Apollo.QueryHookOptions<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables> & ({ variables: PolygonscanInternalTrxQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>(PolygonscanInternalTrxDocument, options);
       }
@@ -6864,8 +5936,13 @@ export function usePolygonscanInternalTrxLazyQuery(baseOptions?: Apollo.LazyQuer
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>(PolygonscanInternalTrxDocument, options);
         }
+export function usePolygonscanInternalTrxSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>(PolygonscanInternalTrxDocument, options);
+        }
 export type PolygonscanInternalTrxQueryHookResult = ReturnType<typeof usePolygonscanInternalTrxQuery>;
 export type PolygonscanInternalTrxLazyQueryHookResult = ReturnType<typeof usePolygonscanInternalTrxLazyQuery>;
+export type PolygonscanInternalTrxSuspenseQueryHookResult = ReturnType<typeof usePolygonscanInternalTrxSuspenseQuery>;
 export type PolygonscanInternalTrxQueryResult = Apollo.QueryResult<PolygonscanInternalTrxQuery, PolygonscanInternalTrxQueryVariables>;
 export const PostDocument = gql`
     query Post($id: String!) {
@@ -6891,7 +5968,7 @@ export const PostDocument = gql`
  *   },
  * });
  */
-export function usePostQuery(baseOptions: Apollo.QueryHookOptions<PostQuery, PostQueryVariables>) {
+export function usePostQuery(baseOptions: Apollo.QueryHookOptions<PostQuery, PostQueryVariables> & ({ variables: PostQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<PostQuery, PostQueryVariables>(PostDocument, options);
       }
@@ -6899,8 +5976,13 @@ export function usePostLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PostQ
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<PostQuery, PostQueryVariables>(PostDocument, options);
         }
+export function usePostSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PostQuery, PostQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<PostQuery, PostQueryVariables>(PostDocument, options);
+        }
 export type PostQueryHookResult = ReturnType<typeof usePostQuery>;
 export type PostLazyQueryHookResult = ReturnType<typeof usePostLazyQuery>;
+export type PostSuspenseQueryHookResult = ReturnType<typeof usePostSuspenseQuery>;
 export type PostQueryResult = Apollo.QueryResult<PostQuery, PostQueryVariables>;
 export const PostsDocument = gql`
     query Posts($filter: FilterPostInput, $sort: SortPostInput, $page: PageInput) {
@@ -6942,8 +6024,13 @@ export function usePostsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Post
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
         }
+export function usePostsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PostsQuery, PostsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<PostsQuery, PostsQueryVariables>(PostsDocument, options);
+        }
 export type PostsQueryHookResult = ReturnType<typeof usePostsQuery>;
 export type PostsLazyQueryHookResult = ReturnType<typeof usePostsLazyQuery>;
+export type PostsSuspenseQueryHookResult = ReturnType<typeof usePostsSuspenseQuery>;
 export type PostsQueryResult = Apollo.QueryResult<PostsQuery, PostsQueryVariables>;
 export const ProfileDocument = gql`
     query Profile($id: String!) {
@@ -6969,7 +6056,7 @@ export const ProfileDocument = gql`
  *   },
  * });
  */
-export function useProfileQuery(baseOptions: Apollo.QueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+export function useProfileQuery(baseOptions: Apollo.QueryHookOptions<ProfileQuery, ProfileQueryVariables> & ({ variables: ProfileQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
       }
@@ -6977,8 +6064,13 @@ export function useProfileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Pr
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
         }
+export function useProfileSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ProfileQuery, ProfileQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ProfileQuery, ProfileQueryVariables>(ProfileDocument, options);
+        }
 export type ProfileQueryHookResult = ReturnType<typeof useProfileQuery>;
 export type ProfileLazyQueryHookResult = ReturnType<typeof useProfileLazyQuery>;
+export type ProfileSuspenseQueryHookResult = ReturnType<typeof useProfileSuspenseQuery>;
 export type ProfileQueryResult = Apollo.QueryResult<ProfileQuery, ProfileQueryVariables>;
 export const ProfileByHandleDocument = gql`
     query ProfileByHandle($handle: String!) {
@@ -7004,7 +6096,7 @@ export const ProfileByHandleDocument = gql`
  *   },
  * });
  */
-export function useProfileByHandleQuery(baseOptions: Apollo.QueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables>) {
+export function useProfileByHandleQuery(baseOptions: Apollo.QueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables> & ({ variables: ProfileByHandleQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options);
       }
@@ -7012,8 +6104,13 @@ export function useProfileByHandleLazyQuery(baseOptions?: Apollo.LazyQueryHookOp
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options);
         }
+export function useProfileByHandleSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ProfileByHandleQuery, ProfileByHandleQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ProfileByHandleQuery, ProfileByHandleQueryVariables>(ProfileByHandleDocument, options);
+        }
 export type ProfileByHandleQueryHookResult = ReturnType<typeof useProfileByHandleQuery>;
 export type ProfileByHandleLazyQueryHookResult = ReturnType<typeof useProfileByHandleLazyQuery>;
+export type ProfileByHandleSuspenseQueryHookResult = ReturnType<typeof useProfileByHandleSuspenseQuery>;
 export type ProfileByHandleQueryResult = Apollo.QueryResult<ProfileByHandleQuery, ProfileByHandleQueryVariables>;
 export const ProfileDisplayNameDocument = gql`
     query ProfileDisplayName($id: String!) {
@@ -7040,7 +6137,7 @@ export const ProfileDisplayNameDocument = gql`
  *   },
  * });
  */
-export function useProfileDisplayNameQuery(baseOptions: Apollo.QueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>) {
+export function useProfileDisplayNameQuery(baseOptions: Apollo.QueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables> & ({ variables: ProfileDisplayNameQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
       }
@@ -7048,8 +6145,13 @@ export function useProfileDisplayNameLazyQuery(baseOptions?: Apollo.LazyQueryHoo
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
         }
+export function useProfileDisplayNameSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>(ProfileDisplayNameDocument, options);
+        }
 export type ProfileDisplayNameQueryHookResult = ReturnType<typeof useProfileDisplayNameQuery>;
 export type ProfileDisplayNameLazyQueryHookResult = ReturnType<typeof useProfileDisplayNameLazyQuery>;
+export type ProfileDisplayNameSuspenseQueryHookResult = ReturnType<typeof useProfileDisplayNameSuspenseQuery>;
 export type ProfileDisplayNameQueryResult = Apollo.QueryResult<ProfileDisplayNameQuery, ProfileDisplayNameQueryVariables>;
 export const ProfileVerificationRequestDocument = gql`
     query ProfileVerificationRequest($id: String, $profileId: String) {
@@ -7084,11 +6186,16 @@ export function useProfileVerificationRequestLazyQuery(baseOptions?: Apollo.Lazy
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(ProfileVerificationRequestDocument, options);
         }
+export function useProfileVerificationRequestSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>(ProfileVerificationRequestDocument, options);
+        }
 export type ProfileVerificationRequestQueryHookResult = ReturnType<typeof useProfileVerificationRequestQuery>;
 export type ProfileVerificationRequestLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestLazyQuery>;
+export type ProfileVerificationRequestSuspenseQueryHookResult = ReturnType<typeof useProfileVerificationRequestSuspenseQuery>;
 export type ProfileVerificationRequestQueryResult = Apollo.QueryResult<ProfileVerificationRequestQuery, ProfileVerificationRequestQueryVariables>;
 export const ProfileVerificationRequestsDocument = gql`
-    query ProfileVerificationRequests($status: String, $page: PageInput) {
+    query ProfileVerificationRequests($status: ProfileVerificationStatusType, $page: PageInput) {
   profileVerificationRequests(status: $status, page: $page) {
     nodes {
       ...ProfileVerificationRequestComponentFields
@@ -7126,8 +6233,13 @@ export function useProfileVerificationRequestsLazyQuery(baseOptions?: Apollo.Laz
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>(ProfileVerificationRequestsDocument, options);
         }
+export function useProfileVerificationRequestsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>(ProfileVerificationRequestsDocument, options);
+        }
 export type ProfileVerificationRequestsQueryHookResult = ReturnType<typeof useProfileVerificationRequestsQuery>;
 export type ProfileVerificationRequestsLazyQueryHookResult = ReturnType<typeof useProfileVerificationRequestsLazyQuery>;
+export type ProfileVerificationRequestsSuspenseQueryHookResult = ReturnType<typeof useProfileVerificationRequestsSuspenseQuery>;
 export type ProfileVerificationRequestsQueryResult = Apollo.QueryResult<ProfileVerificationRequestsQuery, ProfileVerificationRequestsQueryVariables>;
 export const ProofBookByWalletDocument = gql`
     query ProofBookByWallet($walletAddress: String!) {
@@ -7156,7 +6268,7 @@ export const ProofBookByWalletDocument = gql`
  *   },
  * });
  */
-export function useProofBookByWalletQuery(baseOptions: Apollo.QueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
+export function useProofBookByWalletQuery(baseOptions: Apollo.QueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables> & ({ variables: ProofBookByWalletQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
       }
@@ -7164,8 +6276,13 @@ export function useProofBookByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHook
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
         }
+export function useProofBookByWalletSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>(ProofBookByWalletDocument, options);
+        }
 export type ProofBookByWalletQueryHookResult = ReturnType<typeof useProofBookByWalletQuery>;
 export type ProofBookByWalletLazyQueryHookResult = ReturnType<typeof useProofBookByWalletLazyQuery>;
+export type ProofBookByWalletSuspenseQueryHookResult = ReturnType<typeof useProofBookByWalletSuspenseQuery>;
 export type ProofBookByWalletQueryResult = Apollo.QueryResult<ProofBookByWalletQuery, ProofBookByWalletQueryVariables>;
 export const ReactToPostDocument = gql`
     mutation ReactToPost($input: ReactToPostInput!) {
@@ -7246,7 +6363,7 @@ export const ReactionsDocument = gql`
  *   },
  * });
  */
-export function useReactionsQuery(baseOptions: Apollo.QueryHookOptions<ReactionsQuery, ReactionsQueryVariables>) {
+export function useReactionsQuery(baseOptions: Apollo.QueryHookOptions<ReactionsQuery, ReactionsQueryVariables> & ({ variables: ReactionsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options);
       }
@@ -7254,8 +6371,13 @@ export function useReactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options);
         }
+export function useReactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ReactionsQuery, ReactionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ReactionsQuery, ReactionsQueryVariables>(ReactionsDocument, options);
+        }
 export type ReactionsQueryHookResult = ReturnType<typeof useReactionsQuery>;
 export type ReactionsLazyQueryHookResult = ReturnType<typeof useReactionsLazyQuery>;
+export type ReactionsSuspenseQueryHookResult = ReturnType<typeof useReactionsSuspenseQuery>;
 export type ReactionsQueryResult = Apollo.QueryResult<ReactionsQuery, ReactionsQueryVariables>;
 export const RegisterDocument = gql`
     mutation Register($input: RegisterInput!) {
@@ -7561,7 +6683,7 @@ export const TrackDocument = gql`
  *   },
  * });
  */
-export function useTrackQuery(baseOptions: Apollo.QueryHookOptions<TrackQuery, TrackQueryVariables>) {
+export function useTrackQuery(baseOptions: Apollo.QueryHookOptions<TrackQuery, TrackQueryVariables> & ({ variables: TrackQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
       }
@@ -7569,8 +6691,13 @@ export function useTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Trac
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
         }
+export function useTrackSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TrackQuery, TrackQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<TrackQuery, TrackQueryVariables>(TrackDocument, options);
+        }
 export type TrackQueryHookResult = ReturnType<typeof useTrackQuery>;
 export type TrackLazyQueryHookResult = ReturnType<typeof useTrackLazyQuery>;
+export type TrackSuspenseQueryHookResult = ReturnType<typeof useTrackSuspenseQuery>;
 export type TrackQueryResult = Apollo.QueryResult<TrackQuery, TrackQueryVariables>;
 export const TrackEditionDocument = gql`
     query TrackEdition($id: String!) {
@@ -7596,7 +6723,7 @@ export const TrackEditionDocument = gql`
  *   },
  * });
  */
-export function useTrackEditionQuery(baseOptions: Apollo.QueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>) {
+export function useTrackEditionQuery(baseOptions: Apollo.QueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables> & ({ variables: TrackEditionQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
       }
@@ -7604,8 +6731,13 @@ export function useTrackEditionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
         }
+export function useTrackEditionSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TrackEditionQuery, TrackEditionQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<TrackEditionQuery, TrackEditionQueryVariables>(TrackEditionDocument, options);
+        }
 export type TrackEditionQueryHookResult = ReturnType<typeof useTrackEditionQuery>;
 export type TrackEditionLazyQueryHookResult = ReturnType<typeof useTrackEditionLazyQuery>;
+export type TrackEditionSuspenseQueryHookResult = ReturnType<typeof useTrackEditionSuspenseQuery>;
 export type TrackEditionQueryResult = Apollo.QueryResult<TrackEditionQuery, TrackEditionQueryVariables>;
 export const TracksDocument = gql`
     query Tracks($filter: FilterTrackInput, $sort: SortTrackInput, $page: PageInput) {
@@ -7648,8 +6780,13 @@ export function useTracksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Tra
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options);
         }
+export function useTracksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TracksQuery, TracksQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<TracksQuery, TracksQueryVariables>(TracksDocument, options);
+        }
 export type TracksQueryHookResult = ReturnType<typeof useTracksQuery>;
 export type TracksLazyQueryHookResult = ReturnType<typeof useTracksLazyQuery>;
+export type TracksSuspenseQueryHookResult = ReturnType<typeof useTracksSuspenseQuery>;
 export type TracksQueryResult = Apollo.QueryResult<TracksQuery, TracksQueryVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
@@ -7720,8 +6857,13 @@ export function useUnreadMessageCountLazyQuery(baseOptions?: Apollo.LazyQueryHoo
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options);
         }
+export function useUnreadMessageCountSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>(UnreadMessageCountDocument, options);
+        }
 export type UnreadMessageCountQueryHookResult = ReturnType<typeof useUnreadMessageCountQuery>;
 export type UnreadMessageCountLazyQueryHookResult = ReturnType<typeof useUnreadMessageCountLazyQuery>;
+export type UnreadMessageCountSuspenseQueryHookResult = ReturnType<typeof useUnreadMessageCountSuspenseQuery>;
 export type UnreadMessageCountQueryResult = Apollo.QueryResult<UnreadMessageCountQuery, UnreadMessageCountQueryVariables>;
 export const UnsubscribeFromProfileDocument = gql`
     mutation UnsubscribeFromProfile($input: UnsubscribeFromProfileInput!) {
@@ -8020,8 +7162,6 @@ export const UpdateOtpDocument = gql`
   updateOTP(input: $input) {
     user {
       id
-      otpSecret
-      otpRecoveryPhrase
     }
   }
 }
@@ -8445,7 +7585,7 @@ export const UploadUrlDocument = gql`
  *   },
  * });
  */
-export function useUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
+export function useUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables> & ({ variables: UploadUrlQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
       }
@@ -8453,8 +7593,13 @@ export function useUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
         }
+export function useUploadUrlSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<UploadUrlQuery, UploadUrlQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<UploadUrlQuery, UploadUrlQueryVariables>(UploadUrlDocument, options);
+        }
 export type UploadUrlQueryHookResult = ReturnType<typeof useUploadUrlQuery>;
 export type UploadUrlLazyQueryHookResult = ReturnType<typeof useUploadUrlLazyQuery>;
+export type UploadUrlSuspenseQueryHookResult = ReturnType<typeof useUploadUrlSuspenseQuery>;
 export type UploadUrlQueryResult = Apollo.QueryResult<UploadUrlQuery, UploadUrlQueryVariables>;
 export const UserByWalletDocument = gql`
     query UserByWallet($walletAddress: String!) {
@@ -8491,7 +7636,7 @@ export const UserByWalletDocument = gql`
  *   },
  * });
  */
-export function useUserByWalletQuery(baseOptions: Apollo.QueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>) {
+export function useUserByWalletQuery(baseOptions: Apollo.QueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables> & ({ variables: UserByWalletQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
       }
@@ -8499,8 +7644,13 @@ export function useUserByWalletLazyQuery(baseOptions?: Apollo.LazyQueryHookOptio
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
         }
+export function useUserByWalletSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<UserByWalletQuery, UserByWalletQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<UserByWalletQuery, UserByWalletQueryVariables>(UserByWalletDocument, options);
+        }
 export type UserByWalletQueryHookResult = ReturnType<typeof useUserByWalletQuery>;
 export type UserByWalletLazyQueryHookResult = ReturnType<typeof useUserByWalletLazyQuery>;
+export type UserByWalletSuspenseQueryHookResult = ReturnType<typeof useUserByWalletSuspenseQuery>;
 export type UserByWalletQueryResult = Apollo.QueryResult<UserByWalletQuery, UserByWalletQueryVariables>;
 export const ValidateOtpRecoveryPhraseDocument = gql`
     mutation ValidateOTPRecoveryPhrase($input: ValidateOTPRecoveryPhraseInput!) {
@@ -8558,7 +7708,7 @@ export const WhitelistEntryByWalletDocument = gql`
  *   },
  * });
  */
-export function useWhitelistEntryByWalletQuery(baseOptions: Apollo.QueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>) {
+export function useWhitelistEntryByWalletQuery(baseOptions: Apollo.QueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables> & ({ variables: WhitelistEntryByWalletQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(WhitelistEntryByWalletDocument, options);
       }
@@ -8566,6 +7716,11 @@ export function useWhitelistEntryByWalletLazyQuery(baseOptions?: Apollo.LazyQuer
           const options = {...defaultOptions, ...baseOptions}
           return Apollo.useLazyQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(WhitelistEntryByWalletDocument, options);
         }
+export function useWhitelistEntryByWalletSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>(WhitelistEntryByWalletDocument, options);
+        }
 export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletQuery>;
 export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
+export type WhitelistEntryByWalletSuspenseQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletSuspenseQuery>;
 export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;

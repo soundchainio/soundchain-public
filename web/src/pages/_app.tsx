@@ -6,6 +6,7 @@ import { CheckBodyScroll } from 'components/CheckBodyScroll'
 import { Layout } from 'components/Layout'
 import { config } from 'config'
 import { StateProvider } from 'contexts'
+import { PanelProvider } from 'contexts/PanelContext'
 import { AudioPlayerProvider } from 'hooks/useAudioPlayer'
 import { TrackProvider } from 'hooks/useTrack'
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
@@ -51,22 +52,24 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
     <ApolloProvider pageProps={pageProps}>
       <ModalProvider>
         <StateProvider>
-          <MagicProvider>
-            <WalletProvider>
-              <AudioPlayerProvider>
-                <TrackProvider>
-                  <HideBottomNavBarProvider>
-                    <LayoutContextProvider>
-                      <CheckBodyScroll />
-                      <Layout>
-                        <Component {...pageProps} />
-                      </Layout>
-                    </LayoutContextProvider>
-                  </HideBottomNavBarProvider>
-                </TrackProvider>
-              </AudioPlayerProvider>
-            </WalletProvider>
-          </MagicProvider>
+          <PanelProvider>
+            <MagicProvider>
+              <WalletProvider>
+                <AudioPlayerProvider>
+                  <TrackProvider>
+                    <HideBottomNavBarProvider>
+                      <LayoutContextProvider>
+                        <CheckBodyScroll />
+                        <Layout>
+                          <Component {...pageProps} />
+                        </Layout>
+                      </LayoutContextProvider>
+                    </HideBottomNavBarProvider>
+                  </TrackProvider>
+                </AudioPlayerProvider>
+              </WalletProvider>
+            </MagicProvider>
+          </PanelProvider>
         </StateProvider>
       </ModalProvider>
     </ApolloProvider>
@@ -77,9 +80,11 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   if (!Component.getLayout) return <></>
   return (
     <ApolloProvider pageProps={pageProps}>
-      <ModalProvider>
-        {Component.getLayout(<Component {...pageProps} />)}
-      </ModalProvider>
+      <MagicProvider>
+        <WalletProvider>
+          {Component.getLayout(<Component {...pageProps} />)}
+        </WalletProvider>
+      </MagicProvider>
     </ApolloProvider>
   )
 }

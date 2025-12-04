@@ -2,8 +2,6 @@ mutation UpdateOTP($input: UpdateOTPInput!) {
   updateOTP(input: $input) {
     user {
       id
-      otpSecret
-      otpRecoveryPhrase
     }
   }
 }

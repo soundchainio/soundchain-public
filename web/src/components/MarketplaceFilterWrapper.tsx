@@ -87,23 +87,17 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
   const [localPurchaseType, setLocalPurchaseType] = useState<'single' | 'sweep' | 'bundle' | undefined>(purchaseType);
   const [localCustomBundle, setLocalCustomBundle] = useState<{ nftIds: string[]; tokenSymbol: string; tokenAmount: number; chainId: number; privateAsset?: string }[] | undefined>(customBundle);
 
-  useEffect(() => {
-    setGenres(localGenres);
-    setSaleType(localSaleType);
-    setAcceptedTokens?.(localAcceptedTokens);
-    setChainId(localChainId);
-    setSorting(localSorting);
-    setViewMode(localViewMode);
-    setSelectedCategory?.(localSelectedCategory);
-    setBundleSelections?.(localBundleSelections);
-    setPurchaseType?.(localPurchaseType);
-    setCustomBundle?.(localCustomBundle);
-  }, [
-    localGenres, localSaleType, localAcceptedTokens, localChainId, localSorting,
-    localViewMode, localSelectedCategory, localBundleSelections, localPurchaseType, localCustomBundle,
-    setGenres, setSaleType, setAcceptedTokens, setChainId, setSorting, setViewMode,
-    setSelectedCategory, setBundleSelections, setPurchaseType, setCustomBundle,
-  ]);
+  // Sync local state to parent - only when specific values change
+  useEffect(() => { setGenres(localGenres) }, [localGenres, setGenres]);
+  useEffect(() => { setSaleType(localSaleType) }, [localSaleType, setSaleType]);
+  useEffect(() => { setAcceptedTokens?.(localAcceptedTokens) }, [localAcceptedTokens, setAcceptedTokens]);
+  useEffect(() => { setChainId(localChainId) }, [localChainId, setChainId]);
+  useEffect(() => { setSorting(localSorting) }, [localSorting, setSorting]);
+  useEffect(() => { setViewMode(localViewMode) }, [localViewMode, setViewMode]);
+  useEffect(() => { setSelectedCategory?.(localSelectedCategory) }, [localSelectedCategory, setSelectedCategory]);
+  useEffect(() => { setBundleSelections?.(localBundleSelections) }, [localBundleSelections, setBundleSelections]);
+  useEffect(() => { setPurchaseType?.(localPurchaseType) }, [localPurchaseType, setPurchaseType]);
+  useEffect(() => { setCustomBundle?.(localCustomBundle) }, [localCustomBundle, setCustomBundle]);
 
   const toggleToken = (token: Token) => {
     setLocalAcceptedTokens(prev => {

@@ -4,7 +4,7 @@ import { ListView } from 'components/ListView/ListView'
 import { useModalState } from 'contexts/ModalContext'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { SaleType, Track, useListingItemsQuery } from 'lib/graphql'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { GenreLabel } from 'utils/Genres'
 import { SaleTypeLabel } from 'utils/SaleTypeLabel'
 import { MarketplaceFilterWrapper } from './MarketplaceFilterWrapper'
@@ -54,15 +54,16 @@ export const Marketplace = () => {
     acceptsOGUN: filterAcceptsOGUN,
   } = useModalState() || {}
 
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'single'>('grid')
   const [genres, setGenres] = useState<GenreLabel[] | undefined>(undefined)
   const [saleType, setSaleType] = useState<SaleTypeLabel | undefined>(undefined)
   const [acceptsMATIC, setAcceptsMATIC] = useState<boolean | undefined>(undefined)
   const [acceptsOGUN, setAcceptsOGUN] = useState<boolean | undefined>(undefined)
   const [sorting, setSorting] = useState<SortListingItem>(SortListingItem.CreatedAt)
   const [selectedChains, setSelectedChains] = useState<string[]>(['polygon'])
+  const isInitialMount = useRef(true)
 
-  const { data, refetch, fetchMore, loading } = useListingItemsQuery({
+  const { data, refetch, fetchMore, loading, error } = useListingItemsQuery({
     variables: {
       page: { first: pageSize },
       sort: SelectToApolloQuery[sorting],
@@ -71,12 +72,38 @@ export const Marketplace = () => {
     ssr: false,
   })
 
-  useEffect(() => genresFromModal && setGenres(genresFromModal), [genresFromModal])
-  useEffect(() => filterSaleType && setSaleType(filterSaleType), [filterSaleType])
-  useEffect(() => setAcceptsMATIC(filterAcceptsMATIC), [filterAcceptsMATIC])
-  useEffect(() => setAcceptsOGUN(filterAcceptsOGUN), [filterAcceptsOGUN])
+  // Debug logging - check console for data flow
+  console.log('[Marketplace Debug]', {
+    loading,
+    error: error?.message,
+    hasData: !!data,
+    totalCount: data?.listingItems?.pageInfo?.totalCount,
+    nodesLength: data?.listingItems?.nodes?.length,
+    firstTrack: data?.listingItems?.nodes?.[0]?.title,
+  })
 
   useEffect(() => {
+    if (genresFromModal) setGenres(genresFromModal)
+  }, [genresFromModal])
+
+  useEffect(() => {
+    if (filterSaleType) setSaleType(filterSaleType)
+  }, [filterSaleType])
+
+  useEffect(() => {
+    if (filterAcceptsMATIC !== undefined) setAcceptsMATIC(filterAcceptsMATIC)
+  }, [filterAcceptsMATIC])
+
+  useEffect(() => {
+    if (filterAcceptsOGUN !== undefined) setAcceptsOGUN(filterAcceptsOGUN)
+  }, [filterAcceptsOGUN])
+
+  useEffect(() => {
+    // Skip refetch on initial mount - the query already runs with initial values
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
     refetch({
       page: {
         first: pageSize,
@@ -84,7 +111,8 @@ export const Marketplace = () => {
       sort: SelectToApolloQuery[sorting],
       filter: buildMarketplaceFilter(genres, saleType, acceptsMATIC, acceptsOGUN),
     })
-  }, [genres, saleType, refetch, sorting, acceptsMATIC, acceptsOGUN])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [genres, saleType, sorting, acceptsMATIC, acceptsOGUN])
 
   const loadMore = () => {
     fetchMore({
@@ -138,9 +166,10 @@ export const Marketplace = () => {
         setChainId={() => {}}
         sorting={sorting}
         setSorting={setSorting}
+        privateAssetOptions={[]}
         className="sm:flex-col md:flex-row"
       />
-      {viewMode === 'grid' ? (
+      {viewMode === 'grid' && (
         <GridView
           loading={loading}
           hasNextPage={data?.listingItems.pageInfo.hasNextPage}
@@ -149,13 +178,24 @@ export const Marketplace = () => {
           refetch={refetch}
           className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-4 py-6"
         />
-      ) : (
+      )}
+      {viewMode === 'list' && (
         <ListView
           loading={loading}
           hasNextPage={data?.listingItems.pageInfo.hasNextPage}
           loadMore={loadMore}
           tracks={data?.listingItems.nodes as Track[]}
           refetch={refetch}
+        />
+      )}
+      {viewMode === 'single' && (
+        <GridView
+          loading={loading}
+          hasNextPage={data?.listingItems.pageInfo.hasNextPage}
+          loadMore={loadMore}
+          tracks={data?.listingItems.nodes as Track[]}
+          refetch={refetch}
+          className="grid grid-cols-1 gap-6 px-4 py-6 max-w-2xl mx-auto"
         />
       )}
     </>

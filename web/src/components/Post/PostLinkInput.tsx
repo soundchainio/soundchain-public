@@ -1,9 +1,14 @@
-import { XCircleIcon } from '@heroicons/react/24/outline'
+import { XCircleIcon, InformationCircleIcon } from '@heroicons/react/24/outline'
 import { Bandcamp } from 'icons/Bandcamp'
 import { Soundcloud } from 'icons/Soundcloud'
 import { Spotify } from 'icons/Spotify'
 import { Vimeo } from 'icons/Vimeo'
 import { Youtube } from 'icons/Youtube'
+import { Instagram } from 'icons/social/Instagram'
+import { TikTok } from 'icons/TikTok'
+import { Facebook } from 'icons/Facebook'
+import { XTwitter } from 'icons/XTwitter'
+import { CustomHTML } from 'icons/CustomHTML'
 import React, { useEffect, useState } from 'react'
 import { MediaProvider } from 'types/MediaProvider'
 
@@ -20,18 +25,65 @@ interface PostLinkInputProps {
 }
 
 const mediaProviderOptions = {
-  [MediaProvider.SPOTIFY]: { name: 'Spotify', example: 'https://open.spotify.com/track/6MQrN9j', logo: <Spotify /> },
+  [MediaProvider.SPOTIFY]: {
+    name: 'Spotify',
+    example: 'https://open.spotify.com/track/... or embed code',
+    tooltip: 'Paste Spotify track/album/playlist link OR embed code. Full playback supported!',
+    logo: <Spotify />,
+  },
   [MediaProvider.SOUNDCLOUD]: {
     name: 'SoundCloud',
-    example: 'https://soundcloud.com/artist/music',
+    example: 'https://soundcloud.com/artist/music or embed code',
+    tooltip: 'Paste SoundCloud track link OR embed code. Both work!',
     logo: <Soundcloud color="#FF7A00" className="scale-150" />,
   },
-  [MediaProvider.YOUTUBE]: { name: 'Youtube', example: 'https://www.youtube.com/watch?v=Ks2Gsdie', logo: <Youtube /> },
-  [MediaProvider.VIMEO]: { name: 'Vimeo', example: 'https://vimeo.com/12345', logo: <Vimeo /> },
+  [MediaProvider.YOUTUBE]: {
+    name: 'Youtube',
+    example: 'Any YouTube link (watch, shorts, embed, youtu.be)',
+    tooltip: 'Paste ANY YouTube link - watch, shorts, embeds, youtu.be - all formats supported!',
+    logo: <Youtube />,
+  },
+  [MediaProvider.VIMEO]: {
+    name: 'Vimeo',
+    example: 'https://vimeo.com/12345 or embed code',
+    tooltip: 'Paste Vimeo video link OR embed code',
+    logo: <Vimeo />,
+  },
   [MediaProvider.BANDCAMP]: {
     name: 'Bandcamp',
-    example: 'https://colleengreen.bandcamp.com/album/cool',
+    example: 'https://artist.bandcamp.com/album/name or embed code',
+    tooltip: 'Paste Bandcamp album/track link OR embed code. Auto-scales to fit!',
     logo: <Bandcamp />,
+  },
+  [MediaProvider.INSTAGRAM]: {
+    name: 'Instagram',
+    example: 'https://instagram.com/p/... (posts, reels, TV)',
+    tooltip: 'Paste Instagram post, reel, or TV link. Embed codes also work!',
+    logo: <Instagram className="scale-150" />,
+  },
+  [MediaProvider.TIKTOK]: {
+    name: 'TikTok',
+    example: 'https://tiktok.com/@user/video/...',
+    tooltip: 'Paste TikTok video link or embed code',
+    logo: <TikTok />,
+  },
+  [MediaProvider.FACEBOOK]: {
+    name: 'Facebook',
+    example: 'https://facebook.com/.../videos/...',
+    tooltip: 'Paste Facebook video link or embed code',
+    logo: <Facebook />,
+  },
+  [MediaProvider.X]: {
+    name: 'X (Twitter)',
+    example: 'https://twitter.com/.../status/... or x.com',
+    tooltip: 'Paste X/Twitter post link or embed code',
+    logo: <XTwitter />,
+  },
+  [MediaProvider.CUSTOM_HTML]: {
+    name: '🌐 Custom Embed',
+    example: 'Paste any iframe embed code or URL',
+    tooltip: 'ULTIMATE POWER! Paste ANY custom embed code or iframe. Works with any platform!',
+    logo: <CustomHTML className="text-purple-500" />,
   },
 }
 
@@ -68,6 +120,15 @@ export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInpu
     <div className="mt-4 mb-10 flex items-center text-gray-400">
       <div className="flex w-20 flex-col items-center text-xs">{mediaProviderOptions[type].logo}</div>
       <div className="flex flex-1 flex-col">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-semibold text-gray-300">{mediaProviderOptions[type].name}</span>
+          <div className="group relative">
+            <InformationCircleIcon className="w-4 h-4 text-gray-500 hover:text-blue-400 cursor-help" />
+            <div className="absolute left-0 top-6 z-50 hidden group-hover:block w-64 p-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white shadow-xl">
+              {mediaProviderOptions[type].tooltip}
+            </div>
+          </div>
+        </div>
         <input
           type="text"
           aria-label={`Enter ${mediaProviderOptions[type].name} link`}
@@ -79,7 +140,7 @@ export const PostLinkInput = ({ type, setLink, link, setPostLink }: PostLinkInpu
           disabled={isDisabled()}
         />
         <div className="relative">
-          <span className="absolute top-2 left-0 text-xs">({mediaProviderOptions[type].example})</span>
+          <span className="absolute top-2 left-0 text-xs opacity-60">({mediaProviderOptions[type].example})</span>
         </div>
       </div>
       <button className="w-16" onClick={onClear} aria-label="Close">

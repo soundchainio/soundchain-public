@@ -1,4 +1,4 @@
-query ProfileVerificationRequests($status: String, $page: PageInput) {
+query ProfileVerificationRequests($status: ProfileVerificationStatusType, $page: PageInput) {
   profileVerificationRequests(status: $status, page: $page) {
     nodes {
       ...ProfileVerificationRequestComponentFields

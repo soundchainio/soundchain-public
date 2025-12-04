@@ -33,9 +33,15 @@ import { UpdatePostPayload } from '../types/UpdatePostPayload';
 
 @Resolver(Post)
 export class PostResolver {
-  @FieldResolver(() => Profile)
-  profile(@Ctx() { profileService }: Context, @Root() post: Post): Promise<Profile> {
-    return profileService.getProfile(post.profileId.toString());
+  @FieldResolver(() => Profile, { nullable: true })
+  async profile(@Ctx() { profileService }: Context, @Root() post: Post): Promise<Profile | null> {
+    try {
+      const profile = await profileService.getProfile(post.profileId.toString());
+      return profile || null;
+    } catch (error) {
+      console.error(`Failed to load profile ${post.profileId} for post ${post._id}:`, error);
+      return null;
+    }
   }
 
   @FieldResolver(() => [Comment])

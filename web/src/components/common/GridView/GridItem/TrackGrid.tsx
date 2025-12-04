@@ -19,6 +19,7 @@ import { createPublicClient, http } from 'viem';
 import { zetachain, polygon } from 'viem/chains';
 import { ShowRemoveListing } from 'contexts/payloads/modal';
 import { SaleType } from 'lib/graphql';
+import { RotateCcw, Database, Expand } from 'lucide-react';
 const WavesurferComponent = dynamic(() => import('../../../wavesurfer'), { ssr: false });
 
 // Mock icon component for all tokens
@@ -67,8 +68,16 @@ interface ExtendedListingItem extends ListingItemWithPrice {
   privateAsset?: string;
 }
 
+// Chain name mapping for display
+const chainNames: { [key: number]: string } = {
+  1: 'Ethereum', 137: 'Polygon', 56: 'BSC', 101: 'Solana', 250: 'Fantom',
+  43114: 'Avalanche', 7000: 'ZetaChain', 8453: 'Base', 1284: 'Moonbeam',
+  25: 'Cronos', 100: 'Gnosis', 128: 'Heco', 42161: 'Arbitrum', 10: 'Optimism'
+};
+
 const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
   ({ track, handleOnPlayClicked, walletProvider, getContractAddress }, ref) => {
+    const [isFlipped, setIsFlipped] = useState(false);
     const song = {
       src: track.playbackUrl,
       trackId: track.id,
@@ -158,106 +167,182 @@ const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
     const tokenBadge = tokenSymbol && !['MATIC', 'OGUN'].includes(tokenSymbol) ? `+${tokenSymbol}` : '';
     const currencyIcon = <TokenIcon symbol={selectedCurrency} />;
 
+    const handleFlip = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsFlipped(!isFlipped);
+    };
+
     return (
-      <div ref={ref} className={`rounded-lg bg-transparent p-0.5 hover:bg-rainbow-gradient ${isPlaying && 'bg-rainbow-gradient'}`}>
-        <div className="flex w-[300px] flex-col rounded-lg bg-black text-white sm:w-full">
-          <Link href={`/tracks/${trackId}`} passHref>
-            <div className="h-[300px] overflow-hidden rounded-t-xl sm:h-[225px]">
-              <Asset src={art} />
-              {chainId === 7000 && <span className="text-xs text-blue-500">ZetaChain</span>}
-            </div>
-          </Link>
-          <div className="my-3 flex flex-col content-center items-center decoration-gray-80">
-            <Link href={`/tracks/${trackId}`} passHref>
-              <div className="mx-4 mb-2 text-sm font-bold" title={title || ''}>
-                {limitTextToNumberOfCharacters(title ? title : 'Unknown Title', 20)}
-                {tokenBadge && <span className="ml-1 text-xs text-green-500">{tokenBadge}</span>}
+      <div ref={ref} className="nft-flip-card-container" onClick={handleFlip}>
+        <div className={`nft-flip-card ${isFlipped ? 'flipped' : ''}`}>
+          {/* FRONT SIDE - Track Card */}
+          <div className="nft-flip-card-front">
+            <div className={`retro-card h-full ${isPlaying ? 'soundchain-gradient-border' : ''}`}>
+              {/* Flip Hint */}
+              <div className="flip-hint">
+                <RotateCcw className="w-3 h-3" />
               </div>
-            </Link>
-            <Link href={`/profiles/${artist}`} passHref>
-              <div className="text-center text-sm font-bold text-gray-80 hover:text-gray-400" title={artist || ''}>
-                {artist ? artist : 'Unknown'}
-              </div>
-            </Link>
-          </div>
-          <div className="mx-2">
-            <WavesurferComponent
-              setIsReady={setIsReady}
-              url={song.url}
-              isPlaying={isPlaying}
-              setProgressStateFromSlider={setProgressStateFromSlider}
-              progress={progress}
-            />
-          </div>
-          <div>
-            {saleType && (
-              <div className="mx-3 mt-3 flex items-start justify-between">
-                <div className="flex flex-col items-start justify-start">
-                  <div className="flex items-center">
-                    <div className="mr-1.5 mt-1 font-semibold">{trackPrice}</div>
-                    {currencyIcon}
+
+              {/* Artwork */}
+              <Link href={`/tracks/${trackId}`} passHref onClick={(e) => e.stopPropagation()}>
+                <div className="aspect-square overflow-hidden analog-glow relative group">
+                  <Asset src={art} />
+                  {chainId && (
+                    <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded chain-${chainNames[chainId]?.toLowerCase() || 'polygon'}`}>
+                      {chainNames[chainId] || 'Polygon'}
+                    </span>
+                  )}
+                </div>
+              </Link>
+
+              {/* Track Info */}
+              <div className="p-3">
+                <Link href={`/tracks/${trackId}`} passHref onClick={(e) => e.stopPropagation()}>
+                  <h3 className="retro-title text-sm truncate mb-1" title={title || ''}>
+                    {limitTextToNumberOfCharacters(title ? title : 'Unknown Title', 20)}
+                  </h3>
+                </Link>
+                <Link href={`/profiles/${artist}`} passHref onClick={(e) => e.stopPropagation()}>
+                  <p className="retro-json text-xs truncate">{artist || 'Unknown Artist'}</p>
+                </Link>
+
+                {/* Waveform */}
+                <div className="my-2" onClick={(e) => e.stopPropagation()}>
+                  <WavesurferComponent
+                    setIsReady={setIsReady}
+                    url={song.url}
+                    isPlaying={isPlaying}
+                    setProgressStateFromSlider={setProgressStateFromSlider}
+                    progress={progress}
+                  />
+                </div>
+
+                {/* Price & Sale Type */}
+                {saleType && (
+                  <div className="metadata-section">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="metadata-value text-lg">{trackPrice}</span>
+                          {currencyIcon}
+                        </div>
+                        {trackPrice > 0 && selectedCurrency === 'MATIC' && maticUsd?.maticUsd && (
+                          <span className="text-xs text-gray-400">
+                            ≈ {currency(trackPrice * parseFloat(maticUsd.maticUsd))} USD
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right" onClick={(e) => e.stopPropagation()}>
+                        {saleType === 'auction' ? (
+                          <Link href={{ pathname: `tracks/${track.id}/place-bid`, query: { ...router.query, isPaymentOGUN: isOgunPrice } }} passHref>
+                            <span className="retro-button text-xs py-1 px-2">AUCTION</span>
+                          </Link>
+                        ) : (
+                          <Link href={{ pathname: `tracks/${track.id}/buy-now`, query: { ...router.query, isPaymentOGUN: isOgunPrice } }} passHref>
+                            <span className="retro-button text-xs py-1 px-2">BUY NOW</span>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                    {tokenBadge && <span className="metadata-attribute mt-2 inline-block">{tokenBadge}</span>}
+                    {sweepIndicator && <span className="metadata-attribute mt-2 ml-1 inline-block">{sweepIndicator}</span>}
                   </div>
-                  {trackPrice > 0 && (
-                    <div className="mt-0.5 text-xs font-semibold text-gray-80">
-                      {selectedCurrency === 'MATIC' && maticUsd && maticUsd.maticUsd && trackPrice && `${currency(trackPrice * parseFloat(maticUsd.maticUsd))}`}
-                    </div>
+                )}
+
+                {/* Play Controls */}
+                <div className="flex items-center justify-between mt-3" onClick={(e) => e.stopPropagation()}>
+                  {!isReady ? <LoaderAnimation ring /> : (
+                    <button className="retro-button p-2 rounded-full" onClick={onTrackClick}>
+                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </button>
                   )}
-                  {sweepIndicator && <span className="text-xs text-yellow-500">{sweepIndicator}</span>}
-                </div>
-                <div className="flex flex-col items-end justify-start">
-                  {saleType === 'auction' ? (
-                    <Link
-                      href={{
-                        pathname: `tracks/${track.id}/place-bid`,
-                        query: { ...router.query, isPaymentOGUN: isOgunPrice },
-                      }}
-                      passHref
-                    >
-                      <div className="auction-gradient sale-type-font-size text-sm font-bold">{saleType.toUpperCase()}</div>
-                    </Link>
-                  ) : (
-                    <Link
-                      href={{
-                        pathname: `tracks/${track.id}/buy-now`,
-                        query: { ...router.query, isPaymentOGUN: isOgunPrice },
-                      }}
-                      passHref
-                    >
-                      <div className="buy-now-gradient sale-type-font-size text-sm font-bold">{saleType.toUpperCase()}</div>
-                    </Link>
-                  )}
-                  {editionSize && editionSize > 0 && (
-                    <div className="flex items-center justify-between gap-2 text-xs font-black text-gray-80">
-                      <Cards width={14} height={14} />
-                      {listingCount && listingCount > 0 && (
-                        <>
-                          {listingCount}
-                          {' / '}
-                        </>
-                      )}
-                      {editionSize}
-                    </div>
-                  )}
-                  {privateAsset && <span className="text-xs text-purple-500">{privateAsset}</span>}
-                  <button onClick={() => setIsOgunPrice(!isOgunPrice)} className="mt-2 text-xs text-blue-500">
-                    Toggle OGUN Listing (Rewards: {isOgunPrice ? 'Active' : 'Inactive'})
-                  </button>
-                  <button onClick={handleListForSale} className="mt-2 text-xs text-blue-500">List for Sale</button>
+                  <div className="flex items-center gap-3 text-xs text-gray-400 retro-text">
+                    <span className="flex items-center gap-1"><Play fill="#808080" className="w-3 h-3" /> {playbackCount || 0}</span>
+                    <span className="flex items-center gap-1"><HeartFilled className="w-3 h-3" /> {favoriteCount || 0}</span>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
-          <div className="m-4 flex items-center justify-between">
-            {!isReady ? <LoaderAnimation ring /> : (
-              <button className="flex h-6 w-6 items-center rounded-full bg-white" onClick={onTrackClick}>
-                {isPlaying ? <Pause className="m-auto scale-125 text-white" /> : <Play className="m-auto text-white" />}
-              </button>
-            )}
-            <div className="my-2 flex items-center gap-1 pt-1 text-xs font-medium text-gray-80">
-              <Play fill="#808080" />
-              <span>{playbackCount || 0}</span>
-              <HeartFilled />
-              <span className="flex-1">{favoriteCount || 0}</span>
+
+          {/* BACK SIDE - Metadata JSON */}
+          <div className="nft-flip-card-back">
+            <div className="p-4 h-full flex flex-col text-white">
+              <div className="flip-hint">
+                <RotateCcw className="w-3 h-3" />
+              </div>
+
+              <div className="retro-title text-center mb-4 text-sm">TRACK_METADATA.JSON</div>
+
+              <div className="flex-1 overflow-y-auto space-y-3">
+                {/* Track Info */}
+                <div className="metadata-section">
+                  <div className="metadata-label">TRACK_INFO</div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between"><span className="text-gray-400">TITLE:</span><span className="metadata-value">{limitTextToNumberOfCharacters(title || 'Unknown', 15)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">ARTIST:</span><span className="metadata-value">{limitTextToNumberOfCharacters(artist || 'Unknown', 15)}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">TRACK_ID:</span><span className="metadata-value">{trackId?.slice(0, 8)}...</span></div>
+                  </div>
+                </div>
+
+                {/* Chain Info */}
+                <div className="metadata-section">
+                  <div className="metadata-label">BLOCKCHAIN_DATA</div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between"><span className="text-gray-400">CHAIN:</span><span className="metadata-value">{chainNames[chainId || 137] || 'Polygon'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">TOKEN:</span><span className="metadata-value">{tokenSymbol || 'MATIC'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">PRICE:</span><span className="metadata-value">{trackPrice} {selectedCurrency}</span></div>
+                    {bundleId && <div className="flex justify-between"><span className="text-gray-400">BUNDLE:</span><span className="metadata-value">{bundleId.slice(0,8)}...</span></div>}
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="metadata-section">
+                  <div className="metadata-label">STATISTICS</div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between"><span className="text-gray-400">PLAYS:</span><span className="metadata-value">{playbackCount || 0}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">FAVORITES:</span><span className="metadata-value">{favoriteCount || 0}</span></div>
+                    {editionSize && <div className="flex justify-between"><span className="text-gray-400">EDITIONS:</span><span className="metadata-value">{listingCount || 0}/{editionSize}</span></div>}
+                    <div className="flex justify-between"><span className="text-gray-400">SALE_TYPE:</span><span className="metadata-value uppercase">{saleType || 'N/A'}</span></div>
+                  </div>
+                </div>
+
+                {/* Private Asset */}
+                {privateAsset && (
+                  <div className="metadata-section">
+                    <div className="metadata-label">PRIVATE_ASSET</div>
+                    <div className="metadata-attribute">{privateAsset}</div>
+                  </div>
+                )}
+
+                {/* Raw JSON Preview */}
+                <div className="metadata-section">
+                  <div className="metadata-label">RAW_JSON</div>
+                  <div className="metadata-json text-xs">
+{`{
+  "id": "${trackId}",
+  "title": "${title}",
+  "artist": "${artist}",
+  "chain": "${chainNames[chainId || 137]}",
+  "token": "${tokenSymbol || 'MATIC'}",
+  "price": ${trackPrice},
+  "plays": ${playbackCount || 0},
+  "favorites": ${favoriteCount || 0}
+}`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                <Link href={`/tracks/${trackId}`} passHref className="flex-1">
+                  <button className="retro-button w-full text-xs py-2">VIEW DETAILS</button>
+                </Link>
+                <button onClick={() => setIsOgunPrice(!isOgunPrice)} className="soundchain-button-outline px-3 py-2 text-xs">
+                  {isOgunPrice ? 'OGUN ✓' : 'OGUN'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

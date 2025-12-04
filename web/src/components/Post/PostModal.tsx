@@ -36,9 +36,7 @@ export const PostModal = () => {
   const { showNewPost, repostId, editPostId, trackId } = useModalState()
   const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch()
 
-  const [getPost, { data: editingPost }] = usePostLazyQuery({
-    variables: { id: editPostId as string },
-  })
+  const [getPost, { data: editingPost }] = usePostLazyQuery()
 
   const initialValues = { body: editingPost?.post.body || '' }
 
@@ -65,9 +63,9 @@ export const PostModal = () => {
 
   useEffect(() => {
     if (editPostId) {
-      getPost()
+      getPost({ variables: { id: editPostId } })
     }
-  }, [editPostId])
+  }, [editPostId, getPost])
 
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {

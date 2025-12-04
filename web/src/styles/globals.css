@@ -1,3 +1,6 @@
+/* Import retro fonts - must be at top */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -439,4 +442,457 @@ input[type='number'] {
 
 .ogun-bg {
   background: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
+}
+
+/* ============================================
+   RETRO MPC60 AESTHETIC - SoundChain Redesign
+   ============================================ */
+
+/* SoundChain Color Variables */
+:root {
+  --soundchain-gradient: linear-gradient(135deg, #ff6b35 0%, #f7931e 25%, #00d4aa 50%, #00bcd4 75%, #9c27b0 100%);
+  --soundchain-accent: #00d4aa;
+  --soundchain-primary: #f7931e;
+  --soundchain-secondary: #9c27b0;
+  --soundchain-tertiary: #ff6b35;
+  --soundchain-cyan: #00bcd4;
+  --mpc60-green: #00ff00;
+  --mpc60-amber: #ffaa00;
+  --retro-bg: #0a0a0a;
+  --retro-card-bg: #121212;
+  --retro-border: #1a1a1a;
+}
+
+/* Retro Text Styles */
+.retro-text {
+  font-family: 'JetBrains Mono', 'Space Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.retro-title {
+  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--soundchain-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.05em;
+}
+
+.retro-json {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--soundchain-accent);
+  letter-spacing: 0.02em;
+}
+
+/* MPC60 Display Style */
+.mpc60-display {
+  font-family: 'Space Mono', monospace;
+  background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: var(--mpc60-green);
+  text-shadow: 0 0 8px var(--mpc60-green);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Retro Card Base */
+.retro-card {
+  background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.retro-card:hover {
+  border-color: var(--soundchain-accent);
+  box-shadow:
+    0 8px 30px rgba(0, 212, 170, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Retro Button */
+.retro-button {
+  font-family: 'Space Mono', monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: var(--soundchain-gradient);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(247, 147, 30, 0.3);
+}
+
+.retro-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(247, 147, 30, 0.4);
+}
+
+.retro-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* SoundChain Button Outline */
+.soundchain-button-outline {
+  font-family: 'JetBrains Mono', monospace;
+  background: transparent;
+  border: 1px solid var(--soundchain-accent);
+  color: var(--soundchain-accent);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.soundchain-button-outline:hover {
+  background: rgba(0, 212, 170, 0.1);
+  border-color: var(--soundchain-primary);
+  color: var(--soundchain-primary);
+}
+
+/* ============================================
+   FLIP CARD ANIMATION
+   ============================================ */
+
+.nft-flip-card-container {
+  perspective: 1000px;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.nft-flip-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nft-flip-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.nft-flip-card-front,
+.nft-flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.nft-flip-card-front {
+  z-index: 2;
+}
+
+.nft-flip-card-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(145deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+  border: 1px solid #30363d;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 0 30px rgba(0, 212, 170, 0.03);
+}
+
+.flip-hint {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  color: var(--soundchain-accent);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.nft-flip-card-container:hover .flip-hint {
+  opacity: 1;
+}
+
+/* ============================================
+   METADATA DISPLAY STYLES
+   ============================================ */
+
+.metadata-section {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.metadata-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--soundchain-accent);
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 212, 170, 0.2);
+}
+
+.metadata-value {
+  font-family: 'JetBrains Mono', monospace;
+  color: #e6e6e6;
+  font-weight: 500;
+}
+
+.metadata-attribute {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--soundchain-accent);
+}
+
+.metadata-json {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 6px;
+  padding: 10px;
+  color: var(--mpc60-green);
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* ============================================
+   ANALOG GLOW EFFECTS
+   ============================================ */
+
+.analog-glow {
+  position: relative;
+  box-shadow:
+    0 0 10px rgba(0, 212, 170, 0.1),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.analog-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  pointer-events: none;
+}
+
+/* Card Image Styling */
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* ============================================
+   RARITY BADGE COLORS
+   ============================================ */
+
+.rarity-legendary {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.rarity-epic {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(171, 78, 255, 0.2));
+  border: 1px solid rgba(156, 39, 176, 0.5);
+  color: #ab4eff;
+  text-shadow: 0 0 8px rgba(171, 78, 255, 0.5);
+}
+
+.rarity-rare {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(100, 181, 246, 0.2));
+  border: 1px solid rgba(33, 150, 243, 0.5);
+  color: #64b5f6;
+  text-shadow: 0 0 8px rgba(100, 181, 246, 0.5);
+}
+
+.rarity-common {
+  background: rgba(128, 128, 128, 0.2);
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  color: #808080;
+}
+
+/* ============================================
+   CHAIN BADGE COLORS
+   ============================================ */
+
+.chain-ethereum { background: rgba(98, 126, 234, 0.2); border-color: #627eea; color: #627eea; }
+.chain-polygon { background: rgba(130, 71, 229, 0.2); border-color: #8247e5; color: #8247e5; }
+.chain-bsc { background: rgba(243, 186, 47, 0.2); border-color: #f3ba2f; color: #f3ba2f; }
+.chain-solana { background: rgba(0, 209, 140, 0.2); border-color: #00d18c; color: #00d18c; }
+.chain-avalanche { background: rgba(232, 65, 66, 0.2); border-color: #e84142; color: #e84142; }
+.chain-zetachain { background: rgba(0, 212, 170, 0.2); border-color: #00d4aa; color: #00d4aa; }
+.chain-base { background: rgba(0, 82, 255, 0.2); border-color: #0052ff; color: #0052ff; }
+
+/* ============================================
+   SCROLLING BACKGROUND
+   ============================================ */
+
+.scrolling-background {
+  background:
+    linear-gradient(180deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.8) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 212, 170, 0.03) 2px,
+      rgba(0, 212, 170, 0.03) 4px
+    );
+  background-size: 100% 100%, 100% 8px;
+  animation: scanlines 10s linear infinite;
+}
+
+@keyframes scanlines {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 0 0, 0 100%; }
+}
+
+/* ============================================
+   SOUNDCHAIN GRADIENT TEXT
+   ============================================ */
+
+.soundchain-gradient-text {
+  background: var(--soundchain-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.soundchain-accent-text {
+  color: var(--soundchain-accent);
+}
+
+.soundchain-gradient-border {
+  border: 1px solid transparent;
+  background: linear-gradient(#0a0a0a, #0a0a0a) padding-box,
+              var(--soundchain-gradient) border-box;
+}
+
+/* ============================================
+   MARKETPLACE GRID LAYOUT
+   ============================================ */
+
+.marketplace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* ============================================
+   MARKETPLACE FILTER BAR
+   ============================================ */
+
+.marketplace-filter-bar {
+  background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+  border-bottom: 1px solid #2a2a2a;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.filter-button {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  color: var(--soundchain-accent);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.filter-button:hover,
+.filter-button.active {
+  background: rgba(0, 212, 170, 0.2);
+  border-color: var(--soundchain-accent);
+}
+
+.filter-button.active {
+  box-shadow: 0 0 10px rgba(0, 212, 170, 0.3);
+}
+
+/* View Mode Toggle */
+.view-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: #808080;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-toggle button.active {
+  background: var(--soundchain-accent);
+  color: white;
+}
+
+.view-toggle button:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
 }

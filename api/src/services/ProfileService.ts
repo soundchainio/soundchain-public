@@ -96,7 +96,7 @@ export class ProfileService extends ModelService<typeof Profile> {
   }
 
   async followProfile(followerId: mongoose.Types.ObjectId, followedId: mongoose.Types.ObjectId): Promise<Profile> {
-    if (followerId.equals(followedId)) {
+    if (followerId.toString() === followedId.toString()) {
       throw new UserInputError('You cannot follow yourself.');
     }
 
@@ -121,7 +121,7 @@ export class ProfileService extends ModelService<typeof Profile> {
   }
 
   async unfollowProfile(followerId: mongoose.Types.ObjectId, followedId: mongoose.Types.ObjectId): Promise<Profile> {
-    if (followerId.equals(followedId)) {
+    if (followerId.toString() === followedId.toString()) {
       throw new UserInputError('You cannot unfollow yourself.');
     }
 

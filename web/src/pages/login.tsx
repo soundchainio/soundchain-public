@@ -19,11 +19,11 @@ import { isApolloError } from '@apollo/client';
 import styled from 'styled-components';
 
 const Overlay = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.5);
   z-index: 1;
 `;
@@ -89,7 +89,7 @@ export default function LoginPage() {
   const handleError = useCallback(
     (error: Error) => {
       setLoggingIn(false);
-      console.error('Login error:', error);
+      console.error('Login error:', error.message);
       if (isApolloError(error) && error.message === 'already exists') {
         const authMethodFromError = error.graphQLErrors?.find((err) => err.extensions?.with)?.extensions?.with;
         setAuthMethod(authMethodFromError ? [authMethodFromError] : undefined);
@@ -97,7 +97,8 @@ export default function LoginPage() {
         router.push('/create-account');
       } else {
         setError(error.message || 'An unexpected error occurred during login');
-        console.warn('Login error details:', error);
+        console.error('Login error message:', error.message);
+        console.error('Login error stack:', error.stack);
       }
     },
     [router],
@@ -287,13 +288,21 @@ export default function LoginPage() {
     <>
       <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
       <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden">
-        {/* Background GIF with proper scaling */}
-        <div className="absolute inset-0 z-0">
+        {/* Background GIF with proper scaling - fixed to viewport */}
+        <div className="fixed inset-0 z-0">
           <img
             src="/images/login-background.gif"
             alt="Login background"
-            className="h-full w-full object-cover"
-            style={{ objectFit: 'cover' }}
+            className="min-h-full min-w-full object-cover"
+            style={{
+              objectFit: 'cover',
+              width: '100vw',
+              height: '100vh',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)'
+            }}
           />
         </div>
         <Overlay />

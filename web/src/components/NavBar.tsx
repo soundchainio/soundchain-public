@@ -6,6 +6,7 @@ import { Library } from 'icons/Library'
 import { MarketplaceNavBar } from 'icons/MarketplaceNavBar'
 import { NewPost } from 'icons/NewPost'
 import { Search } from 'icons/Search'
+import { DEX } from 'icons/DEX'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
@@ -57,8 +58,16 @@ export const NavBar = () => {
         {isMinting ? (
           <NavBarButton label="Minting..." alwaysShowLabel nyanCat={true} onClick={handleCreateClick} />
         ) : (
-          <NavBarButton label="Create" alwaysShowLabel icon={NewPost} onClick={handleCreateClick} />
+          <NavBarButton label="Create+" alwaysShowLabel icon={NewPost} onClick={handleCreateClick} />
         )}
+        <NavBarButton
+          id="top-dex-"
+          label="DEX"
+          icon={DEX}
+          color="green-yellow"
+          path={'/dex'}
+          alwaysShowLabel
+        />
       </div>
     </nav>
   )

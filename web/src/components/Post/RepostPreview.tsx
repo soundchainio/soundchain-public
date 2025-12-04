@@ -1,4 +1,4 @@
-import { RefreshIcon } from '@heroicons/react/24/outline'
+import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import { Track, usePostQuery } from 'lib/graphql'
 import { Avatar } from '../Avatar'
 import { DisplayName } from '../DisplayName'
@@ -21,7 +21,7 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
   return (
     <div className=" my-4 bg-gray-20">
       <div className="flex items-center bg-gray-20 text-sm font-bold text-gray-400">
-        <RefreshIcon className="mr-1 h-4 w-4" /> Repost
+        <ArrowPathIcon className="mr-1 h-4 w-4" /> Repost
       </div>
       <div className="mb-2 break-words rounded-lg bg-gray-30 p-4">
         {post.deleted ? (

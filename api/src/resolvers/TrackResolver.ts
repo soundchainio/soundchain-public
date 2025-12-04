@@ -30,6 +30,7 @@ import { UpdateEditionOwnedTracksPayload } from '../types/UpdateEditionOwnedTrac
 import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 import { TrackPrice } from '../types/TrackPrice';
+import { CurrencyType } from '../types/CurrencyType';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -57,8 +58,9 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => Number)
-  favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<FavoriteCount> {
-    return trackService.favoriteCount(trackId.toString(), trackEditionId);
+  async favoriteCount(@Ctx() { trackService }: Context, @Root() { _id: trackId, trackEditionId }: Track): Promise<number> {
+    const result = await trackService.favoriteCount(trackId.toString(), trackEditionId);
+    return result?.count ?? 0; // Safely extract count, default to 0 if undefined
   }
 
   @FieldResolver(() => Number)
@@ -68,15 +70,21 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => TrackPrice)
-  price(@Ctx() { trackService, listingItemService }: Context, @Root() { trackEditionId, nftData }: Track): Promise<TrackPrice> {
+  async price(@Ctx() { trackService, listingItemService }: Context, @Root() { trackEditionId, nftData }: Track): Promise<TrackPrice> {
     if (trackEditionId) {
       return listingItemService.getCheapestListingItem(trackEditionId);
+    }
+    if (!nftData || nftData.tokenId === undefined || !nftData.contract) {
+      return { value: 0, currency: CurrencyType.MATIC }; // Return default price if nftData is missing
     }
     return trackService.priceToShow(nftData.tokenId, nftData.contract);
   }
 
   @FieldResolver(() => String)
-  saleType(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
+  async saleType(@Ctx() { trackService }: Context, @Root() { nftData }: Track): Promise<string> {
+    if (!nftData || nftData.tokenId === undefined || !nftData.contract) {
+      return ''; // Return empty string if nftData is missing
+    }
     return trackService.saleType(nftData.tokenId, nftData.contract);
   }
 
@@ -102,14 +110,18 @@ export class TrackResolver {
       : Promise.resolve(0);
   }
 
-  @FieldResolver(() => TrackEdition)
-  trackEdition(
+  @FieldResolver(() => TrackEdition, { nullable: true })
+  async trackEdition(
     @Ctx() { trackEditionService }: Context,
     @Root() { trackEditionId }: Track,
-  ): Promise<TrackEdition> {
-    return trackEditionId
-      ? trackEditionService.findOrFail(trackEditionId)
-      : null;
+  ): Promise<TrackEdition | null> {
+    if (!trackEditionId) return null;
+    try {
+      return await trackEditionService.findOrFail(trackEditionId);
+    } catch (error) {
+      console.warn(`TrackEdition ${trackEditionId} not found`);
+      return null;
+    }
   }
 
   @FieldResolver(() => ListingItem, { nullable: true })
@@ -117,8 +129,9 @@ export class TrackResolver {
     @Ctx() { listingItemService }: Context,
     @Root() { nftData }: Track,
   ): Promise<ListingItem | void> {
-    if (typeof nftData.tokenId !== 'number' || !nftData.contract) {
-      return;
+    // CRITICAL: Check if nftData exists first before accessing properties
+    if (!nftData || typeof nftData.tokenId !== 'number' || !nftData.contract) {
+      return null;
     }
     const item = await listingItemService.getListingItem(nftData.tokenId, nftData.contract);
     if (!item) return undefined;

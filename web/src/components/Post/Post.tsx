@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { AddLinks } from 'react-link-text' // Removed AddLinksProps import
 import ReactPlayer from 'react-player'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+import { MediaProvider } from 'types/MediaProvider'
+import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
 
 // Define a minimal type for addLinksOptions based on react-link-text usage
 interface AddLinksOptions {
@@ -81,26 +82,144 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
           </div>
         </div>
         <AddLinks options={addLinksOptions} {...{ children: <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">{post.body}</pre> } as any} />
-        {post.mediaLink &&
-          (hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-            <ReactPlayer
-              width="100%"
-              height="600px"
-              style={{ marginTop: '1rem' }}
-              url={post.mediaLink}
-              playsinline
-              controls
-              light
-            />
-          ) : (
+        {post.mediaLink && (() => {
+          const mediaSource = IdentifySource(post.mediaLink)
+          const mediaType = mediaSource.type
+
+          // Enhanced URL with autoplay and no restrictions
+          let enhancedUrl = post.mediaLink
+
+          // Platform-specific enhancements
+          if (mediaType === MediaProvider.YOUTUBE) {
+            const url = new URL(enhancedUrl)
+            url.searchParams.set('iv_load_policy', '3') // Remove age restrictions
+            url.searchParams.set('modestbranding', '1')
+            url.searchParams.set('rel', '0')
+            enhancedUrl = url.toString()
+
+            // Return responsive YouTube embed
+            return (
+              <iframe
+                frameBorder="0"
+                className="mt-4 w-full bg-gray-20 aspect-video"
+                allowFullScreen
+                src={enhancedUrl}
+                title="Media"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              />
+            )
+          }
+
+          if (mediaType === MediaProvider.VIMEO) {
+            const url = new URL(enhancedUrl)
+            url.searchParams.set('autopause', '0')
+            enhancedUrl = url.toString()
+
+            // Return responsive Vimeo embed
+            return (
+              <iframe
+                frameBorder="0"
+                className="mt-4 w-full bg-gray-20 aspect-video"
+                allowFullScreen
+                src={enhancedUrl}
+                title="Media"
+                allow="autoplay; fullscreen; picture-in-picture"
+              />
+            )
+          }
+
+          // Platform-specific iframe rendering
+          if (mediaType === MediaProvider.INSTAGRAM) {
+            return (
+              <iframe
+                frameBorder="0"
+                className="mt-4 w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[700px]"
+                allowFullScreen
+                scrolling="no"
+                src={enhancedUrl}
+                title="Media"
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+              />
+            )
+          }
+
+          if (mediaType === MediaProvider.TIKTOK) {
+            return (
+              <iframe
+                frameBorder="0"
+                className="mt-4 w-full bg-gray-20 h-[80vh] max-h-[650px] md:h-[650px]"
+                allowFullScreen
+                scrolling="no"
+                src={enhancedUrl}
+                title="Media"
+                allow="autoplay; encrypted-media; accelerometer; gyroscope"
+              />
+            )
+          }
+
+          if (mediaType === MediaProvider.X) {
+            return (
+              <iframe
+                frameBorder="0"
+                className="mt-4 w-full bg-gray-20 h-[70vh] max-h-[700px] md:h-[700px]"
+                allowFullScreen
+                scrolling="no"
+                src={enhancedUrl}
+                title="Media"
+              />
+            )
+          }
+
+          if (mediaType === MediaProvider.BANDCAMP) {
+            return (
+              <iframe
+                frameBorder="0"
+                className="mt-4 w-full bg-gray-20 h-[500px] md:h-[600px]"
+                allowFullScreen
+                seamless
+                src={enhancedUrl}
+                title="Media"
+              />
+            )
+          }
+
+          if (mediaType === MediaProvider.TWITCH) {
+            return (
+              <iframe
+                frameBorder="0"
+                className="mt-4 w-full bg-gray-20 aspect-video"
+                allowFullScreen
+                src={enhancedUrl}
+                title="Media"
+                allow="autoplay; fullscreen; picture-in-picture"
+              />
+            )
+          }
+
+          if (mediaType === MediaProvider.DISCORD) {
+            return (
+              <iframe
+                frameBorder="0"
+                className="mt-4 w-full bg-gray-20 h-[500px] md:h-[600px]"
+                src={enhancedUrl}
+                title="Media"
+                sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+              />
+            )
+          }
+
+          // Default iframe for SoundCloud, Spotify, Custom HTML
+          return (
             <iframe
               frameBorder="0"
-              className="mt-4 min-h-[250px] w-full bg-gray-20"
+              className="mt-4 w-full bg-gray-20 aspect-video"
               allowFullScreen
-              src={post.mediaLink}
+              src={enhancedUrl}
               title="Media"
+              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
             />
-          ))}
+          )
+        })()}
         {post.repostId && <RepostPreview postId={post.repostId} handleOnPlayClicked={handleOnPlayClicked} />}
         {post.track && !post.track.deleted && (
           <div className="mt-4 w-full">

@@ -1,9 +1,13 @@
 import { ClearInputButton } from 'components/common/Buttons/ClearInputButton'
 import { Bandcamp } from 'icons/Bandcamp'
+import { CustomHTML } from 'icons/CustomHTML'
 import { Soundcloud } from 'icons/Soundcloud'
 import { Spotify } from 'icons/Spotify'
 import { Vimeo } from 'icons/Vimeo'
 import { Youtube } from 'icons/Youtube'
+import { Instagram } from 'icons/social/Instagram'
+import { TikTok } from 'icons/social/TikTok'
+import { X } from 'icons/social/X'
 import { useState } from 'react'
 import { MediaProvider } from 'types/MediaProvider'
 import { MediaLink } from '../PostLinkInput'
@@ -18,6 +22,10 @@ export const LinkItem = ({ setLink, link, linkItemType }: LinkItemProps) => {
   const initialFieldValue = link?.type === linkItemType ? link.value : ''
   const [fieldValue, setFieldValue] = useState<string>(initialFieldValue)
   const mediaProviderOptions = {
+    [MediaProvider.CUSTOM_HTML]: {
+      example: '<iframe src="..." />',
+      logo: <CustomHTML className="mx-1 h-6 w-6 text-gray-400" />,
+    },
     [MediaProvider.SPOTIFY]: {
       example: 'https://open.spotify.com/track/6MQrN9j',
       logo: <Spotify className="mx-1 h-7 w-7" />,
@@ -31,6 +39,18 @@ export const LinkItem = ({ setLink, link, linkItemType }: LinkItemProps) => {
       logo: <Youtube className="mx-1 h-7 w-7" />,
     },
     [MediaProvider.VIMEO]: { example: 'https://vimeo.com/12345', logo: <Vimeo className="mx-1 h-7 w-7" /> },
+    [MediaProvider.INSTAGRAM]: {
+      example: 'https://www.instagram.com/p/ABC123',
+      logo: <Instagram className="mx-1 h-6 w-6" />,
+    },
+    [MediaProvider.TIKTOK]: {
+      example: 'https://www.tiktok.com/@user/video/123',
+      logo: <TikTok className="mx-1 h-6 w-6" />,
+    },
+    [MediaProvider.X]: {
+      example: 'https://x.com/user/status/123',
+      logo: <X className="mx-1 h-5 w-5 mt-1" />,
+    },
     [MediaProvider.BANDCAMP]: {
       example: 'https://colleengreen.bandcamp.com/album/cool',
       logo: (

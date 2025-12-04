@@ -10,7 +10,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 
-import { ChatAltIcon, RefreshIcon, ShareIcon, ThumbUpIcon } from '@heroicons/react/24/outline'
+import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
 
 interface PostActionsProps {
   postId: string
@@ -69,7 +69,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
     <div className="relative flex items-center overflow-hidden bg-gray-25 px-0 py-2">
       <div className={commonClasses}>
         <button className="flex items-center space-x-1 font-bold" onClick={handleLikeButton}>
-          {myReaction ? <ReactionEmoji name={myReaction} className="h-4 w-4" /> : <ThumbUpIcon className="h-4 w-4" />}
+          {myReaction ? <ReactionEmoji name={myReaction} className="h-4 w-4" /> : <HandThumbUpIcon className="h-4 w-4" />}
           <span className={myReaction ? 'text-[#62AAFF]' : ''}>Like</span>
         </button>
       </div>
@@ -81,13 +81,13 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
       />
       <div className={commonClasses}>
         <NextLink href={`/posts/${postId}#openComment`} className="flex items-center font-bold">
-          <ChatAltIcon className="mr-1 h-4 w-4" />
+          <ChatBubbleLeftIcon className="mr-1 h-4 w-4" />
           Comment
         </NextLink>
       </div>
       <div className={commonClasses}>
         <button className="flex items-center font-bold" onClick={onRepostClick}>
-          <RefreshIcon className="mr-1 h-4 w-4" />
+          <ArrowPathIcon className="mr-1 h-4 w-4" />
           Repost
         </button>
       </div>
