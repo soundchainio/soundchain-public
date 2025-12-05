@@ -689,6 +689,53 @@ input[type='number'] {
 }
 
 /* ============================================
+   CUSTOM SCROLLBAR STYLES
+   ============================================ */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 170, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 170, 0.5);
+}
+
+.custom-scrollbar-mini::-webkit-scrollbar {
+  width: 3px;
+}
+
+.custom-scrollbar-mini::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.custom-scrollbar-mini::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 170, 0.25);
+  border-radius: 2px;
+}
+
+.custom-scrollbar-mini::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 170, 0.4);
+}
+
+/* Track NFT Card (uses same flip card base) */
+.track-nft-card-container {
+  perspective: 1000px;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ============================================
    ANALOG GLOW EFFECTS
    ============================================ */
 

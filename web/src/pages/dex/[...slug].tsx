@@ -18,6 +18,7 @@ import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { NFTCard } from 'components/dex/NFTCard'
+import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { TokenCard } from 'components/dex/TokenCard'
 import { BundleCard } from 'components/dex/BundleCard'
 import { Card, CardContent } from 'components/ui/card'
@@ -474,15 +475,22 @@ function DEXDashboard() {
   }, [listingData, fetchMoreListings, loadingMoreListings])
 
   // Explore Users Query - search for users/profiles
+  // Pass undefined when no search to get all users, pass search string to filter
   const { data: exploreUsersData, loading: exploreUsersLoading } = useExploreUsersQuery({
-    variables: { search: exploreSearchQuery || '', page: { first: 50 } },
+    variables: {
+      search: exploreSearchQuery.trim() || undefined,
+      page: { first: 50 }
+    },
     skip: selectedView !== 'explore',
     fetchPolicy: 'cache-and-network',
   })
 
   // Explore Tracks Query - search for tracks
   const { data: exploreTracksData, loading: exploreTracksLoading } = useExploreTracksQuery({
-    variables: { search: exploreSearchQuery || '', page: { first: 50 } },
+    variables: {
+      search: exploreSearchQuery.trim() || undefined,
+      page: { first: 50 }
+    },
     skip: selectedView !== 'explore',
     fetchPolicy: 'cache-and-network',
   })
@@ -1185,14 +1193,15 @@ function DEXDashboard() {
                 </Card>
               ) : (
                 <>
-                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
                     {userTracks.map((track: any, index: number) => (
-                      <TrackCard
+                      <TrackNFTCard
                         key={track.id}
                         track={track}
                         onPlay={() => handlePlayTrack(track, index, userTracks)}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
+                        listView={viewMode === 'list'}
                       />
                     ))}
                   </div>
@@ -1222,14 +1231,15 @@ function DEXDashboard() {
                 <>
                   <Separator className="my-8" />
                   <h2 className="retro-title">Marketplace Tracks ({listingData?.listingItems?.pageInfo?.totalCount || marketTracks.length})</h2>
-                  <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
                     {marketTracks.map((track: any, index: number) => (
-                      <TrackCard
+                      <TrackNFTCard
                         key={track.id}
                         track={track}
                         onPlay={() => handlePlayTrack(track, index, marketTracks)}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
+                        listView={viewMode === 'list'}
                       />
                     ))}
                   </div>
@@ -1409,14 +1419,15 @@ function DEXDashboard() {
               </Card>
 
               {selectedPurchaseType === 'tracks' && marketTracks.length > 0 && (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}>
+                <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
                   {marketTracks.map((track: any, index: number) => (
-                    <TrackCard
+                    <TrackNFTCard
                       key={track.id}
                       track={track}
                       onPlay={() => handlePlayTrack(track, index, marketTracks)}
                       isPlaying={isPlaying}
                       isCurrentTrack={currentSong?.trackId === track.id}
+                      listView={viewMode === 'list'}
                     />
                   ))}
                 </div>
@@ -1931,6 +1942,8 @@ DEXDashboard.getLayout = (page: ReactElement) => {
                     textAlign: 'center',
                   }}
                 />
+                {/* Portal container for modals - required for Posts video/music embed modals */}
+                <div id="modals"></div>
               </TrackProvider>
             </AudioPlayerProvider>
           </LayoutContextProvider>
