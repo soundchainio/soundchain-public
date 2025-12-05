@@ -1,39 +1,16 @@
-import { Explore } from 'components/pages/ExplorePage/Explore'
-import SEO from 'components/SEO'
-import { TopNavBarProps } from 'components/TopNavBar'
-import { useLayoutContext } from 'hooks/useLayoutContext'
-import { cacheFor } from 'lib/apollo'
-import { protectPage } from 'lib/protectPage'
-import { useEffect, useMemo } from 'react'
+import { GetServerSideProps } from 'next'
 
-export const getServerSideProps = protectPage((context, apolloClient) => {
-  return cacheFor(ExplorePage, {}, context, apolloClient)
-})
+// GHOST: Redirect /explore to /dex/explore (legacy page deprecated)
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: '/dex/explore',
+      permanent: true, // 301 redirect - SEO friendly
+    },
+  }
+}
 
+// This component won't render due to redirect
 export default function ExplorePage() {
-  const { setTopNavBarProps } = useLayoutContext()
-
-  const topNavBarProps: TopNavBarProps = useMemo(
-    () => ({
-      title: 'Explore',
-      rightButton: undefined,
-      leftButton: undefined,
-    }),
-    [],
-  )
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps, topNavBarProps])
-
-  return (
-    <>
-      <SEO
-        title="Explore | SoundChain"
-        description="Explore your favorite artists and tracks on SoundChain"
-        canonicalUrl="/explore/"
-      />
-      <Explore />
-    </>
-  )
+  return null
 }
