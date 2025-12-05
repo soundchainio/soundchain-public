@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, ReactElement, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { GetServerSideProps } from 'next'
 import Image from 'next/image'
 import { Logo } from 'icons/Logo'
 import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
@@ -1937,6 +1938,15 @@ DEXDashboard.getLayout = (page: ReactElement) => {
       </StateProvider>
     </ModalProvider>
   )
+}
+
+// Required for optional catch-all route to work at /dex (base path)
+// Without this, Next.js only generates static paths and /dex returns 404
+export const getServerSideProps: GetServerSideProps = async () => {
+  // Return empty props - the page handles routing client-side via useRouter
+  return {
+    props: {},
+  }
 }
 
 export default DEXDashboard
