@@ -1,37 +1,16 @@
-import { ClearAllNotificationsButton } from 'components/ClearAllNotificationsButton'
-import { Notifications } from 'components/Notifications'
-import SEO from 'components/SEO'
-import { TopNavBarProps } from 'components/TopNavBar'
-import { useLayoutContext } from 'hooks/useLayoutContext'
-import { cacheFor } from 'lib/apollo'
-import { NotificationCountDocument, useResetNotificationCountMutation } from 'lib/graphql'
-import { protectPage } from 'lib/protectPage'
-import { useEffect } from 'react'
+import { GetServerSideProps } from 'next'
 
-export const getServerSideProps = protectPage((context, apolloClient) => {
-  return cacheFor(UserNotifications, {}, context, apolloClient)
-})
-
-const topNavBarProps: TopNavBarProps = {
-  rightButton: <ClearAllNotificationsButton />,
+// GHOST: Redirect /notifications to /dex/notifications (legacy page deprecated)
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: '/dex/notifications',
+      permanent: true, // 301 redirect - SEO friendly
+    },
+  }
 }
 
-export default function UserNotifications() {
-  const [resetNotificationCount] = useResetNotificationCountMutation()
-  const { setTopNavBarProps } = useLayoutContext()
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps])
-
-  useEffect(() => {
-    resetNotificationCount({ refetchQueries: [NotificationCountDocument] })
-  }, [resetNotificationCount])
-
-  return (
-    <>
-      <SEO title="Alerts | SoundChain" description="Check your alerts on SoundChain" canonicalUrl="/notifications/" />
-      <Notifications />
-    </>
-  )
+// This component won't render due to redirect
+export default function NotificationsPage() {
+  return null
 }

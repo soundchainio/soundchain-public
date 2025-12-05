@@ -300,11 +300,15 @@ function DEXDashboard() {
       case 'track': return 'track'
       case 'marketplace': return 'marketplace'
       case 'feed': return 'feed'
+      case 'wallet': return 'wallet'
+      case 'settings': return 'settings'
+      case 'messages': return 'messages'
+      case 'notifications': return 'notifications'
       default: return 'dashboard'
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -321,7 +325,7 @@ function DEXDashboard() {
   // Sync selectedView with URL changes (for back/forward navigation)
   useEffect(() => {
     const newView = getInitialView()
-    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'marketplace', 'feed', 'dashboard'].includes(newView)) {
+    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications'].includes(newView)) {
       setSelectedView(newView as any)
     }
   }, [routeType])
@@ -1742,6 +1746,145 @@ function DEXDashboard() {
                   <Plus className="w-4 h-4 mr-2" />
                   Create New Playlist (Coming Soon)
                 </Button>
+              </Card>
+            </div>
+          )}
+
+          {/* Wallet View - DEX-centric wallet management */}
+          {selectedView === 'wallet' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Wallet className="w-8 h-8 text-green-400" />
+                  <h2 className="retro-title text-xl">Wallet</h2>
+                </div>
+                <p className="text-gray-400 mb-6">Manage your crypto assets, NFTs, and OGUN tokens all in one place.</p>
+                {isWalletConnected ? (
+                  <div className="space-y-4">
+                    <Card className="metadata-section p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-400">Connected Wallet</p>
+                          <p className="font-mono text-cyan-400">{connectedWallet}</p>
+                        </div>
+                        <Badge className="bg-green-500/20 text-green-400">Connected</Badge>
+                      </div>
+                    </Card>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card className="metadata-section p-4 text-center">
+                        <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                        <h3 className="font-bold text-white">OGUN Balance</h3>
+                        <p className="text-2xl font-bold text-yellow-400">0.00</p>
+                      </Card>
+                      <Card className="metadata-section p-4 text-center">
+                        <ImageIcon className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                        <h3 className="font-bold text-white">NFTs Owned</h3>
+                        <p className="text-2xl font-bold text-purple-400">0</p>
+                      </Card>
+                      <Card className="metadata-section p-4 text-center">
+                        <TrendingUp className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+                        <h3 className="font-bold text-white">Total Value</h3>
+                        <p className="text-2xl font-bold text-cyan-400">$0.00</p>
+                      </Card>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Wallet className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400 mb-4">Connect your wallet to view assets</p>
+                    <Button onClick={() => setShowWalletModal(true)} className="retro-button">
+                      <Wallet className="w-4 h-4 mr-2" />
+                      Connect Wallet
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+
+          {/* Settings View */}
+          {selectedView === 'settings' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <SettingsIcon className="w-8 h-8 text-gray-400" />
+                  <h2 className="retro-title text-xl">Settings</h2>
+                </div>
+                <p className="text-gray-400 mb-6">Manage your account, profile, and preferences.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link href="/settings/name">
+                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                      <h3 className="font-bold text-white">Display Name</h3>
+                      <p className="text-xs text-gray-400">Update your name</p>
+                    </Card>
+                  </Link>
+                  <Link href="/settings/username">
+                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                      <h3 className="font-bold text-white">Username</h3>
+                      <p className="text-xs text-gray-400">Change your @handle</p>
+                    </Card>
+                  </Link>
+                  <Link href="/settings/bio">
+                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                      <h3 className="font-bold text-white">Bio</h3>
+                      <p className="text-xs text-gray-400">Tell your story</p>
+                    </Card>
+                  </Link>
+                  <Link href="/settings/profile-picture">
+                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                      <h3 className="font-bold text-white">Profile Picture</h3>
+                      <p className="text-xs text-gray-400">Update your avatar</p>
+                    </Card>
+                  </Link>
+                  <Link href="/settings/social-links">
+                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                      <h3 className="font-bold text-white">Social Links</h3>
+                      <p className="text-xs text-gray-400">Connect your socials</p>
+                    </Card>
+                  </Link>
+                  <Link href="/settings/security">
+                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                      <h3 className="font-bold text-white">Security</h3>
+                      <p className="text-xs text-gray-400">2FA and security options</p>
+                    </Card>
+                  </Link>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Messages View */}
+          {selectedView === 'messages' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <MessageCircle className="w-8 h-8 text-blue-400" />
+                  <h2 className="retro-title text-xl">Messages</h2>
+                </div>
+                <p className="text-gray-400 mb-6">Your conversations with other artists and fans.</p>
+                <div className="text-center py-8">
+                  <MessageCircle className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-400">No messages yet</p>
+                  <p className="text-xs text-gray-500 mt-2">Start a conversation by visiting an artist's profile</p>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {/* Notifications View */}
+          {selectedView === 'notifications' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Bell className="w-8 h-8 text-yellow-400" />
+                  <h2 className="retro-title text-xl">Notifications</h2>
+                </div>
+                <p className="text-gray-400 mb-6">Stay updated on likes, follows, sales, and more.</p>
+                <div className="text-center py-8">
+                  <Bell className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-400">No new notifications</p>
+                  <p className="text-xs text-gray-500 mt-2">You're all caught up!</p>
+                </div>
               </Card>
             </div>
           )}

@@ -1,41 +1,16 @@
-import { CoverPictureForm } from 'components/forms/profile/CoverPictureForm'
-import SEO from 'components/SEO'
-import { TopNavBarProps } from 'components/TopNavBar'
-import { useLayoutContext } from 'hooks/useLayoutContext'
-import { useRouter } from 'next/router'
-import React, { useEffect } from 'react'
+import { GetServerSideProps } from 'next'
 
-const topNavBarProps: TopNavBarProps = {
-  title: 'Cover Picture',
+// GHOST: Redirect /settings/cover-picture to /dex/settings/cover-picture (legacy page deprecated)
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: '/dex/settings/cover-picture',
+      permanent: true, // 301 redirect - SEO friendly
+    },
+  }
 }
 
-export default function CoverPicturePage() {
-  const router = useRouter()
-  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext()
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-    setHideBottomNavBar(true)
-
-    return () => {
-      setHideBottomNavBar(false)
-    }
-  }, [setHideBottomNavBar, setTopNavBarProps])
-
-  return (
-    <>
-      <SEO
-        title="Cover Picture | SoundChain"
-        canonicalUrl="/settings/cover-picture"
-        description="SoundChain Cover Picture"
-      />
-      <div className="flex min-h-full flex-col px-6 py-6 lg:px-8">
-        <CoverPictureForm
-          afterSubmit={() => router.push('/settings')}
-          submitText="SAVE"
-          submitProps={{ borderColor: 'bg-green-gradient' }}
-        />
-      </div>
-    </>
-  )
+// This component won't render due to redirect
+export default function SettingsCoverPicturePage() {
+  return null
 }

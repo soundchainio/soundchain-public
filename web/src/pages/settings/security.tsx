@@ -1,42 +1,16 @@
-import { DisableRecoveryForm } from 'components/forms/profile/DisableSecurityForm'
-import { SecurityForm } from 'components/forms/profile/SecurityForm'
-import SEO from 'components/SEO'
-import { TopNavBarProps } from 'components/TopNavBar'
-import { useLayoutContext } from 'hooks/useLayoutContext'
-import { useMe } from 'hooks/useMe'
-import { useRouter } from 'next/router'
-import React, { useEffect } from 'react'
+import { GetServerSideProps } from 'next'
 
-const topNavBarProps: TopNavBarProps = {
-  title: 'Two-factor Security',
+// GHOST: Redirect /settings/security to /dex/settings/security (legacy page deprecated)
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: '/dex/settings/security',
+      permanent: true, // 301 redirect - SEO friendly
+    },
+  }
 }
 
-export default function SecurityPage() {
-  const router = useRouter()
-  const me = useMe()
-  const { setTopNavBarProps, setHideBottomNavBar } = useLayoutContext()
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-    setHideBottomNavBar(true)
-
-    return () => {
-      setHideBottomNavBar(false)
-    }
-  }, [setHideBottomNavBar, setTopNavBarProps])
-
-  const handleAfterSubmit = () => router.push('/settings')
-
-  return (
-    <>
-      <SEO title="Security | SoundChain" canonicalUrl="/settings/security/" description="SoundChain Security" />
-      <div className="flex min-h-full flex-col px-6 py-6 lg:px-8">
-        {!me?.otpSecret ? (
-          <SecurityForm afterSubmit={handleAfterSubmit} />
-        ) : (
-          <DisableRecoveryForm afterSubmit={handleAfterSubmit} />
-        )}
-      </div>
-    </>
-  )
+// This component won't render due to redirect
+export default function SettingsSecurityPage() {
+  return null
 }

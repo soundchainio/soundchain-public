@@ -1,28 +1,16 @@
-import { Inbox } from 'components/Inbox'
-import { TopNavBarProps } from 'components/TopNavBar'
-import { useLayoutContext } from 'hooks/useLayoutContext'
-import { cacheFor } from 'lib/apollo'
-import { protectPage } from 'lib/protectPage'
-import { useEffect } from 'react'
-import SEO from '../../components/SEO'
+import { GetServerSideProps } from 'next'
 
-export const getServerSideProps = protectPage((context, apolloClient) => {
-  return cacheFor(MessagesPage, {}, context, apolloClient)
-})
+// GHOST: Redirect /messages to /dex/messages (legacy page deprecated)
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: '/dex/messages',
+      permanent: true, // 301 redirect - SEO friendly
+    },
+  }
+}
 
-const topNavBarProps: TopNavBarProps = {}
-
+// This component won't render due to redirect
 export default function MessagesPage() {
-  const { setTopNavBarProps } = useLayoutContext()
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps])
-
-  return (
-    <>
-      <SEO title="Inbox | SoundChain" canonicalUrl="/messages" description="SoundChain Inbox" />
-      <Inbox />
-    </>
-  )
+  return null
 }
