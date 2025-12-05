@@ -16,23 +16,12 @@ interface HomePageProps {
 }
 
 export const getServerSideProps: GetServerSideProps<HomePageProps> = async context => {
-  try {
-    const apolloClient = createApolloClient(context)
-
-    if (!MeDocument) {
-      console.error('[home] MeDocument is undefined!')
-      return cacheFor(HomePage, { me: null }, context, apolloClient)
-    }
-
-    const { data } = await apolloClient.query({
-      query: MeDocument,
-    })
-
-    return cacheFor(HomePage, { me: data.me }, context, apolloClient)
-  } catch (error) {
-    console.error('[home] Error in getServerSideProps:', error)
-    const apolloClient = createApolloClient(context)
-    return cacheFor(HomePage, { me: null }, context, apolloClient)
+  // GHOST: Redirect all /home requests to /dex (legacy page deprecated)
+  return {
+    redirect: {
+      destination: '/dex',
+      permanent: true, // 301 redirect - SEO friendly
+    },
   }
 }
 
