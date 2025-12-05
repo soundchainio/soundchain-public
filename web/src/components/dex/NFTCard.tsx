@@ -130,52 +130,32 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft, onPurchase, isWalletConne
           </Card>
         </div>
 
-        {/* Back Side */}
+        {/* Back Side - Compact */}
         <div className="nft-flip-card-back">
-          <div className="p-4 h-full flex flex-col text-white">
-            <div className="flip-hint"><RotateCcw className="w-3 h-3" /></div>
-            <div className="retro-title text-center mb-4 text-sm">NFT_METADATA.JSON</div>
-            <div className="flex-1 overflow-y-auto space-y-3">
-              <div className="metadata-section">
-                <div className="metadata-label">COLLECTION_INFO</div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs"><span className="text-gray-400">NAME:</span><span className="metadata-value text-xs">{nft.collection}</span></div>
-                  <div className="flex justify-between text-xs"><span className="text-gray-400">TOKEN_ID:</span><span className="metadata-value">{nft.tokenId}</span></div>
-                  <div className="flex justify-between text-xs"><span className="text-gray-400">STANDARD:</span><span className="metadata-value">ERC-721</span></div>
-                </div>
+          <div className="p-2 h-full flex flex-col text-white">
+            <div className="flip-hint"><RotateCcw className="w-2.5 h-2.5" /></div>
+            <div className="retro-title text-center mb-1 text-[10px]">METADATA</div>
+            <div className="flex-1 overflow-y-auto space-y-1.5 text-[9px]">
+              <div className="metadata-section-compact">
+                <div className="flex justify-between"><span className="text-gray-500">ID:</span><span className="text-cyan-400">{nft.tokenId}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">CHAIN:</span><span className="text-cyan-400">{chainNames[nft.chainId]}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">RARITY:</span><span className="text-cyan-400 uppercase">{nft.rarity}</span></div>
               </div>
-              <div className="metadata-section">
-                <div className="metadata-label">RARITY_ANALYSIS</div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs"><span className="text-gray-400">TIER:</span><span className="metadata-value uppercase">{nft.rarity}</span></div>
-                  <div className="flex justify-between text-xs"><span className="text-gray-400">SCORE:</span><span className="metadata-value">{getRarityScore(nft.rarity)}/100</span></div>
-                </div>
+              <div className="metadata-section-compact">
+                {nft.attributes.slice(0, 3).map((attr, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span className="text-gray-500">{attr.trait_type.toUpperCase()}:</span>
+                    <span className="text-cyan-400">{attr.value}</span>
+                  </div>
+                ))}
               </div>
-              <div className="metadata-section">
-                <div className="metadata-label">ATTRIBUTES</div>
-                <div className="space-y-1">
-                  {nft.attributes.map((attr, index) => (
-                    <div key={index} className="flex justify-between text-xs">
-                      <span className="text-gray-400">{attr.trait_type.toUpperCase()}:</span>
-                      <span className="metadata-value text-xs">{attr.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="metadata-section">
-                <div className="metadata-label">OWNERSHIP</div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs"><span className="text-gray-400">CREATOR:</span><span className="metadata-value text-xs">{shortenAddress(nft.creator)}</span></div>
-                  <div className="flex justify-between text-xs"><span className="text-gray-400">OWNER:</span><span className="metadata-value text-xs">{shortenAddress(nft.owner)}</span></div>
-                </div>
+              <div className="metadata-section-compact">
+                <div className="flex justify-between"><span className="text-gray-500">CREATOR:</span><span className="text-cyan-400">{shortenAddress(nft.creator)}</span></div>
               </div>
             </div>
-            <div className="mt-4">
-              <Button onClick={(e) => { e.stopPropagation(); onPurchase(nft.id) }} disabled={!isWalletConnected} className="w-full retro-button">
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                {isWalletConnected ? 'ACQUIRE_NFT' : 'CONNECT_WALLET'}
-              </Button>
-            </div>
+            <Button onClick={(e) => { e.stopPropagation(); onPurchase(nft.id) }} disabled={!isWalletConnected} size="sm" className="w-full h-6 text-[9px] bg-cyan-500 hover:bg-cyan-600 text-black font-bold mt-1">
+              {isWalletConnected ? 'BUY' : 'CONNECT'}
+            </Button>
           </div>
         </div>
       </div>
