@@ -8,11 +8,8 @@
   ],
   "routes": [
     {
-      "handle": "filesystem"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "web/$1"
     }
   ]
 }
