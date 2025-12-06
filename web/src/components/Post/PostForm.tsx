@@ -175,16 +175,18 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               url.searchParams.set('rel', '0')
               enhancedUrl = url.toString()
 
-              // Return responsive YouTube embed
+              // Return responsive YouTube embed - fixed height on mobile to reduce letterboxing
               return (
-                <iframe
-                  className="w-full bg-gray-20 aspect-video"
-                  frameBorder="0"
-                  allowFullScreen
-                  src={enhancedUrl}
-                  title="Media preview"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                />
+                <div className="w-full bg-black rounded-lg overflow-hidden">
+                  <iframe
+                    className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                    frameBorder="0"
+                    allowFullScreen
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  />
+                </div>
               )
             }
 
@@ -194,16 +196,18 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               url.searchParams.set('muted', '1')
               enhancedUrl = url.toString()
 
-              // Return responsive Vimeo embed
+              // Return responsive Vimeo embed - fixed height on mobile to reduce letterboxing
               return (
-                <iframe
-                  className="w-full bg-gray-20 aspect-video"
-                  frameBorder="0"
-                  allowFullScreen
-                  src={enhancedUrl}
-                  title="Media preview"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                />
+                <div className="w-full bg-black rounded-lg overflow-hidden">
+                  <iframe
+                    className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                    frameBorder="0"
+                    allowFullScreen
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                  />
+                </div>
               )
             }
 
@@ -272,14 +276,16 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               enhancedUrl = url.toString()
 
               return (
-                <iframe
-                  className="w-full bg-gray-20 aspect-video"
-                  frameBorder="0"
-                  allowFullScreen
-                  src={enhancedUrl}
-                  title="Media preview"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                />
+                <div className="w-full bg-black rounded-lg overflow-hidden">
+                  <iframe
+                    className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                    frameBorder="0"
+                    allowFullScreen
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                  />
+                </div>
               )
             }
 
@@ -298,14 +304,16 @@ export const PostForm = ({ ...props }: PostFormProps) => {
 
             // Default iframe for SoundCloud, Spotify, and Custom HTML
             return (
-              <iframe
-                className="w-full bg-gray-20 aspect-video"
-                frameBorder="0"
-                allowFullScreen
-                src={enhancedUrl}
-                title="Media preview"
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-              />
+              <div className="w-full bg-black rounded-lg overflow-hidden">
+                <iframe
+                  className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                  frameBorder="0"
+                  allowFullScreen
+                  src={enhancedUrl}
+                  title="Media preview"
+                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                />
+              </div>
             )
           })()}
           <PostBar

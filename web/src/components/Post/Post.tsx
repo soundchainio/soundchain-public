@@ -102,16 +102,18 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
             url.searchParams.set('rel', '0')
             enhancedUrl = url.toString()
 
-            // Return responsive YouTube embed
+            // Return responsive YouTube embed - use fixed height on mobile to reduce letterboxing
             return (
-              <iframe
-                frameBorder="0"
-                className="mt-4 w-full bg-gray-20 aspect-video"
-                allowFullScreen
-                src={enhancedUrl}
-                title="Media"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              />
+              <div className="mt-4 w-full bg-black rounded-lg overflow-hidden">
+                <iframe
+                  frameBorder="0"
+                  className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                  allowFullScreen
+                  src={enhancedUrl}
+                  title="Media"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                />
+              </div>
             )
           }
 
@@ -120,16 +122,18 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
             url.searchParams.set('autopause', '0')
             enhancedUrl = url.toString()
 
-            // Return responsive Vimeo embed
+            // Return responsive Vimeo embed - fixed height on mobile to reduce letterboxing
             return (
-              <iframe
-                frameBorder="0"
-                className="mt-4 w-full bg-gray-20 aspect-video"
-                allowFullScreen
-                src={enhancedUrl}
-                title="Media"
-                allow="autoplay; fullscreen; picture-in-picture"
-              />
+              <div className="mt-4 w-full bg-black rounded-lg overflow-hidden">
+                <iframe
+                  frameBorder="0"
+                  className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                  allowFullScreen
+                  src={enhancedUrl}
+                  title="Media"
+                  allow="autoplay; fullscreen; picture-in-picture"
+                />
+              </div>
             )
           }
 
