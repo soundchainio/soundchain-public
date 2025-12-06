@@ -17,7 +17,7 @@ const measures = {
 
 module.exports = {
   content: ['./src/**/*.{ts,tsx}'],
-  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/line-clamp')],
+  plugins: [require('@tailwindcss/forms')], // line-clamp is built-in since Tailwind v3.3
   theme: {
     extend: {
       screens: {
