@@ -49,6 +49,7 @@ const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAu
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
+const Notifications = dynamic(() => import('components/Notifications').then(mod => ({ default: mod.Notifications })), { ssr: false })
 
 // Real NFT data comes from the database via listingItems query
 // NFT listings with prices will be shown in the NFT tab
@@ -319,6 +320,7 @@ function DEXDashboard() {
   const [showWalletModal, setShowWalletModal] = useState(false)
   const [showBackendPanel, setShowBackendPanel] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [profileImageError, setProfileImageError] = useState(false)
   const [coverImageError, setCoverImageError] = useState(false)
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
@@ -747,9 +749,14 @@ function DEXDashboard() {
                 <span className="hidden xl:inline ml-2 text-purple-400">Backend</span>
               </Button>
 
-              {/* Notifications Bell - Links to /notifications like Legacy UI */}
-              <Link href="/notifications">
-                <Button variant="ghost" size="sm" className="relative hover:bg-cyan-500/10">
+              {/* Notifications Bell - Dropdown Modal */}
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="relative hover:bg-cyan-500/10"
+                  onClick={() => { setShowNotifications(!showNotifications); setShowUserMenu(false); }}
+                >
                   <Bell className="w-5 h-5" />
                   {user?.unreadNotificationCount > 0 && (
                     <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full">
@@ -757,7 +764,25 @@ function DEXDashboard() {
                     </Badge>
                   )}
                 </Button>
-              </Link>
+
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                  <Card className="absolute right-0 top-12 w-96 retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden">
+                    <div className="flex items-center justify-between p-3 border-b border-cyan-500/30">
+                      <h3 className="retro-title text-sm flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-yellow-400" />
+                        Notifications
+                      </h3>
+                      <Button variant="ghost" size="sm" onClick={() => setShowNotifications(false)}>
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="overflow-y-auto max-h-[calc(70vh-60px)] custom-scrollbar">
+                      <Notifications closePopOver={() => setShowNotifications(false)} />
+                    </div>
+                  </Card>
+                )}
+              </div>
 
               <Button
                 onClick={() => isWalletConnected ? setIsWalletConnected(false) : setShowWalletModal(true)}
@@ -770,7 +795,7 @@ function DEXDashboard() {
               <div className="relative">
                 <Avatar
                   className="w-10 h-10 analog-glow cursor-pointer bg-gradient-to-br from-purple-600 to-cyan-600 hover:ring-2 hover:ring-cyan-400"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false); }}
                 >
                   {user?.profilePicture && !profileImageError ? (
                     <AvatarImage
@@ -809,15 +834,13 @@ function DEXDashboard() {
 
                           {/* Alerts & Inbox */}
                           <div className="py-3 space-y-1 border-b border-cyan-500/30">
-                            <Link href="/notifications">
-                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10 relative" onClick={() => setShowUserMenu(false)}>
-                                <Bell className="w-4 h-4 mr-3" />
-                                <span className="flex-1 text-left">Alerts</span>
-                                {user.unreadNotificationCount > 0 && (
-                                  <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 min-w-[20px] justify-center">{user.unreadNotificationCount}</Badge>
-                                )}
-                              </Button>
-                            </Link>
+                            <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10 relative" onClick={() => { setShowUserMenu(false); setShowNotifications(true); }}>
+                              <Bell className="w-4 h-4 mr-3" />
+                              <span className="flex-1 text-left">Alerts</span>
+                              {user.unreadNotificationCount > 0 && (
+                                <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 min-w-[20px] justify-center">{user.unreadNotificationCount}</Badge>
+                              )}
+                            </Button>
                             <Link href="/messages">
                               <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10 relative" onClick={() => setShowUserMenu(false)}>
                                 <MessageCircle className="w-4 h-4 mr-3" />
@@ -1275,40 +1298,19 @@ function DEXDashboard() {
                     {tracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading...</Badge>}
                   </div>
                   <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
-                    {userTracks.map((track: any) => {
-                      // Check if track has active listing for price
-                      const listing = marketTracks.find((l: any) => l.track?.id === track.id)
-                      const priceValue = listing?.pricePerItemToShow || listing?.pricePerItem || track.price?.value || 0
-                      const currency = listing?.acceptsOGUN ? 'OGUN' : track.price?.currency || 'MATIC'
-                      const isListed = !!listing
-                      return (
-                        <NFTCard
-                          key={track.id}
-                          nft={{
-                            id: track.id,
-                            name: track.title || 'Untitled',
-                            collection: track.artist || 'SoundChain',
-                            tokenId: track.nftData?.tokenId || track.id,
-                            chainId: 137, // Polygon
-                            price: { value: parseFloat(priceValue) || 0, currency },
-                            usdPrice: parseFloat(priceValue) * 0.5, // Estimate
-                            image: track.artworkUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop',
-                            rarity: track.playbackCount > 1000 ? 'legendary' : track.playbackCount > 100 ? 'epic' : track.playbackCount > 10 ? 'rare' : 'common' as const,
-                            attributes: [
-                              { trait_type: 'Plays', value: track.playbackCountFormatted || '0' },
-                              { trait_type: 'Favorites', value: track.favoriteCount || 0 },
-                              { trait_type: 'Genre', value: track.genres?.[0] || 'Music' },
-                              ...(isListed ? [{ trait_type: 'Status', value: 'FOR SALE' }] : []),
-                            ],
-                            creator: track.nftData?.minter || track.artistId || '',
-                            owner: track.nftData?.owner || '',
-                          }}
-                          onPurchase={() => {}}
-                          isWalletConnected={isWalletConnected}
-                          listView={viewMode === 'list'}
-                        />
-                      )
-                    })}
+                    {userTracks.map((track: any, index: number) => (
+                      <TrackNFTCard
+                        key={track.id}
+                        track={{
+                          ...track,
+                          listingItem: marketTracks.find((l: any) => l.track?.id === track.id)?.listingItem || track.listingItem
+                        }}
+                        onPlay={() => handlePlayTrack(track, index, userTracks)}
+                        isPlaying={isPlaying}
+                        isCurrentTrack={currentSong?.trackId === track.id}
+                        listView={viewMode === 'list'}
+                      />
+                    ))}
                   </div>
                   {/* Load More NFTs Button */}
                   {tracksData?.groupedTracks?.pageInfo?.hasNextPage && (
@@ -1440,25 +1442,13 @@ function DEXDashboard() {
                     <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
                       {filteredMarketTracks
                         .filter((t: any) => t.listingItem?.price)
-                        .map((track: any) => (
-                          <NFTCard
+                        .map((track: any, index: number) => (
+                          <TrackNFTCard
                             key={track.id}
-                            nft={{
-                              id: track.id,
-                              name: track.title,
-                              collection: track.artist || 'SoundChain',
-                              tokenId: track.id,
-                              chainId: 137,
-                              price: { value: parseFloat(track.listingItem?.price || 0), currency: track.listingItem?.acceptsOGUN ? 'OGUN' : 'MATIC' },
-                              usdPrice: parseFloat(track.listingItem?.price || 0) * 0.5,
-                              image: track.artworkUrl || '',
-                              rarity: 'rare' as const,
-                              attributes: [],
-                              creator: track.artistWallet || '',
-                              owner: track.ownerWallet || '',
-                            }}
-                            onPurchase={() => {}}
-                            isWalletConnected={isWalletConnected}
+                            track={track}
+                            onPlay={() => handlePlayTrack(track, index, filteredMarketTracks.filter((t: any) => t.listingItem?.price))}
+                            isPlaying={isPlaying}
+                            isCurrentTrack={currentSong?.trackId === track.id}
                             listView={viewMode === 'list'}
                           />
                         ))}

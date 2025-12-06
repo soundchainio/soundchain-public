@@ -186,10 +186,10 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
                 <div className="space-y-2">
                   <h3 className="text-sm font-semibold text-gray-400">Track Info</h3>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    {track.genres?.length > 0 && (
+                    {(track.genres?.length ?? 0) > 0 && (
                       <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
                         <span className="text-gray-500">Genre</span>
-                        <span className="text-cyan-400">{track.genres[0]}</span>
+                        <span className="text-cyan-400">{track.genres?.[0]}</span>
                       </div>
                     )}
                     {track.bpm && (
@@ -316,7 +316,7 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
               <div className="flex items-center justify-between pt-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[9px] text-cyan-400">{track.playbackCountFormatted || '0'} plays</span>
-                  {track.favoriteCount > 0 && (
+                  {(track.favoriteCount ?? 0) > 0 && (
                     <span className="text-[9px] text-red-400 flex items-center gap-0.5">
                       <Heart className="w-2 h-2 fill-current" /> {track.favoriteCount}
                     </span>
