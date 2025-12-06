@@ -442,10 +442,12 @@ function DEXDashboard() {
   }, [tracksData, tracksLoading, tracksError])
 
   // Fetch all listing items for marketplace with pagination
+  // Using errorPolicy: 'all' to prevent errors from crashing the page - partial data still renders
   const { data: listingData, loading: listingLoading, error: listingError, fetchMore: fetchMoreListings } = useListingItemsQuery({
     variables: { page: { first: 50 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} },
     ssr: false,
     fetchPolicy: 'cache-and-network',
+    errorPolicy: 'all', // Allow partial data even with errors
   })
 
   // Load more listings

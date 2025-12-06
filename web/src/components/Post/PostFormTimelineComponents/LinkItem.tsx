@@ -1,10 +1,12 @@
 import { ClearInputButton } from 'components/common/Buttons/ClearInputButton'
 import { Bandcamp } from 'icons/Bandcamp'
 import { CustomHTML } from 'icons/CustomHTML'
+import { Facebook } from 'icons/Facebook'
 import { Soundcloud } from 'icons/Soundcloud'
 import { Spotify } from 'icons/Spotify'
 import { Vimeo } from 'icons/Vimeo'
 import { Youtube } from 'icons/Youtube'
+import { Discord } from 'icons/social/Discord'
 import { Instagram } from 'icons/social/Instagram'
 import { TikTok } from 'icons/social/TikTok'
 import { X } from 'icons/social/X'
@@ -50,6 +52,18 @@ export const LinkItem = ({ setLink, link, linkItemType }: LinkItemProps) => {
     [MediaProvider.X]: {
       example: 'https://x.com/user/status/123',
       logo: <X className="mx-1 h-5 w-5 mt-1" />,
+    },
+    [MediaProvider.FACEBOOK]: {
+      example: 'https://facebook.com/.../videos/123',
+      logo: <Facebook className="mx-1 h-6 w-6" />,
+    },
+    [MediaProvider.TWITCH]: {
+      example: 'https://twitch.tv/channel or /videos/123',
+      logo: <span className="mx-1 text-purple-500 text-lg font-bold">📺</span>,
+    },
+    [MediaProvider.DISCORD]: {
+      example: 'https://discord.gg/invite or /servers/123',
+      logo: <Discord className="mx-1 h-6 w-6" />,
     },
     [MediaProvider.BANDCAMP]: {
       example: 'https://colleengreen.bandcamp.com/album/cool',

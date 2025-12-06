@@ -131,7 +131,18 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
     .exec();
 
   // Hydrate plain aggregation results into proper mongoose documents
-  const hydratedResults = rawResults.map((doc: any) => collection.hydrate(doc)) as DocumentType<InstanceType<T>>[];
+  // Filter out null/undefined docs and wrap hydrate in try-catch to handle corrupted data
+  const hydratedResults = rawResults
+    .filter((doc: any) => doc && doc._id) // Only process valid documents with _id
+    .map((doc: any) => {
+      try {
+        return collection.hydrate(doc);
+      } catch (err) {
+        console.error('Failed to hydrate document:', doc?._id, err);
+        return null;
+      }
+    })
+    .filter((doc: any) => doc !== null) as DocumentType<InstanceType<T>>[];
 
   const totalCount =
     (
