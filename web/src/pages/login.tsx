@@ -188,14 +188,20 @@ export default function LoginPage() {
       console.log('Starting login process for email:', values.email);
       setLoggingIn(true);
       setError(null);
-      console.log("About to call magic.preload()...");
-      // await magic.preload(); // SKIPPED - was causing hang
-      console.log('Magic preload completed');
 
-      console.log("About to call loginWithEmailOTP...");
-      const didToken = await magic.auth.loginWithEmailOTP({ email: values.email });
-      console.log('Received didToken (email OTP):', didToken); // Added logging
-      localStorage.setItem('didToken', didToken); // Persist token
+      // Send magic link to email - user clicks link to complete login (no code pasting needed!)
+      // This is better UX than OTP - user just clicks the email link and is auto-logged in
+      console.log("Sending magic link to email...");
+      await magic.auth.loginWithMagicLink({
+        email: values.email,
+        redirectURI: `${window.location.origin}/login`,  // User returns here after clicking
+        showUI: true  // Show "check your email" UI
+      });
+
+      // After user clicks the email link and returns, get the token
+      const didToken = await magic.user.getIdToken();
+      console.log('Received didToken (magic link):', didToken);
+      localStorage.setItem('didToken', didToken);
 
       if (!didToken) {
         throw new Error('Error connecting Magic: No token returned');
