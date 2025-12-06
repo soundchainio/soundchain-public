@@ -4,7 +4,7 @@ import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
 import { TrackQuery } from 'lib/graphql'
 import Link from 'next/link'
-import ReactTooltip from 'react-tooltip'
+import { Tooltip } from 'react-tooltip'
 import tw from 'tailwind-styled-components'
 
 interface MobilePlayerProps {
@@ -47,10 +47,8 @@ export const MobilePlayer = (props: MobilePlayerProps) => {
           </PlayButton>
           {!hideTrackName && (
             <>
-              <ReactTooltip id="track-title-mobile" type="dark" effect="solid">
-                <span>{track.title}</span>
-              </ReactTooltip>
-              <a data-tip data-for="track-title-mobile">
+              <Tooltip id="track-title-mobile" content={track.title} />
+              <a data-tooltip-id="track-title-mobile">
                 <TrackTitle>{track.title}</TrackTitle>
               </a>
             </>

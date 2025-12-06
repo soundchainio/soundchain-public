@@ -9,7 +9,7 @@ import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { MeQuery, TrackQuery, useProfileLazyQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { LinkItUrl } from 'react-linkify-it'
-import ReactTooltip from 'react-tooltip'
+import { Tooltip } from 'react-tooltip'
 import tw from 'tailwind-styled-components'
 
 import { MobilePlayer } from '../MobileTrackCard/components'
@@ -76,10 +76,8 @@ export const DesktopTrackCard = (props: Props) => {
 
           <ArtistNameContainer>
             <span>
-              <ReactTooltip id="track-title" type="dark" effect="solid">
-                <span>{track.title}</span>
-              </ReactTooltip>
-              <a data-tip data-for="track-title">
+              <Tooltip id="track-title" content={track.title} />
+              <a data-tooltip-id="track-title">
                 <TrackTitle>{track.title}</TrackTitle>
               </a>
 

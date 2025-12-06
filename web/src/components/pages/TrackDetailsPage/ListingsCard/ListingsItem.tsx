@@ -16,7 +16,7 @@ import { Profile, useProfileLazyQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { FaEdit } from 'react-icons/fa'
-import ReactTooltip from 'react-tooltip'
+import { Tooltip } from 'react-tooltip'
 import tw from 'tailwind-styled-components'
 import { fixedDecimals } from 'utils/format'
 import { isPendingRequest } from 'utils/isPendingRequest'
@@ -77,14 +77,10 @@ export const ListingItem = (props: ListingItemProps) => {
 
                 {isPaymentOGUN && (
                   <>
-                    <ReactTooltip id="ogun-price" type="dark" effect="solid">
-                      <span>{fixedDecimals(priceOGUN)} OGUN</span>
-                    </ReactTooltip>
-
-                    <a data-tip data-for="ogun-price" className="h-[20px]">
+                    <Tooltip id="ogun-price" />
+                    <a data-tooltip-id="ogun-price" data-tooltip-content={`${fixedDecimals(priceOGUN)} OGUN`} className="h-[20px]">
                       <div className="flex items-center gap-1">
                         <span className="mt-[1px] max-w-[45px] truncate">{fixedDecimals(priceOGUN)}</span>
-
                         <span className="mt-[1px] text-xs font-semibold text-gray-80"> OGUN</span>
                       </div>
                     </a>
@@ -93,13 +89,8 @@ export const ListingItem = (props: ListingItemProps) => {
 
                 {!isPaymentOGUN && (
                   <>
-                    <ReactTooltip id="matic-price" type="dark" effect="solid">
-                      <div>
-                        <span>{fixedDecimals(price)}</span>
-                        <span className="mt-[1px] text-xs font-semibold text-white "> MATIC</span>
-                      </div>
-                    </ReactTooltip>
-                    <a data-tip data-for="matic-price" className="h-[20px]">
+                    <Tooltip id="matic-price" />
+                    <a data-tooltip-id="matic-price" data-tooltip-content={`${fixedDecimals(price)} MATIC`} className="h-[20px]">
                       <div className="flex items-center gap-1">
                         <span className="mt-[1px] max-w-[45px] truncate">{fixedDecimals(price)}</span>
                         <span className="mt-[1px] text-xs font-semibold text-gray-80 ">MATIC</span>
@@ -116,26 +107,16 @@ export const ListingItem = (props: ListingItemProps) => {
           <Flex>
             {!isPaymentOGUN && (
               <>
-                <ReactTooltip id="matic-price-desktop" type="dark" effect="solid">
-                  <div>
-                    <span>{fixedDecimals(price)}</span>
-                    <span className="mt-[1px] text-xs font-semibold text-white "> MATIC</span>
-                  </div>
-                </ReactTooltip>
-                <a data-tip="tooltip" data-for="matic-price-desktop">
+                <Tooltip id="matic-price-desktop" />
+                <a data-tooltip-id="matic-price-desktop" data-tooltip-content={`${fixedDecimals(price)} MATIC`}>
                   <Matic value={price} variant="listing-inline" truncate="max-w-[70px] truncate" />
                 </a>
               </>
             )}
             {isPaymentOGUN && (
               <>
-                <ReactTooltip id="ogun-price-desktop" type="dark" effect="solid">
-                  <div>
-                    <span>{fixedDecimals(priceOGUN)}</span>
-                    <span className="mt-[1px] text-xs font-semibold text-white "> OGUN</span>
-                  </div>
-                </ReactTooltip>
-                <a data-tip="tooltip" data-for="ogun-price-desktop">
+                <Tooltip id="ogun-price-desktop" />
+                <a data-tooltip-id="ogun-price-desktop" data-tooltip-content={`${fixedDecimals(priceOGUN)} OGUN`}>
                   <Ogun value={priceOGUN} truncate="max-w-[70px] truncate" />
                 </a>
               </>

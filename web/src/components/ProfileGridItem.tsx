@@ -2,7 +2,7 @@ import { Avatar } from 'components/Avatar'
 import { ProfileListItemSkeleton } from 'components/ProfileListItemSkeleton'
 import { Profile } from 'lib/graphql'
 import Link from 'next/link'
-import ReactTooltip from 'react-tooltip'
+import { Tooltip } from 'react-tooltip'
 import { limitTextToNumberOfCharacters } from 'utils/format'
 
 import { DisplayName } from './DisplayName'
@@ -49,19 +49,15 @@ export const ProfileGridItem = ({ profile }: ProfileListItemProps) => {
 
             {profile.isSubscriber ? (
               <>
-                <ReactTooltip id="unsubscribeButton" type="dark" effect="solid">
-                  <span>Unsubscribe</span>
-                </ReactTooltip>
-                <a data-tip data-for="unsubscribeButton" className="mt-2 mr-2">
+                <Tooltip id="unsubscribeButton" content="Unsubscribe" />
+                <a data-tooltip-id="unsubscribeButton" className="mt-2 mr-2">
                   <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
                 </a>
               </>
             ) : (
               <>
-                <ReactTooltip id="subscribeButton" type="dark" effect="solid">
-                  <span>Subscribe</span>
-                </ReactTooltip>
-                <a data-tip data-for="subscribeButton" className="mt-2 mr-2">
+                <Tooltip id="subscribeButton" content="Subscribe" />
+                <a data-tooltip-id="subscribeButton" className="mt-2 mr-2">
                   <SubscribeButton profileId={profile.id} isSubscriber={profile.isSubscriber} />
                 </a>
               </>

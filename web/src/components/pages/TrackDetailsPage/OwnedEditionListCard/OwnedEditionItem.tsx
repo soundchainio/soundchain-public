@@ -7,7 +7,7 @@ import { Role, TrackWithListingItem } from 'lib/graphql'
 import Link from 'next/link'
 import { BsQuestionCircleFill, BsTagFill } from 'react-icons/bs'
 import { MdDelete } from 'react-icons/md'
-import ReactTooltip from 'react-tooltip'
+import { Tooltip } from 'react-tooltip'
 import tw from 'tailwind-styled-components'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { isPendingRequest } from 'utils/isPendingRequest'
@@ -31,10 +31,8 @@ export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
       <div className="my-2 flex items-center justify-center gap-4">
         {isProcessing && (
           <ProcessingContainer>
-            <ReactTooltip id="processingEdition" type="dark" effect="solid">
-              <span>Your NFT is being processed. This can take several minutes.</span>
-            </ReactTooltip>
-            <BsQuestionCircleFill data-tip data-for="processingEdition" size={18} />
+            <Tooltip id="processingEdition" content="Your NFT is being processed. This can take several minutes." />
+            <BsQuestionCircleFill data-tooltip-id="processingEdition" size={18} />
             <span>
               <SpinAnimation />
             </span>
