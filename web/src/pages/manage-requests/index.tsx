@@ -4,10 +4,9 @@ import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { cacheFor } from 'lib/apollo'
-import { Role } from 'lib/graphql'
+import { ProfileVerificationStatusType, Role } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
 import { useEffect, useState } from 'react'
-import { ManageRequestTab } from 'types/ManageRequestTabType'
 
 export const getServerSideProps = protectPage(async (context, apolloClient) => {
   try {
@@ -23,7 +22,7 @@ const topNavBarProps: TopNavBarProps = {
 }
 
 export default function ManageRequests() {
-  const [selectedTab, setSelectedTab] = useState<ManageRequestTab>(ManageRequestTab.PENDING)
+  const [selectedTab, setSelectedTab] = useState<ProfileVerificationStatusType>(ProfileVerificationStatusType.Pending)
   const { setTopNavBarProps } = useLayoutContext()
 
   useEffect(() => {

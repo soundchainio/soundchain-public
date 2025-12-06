@@ -21,7 +21,7 @@ const validatePlural = (word: string, qty: number) => {
 export const PostStats = ({ totalReactions, topReactions, commentCount, repostCount, postId }: PostStatsProps) => {
   const { dispatchReactionsModal } = useModalDispatch()
   const onReactions = () => {
-    dispatchReactionsModal(true, postId, topReactions, totalReactions)
+    dispatchReactionsModal({ postId, top: topReactions, total: totalReactions })
   }
 
   return (

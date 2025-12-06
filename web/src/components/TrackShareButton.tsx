@@ -44,7 +44,7 @@ export const TrackShareButton = (props: Props) => {
 
   const handlePost = () => {
     dispatchShowAudioPlayerModal(false)
-    dispatchShowPostModal(true, trackId)
+    dispatchShowPostModal({ show: true, trackId })
   }
 
   return (
@@ -67,9 +67,9 @@ export const TrackShareButton = (props: Props) => {
             )} z-40 flex w-32 flex-col rounded-lg bg-gray-20 text-white shadow-lg`}
           >
             <Menu.Item>
-              {({ focus }) => (
+              {({ active }) => (
                 <button
-                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${focus && 'rounded-md bg-gray-40'}`}
+                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${active && 'rounded-md bg-gray-40'}`}
                   onClick={handleSharing}
                 >
                   Share URL
@@ -77,9 +77,9 @@ export const TrackShareButton = (props: Props) => {
               )}
             </Menu.Item>
             <Menu.Item>
-              {({ focus }) => (
+              {({ active }) => (
                 <button
-                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${focus && 'rounded-md bg-gray-40'}`}
+                  className={`w-full px-5 py-4 text-left text-xs font-semibold ${active && 'rounded-md bg-gray-40'}`}
                   onClick={handlePost}
                 >
                   Share as Post

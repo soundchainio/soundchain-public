@@ -41,7 +41,7 @@ export const PostModal = () => {
   const initialValues = { body: editingPost?.post.body || '' }
 
   const clearState = () => {
-    dispatchShowPostModal(false, undefined)
+    dispatchShowPostModal({ show: false })
     setPostLink('')
     dispatchSetRepostId(undefined)
     dispatchSetEditPostId(undefined)

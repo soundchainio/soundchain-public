@@ -38,7 +38,7 @@ const ProductCharacteristics = ({ title, content }: ProductCharacteristicsProps)
   )
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   email: yup.string().email('Please enter a valid email address').required('Please enter your email address'),
 })
 

@@ -1,7 +1,7 @@
-import { ManageRequestTab } from 'types/ManageRequestTabType'
+import { ProfileVerificationStatusType } from 'lib/graphql'
 
 interface CurrentRequestStatusProps {
-  status: ManageRequestTab
+  status: ProfileVerificationStatusType
   reason?: string
 }
 
@@ -9,13 +9,13 @@ export const CurrentRequestStatus = ({ status, reason }: CurrentRequestStatusPro
   let classes = ''
 
   switch (status) {
-    case ManageRequestTab.PENDING:
+    case ProfileVerificationStatusType.Pending:
       classes = 'text-blue-500 pl-2 uppercase font-bold'
       break
-    case ManageRequestTab.APPROVED:
+    case ProfileVerificationStatusType.Approved:
       classes = 'text-green-500 pl-2 uppercase font-bold'
       break
-    case ManageRequestTab.DENIED:
+    case ProfileVerificationStatusType.Denied:
       classes = 'text-red-500 pl-2 uppercase font-bold'
       break
   }
@@ -25,7 +25,7 @@ export const CurrentRequestStatus = ({ status, reason }: CurrentRequestStatusPro
       <div>
         Current status: <span className={classes}>{status}</span>
       </div>
-      {reason && status === ManageRequestTab.DENIED && <div>Reason: {reason} </div>}
+      {reason && status === ProfileVerificationStatusType.Denied && <div>Reason: {reason} </div>}
     </div>
   )
 }

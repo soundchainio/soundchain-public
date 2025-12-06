@@ -34,7 +34,7 @@ export interface FormValues {
   totalGasFee?: string
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   recipient: yup.string().required('Please enter a valid wallet address'),
   gasPrice: yup.string().default(''),
   gasLimit: yup.number().default(gas),
@@ -322,7 +322,7 @@ export function TransferNftsForm() {
           })
         }}
       >
-        <Form className="container mx-auto flex h-full flex-col gap-3 py-6 px-2 text-gray-80" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="container mx-auto flex h-full flex-col gap-3 py-6 px-2 text-gray-80">
           <WalletAddressField />
           <SelectNFTsField />
 

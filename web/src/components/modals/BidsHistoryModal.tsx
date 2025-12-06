@@ -19,7 +19,7 @@ export const BidsHistoryModal = () => {
   }, [auctionId, fetch])
 
   const handleClose = () => {
-    dispatchShowBidsHistory(false, '')
+    dispatchShowBidsHistory({ show: false, auctionId: '' })
   }
 
   return (

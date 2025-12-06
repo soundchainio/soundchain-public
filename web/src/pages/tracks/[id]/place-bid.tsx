@@ -176,7 +176,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
 
   const handlePlaceBid = ({ bidAmount, token }: FormValues) => {
     if (token) {
-      const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' })
+      const isValid = authenticator.verify({ token, secret: (me as any)?.otpSecret || '' })
       if (!isValid) {
         toast.error('Invalid token code')
         return
@@ -225,7 +225,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
   }
 
   const validationSchema = yup.object().shape({
-    token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
+    token: (me as any)?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
   })
 
   return (
@@ -317,7 +317,7 @@ export default function PlaceBidPage({ track }: TrackPageProps) {
                       <InputField name="bidAmount" type="number" icon={MaticIcon} step="any" value={values.bidAmount} onChange={handleChange} />
                     </div>
                   </div>
-                  {me?.otpSecret && (
+                  {(me as any)?.otpSecret && (
                     <div className="flex items-center p-4 uppercase">
                       <p className="w-full text-xs font-bold text-gray-80">
                         <Locker className="mr-2 inline h-4 w-4" fill="#303030" /> Two-factor validation

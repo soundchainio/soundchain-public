@@ -49,7 +49,7 @@ export const TransferOgunConfirmationModal = () => {
   };
 
   const validationSchema = yup.object().shape({
-    token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
+    token: (me as any)?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
   });
 
   const hasEnoughFunds = () => {
@@ -69,8 +69,8 @@ export const TransferOgunConfirmationModal = () => {
       return;
     }
 
-    if (token && me?.otpSecret) {
-      const isValid = authenticator.verify({ token, secret: me.otpSecret });
+    if (token && (me as any)?.otpSecret) {
+      const isValid = authenticator.verify({ token, secret: (me as any).otpSecret });
       if (!isValid) {
         toast.error('Invalid token code');
         return;
@@ -128,7 +128,7 @@ export const TransferOgunConfirmationModal = () => {
                 </span>
                 <p className="pt-6">This transaction cannot be undone.</p>
               </div>
-              {me?.otpSecret && (
+              {(me as any)?.otpSecret && (
                 <InputField
                   label="Two-Factor token"
                   name="token"

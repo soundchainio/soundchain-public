@@ -91,7 +91,7 @@ export default function LoginPage() {
       setLoggingIn(false);
       console.error('Login error:', error.message);
       if (isApolloError(error) && error.message === 'already exists') {
-        const authMethodFromError = error.graphQLErrors?.find((err) => err.extensions?.with)?.extensions?.with;
+        const authMethodFromError = error.graphQLErrors?.find((err) => err.extensions?.with)?.extensions?.with as AuthMethod | undefined;
         setAuthMethod(authMethodFromError ? [authMethodFromError] : undefined);
       } else if (error.message.toLowerCase().includes('invalid credentials')) {
         router.push('/create-account');
@@ -194,7 +194,7 @@ export default function LoginPage() {
       console.log("Sending magic link to email...");
       await magic.auth.loginWithMagicLink({
         email: values.email,
-        redirectURI: `${window.location.origin}/login`,  // User returns here after clicking
+        redirectURI: 'https://soundchain.io/login',  // Must match Magic dashboard allowed URLs
         showUI: true  // Show "check your email" UI
       });
 

@@ -1,20 +1,20 @@
 import classNames from 'classnames'
-import { ManageRequestTab } from 'types/ManageRequestTabType'
+import { ProfileVerificationStatusType } from 'lib/graphql'
 
 interface ManageRequestTabsProps {
-  selectedTab: ManageRequestTab
-  setSelectedTab: (tab: ManageRequestTab) => void
+  selectedTab: ProfileVerificationStatusType
+  setSelectedTab: (tab: ProfileVerificationStatusType) => void
 }
 
 interface TabList {
   title: string
-  type: ManageRequestTab
+  type: ProfileVerificationStatusType
 }
 
 const tabs: TabList[] = [
-  { title: 'PENDING', type: ManageRequestTab.PENDING },
-  { title: 'APPROVED', type: ManageRequestTab.APPROVED },
-  { title: 'DENIED', type: ManageRequestTab.DENIED },
+  { title: 'PENDING', type: ProfileVerificationStatusType.Pending },
+  { title: 'APPROVED', type: ProfileVerificationStatusType.Approved },
+  { title: 'DENIED', type: ProfileVerificationStatusType.Denied },
 ]
 
 export const ManageRequestTabs = ({ selectedTab, setSelectedTab }: ManageRequestTabsProps) => {

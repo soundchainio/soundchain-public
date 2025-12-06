@@ -1,5 +1,20 @@
-import { Action } from 'contexts/actions'
 import { PanelActionTypes } from 'contexts/actions/panel'
+import {
+  OpenPanelPayload,
+  ClosePanelPayload,
+  MinimizePanelPayload,
+  MaximizePanelPayload,
+  TogglePanelPayload,
+  SetPanelPositionPayload,
+  SetPanelScrollPayload,
+  BringToFrontPayload,
+  PanelPayload,
+} from 'contexts/payloads/panel'
+
+interface PanelAction {
+  type: PanelActionTypes
+  payload: PanelPayload
+}
 
 export type PanelId =
   | 'marketplace'
@@ -111,10 +126,10 @@ export const initialPanelState: PanelState = {
   minimizedPanels: [],
 }
 
-export const panelReducer = (state: PanelState, action: Action): PanelState => {
+export const panelReducer = (state: PanelState, action: PanelAction): PanelState => {
   switch (action.type) {
     case PanelActionTypes.OPEN_PANEL: {
-      const panelId = action.payload.panelId as PanelId
+      const panelId = (action.payload as OpenPanelPayload).panelId
       const newZIndex = state.highestZIndex + 1
 
       return {
@@ -133,7 +148,7 @@ export const panelReducer = (state: PanelState, action: Action): PanelState => {
     }
 
     case PanelActionTypes.CLOSE_PANEL: {
-      const panelId = action.payload.panelId as PanelId
+      const panelId = (action.payload as ClosePanelPayload).panelId
 
       return {
         ...state,
@@ -149,7 +164,7 @@ export const panelReducer = (state: PanelState, action: Action): PanelState => {
     }
 
     case PanelActionTypes.MINIMIZE_PANEL: {
-      const panelId = action.payload.panelId as PanelId
+      const panelId = (action.payload as MinimizePanelPayload).panelId
       const alreadyMinimized = state.minimizedPanels.includes(panelId)
 
       return {
@@ -166,7 +181,7 @@ export const panelReducer = (state: PanelState, action: Action): PanelState => {
     }
 
     case PanelActionTypes.MAXIMIZE_PANEL: {
-      const panelId = action.payload.panelId as PanelId
+      const panelId = (action.payload as MaximizePanelPayload).panelId
       const newZIndex = state.highestZIndex + 1
 
       return {
@@ -185,7 +200,7 @@ export const panelReducer = (state: PanelState, action: Action): PanelState => {
     }
 
     case PanelActionTypes.TOGGLE_PANEL: {
-      const panelId = action.payload.panelId as PanelId
+      const panelId = (action.payload as TogglePanelPayload).panelId
       const currentStatus = state.panels[panelId].status
 
       if (currentStatus === 'closed') {
@@ -218,7 +233,7 @@ export const panelReducer = (state: PanelState, action: Action): PanelState => {
     }
 
     case PanelActionTypes.SET_PANEL_POSITION: {
-      const { panelId, position } = action.payload
+      const { panelId, position } = action.payload as SetPanelPositionPayload
 
       return {
         ...state,
@@ -233,7 +248,7 @@ export const panelReducer = (state: PanelState, action: Action): PanelState => {
     }
 
     case PanelActionTypes.SET_PANEL_SCROLL: {
-      const { panelId, scrollPosition } = action.payload
+      const { panelId, scrollPosition } = action.payload as SetPanelScrollPayload
 
       return {
         ...state,
@@ -248,7 +263,7 @@ export const panelReducer = (state: PanelState, action: Action): PanelState => {
     }
 
     case PanelActionTypes.BRING_TO_FRONT: {
-      const panelId = action.payload.panelId as PanelId
+      const panelId = (action.payload as BringToFrontPayload).panelId
       const newZIndex = state.highestZIndex + 1
 
       return {

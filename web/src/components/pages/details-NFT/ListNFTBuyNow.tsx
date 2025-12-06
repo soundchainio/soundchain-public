@@ -11,7 +11,7 @@ import { Matic } from 'icons/Matic'
 import { useEffect, useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { date, number, object, SchemaOf, string } from 'yup'
+import { date, number, object, Schema, string } from 'yup'
 import Web3 from 'web3' // Added Web3 import
 import { CurrencyType } from 'types/CurrenctyType'
 
@@ -35,7 +35,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
   const getMinutesToDate = (minutes: number): Date => {
     return new Date(new Date().getTime() + minutes * 1000 * 60)
   }
-  const validationSchema: SchemaOf<ListNFTBuyNowFormValues> = object().shape({
+  const validationSchema: Schema<ListNFTBuyNowFormValues> = object().shape({
     salePrice: number().required('Price is a required field'),
     royalty: number().max(100).min(0).required(),
     selectedCurrency: string().required(),
@@ -77,7 +77,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTBuyNowFormValues>) => {
           return (
-            <Form placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+            <Form>
               <div className="flex flex-col items-center justify-between gap-2">
                 <div className="flex items-center justify-center gap-3 py-3 px-5">
                   <label htmlFor="price" className="flex-shrink-0 text-xs font-bold text-gray-80 ">

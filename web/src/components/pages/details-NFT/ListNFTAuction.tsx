@@ -10,7 +10,7 @@ import { Matic } from 'icons/Matic'
 import { useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { date, number, object, SchemaOf } from 'yup'
+import { date, number, object, Schema } from 'yup'
 
 export interface ListNFTAuctionFormValues {
   price: number
@@ -32,7 +32,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
   const getMinutesToDate = (minutes: number): Date => {
     return new Date(new Date().getTime() + minutes * 1000 * 60)
   }
-  const validationSchema: SchemaOf<ListNFTAuctionFormValues> = object().shape({
+  const validationSchema: Schema<ListNFTAuctionFormValues> = object().shape({
     price: number().min(0.000001).required(),
     startTime: date()
       .min(getMinutesToDate(minStartMinutes), 'The start time should be at least ten minutes from now')
@@ -57,7 +57,7 @@ export const ListNFTAuction = ({ submitLabel, handleSubmit, initialValues }: Lis
         }}
       >
         {({ values, errors, isSubmitting, setFieldValue }: FormikProps<ListNFTAuctionFormValues>) => (
-          <Form placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+          <Form>
             <div className="flex items-center justify-between gap-3 bg-gray-20 py-3 px-5">
               <label htmlFor="price" className="flex-shrink-0 text-xs font-bold uppercase text-gray-80 ">
                 auction start price

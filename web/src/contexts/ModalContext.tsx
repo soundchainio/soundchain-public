@@ -44,13 +44,13 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SHOW_UNDER_DEVELOPMENT, payload: { show } }),
     dispatchShowAuthorActionsModal: (payload: any) =>
       dispatch({ type: ModalActionTypes.SHOW_CONTEXT_MENU, payload }),
-    dispatchSetEditCommentId: (editCommentId: string) =>
+    dispatchSetEditCommentId: (editCommentId: string | undefined) =>
       dispatch({ type: ModalActionTypes.SET_EDIT_COMMENT_ID, payload: { editCommentId } }),
     dispatchShowRemoveListingModal: (payload: any) =>
       dispatch({ type: ModalActionTypes.SHOW_REMOVE_LISTING, payload }),
     dispatchShowPostModal: (payload: any) =>
       dispatch({ type: ModalActionTypes.SHOW_NEW_POST, payload }),
-    dispatchSetEditPostId: (editPostId: string) =>
+    dispatchSetEditPostId: (editPostId: string | undefined) =>
       dispatch({ type: ModalActionTypes.SET_EDIT_POST_ID, payload: { editPostId } }),
     dispatchShowCommentModal: (payload: any) =>
       dispatch({ type: ModalActionTypes.SHOW_COMMENT_MODAL, payload }),
@@ -62,7 +62,7 @@ export const useModalDispatch = () => {
       dispatch({ type: ModalActionTypes.SHOW_BIDS_HISTORY, payload }),
     dispatchShowApproveModal: (show: boolean, type?: any, nftContractAddress?: string | null) =>
       dispatch({ type: ModalActionTypes.SHOW_APPROVE, payload: { show, type, nftContractAddress } }),
-    dispatchSetRepostId: (repostId: string) =>
+    dispatchSetRepostId: (repostId: string | undefined) =>
       dispatch({ type: ModalActionTypes.SET_REPOST_ID, payload: { repostId } }),
     dispatchShowReactionsModal: (payload: any) =>
       dispatch({ type: ModalActionTypes.SHOW_REACTIONS, payload }),

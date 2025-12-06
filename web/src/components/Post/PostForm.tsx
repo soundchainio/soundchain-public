@@ -42,7 +42,7 @@ export interface FormValues {
   mediaLink?: string
 }
 
-const postSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const postSchema: yup.Schema<FormValues> = yup.object().shape({
   body: yup.string().required(),
   mediaLink: yup.string(),
 })
@@ -109,7 +109,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
       onSubmit={onSubmit}
     >
       {({ values, setFieldValue }) => (
-        <Form className="pb-safe flex h-full flex-col" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="pb-safe flex h-full flex-col">
           <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
             <button
               className="flex-1 p-2 text-center font-bold text-gray-400"

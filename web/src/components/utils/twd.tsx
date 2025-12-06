@@ -21,7 +21,9 @@ interface TwProps {
   [key: string]: string | number | boolean | Record<string, unknown> | ReactNode | undefined | null
 }
 
-export function twd<T extends TwProps = TwProps>(className: string): Twinder<T> {
+export function twd<T extends TwProps = TwProps>(classNameInput: string | TemplateStringsArray): Twinder<T> {
+  // Support tagged template literals: twd`classes` or function calls: twd("classes")
+  const className = (Array.isArray(classNameInput) ? (classNameInput as TemplateStringsArray).join('') : classNameInput) as string
   const twdFn: TwinderFn<T> = (...additionalClassNames: string[]) => twd(twMerge(className, ...additionalClassNames))
 
   return new Proxy(twdFn, {

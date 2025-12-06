@@ -21,6 +21,7 @@ interface MagicContextData {
   ogunBalance: string | undefined
   refetchBalance: () => Promise<void>
   isRefetchingBalance: boolean
+  isLoggedIn: boolean
 }
 
 const MagicContext = createContext<MagicContextData>({} as MagicContextData);
@@ -155,7 +156,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   return (
     <MagicContext.Provider
-      value={{ magic, web3, account, balance: maticBalance, ogunBalance, refetchBalance, isRefetchingBalance }}
+      value={{ magic, web3, account, balance: maticBalance, ogunBalance, refetchBalance, isRefetchingBalance, isLoggedIn: !!me }}
     >
       {children}
     </MagicContext.Provider>

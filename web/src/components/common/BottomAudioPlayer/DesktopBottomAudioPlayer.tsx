@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
 import { Playlists } from 'icons/Playlists'
-import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid'
+import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 
 /**

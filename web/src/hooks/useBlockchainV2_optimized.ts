@@ -108,10 +108,10 @@ class BlockchainFunction<Type> {
 
   protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
     const { me } = this;
-    if (!me?.address) {
+    if (!me?.magicWalletAddress) {
       throw new Error('User address not found');
     }
-    await this.validateAddress(me.address);
+    await this.validateAddress(me.magicWalletAddress);
     const isLoggedIn = await this.magic?.user.isLoggedIn() || false; // Added login check
     if (!isLoggedIn) return; // Prevent execution if not logged in
     if (this.web3?.currentProvider && (this.web3.currentProvider as unknown as SDKBase['rpcProvider']).isMagic && !isLoggedIn && me.email) {

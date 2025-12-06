@@ -19,7 +19,7 @@ interface FormValues {
   body: string
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   body: yup.string().required().max(messageMaxLength),
 })
 
@@ -44,7 +44,7 @@ export const NewMessageForm = ({ profileId, onNewMessage, bottomRef }: NewMessag
     <div className="fixed bottom-20 right-0 left-0 z-20 sm:bottom-0 sm:pr-[5px]">
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
         {({ isSubmitting, isValid, dirty }: FormikProps<FormValues>) => (
-          <Form placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+          <Form>
             <div className="flex flex-row items-start space-x-3 bg-gray-25 p-3 py-5">
               {me && <Avatar className="flex self-center" profile={me.profile} linkToProfile={false} />}
               <FlexareaField

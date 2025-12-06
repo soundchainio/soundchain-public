@@ -1,7 +1,7 @@
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { DownArrow } from 'icons/DownArrow'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
-import { Reaction, useReactionsLazyQuery } from 'lib/graphql'
+import { Reaction, ReactionType, useReactionsLazyQuery } from 'lib/graphql'
 import React, { useEffect } from 'react'
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { LoaderAnimation } from 'components/LoaderAnimation'
@@ -29,16 +29,14 @@ export const ReactionsModal = () => {
   }
 
   const onClose = () => {
-    dispatchReactionsModal(false, undefined)
+    dispatchReactionsModal({ postId: undefined })
   }
 
   const getTitle = () => {
     return (
       <div className="flex flex-row items-center justify-center self-center">
-        {top?.map(reaction => (
-          <>
-            <ReactionEmoji key={reaction} name={reaction} className="mr-2 h-4 w-4" />
-          </>
+        {top?.map((reaction: ReactionType, index: number) => (
+          <ReactionEmoji key={`${reaction}-${index}`} name={reaction} className="mr-2 h-4 w-4" />
         ))}
         <span className="pr-2">{total}</span>
         <div className="text-sm font-normal text-gray-60">reaction{total && total > 1 ? 's' : null}</div>

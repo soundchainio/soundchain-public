@@ -43,7 +43,12 @@ export const Post = ({ post, handleOnPlayClicked }: PostProps) => {
   }
 
   const onEllipsisClick = () => {
-    dispatchShowAuthorActionsModal(true, AuthorActionsType.POST, post.id, !isAuthor)
+    dispatchShowAuthorActionsModal({
+      showAuthorActions: true,
+      authorActionsType: AuthorActionsType.POST,
+      authorActionsId: post.id,
+      showOnlyDeleteOption: !isAuthor,
+    })
   }
 
   if (post?.deleted) {

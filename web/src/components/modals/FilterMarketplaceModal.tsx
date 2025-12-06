@@ -27,7 +27,13 @@ export const FilterModalMarketplace = () => {
   const [acceptsAllCoins, setAcceptsAllCoins] = useState(false)
 
   const handleClose = (values: FormValues) => {
-    dispatchShowFilterMarketplaceModal(false, values.genres, values.saleType, values.acceptsMATIC, values.acceptsOGUN)
+    dispatchShowFilterMarketplaceModal({
+      show: false,
+      genres: values.genres,
+      filterSaleType: values.saleType,
+      acceptsMATIC: values.acceptsMATIC,
+      acceptsOGUN: values.acceptsOGUN,
+    })
   }
 
   const handleGenreClick = (
@@ -89,7 +95,7 @@ export const FilterModalMarketplace = () => {
         }}
       >
         {({ setFieldValue, values }) => (
-          <Form className="flex h-full flex-col gap-2 bg-gray-10 p-4" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+          <Form className="flex h-full flex-col gap-2 bg-gray-10 p-4">
             <div className="flex flex-1 flex-col gap-2">
               <span className="text-xs font-bold text-white">Listing COIN Type</span>
               <div className="mb-6 flex gap-3">

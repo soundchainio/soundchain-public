@@ -57,8 +57,8 @@ import { useEffect, useState } from 'react'
 
       useEffect(() => {
         if (account) {
-          whitelistEntryByWallet({ variables: { walletAddress: account } })
-          audioHolderByWallet({ variables: { walletAddress: account } })
+          whitelistEntryByWallet({ variables: { walletAdress: account } })
+          audioHolderByWallet({ variables: { walletAdress: account } })
           proofBookByWallet({ variables: { walletAddress: account } })
         }
       }, [account, audioHolderByWallet, whitelistEntryByWallet, proofBookByWallet])

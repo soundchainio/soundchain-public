@@ -4,9 +4,8 @@ import { Delete as DeleteButton } from 'components/common/Buttons/Delete'
 import { TextareaField } from 'components/TextareaField'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { ProfileVerificationRequestsDocument, useUpdateProfileVerificationRequestMutation } from 'lib/graphql'
+import { ProfileVerificationRequestsDocument, ProfileVerificationStatusType, useUpdateProfileVerificationRequestMutation } from 'lib/graphql'
 import { useRouter } from 'next/router'
-import { ManageRequestTab } from 'types/ManageRequestTabType'
 import * as yup from 'yup'
 
 interface DenyReasonModalProps {
@@ -39,7 +38,7 @@ export const DenyReasonModal = ({ requestId, showReason, setShowReason }: DenyRe
         id: requestId,
         input: {
           reviewerProfileId: me?.profile.id,
-          status: ManageRequestTab.DENIED,
+          status: ProfileVerificationStatusType.Denied,
           reason: values.reason,
         },
       },

@@ -1,7 +1,16 @@
 import { PositioningPortal } from '@codastic/react-positioning-portal'
 import { MusicalNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import Picker from '@emoji-mart/react'
-import type { Emoji } from '@emoji-mart/data'
+
+// Extended Emoji type with native property from emoji-mart picker callback
+interface Emoji {
+  id: string
+  name: string
+  native: string
+  unified: string
+  keywords: string[]
+  shortcodes: string
+}
 import { Edit } from 'icons/Edit'
 import { CreatePostInput, useCreatePostMutation } from 'lib/graphql'
 import { ChangeEvent, useState } from 'react'
@@ -143,7 +152,7 @@ export const PostFormTimeline = () => {
           <div className="flex basis-3/4">
             <PositioningPortal
               isOpen={isEmojiPickerVisible}
-              portalContent={<Picker theme="dark" perLine={7} onSelect={(e: BaseEmoji) => handleSelectEmoji(e)} />}
+              portalContent={<Picker theme="dark" perLine={7} onSelect={(e: Emoji) => handleSelectEmoji(e)} />}
             >
               <div className="mr-[8px] w-6 cursor-pointer" onClick={onEmojiPickerClick}>
                 {isEmojiPickerVisible ? '❌' : '😃'}

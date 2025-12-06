@@ -1,6 +1,15 @@
 import { MusicalNoteIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 import Picker from '@emoji-mart/react'
-import type { Emoji } from '@emoji-mart/data'
+
+// Extended Emoji type with native property from emoji-mart picker callback
+interface Emoji {
+  id: string
+  name: string
+  native: string
+  unified: string
+  keywords: string[]
+  shortcodes: string
+}
 import { useState } from 'react'
 import { PostLinkType } from 'types/PostLinkType'
 import { LinksModal } from '../LinksModal'

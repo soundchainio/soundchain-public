@@ -29,7 +29,7 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const onRepostClick = () => {
     if (!me) return router.push('/login')
     dispatchSetRepostId(postId)
-    dispatchShowPostModal(true)
+    dispatchShowPostModal({ show: true })
   }
 
   const handleLikeButton = () => {

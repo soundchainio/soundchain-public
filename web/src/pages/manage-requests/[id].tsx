@@ -18,6 +18,7 @@ import {
   ProfileVerificationRequest,
   ProfileVerificationRequestDocument,
   ProfileVerificationRequestsDocument,
+  ProfileVerificationStatusType,
   Role,
   useProfileQuery,
   useUpdateProfileVerificationRequestMutation,
@@ -26,7 +27,6 @@ import { protectPage } from 'lib/protectPage'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
-import { ManageRequestTab } from 'types/ManageRequestTabType'
 
 export interface RequestPageProps {
   data: ProfileVerificationRequest
@@ -91,7 +91,7 @@ export default function RequestPage({ data }: RequestPageProps) {
         id: data.id,
         input: {
           reviewerProfileId: me?.profile.id,
-          status: ManageRequestTab.APPROVED,
+          status: ProfileVerificationStatusType.Approved,
         },
       },
     })
@@ -121,7 +121,7 @@ export default function RequestPage({ data }: RequestPageProps) {
               </div>
             </div>
           </NextLink>
-          <CurrentRequestStatus reason={data.reason || ''} status={data.status as ManageRequestTab} />
+          <CurrentRequestStatus reason={data.reason || ''} status={data.status as ProfileVerificationStatusType} />
           {sourceList.map(src => (
             <div key={src.name} className="my-8 flex items-center text-white">
               <div className="flex flex-col items-center justify-center  px-2 text-xs">
@@ -140,12 +140,12 @@ export default function RequestPage({ data }: RequestPageProps) {
           ))}
         </div>
         <div className="my-5 mt-auto flex items-center gap-4 px-4 md:px-0">
-          {data.status !== ManageRequestTab.DENIED && (
+          {data.status !== ProfileVerificationStatusType.Denied && (
             <DeleteButton onClick={handleDeny} className="h-12 w-full text-sm text-white">
-              {data.status === ManageRequestTab.APPROVED ? 'REMOVE VERIFICATION' : 'DENY'}
+              {data.status === ProfileVerificationStatusType.Approved ? 'REMOVE VERIFICATION' : 'DENY'}
             </DeleteButton>
           )}
-          {data.status !== ManageRequestTab.APPROVED && (
+          {data.status !== ProfileVerificationStatusType.Approved && (
             <Button variant="outline" borderColor="bg-green-gradient" className="h-12 w-full" onClick={handleApprove}>
               APPROVE
             </Button>

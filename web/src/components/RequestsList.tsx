@@ -1,12 +1,11 @@
-import { PageInput, useProfileVerificationRequestsQuery } from 'lib/graphql'
+import { PageInput, ProfileVerificationStatusType, useProfileVerificationRequestsQuery } from 'lib/graphql'
 import React from 'react'
-import { ManageRequestTab } from 'types/ManageRequestTabType'
 import { InfiniteLoader } from 'components/InfiniteLoader'
 import { ManageRequestCard } from './ManageRequestCard'
 import { NoResultFound } from './NoResultFound'
 
 interface RequestsListProps {
-  status: ManageRequestTab
+  status: ProfileVerificationStatusType
 }
 
 const pageSize = 15

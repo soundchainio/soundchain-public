@@ -114,6 +114,7 @@ export interface ShowMarketplaceFilterPayload {
   acceptsZETA?: boolean | undefined;
   acceptsBTC?: boolean | undefined;
   acceptsPENGU?: boolean | undefined;
+  acceptsYZY?: boolean | undefined;
   // Add transaction-related properties (might need a separate action)
   transactionStatus?: any;
   bundleSelections?: string[] | undefined;

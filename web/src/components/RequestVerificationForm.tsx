@@ -13,19 +13,19 @@ export interface FormValues {
   bandcamp?: string
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape(
+const validationSchema: yup.Schema<FormValues> = yup.object().shape(
   {
     soundcloud: yup.string().when(['youtube', 'bandcamp'], {
       is: (youtube: string, bandcamp: string) => !youtube && !bandcamp,
-      then: yup.string().required('At least one of the fields are required'),
+      then: (schema) => schema.required('At least one of the fields are required'),
     }),
     youtube: yup.string().when(['soundcloud', 'bandcamp'], {
       is: (soundcloud: string, bandcamp: string) => !soundcloud && !bandcamp,
-      then: yup.string().required('At least one of the fields are required'),
+      then: (schema) => schema.required('At least one of the fields are required'),
     }),
     bandcamp: yup.string().when(['soundcloud', 'youtube'], {
       is: (soundcloud: string, youtube: string) => !soundcloud && !youtube,
-      then: yup.string().required('At least one of the fields are required'),
+      then: (schema) => schema.required('At least one of the fields are required'),
     }),
   },
   [
@@ -60,7 +60,7 @@ export const RequestVerificationForm = ({ handleSubmit, loading }: Props) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      <Form className="flex flex-col gap-4" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+      <Form className="flex flex-col gap-4">
         <div className="mt-2 flex flex-1 flex-col gap-6">
           {sourceList.map(src => (
             <div key={src.name} className="flex items-center gap-2">

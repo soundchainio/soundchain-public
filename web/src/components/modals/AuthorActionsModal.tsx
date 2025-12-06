@@ -48,7 +48,11 @@ export const AuthorActionsModal = () => {
   })
 
   const onOutsideClick = () => {
-    dispatchShowAuthorActionsModal(false, AuthorActionsType.POST, '')
+    dispatchShowAuthorActionsModal({
+      showAuthorActions: false,
+      authorActionsType: AuthorActionsType.POST,
+      authorActionsId: '',
+    })
   }
 
   const onEdit = () => {
@@ -70,7 +74,7 @@ export const AuthorActionsModal = () => {
     if (track) {
       // only the NFT owner should have the right to burn the NFT
       const shouldBurn = me?.profile.id === track?.track.profileId
-      dispatchShowConfirmDeleteNFTModal(true, track.track.id, shouldBurn)
+      dispatchShowConfirmDeleteNFTModal({ show: true, trackId: track.track.id, burn: shouldBurn })
     }
   }
 

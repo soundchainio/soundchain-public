@@ -47,7 +47,7 @@ export const TransferConfirmationModal = () => {
   }
 
   const validationSchema = yup.object().shape({
-    token: me?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
+    token: (me as any)?.otpSecret ? yup.string().required('Two-Factor token is required') : yup.string(),
   })
 
   const hasEnoughFunds = () => {
@@ -59,7 +59,7 @@ export const TransferConfirmationModal = () => {
 
   const handleSubmit = ({ token }: FormValues) => {
     if (token) {
-      const isValid = authenticator.verify({ token, secret: me?.otpSecret || '' })
+      const isValid = authenticator.verify({ token, secret: (me as any)?.otpSecret || '' })
       if (!isValid) {
         toast.error('Invalid token code')
         return
@@ -102,7 +102,7 @@ export const TransferConfirmationModal = () => {
       }
     >
       <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-        <Form className="flex h-full w-full flex-col justify-between" autoComplete="off" placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+        <Form className="flex h-full w-full flex-col justify-between" autoComplete="off">
           <div className="mb-auto flex h-full flex-col justify-between">
             <div className="flex h-full flex-col justify-around">
               <div className="px-4 text-center text-sm font-bold text-gray-80">
@@ -113,7 +113,7 @@ export const TransferConfirmationModal = () => {
                 </span>
                 <p className="pt-6">This transaction cannot be undone.</p>
               </div>
-              {me?.otpSecret && (
+              {(me as any)?.otpSecret && (
                 <InputField
                   label="Two-Factor token"
                   name="token"

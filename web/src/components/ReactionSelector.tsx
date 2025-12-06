@@ -8,6 +8,10 @@ import {
 } from 'lib/graphql-hooks'
 
 interface ReactionSelectorProps {
+  postId: string
+  myReaction: ReactionType | null
+  opened: boolean
+  setOpened: (opened: boolean) => void
 }
 
 const reactionTypes = [

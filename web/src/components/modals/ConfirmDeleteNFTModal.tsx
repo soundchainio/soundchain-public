@@ -88,7 +88,7 @@ export const ConfirmDeleteNFTModal = () => {
   }, [track, account, web3])
 
   const handleClose = () => {
-    dispatchShowConfirmDeleteNFTModal(false, '', false)
+    dispatchShowConfirmDeleteNFTModal({ show: false, trackId: '', burn: false })
   }
 
   const handleCancel = () => {

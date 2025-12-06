@@ -4,7 +4,7 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "types": ["node", "react", "react-dom"], // Keep for dependency support
+    "types": ["node", "react", "react-dom", "jest"], // Keep for dependency support
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,

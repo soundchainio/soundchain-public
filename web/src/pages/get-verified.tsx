@@ -8,6 +8,7 @@ import { Verified } from 'icons/Verified'
 import { cacheFor } from 'lib/apollo'
 import {
   ProfileVerificationRequest,
+  ProfileVerificationStatusType,
   useCreateProfileVerificationRequestMutation,
   useProfileVerificationRequestQuery,
   useRemoveProfileVerificationRequestMutation,
@@ -15,7 +16,6 @@ import {
 import { protectPage } from 'lib/protectPage'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { ManageRequestTab } from 'types/ManageRequestTabType'
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(GetVerified, {}, context, apolloClient)
@@ -79,7 +79,7 @@ export default function GetVerified() {
           </ol>
         </>
       )}
-      {requested?.status === ManageRequestTab.PENDING && (
+      {requested?.status === ProfileVerificationStatusType.Pending && (
         <div className="px-4 pb-10 text-center text-sm text-gray-400">
           Your request has been sent!
           <div className="mt-6 mb-6">
@@ -91,11 +91,11 @@ export default function GetVerified() {
         </div>
       )}
 
-      {requested?.status === ManageRequestTab.APPROVED && (
+      {requested?.status === ProfileVerificationStatusType.Approved && (
         <div className="px-4 pb-10 text-center text-sm text-gray-400">Your account is legitimate!</div>
       )}
 
-      {requested?.status === ManageRequestTab.DENIED && (
+      {requested?.status === ProfileVerificationStatusType.Denied && (
         <div className="px-4 pb-10 text-center text-sm text-gray-400">
           Your request was <span className="font-bold text-red-500">DENIED</span>.
           <div className="mt-5">Reason: {requested.reason}</div>

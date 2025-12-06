@@ -24,7 +24,7 @@ interface PostLinkInputProps {
   setPostLink: (value: string) => void
 }
 
-const mediaProviderOptions = {
+const mediaProviderOptions: Record<string, { name: string; example: string; tooltip: string; logo: JSX.Element }> = {
   [MediaProvider.SPOTIFY]: {
     name: 'Spotify',
     example: 'https://open.spotify.com/track/... or embed code',

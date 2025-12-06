@@ -251,7 +251,7 @@ export const ListedAction = ({
       {endingDate && !futureSale && (
         <div className="flex flex-col items-center px-1 text-xs">
           {countBids != 0 && (
-            <button className="font-bold text-blue-400" onClick={() => dispatchShowBidsHistory(true, auctionId || '')}>
+            <button className="font-bold text-blue-400" onClick={() => dispatchShowBidsHistory({ show: true, auctionId: auctionId || '' })}>
               [{countBids} bids]
             </button>
           )}

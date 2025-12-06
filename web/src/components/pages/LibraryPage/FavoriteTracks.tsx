@@ -81,13 +81,11 @@ export const FavoriteTracks = (props: FavoriteTracksProps) => {
     <>
       {isGrid ? (
         <GridView
-          isLoading={loading}
+          loading={loading}
           hasNextPage={pageInfo.hasNextPage}
           loadMore={loadMore}
-          list={nodes as Track[]}
-          variant="track"
-          refetch={refetch}
-          handleOnPlayClicked={handleOnPlayClicked}
+          tracks={nodes as Track[]}
+          refetch={refetch as () => Promise<any>}
         />
       ) : (
         <ListView

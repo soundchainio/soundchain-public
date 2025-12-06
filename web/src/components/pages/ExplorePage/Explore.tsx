@@ -2,8 +2,8 @@ import { ExploreAll } from 'components/ExploreAll'
 import { ExploreUsersListView } from 'components/ExploreUsersListView'
 import React, { useEffect, useState } from 'react'
 import { ExploreTab } from 'types/ExploreTabType'
-import { SelectToApolloQuery, SortListingItem, SortListingParam } from 'lib/apollo/sorting'
-import { SortExploreTracksField, Track, useExploreTracksQuery } from 'lib/graphql'
+import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
+import { SortExploreTracks, Track, useExploreTracksQuery } from 'lib/graphql'
 import { ListView } from 'components/ListView'
 import { GridView } from 'components/common'
 import { ExploreSearchBar } from './ExploreSearchBar'
@@ -25,7 +25,7 @@ export const Explore = () => {
     variables: {
       page: { first: pageSize },
       search,
-      sort: SelectToApolloQuery[sorting] as unknown as SortListingParam<SortExploreTracksField>,
+      sort: SelectToApolloQuery[sorting] as unknown as SortExploreTracks,
     },
     ssr: false,
   })
@@ -40,7 +40,7 @@ export const Explore = () => {
       page: {
         first: pageSize,
       },
-      sort: SelectToApolloQuery[sorting] as unknown as SortListingParam<SortExploreTracksField>,
+      sort: SelectToApolloQuery[sorting] as unknown as SortExploreTracks,
     })
   }, [refetch, sorting, search])
 
@@ -108,13 +108,11 @@ export const Explore = () => {
             <>
               {isGrid ? (
                 <GridView
-                  isLoading={loading}
-                  variant="track"
+                  loading={loading}
                   hasNextPage={pageInfo.hasNextPage}
                   loadMore={loadMore}
-                  list={nodes as Track[]}
-                  refetch={refetch}
-                  handleOnPlayClicked={handleOnPlayClicked}
+                  tracks={nodes as Track[]}
+                  refetch={refetch as () => Promise<any>}
                 />
               ) : (
                 <ListView

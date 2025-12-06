@@ -58,7 +58,7 @@ export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
         )}
 
         {(isOwner || me?.roles.includes(Role.Admin)) && (
-          <DeleteButton onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.EDITION, id, true)}>
+          <DeleteButton onClick={() => dispatchShowAuthorActionsModal({ showAuthorActions: true, authorActionsType: AuthorActionsType.EDITION, authorActionsId: id, showOnlyDeleteOption: true })}>
             <MdDelete size={22} className="mb-2" />
             <ButtonTitle>Delete</ButtonTitle>
           </DeleteButton>

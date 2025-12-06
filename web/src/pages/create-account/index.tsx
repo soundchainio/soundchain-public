@@ -76,7 +76,7 @@ export default function CreateAccountPage() {
     }
   }
 
-  const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+  const validationSchema: yup.Schema<FormValues> = yup.object().shape({
     displayName: yup.string().min(3).max(255).required().label('Name'),
     handle: yup
       .string()

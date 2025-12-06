@@ -19,7 +19,7 @@ interface FormValues {
   body: string
 }
 
-const validationSchema: yup.SchemaOf<FormValues> = yup.object().shape({
+const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   body: yup.string().required().max(160),
 })
 
@@ -73,7 +73,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
         }, [values.body])
 
         return (
-          <Form placeholder="" onPointerEnterCapture={() => {}} onPointerLeaveCapture={() => {}}>
+          <Form>
             <div className="flex flex-col bg-gray-25">
               <div className="flex flex-row items-start space-x-3 p-3">
                 <Avatar profile={me.profile} linkToProfile={false} />

@@ -73,7 +73,7 @@ function Action(props: ActionProps) {
             type="button"
             aria-label="More options"
             className="flex h-10 w-10 items-center justify-center"
-            onClick={() => dispatchShowAuthorActionsModal(true, AuthorActionsType.NFT, trackId, true)}
+            onClick={() => dispatchShowAuthorActionsModal({ showAuthorActions: true, authorActionsType: AuthorActionsType.NFT, authorActionsId: trackId, showOnlyDeleteOption: true })}
           >
             <Ellipsis fill="#808080" />
           </button>

@@ -23,7 +23,12 @@ export const Comment = ({ commentId }: CommentProps) => {
   const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember)
 
   const onEllipsisClick = () => {
-    dispatchShowAuthorActionsModal(true, AuthorActionsType.COMMENT, commentId, !isAuthor)
+    dispatchShowAuthorActionsModal({
+      showAuthorActions: true,
+      authorActionsType: AuthorActionsType.COMMENT,
+      authorActionsId: commentId,
+      showOnlyDeleteOption: !isAuthor,
+    })
   }
 
   if (!comment) return <CommentSkeleton />
