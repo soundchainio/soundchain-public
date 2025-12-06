@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, ReactElement, useEffect } from 'react'
+import React, { useState, useMemo, useCallback, ReactElement, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
@@ -477,6 +477,68 @@ function DEXDashboard() {
       setLoadingMoreListings(false)
     }
   }, [listingData, fetchMoreListings, loadingMoreListings])
+
+  // Infinite scroll refs - auto-load more when scrolling near bottom
+  const tracksScrollRef = useRef<HTMLDivElement>(null)
+  const nftScrollRef = useRef<HTMLDivElement>(null)
+  const listingsScrollRef = useRef<HTMLDivElement>(null)
+
+  // Auto-load more tracks when scrolling near bottom
+  useEffect(() => {
+    const ref = tracksScrollRef.current
+    if (!ref) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && tracksData?.groupedTracks?.pageInfo?.hasNextPage && !loadingMore) {
+          console.log('🔄 Auto-loading more tracks...')
+          handleLoadMore()
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' } // Trigger 200px before reaching bottom
+    )
+
+    observer.observe(ref)
+    return () => observer.disconnect()
+  }, [tracksData?.groupedTracks?.pageInfo?.hasNextPage, loadingMore, handleLoadMore])
+
+  // Auto-load more listings when scrolling near bottom
+  useEffect(() => {
+    const ref = listingsScrollRef.current
+    if (!ref) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && listingData?.listingItems?.pageInfo?.hasNextPage && !loadingMoreListings) {
+          console.log('🔄 Auto-loading more listings...')
+          handleLoadMoreListings()
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    )
+
+    observer.observe(ref)
+    return () => observer.disconnect()
+  }, [listingData?.listingItems?.pageInfo?.hasNextPage, loadingMoreListings, handleLoadMoreListings])
+
+  // Auto-load more NFTs when scrolling near bottom (separate from tracks since on different tab)
+  useEffect(() => {
+    const ref = nftScrollRef.current
+    if (!ref) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && tracksData?.groupedTracks?.pageInfo?.hasNextPage && !loadingMore) {
+          console.log('🔄 Auto-loading more NFTs...')
+          handleLoadMore()
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    )
+
+    observer.observe(ref)
+    return () => observer.disconnect()
+  }, [tracksData?.groupedTracks?.pageInfo?.hasNextPage, loadingMore, handleLoadMore])
 
   // Explore Users Query - search for users/profiles
   // Pass undefined when no search to get all users, pass search string to filter
@@ -1230,23 +1292,25 @@ function DEXDashboard() {
                       />
                     ))}
                   </div>
-                  {/* Load More Button */}
-                  {tracksData?.groupedTracks?.pageInfo?.hasNextPage && (
+                  {/* Infinite scroll sentinel + Load More Button */}
+                  <div ref={tracksScrollRef} className="h-4" />
+                  {(tracksData?.groupedTracks?.pageInfo?.hasNextPage || loadingMore) && (
                     <div className="flex justify-center mt-6">
-                      <Button
-                        onClick={handleLoadMore}
-                        disabled={loadingMore}
-                        className="retro-button px-8"
-                      >
-                        {loadingMore ? (
-                          <>Loading...</>
-                        ) : (
-                          <>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Load More Tracks ({tracksData?.groupedTracks?.pageInfo?.totalCount - userTracks.length} remaining)
-                          </>
-                        )}
-                      </Button>
+                      {loadingMore ? (
+                        <div className="flex items-center gap-2 text-cyan-400">
+                          <div className="animate-spin h-5 w-5 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                          <span>Loading more tracks...</span>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={handleLoadMore}
+                          disabled={loadingMore}
+                          className="retro-button px-8"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Load More Tracks ({(tracksData?.groupedTracks?.pageInfo?.totalCount || 0) - userTracks.length} remaining)
+                        </Button>
+                      )}
                     </div>
                   )}
                 </>
@@ -1268,21 +1332,25 @@ function DEXDashboard() {
                       />
                     ))}
                   </div>
-                  {/* Load More Marketplace Button */}
-                  {listingData?.listingItems?.pageInfo?.hasNextPage && (
+                  {/* Infinite scroll sentinel + Load More Marketplace Button */}
+                  <div ref={listingsScrollRef} className="h-4" />
+                  {(listingData?.listingItems?.pageInfo?.hasNextPage || loadingMoreListings) && (
                     <div className="flex justify-center mt-6">
-                      <Button
-                        onClick={handleLoadMoreListings}
-                        disabled={loadingMoreListings}
-                        className="retro-button px-8"
-                      >
-                        {loadingMoreListings ? 'Loading...' : (
-                          <>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Load More ({(listingData?.listingItems?.pageInfo?.totalCount || 0) - marketTracks.length} remaining)
-                          </>
-                        )}
-                      </Button>
+                      {loadingMoreListings ? (
+                        <div className="flex items-center gap-2 text-cyan-400">
+                          <div className="animate-spin h-5 w-5 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                          <span>Loading more listings...</span>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={handleLoadMoreListings}
+                          disabled={loadingMoreListings}
+                          className="retro-button px-8"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Load More ({(listingData?.listingItems?.pageInfo?.totalCount || 0) - marketTracks.length} remaining)
+                        </Button>
+                      )}
                     </div>
                   )}
                 </>
@@ -1314,21 +1382,25 @@ function DEXDashboard() {
                       />
                     ))}
                   </div>
-                  {/* Load More NFTs Button */}
-                  {tracksData?.groupedTracks?.pageInfo?.hasNextPage && (
+                  {/* Infinite scroll sentinel + Load More NFTs Button */}
+                  <div ref={nftScrollRef} className="h-4" />
+                  {(tracksData?.groupedTracks?.pageInfo?.hasNextPage || loadingMore) && (
                     <div className="flex justify-center mt-6">
-                      <Button
-                        onClick={() => fetchMoreTracks({ variables: { page: { first: 50, after: tracksData?.groupedTracks?.pageInfo?.endCursor } } })}
-                        disabled={tracksLoading}
-                        className="retro-button px-8"
-                      >
-                        {tracksLoading ? 'Loading...' : (
-                          <>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Load More NFTs ({(tracksData?.groupedTracks?.pageInfo?.totalCount || 0) - userTracks.length} remaining)
-                          </>
-                        )}
-                      </Button>
+                      {loadingMore ? (
+                        <div className="flex items-center gap-2 text-purple-400">
+                          <div className="animate-spin h-5 w-5 border-2 border-purple-400 border-t-transparent rounded-full" />
+                          <span>Loading more NFTs...</span>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={handleLoadMore}
+                          disabled={loadingMore}
+                          className="retro-button px-8"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Load More NFTs ({(tracksData?.groupedTracks?.pageInfo?.totalCount || 0) - userTracks.length} remaining)
+                        </Button>
+                      )}
                     </div>
                   )}
                 </>
@@ -1526,14 +1598,14 @@ function DEXDashboard() {
                     className={`px-4 py-2 rounded-lg transition-all ${exploreTab === 'users' ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                   >
                     <Users className="w-4 h-4 mr-2" />
-                    Users ({exploreUsersData?.exploreUsers?.pageInfo?.totalCount || 0})
+                    Users ({exploreUsersData?.exploreUsers?.nodes?.length || 0})
                   </Button>
                   <Button
                     onClick={() => setExploreTab('tracks')}
                     className={`px-4 py-2 rounded-lg transition-all ${exploreTab === 'tracks' ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                   >
                     <Music className="w-4 h-4 mr-2" />
-                    Tracks ({exploreTracksData?.exploreTracks?.pageInfo?.totalCount || 0})
+                    Tracks ({exploreTracksData?.exploreTracks?.nodes?.length || 0})
                   </Button>
                 </div>
               </Card>
