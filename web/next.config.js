@@ -16,4 +16,26 @@ module.exports = {
   typescript: {
     ignoreBuildErrors: true, // Bypass TypeScript errors
   },
+  // Fix Google OAuth Permissions-Policy error
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Permissions-Policy',
+            value: 'publickey-credentials-get=*, publickey-credentials-create=*, identity-credentials-get=*',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+        ],
+      },
+    ];
+  },
 };

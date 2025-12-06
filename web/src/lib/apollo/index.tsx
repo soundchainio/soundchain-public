@@ -55,16 +55,29 @@ export async function setJwt(newJwt?: string) {
   jwt = newJwt
   if (isBrowser) {
     if (jwt) {
-      Cookies.set(jwtKey, jwt, { sameSite: 'Lax', secure: !isSafari })
+      // Set cookie with proper options for persistence
+      Cookies.set(jwtKey, jwt, {
+        sameSite: 'Lax',
+        secure: !isSafari,
+        expires: 7,  // 7 days expiry
+        path: '/',   // Available on all paths
+      })
+      console.log('JWT cookie set successfully:', jwt.substring(0, 20) + '...')
+
+      // Small delay to ensure cookie is fully set before Apollo reset
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      try {
+        // Only reset if we have a token (not on logout)
+        await apolloClient.resetStore()
+      } catch (error) {
+        // Ignore errors from resetStore - queries will refetch naturally
+        console.warn('Apollo resetStore warning:', error)
+      }
     } else {
-      Cookies.remove(jwtKey)
+      // Logout flow
+      Cookies.remove(jwtKey, { path: '/' })
       await apolloClient.clearStore()
-    }
-    try {
-      await apolloClient.resetStore()
-    } catch (error) {
-      // Ignore errors from resetStore - queries will refetch naturally
-      console.warn('Apollo resetStore warning:', error)
     }
   }
 }

@@ -61,6 +61,26 @@ const HoverableInput = styled.input`
   }
 `;
 
+// Detect in-app browsers that Google blocks for OAuth
+function isInAppBrowser(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
+  // Instagram, Facebook, Twitter, LinkedIn, TikTok, Snapchat, WeChat in-app browsers
+  const inAppPatterns = [
+    /FBAN|FBAV/i,           // Facebook
+    /Instagram/i,           // Instagram
+    /Twitter/i,             // Twitter
+    /LinkedInApp/i,         // LinkedIn
+    /BytedanceWebview/i,    // TikTok
+    /Snapchat/i,            // Snapchat
+    /MicroMessenger/i,      // WeChat
+    /Line\//i,              // Line
+    /KAKAOTALK/i,           // KakaoTalk
+    /Pinterest/i,           // Pinterest
+  ];
+  return inAppPatterns.some(pattern => pattern.test(ua));
+}
+
 export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
@@ -73,9 +93,14 @@ export default function LoginPage() {
   const [authMethod, setAuthMethod] = useState<AuthMethod[]>();
   const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
   const [isClient, setIsClient] = useState(false);
+  const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+    // Detect in-app browser and warn user
+    if (isInAppBrowser()) {
+      setInAppBrowserWarning(true);
+    }
   }, []);
 
   const topNavBarProps = useMemo(
@@ -128,9 +153,12 @@ export default function LoginPage() {
           if (isLoggedIn) {
             console.log('Validated stored didToken:', storedToken);
             const loginResult = await login({ variables: { input: { token: storedToken } } });
-            setJwt(loginResult.data?.login.jwt);
-            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            router.push(redirectUrl);
+            if (loginResult.data?.login.jwt) {
+              await setJwt(loginResult.data.login.jwt);
+              await new Promise(resolve => setTimeout(resolve, 200));
+              const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+              router.push(redirectUrl);
+            }
           } else {
             localStorage.removeItem('didToken');
           }
@@ -145,12 +173,21 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      // Check for in-app browser and warn user
+      if (isInAppBrowser()) {
+        setError('Google login is blocked in this browser. Please open SoundChain in Safari or Chrome by tapping the menu (⋮ or ⋯) and selecting "Open in Browser".');
+        return;
+      }
+
       if (!magic) throw new Error('Magic SDK not initialized');
       setLoggingIn(true);
       setError(null);
+      const baseUrl = config.domainUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.io');
+      const redirectURI = `${baseUrl}/login`;
+      console.log('Google OAuth redirectURI:', redirectURI);
       await magic.oauth.loginWithRedirect({
         provider: 'google',
-        redirectURI: 'https://soundchain.io/login',
+        redirectURI,
         scope: ['openid'],
       });
     } catch (error) {
@@ -169,9 +206,14 @@ export default function LoginPage() {
           console.log('Received didToken (credential):', didToken); // Added logging
           localStorage.setItem('didToken', didToken); // Persist token
           const loginResult = await login({ variables: { input: { token: didToken } } });
-          setJwt(loginResult.data?.login.jwt);
-          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-          router.push(redirectUrl);
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            router.push(redirectUrl);
+          } else {
+            throw new Error('Login failed: No JWT returned');
+          }
         } catch (error) {
           handleError(error as Error);
         } finally {
@@ -191,10 +233,12 @@ export default function LoginPage() {
 
       // Send magic link to email - user clicks link to complete login (no code pasting needed!)
       // This is better UX than OTP - user just clicks the email link and is auto-logged in
-      console.log("Sending magic link to email...");
+      const baseUrl = config.domainUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.io');
+      const redirectURI = `${baseUrl}/login`;
+      console.log("Sending magic link to email...", { email: values.email, redirectURI });
       await magic.auth.loginWithMagicLink({
         email: values.email,
-        redirectURI: 'https://soundchain.io/login',  // Must match Magic dashboard allowed URLs
+        redirectURI,  // Must match Magic dashboard allowed URLs
         showUI: true  // Show "check your email" UI
       });
 
@@ -209,10 +253,20 @@ export default function LoginPage() {
 
       const result = await login({ variables: { input: { token: didToken } } });
       console.log('GraphQL login mutation result:', result);
-      setJwt(result.data?.login.jwt);
-      const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-      console.log('Redirecting to:', redirectUrl);
-      router.push(redirectUrl);
+
+      if (result.data?.login.jwt) {
+        // Wait for JWT to be fully set before redirecting
+        await setJwt(result.data.login.jwt);
+
+        // Additional delay to ensure Apollo cache is ready
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+        console.log('Redirecting to:', redirectUrl);
+        router.push(redirectUrl);
+      } else {
+        throw new Error('Login failed: No JWT returned');
+      }
     } catch (error) {
       console.error('Login error:', error);
       handleError(error as Error);
@@ -222,7 +276,6 @@ export default function LoginPage() {
 
   const GoogleButton = () => (
     <HoverableButton
-      variant="default"
       className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white"
       onClick={handleGoogleLogin}
     >
@@ -316,6 +369,19 @@ export default function LoginPage() {
           <div className="mb-2 flex h-36 items-center justify-center">
             <LogoAndText className="text-white filter drop-shadow-lg" />
           </div>
+          {inAppBrowserWarning && (
+            <div className="mb-4 rounded-lg bg-yellow-500/20 border border-yellow-500 p-4 text-center">
+              <p className="text-sm font-semibold text-yellow-400">
+                You're using an in-app browser
+              </p>
+              <p className="text-xs text-yellow-300 mt-1">
+                For Google login, tap ⋮ or ⋯ menu and select "Open in Safari/Chrome"
+              </p>
+              <p className="text-xs text-white mt-2">
+                Or use <strong>Email login</strong> below - it works everywhere!
+              </p>
+            </div>
+          )}
           {error && (
             <div className="py-4 text-center text-sm text-red-500 font-semibold drop-shadow-md">
               {error}

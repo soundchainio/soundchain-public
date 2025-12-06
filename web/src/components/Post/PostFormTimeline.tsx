@@ -1,5 +1,5 @@
-import { PositioningPortal } from '@codastic/react-positioning-portal'
 import { MusicalNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import { Popover } from '@headlessui/react'
 import Picker from '@emoji-mart/react'
 
 // Extended Emoji type with native property from emoji-mart picker callback
@@ -26,7 +26,6 @@ import { MediaLink } from './PostLinkInput'
 export const PostFormTimeline = () => {
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
   const [postBody, setPostBody] = useState('')
-  const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false)
   const [isMusicLinkVisible, setMusicLinkVisible] = useState(false)
   const [isVideoLinkVisible, setVideoLinkVisible] = useState(false)
   const [isPreviewVisible, setPreviewVisible] = useState(false)
@@ -67,10 +66,6 @@ export const PostFormTimeline = () => {
 
   const onTextAreaChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     setPostBody(event.target.value)
-  }
-
-  const onEmojiPickerClick = () => {
-    setEmojiPickerVisible(!isEmojiPickerVisible)
   }
 
   const onMusicLinkClick = () => {
@@ -150,14 +145,25 @@ export const PostFormTimeline = () => {
         ></PostFormTextArea>
         <div className="flex flex-row">
           <div className="flex basis-3/4">
-            <PositioningPortal
-              isOpen={isEmojiPickerVisible}
-              portalContent={<Picker theme="dark" perLine={7} onSelect={(e: Emoji) => handleSelectEmoji(e)} />}
-            >
-              <div className="mr-[8px] w-6 cursor-pointer" onClick={onEmojiPickerClick}>
-                {isEmojiPickerVisible ? '❌' : '😃'}
-              </div>
-            </PositioningPortal>
+            <Popover className="relative">
+              {({ open, close }) => (
+                <>
+                  <Popover.Button className="mr-[8px] w-6 cursor-pointer focus:outline-none">
+                    {open ? '❌' : '😃'}
+                  </Popover.Button>
+                  <Popover.Panel className="absolute left-0 z-50 mt-2">
+                    <Picker
+                      theme="dark"
+                      perLine={7}
+                      onEmojiSelect={(e: Emoji) => {
+                        handleSelectEmoji(e)
+                        close()
+                      }}
+                    />
+                  </Popover.Panel>
+                </>
+              )}
+            </Popover>
             <button
               className="mr-[8px] w-6 cursor-pointer text-center"
               aria-label="Embed a song to your post"

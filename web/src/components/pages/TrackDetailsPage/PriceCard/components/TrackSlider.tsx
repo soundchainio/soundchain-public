@@ -1,4 +1,4 @@
-import Slider from '@reach/slider'
+import { AudioSlider } from 'components/ui/audio-slider'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
@@ -34,7 +34,7 @@ export const TrackSlider = (props: TrackSliderProps) => {
       </PlayButton>
 
       <div className="text-neutral-400">{timeFromSecs(progress || 0)}</div>
-      <Slider className="audio-player mx-4 w-full" min={0} max={duration} value={progress} onChange={onSliderChange} />
+      <AudioSlider className="audio-player mx-4 w-full" min={0} max={duration} value={progress} onChange={onSliderChange} />
       <div className="text-neutral-400">{remainingTime(progress, duration || 0)} </div>
     </Container>
   )

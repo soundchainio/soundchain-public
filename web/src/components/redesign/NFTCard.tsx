@@ -412,6 +412,39 @@ export const NFTCard: React.FC<NFTCardProps> = ({
                 </div>
               </div>
 
+              {/* IPFS & Blockchain Links */}
+              <div className="metadata-section">
+                <div className="metadata-label">BLOCKCHAIN_LINKS</div>
+                <div className="space-y-2">
+                  <a
+                    href={`https://soundchain.mypinata.cloud/ipfs/${mockMetadata.ipfsHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center justify-between text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    <span className="text-gray-400">IPFS:</span>
+                    <span className="flex items-center gap-1">
+                      <Database className="w-3 h-3" />
+                      {mockMetadata.ipfsHash.substring(0, 12)}...
+                    </span>
+                  </a>
+                  <a
+                    href={`https://polygonscan.com/token/${mockMetadata.contractAddress}?a=${nft.tokenId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center justify-between text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                  >
+                    <span className="text-gray-400">LEDGER:</span>
+                    <span className="flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      PolygonScan
+                    </span>
+                  </a>
+                </div>
+              </div>
+
               {/* JSON Metadata */}
               <div className="metadata-section">
                 <div className="metadata-label">RAW_METADATA</div>

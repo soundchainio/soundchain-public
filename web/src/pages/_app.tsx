@@ -1,6 +1,4 @@
 import { ModalProvider } from "../contexts/ModalContext";
-import '@reach/dialog/styles.css'
-import '@reach/slider/styles.css'
 import 'regenerator-runtime/runtime'
 import { CheckBodyScroll } from 'components/CheckBodyScroll'
 import { Layout } from 'components/Layout'

@@ -10,7 +10,7 @@ import mux from 'mux-embed'
 import Link from 'next/link'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 
-import Slider from '@reach/slider'
+import { AudioSlider } from 'components/ui/audio-slider'
 
 import Asset from './Asset/Asset'
 
@@ -136,7 +136,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
             </Link>
           </div>
           <div className="mt-2 flex flex-col text-white">
-            <Slider className="audio-player ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />
+            <AudioSlider className="audio-player ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />
             <div className="mt-2 flex text-xs text-gray-80">
               <div className="flex-1">{timeFromSecs(playState || 0)}</div>
               <div className="flex-1 text-right">{remainingTime(playState, duration || 0)} </div>

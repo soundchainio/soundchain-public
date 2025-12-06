@@ -24,7 +24,7 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { checkIsMobile } from 'utils/IsMobile'
 
 import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
-import Slider from '@reach/slider'
+import { AudioSlider } from 'components/ui/audio-slider'
 
 export const AudioPlayerModal = () => {
   const router = useRouter()
@@ -157,7 +157,7 @@ export const AudioPlayerModal = () => {
               </div>
             </div>
             <div>
-              <Slider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
+              <AudioSlider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
               <div className="mt-2 flex cursor-default justify-between text-xs text-gray-80">
                 <div>{timeFromSecs(progress || 0)}</div>
                 <div onClick={onPlaybackDurationClick}>
@@ -214,7 +214,7 @@ export const AudioPlayerModal = () => {
                 <div className="flex items-center gap-4 pt-8">
                   <SpeakerXMarkIcon className="h-4 w-4" />
                   <div className="flex-1">
-                    <Slider
+                    <AudioSlider
                       className="volume-slider"
                       min={0}
                       max={1}

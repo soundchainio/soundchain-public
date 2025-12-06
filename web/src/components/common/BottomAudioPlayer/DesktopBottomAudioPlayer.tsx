@@ -1,6 +1,6 @@
 import tw from 'tailwind-styled-components'
 import Asset from '../../Asset/Asset'
-import { Slider } from '@reach/slider'
+import { AudioSlider } from 'components/ui/audio-slider'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useState } from 'react'
@@ -66,7 +66,7 @@ export const BottomAudioPlayer = () => {
         <div className="flex items-center gap-2">
           <SpeakerXMarkIcon className="h-4 w-4 text-white" />
           <div className="">
-            <Slider
+            <AudioSlider
               className="volume-slider w-[50px]"
               min={0}
               max={1}

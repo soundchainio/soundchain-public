@@ -1,4 +1,4 @@
-import Slider from '@reach/slider'
+import { AudioSlider } from 'components/ui/audio-slider'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { Forward } from 'icons/ForwardButton'
 import { Pause } from 'icons/Pause'
@@ -73,7 +73,7 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
       {!hideSlider && (
         <div className="flex items-center">
           <div className="text-neutral-400">{timeFromSecs(progress || 0)}</div>
-          <Slider
+          <AudioSlider
             className="audio-player mx-4 w-[300px]"
             min={0}
             max={duration}

@@ -8,7 +8,7 @@ import { Play } from 'icons/Play'
 import Link from 'next/link'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 
-import Slider from '@reach/slider'
+import { AudioSlider } from 'components/ui/audio-slider'
 
 import { TrackPrice } from '../lib/graphql'
 import Asset from './Asset/Asset'
@@ -139,7 +139,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
           <div className="mt-2 flex flex-col text-white">
             {isSameSong ? (
               <>
-                <Slider
+                <AudioSlider
                   className="audio-player ml-1"
                   min={0}
                   max={duration}
@@ -153,7 +153,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
               </>
             ) : (
               <>
-                <Slider className="audio-player ml-1" min={0} max={1} value={0} disabled />
+                <AudioSlider className="audio-player ml-1" min={0} max={1} value={0} />
                 <div className="mt-2 flex text-xs text-gray-80">
                   <div className="flex-1">0:00</div>
                   <div className="flex-1 text-right" />
