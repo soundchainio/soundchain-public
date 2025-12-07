@@ -182,7 +182,8 @@ export default function LoginPage() {
       if (!magic) throw new Error('Magic SDK not initialized');
       setLoggingIn(true);
       setError(null);
-      const baseUrl = config.domainUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.io');
+      // Use actual browser origin to handle both www and non-www domains
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
       const redirectURI = `${baseUrl}/login`;
       console.log('Google OAuth redirectURI:', redirectURI);
       await magic.oauth.loginWithRedirect({
@@ -233,7 +234,8 @@ export default function LoginPage() {
 
       // Send magic link to email - user clicks link to complete login (no code pasting needed!)
       // This is better UX than OTP - user just clicks the email link and is auto-logged in
-      const baseUrl = config.domainUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.io');
+      // Use actual browser origin to handle both www and non-www domains
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
       const redirectURI = `${baseUrl}/login`;
       console.log("Sending magic link to email...", { email: values.email, redirectURI });
       await magic.auth.loginWithMagicLink({
