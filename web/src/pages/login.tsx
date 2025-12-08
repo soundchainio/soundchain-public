@@ -195,13 +195,15 @@ export default function LoginPage() {
 
       // Use OAuth2 extension's loginWithRedirect - newer implementation
       // prompt: 'select_account' forces Google to show account picker
-      await (magic as any).oauth2.loginWithRedirect({
+      console.log('[OAuth2] Calling loginWithRedirect...');
+      const redirectResult = await (magic as any).oauth2.loginWithRedirect({
         provider: 'google',
         redirectURI,
         scope: ['openid', 'email', 'profile'],
         prompt: 'select_account',
       });
-      // Browser will redirect to Google
+      console.log('[OAuth2] loginWithRedirect returned:', redirectResult);
+      // Browser should redirect to Google - if we get here, something's wrong
     } catch (error) {
       console.error('[OAuth2] Google login error:', error);
       handleError(error as Error);
@@ -241,11 +243,24 @@ export default function LoginPage() {
   // Handle OAuth2 redirect callback
   useEffect(() => {
     async function handleOAuthRedirect() {
-      if (!magic) return;
+      // Log current URL for debugging
+      console.log('[OAuth2] Current URL:', window.location.href);
+      console.log('[OAuth2] Search params:', window.location.search);
+
+      if (!magic) {
+        console.log('[OAuth2] Magic not ready yet');
+        return;
+      }
 
       // Check if URL has OAuth params
       const params = new URLSearchParams(window.location.search);
       const hasOAuthParams = params.has('code') || params.has('state') || params.has('magic_credential');
+
+      console.log('[OAuth2] Has OAuth params:', hasOAuthParams, {
+        code: params.has('code'),
+        state: params.has('state'),
+        magic_credential: params.has('magic_credential')
+      });
 
       if (!hasOAuthParams) return;
 
