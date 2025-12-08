@@ -28,18 +28,40 @@ let initialOAuthParams: {
   hasState: boolean;
 } | null = null;
 
+// Track if we've already processed this OAuth callback (persists across re-renders)
+const OAUTH_PROCESSED_KEY = 'soundchain_oauth_processed';
+const OAUTH_PARAMS_KEY = 'soundchain_oauth_params';
+
 if (typeof window !== 'undefined') {
   const url = window.location.href;
   const search = window.location.search;
   const params = new URLSearchParams(search);
-  initialOAuthParams = {
-    url,
-    search,
-    hasMagicCredential: params.has('magic_credential'),
-    hasCode: params.has('code'),
-    hasState: params.has('state'),
-  };
-  console.log('[OAuth EARLY] Captured params at module load:', initialOAuthParams);
+
+  const hasOAuthParams = params.has('magic_credential') || params.has('code') || params.has('state');
+
+  if (hasOAuthParams) {
+    initialOAuthParams = {
+      url,
+      search,
+      hasMagicCredential: params.has('magic_credential'),
+      hasCode: params.has('code'),
+      hasState: params.has('state'),
+    };
+    // Store params in sessionStorage in case they get cleared
+    sessionStorage.setItem(OAUTH_PARAMS_KEY, JSON.stringify(initialOAuthParams));
+    console.log('[OAuth EARLY] Captured params at module load:', initialOAuthParams);
+
+    // Log ALL storage for debugging
+    console.log('[OAuth EARLY] All localStorage keys:', Object.keys(localStorage));
+    console.log('[OAuth EARLY] All sessionStorage keys:', Object.keys(sessionStorage));
+  } else {
+    // Try to recover from sessionStorage
+    const stored = sessionStorage.getItem(OAUTH_PARAMS_KEY);
+    if (stored) {
+      initialOAuthParams = JSON.parse(stored);
+      console.log('[OAuth EARLY] Recovered params from sessionStorage:', initialOAuthParams);
+    }
+  }
 }
 
 const Overlay = styled.div`
@@ -283,11 +305,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     async function handleOAuthRedirect() {
-      console.log('[OAuth] Handler called - magic:', !!magic, 'loggingIn:', loggingIn, 'processed:', oauthProcessedRef.current);
+      // Check if already processed using sessionStorage (persists across re-renders)
+      const alreadyProcessed = sessionStorage.getItem(OAUTH_PROCESSED_KEY) === 'true';
+
+      console.log('[OAuth] Handler called - magic:', !!magic, 'loggingIn:', loggingIn, 'alreadyProcessed:', alreadyProcessed);
       console.log('[OAuth] Initial params from module load:', initialOAuthParams);
 
       // Skip if already processing or no magic instance
-      if (!magic || oauthProcessedRef.current) {
+      if (!magic || alreadyProcessed || oauthProcessedRef.current) {
         console.log('[OAuth] Skipping - no magic or already processed');
         return;
       }
@@ -318,6 +343,7 @@ export default function LoginPage() {
 
       // Mark as processing BEFORE the async call to prevent concurrent calls
       oauthProcessedRef.current = true;
+      sessionStorage.setItem(OAUTH_PROCESSED_KEY, 'true');
       setLoggingIn(true);
       console.log('[OAuth] Set processed=true, calling getRedirectResult...');
 
@@ -362,9 +388,13 @@ export default function LoginPage() {
       } catch (error: any) {
         console.log('[OAuth] Caught error:', error?.message, error);
 
+        // Clean up sessionStorage
+        sessionStorage.removeItem(OAUTH_PROCESSED_KEY);
+        sessionStorage.removeItem(OAUTH_PARAMS_KEY);
+
         if (error?.message?.includes('timeout')) {
           console.error('[OAuth] getRedirectResult TIMED OUT - Magic SDK may be hanging');
-          setError('Login timed out. Please try again.');
+          setError('Google login timed out. This may be a temporary issue with the authentication service. Please try again or use Email login.');
           setLoggingIn(false);
           oauthProcessedRef.current = false;
           return;
