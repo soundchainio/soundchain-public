@@ -180,6 +180,8 @@ export default function LoginPage() {
   }, [magic, login, router, loggingIn]);
 
   const handleGoogleLogin = async () => {
+    console.log('[OAuth2] handleGoogleLogin called');
+
     try {
       // Check for in-app browser and warn user
       if (isInAppBrowser()) {
@@ -187,56 +189,37 @@ export default function LoginPage() {
         return;
       }
 
-      if (!magic) throw new Error('Magic SDK not initialized');
+      if (!magic) {
+        console.error('[OAuth2] Magic not initialized');
+        throw new Error('Magic SDK not initialized');
+      }
+
+      console.log('[OAuth2] Magic SDK ready, starting OAuth...');
       setLoggingIn(true);
       setError(null);
 
-      // Clear any existing Magic session before starting OAuth
-      // This prevents the SDK from thinking we're already logged in
-      try {
-        const isLoggedIn = await magic.user.isLoggedIn();
-        console.log('[OAuth2] Existing Magic session:', isLoggedIn);
-        if (isLoggedIn) {
-          console.log('[OAuth2] Logging out existing session before OAuth...');
-          await magic.user.logout();
-          localStorage.removeItem('didToken');
-        }
-      } catch (logoutErr) {
-        console.log('[OAuth2] No existing session to clear');
-      }
+      // Clear localStorage token (skip magic.user.isLoggedIn which can hang)
+      localStorage.removeItem('didToken');
 
       // Use browser origin to handle both www and non-www domains
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
       const redirectURI = `${baseUrl}/login`;
 
-      console.log('[OAuth2] Starting Google OAuth with redirect...');
       console.log('[OAuth2] Redirect URI:', redirectURI);
-      console.log('[OAuth2] Magic oauth2 extension:', (magic as any).oauth2);
-      console.log('[OAuth2] Magic SDK apiKey:', (magic as any).apiKey);
+      console.log('[OAuth2] Calling loginWithRedirect...');
 
-      // Use OAuth2 extension's loginWithRedirect with shouldReturnURI
-      // This returns the URL instead of auto-redirecting, giving us more control
-      console.log('[OAuth2] Calling loginWithRedirect with shouldReturnURI...');
-      const oauthUrl = await (magic as any).oauth2.loginWithRedirect({
+      // Use OAuth2 extension's loginWithRedirect
+      // Don't use shouldReturnURI - let it redirect directly
+      await (magic as any).oauth2.loginWithRedirect({
         provider: 'google',
         redirectURI,
         scope: 'openid email profile',
-        loginHint: '', // Empty to ensure account picker shows
-        shouldReturnURI: true, // Return URL instead of auto-redirecting
       });
 
-      console.log('[OAuth2] loginWithRedirect returned URL:', oauthUrl);
-
-      // If we got a URL, manually redirect to it
-      if (oauthUrl && typeof oauthUrl === 'string') {
-        console.log('[OAuth2] Redirecting to Google OAuth URL...');
-        window.location.href = oauthUrl;
-      } else {
-        console.error('[OAuth2] loginWithRedirect returned null/invalid - no redirect URL from Magic');
-        console.error('[OAuth2] Response type:', typeof oauthUrl, oauthUrl);
-        setError('OAuth initialization failed. Please check Magic Dashboard OAuth settings.');
-        setLoggingIn(false);
-      }
+      // If we reach here, something went wrong (should have redirected)
+      console.error('[OAuth2] loginWithRedirect completed without redirecting');
+      setError('OAuth redirect failed. Please try again.');
+      setLoggingIn(false);
     } catch (error) {
       console.error('[OAuth2] Google login error:', error);
       handleError(error as Error);
