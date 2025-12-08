@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -226,47 +226,67 @@ export default function LoginPage() {
   }, [magic, magicParam, login, handleError]);
 
   // Handle Google OAuth redirect callback
+  // Use a ref to track if we've already processed the OAuth callback
+  const oauthProcessedRef = useRef(false);
+
   useEffect(() => {
     async function handleOAuthRedirect() {
-      if (!magic || loggingIn) return;
+      console.log('[OAuth] Handler called - magic:', !!magic, 'loggingIn:', loggingIn, 'processed:', oauthProcessedRef.current);
+      console.log('[OAuth] Current URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
+
+      // Skip if already processing or no magic instance
+      if (!magic || oauthProcessedRef.current) {
+        console.log('[OAuth] Skipping - no magic or already processed');
+        return;
+      }
 
       try {
-        // Check if this is an OAuth redirect (user returning from Google)
+        console.log('[OAuth] Calling getRedirectResult...');
         const result = await magic.oauth.getRedirectResult();
+        console.log('[OAuth] getRedirectResult returned:', result);
+
         if (result) {
-          console.log('OAuth redirect result received:', result);
+          oauthProcessedRef.current = true;
+          console.log('[OAuth] Got result, processing...');
           setLoggingIn(true);
           setError(null);
 
           const didToken = result.magic.idToken;
-          console.log('Received didToken (OAuth):', didToken);
+          console.log('[OAuth] Received didToken:', didToken?.substring(0, 50) + '...');
           localStorage.setItem('didToken', didToken);
 
           const loginResult = await login({ variables: { input: { token: didToken } } });
+          console.log('[OAuth] Login mutation result:', loginResult);
+
           if (loginResult.data?.login.jwt) {
             await setJwt(loginResult.data.login.jwt);
             await new Promise(resolve => setTimeout(resolve, 200));
             const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            console.log('OAuth login successful, redirecting to:', redirectUrl);
+            console.log('[OAuth] Login successful, redirecting to:', redirectUrl);
             router.push(redirectUrl);
           } else {
             throw new Error('Login failed: No JWT returned');
           }
+        } else {
+          console.log('[OAuth] No result from getRedirectResult (not an OAuth callback)');
         }
       } catch (error: any) {
+        console.log('[OAuth] Caught error:', error?.message, error);
         // getRedirectResult throws if not an OAuth redirect - that's expected
-        if (error?.message?.includes('Missing required param') ||
-            error?.message?.includes('No redirect result')) {
-          // Not an OAuth redirect, ignore
+        if (error?.message?.includes('Missing') ||
+            error?.message?.includes('redirect') ||
+            error?.message?.includes('OAuth') ||
+            error?.message?.includes('param')) {
+          console.log('[OAuth] Expected error (not an OAuth callback), ignoring');
           return;
         }
-        console.error('OAuth redirect error:', error);
+        console.error('[OAuth] Unexpected error:', error);
         handleError(error as Error);
         setLoggingIn(false);
       }
     }
     handleOAuthRedirect();
-  }, [magic, login, router, handleError, loggingIn]);
+  }, [magic, login, router, handleError]);
 
   async function handleSubmit(values: FormValues) {
     try {
