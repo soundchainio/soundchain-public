@@ -183,67 +183,40 @@ export default function LoginPage() {
     console.log('[OAuth2] handleGoogleLogin called');
 
     try {
-      // Check for in-app browser and warn user
       if (isInAppBrowser()) {
-        setError('Google login is blocked in this browser. Please open SoundChain in Safari or Chrome by tapping the menu (⋮ or ⋯) and selecting "Open in Browser".');
+        setError('Google login is blocked in this browser. Please open in Safari or Chrome.');
         return;
       }
-
-      if (!magic) {
-        console.error('[OAuth2] Magic not initialized');
-        throw new Error('Magic SDK not initialized');
-      }
-
-      // Debug: Log Magic SDK structure
-      console.log('[OAuth2] Magic SDK:', magic);
-      console.log('[OAuth2] Magic oauth2:', (magic as any).oauth2);
-      console.log('[OAuth2] loginWithRedirect type:', typeof (magic as any).oauth2?.loginWithRedirect);
-      console.log('[OAuth2] getRedirectResult type:', typeof (magic as any).oauth2?.getRedirectResult);
-
-      // Check if there's an older oauth extension we should use
-      console.log('[OAuth2] Magic oauth (old):', (magic as any).oauth);
-      console.log('[OAuth2] Magic auth:', (magic as any).auth);
 
       setLoggingIn(true);
       setError(null);
       localStorage.removeItem('didToken');
 
-      const baseUrl = window.location.origin;
-      const redirectURI = `${baseUrl}/login`;
+      // Create a fresh Magic instance specifically for OAuth (no network config)
+      const { Magic } = await import('magic-sdk');
+      const { OAuthExtension } = await import('@magic-ext/oauth2');
 
-      console.log('[OAuth2] Redirect URI:', redirectURI);
-      console.log('[OAuth2] Calling loginWithRedirect (no await - should redirect)...');
-
-      // Don't await - this should redirect the browser immediately
-      const oauthConfig = {
-        provider: 'google',
-        redirectURI,
-        scope: 'openid email profile',  // Try as string, not array
-      };
-      console.log('[OAuth2] Config:', oauthConfig);
-
-      (magic as any).oauth2.loginWithRedirect(oauthConfig).then((result: any) => {
-        console.log('[OAuth2] loginWithRedirect resolved:', result);
-        // If we get here without redirect, something's wrong
-        if (result === null) {
-          setError('OAuth failed to redirect. Check Magic Dashboard OAuth settings.');
-          setLoggingIn(false);
-        }
-      }).catch((err: any) => {
-        console.error('[OAuth2] loginWithRedirect error:', err);
-        setError(err.message || 'OAuth error');
-        setLoggingIn(false);
+      const oauthMagic = new Magic('pk_live_858EC1BFF763F101', {
+        extensions: [new OAuthExtension()],
       });
 
-      // Page should redirect to Google, so we shouldn't reach here
-      // But if we do, wait a bit then show error
-      setTimeout(() => {
-        console.log('[OAuth2] Still on page after 5s - redirect may have failed');
-      }, 5000);
+      const redirectURI = `${window.location.origin}/login`;
+      console.log('[OAuth2] Fresh Magic instance created');
+      console.log('[OAuth2] Redirect URI:', redirectURI);
 
+      // This should redirect to Google immediately
+      await (oauthMagic as any).oauth2.loginWithRedirect({
+        provider: 'google',
+        redirectURI,
+      });
+
+      // If we reach here without redirect, something failed
+      console.error('[OAuth2] Did not redirect');
+      setError('OAuth failed to redirect');
+      setLoggingIn(false);
     } catch (error: any) {
-      console.error('[OAuth2] Google login error:', error);
-      handleError(error as Error);
+      console.error('[OAuth2] Error:', error);
+      setError(error.message || 'Google login failed');
       setLoggingIn(false);
     }
   };
