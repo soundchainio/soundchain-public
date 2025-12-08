@@ -225,6 +225,49 @@ export default function LoginPage() {
     handleMagicLink();
   }, [magic, magicParam, login, handleError]);
 
+  // Handle Google OAuth redirect callback
+  useEffect(() => {
+    async function handleOAuthRedirect() {
+      if (!magic || loggingIn) return;
+
+      try {
+        // Check if this is an OAuth redirect (user returning from Google)
+        const result = await magic.oauth.getRedirectResult();
+        if (result) {
+          console.log('OAuth redirect result received:', result);
+          setLoggingIn(true);
+          setError(null);
+
+          const didToken = result.magic.idToken;
+          console.log('Received didToken (OAuth):', didToken);
+          localStorage.setItem('didToken', didToken);
+
+          const loginResult = await login({ variables: { input: { token: didToken } } });
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            console.log('OAuth login successful, redirecting to:', redirectUrl);
+            router.push(redirectUrl);
+          } else {
+            throw new Error('Login failed: No JWT returned');
+          }
+        }
+      } catch (error: any) {
+        // getRedirectResult throws if not an OAuth redirect - that's expected
+        if (error?.message?.includes('Missing required param') ||
+            error?.message?.includes('No redirect result')) {
+          // Not an OAuth redirect, ignore
+          return;
+        }
+        console.error('OAuth redirect error:', error);
+        handleError(error as Error);
+        setLoggingIn(false);
+      }
+    }
+    handleOAuthRedirect();
+  }, [magic, login, router, handleError, loggingIn]);
+
   async function handleSubmit(values: FormValues) {
     try {
       if (!magic) throw new Error('Magic SDK not initialized');
