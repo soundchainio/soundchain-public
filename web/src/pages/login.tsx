@@ -226,13 +226,26 @@ export default function LoginPage() {
   }, [magic, magicParam, login, handleError]);
 
   // Handle Google OAuth redirect callback
-  // Use a ref to track if we've already processed the OAuth callback
+  // Use refs to track state across renders
   const oauthProcessedRef = useRef(false);
+  const oauthParamsRef = useRef<string | null>(null);
+
+  // Capture OAuth params immediately on mount (before any re-renders can clear them)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !oauthParamsRef.current) {
+      const url = window.location.href;
+      if (url.includes('magic_credential') || url.includes('code=')) {
+        oauthParamsRef.current = url;
+        console.log('[OAuth] Captured OAuth URL params on mount');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     async function handleOAuthRedirect() {
       console.log('[OAuth] Handler called - magic:', !!magic, 'loggingIn:', loggingIn, 'processed:', oauthProcessedRef.current);
       console.log('[OAuth] Current URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
+      console.log('[OAuth] Captured params:', oauthParamsRef.current ? 'YES' : 'NO');
 
       // Skip if already processing or no magic instance
       if (!magic || oauthProcessedRef.current) {
@@ -240,13 +253,35 @@ export default function LoginPage() {
         return;
       }
 
+      // Check if this looks like an OAuth callback (either current URL or captured params)
+      const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+      const hasOAuthParams = currentUrl.includes('magic_credential') ||
+                             currentUrl.includes('code=') ||
+                             oauthParamsRef.current !== null;
+
+      if (!hasOAuthParams) {
+        console.log('[OAuth] No OAuth params detected, skipping');
+        return;
+      }
+
+      // Mark as processing BEFORE the async call to prevent concurrent calls
+      oauthProcessedRef.current = true;
+      console.log('[OAuth] Set processed=true, calling getRedirectResult...');
+
       try {
-        console.log('[OAuth] Calling getRedirectResult...');
-        const result = await magic.oauth.getRedirectResult();
+        // Add timeout to detect if getRedirectResult hangs
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('getRedirectResult timeout after 15s')), 15000)
+        );
+
+        const result = await Promise.race([
+          magic.oauth.getRedirectResult(),
+          timeoutPromise
+        ]) as any;
+
         console.log('[OAuth] getRedirectResult returned:', result);
 
         if (result) {
-          oauthProcessedRef.current = true;
           console.log('[OAuth] Got result, processing...');
           setLoggingIn(true);
           setError(null);
@@ -268,21 +303,33 @@ export default function LoginPage() {
             throw new Error('Login failed: No JWT returned');
           }
         } else {
-          console.log('[OAuth] No result from getRedirectResult (not an OAuth callback)');
+          console.log('[OAuth] No result from getRedirectResult');
+          oauthProcessedRef.current = false; // Allow retry
         }
       } catch (error: any) {
         console.log('[OAuth] Caught error:', error?.message, error);
+
+        if (error?.message?.includes('timeout')) {
+          console.error('[OAuth] getRedirectResult TIMED OUT - Magic SDK may be hanging');
+          setError('Login timed out. Please try again.');
+          setLoggingIn(false);
+          oauthProcessedRef.current = false;
+          return;
+        }
+
         // getRedirectResult throws if not an OAuth redirect - that's expected
         if (error?.message?.includes('Missing') ||
             error?.message?.includes('redirect') ||
             error?.message?.includes('OAuth') ||
             error?.message?.includes('param')) {
           console.log('[OAuth] Expected error (not an OAuth callback), ignoring');
+          oauthProcessedRef.current = false; // Allow normal login flow
           return;
         }
         console.error('[OAuth] Unexpected error:', error);
         handleError(error as Error);
         setLoggingIn(false);
+        oauthProcessedRef.current = false;
       }
     }
     handleOAuthRedirect();
