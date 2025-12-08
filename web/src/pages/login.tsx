@@ -18,6 +18,30 @@ import { useRouter } from 'next/router';
 import { isApolloError } from '@apollo/client';
 import styled from 'styled-components';
 
+// CRITICAL: Capture OAuth params at module level BEFORE React hydrates
+// This is needed because Magic SDK or Next.js router may clear the URL params
+let initialOAuthParams: {
+  url: string;
+  search: string;
+  hasMagicCredential: boolean;
+  hasCode: boolean;
+  hasState: boolean;
+} | null = null;
+
+if (typeof window !== 'undefined') {
+  const url = window.location.href;
+  const search = window.location.search;
+  const params = new URLSearchParams(search);
+  initialOAuthParams = {
+    url,
+    search,
+    hasMagicCredential: params.has('magic_credential'),
+    hasCode: params.has('code'),
+    hasState: params.has('state'),
+  };
+  console.log('[OAuth EARLY] Captured params at module load:', initialOAuthParams);
+}
+
 const Overlay = styled.div`
   position: fixed;
   top: 0;
@@ -260,6 +284,7 @@ export default function LoginPage() {
   useEffect(() => {
     async function handleOAuthRedirect() {
       console.log('[OAuth] Handler called - magic:', !!magic, 'loggingIn:', loggingIn, 'processed:', oauthProcessedRef.current);
+      console.log('[OAuth] Initial params from module load:', initialOAuthParams);
 
       // Skip if already processing or no magic instance
       if (!magic || oauthProcessedRef.current) {
@@ -267,28 +292,28 @@ export default function LoginPage() {
         return;
       }
 
-      // Check if this looks like an OAuth callback
-      const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-      const hasMagicCredential = urlParams?.has('magic_credential');
-      const hasCode = urlParams?.has('code');
-      const hasState = urlParams?.has('state');
-      const hasProvider = urlParams?.has('provider');
+      // Check if this looks like an OAuth callback using EARLY captured params
+      // The URL might be cleared by Magic SDK or Next.js router by the time this runs
+      const hasOAuthParams = initialOAuthParams?.hasMagicCredential ||
+                             initialOAuthParams?.hasCode ||
+                             initialOAuthParams?.hasState ||
+                             oauthParamsRef.current !== null;
 
-      console.log('[OAuth] URL params check:', {
-        hasMagicCredential,
-        hasCode,
-        hasState,
-        hasProvider,
-        fullUrl: currentUrl
-      });
+      console.log('[OAuth] Has OAuth params (from early capture):', hasOAuthParams);
 
       // Only call getRedirectResult if we have OAuth-related params
-      // magic_credential is the final param Magic adds after OAuth exchange
-      // code+state are standard OAuth params before Magic processes them
-      if (!hasMagicCredential && !hasCode && !oauthParamsRef.current) {
+      if (!hasOAuthParams) {
         console.log('[OAuth] No OAuth params detected, skipping getRedirectResult');
         return;
+      }
+
+      // CRITICAL: Restore the URL params if they were cleared
+      // Magic SDK's getRedirectResult() reads from window.location
+      if (initialOAuthParams?.search && !window.location.search) {
+        console.log('[OAuth] URL params were cleared! Restoring from early capture...');
+        const restoredUrl = window.location.pathname + initialOAuthParams.search;
+        window.history.replaceState(null, '', restoredUrl);
+        console.log('[OAuth] Restored URL to:', window.location.href);
       }
 
       // Mark as processing BEFORE the async call to prevent concurrent calls
