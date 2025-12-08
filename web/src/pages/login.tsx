@@ -194,10 +194,12 @@ export default function LoginPage() {
       console.log('[OAuth2] Magic oauth2 extension:', (magic as any).oauth2);
 
       // Use OAuth2 extension's loginWithRedirect - newer implementation
+      // prompt: 'select_account' forces Google to show account picker
       await (magic as any).oauth2.loginWithRedirect({
         provider: 'google',
         redirectURI,
         scope: ['openid', 'email', 'profile'],
+        prompt: 'select_account',
       });
       // Browser will redirect to Google
     } catch (error) {
