@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { OAuthExtension } from '@magic-ext/oauth'
-import { InstanceWithExtensions, MagicSDKExtensionsOption, SDKBase } from '@magic-sdk/provider'
+import { OAuth2Extension } from '@magic-ext/oauth2'
+import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider'
 import { setJwt } from 'lib/apollo'
 import { Magic, RPCErrorCode } from 'magic-sdk'
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
@@ -13,8 +13,12 @@ import { config } from 'config'
 import { AbiItem } from 'web3-utils'
 
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
+
+// Type for Magic instance with OAuth2 extension
+type MagicInstance = InstanceWithExtensions<SDKBase, OAuth2Extension[]> | null;
+
 interface MagicContextData {
-  magic: InstanceWithExtensions<SDKBase, OAuthExtension[]> | null
+  magic: MagicInstance
   web3: Web3 | null
   account: string | undefined
   balance: string | undefined
@@ -30,18 +34,20 @@ interface MagicProviderProps {
   children: ReactNode
 }
 
-// Create client-side Magic instance
-const createMagic = (magicPublicKey: string): InstanceWithExtensions<SDKBase, OAuthExtension[]> | null => {
+// Create client-side Magic instance with OAuth2 extension (uses popup flow)
+const createMagic = (magicPublicKey: string): MagicInstance => {
   try {
-    return typeof window !== 'undefined'
-      ? new Magic(magicPublicKey, {
-          network: {
-            rpcUrl: network.rpc,
-            chainId: network.id,
-          },
-          extensions: [new OAuthExtension()],
-        })
-      : null
+    if (typeof window === 'undefined') return null;
+
+    const magicInstance = new Magic(magicPublicKey, {
+      network: {
+        rpcUrl: network.rpc,
+        chainId: network.id,
+      },
+      extensions: [new OAuth2Extension()],
+    });
+
+    return magicInstance as MagicInstance;
   } catch {
     return null
   }
@@ -49,7 +55,7 @@ const createMagic = (magicPublicKey: string): InstanceWithExtensions<SDKBase, OA
 
 // Create Web3 instance
 const createWeb3 = (
-  magic: InstanceWithExtensions<SDKBase, OAuthExtension[]>,
+  magic: NonNullable<MagicInstance>,
 ): Web3 | null => {
   try {
     return new Web3((magic as any).rpcProvider)
@@ -60,7 +66,7 @@ const createWeb3 = (
 
 export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe()
-  const [magic, setMagic] = useState<InstanceWithExtensions<SDKBase, OAuthExtension[]> | null>(null)
+  const [magic, setMagic] = useState<MagicInstance>(null)
   const [web3, setWeb3] = useState<Web3 | null>(null)
   const [account, setAccount] = useState('')
   const [maticBalance, setMaticBalance] = useState('')
