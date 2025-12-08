@@ -197,7 +197,12 @@ export default function LoginPage() {
       // Debug: Log Magic SDK structure
       console.log('[OAuth2] Magic SDK:', magic);
       console.log('[OAuth2] Magic oauth2:', (magic as any).oauth2);
-      console.log('[OAuth2] Magic oauth2 methods:', Object.keys((magic as any).oauth2 || {}));
+      console.log('[OAuth2] loginWithRedirect type:', typeof (magic as any).oauth2?.loginWithRedirect);
+      console.log('[OAuth2] getRedirectResult type:', typeof (magic as any).oauth2?.getRedirectResult);
+
+      // Check if there's an older oauth extension we should use
+      console.log('[OAuth2] Magic oauth (old):', (magic as any).oauth);
+      console.log('[OAuth2] Magic auth:', (magic as any).auth);
 
       setLoggingIn(true);
       setError(null);
@@ -210,11 +215,14 @@ export default function LoginPage() {
       console.log('[OAuth2] Calling loginWithRedirect (no await - should redirect)...');
 
       // Don't await - this should redirect the browser immediately
-      (magic as any).oauth2.loginWithRedirect({
+      const oauthConfig = {
         provider: 'google',
         redirectURI,
-        scope: ['openid', 'email', 'profile'],
-      }).then((result: any) => {
+        scope: 'openid email profile',  // Try as string, not array
+      };
+      console.log('[OAuth2] Config:', oauthConfig);
+
+      (magic as any).oauth2.loginWithRedirect(oauthConfig).then((result: any) => {
         console.log('[OAuth2] loginWithRedirect resolved:', result);
         // If we get here without redirect, something's wrong
         if (result === null) {
