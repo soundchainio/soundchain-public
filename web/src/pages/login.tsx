@@ -198,8 +198,13 @@ export default function LoginPage() {
       setLoggingIn(true);
       setError(null);
 
-      // Clear localStorage token (skip magic.user.isLoggedIn which can hang)
+      // Clear localStorage token
       localStorage.removeItem('didToken');
+
+      // Preload Magic iframe to ensure it's ready
+      console.log('[OAuth2] Preloading Magic iframe...');
+      await magic.preload();
+      console.log('[OAuth2] Magic iframe preloaded');
 
       // Use browser origin to handle both www and non-www domains
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
@@ -208,21 +213,32 @@ export default function LoginPage() {
       console.log('[OAuth2] Redirect URI:', redirectURI);
       console.log('[OAuth2] Calling loginWithRedirect...');
 
-      // Use OAuth2 extension's loginWithRedirect
-      // Don't use shouldReturnURI - let it redirect directly
-      await (magic as any).oauth2.loginWithRedirect({
-        provider: 'google',
-        redirectURI,
-        scope: 'openid email profile',
+      // Add timeout to detect hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('OAuth redirect timed out after 30s')), 30000);
       });
+
+      // Use OAuth2 extension's loginWithRedirect with timeout
+      await Promise.race([
+        (magic as any).oauth2.loginWithRedirect({
+          provider: 'google',
+          redirectURI,
+          scope: 'openid email profile',
+        }),
+        timeoutPromise
+      ]);
 
       // If we reach here, something went wrong (should have redirected)
       console.error('[OAuth2] loginWithRedirect completed without redirecting');
       setError('OAuth redirect failed. Please try again.');
       setLoggingIn(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[OAuth2] Google login error:', error);
-      handleError(error as Error);
+      if (error?.message?.includes('timed out')) {
+        setError('Google login timed out. This may be a Magic SDK issue. Try email login instead.');
+      } else {
+        handleError(error as Error);
+      }
       setLoggingIn(false);
     }
   };
