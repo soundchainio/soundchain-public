@@ -185,36 +185,21 @@ export default function LoginPage() {
       setLoggingIn(true);
       setError(null);
 
-      console.log('[OAuth2] Starting Google OAuth with popup...');
+      // Use browser origin to handle both www and non-www domains
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
+      const redirectURI = `${baseUrl}/login`;
 
-      // Use OAuth2 extension's loginWithPopup - avoids redirect PKCE state issues
-      const result = await (magic as any).oauth2.loginWithPopup({
+      console.log('[OAuth2] Starting Google OAuth with redirect...');
+      console.log('[OAuth2] Redirect URI:', redirectURI);
+      console.log('[OAuth2] Magic oauth2 extension:', (magic as any).oauth2);
+
+      // Use OAuth2 extension's loginWithRedirect - newer implementation
+      await (magic as any).oauth2.loginWithRedirect({
         provider: 'google',
+        redirectURI,
         scope: ['openid', 'email', 'profile'],
       });
-
-      console.log('[OAuth2] loginWithPopup result:', result);
-
-      if (result && result.magic?.idToken) {
-        const didToken = result.magic.idToken;
-        console.log('[OAuth2] Got didToken:', didToken?.substring(0, 50) + '...');
-        localStorage.setItem('didToken', didToken);
-
-        const loginResult = await login({ variables: { input: { token: didToken } } });
-        console.log('[OAuth2] Login mutation result:', loginResult);
-
-        if (loginResult.data?.login.jwt) {
-          await setJwt(loginResult.data.login.jwt);
-          await new Promise(resolve => setTimeout(resolve, 200));
-          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-          console.log('[OAuth2] Login successful, redirecting to:', redirectUrl);
-          router.push(redirectUrl);
-        } else {
-          throw new Error('Login failed: No JWT returned');
-        }
-      } else {
-        throw new Error('No result from Google login');
-      }
+      // Browser will redirect to Google
     } catch (error) {
       console.error('[OAuth2] Google login error:', error);
       handleError(error as Error);
@@ -251,7 +236,50 @@ export default function LoginPage() {
     handleMagicLink();
   }, [magic, magicParam, login, handleError]);
 
-  // Note: OAuth2 uses popup flow - no redirect handling needed
+  // Handle OAuth2 redirect callback
+  useEffect(() => {
+    async function handleOAuthRedirect() {
+      if (!magic) return;
+
+      // Check if URL has OAuth params
+      const params = new URLSearchParams(window.location.search);
+      const hasOAuthParams = params.has('code') || params.has('state') || params.has('magic_credential');
+
+      if (!hasOAuthParams) return;
+
+      console.log('[OAuth2] Detected OAuth redirect params, processing...');
+      setLoggingIn(true);
+
+      try {
+        const result = await (magic as any).oauth2.getRedirectResult();
+        console.log('[OAuth2] getRedirectResult:', result);
+
+        if (result && result.magic?.idToken) {
+          const didToken = result.magic.idToken;
+          console.log('[OAuth2] Got didToken from redirect');
+          localStorage.setItem('didToken', didToken);
+
+          const loginResult = await login({ variables: { input: { token: didToken } } });
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            router.push(redirectUrl);
+          } else {
+            throw new Error('Login failed: No JWT returned');
+          }
+        }
+      } catch (error: any) {
+        console.error('[OAuth2] Redirect error:', error);
+        // Ignore "not an OAuth redirect" errors
+        if (!error?.message?.includes('Missing') && !error?.message?.includes('OAuth')) {
+          handleError(error as Error);
+        }
+        setLoggingIn(false);
+      }
+    }
+    handleOAuthRedirect();
+  }, [magic, login, router, handleError]);
 
   async function handleSubmit(values: FormValues) {
     try {
