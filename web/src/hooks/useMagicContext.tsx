@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { OAuth2Extension } from '@magic-ext/oauth2'
+import { OAuthExtension } from '@magic-ext/oauth2'
 import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider'
 import { setJwt } from 'lib/apollo'
 import { Magic, RPCErrorCode } from 'magic-sdk'
@@ -14,8 +14,8 @@ import { AbiItem } from 'web3-utils'
 
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
 
-// Type for Magic instance with OAuth2 extension
-type MagicInstance = InstanceWithExtensions<SDKBase, OAuth2Extension[]> | null;
+// Type for Magic instance with OAuth2 extension (oauth2 package exports OAuthExtension)
+type MagicInstance = InstanceWithExtensions<SDKBase, OAuthExtension[]> | null;
 
 interface MagicContextData {
   magic: MagicInstance
@@ -35,6 +35,7 @@ interface MagicProviderProps {
 }
 
 // Create client-side Magic instance with OAuth2 extension (uses popup flow)
+// Note: @magic-ext/oauth2 package exports "OAuthExtension" class
 const createMagic = (magicPublicKey: string): MagicInstance => {
   try {
     if (typeof window === 'undefined') return null;
@@ -44,7 +45,7 @@ const createMagic = (magicPublicKey: string): MagicInstance => {
         rpcUrl: network.rpc,
         chainId: network.id,
       },
-      extensions: [new OAuth2Extension()],
+      extensions: [new OAuthExtension()],
     });
 
     return magicInstance as MagicInstance;
