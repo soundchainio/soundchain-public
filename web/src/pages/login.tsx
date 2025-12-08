@@ -182,17 +182,39 @@ export default function LoginPage() {
       if (!magic) throw new Error('Magic SDK not initialized');
       setLoggingIn(true);
       setError(null);
-      // Use actual browser origin to handle both www and non-www domains
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
-      const redirectURI = `${baseUrl}/login`;
-      console.log('Google OAuth redirectURI:', redirectURI);
-      await magic.oauth.loginWithRedirect({
+
+      console.log('[OAuth] Starting Google OAuth with popup...');
+
+      // Use popup mode - more reliable than redirect as it doesn't depend on localStorage persistence
+      const result = await magic.oauth.loginWithPopup({
         provider: 'google',
-        redirectURI,
-        scope: ['openid'],
+        scope: ['openid', 'email', 'profile'],
       });
+
+      console.log('[OAuth] Popup result:', result);
+
+      if (result) {
+        const didToken = result.magic.idToken;
+        console.log('[OAuth] Got didToken from popup:', didToken?.substring(0, 50) + '...');
+        localStorage.setItem('didToken', didToken);
+
+        const loginResult = await login({ variables: { input: { token: didToken } } });
+        console.log('[OAuth] Login mutation result:', loginResult);
+
+        if (loginResult.data?.login.jwt) {
+          await setJwt(loginResult.data.login.jwt);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          console.log('[OAuth] Login successful, redirecting to:', redirectUrl);
+          router.push(redirectUrl);
+        } else {
+          throw new Error('Login failed: No JWT returned');
+        }
+      }
     } catch (error) {
+      console.error('[OAuth] Google login error:', error);
       handleError(error as Error);
+      setLoggingIn(false);
     }
   };
 
