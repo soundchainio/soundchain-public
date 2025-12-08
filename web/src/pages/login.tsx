@@ -183,34 +183,20 @@ export default function LoginPage() {
       setLoggingIn(true);
       setError(null);
 
-      console.log('[OAuth] Starting Google OAuth with popup...');
+      console.log('[OAuth] Starting Google OAuth with redirect...');
 
-      // Use popup mode - more reliable than redirect as it doesn't depend on localStorage persistence
-      const result = await magic.oauth.loginWithPopup({
+      // Use browser origin to handle both www and non-www domains
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
+      const redirectURI = `${baseUrl}/login`;
+      console.log('[OAuth] Redirect URI:', redirectURI);
+
+      // Use redirect mode - Magic SDK OAuth extension only supports loginWithRedirect
+      await magic.oauth.loginWithRedirect({
         provider: 'google',
+        redirectURI,
         scope: ['openid', 'email', 'profile'],
       });
-
-      console.log('[OAuth] Popup result:', result);
-
-      if (result) {
-        const didToken = result.magic.idToken;
-        console.log('[OAuth] Got didToken from popup:', didToken?.substring(0, 50) + '...');
-        localStorage.setItem('didToken', didToken);
-
-        const loginResult = await login({ variables: { input: { token: didToken } } });
-        console.log('[OAuth] Login mutation result:', loginResult);
-
-        if (loginResult.data?.login.jwt) {
-          await setJwt(loginResult.data.login.jwt);
-          await new Promise(resolve => setTimeout(resolve, 200));
-          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-          console.log('[OAuth] Login successful, redirecting to:', redirectUrl);
-          router.push(redirectUrl);
-        } else {
-          throw new Error('Login failed: No JWT returned');
-        }
-      }
+      // Note: Code after loginWithRedirect won't execute - browser redirects to Google
     } catch (error) {
       console.error('[OAuth] Google login error:', error);
       handleError(error as Error);
@@ -254,9 +240,17 @@ export default function LoginPage() {
 
   // Capture OAuth params immediately on mount (before any re-renders can clear them)
   useEffect(() => {
-    if (typeof window !== 'undefined' && !oauthParamsRef.current) {
+    if (typeof window !== 'undefined') {
       const url = window.location.href;
-      if (url.includes('magic_credential') || url.includes('code=')) {
+      const search = window.location.search;
+      const hash = window.location.hash;
+      console.log('[OAuth Debug] Page loaded');
+      console.log('[OAuth Debug] Full URL:', url);
+      console.log('[OAuth Debug] Search params:', search);
+      console.log('[OAuth Debug] Hash:', hash);
+      console.log('[OAuth Debug] localStorage magic keys:', Object.keys(localStorage).filter(k => k.includes('magic')));
+
+      if (!oauthParamsRef.current && (url.includes('magic_credential') || url.includes('code=') || url.includes('state='))) {
         oauthParamsRef.current = url;
         console.log('[OAuth] Captured OAuth URL params on mount');
       }
@@ -266,8 +260,6 @@ export default function LoginPage() {
   useEffect(() => {
     async function handleOAuthRedirect() {
       console.log('[OAuth] Handler called - magic:', !!magic, 'loggingIn:', loggingIn, 'processed:', oauthProcessedRef.current);
-      console.log('[OAuth] Current URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
-      console.log('[OAuth] Captured params:', oauthParamsRef.current ? 'YES' : 'NO');
 
       // Skip if already processing or no magic instance
       if (!magic || oauthProcessedRef.current) {
@@ -275,19 +267,33 @@ export default function LoginPage() {
         return;
       }
 
-      // Check if this looks like an OAuth callback (either current URL or captured params)
+      // Check if this looks like an OAuth callback
       const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-      const hasOAuthParams = currentUrl.includes('magic_credential') ||
-                             currentUrl.includes('code=') ||
-                             oauthParamsRef.current !== null;
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const hasMagicCredential = urlParams?.has('magic_credential');
+      const hasCode = urlParams?.has('code');
+      const hasState = urlParams?.has('state');
+      const hasProvider = urlParams?.has('provider');
 
-      if (!hasOAuthParams) {
-        console.log('[OAuth] No OAuth params detected, skipping');
+      console.log('[OAuth] URL params check:', {
+        hasMagicCredential,
+        hasCode,
+        hasState,
+        hasProvider,
+        fullUrl: currentUrl
+      });
+
+      // Only call getRedirectResult if we have OAuth-related params
+      // magic_credential is the final param Magic adds after OAuth exchange
+      // code+state are standard OAuth params before Magic processes them
+      if (!hasMagicCredential && !hasCode && !oauthParamsRef.current) {
+        console.log('[OAuth] No OAuth params detected, skipping getRedirectResult');
         return;
       }
 
       // Mark as processing BEFORE the async call to prevent concurrent calls
       oauthProcessedRef.current = true;
+      setLoggingIn(true);
       console.log('[OAuth] Set processed=true, calling getRedirectResult...');
 
       try {
@@ -305,7 +311,6 @@ export default function LoginPage() {
 
         if (result) {
           console.log('[OAuth] Got result, processing...');
-          setLoggingIn(true);
           setError(null);
 
           const didToken = result.magic.idToken;
@@ -326,6 +331,7 @@ export default function LoginPage() {
           }
         } else {
           console.log('[OAuth] No result from getRedirectResult');
+          setLoggingIn(false);
           oauthProcessedRef.current = false; // Allow retry
         }
       } catch (error: any) {
@@ -345,6 +351,7 @@ export default function LoginPage() {
             error?.message?.includes('OAuth') ||
             error?.message?.includes('param')) {
           console.log('[OAuth] Expected error (not an OAuth callback), ignoring');
+          setLoggingIn(false);
           oauthProcessedRef.current = false; // Allow normal login flow
           return;
         }
