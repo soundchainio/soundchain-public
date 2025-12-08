@@ -201,41 +201,47 @@ export default function LoginPage() {
       // Clear localStorage token
       localStorage.removeItem('didToken');
 
-      // Preload Magic iframe to ensure it's ready
-      console.log('[OAuth2] Preloading Magic iframe...');
-      await magic.preload();
-      console.log('[OAuth2] Magic iframe preloaded');
-
-      // Use browser origin to handle both www and non-www domains
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
-      const redirectURI = `${baseUrl}/login`;
-
-      console.log('[OAuth2] Redirect URI:', redirectURI);
-      console.log('[OAuth2] Calling loginWithRedirect...');
+      console.log('[OAuth2] Using loginWithPopup...');
 
       // Add timeout to detect hanging
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('OAuth redirect timed out after 30s')), 30000);
+        setTimeout(() => reject(new Error('OAuth popup timed out after 60s')), 60000);
       });
 
-      // Use OAuth2 extension's loginWithRedirect with timeout
-      await Promise.race([
-        (magic as any).oauth2.loginWithRedirect({
+      // Try popup flow - it may work when redirect doesn't
+      const result = await Promise.race([
+        (magic as any).oauth2.loginWithPopup({
           provider: 'google',
-          redirectURI,
           scope: 'openid email profile',
         }),
         timeoutPromise
-      ]);
+      ]) as any;
 
-      // If we reach here, something went wrong (should have redirected)
-      console.error('[OAuth2] loginWithRedirect completed without redirecting');
-      setError('OAuth redirect failed. Please try again.');
-      setLoggingIn(false);
+      console.log('[OAuth2] loginWithPopup result:', result);
+
+      if (result?.magic?.idToken) {
+        const didToken = result.magic.idToken;
+        console.log('[OAuth2] Got didToken from popup');
+        localStorage.setItem('didToken', didToken);
+
+        const loginResult = await login({ variables: { input: { token: didToken } } });
+        if (loginResult.data?.login.jwt) {
+          await setJwt(loginResult.data.login.jwt);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          router.push(redirectUrl);
+        } else {
+          throw new Error('Login failed: No JWT returned');
+        }
+      } else {
+        throw new Error('OAuth popup did not return a token');
+      }
     } catch (error: any) {
       console.error('[OAuth2] Google login error:', error);
       if (error?.message?.includes('timed out')) {
-        setError('Google login timed out. This may be a Magic SDK issue. Try email login instead.');
+        setError('Google login timed out. Please check your Magic Dashboard OAuth settings.');
+      } else if (error?.message?.includes('popup')) {
+        setError('Popup was blocked or closed. Please allow popups for this site.');
       } else {
         handleError(error as Error);
       }
