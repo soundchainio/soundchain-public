@@ -229,47 +229,13 @@ export default function LoginPage() {
 
       const redirectURI = `${window.location.origin}/login`;
       console.log('[OAuth2] Redirect URI:', redirectURI);
-      console.log('[OAuth2] Using auth-only Magic (no network config)');
-      console.log('[OAuth2] oauth2 extension:', (authMagic as any).oauth2);
+      console.log('[OAuth2] Using Magic Login Widget mode');
 
-      // Try popup first (more reliable), fall back to redirect
-      try {
-        console.log('[OAuth2] Attempting loginWithPopup...');
-        const result = await (authMagic as any).oauth2.loginWithPopup({
-          provider: 'google',
-        });
-
-        console.log('[OAuth2] Popup result:', result);
-
-        if (result && result.magic?.idToken) {
-          const didToken = result.magic.idToken;
-          console.log('[OAuth2] Got didToken from popup');
-          localStorage.setItem('didToken', didToken);
-
-          const loginResult = await login({ variables: { input: { token: didToken } } });
-          if (loginResult.data?.login.jwt) {
-            await setJwt(loginResult.data.login.jwt);
-            await new Promise(resolve => setTimeout(resolve, 200));
-            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            router.push(redirectUrl);
-            return;
-          } else {
-            throw new Error('Login failed: No JWT returned');
-          }
-        }
-      } catch (popupError: any) {
-        console.error('[OAuth2] Popup failed:', popupError);
-        // If popup was blocked, try redirect
-        if (popupError?.message?.includes('popup') || popupError?.message?.includes('blocked')) {
-          console.log('[OAuth2] Popup blocked, trying redirect...');
-          await (authMagic as any).oauth2.loginWithRedirect({
-            provider: 'google',
-            redirectURI,
-          });
-        } else {
-          throw popupError;
-        }
-      }
+      // Magic Login Widget mode - just call loginWithRedirect, Magic handles everything
+      await (authMagic as any).oauth2.loginWithRedirect({
+        provider: 'google',
+        redirectURI,
+      });
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || 'Google login failed');
