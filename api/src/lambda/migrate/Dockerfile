@@ -26,7 +26,8 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Build
 RUN tsc
 
-COPY global-bundle.pem ./.build/src/lambda/migrate/
+# Copy SSL cert for DocumentDB TLS connection
+COPY global-bundle.pem ./.build/
 
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/migrate/handler.handler" ]

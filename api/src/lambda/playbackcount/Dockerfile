@@ -26,7 +26,9 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Build
 RUN tsc
 
-COPY global-bundle.pem ./.build/src/lambda/playbackcount/
+# Copy SSL cert for DocumentDB TLS connection
+# handler.ts uses relative path 'global-bundle.pem' which resolves from CWD (/var/task)
+COPY global-bundle.pem ./
 
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/playbackcount/handler.playbackCount" ]

@@ -26,7 +26,10 @@ COPY . ${LAMBDA_TASK_ROOT}
 # Build
 RUN tsc
 
-COPY global-bundle.pem ./.build/src/lambda/hello/
+# Copy SSL cert for DocumentDB TLS connection
+# config.ts looks for it at path.join(__dirname, '..', 'global-bundle.pem')
+# Since __dirname is .build/src, it resolves to .build/global-bundle.pem
+COPY global-bundle.pem ./.build/
 
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/hello/handler.handler" ]
