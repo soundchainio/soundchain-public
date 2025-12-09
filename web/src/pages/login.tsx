@@ -397,33 +397,33 @@ export default function LoginPage() {
   }
 
   const GoogleButton = () => (
-    <HoverableButton
-      className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white w-64"
+    <button
+      className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-yellow-400"
       onClick={handleGoogleLogin}
     >
-      <Google className="mr-1 h-5 w-5" />
+      <Google className="h-5 w-5" />
       <span>Login with Google</span>
-    </HoverableButton>
+    </button>
   );
 
   const DiscordButton = () => (
-    <HoverableButton
-      className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white w-64"
+    <button
+      className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-[#5865F2]"
       onClick={handleDiscordLogin}
     >
-      <Discord className="mr-1 h-5 w-5" />
+      <Discord className="h-5 w-5" />
       <span>Login with Discord</span>
-    </HoverableButton>
+    </button>
   );
 
   const TwitchButton = () => (
-    <HoverableButton
-      className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white w-64"
+    <button
+      className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-[#9146FF]"
       onClick={handleTwitchLogin}
     >
-      <Twitch className="mr-1 h-5 w-5" />
+      <Twitch className="h-5 w-5" />
       <span>Login with Twitch</span>
-    </HoverableButton>
+    </button>
   );
 
   if (!isClient) {
