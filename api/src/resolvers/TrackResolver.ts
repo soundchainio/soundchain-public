@@ -236,9 +236,13 @@ export class TrackResolver {
   @Authorized()
   async updateTrack(
     @Ctx() { trackService }: Context,
-    @Arg('input') { trackId, ...changes }: UpdateTrackInput,
+    @Arg('input') { trackId, profileId, ...changes }: UpdateTrackInput,
   ): Promise<UpdateTrackPayload> {
-    const track = await trackService.updateTrack(new mongoose.Types.ObjectId(trackId), changes);
+    const trackChanges = {
+      ...changes,
+      ...(profileId && { profileId: new mongoose.Types.ObjectId(profileId) }),
+    };
+    const track = await trackService.updateTrack(new mongoose.Types.ObjectId(trackId), trackChanges);
     return { track };
   }
 

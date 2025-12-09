@@ -1,6 +1,7 @@
 import type { Handler } from 'aws-lambda';
 import { config, database, up } from 'migrate-mongo';
-import migrationConfig from '../../../migrate-mongo-config.js';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const migrationConfig = require('../../../migrate-mongo-config.js');
 
 export const handler: Handler = async () => {
   console.log('Starting migrations');
