@@ -28,7 +28,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -277,6 +277,31 @@ function TrackCard({ track, onPlay, isPlaying, isCurrentTrack }: {
       </CardContent>
     </Card>
   )
+}
+
+// Helper function to linkify URLs in text (for description and utility fields)
+// URLs in description/utility become clickable links for artist marketing
+const linkifyText = (text: string) => {
+  if (!text) return null
+  const urlRegex = /(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-&?=%.]+/g
+  const urls = text.match(urlRegex)
+  const contentSplit = text.split(urlRegex)
+
+  return contentSplit.map((partialContent, idx) => {
+    if (urls && urls.length > idx) {
+      const normalizedUrl =
+        !urls[idx].startsWith('http://') && !urls[idx].startsWith('https://') ? 'https://' + urls[idx] : urls[idx]
+      return (
+        <span key={idx}>
+          {partialContent}
+          <a href={normalizedUrl} target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-300 underline">
+            {urls[idx]}
+          </a>
+        </span>
+      )
+    }
+    return <span key={idx}>{partialContent}</span>
+  })
 }
 
 function DEXDashboard() {
@@ -564,6 +589,20 @@ function DEXDashboard() {
   // Follow/Unfollow mutations
   const [followProfile, { loading: followLoading }] = useFollowProfileMutation()
   const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation()
+
+  // Track Detail Query - fetch single track when viewing /dex/track/[id]
+  const { data: trackDetailData, loading: trackDetailLoading, error: trackDetailError } = useTrackQuery({
+    variables: { id: routeId || '' },
+    skip: selectedView !== 'track' || !routeId,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Profile Detail Query - fetch single profile when viewing /dex/profile/[handle]
+  const { data: profileDetailData, loading: profileDetailLoading, error: profileDetailError } = useProfileQuery({
+    variables: { id: routeId || '' },
+    skip: selectedView !== 'profile' || !routeId,
+    fetchPolicy: 'cache-and-network',
+  })
 
   // Handle follow toggle
   const handleFollowToggle = async (profileId: string, isFollowed: boolean, handle: string) => {
@@ -2324,6 +2363,486 @@ function DEXDashboard() {
                   <p className="text-xs text-gray-500 mt-2">You're all caught up!</p>
                 </div>
               </Card>
+            </div>
+          )}
+
+          {/* Track Detail View - /dex/track/[id] */}
+          {selectedView === 'track' && routeId && (
+            <div className="space-y-6 pb-32 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {trackDetailLoading && (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                  <span className="ml-3 text-cyan-400">Loading track details...</span>
+                </div>
+              )}
+              {trackDetailError && (
+                <Card className="retro-card p-6 text-center">
+                  <p className="text-red-400 mb-2">Error loading track</p>
+                  <p className="text-gray-500 text-sm">{trackDetailError.message}</p>
+                </Card>
+              )}
+              {trackDetailData?.track && (
+                <>
+                  {/* Back Button */}
+                  <Button variant="ghost" onClick={() => router.back()} className="mb-4 hover:bg-cyan-500/10">
+                    <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
+                    Back
+                  </Button>
+
+                  {/* Track Header Card */}
+                  <Card className="retro-card overflow-hidden">
+                    <div className="flex flex-col md:flex-row">
+                      {/* Album Art */}
+                      <div className="w-full md:w-80 aspect-square relative bg-gray-800">
+                        <img
+                          src={trackDetailData.track.artworkUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop'}
+                          alt={trackDetailData.track.title || 'Track'}
+                          className="w-full h-full object-cover"
+                        />
+                        <Button
+                          onClick={() => {
+                            const track = trackDetailData.track
+                            if (track) {
+                              const playlist: Song[] = [{
+                                trackId: track.id,
+                                src: track.playbackUrl || '',
+                                title: track.title || 'Untitled',
+                                artist: track.artist || 'Unknown',
+                                art: track.artworkUrl || '',
+                                isFavorite: track.isFavorite || false,
+                              }]
+                              playlistState(playlist, 0)
+                            }
+                          }}
+                          className="absolute bottom-4 right-4 w-14 h-14 rounded-full bg-cyan-500 hover:bg-cyan-400 flex items-center justify-center shadow-lg"
+                        >
+                          {isPlaying && currentSong?.trackId === trackDetailData.track.id ? (
+                            <Pause className="w-6 h-6 text-black" />
+                          ) : (
+                            <Play className="w-6 h-6 text-black ml-1" />
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Track Info */}
+                      <div className="flex-1 p-6 space-y-4">
+                        <div>
+                          <h1 className="text-3xl font-bold text-white mb-2">{trackDetailData.track.title}</h1>
+                          {/* Artist - Clickable Link to Profile */}
+                          <Link href={`/${trackDetailData.track.artistProfileId || trackDetailData.track.artistId}`}>
+                            <p className="text-cyan-400 text-lg hover:text-cyan-300 cursor-pointer transition-colors">
+                              {trackDetailData.track.artist}
+                            </p>
+                          </Link>
+                        </div>
+
+                        {/* Stats Row */}
+                        <div className="flex flex-wrap gap-4">
+                          <div className="flex items-center gap-2">
+                            <Play className="w-4 h-4 text-cyan-400" />
+                            <span className="text-white">{trackDetailData.track.playbackCountFormatted || '0'} plays</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Heart className={`w-4 h-4 ${trackDetailData.track.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+                            <span className="text-white">{trackDetailData.track.favoriteCount || 0} favorites</span>
+                          </div>
+                          {trackDetailData.track.album && (
+                            <div className="flex items-center gap-2">
+                              <Music className="w-4 h-4 text-purple-400" />
+                              <span className="text-white">{trackDetailData.track.album}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Price Badge if Listed */}
+                        {trackDetailData.track.price && (
+                          <Badge className="bg-green-500/20 text-green-400 text-lg px-4 py-2">
+                            {trackDetailData.track.price.value} {trackDetailData.track.price.currency}
+                          </Badge>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap gap-3 pt-4">
+                          <Button className="retro-button">
+                            <Heart className="w-4 h-4 mr-2" />
+                            Favorite
+                          </Button>
+                          <Button variant="outline" className="border-cyan-500/50 hover:bg-cyan-500/10">
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                          </Button>
+                          {trackDetailData.track.price && (
+                            <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
+                              <ShoppingBag className="w-4 h-4 mr-2" />
+                              Buy NFT
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Track Details Card */}
+                  <Card className="retro-card">
+                    <CardContent className="p-6">
+                      <h2 className="retro-title text-lg mb-4">Track Details</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-3">
+                          <div className="flex justify-between py-2 border-b border-gray-800">
+                            <span className="text-gray-400">Track Title</span>
+                            <span className="text-white">{trackDetailData.track.title || '-'}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-800">
+                            <span className="text-gray-400">Album</span>
+                            <span className="text-white">{trackDetailData.track.album || '-'}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-800">
+                            <span className="text-gray-400">Release Year</span>
+                            <span className="text-white">{trackDetailData.track.releaseYear || '-'}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-800">
+                            <span className="text-gray-400">Copyright</span>
+                            <span className="text-white">{trackDetailData.track.copyright || '-'}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-800">
+                            <span className="text-gray-400">ISRC</span>
+                            <span className="text-white font-mono text-sm">{trackDetailData.track.ISRC || '-'}</span>
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="py-2 border-b border-gray-800">
+                            <span className="text-gray-400 block mb-2">Genres</span>
+                            <div className="flex flex-wrap gap-2">
+                              {(trackDetailData.track.genres?.length ?? 0) > 0 ? (
+                                trackDetailData.track.genres?.map((genre) => (
+                                  <Badge key={genre} className="bg-purple-500/20 text-purple-400">{genre}</Badge>
+                                ))
+                              ) : (
+                                <span className="text-gray-500">No genres</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-800">
+                            <span className="text-gray-400">Edition Size</span>
+                            <span className="text-white">{trackDetailData.track.editionSize || 1}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b border-gray-800">
+                            <span className="text-gray-400">Created</span>
+                            <span className="text-white">{new Date(trackDetailData.track.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Description Card - URLs are clickable for artist marketing */}
+                  {trackDetailData.track.description && (
+                    <Card className="retro-card">
+                      <CardContent className="p-6">
+                        <h2 className="retro-title text-lg mb-4">Description</h2>
+                        <p className="text-gray-300 whitespace-pre-wrap">{linkifyText(trackDetailData.track.description)}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Utility Card - URLs are clickable for artist marketing */}
+                  {trackDetailData.track.utilityInfo && (
+                    <Card className="retro-card border-yellow-500/30">
+                      <CardContent className="p-6">
+                        <h2 className="retro-title text-lg mb-4 flex items-center gap-2">
+                          <Zap className="w-5 h-5 text-yellow-400" />
+                          Utility
+                        </h2>
+                        <p className="text-gray-300 whitespace-pre-wrap">{linkifyText(trackDetailData.track.utilityInfo)}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* NFT / Blockchain Data Card */}
+                  {trackDetailData.track.nftData && (
+                    <Card className="retro-card border-purple-500/30">
+                      <CardContent className="p-6">
+                        <h2 className="retro-title text-lg mb-4 flex items-center gap-2">
+                          <Database className="w-5 h-5 text-purple-400" />
+                          Blockchain Data
+                        </h2>
+                        <div className="space-y-3">
+                          {/* Token ID - Clickable Link to Polygonscan */}
+                          <div className="flex flex-col md:flex-row md:justify-between py-2 border-b border-gray-800">
+                            <span className="text-gray-400 mb-1 md:mb-0">Token ID</span>
+                            {trackDetailData.track.nftData.transactionHash ? (
+                              <a
+                                href={`${config.polygonscan}tx/${trackDetailData.track.nftData.transactionHash}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-mono text-sm"
+                              >
+                                {trackDetailData.track.nftData.tokenId || 'View on Polygonscan'}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <span className="text-gray-500">Not minted</span>
+                            )}
+                          </div>
+                          {/* Contract Address */}
+                          {trackDetailData.track.nftData.contract && (
+                            <div className="flex flex-col md:flex-row md:justify-between py-2 border-b border-gray-800">
+                              <span className="text-gray-400 mb-1 md:mb-0">Contract</span>
+                              <a
+                                href={`${config.polygonscan}address/${trackDetailData.track.nftData.contract}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-mono text-sm"
+                              >
+                                {trackDetailData.track.nftData.contract.slice(0, 8)}...{trackDetailData.track.nftData.contract.slice(-6)}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          )}
+                          {/* IPFS */}
+                          {trackDetailData.track.nftData.ipfsCid && (
+                            <div className="flex flex-col md:flex-row md:justify-between py-2 border-b border-gray-800">
+                              <span className="text-gray-400 mb-1 md:mb-0">IPFS</span>
+                              <a
+                                href={`${config.ipfsGateway}${trackDetailData.track.nftData.ipfsCid}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-mono text-sm"
+                              >
+                                {trackDetailData.track.nftData.ipfsCid.slice(0, 12)}...
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          )}
+                          {/* Minter */}
+                          {trackDetailData.track.nftData.minter && (
+                            <div className="flex flex-col md:flex-row md:justify-between py-2 border-b border-gray-800">
+                              <span className="text-gray-400 mb-1 md:mb-0">Minter</span>
+                              <a
+                                href={`${config.polygonscan}address/${trackDetailData.track.nftData.minter}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-mono text-sm"
+                              >
+                                {trackDetailData.track.nftData.minter.slice(0, 8)}...{trackDetailData.track.nftData.minter.slice(-6)}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          )}
+                          {/* Owner */}
+                          {trackDetailData.track.nftData.owner && (
+                            <div className="flex flex-col md:flex-row md:justify-between py-2 border-b border-gray-800">
+                              <span className="text-gray-400 mb-1 md:mb-0">Current Owner</span>
+                              <a
+                                href={`${config.polygonscan}address/${trackDetailData.track.nftData.owner}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-mono text-sm"
+                              >
+                                {trackDetailData.track.nftData.owner.slice(0, 8)}...{trackDetailData.track.nftData.owner.slice(-6)}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          )}
+                          <div className="flex justify-between py-2">
+                            <span className="text-gray-400">Chain</span>
+                            <Badge className="bg-purple-500/20 text-purple-400">Polygon</Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Track Edition Info */}
+                  {trackDetailData.track.trackEdition && (
+                    <Card className="retro-card">
+                      <CardContent className="p-6">
+                        <h2 className="retro-title text-lg mb-4">Edition Info</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="text-center p-4 bg-gray-800/50 rounded-lg">
+                            <div className="text-2xl font-bold text-cyan-400">{trackDetailData.track.editionSize || 1}</div>
+                            <div className="text-xs text-gray-400">Total Editions</div>
+                          </div>
+                          <div className="text-center p-4 bg-gray-800/50 rounded-lg">
+                            <div className="text-2xl font-bold text-green-400">{trackDetailData.track.listingCount || 0}</div>
+                            <div className="text-xs text-gray-400">Listed for Sale</div>
+                          </div>
+                          <div className="text-center p-4 bg-gray-800/50 rounded-lg">
+                            <div className="text-2xl font-bold text-purple-400">{trackDetailData.track.playbackCount || 0}</div>
+                            <div className="text-xs text-gray-400">Total Plays</div>
+                          </div>
+                          <div className="text-center p-4 bg-gray-800/50 rounded-lg">
+                            <div className="text-2xl font-bold text-red-400">{trackDetailData.track.favoriteCount || 0}</div>
+                            <div className="text-xs text-gray-400">Favorites</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Profile View - /dex/profile/[handle] */}
+          {selectedView === 'profile' && routeId && (
+            <div className="space-y-6 pb-32 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {profileDetailLoading && (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                  <span className="ml-3 text-cyan-400">Loading profile...</span>
+                </div>
+              )}
+              {profileDetailError && (
+                <Card className="retro-card p-6 text-center">
+                  <p className="text-red-400 mb-2">Error loading profile</p>
+                  <p className="text-gray-500 text-sm">{profileDetailError.message}</p>
+                </Card>
+              )}
+              {profileDetailData?.profile && (
+                <>
+                  {/* Back Button */}
+                  <Button variant="ghost" onClick={() => router.back()} className="mb-4 hover:bg-cyan-500/10">
+                    <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
+                    Back
+                  </Button>
+
+                  {/* Profile Header */}
+                  <Card className="retro-card overflow-hidden">
+                    {/* Cover Photo */}
+                    <div className="h-48 bg-gradient-to-r from-purple-600 to-cyan-600 relative">
+                      {profileDetailData.profile.coverPicture && (
+                        <img
+                          src={profileDetailData.profile.coverPicture}
+                          alt="Cover"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+
+                    {/* Profile Info */}
+                    <div className="p-6 -mt-16 relative">
+                      <Avatar className="w-32 h-32 border-4 border-gray-900 mb-4">
+                        <AvatarImage src={profileDetailData.profile.profilePicture || ''} />
+                        <AvatarFallback className="text-4xl bg-gray-800">
+                          {profileDetailData.profile.displayName?.charAt(0) || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h1 className="text-2xl font-bold text-white">{profileDetailData.profile.displayName}</h1>
+                            {profileDetailData.profile.verified && (
+                              <BadgeCheck className="w-6 h-6 text-cyan-400" />
+                            )}
+                            {profileDetailData.profile.teamMember && (
+                              <SoundchainGoldLogo className="w-6 h-6" />
+                            )}
+                          </div>
+                          <p className="text-cyan-400 mb-2">@{profileDetailData.profile.userHandle}</p>
+                          {profileDetailData.profile.bio && (
+                            <p className="text-gray-300 max-w-xl mb-4">{profileDetailData.profile.bio}</p>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 mt-4 md:mt-0">
+                          {me?.profile?.id !== profileDetailData.profile.id && (
+                            <>
+                              <Button
+                                onClick={() => handleFollowToggle(
+                                  profileDetailData.profile!.id,
+                                  profileDetailData.profile!.isFollowed || false,
+                                  profileDetailData.profile!.userHandle || ''
+                                )}
+                                disabled={followLoading || unfollowLoading}
+                                className={profileDetailData.profile.isFollowed ? 'bg-gray-700 hover:bg-gray-600' : 'retro-button'}
+                              >
+                                <Users className="w-4 h-4 mr-2" />
+                                {profileDetailData.profile.isFollowed ? 'Following' : 'Follow'}
+                              </Button>
+                              <Button variant="outline" className="border-cyan-500/50 hover:bg-cyan-500/10">
+                                <MessageCircle className="w-4 h-4 mr-2" />
+                                Message
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Stats */}
+                      <div className="flex gap-6 mt-4">
+                        <div className="text-center">
+                          <div className="text-xl font-bold text-white">{profileDetailData.profile.followerCount || 0}</div>
+                          <div className="text-xs text-gray-400">Followers</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xl font-bold text-white">{profileDetailData.profile.followingCount || 0}</div>
+                          <div className="text-xs text-gray-400">Following</div>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Social Links */}
+                  {profileDetailData.profile.socialMedias && (
+                    <Card className="retro-card">
+                      <CardContent className="p-6">
+                        <h2 className="retro-title text-lg mb-4">Social Links</h2>
+                        <div className="flex flex-wrap gap-3">
+                          {profileDetailData.profile.socialMedias.twitter && (
+                            <a href={profileDetailData.profile.socialMedias.twitter} target="_blank" rel="noreferrer">
+                              <Button variant="outline" size="sm" className="border-blue-500/50 hover:bg-blue-500/10">
+                                Twitter
+                                <ExternalLink className="w-3 h-3 ml-2" />
+                              </Button>
+                            </a>
+                          )}
+                          {profileDetailData.profile.socialMedias.instagram && (
+                            <a href={profileDetailData.profile.socialMedias.instagram} target="_blank" rel="noreferrer">
+                              <Button variant="outline" size="sm" className="border-pink-500/50 hover:bg-pink-500/10">
+                                Instagram
+                                <ExternalLink className="w-3 h-3 ml-2" />
+                              </Button>
+                            </a>
+                          )}
+                          {profileDetailData.profile.socialMedias.spotify && (
+                            <a href={profileDetailData.profile.socialMedias.spotify} target="_blank" rel="noreferrer">
+                              <Button variant="outline" size="sm" className="border-green-500/50 hover:bg-green-500/10">
+                                Spotify
+                                <ExternalLink className="w-3 h-3 ml-2" />
+                              </Button>
+                            </a>
+                          )}
+                          {profileDetailData.profile.socialMedias.soundcloud && (
+                            <a href={profileDetailData.profile.socialMedias.soundcloud} target="_blank" rel="noreferrer">
+                              <Button variant="outline" size="sm" className="border-orange-500/50 hover:bg-orange-500/10">
+                                SoundCloud
+                                <ExternalLink className="w-3 h-3 ml-2" />
+                              </Button>
+                            </a>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Favorite Genres */}
+                  {(profileDetailData.profile.favoriteGenres?.length ?? 0) > 0 && (
+                    <Card className="retro-card">
+                      <CardContent className="p-6">
+                        <h2 className="retro-title text-lg mb-4">Favorite Genres</h2>
+                        <div className="flex flex-wrap gap-2">
+                          {profileDetailData.profile.favoriteGenres?.map((genre) => (
+                            <Badge key={genre} className="bg-purple-500/20 text-purple-400">{genre}</Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>

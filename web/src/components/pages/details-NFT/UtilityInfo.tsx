@@ -20,7 +20,7 @@ export const UtilityInfo = ({ content, className }: UtilityInfoProps) => {
         return (
           <>
             {partialContent}
-            <a href={normalizedUrl} target="_blank" rel="noreferrer">
+            <a href={normalizedUrl} target="_blank" rel="noreferrer" className="text-cyan-400 hover:text-cyan-300 underline">
               {urls[idx]}
             </a>
           </>

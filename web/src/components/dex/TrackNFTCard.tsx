@@ -1,14 +1,18 @@
 import React, { useState } from 'react'
+import Link from 'next/link'
 import { Card } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Play, Pause, Heart, RotateCcw, X, Maximize2, Share2, ShoppingCart, ExternalLink, Music2 } from 'lucide-react'
+import { config } from 'config'
 
 interface TrackNFTCardProps {
   track: {
     id: string
     title: string
     artist: string
+    artistId?: string
+    artistProfileId?: string
     artworkUrl?: string
     playbackCount?: number
     playbackCountFormatted?: string
@@ -17,6 +21,7 @@ interface TrackNFTCardProps {
     genres?: string[]
     nftData?: {
       tokenId?: string
+      transactionHash?: string
       minter?: string
       owner?: string
       contractAddress?: string
@@ -38,6 +43,8 @@ interface TrackNFTCardProps {
   isCurrentTrack: boolean
   onFavorite?: () => void
   listView?: boolean
+  onArtistClick?: (artistId: string) => void
+  onTrackClick?: (trackId: string) => void
 }
 
 export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
@@ -46,7 +53,9 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
   isPlaying,
   isCurrentTrack,
   onFavorite,
-  listView = false
+  listView = false,
+  onArtistClick,
+  onTrackClick
 }) => {
   const [isFlipped, setIsFlipped] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -154,8 +163,16 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
               <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
                 {/* Title & Artist */}
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">{track.title}</h1>
-                  <p className="text-lg text-cyan-400">{track.artist}</p>
+                  <Link href={`/dex/track/${track.id}`}>
+                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 hover:text-cyan-400 transition-colors cursor-pointer">{track.title}</h1>
+                  </Link>
+                  {track.artistProfileId || track.artistId ? (
+                    <Link href={`/${track.artistProfileId || track.artistId}`}>
+                      <p className="text-lg text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer">{track.artist}</p>
+                    </Link>
+                  ) : (
+                    <p className="text-lg text-cyan-400">{track.artist}</p>
+                  )}
                 </div>
 
                 {/* Stats */}
@@ -221,13 +238,35 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
                       {track.nftData.tokenId && (
                         <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
                           <span className="text-gray-500">Token ID</span>
-                          <span className="text-cyan-400 font-mono">{track.nftData.tokenId}</span>
+                          {track.nftData.transactionHash ? (
+                            <a
+                              href={`${config.polygonscan}tx/${track.nftData.transactionHash}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-cyan-400 font-mono hover:text-cyan-300 flex items-center gap-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {track.nftData.tokenId}
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <span className="text-cyan-400 font-mono">{track.nftData.tokenId}</span>
+                          )}
                         </div>
                       )}
                       {track.nftData.contractAddress && (
                         <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
                           <span className="text-gray-500">Contract</span>
-                          <span className="text-cyan-400 font-mono text-xs">{track.nftData.contractAddress.slice(0, 8)}...{track.nftData.contractAddress.slice(-6)}</span>
+                          <a
+                            href={`${config.polygonscan}address/${track.nftData.contractAddress}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-cyan-400 font-mono text-xs hover:text-cyan-300 flex items-center gap-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {track.nftData.contractAddress.slice(0, 8)}...{track.nftData.contractAddress.slice(-6)}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
                         </div>
                       )}
                       <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
@@ -240,10 +279,15 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
               </div>
 
               {/* Action buttons */}
-              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-700">
+              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-700">
                 <Button onClick={onPlay} className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-black font-bold">
                   {isPlaying && isCurrentTrack ? <><Pause className="w-4 h-4 mr-2" /> Pause</> : <><Play className="w-4 h-4 mr-2" /> Play</>}
                 </Button>
+                <Link href={`/dex/track/${track.id}`}>
+                  <Button variant="outline" className="border-purple-500/50 hover:bg-purple-500/10 text-purple-400">
+                    <ExternalLink className="w-4 h-4 mr-2" /> Details
+                  </Button>
+                </Link>
                 <Button variant="outline" onClick={() => onFavorite?.()} className="border-gray-600 hover:bg-gray-800">
                   <Heart className={`w-4 h-4 ${track.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                 </Button>

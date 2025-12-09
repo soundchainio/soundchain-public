@@ -272,15 +272,34 @@ function InnerForm(props: InnerFormProps) {
           <WalletConnectIcon className="mr-2" /> Connect Wallet
         </button>
         {account && <p>Connected: {account}</p>}
-        <select
-          value={values.chain}
-          onChange={(e) => setFieldValue('chain', e.target.value)}
-          className="p-2 border rounded w-full mb-4"
-        >
-          {supportedChains.map(chain => (
-            <option key={chain} value={chain}>{chain}</option>
-          ))}
-        </select>
+
+        {/* Chain Selection with Info Tooltip */}
+        <div className="relative mb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <label className="text-xs font-bold text-gray-80">MINT ON CHAIN</label>
+            <div className="group relative">
+              <span className="cursor-help text-cyan-400 text-xs border border-cyan-400 rounded-full w-4 h-4 inline-flex items-center justify-center">?</span>
+              <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-900 border border-cyan-500/50 rounded-lg text-xs text-gray-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-lg">
+                <p className="font-bold text-cyan-400 mb-2">Cross-Chain Minting Info</p>
+                <p className="mb-2"><strong>EVM Chains:</strong> Polygon, Ethereum, Base, Avalanche, BSC share the same wallet address format (0x...). Your collaborators can use the same address across all EVM chains.</p>
+                <p className="mb-2"><strong>ZetaChain Integration:</strong> Coming soon! ZetaChain will enable cross-chain royalty distribution - collaborators can receive payments on their preferred chain automatically.</p>
+                <p className="mb-2"><strong>Non-EVM Chains:</strong> Solana, Bitcoin use different address formats. ZetaChain is working on Solana support.</p>
+                <p className="text-yellow-400"><strong>Tip:</strong> Polygon recommended for lowest gas fees!</p>
+              </div>
+            </div>
+          </div>
+          <select
+            value={values.chain}
+            onChange={(e) => setFieldValue('chain', e.target.value)}
+            className="p-2 border rounded w-full bg-gray-800 text-white"
+          >
+            {supportedChains.map(chain => (
+              <option key={chain} value={chain}>
+                {chain} {chain === 'Polygon' ? '(Recommended - Low Gas)' : chain === 'Solana' ? '(Coming Soon)' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
         {errors.chain && <p className="text-red-500 text-xs">{errors.chain}</p>}
       </div>
       <div className="flex items-center gap-2 px-4">
@@ -350,7 +369,18 @@ function InnerForm(props: InnerFormProps) {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <h3 className="text-[11px] font-bold uppercase text-gray-80">Collaborators</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-[11px] font-bold uppercase text-gray-80">Collaborators</h3>
+            <div className="group relative">
+              <span className="cursor-help text-cyan-400 text-[9px] border border-cyan-400 rounded-full w-3 h-3 inline-flex items-center justify-center">?</span>
+              <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-gray-900 border border-cyan-500/50 rounded-lg text-[10px] text-gray-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-lg">
+                <p className="font-bold text-cyan-400 mb-1">Multi-Chain Collaborators</p>
+                <p className="mb-1">Add band members, producers, or anyone who should receive royalties from this NFT.</p>
+                <p className="mb-1"><strong>EVM Wallets (0x...):</strong> Work on Polygon, Ethereum, Base, Avalanche, BSC - same address!</p>
+                <p className="text-yellow-400"><strong>Coming Soon:</strong> ZetaChain will auto-distribute royalties to each collaborator's preferred chain.</p>
+              </div>
+            </div>
+          </div>
           <p className="text-[9px] text-gray-80">Tap/Hover to add collaborators (total royalty must not exceed 100%).</p>
           {values.collaborators.map((collaborator, index) => (
             <div key={index} className="flex items-center gap-2 mt-2">
