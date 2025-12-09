@@ -1,19 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from 'react'
-import { Button } from 'components/common/Buttons/Button'
-import { InputField } from 'components/InputField'
-import SEO from 'components/SEO'
-import { TopNavBarProps } from 'components/TopNavBar'
+import { useEffect, useState, useRef } from 'react'
 import { Form, Formik, FormikHelpers } from 'formik'
+import { useRouter } from 'next/dist/client/router'
+import Link from 'next/link'
+import * as yup from 'yup'
+import { User, Image as ImageIcon, Music, Mic2, FileText, Link2, Shield, CheckCircle2, ChevronDown } from 'lucide-react'
+
+import SEO from 'components/SEO'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { setJwt } from 'lib/apollo'
 import { useRegisterMutation } from 'lib/graphql'
-import { useRouter } from 'next/dist/client/router'
-import Link from 'next/link'
 import { formatValidationErrors } from 'utils/errorHelpers'
 import { handleRegex } from 'utils/Validation'
-import * as yup from 'yup'
+import { config } from 'config'
+
 import { ProfilePictureForm } from 'components/forms/profile/ProfilePictureForm'
 import { CoverPictureForm } from 'components/forms/profile/CoverPictureForm'
 import { FavoriteGenresForm } from 'components/forms/profile/FavoriteGenresForm'
@@ -21,102 +22,28 @@ import { MusicianTypesForm } from 'components/forms/profile/MusicianTypesForm'
 import { BioForm } from 'components/forms/profile/BioForm'
 import { SocialLinksForm } from 'components/forms/profile/SocialLinksForm'
 import { SecurityForm } from 'components/forms/profile/SecurityForm'
-import { config } from 'config'
-import styled from 'styled-components'
+import { Card, CardContent } from 'components/ui/card'
+import { Button } from 'components/ui/button'
+import { Badge } from 'components/ui/badge'
 
 interface FormValues {
   displayName: string
   handle: string
 }
 
-const topNavBarProps: TopNavBarProps = {}
-
 export const HANDLE_MAX_CHARS = 24
 
-const UnifiedContainer = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 24px;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  border-radius: 16px;
-  border: 2px solid rgba(255, 215, 0, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-`
-
-const SectionTitle = styled.h2`
-  color: #ffd700;
-  font-size: 24px;
-  font-weight: 800;
-  margin: 32px 0 16px 0;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid rgba(255, 215, 0, 0.3);
-
-  &:first-of-type {
-    margin-top: 0;
-  }
-`
-
-const SectionSubtitle = styled.p`
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
-  margin: 0 0 20px 0;
-`
-
-const FormSection = styled.div`
-  margin-bottom: 32px;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-`
-
-const OptionalBadge = styled.span`
-  background: rgba(0, 212, 170, 0.2);
-  color: #00d4aa;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  margin-left: 12px;
-  text-transform: lowercase;
-`
-
-const ProgressBar = styled.div`
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: linear-gradient(135deg, #0f0c29, #302b63);
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 24px;
-  border: 2px solid rgba(255, 215, 0, 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-`
-
-const ProgressTitle = styled.div`
-  color: #ffd700;
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  text-align: center;
-`
-
-const ProgressSteps = styled.div`
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
-`
-
-const ProgressStep = styled.div<{ $completed: boolean }>`
-  height: 8px;
-  background: ${props => props.$completed
-    ? 'linear-gradient(90deg, #ffd700, #ffed4e)'
-    : 'rgba(255, 255, 255, 0.1)'};
-  border-radius: 4px;
-  transition: all 0.3s ease;
-`
+// Section configuration
+const sections = [
+  { id: 'basics', title: 'Basic Info', icon: User, required: true },
+  { id: 'profile-picture', title: 'Profile Picture', icon: ImageIcon, required: false },
+  { id: 'cover-picture', title: 'Cover Photo', icon: ImageIcon, required: false },
+  { id: 'genres', title: 'Favorite Genres', icon: Music, required: false },
+  { id: 'musician-type', title: 'Musician Type', icon: Mic2, required: false },
+  { id: 'bio', title: 'Bio', icon: FileText, required: false },
+  { id: 'social-links', title: 'Social Links', icon: Link2, required: false },
+  { id: 'security', title: 'Two-Factor Auth', icon: Shield, required: false },
+]
 
 export default function UnifiedCreateAccountPage() {
   const router = useRouter()
@@ -126,11 +53,15 @@ export default function UnifiedCreateAccountPage() {
   const [token, setToken] = useState<string>('')
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false)
   const [accountCreated, setAccountCreated] = useState<boolean>(false)
-  const [completedSteps, setCompletedSteps] = useState<number>(0)
+  const [completedSections, setCompletedSections] = useState<Set<string>>(new Set())
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['basics']))
   const { setTopNavBarProps, setIsAuthLayout, setHideBottomNavBar } = useLayoutContext()
 
+  // Refs for scrolling
+  const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
+    setTopNavBarProps({})
     setIsAuthLayout(true)
     setHideBottomNavBar(true)
 
@@ -163,20 +94,42 @@ export default function UnifiedCreateAccountPage() {
     setTermsAccepted(!termsAccepted)
   }
 
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => {
+      const next = new Set(prev)
+      if (next.has(sectionId)) {
+        next.delete(sectionId)
+      } else {
+        next.add(sectionId)
+      }
+      return next
+    })
+  }
+
+  const markSectionComplete = (sectionId: string) => {
+    setCompletedSections(prev => new Set(prev).add(sectionId))
+    // Auto-expand next section
+    const currentIndex = sections.findIndex(s => s.id === sectionId)
+    if (currentIndex < sections.length - 1) {
+      const nextSection = sections[currentIndex + 1]
+      setExpandedSections(prev => new Set(prev).add(nextSection.id))
+      // Scroll to next section
+      setTimeout(() => {
+        sectionRefs.current[nextSection.id]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }
+  }
+
   const handleSubmit = async (values: FormValues, { setErrors }: FormikHelpers<FormValues>) => {
     try {
       const { data } = await register({ variables: { input: { token, ...values } } })
       setJwt(data?.register.jwt)
       setAccountCreated(true)
-      setCompletedSteps(1)
+      markSectionComplete('basics')
     } catch (error: any) {
       const formatted = formatValidationErrors<FormValues>(error.graphQLErrors[0])
       setErrors(formatted)
     }
-  }
-
-  const handleSectionComplete = () => {
-    setCompletedSteps(prev => Math.min(prev + 1, 7))
   }
 
   const handleFinalSubmit = () => {
@@ -200,182 +153,329 @@ export default function UnifiedCreateAccountPage() {
   }
 
   if (!email || !token) {
-    return null
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <div className="retro-text text-cyan-400">Loading...</div>
+      </div>
+    )
   }
+
+  const completedCount = completedSections.size
+  const totalSections = sections.length
 
   return (
     <>
       <SEO
         title="Create Account | SoundChain"
         canonicalUrl="/create-account/unified"
-        description="Create your account on SoundChain - One simple page"
+        description="Create your SoundChain account - Web3 Music Platform"
       />
-      <UnifiedContainer>
-        <ProgressBar>
-          <ProgressTitle>⭐ Account Setup Progress</ProgressTitle>
-          <ProgressSteps>
-            {[1, 2, 3, 4, 5, 6, 7].map((step) => (
-              <ProgressStep key={step} $completed={completedSteps >= step} />
-            ))}
-          </ProgressSteps>
-        </ProgressBar>
-
-        {!accountCreated ? (
-          <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-            {(formikProps) => (
-              <Form className="flex flex-1 flex-col" autoComplete="off" {...(formikProps as any)}>
-                <FormSection>
-                  <SectionTitle>🎯 Basic Information</SectionTitle>
-                  <SectionSubtitle>Let's start with your name and username</SectionSubtitle>
-
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <InputField label="Name" type="text" name="displayName" />
-                    </div>
-                    <div className="space-y-3">
-                      <InputField
-                        label={`Enter username. (Only letters and numbers allowed. Max of ${HANDLE_MAX_CHARS} characters)`}
-                        type="text"
-                        name="handle"
-                        maxLength={HANDLE_MAX_CHARS}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-6 mt-6 flex items-start gap-4 text-center text-xs font-thin text-white sm:items-center">
-                    <input
-                      type="checkbox"
-                      id="termsCheckbox"
-                      className="h-5 w-5 rounded border-2 border-green-500 bg-black text-green-500 focus:ring-0"
-                      onChange={toggleTerms}
-                    />
-                    <div className="relative">
-                      <label htmlFor="termsCheckbox">I agree to the SoundChain's</label>
-                      <Link href={`/terms-and-conditions`} passHref className="relative px-2 text-white underline">
-                        <span className="after:absolute after:-inset-1">Terms & Conditions</span>
-                      </Link>
-                      and
-                      <Link href={`/privacy-policy`} passHref className="relative px-2 text-white underline">
-                        <span className="after:absolute after:-inset-1">Privacy Policy.</span>
-                      </Link>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className={'w-full transition ' + (termsAccepted ? 'opacity-100' : 'opacity-50')}
-                    loading={loading}
-                    disabled={loading || !termsAccepted}
-                  >
-                    CREATE ACCOUNT & CONTINUE
-                  </Button>
-                </FormSection>
-              </Form>
-            )}
-          </Formik>
-        ) : (
-          <div className="space-y-8">
-            <FormSection>
-              <SectionTitle>
-                📸 Profile Picture
-                <OptionalBadge>optional - skip if you want</OptionalBadge>
-              </SectionTitle>
-              <ProfilePictureForm
-                afterSubmit={handleSectionComplete}
-                submitText="SAVE & CONTINUE"
-                submitProps={{ borderColor: 'bg-blue-gradient' }}
-              />
-            </FormSection>
-
-            <FormSection>
-              <SectionTitle>
-                🎨 Cover Photo
-                <OptionalBadge>optional</OptionalBadge>
-              </SectionTitle>
-              <CoverPictureForm
-                afterSubmit={handleSectionComplete}
-                submitText="SAVE & CONTINUE"
-                submitProps={{ borderColor: 'bg-blue-gradient' }}
-              />
-            </FormSection>
-
-            <FormSection>
-              <SectionTitle>
-                🎵 Favorite Genres
-                <OptionalBadge>optional</OptionalBadge>
-              </SectionTitle>
-              <SectionSubtitle>Help us recommend music you'll love</SectionSubtitle>
-              <FavoriteGenresForm
-                afterSubmit={handleSectionComplete}
-                submitText="SAVE & CONTINUE"
-                submitProps={{ borderColor: 'bg-blue-gradient' }}
-              />
-            </FormSection>
-
-            <FormSection>
-              <SectionTitle>
-                🎤 Musician Type
-                <OptionalBadge>optional</OptionalBadge>
-              </SectionTitle>
-              <SectionSubtitle>Are you a producer, artist, DJ, or something else?</SectionSubtitle>
-              <MusicianTypesForm
-                afterSubmit={handleSectionComplete}
-                submitText="SAVE & CONTINUE"
-                submitProps={{ borderColor: 'bg-blue-gradient' }}
-              />
-            </FormSection>
-
-            <FormSection>
-              <SectionTitle>
-                ✍️ Bio
-                <OptionalBadge>optional</OptionalBadge>
-              </SectionTitle>
-              <SectionSubtitle>Tell the world about yourself</SectionSubtitle>
-              <BioForm
-                afterSubmit={handleSectionComplete}
-                submitText="SAVE & CONTINUE"
-                submitProps={{ borderColor: 'bg-blue-gradient' }}
-              />
-            </FormSection>
-
-            <FormSection>
-              <SectionTitle>
-                🔗 Social Links
-                <OptionalBadge>optional</OptionalBadge>
-              </SectionTitle>
-              <SectionSubtitle>Connect your social media profiles</SectionSubtitle>
-              <SocialLinksForm
-                afterSubmit={handleSectionComplete}
-                submitText="SAVE & CONTINUE"
-                submitProps={{ borderColor: 'bg-green-gradient' }}
-              />
-            </FormSection>
-
-            <FormSection>
-              <SectionTitle>
-                🔒 Two-Factor Security
-                <OptionalBadge>optional but recommended</OptionalBadge>
-              </SectionTitle>
-              <SectionSubtitle>Protect your account with 2FA</SectionSubtitle>
-              <SecurityForm afterSubmit={handleSectionComplete} />
-            </FormSection>
-
-            <FormSection style={{ background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 212, 170, 0.1))' }}>
-              <SectionTitle>🎉 All Done!</SectionTitle>
-              <SectionSubtitle>
-                You can always update these settings later. Ready to start your Web3 music journey?
-              </SectionSubtitle>
-              <Button
-                onClick={handleFinalSubmit}
-                className="w-full"
-                borderColor="bg-green-gradient"
-              >
-                ✓ COMPLETE SETUP & GO TO SOUNDCHAIN
-              </Button>
-            </FormSection>
+      <div className="min-h-screen bg-[#0a0a0a] py-6 px-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="retro-title text-2xl md:text-3xl mb-2">Create Your Account</h1>
+            <p className="retro-json text-sm">Join the future of music ownership</p>
           </div>
-        )}
-      </UnifiedContainer>
+
+          {/* Progress Bar */}
+          <Card className="retro-card mb-6 sticky top-4 z-10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="retro-text text-sm text-white">Setup Progress</span>
+                <Badge className="bg-cyan-500/20 text-cyan-400">
+                  {completedCount}/{totalSections} Complete
+                </Badge>
+              </div>
+              <div className="flex gap-1">
+                {sections.map((section, idx) => (
+                  <div
+                    key={section.id}
+                    className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+                      completedSections.has(section.id)
+                        ? 'bg-gradient-to-r from-cyan-400 to-green-400'
+                        : 'bg-gray-700'
+                    }`}
+                  />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sections */}
+          <div className="space-y-4">
+            {sections.map((section, index) => {
+              const Icon = section.icon
+              const isCompleted = completedSections.has(section.id)
+              const isExpanded = expandedSections.has(section.id)
+              const isDisabled = section.id !== 'basics' && !accountCreated
+
+              return (
+                <Card
+                  key={section.id}
+                  ref={(el) => (sectionRefs.current[section.id] = el)}
+                  className={`retro-card transition-all duration-300 ${
+                    isCompleted ? 'border-green-500/50' : ''
+                  } ${isDisabled ? 'opacity-50' : ''}`}
+                >
+                  {/* Section Header */}
+                  <button
+                    onClick={() => !isDisabled && toggleSection(section.id)}
+                    disabled={isDisabled}
+                    className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors rounded-t-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        isCompleted
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-cyan-500/20 text-cyan-400'
+                      }`}>
+                        {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                      </div>
+                      <div className="text-left">
+                        <h3 className="retro-text text-white font-semibold">{section.title}</h3>
+                        <span className="text-xs text-gray-500">
+                          {section.required ? 'Required' : 'Optional'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isCompleted && (
+                        <Badge className="bg-green-500/20 text-green-400 text-xs">Done</Badge>
+                      )}
+                      <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${
+                        isExpanded ? 'rotate-180' : ''
+                      }`} />
+                    </div>
+                  </button>
+
+                  {/* Section Content */}
+                  {isExpanded && !isDisabled && (
+                    <CardContent className="p-4 pt-0 border-t border-gray-800">
+                      {section.id === 'basics' && !accountCreated && (
+                        <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+                          {(formikProps) => (
+                            <Form className="space-y-6" autoComplete="off">
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="metadata-label text-xs mb-2 block">Display Name</label>
+                                  <input
+                                    type="text"
+                                    name="displayName"
+                                    placeholder="Your name"
+                                    value={formikProps.values.displayName}
+                                    onChange={formikProps.handleChange}
+                                    onBlur={formikProps.handleBlur}
+                                    className="w-full bg-black/50 border border-cyan-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none retro-text"
+                                  />
+                                  {formikProps.touched.displayName && formikProps.errors.displayName && (
+                                    <p className="text-red-400 text-xs mt-1">{formikProps.errors.displayName}</p>
+                                  )}
+                                </div>
+                                <div>
+                                  <label className="metadata-label text-xs mb-2 block">
+                                    Username (max {HANDLE_MAX_CHARS} chars, letters & numbers only)
+                                  </label>
+                                  <input
+                                    type="text"
+                                    name="handle"
+                                    placeholder="username"
+                                    maxLength={HANDLE_MAX_CHARS}
+                                    value={formikProps.values.handle}
+                                    onChange={formikProps.handleChange}
+                                    onBlur={formikProps.handleBlur}
+                                    className="w-full bg-black/50 border border-cyan-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none retro-text"
+                                  />
+                                  {formikProps.touched.handle && formikProps.errors.handle && (
+                                    <p className="text-red-400 text-xs mt-1">{formikProps.errors.handle}</p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-3 p-3 bg-black/30 rounded-lg border border-gray-800">
+                                <input
+                                  type="checkbox"
+                                  id="termsCheckbox"
+                                  checked={termsAccepted}
+                                  onChange={toggleTerms}
+                                  className="mt-1 h-4 w-4 rounded border-cyan-500 bg-black text-cyan-500 focus:ring-0"
+                                />
+                                <label htmlFor="termsCheckbox" className="text-xs text-gray-400">
+                                  I agree to SoundChain's{' '}
+                                  <Link href="/terms-and-conditions" className="text-cyan-400 hover:underline">
+                                    Terms & Conditions
+                                  </Link>{' '}
+                                  and{' '}
+                                  <Link href="/privacy-policy" className="text-cyan-400 hover:underline">
+                                    Privacy Policy
+                                  </Link>
+                                </label>
+                              </div>
+
+                              <Button
+                                type="submit"
+                                disabled={loading || !termsAccepted}
+                                className={`w-full retro-button py-3 ${
+                                  termsAccepted
+                                    ? 'bg-gradient-to-r from-cyan-500 to-green-500 hover:from-cyan-400 hover:to-green-400'
+                                    : 'bg-gray-700 cursor-not-allowed'
+                                }`}
+                              >
+                                {loading ? 'Creating...' : 'Create Account'}
+                              </Button>
+                            </Form>
+                          )}
+                        </Formik>
+                      )}
+
+                      {section.id === 'basics' && accountCreated && (
+                        <div className="text-center py-4">
+                          <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-2" />
+                          <p className="retro-text text-green-400">Account Created!</p>
+                        </div>
+                      )}
+
+                      {section.id === 'profile-picture' && accountCreated && (
+                        <div className="py-4">
+                          <ProfilePictureForm
+                            afterSubmit={() => markSectionComplete('profile-picture')}
+                            submitText="Save & Continue"
+                            submitProps={{ className: 'w-full retro-button bg-gradient-to-r from-cyan-500 to-blue-500' }}
+                          />
+                          <button
+                            onClick={() => markSectionComplete('profile-picture')}
+                            className="w-full mt-3 text-gray-500 hover:text-gray-400 text-sm"
+                          >
+                            Skip for now →
+                          </button>
+                        </div>
+                      )}
+
+                      {section.id === 'cover-picture' && accountCreated && (
+                        <div className="py-4">
+                          <CoverPictureForm
+                            afterSubmit={() => markSectionComplete('cover-picture')}
+                            submitText="Save & Continue"
+                            submitProps={{ className: 'w-full retro-button bg-gradient-to-r from-cyan-500 to-blue-500' }}
+                          />
+                          <button
+                            onClick={() => markSectionComplete('cover-picture')}
+                            className="w-full mt-3 text-gray-500 hover:text-gray-400 text-sm"
+                          >
+                            Skip for now →
+                          </button>
+                        </div>
+                      )}
+
+                      {section.id === 'genres' && accountCreated && (
+                        <div className="py-4">
+                          <FavoriteGenresForm
+                            afterSubmit={() => markSectionComplete('genres')}
+                            submitText="Save & Continue"
+                            submitProps={{ className: 'w-full retro-button bg-gradient-to-r from-purple-500 to-pink-500' }}
+                          />
+                          <button
+                            onClick={() => markSectionComplete('genres')}
+                            className="w-full mt-3 text-gray-500 hover:text-gray-400 text-sm"
+                          >
+                            Skip for now →
+                          </button>
+                        </div>
+                      )}
+
+                      {section.id === 'musician-type' && accountCreated && (
+                        <div className="py-4">
+                          <MusicianTypesForm
+                            afterSubmit={() => markSectionComplete('musician-type')}
+                            submitText="Save & Continue"
+                            submitProps={{ className: 'w-full retro-button bg-gradient-to-r from-orange-500 to-yellow-500' }}
+                          />
+                          <button
+                            onClick={() => markSectionComplete('musician-type')}
+                            className="w-full mt-3 text-gray-500 hover:text-gray-400 text-sm"
+                          >
+                            Skip for now →
+                          </button>
+                        </div>
+                      )}
+
+                      {section.id === 'bio' && accountCreated && (
+                        <div className="py-4">
+                          <BioForm
+                            afterSubmit={() => markSectionComplete('bio')}
+                            submitText="Save & Continue"
+                            submitProps={{ className: 'w-full retro-button bg-gradient-to-r from-green-500 to-teal-500' }}
+                          />
+                          <button
+                            onClick={() => markSectionComplete('bio')}
+                            className="w-full mt-3 text-gray-500 hover:text-gray-400 text-sm"
+                          >
+                            Skip for now →
+                          </button>
+                        </div>
+                      )}
+
+                      {section.id === 'social-links' && accountCreated && (
+                        <div className="py-4">
+                          <SocialLinksForm
+                            afterSubmit={() => markSectionComplete('social-links')}
+                            submitText="Save & Continue"
+                            submitProps={{ className: 'w-full retro-button bg-gradient-to-r from-blue-500 to-indigo-500' }}
+                          />
+                          <button
+                            onClick={() => markSectionComplete('social-links')}
+                            className="w-full mt-3 text-gray-500 hover:text-gray-400 text-sm"
+                          >
+                            Skip for now →
+                          </button>
+                        </div>
+                      )}
+
+                      {section.id === 'security' && accountCreated && (
+                        <div className="py-4">
+                          <p className="text-gray-400 text-sm mb-4">
+                            Protect your account with two-factor authentication (recommended)
+                          </p>
+                          <SecurityForm afterSubmit={() => markSectionComplete('security')} />
+                          <button
+                            onClick={() => markSectionComplete('security')}
+                            className="w-full mt-3 text-gray-500 hover:text-gray-400 text-sm"
+                          >
+                            Skip for now →
+                          </button>
+                        </div>
+                      )}
+                    </CardContent>
+                  )}
+                </Card>
+              )
+            })}
+          </div>
+
+          {/* Final CTA */}
+          {accountCreated && (
+            <Card className="retro-card mt-6 bg-gradient-to-r from-cyan-500/10 to-green-500/10 border-cyan-500/50">
+              <CardContent className="p-6 text-center">
+                <h3 className="retro-title text-lg mb-2">Ready to Explore?</h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  You can always update your profile later in settings
+                </p>
+                <Button
+                  onClick={handleFinalSubmit}
+                  className="w-full retro-button bg-gradient-to-r from-cyan-500 to-green-500 hover:from-cyan-400 hover:to-green-400 py-3 text-lg font-bold"
+                >
+                  Enter SoundChain →
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Footer */}
+          <div className="text-center mt-8 text-gray-600 text-xs">
+            <p>© 2025 SoundChain. Web3 Music Platform.</p>
+          </div>
+        </div>
+      </div>
     </>
   )
 }

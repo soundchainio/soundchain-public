@@ -8,6 +8,8 @@ import { config } from 'config';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { Google } from 'icons/Google';
+import { Discord } from 'icons/Discord';
+import { Twitch } from 'icons/Twitch';
 import { LeftArrow } from 'icons/LeftArrow';
 import { LogoAndText } from 'icons/LogoAndText';
 import { UserWarning } from 'icons/UserWarning';
@@ -206,11 +208,11 @@ export default function LoginPage() {
     validateToken();
   }, [magic, login, router, loggingIn]);
 
-  const handleGoogleLogin = async () => {
-    console.log('[OAuth2] handleGoogleLogin called');
+  const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
+    console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
 
     try {
-      if (isInAppBrowser()) {
+      if (isInAppBrowser() && provider === 'google') {
         setError('Google login is blocked in this browser. Please open in Safari or Chrome.');
         return;
       }
@@ -228,15 +230,14 @@ export default function LoginPage() {
       localStorage.removeItem('didToken');
 
       const redirectURI = `${window.location.origin}/login`;
+      console.log('[OAuth2] Provider:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
-      console.log('[OAuth2] Using Magic Login Widget mode');
-      console.log('[OAuth2] authMagic.oauth2:', (authMagic as any).oauth2);
 
       // Magic Login Widget mode - just call loginWithRedirect, Magic handles everything
       try {
         console.log('[OAuth2] Calling loginWithRedirect...');
         const result = await (authMagic as any).oauth2.loginWithRedirect({
-          provider: 'google',
+          provider,
           redirectURI,
         });
         console.log('[OAuth2] loginWithRedirect returned:', result);
@@ -244,15 +245,18 @@ export default function LoginPage() {
         console.error('[OAuth2] loginWithRedirect error:', redirectError);
         console.error('[OAuth2] Error name:', redirectError?.name);
         console.error('[OAuth2] Error message:', redirectError?.message);
-        console.error('[OAuth2] Error stack:', redirectError?.stack);
         throw redirectError;
       }
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
-      setError(error.message || 'Google login failed');
+      setError(error.message || `${provider} login failed`);
       setLoggingIn(false);
     }
   };
+
+  const handleGoogleLogin = () => handleSocialLogin('google');
+  const handleDiscordLogin = () => handleSocialLogin('discord');
+  const handleTwitchLogin = () => handleSocialLogin('twitch');
 
   useEffect(() => {
     async function handleMagicLink() {
@@ -394,11 +398,31 @@ export default function LoginPage() {
 
   const GoogleButton = () => (
     <HoverableButton
-      className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white"
+      className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white w-64"
       onClick={handleGoogleLogin}
     >
       <Google className="mr-1 h-5 w-5" />
       <span>Login with Google</span>
+    </HoverableButton>
+  );
+
+  const DiscordButton = () => (
+    <HoverableButton
+      className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white w-64"
+      onClick={handleDiscordLogin}
+    >
+      <Discord className="mr-1 h-5 w-5" />
+      <span>Login with Discord</span>
+    </HoverableButton>
+  );
+
+  const TwitchButton = () => (
+    <HoverableButton
+      className="flex gap-2 rounded border border-white/20 bg-black/30 backdrop-blur-sm px-3 py-4 text-sm font-semibold text-white w-64"
+      onClick={handleTwitchLogin}
+    >
+      <Twitch className="mr-1 h-5 w-5" />
+      <span>Login with Twitch</span>
     </HoverableButton>
   );
 
@@ -445,6 +469,8 @@ export default function LoginPage() {
             If you wish to login to an existing account, you must use the same method previously:
           </div>
           {authMethod.includes(AuthMethod.Google) && <GoogleButton />}
+          {(authMethod as any).includes('discord') && <DiscordButton />}
+          {(authMethod as any).includes('twitch') && <TwitchButton />}
           {authMethod.includes(AuthMethod.MagicLink) && <LoginForm handleMagicLogin={handleSubmit} />}
           <div className="flex h-full flex-col justify-between">
             <div className="py-4 text-center text-sm text-white font-semibold">
@@ -505,7 +531,11 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          <GoogleButton />
+          <div className="flex flex-col gap-3">
+            <GoogleButton />
+            <DiscordButton />
+            <TwitchButton />
+          </div>
           <div className="py-7 text-center text-sm font-bold text-gray-50 drop-shadow-md">OR</div>
           <LoginForm handleMagicLogin={handleSubmit} />
         </ContentContainer>

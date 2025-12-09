@@ -1826,46 +1826,205 @@ function DEXDashboard() {
             </div>
           )}
 
-          {/* Wallet View - DEX-centric wallet management */}
+          {/* Wallet View - Comprehensive DEX Wallet Management */}
           {selectedView === 'wallet' && (
             <div className="space-y-6">
+              {/* Header Card */}
               <Card className="retro-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Wallet className="w-8 h-8 text-green-400" />
-                  <h2 className="retro-title text-xl">Wallet</h2>
-                </div>
-                <p className="text-gray-400 mb-6">Manage your crypto assets, NFTs, and OGUN tokens all in one place.</p>
-                {isWalletConnected ? (
-                  <div className="space-y-4">
-                    <Card className="metadata-section p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-gray-400">Connected Wallet</p>
-                          <p className="font-mono text-cyan-400">{connectedWallet}</p>
-                        </div>
-                        <Badge className="bg-green-500/20 text-green-400">Connected</Badge>
-                      </div>
-                    </Card>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card className="metadata-section p-4 text-center">
-                        <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-                        <h3 className="font-bold text-white">OGUN Balance</h3>
-                        <p className="text-2xl font-bold text-yellow-400">0.00</p>
-                      </Card>
-                      <Card className="metadata-section p-4 text-center">
-                        <ImageIcon className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                        <h3 className="font-bold text-white">NFTs Owned</h3>
-                        <p className="text-2xl font-bold text-purple-400">0</p>
-                      </Card>
-                      <Card className="metadata-section p-4 text-center">
-                        <TrendingUp className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-                        <h3 className="font-bold text-white">Total Value</h3>
-                        <p className="text-2xl font-bold text-cyan-400">$0.00</p>
-                      </Card>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-cyan-500/20">
+                      <Wallet className="w-8 h-8 text-green-400" />
+                    </div>
+                    <div>
+                      <h2 className="retro-title text-xl">Wallet</h2>
+                      <p className="text-gray-400 text-sm">Manage your crypto assets</p>
                     </div>
                   </div>
+                  {userWallet && (
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-purple-500/20 text-purple-400 px-3 py-1">
+                        <span className="w-2 h-2 bg-purple-400 rounded-full inline-block mr-2 animate-pulse" />
+                        Polygon
+                      </Badge>
+                      <Badge className="bg-green-500/20 text-green-400 px-3 py-1">
+                        <span className="w-2 h-2 bg-green-400 rounded-full inline-block mr-2" />
+                        ZetaChain
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+
+                {/* Default Wallet Selection */}
+                <Card className="metadata-section p-4 mb-4 border-yellow-500/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400">⚡</span>
+                      <h4 className="text-sm font-bold text-white">Default Wallet</h4>
+                    </div>
+                    <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Active</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {/* Magic Wallet - Default */}
+                    <button className="p-3 rounded-lg border-2 border-cyan-500 bg-cyan-500/10 text-left transition-all hover:bg-cyan-500/20">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">✨</span>
+                        <span className="font-bold text-cyan-400 text-sm">Magic</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Native wallet</p>
+                    </button>
+                    {/* WalletConnect (includes MetaMask, Rainbow, Trust, etc.) */}
+                    <button className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">🔗</span>
+                        <span className="font-bold text-gray-400 text-sm">WalletConnect</span>
+                      </div>
+                      <p className="text-xs text-gray-500">300+ wallets</p>
+                    </button>
+                    {/* Coinbase Wallet */}
+                    <button className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">🔵</span>
+                        <span className="font-bold text-gray-400 text-sm">Coinbase</span>
+                      </div>
+                      <p className="text-xs text-gray-500">Coinbase Wallet</p>
+                    </button>
+                    {/* ZetaChain */}
+                    <button className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-green-500/50 hover:bg-green-500/10 relative">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">🟢</span>
+                        <span className="font-bold text-gray-400 text-sm">ZetaChain</span>
+                      </div>
+                      <p className="text-xs text-gray-500">Omnichain</p>
+                      <Badge className="absolute -top-2 -right-2 bg-yellow-500/20 text-yellow-400 text-[10px] px-1">Soon</Badge>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">Your default wallet is used for transactions, minting, and receiving payments.</p>
+                </Card>
+
+                {/* Connected Wallets */}
+                {userWallet ? (
+                  <div className="space-y-3 mb-6">
+                    {/* Magic Wallet (Primary) */}
+                    <Card className="metadata-section p-4 border-cyan-500/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                            <span className="text-white text-lg">✨</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-gray-400">Magic Wallet</p>
+                              <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Default</Badge>
+                            </div>
+                            <p className="font-mono text-cyan-400 text-sm">{userWallet.slice(0, 10)}...{userWallet.slice(-8)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-purple-500/20 text-purple-400 text-xs">Polygon</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { navigator.clipboard.writeText(userWallet); }}
+                            className="hover:bg-cyan-500/20"
+                          >
+                            <Copy className="w-4 h-4 text-cyan-400" />
+                          </Button>
+                          <a href={`https://polygonscan.com/address/${userWallet}`} target="_blank" rel="noreferrer">
+                            <Button variant="ghost" size="sm" className="hover:bg-purple-500/20">
+                              <ExternalLink className="w-4 h-4 text-purple-400" />
+                            </Button>
+                          </a>
+                        </div>
+                      </div>
+                    </Card>
+
+                    {/* ZetaChain Wallet (Coming Soon) */}
+                    <Card className="metadata-section p-4 border-green-500/30 opacity-75">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                            <span className="text-white text-lg">🟢</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-gray-400">ZetaChain Wallet</p>
+                              <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Coming Soon</Badge>
+                            </div>
+                            <p className="font-mono text-gray-500 text-sm">Universal omnichain address</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-green-500/20 text-green-400 text-xs">ZetaChain</Badge>
+                          <Button variant="ghost" size="sm" disabled className="opacity-50">
+                            <Plus className="w-4 h-4 text-gray-500" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mt-3 p-2 rounded bg-green-500/10 border border-green-500/20">
+                        <p className="text-xs text-green-400">🚀 ZetaChain integration coming soon! Bridge assets across Bitcoin, Ethereum, BNB, Polygon & more.</p>
+                      </div>
+                    </Card>
+
+                    {/* WalletConnect (includes MetaMask, Rainbow, Trust, etc.) */}
+                    <Card className="metadata-section p-4 border-blue-500/30">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                            <span className="text-white text-lg">🔗</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-gray-400">WalletConnect</p>
+                              <Badge className="bg-blue-500/20 text-blue-400 text-xs">v2</Badge>
+                            </div>
+                            <p className="text-gray-400 text-sm">300+ wallets supported</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowWalletModal(true)}
+                          className="border-blue-500/50 hover:bg-blue-500/10 text-blue-400"
+                        >
+                          Connect
+                        </Button>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="px-2 py-1 bg-orange-500/20 rounded text-xs text-orange-400">🦊 MetaMask</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">Rainbow</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">Trust</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">Argent</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">Ledger</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">+300 more</span>
+                      </div>
+                    </Card>
+
+                    {/* Coinbase Wallet */}
+                    <Card className="metadata-section p-4 border-dashed border-gray-700">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
+                            <span className="text-lg">🔵</span>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Coinbase Wallet</p>
+                            <p className="text-gray-400 text-sm">Mobile or browser extension</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowWalletModal(true)}
+                          className="border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/10"
+                        >
+                          Connect
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
                 ) : (
-                  <div className="text-center py-8">
+                  <div className="text-center py-8 mb-6">
                     <Wallet className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                     <p className="text-gray-400 mb-4">Connect your wallet to view assets</p>
                     <Button onClick={() => setShowWalletModal(true)} className="retro-button">
@@ -1874,6 +2033,209 @@ function DEXDashboard() {
                     </Button>
                   </div>
                 )}
+
+                {/* Balance Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <Card className="metadata-section p-4 text-center hover:border-yellow-500/50 transition-all">
+                    <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-400 mb-1">OGUN</p>
+                    <p className="text-xl font-bold text-yellow-400">0.00</p>
+                    <p className="text-xs text-gray-500">≈ $0.00</p>
+                  </Card>
+                  <Card className="metadata-section p-4 text-center hover:border-purple-500/50 transition-all">
+                    <div className="w-8 h-8 mx-auto mb-2 text-purple-400">
+                      <svg viewBox="0 0 38 33" fill="currentColor"><path d="M29.7 16.5l-11.7 6.7-11.7-6.7 11.7-16.5 11.7 16.5zM18 25.2l-11.7-6.7 11.7 16.5 11.7-16.5-11.7 6.7z"/></svg>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-1">MATIC</p>
+                    <p className="text-xl font-bold text-purple-400">0.00</p>
+                    <p className="text-xs text-gray-500">≈ $0.00</p>
+                  </Card>
+                  <Card className="metadata-section p-4 text-center hover:border-cyan-500/50 transition-all">
+                    <ImageIcon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-400 mb-1">NFTs</p>
+                    <p className="text-xl font-bold text-cyan-400">0</p>
+                    <p className="text-xs text-gray-500">Owned</p>
+                  </Card>
+                  <Card className="metadata-section p-4 text-center hover:border-green-500/50 transition-all">
+                    <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-400 mb-1">Total Value</p>
+                    <p className="text-xl font-bold text-green-400">$0.00</p>
+                    <p className="text-xs text-gray-500">Portfolio</p>
+                  </Card>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Button className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 flex-col h-auto py-4">
+                    <Plus className="w-5 h-5 mb-1" />
+                    <span className="text-xs">Buy Crypto</span>
+                  </Button>
+                  <Button variant="outline" className="border-cyan-500/50 hover:bg-cyan-500/10 flex-col h-auto py-4">
+                    <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                    <span className="text-xs">Send</span>
+                  </Button>
+                  <Button variant="outline" className="border-purple-500/50 hover:bg-purple-500/10 flex-col h-auto py-4">
+                    <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+                    <span className="text-xs">Receive</span>
+                  </Button>
+                  <Button variant="outline" className="border-yellow-500/50 hover:bg-yellow-500/10 flex-col h-auto py-4">
+                    <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                    <span className="text-xs">Swap</span>
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Buy Crypto Section */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Plus className="w-6 h-6 text-green-400" />
+                  <h3 className="retro-title text-lg">Buy Crypto</h3>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">Purchase MATIC on Polygon to mint NFTs and pay gas fees.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <a href="https://ramp.network/" target="_blank" rel="noreferrer">
+                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer group">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                            <span className="text-lg">🔷</span>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white group-hover:text-cyan-400 transition-colors">Ramp Network</h4>
+                            <p className="text-xs text-gray-400">Card & Bank Transfer</p>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-cyan-400" />
+                      </div>
+                    </Card>
+                  </a>
+                  <a href="https://www.moonpay.com/" target="_blank" rel="noreferrer">
+                    <Card className="metadata-section p-4 hover:border-purple-500/50 transition-all cursor-pointer group">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                            <span className="text-lg">🌙</span>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white group-hover:text-purple-400 transition-colors">MoonPay</h4>
+                            <p className="text-xs text-gray-400">Card & Apple Pay</p>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-purple-400" />
+                      </div>
+                    </Card>
+                  </a>
+                </div>
+
+                <div className="border-t border-gray-800 pt-4">
+                  <p className="text-xs text-gray-500 mb-3">Exchanges (Buy & Withdraw to Polygon)</p>
+                  <div className="flex flex-wrap gap-3">
+                    <a href="https://www.binance.us/" target="_blank" rel="noreferrer" className="px-3 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-yellow-400 text-xs hover:bg-yellow-500/20 transition-all">Binance</a>
+                    <a href="https://crypto.com/us/app" target="_blank" rel="noreferrer" className="px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 text-xs hover:bg-blue-500/20 transition-all">Crypto.com</a>
+                    <a href="https://www.okcoin.com/" target="_blank" rel="noreferrer" className="px-3 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400 text-xs hover:bg-cyan-500/20 transition-all">OKCoin</a>
+                    <a href="https://www.mexc.com/" target="_blank" rel="noreferrer" className="px-3 py-2 bg-green-500/10 border border-green-500/30 rounded-lg text-green-400 text-xs hover:bg-green-500/20 transition-all">MEXC</a>
+                    <a href="https://www.coinbase.com/" target="_blank" rel="noreferrer" className="px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 text-xs hover:bg-blue-500/20 transition-all">Coinbase</a>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Bridge Section */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Globe className="w-6 h-6 text-purple-400" />
+                  <h3 className="retro-title text-lg">Bridge Assets</h3>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">Move assets across chains - Polygon, Ethereum, ZetaChain & more.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* ZetaChain Bridge - Featured */}
+                  <a href="https://www.zetachain.com/docs/developers/cross-chain-messaging/" target="_blank" rel="noreferrer">
+                    <Card className="metadata-section p-4 hover:border-green-500/50 transition-all cursor-pointer group border-green-500/30 bg-green-500/5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                            <span className="text-2xl">🟢</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-white group-hover:text-green-400 transition-colors">ZetaChain Bridge</h4>
+                              <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Coming Soon</Badge>
+                            </div>
+                            <p className="text-xs text-gray-400">Universal cross-chain: BTC, ETH, BNB, Polygon</p>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-5 h-5 text-gray-500 group-hover:text-green-400" />
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Badge className="bg-orange-500/20 text-orange-400 text-xs">Bitcoin</Badge>
+                        <Badge className="bg-blue-500/20 text-blue-400 text-xs">Ethereum</Badge>
+                        <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">BNB</Badge>
+                        <Badge className="bg-purple-500/20 text-purple-400 text-xs">Polygon</Badge>
+                      </div>
+                    </Card>
+                  </a>
+
+                  {/* Polygon Bridge */}
+                  <a href="https://wallet.polygon.technology/" target="_blank" rel="noreferrer">
+                    <Card className="metadata-section p-4 hover:border-purple-500/50 transition-all cursor-pointer group">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                            <span className="text-2xl">🌉</span>
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-white group-hover:text-purple-400 transition-colors">Polygon Bridge</h4>
+                            <p className="text-xs text-gray-400">Ethereum ↔ Polygon transfers</p>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-5 h-5 text-gray-500 group-hover:text-purple-400" />
+                      </div>
+                    </Card>
+                  </a>
+                </div>
+
+                {/* ZetaChain Info Banner */}
+                <div className="mt-4 p-4 rounded-lg bg-gradient-to-r from-green-500/10 to-cyan-500/10 border border-green-500/30">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">⚡</span>
+                    <div>
+                      <h4 className="font-bold text-green-400 text-sm mb-1">ZetaChain Omnichain Integration</h4>
+                      <p className="text-xs text-gray-400 mb-2">
+                        SoundChain is integrating ZetaChain for universal cross-chain capabilities. Soon you'll be able to:
+                      </p>
+                      <ul className="text-xs text-gray-500 space-y-1">
+                        <li>• Bridge OGUN tokens across all major chains</li>
+                        <li>• Receive payments in BTC, ETH, BNB, or MATIC</li>
+                        <li>• Single wallet address works on all chains</li>
+                        <li>• Native Bitcoin NFT support</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Transaction History Placeholder */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <BarChart3 className="w-6 h-6 text-cyan-400" />
+                    <h3 className="retro-title text-lg">Recent Activity</h3>
+                  </div>
+                  {userWallet && (
+                    <a href={`https://polygonscan.com/address/${userWallet}`} target="_blank" rel="noreferrer">
+                      <Button variant="ghost" size="sm" className="text-xs text-cyan-400 hover:bg-cyan-500/10">
+                        View All <ExternalLink className="w-3 h-3 ml-1" />
+                      </Button>
+                    </a>
+                  )}
+                </div>
+
+                <div className="text-center py-8">
+                  <BarChart3 className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm">No recent transactions</p>
+                  <p className="text-xs text-gray-600 mt-1">Your transaction history will appear here</p>
+                </div>
               </Card>
             </div>
           )}
