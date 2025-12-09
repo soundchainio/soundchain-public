@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "build": "tsc --noEmit",
     "dev": "docker-compose up -d && yarn migrate && nodemon -w 'src/**' -e 'ts,json' -x ts-node src/local.ts",
     "dev:quick": "yarn migrate && nodemon -w 'src/**' -e 'ts,json' -x ts-node src/local.ts",
     "start:local": "ts-node --transpile-only src/local.ts",
