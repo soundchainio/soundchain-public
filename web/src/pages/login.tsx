@@ -230,12 +230,23 @@ export default function LoginPage() {
       const redirectURI = `${window.location.origin}/login`;
       console.log('[OAuth2] Redirect URI:', redirectURI);
       console.log('[OAuth2] Using Magic Login Widget mode');
+      console.log('[OAuth2] authMagic.oauth2:', (authMagic as any).oauth2);
 
       // Magic Login Widget mode - just call loginWithRedirect, Magic handles everything
-      await (authMagic as any).oauth2.loginWithRedirect({
-        provider: 'google',
-        redirectURI,
-      });
+      try {
+        console.log('[OAuth2] Calling loginWithRedirect...');
+        const result = await (authMagic as any).oauth2.loginWithRedirect({
+          provider: 'google',
+          redirectURI,
+        });
+        console.log('[OAuth2] loginWithRedirect returned:', result);
+      } catch (redirectError: any) {
+        console.error('[OAuth2] loginWithRedirect error:', redirectError);
+        console.error('[OAuth2] Error name:', redirectError?.name);
+        console.error('[OAuth2] Error message:', redirectError?.message);
+        console.error('[OAuth2] Error stack:', redirectError?.stack);
+        throw redirectError;
+      }
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || 'Google login failed');
