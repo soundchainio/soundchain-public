@@ -27,9 +27,12 @@ const MAGIC_KEY = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101
 const createAuthMagic = () => {
   if (typeof window === 'undefined') return null;
   try {
-    return new Magic(MAGIC_KEY, {
+    const instance = new Magic(MAGIC_KEY, {
       extensions: [new OAuthExtension()],
     });
+    console.log('[OAuth] Created auth Magic instance:', instance);
+    console.log('[OAuth] oauth2 extension available:', !!(instance as any).oauth2);
+    return instance;
   } catch (e) {
     console.error('[OAuth] Failed to create auth Magic:', e);
     return null;
@@ -227,17 +230,46 @@ export default function LoginPage() {
       const redirectURI = `${window.location.origin}/login`;
       console.log('[OAuth2] Redirect URI:', redirectURI);
       console.log('[OAuth2] Using auth-only Magic (no network config)');
+      console.log('[OAuth2] oauth2 extension:', (authMagic as any).oauth2);
 
-      // Use auth-only Magic instance - await is required for redirect to work
-      await (authMagic as any).oauth2.loginWithRedirect({
-        provider: 'google',
-        redirectURI,
-      });
+      // Try popup first (more reliable), fall back to redirect
+      try {
+        console.log('[OAuth2] Attempting loginWithPopup...');
+        const result = await (authMagic as any).oauth2.loginWithPopup({
+          provider: 'google',
+        });
 
-      // If we reach here, redirect didn't happen (should not normally reach this)
-      console.error('[OAuth2] loginWithRedirect completed without redirecting');
-      setError('OAuth redirect failed. Please try again.');
-      setLoggingIn(false);
+        console.log('[OAuth2] Popup result:', result);
+
+        if (result && result.magic?.idToken) {
+          const didToken = result.magic.idToken;
+          console.log('[OAuth2] Got didToken from popup');
+          localStorage.setItem('didToken', didToken);
+
+          const loginResult = await login({ variables: { input: { token: didToken } } });
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            router.push(redirectUrl);
+            return;
+          } else {
+            throw new Error('Login failed: No JWT returned');
+          }
+        }
+      } catch (popupError: any) {
+        console.error('[OAuth2] Popup failed:', popupError);
+        // If popup was blocked, try redirect
+        if (popupError?.message?.includes('popup') || popupError?.message?.includes('blocked')) {
+          console.log('[OAuth2] Popup blocked, trying redirect...');
+          await (authMagic as any).oauth2.loginWithRedirect({
+            provider: 'google',
+            redirectURI,
+          });
+        } else {
+          throw popupError;
+        }
+      }
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || 'Google login failed');
