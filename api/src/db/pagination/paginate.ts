@@ -130,19 +130,11 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
     .limit(limit + 1)
     .exec();
 
-  // Hydrate plain aggregation results into proper mongoose documents
-  // Filter out null/undefined docs and wrap hydrate in try-catch to handle corrupted data
-  const hydratedResults = rawResults
-    .filter((doc: any) => doc && doc._id) // Only process valid documents with _id
-    .map((doc: any) => {
-      try {
-        return collection.hydrate(doc);
-      } catch (err) {
-        console.error('Failed to hydrate document:', doc?._id, err);
-        return null;
-      }
-    })
-    .filter((doc: any) => doc !== null) as DocumentType<InstanceType<T>>[];
+  // Return plain aggregation results directly - don't hydrate since aggregation
+  // produces documents with structure that may not match the model schema
+  // (e.g., $mergeObjects, $replaceRoot add extra fields)
+  const results = rawResults
+    .filter((doc: any) => doc && doc._id) as DocumentType<InstanceType<T>>[];
 
   const totalCount =
     (
@@ -153,5 +145,5 @@ export async function paginatePipelineAggregated<T extends typeof Model>(
         .exec()
     )[0]?.count ?? 0;
 
-  return prepareResult(field, last, limit, after, before, hydratedResults, totalCount);
+  return prepareResult(field, last, limit, after, before, results, totalCount);
 }
