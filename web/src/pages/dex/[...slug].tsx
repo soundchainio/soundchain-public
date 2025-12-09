@@ -445,6 +445,29 @@ function DEXDashboard() {
     refetchTracks()
   }, []) // Empty deps = run once on mount
 
+  // AUTO-LOAD ALL TRACKS: Aggressive loading until all tracks are fetched
+  const tracksLoadedRef = useRef(0)
+  useEffect(() => {
+    const currentCount = tracksData?.groupedTracks?.nodes?.length || 0
+    const totalCount = tracksData?.groupedTracks?.pageInfo?.totalCount || 0
+    const hasMore = tracksData?.groupedTracks?.pageInfo?.hasNextPage
+
+    // Only trigger if we have new data and more to load
+    if (currentCount > tracksLoadedRef.current) {
+      tracksLoadedRef.current = currentCount
+      console.log(`✅ Tracks loaded: ${currentCount}/${totalCount}`)
+    }
+
+    // Auto-load more if there's more data
+    if (hasMore && !loadingMore && !tracksLoading && currentCount > 0) {
+      const timer = setTimeout(() => {
+        console.log(`🔄 AUTO-LOADING MORE TRACKS... (${currentCount}/${totalCount})`)
+        handleLoadMore()
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [tracksData?.groupedTracks?.nodes?.length, tracksData?.groupedTracks?.pageInfo?.hasNextPage, loadingMore, tracksLoading])
+
   // CRITICAL DEBUG: Log raw GraphQL response
   useEffect(() => {
     console.log('🔍 TRACKS QUERY DEBUG:', {
@@ -502,6 +525,27 @@ function DEXDashboard() {
       setLoadingMoreListings(false)
     }
   }, [listingData, fetchMoreListings, loadingMoreListings])
+
+  // AUTO-LOAD ALL LISTINGS: Aggressive loading until all listings are fetched
+  const listingsLoadedRef = useRef(0)
+  useEffect(() => {
+    const currentCount = listingData?.listingItems?.nodes?.length || 0
+    const totalCount = listingData?.listingItems?.pageInfo?.totalCount || 0
+    const hasMore = listingData?.listingItems?.pageInfo?.hasNextPage
+
+    if (currentCount > listingsLoadedRef.current) {
+      listingsLoadedRef.current = currentCount
+      console.log(`✅ Listings loaded: ${currentCount}/${totalCount}`)
+    }
+
+    if (hasMore && !loadingMoreListings && !listingLoading && currentCount > 0) {
+      const timer = setTimeout(() => {
+        console.log(`🔄 AUTO-LOADING MORE LISTINGS... (${currentCount}/${totalCount})`)
+        handleLoadMoreListings()
+      }, 400)
+      return () => clearTimeout(timer)
+    }
+  }, [listingData?.listingItems?.nodes?.length, listingData?.listingItems?.pageInfo?.hasNextPage, loadingMoreListings, listingLoading])
 
   // Infinite scroll refs - auto-load more when scrolling near bottom
   const tracksScrollRef = useRef<HTMLDivElement>(null)
@@ -1551,15 +1595,15 @@ function DEXDashboard() {
               {selectedPurchaseType === 'nft' && (
                 <>
                   {/* Real NFT listings from marketplace */}
-                  {filteredMarketTracks.filter((t: any) => t.listingItem?.price).length > 0 ? (
+                  {filteredMarketTracks.filter((t: any) => t.listingItem?.pricePerItem || t.listingItem?.pricePerItemToShow).length > 0 ? (
                     <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
                       {filteredMarketTracks
-                        .filter((t: any) => t.listingItem?.price)
+                        .filter((t: any) => t.listingItem?.pricePerItem || t.listingItem?.pricePerItemToShow)
                         .map((track: any, index: number) => (
                           <TrackNFTCard
                             key={track.id}
                             track={track}
-                            onPlay={() => handlePlayTrack(track, index, filteredMarketTracks.filter((t: any) => t.listingItem?.price))}
+                            onPlay={() => handlePlayTrack(track, index, filteredMarketTracks.filter((t: any) => t.listingItem?.pricePerItem || t.listingItem?.pricePerItemToShow))}
                             isPlaying={isPlaying}
                             isCurrentTrack={currentSong?.trackId === track.id}
                             listView={viewMode === 'list'}
