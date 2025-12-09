@@ -9,7 +9,7 @@ interface BlockchainNetwork {
 
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
-  rpc: 'https://polygon-bor-rpc.publicnode.com',
+  rpc: 'https://polygon-rpc.com',  // Official Polygon RPC
   id: 137,
   idHex: '0x89',
   symbol: 'POL',

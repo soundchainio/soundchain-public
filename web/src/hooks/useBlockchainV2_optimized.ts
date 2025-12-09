@@ -1,5 +1,5 @@
 import { SDKBase, InstanceWithExtensions } from '@magic-sdk/provider';
-import { OAuthExtension } from '@magic-ext/oauth';
+import { OAuthExtension } from '@magic-ext/oauth2';
 import { config } from 'config';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';

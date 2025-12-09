@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -17,8 +17,24 @@ import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { isApolloError } from '@apollo/client';
 import styled from 'styled-components';
+import { Magic } from 'magic-sdk';
+import { OAuthExtension } from '@magic-ext/oauth2';
 
-// Note: OAuth2 uses popup flow, no longer need to capture redirect params
+// Note: OAuth2 uses redirect flow. Network config is NOT needed for auth - only for wallet operations.
+const MAGIC_KEY = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
+
+// Create auth-only Magic instance (NO network config - network config causes OAuth to hang)
+const createAuthMagic = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return new Magic(MAGIC_KEY, {
+      extensions: [new OAuthExtension()],
+    });
+  } catch (e) {
+    console.error('[OAuth] Failed to create auth Magic:', e);
+    return null;
+  }
+};
 
 const Overlay = styled.div`
   position: fixed;
@@ -97,11 +113,19 @@ export default function LoginPage() {
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
 
+  // Auth-only Magic instance for OAuth (no network config)
+  const authMagicRef = useRef<ReturnType<typeof createAuthMagic>>(null);
+
   useEffect(() => {
     setIsClient(true);
     // Detect in-app browser and warn user
     if (isInAppBrowser()) {
       setInAppBrowserWarning(true);
+    }
+    // Initialize auth-only Magic for OAuth (no network config - avoids OAuth hanging issue)
+    if (!authMagicRef.current) {
+      authMagicRef.current = createAuthMagic();
+      console.log('[OAuth] Auth-only Magic instance created:', !!authMagicRef.current);
     }
   }, []);
 
@@ -188,32 +212,37 @@ export default function LoginPage() {
         return;
       }
 
+      // Use auth-only Magic (no network config) - network config causes OAuth to hang
+      const authMagic = authMagicRef.current;
+      if (!authMagic) {
+        console.error('[OAuth2] Auth Magic not ready');
+        setError('Please refresh and try again.');
+        return;
+      }
+
       setLoggingIn(true);
       setError(null);
       localStorage.removeItem('didToken');
 
-      // Create a fresh Magic instance specifically for OAuth (no network config)
-      const { Magic } = await import('magic-sdk');
-      const { OAuthExtension } = await import('@magic-ext/oauth2');
-
-      const oauthMagic = new Magic('pk_live_858EC1BFF763F101', {
-        extensions: [new OAuthExtension()],
-      });
-
       const redirectURI = `${window.location.origin}/login`;
-      console.log('[OAuth2] Fresh Magic instance created');
       console.log('[OAuth2] Redirect URI:', redirectURI);
+      console.log('[OAuth2] Using auth-only Magic (no network config)');
 
-      // This should redirect to Google immediately
-      await (oauthMagic as any).oauth2.loginWithRedirect({
+      // Use auth-only Magic instance - redirect happens immediately
+      (authMagic as any).oauth2.loginWithRedirect({
         provider: 'google',
         redirectURI,
       });
 
-      // If we reach here without redirect, something failed
-      console.error('[OAuth2] Did not redirect');
-      setError('OAuth failed to redirect');
-      setLoggingIn(false);
+      // Don't await - redirect should happen immediately
+      // If we're still here after 5 seconds, something is wrong
+      setTimeout(() => {
+        if (loggingIn) {
+          console.error('[OAuth2] Redirect timeout');
+          setError('OAuth redirect timed out. Try refreshing.');
+          setLoggingIn(false);
+        }
+      }, 5000);
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || 'Google login failed');
@@ -257,19 +286,19 @@ export default function LoginPage() {
       console.log('[OAuth2] Current URL:', window.location.href);
       console.log('[OAuth2] Search params:', window.location.search);
 
-      if (!magic) {
-        console.log('[OAuth2] Magic not ready yet');
+      const authMagic = authMagicRef.current;
+      if (!authMagic) {
+        console.log('[OAuth2] Auth Magic not ready yet');
         return;
       }
 
       // Check if URL has OAuth params
       const params = new URLSearchParams(window.location.search);
-      const hasOAuthParams = params.has('code') || params.has('state') || params.has('magic_credential');
+      const hasOAuthParams = params.has('code') || params.has('state');
 
       console.log('[OAuth2] Has OAuth params:', hasOAuthParams, {
         code: params.has('code'),
-        state: params.has('state'),
-        magic_credential: params.has('magic_credential')
+        state: params.has('state')
       });
 
       if (!hasOAuthParams) return;
@@ -278,7 +307,7 @@ export default function LoginPage() {
       setLoggingIn(true);
 
       try {
-        const result = await (magic as any).oauth2.getRedirectResult();
+        const result = await (authMagic as any).oauth2.getRedirectResult();
         console.log('[OAuth2] getRedirectResult:', result);
 
         if (result && result.magic?.idToken) {
@@ -306,7 +335,7 @@ export default function LoginPage() {
       }
     }
     handleOAuthRedirect();
-  }, [magic, login, router, handleError]);
+  }, [isClient, login, router, handleError]);
 
   async function handleSubmit(values: FormValues) {
     try {
