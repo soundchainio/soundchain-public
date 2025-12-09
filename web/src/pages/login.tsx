@@ -228,21 +228,16 @@ export default function LoginPage() {
       console.log('[OAuth2] Redirect URI:', redirectURI);
       console.log('[OAuth2] Using auth-only Magic (no network config)');
 
-      // Use auth-only Magic instance - redirect happens immediately
-      (authMagic as any).oauth2.loginWithRedirect({
+      // Use auth-only Magic instance - await is required for redirect to work
+      await (authMagic as any).oauth2.loginWithRedirect({
         provider: 'google',
         redirectURI,
       });
 
-      // Don't await - redirect should happen immediately
-      // If we're still here after 5 seconds, something is wrong
-      setTimeout(() => {
-        if (loggingIn) {
-          console.error('[OAuth2] Redirect timeout');
-          setError('OAuth redirect timed out. Try refreshing.');
-          setLoggingIn(false);
-        }
-      }, 5000);
+      // If we reach here, redirect didn't happen (should not normally reach this)
+      console.error('[OAuth2] loginWithRedirect completed without redirecting');
+      setError('OAuth redirect failed. Please try again.');
+      setLoggingIn(false);
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || 'Google login failed');
