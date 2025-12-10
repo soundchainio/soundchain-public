@@ -133,36 +133,70 @@ export class TrackService extends ModelService<typeof Track> {
       dotNotationFilter['profileId'] = new mongoose.Types.ObjectId(dotNotationFilter['profileId']);
     }
 
-    // Use normal query - trackEdition is handled by @FieldResolver in TrackResolver
-    const { first = 25 } = page || {};
+    const { first = 25, after } = page || {};
+    const matchFilter = { ...defaultFilter, ...dotNotationFilter, ...owner };
 
-    const tracks = await this.model
-      .find({ ...defaultFilter, ...dotNotationFilter, ...owner })
-      .sort({ createdAt: -1 })
-      .limit(first)
-      .exec();
+    // Decode cursor for pagination
+    const afterId = after ? Buffer.from(after, 'base64').toString('utf8') : null;
 
-    // Group tracks by trackEditionId
-    const groupedMap = new Map<string, any>();
+    // Use aggregation to group by trackEditionId at database level
+    // This ensures we get `first` unique editions, not `first` individual tracks
+    const aggregationPipeline: any[] = [
+      { $match: matchFilter },
+      { $sort: { createdAt: -1 } },
+    ];
 
-    for (const track of tracks) {
-      const key = track.trackEditionId?.toString() || track._id.toString();
+    // Group by trackEditionId (or _id if no edition), keeping first document in each group
+    aggregationPipeline.push(
+      {
+        $group: {
+          _id: { $ifNull: ['$trackEditionId', '$_id'] },
+          doc: { $first: '$$ROOT' },
+          createdAt: { $first: '$createdAt' },
+        },
+      },
+      { $sort: { createdAt: -1 } },
+    );
 
-      if (!groupedMap.has(key)) {
-        groupedMap.set(key, track);
-      }
+    // Add cursor-based pagination: skip documents before the cursor
+    if (afterId) {
+      aggregationPipeline.push({
+        $match: { createdAt: { $lt: new Date(afterId) } }
+      });
     }
 
-    const nodes = Array.from(groupedMap.values()).slice(0, first);
-    const totalCount = await this.model.find({ ...defaultFilter, ...dotNotationFilter, ...owner }).countDocuments();
+    // Fetch one extra to check for next page
+    aggregationPipeline.push(
+      { $limit: first + 1 },
+      { $replaceRoot: { newRoot: '$doc' } }
+    );
+
+    const results = await this.model.aggregate(aggregationPipeline).exec();
+
+    // Check if there are more results beyond the requested limit
+    const hasMoreResults = results.length > first;
+    const nodes = hasMoreResults ? results.slice(0, first) : results;
+
+    // Count total unique editions/tracks
+    const countPipeline = [
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: { $ifNull: ['$trackEditionId', '$_id'] },
+        },
+      },
+      { $count: 'total' },
+    ];
+    const countResult = await this.model.aggregate(countPipeline).exec();
+    const totalCount = countResult[0]?.total || 0;
 
     return {
       nodes,
       pageInfo: {
         totalCount,
-        hasNextPage: nodes.length >= first,
-        hasPreviousPage: false,
-        endCursor: nodes.length > 0 ? btoa(nodes[nodes.length - 1]._id.toString()) : undefined,
+        hasNextPage: hasMoreResults,
+        hasPreviousPage: afterId !== null,
+        endCursor: nodes.length > 0 ? Buffer.from(nodes[nodes.length - 1].createdAt.toISOString()).toString('base64') : undefined,
       },
     };
   }
