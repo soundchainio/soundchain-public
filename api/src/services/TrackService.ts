@@ -224,6 +224,65 @@ export class TrackService extends ModelService<typeof Track> {
     return this.findOrFail(id);
   }
 
+  /**
+   * Get tracks grouped by genre for the genre-browsing UI
+   * Returns an object with genre keys and arrays of tracks
+   * Only returns genres that have at least one track
+   */
+  async getTracksByGenre(limit: number = 10): Promise<{ genre: string; tracks: Track[] }[]> {
+    // Get all unique genres that exist in tracks
+    const genresResult = await this.model.aggregate([
+      { $match: { title: { $exists: true }, deleted: false, genres: { $exists: true, $ne: [] } } },
+      { $unwind: '$genres' },
+      { $group: { _id: '$genres' } },
+      { $sort: { _id: 1 } },
+    ]).exec();
+
+    const genres = genresResult.map((g: any) => g._id);
+
+    // For each genre, get the most recent tracks (grouped by edition)
+    const genreTracksPromises = genres.map(async (genre: string) => {
+      // Use aggregation to get unique tracks by edition for this genre
+      const aggregationPipeline = [
+        { $match: { title: { $exists: true }, deleted: false, genres: genre } },
+        { $sort: { createdAt: -1 } },
+        {
+          $group: {
+            _id: { $ifNull: ['$trackEditionId', '$_id'] },
+            docId: { $first: '$_id' },
+            createdAt: { $first: '$createdAt' },
+          },
+        },
+        { $sort: { createdAt: -1 } },
+        { $limit: limit },
+        { $project: { docId: 1 } },
+      ];
+
+      const groupedResults = await this.model.aggregate(aggregationPipeline).exec();
+      const trackIds = groupedResults.map((r: any) => r.docId);
+
+      if (trackIds.length === 0) {
+        return { genre, tracks: [] };
+      }
+
+      // Fetch actual Track documents
+      const tracks = await this.model.find({ _id: { $in: trackIds } }).exec();
+
+      // Maintain order from aggregation
+      const trackMap = new Map(tracks.map((t: Track) => [t._id.toString(), t]));
+      const orderedTracks = trackIds
+        .map((id: mongoose.Types.ObjectId) => trackMap.get(id.toString()))
+        .filter((t: Track | undefined): t is Track => t !== undefined);
+
+      return { genre, tracks: orderedTracks };
+    });
+
+    const results = await Promise.all(genreTracksPromises);
+
+    // Filter out genres with no tracks
+    return results.filter((r) => r.tracks.length > 0);
+  }
+
   async getTrackFromEdition(id: string, trackEditionId?: string): Promise<Track> {
     const ors: any[] = [{ _id: id, deleted: false }];
     if (trackEditionId) {

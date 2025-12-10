@@ -19,6 +19,8 @@ import { useMe } from 'hooks/useMe'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { NFTCard } from 'components/dex/NFTCard'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
+import { GenreSection } from 'components/dex/GenreSection'
+import { gql, useQuery } from '@apollo/client'
 import { TokenCard } from 'components/dex/TokenCard'
 import { BundleCard } from 'components/dex/BundleCard'
 import { Card, CardContent } from 'components/ui/card'
@@ -387,6 +389,45 @@ function DEXDashboard() {
   // Real SoundChain data - YOUR profile
   const { data: userData, loading: userLoading, error: userError } = useMeQuery({
     ssr: false,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // GraphQL query for tracks by genre (Spotify-style horizontal scrolling)
+  const TRACKS_BY_GENRE_QUERY = gql`
+    query TracksByGenre($limit: Float) {
+      tracksByGenre(limit: $limit) {
+        genre
+        tracks {
+          id
+          title
+          artwork
+          playbackUrl
+          genres
+          playbackCount
+          favoriteCount
+          createdAt
+          trackEditionId
+          trackEdition {
+            id
+            editionId
+            editionSize
+            contract
+          }
+          profile {
+            id
+            displayName
+            handle
+            avatar
+            verified
+          }
+        }
+      }
+    }
+  `
+
+  // Fetch tracks grouped by genre for the new Spotify-style UI
+  const { data: genreTracksData, loading: genreTracksLoading, error: genreTracksError } = useQuery(TRACKS_BY_GENRE_QUERY, {
+    variables: { limit: 15 }, // 15 tracks per genre for horizontal scroll
     fetchPolicy: 'cache-and-network',
   })
 
@@ -1327,30 +1368,48 @@ function DEXDashboard() {
 
           {/* Content */}
           {selectedPurchaseType === 'tracks' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Genre-based browsing header */}
               <div className="flex items-center justify-between">
-                <h2 className="retro-title">All Tracks ({tracksData?.groupedTracks?.pageInfo?.totalCount || userTracks.length})</h2>
+                <div>
+                  <h2 className="retro-title text-xl">Browse by Genre</h2>
+                  <p className="text-sm text-gray-400">Discover tracks organized by genre - scroll horizontally to explore</p>
+                </div>
                 <div className="flex gap-2">
-                  {tracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading...</Badge>}
-                  {tracksError && (
-                    <Badge className="bg-red-500/20 text-red-400 cursor-pointer"
-                      title={JSON.stringify(tracksError, null, 2)}>
-                      Error: {tracksError.message} (click for details)
+                  {genreTracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading genres...</Badge>}
+                  {genreTracksError && (
+                    <Badge className="bg-red-500/20 text-red-400">Error loading genres</Badge>
+                  )}
+                  {genreTracksData?.tracksByGenre && (
+                    <Badge className="bg-green-500/20 text-green-400">
+                      {genreTracksData.tracksByGenre.length} genres
                     </Badge>
-                  )}
-                  {!tracksLoading && !tracksError && userTracks.length === 0 && (
-                    <Badge className="bg-blue-500/20 text-blue-400">API has {tracksData?.groupedTracks?.pageInfo?.totalCount || 0} tracks but none displayed - check console!</Badge>
-                  )}
-                  {!tracksLoading && !tracksError && userTracks.length > 0 && (
-                    <Badge className="bg-green-500/20 text-green-400">✅ Loaded {userTracks.length} tracks</Badge>
                   )}
                 </div>
               </div>
-              {tracksLoading ? (
+
+              {/* Genre Sections - Spotify-style horizontal scrolling */}
+              {genreTracksLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="text-cyan-400">Loading your tracks...</div>
+                  <div className="flex items-center gap-3 text-cyan-400">
+                    <div className="animate-spin h-6 w-6 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                    <span>Loading genres...</span>
+                  </div>
                 </div>
-              ) : userTracks.length === 0 ? (
+              ) : genreTracksData?.tracksByGenre?.length > 0 ? (
+                <div className="space-y-2">
+                  {genreTracksData.tracksByGenre.map((genreData: any) => (
+                    <GenreSection
+                      key={genreData.genre}
+                      genre={genreData.genre}
+                      tracks={genreData.tracks}
+                      onPlayTrack={handlePlayTrack}
+                      isPlaying={isPlaying}
+                      currentTrackId={currentSong?.trackId}
+                    />
+                  ))}
+                </div>
+              ) : (
                 <Card className="retro-card p-8 text-center">
                   <Music className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
                   <p className="text-gray-400">No tracks found. Upload your first track to get started!</p>
@@ -1361,48 +1420,14 @@ function DEXDashboard() {
                     </Button>
                   </Link>
                 </Card>
-              ) : (
-                <>
-                  <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
-                    {userTracks.map((track: any, index: number) => (
-                      <TrackNFTCard
-                        key={track.id}
-                        track={track}
-                        onPlay={() => handlePlayTrack(track, index, userTracks)}
-                        isPlaying={isPlaying}
-                        isCurrentTrack={currentSong?.trackId === track.id}
-                        listView={viewMode === 'list'}
-                      />
-                    ))}
-                  </div>
-                  {/* Infinite scroll sentinel + Load More Button */}
-                  <div ref={tracksScrollRef} className="h-4" />
-                  {(tracksData?.groupedTracks?.pageInfo?.hasNextPage || loadingMore) && (
-                    <div className="flex justify-center mt-6">
-                      {loadingMore ? (
-                        <div className="flex items-center gap-2 text-cyan-400">
-                          <div className="animate-spin h-5 w-5 border-2 border-cyan-400 border-t-transparent rounded-full" />
-                          <span>Loading more tracks...</span>
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={handleLoadMore}
-                          disabled={loadingMore}
-                          className="retro-button px-8"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Load More Tracks ({(tracksData?.groupedTracks?.pageInfo?.totalCount || 0) - userTracks.length} remaining)
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </>
               )}
 
+              {/* Marketplace section below genres */}
               {marketTracks.length > 0 && (
                 <>
                   <Separator className="my-8" />
-                  <h2 className="retro-title">Marketplace Tracks ({listingData?.listingItems?.pageInfo?.totalCount || marketTracks.length})</h2>
+                  <h2 className="retro-title">Marketplace Listings ({listingData?.listingItems?.pageInfo?.totalCount || marketTracks.length})</h2>
+                  <p className="text-sm text-gray-400 mb-4">NFTs available for purchase</p>
                   <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
                     {marketTracks.map((track: any, index: number) => (
                       <TrackNFTCard

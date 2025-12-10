@@ -31,6 +31,7 @@ import { UpdateTrackInput } from '../types/UpdateTrackInput';
 import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 import { TrackPrice } from '../types/TrackPrice';
 import { CurrencyType } from '../types/CurrencyType';
+import { GenreTracks } from '../types/GenreTracks';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -212,6 +213,14 @@ export class TrackResolver {
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<TrackConnection> {
     return trackService.getGroupedTracks(filter, sort, page);
+  }
+
+  @Query(() => [GenreTracks])
+  tracksByGenre(
+    @Ctx() { trackService }: Context,
+    @Arg('limit', { nullable: true, defaultValue: 10 }) limit?: number,
+  ): Promise<GenreTracks[]> {
+    return trackService.getTracksByGenre(limit);
   }
 
   @Mutation(() => CreateMultipleTracksPayload)
