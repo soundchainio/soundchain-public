@@ -21,6 +21,7 @@ import { NFTCard } from 'components/dex/NFTCard'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
+import { GenreLeaderboard } from 'components/dex/GenreLeaderboard'
 import { gql, useQuery } from '@apollo/client'
 import { TokenCard } from 'components/dex/TokenCard'
 import { BundleCard } from 'components/dex/BundleCard'
@@ -353,6 +354,7 @@ function DEXDashboard() {
   const [coverImageError, setCoverImageError] = useState(false)
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
   const [exploreTab, setExploreTab] = useState<'tracks' | 'users'>('users')
+  const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
 
   // Sync selectedView with URL changes (for back/forward navigation)
   useEffect(() => {
@@ -1379,11 +1381,27 @@ function DEXDashboard() {
           {/* Content */}
           {selectedPurchaseType === 'tracks' && (
             <div className="space-y-6">
-              {/* Genre-based browsing header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="retro-title text-xl">Browse by Genre</h2>
-                  <p className="text-sm text-gray-400">Discover tracks organized by genre - scroll horizontally to explore</p>
+              {/* Tracks view mode toggle */}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTracksViewMode('browse')}
+                    className={`transition-all duration-300 ${tracksViewMode === 'browse' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:bg-white/5'}`}
+                  >
+                    <Compass className="w-4 h-4 mr-2" />
+                    Browse
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTracksViewMode('leaderboard')}
+                    className={`transition-all duration-300 ${tracksViewMode === 'leaderboard' ? 'bg-purple-500/20 text-purple-400' : 'text-gray-400 hover:bg-white/5'}`}
+                  >
+                    <Trophy className="w-4 h-4 mr-2" />
+                    Leaderboards
+                  </Button>
                 </div>
                 <div className="flex gap-2">
                   {genreTracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading genres...</Badge>}
@@ -1398,47 +1416,84 @@ function DEXDashboard() {
                 </div>
               </div>
 
-              {/* Top Charts Section - Most streamed tracks with gamification */}
-              <TopChartsSection
-                tracks={topTracksData?.tracks?.nodes || []}
-                onPlayTrack={handlePlayTrack}
-                isPlaying={isPlaying}
-                currentTrackId={currentSong?.trackId}
-                loading={topTracksLoading}
-              />
+              {/* Browse Mode - Genre sections with horizontal scrolling */}
+              {tracksViewMode === 'browse' && (
+                <>
+                  {/* Top Charts Section - Most streamed tracks with gamification */}
+                  <TopChartsSection
+                    tracks={topTracksData?.tracks?.nodes || []}
+                    onPlayTrack={handlePlayTrack}
+                    isPlaying={isPlaying}
+                    currentTrackId={currentSong?.trackId}
+                    loading={topTracksLoading}
+                  />
 
-              {/* Genre Sections - Spotify-style horizontal scrolling */}
-              {genreTracksLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="flex items-center gap-3 text-cyan-400">
-                    <div className="animate-spin h-6 w-6 border-2 border-cyan-400 border-t-transparent rounded-full" />
-                    <span>Loading genres...</span>
-                  </div>
-                </div>
-              ) : genreTracksData?.tracksByGenre?.length > 0 ? (
-                <div className="space-y-2">
-                  {genreTracksData.tracksByGenre.map((genreData: any) => (
-                    <GenreSection
-                      key={genreData.genre}
-                      genre={genreData.genre}
-                      tracks={genreData.tracks}
+                  {/* Genre Sections - Spotify-style horizontal scrolling */}
+                  {genreTracksLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex items-center gap-3 text-cyan-400">
+                        <div className="animate-spin h-6 w-6 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                        <span>Loading genres...</span>
+                      </div>
+                    </div>
+                  ) : genreTracksData?.tracksByGenre?.length > 0 ? (
+                    <div className="space-y-2">
+                      {genreTracksData.tracksByGenre.map((genreData: any) => (
+                        <GenreSection
+                          key={genreData.genre}
+                          genre={genreData.genre}
+                          tracks={genreData.tracks}
+                          onPlayTrack={handlePlayTrack}
+                          isPlaying={isPlaying}
+                          currentTrackId={currentSong?.trackId}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="retro-card p-8 text-center">
+                      <Music className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
+                      <p className="text-gray-400">No tracks found. Upload your first track to get started!</p>
+                      <Link href="/upload">
+                        <Button className="retro-button mt-4">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Upload Track
+                        </Button>
+                      </Link>
+                    </Card>
+                  )}
+                </>
+              )}
+
+              {/* Leaderboard Mode - Genre standings with POAP badges */}
+              {tracksViewMode === 'leaderboard' && (
+                <>
+                  {genreTracksLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex items-center gap-3 text-purple-400">
+                        <div className="animate-spin h-6 w-6 border-2 border-purple-400 border-t-transparent rounded-full" />
+                        <span>Loading leaderboards...</span>
+                      </div>
+                    </div>
+                  ) : genreTracksData?.tracksByGenre?.length > 0 ? (
+                    <GenreLeaderboard
+                      genreData={genreTracksData.tracksByGenre}
                       onPlayTrack={handlePlayTrack}
                       isPlaying={isPlaying}
                       currentTrackId={currentSong?.trackId}
                     />
-                  ))}
-                </div>
-              ) : (
-                <Card className="retro-card p-8 text-center">
-                  <Music className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
-                  <p className="text-gray-400">No tracks found. Upload your first track to get started!</p>
-                  <Link href="/upload">
-                    <Button className="retro-button mt-4">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Upload Track
-                    </Button>
-                  </Link>
-                </Card>
+                  ) : (
+                    <Card className="retro-card p-8 text-center">
+                      <Trophy className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
+                      <p className="text-gray-400">No tracks to rank yet. Upload tracks to compete!</p>
+                      <Link href="/upload">
+                        <Button className="retro-button mt-4">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Upload Track
+                        </Button>
+                      </Link>
+                    </Card>
+                  )}
+                </>
               )}
 
               {/* Marketplace section below genres */}
