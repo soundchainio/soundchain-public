@@ -136,7 +136,7 @@ export class TrackService extends ModelService<typeof Track> {
     const { first = 25, after } = page || {};
     const matchFilter = { ...defaultFilter, ...dotNotationFilter, ...owner };
 
-    // Decode cursor for pagination
+    // Decode cursor for pagination - cursor is the _id of last item
     const afterId = after ? Buffer.from(after, 'base64').toString('utf8') : null;
 
     // Use aggregation to group by trackEditionId at database level
@@ -152,17 +152,26 @@ export class TrackService extends ModelService<typeof Track> {
         $group: {
           _id: { $ifNull: ['$trackEditionId', '$_id'] },
           doc: { $first: '$$ROOT' },
+          docId: { $first: '$_id' },
           createdAt: { $first: '$createdAt' },
         },
       },
       { $sort: { createdAt: -1 } },
     );
 
-    // Add cursor-based pagination: skip documents before the cursor
+    // Add cursor-based pagination: skip documents with _id <= cursor
     if (afterId) {
-      aggregationPipeline.push({
-        $match: { createdAt: { $lt: new Date(afterId) } }
-      });
+      try {
+        const cursorObjectId = new mongoose.Types.ObjectId(afterId);
+        aggregationPipeline.push({
+          $match: { docId: { $lt: cursorObjectId } }
+        });
+      } catch {
+        // If not a valid ObjectId, try as date string
+        aggregationPipeline.push({
+          $match: { createdAt: { $lt: new Date(afterId) } }
+        });
+      }
     }
 
     // Fetch one extra to check for next page
@@ -190,13 +199,17 @@ export class TrackService extends ModelService<typeof Track> {
     const countResult = await this.model.aggregate(countPipeline).exec();
     const totalCount = countResult[0]?.total || 0;
 
+    // Use _id as cursor (more reliable than createdAt)
+    const lastNode = nodes[nodes.length - 1];
+    const endCursor = lastNode ? Buffer.from(lastNode._id.toString()).toString('base64') : undefined;
+
     return {
       nodes,
       pageInfo: {
         totalCount,
         hasNextPage: hasMoreResults,
         hasPreviousPage: afterId !== null,
-        endCursor: nodes.length > 0 ? Buffer.from(nodes[nodes.length - 1].createdAt.toISOString()).toString('base64') : undefined,
+        endCursor,
       },
     };
   }
