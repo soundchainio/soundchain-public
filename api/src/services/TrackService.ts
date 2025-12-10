@@ -139,27 +139,23 @@ export class TrackService extends ModelService<typeof Track> {
     // Decode cursor for pagination - cursor is the _id of last item
     const afterId = after ? Buffer.from(after, 'base64').toString('utf8') : null;
 
-    // Use aggregation to group by trackEditionId at database level
-    // This ensures we get `first` unique editions, not `first` individual tracks
+    // Step 1: Use aggregation to get just the _ids of grouped tracks
+    // This avoids hydration issues by only getting IDs, then fetching real documents
     const aggregationPipeline: any[] = [
       { $match: matchFilter },
       { $sort: { createdAt: -1 } },
-    ];
-
-    // Group by trackEditionId (or _id if no edition), keeping first document in each group
-    aggregationPipeline.push(
+      // Group by trackEditionId (or _id if no edition), keeping first document's _id in each group
       {
         $group: {
           _id: { $ifNull: ['$trackEditionId', '$_id'] },
-          doc: { $first: '$$ROOT' },
           docId: { $first: '$_id' },
           createdAt: { $first: '$createdAt' },
         },
       },
       { $sort: { createdAt: -1 } },
-    );
+    ];
 
-    // Add cursor-based pagination: skip documents with _id <= cursor
+    // Add cursor-based pagination: skip documents with docId <= cursor
     if (afterId) {
       try {
         const cursorObjectId = new mongoose.Types.ObjectId(afterId);
@@ -174,21 +170,27 @@ export class TrackService extends ModelService<typeof Track> {
       }
     }
 
-    // Fetch one extra to check for next page
+    // Fetch one extra to check for next page, only project docId
     aggregationPipeline.push(
       { $limit: first + 1 },
-      { $replaceRoot: { newRoot: '$doc' } }
+      { $project: { docId: 1, createdAt: 1 } }
     );
 
-    const rawResults = await this.model.aggregate(aggregationPipeline).exec();
-
-    // Hydrate plain objects back into Mongoose documents
-    // This is needed because field resolvers expect Mongoose documents, not plain objects
-    const results = rawResults.map((doc: any) => this.model.hydrate(doc));
+    const groupedResults = await this.model.aggregate(aggregationPipeline).exec();
 
     // Check if there are more results beyond the requested limit
-    const hasMoreResults = results.length > first;
-    const nodes = hasMoreResults ? results.slice(0, first) : results;
+    const hasMoreResults = groupedResults.length > first;
+    const pageResults = hasMoreResults ? groupedResults.slice(0, first) : groupedResults;
+
+    // Step 2: Fetch actual Track documents using find() - this returns proper Mongoose documents
+    const trackIds = pageResults.map((r: any) => r.docId);
+    const tracks = await this.model.find({ _id: { $in: trackIds } }).exec();
+
+    // Maintain the same order as the aggregation results
+    const trackMap = new Map(tracks.map((t: Track) => [t._id.toString(), t]));
+    const nodes = trackIds
+      .map((id: mongoose.Types.ObjectId) => trackMap.get(id.toString()))
+      .filter((t: Track | undefined): t is Track => t !== undefined);
 
     // Count total unique editions/tracks
     const countPipeline = [
@@ -203,9 +205,9 @@ export class TrackService extends ModelService<typeof Track> {
     const countResult = await this.model.aggregate(countPipeline).exec();
     const totalCount = countResult[0]?.total || 0;
 
-    // Use _id as cursor (more reliable than createdAt)
-    const lastNode = nodes[nodes.length - 1];
-    const endCursor = lastNode ? Buffer.from(lastNode._id.toString()).toString('base64') : undefined;
+    // Use docId from the last aggregation result as cursor
+    const lastResult = pageResults[pageResults.length - 1];
+    const endCursor = lastResult ? Buffer.from(lastResult.docId.toString()).toString('base64') : undefined;
 
     return {
       nodes,
