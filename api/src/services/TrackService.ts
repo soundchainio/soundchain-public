@@ -180,7 +180,11 @@ export class TrackService extends ModelService<typeof Track> {
       { $replaceRoot: { newRoot: '$doc' } }
     );
 
-    const results = await this.model.aggregate(aggregationPipeline).exec();
+    const rawResults = await this.model.aggregate(aggregationPipeline).exec();
+
+    // Hydrate plain objects back into Mongoose documents
+    // This is needed because field resolvers expect Mongoose documents, not plain objects
+    const results = rawResults.map((doc: any) => this.model.hydrate(doc));
 
     // Check if there are more results beyond the requested limit
     const hasMoreResults = results.length > first;
