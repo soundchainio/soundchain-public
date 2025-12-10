@@ -20,6 +20,7 @@ import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { NFTCard } from 'components/dex/NFTCard'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { GenreSection } from 'components/dex/GenreSection'
+import { TopChartsSection } from 'components/dex/TopChartsSection'
 import { gql, useQuery } from '@apollo/client'
 import { TokenCard } from 'components/dex/TokenCard'
 import { BundleCard } from 'components/dex/BundleCard'
@@ -428,6 +429,15 @@ function DEXDashboard() {
   // Fetch tracks grouped by genre for the new Spotify-style UI
   const { data: genreTracksData, loading: genreTracksLoading, error: genreTracksError } = useQuery(TRACKS_BY_GENRE_QUERY, {
     variables: { limit: 15 }, // 15 tracks per genre for horizontal scroll
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Fetch Top 10 most streamed tracks for the Top Charts section
+  const { data: topTracksData, loading: topTracksLoading } = useTracksQuery({
+    variables: {
+      sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
+      page: { first: 10 },
+    },
     fetchPolicy: 'cache-and-network',
   })
 
@@ -1387,6 +1397,15 @@ function DEXDashboard() {
                   )}
                 </div>
               </div>
+
+              {/* Top Charts Section - Most streamed tracks with gamification */}
+              <TopChartsSection
+                tracks={topTracksData?.tracks?.nodes || []}
+                onPlayTrack={handlePlayTrack}
+                isPlaying={isPlaying}
+                currentTrackId={currentSong?.trackId}
+                loading={topTracksLoading}
+              />
 
               {/* Genre Sections - Spotify-style horizontal scrolling */}
               {genreTracksLoading ? (
