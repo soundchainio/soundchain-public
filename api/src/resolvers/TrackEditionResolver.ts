@@ -15,7 +15,12 @@ export class TrackEditionResolver {
     @Arg('id') id: string,
     @Ctx() ctx: Context,
   ): Promise<TrackEdition> {
-    return ctx.trackEditionService.findOrFail(id);
+    const edition = await ctx.trackEditionService.findOrFail(id);
+    // Convert to plain object to avoid mongoose internal symbol access issues
+    if (edition && typeof (edition as any).toObject === 'function') {
+      return (edition as any).toObject() as TrackEdition;
+    }
+    return edition;
   }
 
   @Mutation(() => CreateTrackEditionPayload)

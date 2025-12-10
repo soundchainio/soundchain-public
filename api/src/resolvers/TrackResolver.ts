@@ -117,7 +117,13 @@ export class TrackResolver {
   ): Promise<TrackEdition | null> {
     if (!trackEditionId) return null;
     try {
-      return await trackEditionService.findOrFail(trackEditionId);
+      const edition = await trackEditionService.findOrFail(trackEditionId);
+      // Convert to plain object to avoid mongoose internal symbol access issues
+      // during GraphQL serialization
+      if (edition && typeof (edition as any).toObject === 'function') {
+        return (edition as any).toObject() as TrackEdition;
+      }
+      return edition;
     } catch (error) {
       console.warn(`TrackEdition ${trackEditionId} not found`);
       return null;
