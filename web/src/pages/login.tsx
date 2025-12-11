@@ -233,63 +233,13 @@ export default function LoginPage() {
       console.log('[OAuth2] Provider:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
 
-      // Try loginWithPopup first (shows Magic widget), fall back to loginWithRedirect
-      try {
-        // Check if loginWithPopup is available (newer Magic SDK feature)
-        if (typeof (authMagic as any).oauth2.loginWithPopup === 'function') {
-          console.log('[OAuth2] Using loginWithPopup (popup mode)...');
-          console.log('[OAuth2] Calling loginWithPopup now...');
-
-          let result;
-          try {
-            result = await (authMagic as any).oauth2.loginWithPopup({
-              provider,
-            });
-            console.log('[OAuth2] loginWithPopup completed with result:', result);
-          } catch (popupError: any) {
-            console.error('[OAuth2] loginWithPopup FAILED:', popupError);
-            console.error('[OAuth2] Popup error message:', popupError?.message);
-            console.error('[OAuth2] Popup error code:', popupError?.code);
-            console.error('[OAuth2] Full popup error:', JSON.stringify(popupError, null, 2));
-
-            // If popup fails, try redirect as fallback
-            console.log('[OAuth2] Falling back to loginWithRedirect...');
-            await (authMagic as any).oauth2.loginWithRedirect({
-              provider,
-              redirectURI,
-            });
-            return;
-          }
-
-          if (result && result.magic?.idToken) {
-            const didToken = result.magic.idToken;
-            localStorage.setItem('didToken', didToken);
-
-            const loginResult = await login({ variables: { input: { token: didToken } } });
-            if (loginResult.data?.login.jwt) {
-              await setJwt(loginResult.data.login.jwt);
-              await new Promise(resolve => setTimeout(resolve, 200));
-              const callbackUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-              router.push(callbackUrl);
-            } else {
-              throw new Error('Login failed: No JWT returned');
-            }
-          }
-        } else {
-          // Fall back to redirect mode
-          console.log('[OAuth2] Using loginWithRedirect (redirect mode)...');
-          await (authMagic as any).oauth2.loginWithRedirect({
-            provider,
-            redirectURI,
-          });
-          console.log('[OAuth2] Redirecting to provider...');
-        }
-      } catch (redirectError: any) {
-        console.error('[OAuth2] OAuth error:', redirectError);
-        console.error('[OAuth2] Error name:', redirectError?.name);
-        console.error('[OAuth2] Error message:', redirectError?.message);
-        throw redirectError;
-      }
+      // Use loginWithRedirect - redirects browser to OAuth provider
+      console.log('[OAuth2] Using loginWithRedirect (redirect mode)...');
+      await (authMagic as any).oauth2.loginWithRedirect({
+        provider,
+        redirectURI,
+      });
+      console.log('[OAuth2] Redirect initiated to provider...');
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || `${provider} login failed`);
