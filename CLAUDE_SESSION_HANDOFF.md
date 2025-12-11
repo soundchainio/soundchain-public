@@ -12,6 +12,7 @@
 2. **Genre Loading Error** - API fix deployed, needs verification
 
 ### Latest Commits (Today)
+- `cfde6c6d` - Don't await loginWithRedirect - let browser navigate
 - `64d432b9` - DEX wallet shows real balances, backend panel real stats
 - `f3448755` - OAuth uses context Magic instance
 - `4ff26dbe` - Removed loginWithPopup (caused black screen)
