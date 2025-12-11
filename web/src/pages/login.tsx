@@ -217,17 +217,18 @@ export default function LoginPage() {
         return;
       }
 
-      // Use auth-only Magic (no network config) - network config causes OAuth to hang
-      const authMagic = authMagicRef.current;
-      if (!authMagic) {
-        console.error('[OAuth2] Auth Magic not ready');
+      // Use the Magic instance from context (has network + OAuth2 extension)
+      // The context Magic is properly initialized with network config
+      const magicInstance = magic || authMagicRef.current;
+      if (!magicInstance) {
+        console.error('[OAuth2] Magic not ready');
         setError('Please refresh and try again.');
         return;
       }
 
-      console.log('[OAuth2] authMagic instance:', authMagic);
-      console.log('[OAuth2] oauth2 extension:', (authMagic as any).oauth2);
-      console.log('[OAuth2] loginWithRedirect function:', typeof (authMagic as any).oauth2?.loginWithRedirect);
+      console.log('[OAuth2] Using magic instance:', magicInstance);
+      console.log('[OAuth2] oauth2 extension:', (magicInstance as any).oauth2);
+      console.log('[OAuth2] loginWithRedirect function:', typeof (magicInstance as any).oauth2?.loginWithRedirect);
 
       setLoggingIn(true);
       setError(null);
@@ -239,7 +240,7 @@ export default function LoginPage() {
 
       // Use loginWithRedirect - this should navigate browser to OAuth provider
       console.log('[OAuth2] Calling loginWithRedirect NOW...');
-      const result = await (authMagic as any).oauth2.loginWithRedirect({
+      const result = await (magicInstance as any).oauth2.loginWithRedirect({
         provider,
         redirectURI,
       });
