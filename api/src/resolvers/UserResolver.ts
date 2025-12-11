@@ -96,10 +96,23 @@ export class UserResolver {
       console.log('Auth method:', authMethod);
       const user = users.find(u => u.authMethod === authMethod);
 
-      if (user && !config.env.isProduction && magicUser.publicAddress !== user.magicWalletAddress) {
-        console.log('Updating magic wallet address for user:', user._id.toString());
-        await userService.updateMagicWallet(user._id.toString(), magicUser.publicAddress);
-        console.log('Magic wallet updated');
+      // Update the OAuth-specific wallet if the address changed or is new
+      if (user && magicUser.publicAddress) {
+        const currentWallet = (() => {
+          switch (authMethod) {
+            case AuthMethod.google: return user.googleWalletAddress;
+            case AuthMethod.discord: return user.discordWalletAddress;
+            case AuthMethod.twitch: return user.twitchWalletAddress;
+            case AuthMethod.magicLink: return user.emailWalletAddress;
+            default: return user.magicWalletAddress;
+          }
+        })();
+
+        if (!currentWallet || currentWallet !== magicUser.publicAddress) {
+          console.log(`Updating ${authMethod} wallet address for user:`, user._id.toString());
+          await userService.updateOAuthWallet(user._id.toString(), magicUser.publicAddress, authMethod);
+          console.log(`${authMethod} wallet updated`);
+        }
       }
 
       if (!user) {

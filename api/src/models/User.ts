@@ -27,6 +27,23 @@ export class User extends Model {
   @prop({ required: false })
   magicWalletAddress: string;
 
+  // OAuth-specific wallet addresses (each OAuth provider gives a unique wallet)
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  googleWalletAddress?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  discordWalletAddress?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  twitchWalletAddress?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  emailWalletAddress?: string;
+
   @Field(() => [String], { nullable: true })
   @prop({ type: [String], required: false })
   metaMaskWalletAddressees: string[];

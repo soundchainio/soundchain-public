@@ -4,8 +4,13 @@ query Me {
     handle
     email
     magicWalletAddress
+    googleWalletAddress
+    discordWalletAddress
+    twitchWalletAddress
+    emailWalletAddress
     metaMaskWalletAddressees
     defaultWallet
+    authMethod
     isApprovedOnMarketplace
     roles
     profile {

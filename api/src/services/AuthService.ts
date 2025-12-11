@@ -21,12 +21,35 @@ export class AuthService extends Service {
     await this.context.feedService.seedNewProfileFeed(profile.id);
 
     const emailVerificationToken = uuidv4();
+
+    // Determine which wallet field to populate based on OAuth provider
+    const walletFields: Record<string, string> = {
+      magicWalletAddress, // Always set the default Magic wallet
+    };
+
+    // Also save to provider-specific wallet field
+    switch (oauthProvider) {
+      case AuthMethod.google:
+        walletFields.googleWalletAddress = magicWalletAddress;
+        break;
+      case AuthMethod.discord:
+        walletFields.discordWalletAddress = magicWalletAddress;
+        break;
+      case AuthMethod.twitch:
+        walletFields.twitchWalletAddress = magicWalletAddress;
+        break;
+      case AuthMethod.magicLink:
+      default:
+        walletFields.emailWalletAddress = magicWalletAddress;
+        break;
+    }
+
     const user = new UserModel({
       email,
       handle,
       profileId: profile._id,
       emailVerificationToken,
-      magicWalletAddress,
+      ...walletFields,
       authMethod: oauthProvider || AuthMethod.magicLink,
     });
 

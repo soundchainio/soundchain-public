@@ -77,6 +77,35 @@ export class UserService extends ModelService<typeof User> {
     return updatedUser;
   }
 
+  async updateOAuthWallet(id: string, walletAddress: string, oauthProvider: string): Promise<User> {
+    const updateFields: Record<string, string> = {
+      magicWalletAddress: walletAddress,
+    };
+
+    // Map OAuth provider to specific wallet field
+    switch (oauthProvider) {
+      case 'google':
+        updateFields.googleWalletAddress = walletAddress;
+        break;
+      case 'discord':
+        updateFields.discordWalletAddress = walletAddress;
+        break;
+      case 'twitch':
+        updateFields.twitchWalletAddress = walletAddress;
+        break;
+      case 'magicLink':
+      default:
+        updateFields.emailWalletAddress = walletAddress;
+        break;
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate(id, updateFields, { new: true });
+    if (!updatedUser) {
+      throw new Error(`Could not update the user wallet with id: ${id}`);
+    }
+    return updatedUser;
+  }
+
   async updateOTP({
     _id,
     otpSecret,
