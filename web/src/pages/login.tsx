@@ -238,10 +238,28 @@ export default function LoginPage() {
         // Check if loginWithPopup is available (newer Magic SDK feature)
         if (typeof (authMagic as any).oauth2.loginWithPopup === 'function') {
           console.log('[OAuth2] Using loginWithPopup (popup mode)...');
-          const result = await (authMagic as any).oauth2.loginWithPopup({
-            provider,
-          });
-          console.log('[OAuth2] loginWithPopup result:', result);
+          console.log('[OAuth2] Calling loginWithPopup now...');
+
+          let result;
+          try {
+            result = await (authMagic as any).oauth2.loginWithPopup({
+              provider,
+            });
+            console.log('[OAuth2] loginWithPopup completed with result:', result);
+          } catch (popupError: any) {
+            console.error('[OAuth2] loginWithPopup FAILED:', popupError);
+            console.error('[OAuth2] Popup error message:', popupError?.message);
+            console.error('[OAuth2] Popup error code:', popupError?.code);
+            console.error('[OAuth2] Full popup error:', JSON.stringify(popupError, null, 2));
+
+            // If popup fails, try redirect as fallback
+            console.log('[OAuth2] Falling back to loginWithRedirect...');
+            await (authMagic as any).oauth2.loginWithRedirect({
+              provider,
+              redirectURI,
+            });
+            return;
+          }
 
           if (result && result.magic?.idToken) {
             const didToken = result.magic.idToken;
