@@ -233,16 +233,41 @@ export default function LoginPage() {
       console.log('[OAuth2] Provider:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
 
-      // Magic Login Widget mode - just call loginWithRedirect, Magic handles everything
+      // Try loginWithPopup first (shows Magic widget), fall back to loginWithRedirect
       try {
-        console.log('[OAuth2] Calling loginWithRedirect...');
-        const result = await (authMagic as any).oauth2.loginWithRedirect({
-          provider,
-          redirectURI,
-        });
-        console.log('[OAuth2] loginWithRedirect returned:', result);
+        // Check if loginWithPopup is available (newer Magic SDK feature)
+        if (typeof (authMagic as any).oauth2.loginWithPopup === 'function') {
+          console.log('[OAuth2] Using loginWithPopup (popup mode)...');
+          const result = await (authMagic as any).oauth2.loginWithPopup({
+            provider,
+          });
+          console.log('[OAuth2] loginWithPopup result:', result);
+
+          if (result && result.magic?.idToken) {
+            const didToken = result.magic.idToken;
+            localStorage.setItem('didToken', didToken);
+
+            const loginResult = await login({ variables: { input: { token: didToken } } });
+            if (loginResult.data?.login.jwt) {
+              await setJwt(loginResult.data.login.jwt);
+              await new Promise(resolve => setTimeout(resolve, 200));
+              const callbackUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+              router.push(callbackUrl);
+            } else {
+              throw new Error('Login failed: No JWT returned');
+            }
+          }
+        } else {
+          // Fall back to redirect mode
+          console.log('[OAuth2] Using loginWithRedirect (redirect mode)...');
+          await (authMagic as any).oauth2.loginWithRedirect({
+            provider,
+            redirectURI,
+          });
+          console.log('[OAuth2] Redirecting to provider...');
+        }
       } catch (redirectError: any) {
-        console.error('[OAuth2] loginWithRedirect error:', redirectError);
+        console.error('[OAuth2] OAuth error:', redirectError);
         console.error('[OAuth2] Error name:', redirectError?.name);
         console.error('[OAuth2] Error message:', redirectError?.message);
         throw redirectError;
