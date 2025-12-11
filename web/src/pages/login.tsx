@@ -218,39 +218,45 @@ export default function LoginPage() {
       }
 
       // Use the Magic instance from context (has network + OAuth2 extension)
-      // The context Magic is properly initialized with network config
-      const magicInstance = magic || authMagicRef.current;
+      const magicInstance = magic;
       if (!magicInstance) {
-        console.error('[OAuth2] Magic not ready');
-        setError('Please refresh and try again.');
+        console.error('[OAuth2] Magic not ready - waiting...');
+        setError('Loading... Please try again in a moment.');
         return;
       }
 
-      console.log('[OAuth2] Using magic instance:', magicInstance);
-      console.log('[OAuth2] oauth2 extension:', (magicInstance as any).oauth2);
-      console.log('[OAuth2] loginWithRedirect function:', typeof (magicInstance as any).oauth2?.loginWithRedirect);
+      // Verify oauth2 extension exists
+      if (!(magicInstance as any).oauth2) {
+        console.error('[OAuth2] oauth2 extension not available');
+        setError('OAuth not available. Please refresh the page.');
+        return;
+      }
 
       setLoggingIn(true);
       setError(null);
       localStorage.removeItem('didToken');
 
       const redirectURI = `${window.location.origin}/login`;
-      console.log('[OAuth2] Provider:', provider);
+      console.log('[OAuth2] Starting OAuth for:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
 
-      // Use loginWithRedirect - this should navigate browser to OAuth provider
-      console.log('[OAuth2] Calling loginWithRedirect NOW...');
-      const result = await (magicInstance as any).oauth2.loginWithRedirect({
+      // loginWithRedirect triggers browser navigation - this promise never resolves normally
+      // The browser will redirect to the OAuth provider (Google/Discord/Twitch)
+      // After auth, user is redirected back to redirectURI where getRedirectResult() handles it
+      (magicInstance as any).oauth2.loginWithRedirect({
         provider,
         redirectURI,
+      }).catch((err: any) => {
+        console.error('[OAuth2] loginWithRedirect error:', err);
+        setError(err.message || `${provider} login failed`);
+        setLoggingIn(false);
       });
-      // Note: This line should NOT be reached if redirect happens
-      console.log('[OAuth2] loginWithRedirect returned (unexpected):', result);
+
+      // Don't await - the redirect should happen immediately
+      // If we reach here, something is wrong (redirect should have navigated away)
+      console.log('[OAuth2] loginWithRedirect called - waiting for browser redirect...');
     } catch (error: any) {
       console.error('[OAuth2] Error caught:', error);
-      console.error('[OAuth2] Error name:', error?.name);
-      console.error('[OAuth2] Error message:', error?.message);
-      console.error('[OAuth2] Error stack:', error?.stack);
       setError(error.message || `${provider} login failed`);
       setLoggingIn(false);
     }
