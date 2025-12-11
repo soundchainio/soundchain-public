@@ -225,6 +225,10 @@ export default function LoginPage() {
         return;
       }
 
+      console.log('[OAuth2] authMagic instance:', authMagic);
+      console.log('[OAuth2] oauth2 extension:', (authMagic as any).oauth2);
+      console.log('[OAuth2] loginWithRedirect function:', typeof (authMagic as any).oauth2?.loginWithRedirect);
+
       setLoggingIn(true);
       setError(null);
       localStorage.removeItem('didToken');
@@ -233,15 +237,19 @@ export default function LoginPage() {
       console.log('[OAuth2] Provider:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
 
-      // Use loginWithRedirect - redirects browser to OAuth provider
-      console.log('[OAuth2] Using loginWithRedirect (redirect mode)...');
-      await (authMagic as any).oauth2.loginWithRedirect({
+      // Use loginWithRedirect - this should navigate browser to OAuth provider
+      console.log('[OAuth2] Calling loginWithRedirect NOW...');
+      const result = await (authMagic as any).oauth2.loginWithRedirect({
         provider,
         redirectURI,
       });
-      console.log('[OAuth2] Redirect initiated to provider...');
+      // Note: This line should NOT be reached if redirect happens
+      console.log('[OAuth2] loginWithRedirect returned (unexpected):', result);
     } catch (error: any) {
-      console.error('[OAuth2] Error:', error);
+      console.error('[OAuth2] Error caught:', error);
+      console.error('[OAuth2] Error name:', error?.name);
+      console.error('[OAuth2] Error message:', error?.message);
+      console.error('[OAuth2] Error stack:', error?.stack);
       setError(error.message || `${provider} login failed`);
       setLoggingIn(false);
     }
