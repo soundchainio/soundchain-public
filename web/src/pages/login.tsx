@@ -294,13 +294,7 @@ export default function LoginPage() {
       console.log('[OAuth2] Current URL:', window.location.href);
       console.log('[OAuth2] Search params:', window.location.search);
 
-      const authMagic = authMagicRef.current;
-      if (!authMagic) {
-        console.log('[OAuth2] Auth Magic not ready yet');
-        return;
-      }
-
-      // Check if URL has OAuth params
+      // Check if URL has OAuth params FIRST before checking Magic
       const params = new URLSearchParams(window.location.search);
       const hasOAuthParams = params.has('code') || params.has('state');
 
@@ -311,11 +305,33 @@ export default function LoginPage() {
 
       if (!hasOAuthParams) return;
 
+      // Create Magic instance if not exists (important for page reload after OAuth redirect)
+      let authMagic = authMagicRef.current;
+      if (!authMagic) {
+        console.log('[OAuth2] Creating auth Magic instance for redirect handling...');
+        authMagic = createAuthMagic();
+        authMagicRef.current = authMagic;
+      }
+
+      if (!authMagic) {
+        console.error('[OAuth2] Failed to create auth Magic instance');
+        setError('Authentication service unavailable. Please try again.');
+        return;
+      }
+
       console.log('[OAuth2] Detected OAuth redirect params, processing...');
       setLoggingIn(true);
 
       try {
-        const result = await (authMagic as any).oauth2.getRedirectResult();
+        // Add timeout to prevent infinite spinner (30 seconds)
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('OAuth login timed out. Please try again.')), 30000)
+        );
+
+        const result = await Promise.race([
+          (authMagic as any).oauth2.getRedirectResult(),
+          timeoutPromise
+        ]) as any;
         console.log('[OAuth2] getRedirectResult:', result);
 
         if (result && result.magic?.idToken) {
@@ -332,9 +348,13 @@ export default function LoginPage() {
           } else {
             throw new Error('Login failed: No JWT returned');
           }
+        } else {
+          console.log('[OAuth2] No idToken in result, clearing login state');
+          setLoggingIn(false);
         }
       } catch (error: any) {
         console.error('[OAuth2] Redirect error:', error);
+        console.error('[OAuth2] Error details:', JSON.stringify(error, null, 2));
         // Ignore "not an OAuth redirect" errors
         if (!error?.message?.includes('Missing') && !error?.message?.includes('OAuth')) {
           handleError(error as Error);
