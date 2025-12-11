@@ -17,6 +17,7 @@ import { config } from 'config'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
+import { useMagicContext } from 'hooks/useMagicContext'
 import { NFTCard } from 'components/dex/NFTCard'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { GenreSection } from 'components/dex/GenreSection'
@@ -167,15 +168,15 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
   )
 }
 
-// Backend Tab Component - API/Aggregator View
-function BackendPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+// Backend Tab Component - API/Aggregator View (Real stats from DB)
+function BackendPanel({ isOpen, onClose, totalTracks, totalListings }: { isOpen: boolean; onClose: () => void; totalTracks?: number; totalListings?: number }) {
   if (!isOpen) return null
 
   const aggregatorStats = [
-    { label: 'NFTs Indexed', value: '2.4M', change: '+12.4%' },
-    { label: 'Tokens Tracked', value: '847K', change: '+8.7%' },
-    { label: 'Chains Connected', value: '25+', change: '0%' },
-    { label: 'API Requests/min', value: '45.2K', change: '+15.2%' },
+    { label: 'Tracks Indexed', value: totalTracks?.toLocaleString() || '0', change: 'Live' },
+    { label: 'NFT Listings', value: totalListings?.toLocaleString() || '0', change: 'Live' },
+    { label: 'Network', value: 'Polygon', change: 'Mainnet' },
+    { label: 'GraphQL API', value: 'Active', change: 'Online' },
   ]
 
   return (
@@ -377,6 +378,9 @@ function DEXDashboard() {
 
   // Audio Player Context
   const { play, playlistState, isPlaying, currentSong, togglePlay } = useAudioPlayerContext()
+
+  // Magic Wallet Context - Real balances from blockchain
+  const { balance: maticBalance, ogunBalance, account: walletAccount } = useMagicContext()
 
   // Create+ Button Handler (Legacy UI Pattern)
   const handleCreateClick = () => {
@@ -2288,12 +2292,12 @@ function DEXDashboard() {
                   </div>
                 )}
 
-                {/* Balance Cards */}
+                {/* Balance Cards - Real data from Magic wallet */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <Card className="metadata-section p-4 text-center hover:border-yellow-500/50 transition-all">
                     <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                     <p className="text-xs text-gray-400 mb-1">OGUN</p>
-                    <p className="text-xl font-bold text-yellow-400">0.00</p>
+                    <p className="text-xl font-bold text-yellow-400">{ogunBalance || '0.00'}</p>
                     <p className="text-xs text-gray-500">≈ $0.00</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-purple-500/50 transition-all">
@@ -2301,13 +2305,13 @@ function DEXDashboard() {
                       <svg viewBox="0 0 38 33" fill="currentColor"><path d="M29.7 16.5l-11.7 6.7-11.7-6.7 11.7-16.5 11.7 16.5zM18 25.2l-11.7-6.7 11.7 16.5 11.7-16.5-11.7 6.7z"/></svg>
                     </div>
                     <p className="text-xs text-gray-400 mb-1">MATIC</p>
-                    <p className="text-xl font-bold text-purple-400">0.00</p>
+                    <p className="text-xl font-bold text-purple-400">{maticBalance || '0.00'}</p>
                     <p className="text-xs text-gray-500">≈ $0.00</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-cyan-500/50 transition-all">
                     <ImageIcon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
                     <p className="text-xs text-gray-400 mb-1">NFTs</p>
-                    <p className="text-xl font-bold text-cyan-400">0</p>
+                    <p className="text-xl font-bold text-cyan-400">{tracksData?.groupedTracks?.pageInfo?.totalCount || 0}</p>
                     <p className="text-xs text-gray-500">Owned</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-green-500/50 transition-all">
@@ -3073,7 +3077,12 @@ function DEXDashboard() {
 
       {/* Modals */}
       <WalletConnectModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} onConnect={handleWalletConnect} />
-      <BackendPanel isOpen={showBackendPanel} onClose={() => setShowBackendPanel(false)} />
+      <BackendPanel
+        isOpen={showBackendPanel}
+        onClose={() => setShowBackendPanel(false)}
+        totalTracks={tracksData?.groupedTracks?.pageInfo?.totalCount}
+        totalListings={listingData?.listingItems?.pageInfo?.totalCount}
+      />
     </div>
   )
 }
