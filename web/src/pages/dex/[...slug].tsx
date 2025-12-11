@@ -448,7 +448,7 @@ function DEXDashboard() {
     variables: {
       filter: {}, // Empty filter to get ALL tracks
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
-      page: { first: 50 }, // Start with 50 tracks (API max)
+      page: { first: 20 }, // Start with 20 tracks for smooth rendering
     },
     skip: false, // Always fetch
     fetchPolicy: 'cache-and-network', // Use cache but also fetch fresh
@@ -467,7 +467,7 @@ function DEXDashboard() {
       await fetchMoreTracks({
         variables: {
           page: {
-            first: 50,
+            first: 20,
             after: tracksData.groupedTracks.pageInfo.endCursor,
           },
         },
@@ -545,7 +545,7 @@ function DEXDashboard() {
   // Fetch all listing items for marketplace with pagination
   // Using errorPolicy: 'all' to prevent errors from crashing the page - partial data still renders
   const { data: listingData, loading: listingLoading, error: listingError, fetchMore: fetchMoreListings } = useListingItemsQuery({
-    variables: { page: { first: 50 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} },
+    variables: { page: { first: 20 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} },
     ssr: false,
     fetchPolicy: 'cache-and-network',
     errorPolicy: 'all', // Allow partial data even with errors
@@ -559,7 +559,7 @@ function DEXDashboard() {
     try {
       await fetchMoreListings({
         variables: {
-          page: { first: 50, after: listingData.listingItems.pageInfo.endCursor },
+          page: { first: 20, after: listingData.listingItems.pageInfo.endCursor },
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev
@@ -667,7 +667,7 @@ function DEXDashboard() {
   const { data: exploreUsersData, loading: exploreUsersLoading } = useExploreUsersQuery({
     variables: {
       search: exploreSearchQuery.trim() || undefined,
-      page: { first: 50 }
+      page: { first: 20 }
     },
     skip: selectedView !== 'explore',
     fetchPolicy: 'cache-and-network',
@@ -677,7 +677,7 @@ function DEXDashboard() {
   const { data: exploreTracksData, loading: exploreTracksLoading } = useExploreTracksQuery({
     variables: {
       search: exploreSearchQuery.trim() || undefined,
-      page: { first: 50 }
+      page: { first: 20 }
     },
     skip: selectedView !== 'explore',
     fetchPolicy: 'cache-and-network',
