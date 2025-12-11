@@ -97,12 +97,17 @@ export const BottomAudioPlayer = () => {
 export default BottomAudioPlayer
 
 const Container = tw.div`
-  flex 
+  hidden
+  md:flex
+  fixed
+  bottom-0
+  left-0
+  right-0
+  z-50
   justify-between
   items-center
-  bg-neutral-900 
+  bg-neutral-900
   h-[90px]
-  mt-4
   transition-all duration-300
 `
 

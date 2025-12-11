@@ -23,7 +23,7 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <div className="flex flex-col gap-2 bg-neutral-900 py-2">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-col gap-2 bg-neutral-900 py-2 md:hidden">
       <div className="flex items-center justify-between px-2">
         <button
           className="flex min-w-0 flex-1 items-center gap-2"
