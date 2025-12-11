@@ -6,6 +6,7 @@ import { useModalState } from 'contexts/ModalContext'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useIsMobile } from 'hooks/useIsMobile'
 import { useLayoutContext } from 'hooks/useLayoutContext'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { ReactNode, useEffect, useState } from 'react'
@@ -47,10 +48,12 @@ export const Layout = ({ children, className }: LayoutProps) => {
   const modalState = useModalState()
   const showCommentModal = modalState?.showCommentModal
   const { hideBottomNavBar, isAuthLayout, topNavBarProps, isLandingLayout } = useLayoutContext()
+  const { currentSong } = useAudioPlayerContext()
   const { asPath } = useRouter()
   const [canInsertScript, setCanInsertScript] = useState(false)
 
   const isMobileOrTablet = useIsMobile(breakpointsNumber.tablet)
+  const hasActivePlayer = !!currentSong?.src
 
   useEffect(() => {
     setCanInsertScript(true)
@@ -94,7 +97,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
             <TopNavBar {...topNavBarProps} />
             <div id="top-sheet"></div>
             <main id="main" className="relative flex-1 overflow-y-auto bg-gray-10 focus:outline-none">
-              <div className={classNames('h-full', className)}>{children}</div>
+              <div className={classNames('h-full', hasActivePlayer ? 'pb-24' : '', className)}>{children}</div>
             </main>
           </div>
           <div id="modals" className="absolute z-20 w-full">

@@ -97,18 +97,19 @@ export const BottomAudioPlayer = () => {
 export default BottomAudioPlayer
 
 const Container = tw.div`
-  hidden
-  md:flex
   fixed
   bottom-0
   left-0
   right-0
   z-50
+  flex
   justify-between
   items-center
   bg-neutral-900
   h-[90px]
   transition-all duration-300
+  animate-slide-up
+  shadow-[0_-4px_20px_rgba(0,0,0,0.5)]
 `
 
 const TrackDetails = tw.div`

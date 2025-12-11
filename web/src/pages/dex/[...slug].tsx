@@ -858,7 +858,7 @@ function DEXDashboard() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white pb-24 md:pb-28">
+    <div className="min-h-screen bg-gray-900 text-white">
       {/* Full-screen Cover Photo Background */}
       <div className="fixed inset-0 z-0">
         {user?.coverPicture && !coverImageError ? (
