@@ -742,6 +742,12 @@ function DEXDashboard() {
     }
   }, [listingError])
 
+  useEffect(() => {
+    if (genreTracksError) {
+      console.error('❌ Genre Tracks Query Error:', genreTracksError)
+    }
+  }, [genreTracksError])
+
   // User profile from GraphQL - REAL DATA
   const user = userData?.me?.profile
   const userWallet = userData?.me?.defaultWallet
