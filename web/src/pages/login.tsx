@@ -287,56 +287,41 @@ export default function LoginPage() {
     handleMagicLink();
   }, [magic, magicParam, login, handleError]);
 
-  // Handle OAuth2 redirect callback
+  // Handle OAuth2 redirect callback - ALWAYS try getRedirectResult on page load
+  // Magic handles URL params internally, we shouldn't check for them ourselves
   useEffect(() => {
     async function handleOAuthRedirect() {
-      // Log current URL for debugging
+      // Skip if not client-side or already logging in
+      if (!isClient || loggingIn) return;
+
+      console.log('[OAuth2] Checking for OAuth redirect result...');
       console.log('[OAuth2] Current URL:', window.location.href);
-      console.log('[OAuth2] Search params:', window.location.search);
 
-      // Check if URL has OAuth params FIRST before checking Magic
-      const params = new URLSearchParams(window.location.search);
-      const hasOAuthParams = params.has('code') || params.has('state');
-
-      console.log('[OAuth2] Has OAuth params:', hasOAuthParams, {
-        code: params.has('code'),
-        state: params.has('state')
-      });
-
-      if (!hasOAuthParams) return;
-
-      // Create Magic instance if not exists (important for page reload after OAuth redirect)
+      // Create Magic instance if not exists
       let authMagic = authMagicRef.current;
       if (!authMagic) {
-        console.log('[OAuth2] Creating auth Magic instance for redirect handling...');
+        console.log('[OAuth2] Creating auth Magic instance...');
         authMagic = createAuthMagic();
         authMagicRef.current = authMagic;
       }
 
       if (!authMagic) {
-        console.error('[OAuth2] Failed to create auth Magic instance');
-        setError('Authentication service unavailable. Please try again.');
+        console.log('[OAuth2] No Magic instance available');
         return;
       }
 
-      console.log('[OAuth2] Detected OAuth redirect params, processing...');
-      setLoggingIn(true);
-
       try {
-        // Add timeout to prevent infinite spinner (30 seconds)
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('OAuth login timed out. Please try again.')), 30000)
-        );
-
-        const result = await Promise.race([
-          (authMagic as any).oauth2.getRedirectResult(),
-          timeoutPromise
-        ]) as any;
-        console.log('[OAuth2] getRedirectResult:', result);
+        // Always try to get redirect result - Magic handles state internally
+        // This will return null/undefined if there's no OAuth redirect to process
+        console.log('[OAuth2] Calling getRedirectResult...');
+        const result = await (authMagic as any).oauth2.getRedirectResult();
+        console.log('[OAuth2] getRedirectResult returned:', result);
 
         if (result && result.magic?.idToken) {
+          console.log('[OAuth2] Got OAuth result with idToken!');
+          setLoggingIn(true);
+
           const didToken = result.magic.idToken;
-          console.log('[OAuth2] Got didToken from redirect');
           localStorage.setItem('didToken', didToken);
 
           const loginResult = await login({ variables: { input: { token: didToken } } });
@@ -349,21 +334,25 @@ export default function LoginPage() {
             throw new Error('Login failed: No JWT returned');
           }
         } else {
-          console.log('[OAuth2] No idToken in result, clearing login state');
-          setLoggingIn(false);
+          console.log('[OAuth2] No OAuth redirect result (normal for fresh page load)');
         }
       } catch (error: any) {
-        console.error('[OAuth2] Redirect error:', error);
-        console.error('[OAuth2] Error details:', JSON.stringify(error, null, 2));
-        // Ignore "not an OAuth redirect" errors
-        if (!error?.message?.includes('Missing') && !error?.message?.includes('OAuth')) {
-          handleError(error as Error);
+        // getRedirectResult throws if there's no OAuth redirect in progress - this is expected
+        const errorMsg = error?.message || '';
+        if (errorMsg.includes('Magic') || errorMsg.includes('oauth') || errorMsg.includes('redirect')) {
+          console.log('[OAuth2] No OAuth redirect to process (expected):', errorMsg);
+        } else {
+          console.error('[OAuth2] Unexpected error:', error);
+          setError(error.message || 'OAuth login failed');
         }
         setLoggingIn(false);
       }
     }
-    handleOAuthRedirect();
-  }, [isClient, login, router, handleError]);
+
+    // Small delay to ensure Magic SDK is fully initialized
+    const timeoutId = setTimeout(handleOAuthRedirect, 100);
+    return () => clearTimeout(timeoutId);
+  }, [isClient, login, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
