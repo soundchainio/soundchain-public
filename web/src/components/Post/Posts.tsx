@@ -151,11 +151,16 @@ interface RowProps {
 
 const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
   const rowRef = useRef<HTMLDivElement>(null)
+  const lastHeightRef = useRef<number>(0)
 
   useEffect(() => {
-    const gapHeight = rowRef?.current?.getBoundingClientRect().height
+    const gapHeight = rowRef?.current?.getBoundingClientRect().height || 0
 
-    setSize(index, gapHeight)
+    // Only update if height changed significantly (prevents re-render loop from iframe loading)
+    if (Math.abs(gapHeight - lastHeightRef.current) > 5) {
+      lastHeightRef.current = gapHeight
+      setSize(index, gapHeight)
+    }
   }, [setSize, index])
 
   if (!data[index]) {
