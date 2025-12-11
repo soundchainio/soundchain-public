@@ -114,6 +114,7 @@ export const Posts = ({ profileId }: PostsProps) => {
                   itemCount={postsCount}
                   itemSize={getSize}
                   itemData={nodes}
+                  overscanCount={3}
                 >
                   {memo(
                     ({ data, index, style }) => (
@@ -152,15 +153,22 @@ interface RowProps {
 const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
   const rowRef = useRef<HTMLDivElement>(null)
   const lastHeightRef = useRef<number>(0)
+  const hasSetInitialSize = useRef(false)
 
   useEffect(() => {
-    const gapHeight = rowRef?.current?.getBoundingClientRect().height || 0
+    // Debounce height measurements to prevent re-render cascade from iframe loading
+    const timeoutId = setTimeout(() => {
+      const gapHeight = rowRef?.current?.getBoundingClientRect().height || 0
 
-    // Only update if height changed significantly (prevents re-render loop from iframe loading)
-    if (Math.abs(gapHeight - lastHeightRef.current) > 5) {
-      lastHeightRef.current = gapHeight
-      setSize(index, gapHeight)
-    }
+      // Only update if height changed significantly OR if this is the first measurement
+      if (!hasSetInitialSize.current || Math.abs(gapHeight - lastHeightRef.current) > 50) {
+        hasSetInitialSize.current = true
+        lastHeightRef.current = gapHeight
+        setSize(index, gapHeight)
+      }
+    }, hasSetInitialSize.current ? 500 : 50) // Fast initial, slow subsequent
+
+    return () => clearTimeout(timeoutId)
   }, [setSize, index])
 
   if (!data[index]) {
