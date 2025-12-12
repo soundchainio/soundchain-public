@@ -831,15 +831,23 @@ function DEXDashboard() {
   }
 
   const handlePlayTrack = useCallback((track: any, index: number, tracks: any[]) => {
-    const playlist: Song[] = tracks.map(t => ({
-      trackId: t.id,
-      src: t.playbackUrl || '',
-      title: t.title,
-      artist: t.artist,
-      art: t.artworkUrl || '',
-      isFavorite: t.isFavorite,
-    }))
-    playlistState(playlist, index)
+    try {
+      if (!track || !tracks?.length) {
+        console.error('[handlePlayTrack] Invalid track or tracks array')
+        return
+      }
+      const playlist: Song[] = tracks.map(t => ({
+        trackId: t?.id || '',
+        src: t?.playbackUrl || '',
+        title: t?.title || 'Unknown',
+        artist: t?.artist || t?.profile?.displayName || 'Unknown Artist',
+        art: t?.artworkUrl || t?.artwork || '',
+        isFavorite: t?.isFavorite || false,
+      }))
+      playlistState(playlist, index)
+    } catch (error) {
+      console.error('[handlePlayTrack] Error creating playlist:', error)
+    }
   }, [playlistState])
 
   const handleWalletConnect = (address: string, walletType: string) => {

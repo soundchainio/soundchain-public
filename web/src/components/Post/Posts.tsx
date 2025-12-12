@@ -114,7 +114,7 @@ export const Posts = ({ profileId }: PostsProps) => {
                   itemCount={postsCount}
                   itemSize={getSize}
                   itemData={nodes}
-                  overscanCount={3}
+                  overscanCount={5}
                 >
                   {memo(
                     ({ data, index, style }) => (
