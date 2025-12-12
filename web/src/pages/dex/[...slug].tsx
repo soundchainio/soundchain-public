@@ -420,9 +420,11 @@ function DEXDashboard() {
   `
 
   // Fetch tracks grouped by genre for the new Spotify-style UI
-  const { data: genreTracksData, loading: genreTracksLoading, error: genreTracksError } = useQuery(TRACKS_BY_GENRE_QUERY, {
-    variables: { limit: 15 }, // 15 tracks per genre for horizontal scroll
-    fetchPolicy: 'cache-and-network',
+  // Reduced limit to prevent Lambda timeout (502 errors)
+  const { data: genreTracksData, loading: genreTracksLoading, error: genreTracksError, refetch: refetchGenreTracks } = useQuery(TRACKS_BY_GENRE_QUERY, {
+    variables: { limit: 8 }, // Reduced from 15 to 8 to prevent Lambda timeout
+    fetchPolicy: 'cache-first', // Use cache to reduce API calls
+    errorPolicy: 'all', // Return partial data on error
   })
 
   // Fetch Top 10 most streamed tracks for the Top Charts section
@@ -514,11 +516,11 @@ function DEXDashboard() {
   }, [tracksError])
 
   // Fetch all listing items for marketplace with pagination
-  // Using errorPolicy: 'all' to prevent errors from crashing the page - partial data still renders
-  const { data: listingData, loading: listingLoading, error: listingError, fetchMore: fetchMoreListings } = useListingItemsQuery({
-    variables: { page: { first: 20 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} },
+  // Reduced initial load and using cache-first to prevent Lambda timeout (502 errors)
+  const { data: listingData, loading: listingLoading, error: listingError, fetchMore: fetchMoreListings, refetch: refetchListings } = useListingItemsQuery({
+    variables: { page: { first: 10 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} }, // Reduced from 20 to 10
     ssr: false,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first', // Use cache to reduce API calls
     errorPolicy: 'all', // Allow partial data even with errors
   })
 
@@ -646,17 +648,33 @@ function DEXDashboard() {
     }
   }, [tracksError])
 
+  // Auto-retry on 502 errors (Lambda timeout) - once after 2 seconds
+  const [listingRetried, setListingRetried] = useState(false)
+  const [genreRetried, setGenreRetried] = useState(false)
+
   useEffect(() => {
     if (listingError) {
       console.error('❌ useListingItemsQuery Error:', listingError)
+      // Auto-retry once on 502 error
+      if (!listingRetried && listingError.message?.includes('502')) {
+        console.log('🔄 Retrying listing query in 2s...')
+        setListingRetried(true)
+        setTimeout(() => refetchListings(), 2000)
+      }
     }
-  }, [listingError])
+  }, [listingError, listingRetried, refetchListings])
 
   useEffect(() => {
     if (genreTracksError) {
       console.error('❌ Genre Tracks Query Error:', genreTracksError)
+      // Auto-retry once on 502 error
+      if (!genreRetried && genreTracksError.message?.includes('502')) {
+        console.log('🔄 Retrying genre tracks query in 2s...')
+        setGenreRetried(true)
+        setTimeout(() => refetchGenreTracks(), 2000)
+      }
     }
-  }, [genreTracksError])
+  }, [genreTracksError, genreRetried, refetchGenreTracks])
 
   // User profile from GraphQL - REAL DATA
   const user = userData?.me?.profile
