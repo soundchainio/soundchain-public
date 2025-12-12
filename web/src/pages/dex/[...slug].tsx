@@ -502,49 +502,29 @@ function DEXDashboard() {
     refetchTracks()
   }, []) // Empty deps = run once on mount
 
-  // AUTO-LOAD ALL TRACKS: Aggressive loading until all tracks are fetched
+  // AUTO-LOAD ALL TRACKS: Load up to totalCount then STOP
+  // CRITICAL: Removed aggressive auto-loading - was causing infinite loop and memory leak
+  // Now only logs progress, manual "Load More" button handles pagination
   const tracksLoadedRef = useRef(0)
   useEffect(() => {
     const currentCount = tracksData?.groupedTracks?.nodes?.length || 0
     const totalCount = tracksData?.groupedTracks?.pageInfo?.totalCount || 0
-    const hasMore = tracksData?.groupedTracks?.pageInfo?.hasNextPage
 
-    // Only trigger if we have new data and more to load
+    // Only log if we have new data
     if (currentCount > tracksLoadedRef.current) {
       tracksLoadedRef.current = currentCount
       console.log(`✅ Tracks loaded: ${currentCount}/${totalCount}`)
     }
+    // NO AUTO-LOADING - let user click "Load More" button
+    // Previous auto-loading caused infinite loop
+  }, [tracksData?.groupedTracks?.nodes?.length])
 
-    // Auto-load more if there's more data
-    if (hasMore && !loadingMore && !tracksLoading && currentCount > 0) {
-      const timer = setTimeout(() => {
-        console.log(`🔄 AUTO-LOADING MORE TRACKS... (${currentCount}/${totalCount})`)
-        handleLoadMore()
-      }, 300)
-      return () => clearTimeout(timer)
-    }
-  }, [tracksData?.groupedTracks?.nodes?.length, tracksData?.groupedTracks?.pageInfo?.hasNextPage, loadingMore, tracksLoading])
-
-  // CRITICAL DEBUG: Log raw GraphQL response
+  // Log only errors (reduced logging for performance)
   useEffect(() => {
-    console.log('🔍 TRACKS QUERY DEBUG:', {
-      loading: tracksLoading,
-      error: tracksError,
-      hasData: !!tracksData,
-      totalCount: tracksData?.groupedTracks?.pageInfo?.totalCount,
-      nodesLength: tracksData?.groupedTracks?.nodes?.length,
-      rawData: tracksData,
-    })
     if (tracksError) {
-      console.error('🚨 TRACKS ERROR DETAILS:', tracksError)
-      console.error('🚨 ERROR GRAPHQL ERRORS:', tracksError.graphQLErrors)
-      console.error('🚨 ERROR NETWORK ERROR:', tracksError.networkError)
+      console.error('🚨 TRACKS ERROR:', tracksError.message)
     }
-    if (tracksData?.groupedTracks?.nodes) {
-      console.log('✅ TRACKS LOADED:', tracksData.groupedTracks.nodes.length, 'tracks')
-      console.log('✅ FIRST 3 TRACKS:', tracksData.groupedTracks.nodes.slice(0, 3))
-    }
-  }, [tracksData, tracksLoading, tracksError])
+  }, [tracksError])
 
   // Fetch all listing items for marketplace with pagination
   // Using errorPolicy: 'all' to prevent errors from crashing the page - partial data still renders
@@ -583,26 +563,20 @@ function DEXDashboard() {
     }
   }, [listingData, fetchMoreListings, loadingMoreListings])
 
-  // AUTO-LOAD ALL LISTINGS: Aggressive loading until all listings are fetched
+  // AUTO-LOAD ALL LISTINGS: Disabled - was causing 502 errors and performance issues
+  // User can click "Load More" button for pagination
   const listingsLoadedRef = useRef(0)
   useEffect(() => {
     const currentCount = listingData?.listingItems?.nodes?.length || 0
     const totalCount = listingData?.listingItems?.pageInfo?.totalCount || 0
-    const hasMore = listingData?.listingItems?.pageInfo?.hasNextPage
 
     if (currentCount > listingsLoadedRef.current) {
       listingsLoadedRef.current = currentCount
       console.log(`✅ Listings loaded: ${currentCount}/${totalCount}`)
     }
-
-    if (hasMore && !loadingMoreListings && !listingLoading && currentCount > 0) {
-      const timer = setTimeout(() => {
-        console.log(`🔄 AUTO-LOADING MORE LISTINGS... (${currentCount}/${totalCount})`)
-        handleLoadMoreListings()
-      }, 400)
-      return () => clearTimeout(timer)
-    }
-  }, [listingData?.listingItems?.nodes?.length, listingData?.listingItems?.pageInfo?.hasNextPage, loadingMoreListings, listingLoading])
+    // NO AUTO-LOADING - let user click "Load More" button
+    // Previous auto-loading caused 502 errors from backend overload
+  }, [listingData?.listingItems?.nodes?.length])
 
   // Infinite scroll refs - auto-load more when scrolling near bottom
   const tracksScrollRef = useRef<HTMLDivElement>(null)
@@ -766,61 +740,14 @@ function DEXDashboard() {
     })
   }
 
-  // Debug logging - Enhanced (ALWAYS LOG)
+  // Debug logging - Only log errors (disabled verbose logging for performance)
   if (typeof window !== 'undefined') {
-    console.log('🎵 DEX Dashboard Data:', {
-      userLoading: userLoading,
-      tracksLoading: tracksLoading,
-      listingLoading: listingLoading,
-      userError: userError?.message,
-      tracksError: tracksError?.message,
-      listingError: listingError?.message,
-      userLoaded: !!userData?.me,
-      profileLoaded: !!user,
-      userId: userData?.me?.id,
-      profileId: user?.id,
-      displayName: user?.displayName,
-      userHandle: user?.userHandle,
-      profilePicture: user?.profilePicture,
-      coverPicture: user?.coverPicture,
-      followerCount: user?.followerCount,
-      followingCount: user?.followingCount,
-      verified: user?.verified,
-      userTracksCount: userTracks.length,
-      marketTracksCount: marketTracks.length,
-      userWallet: userWallet,
-      rawUserData: userData,
-      rawUser: user,
-    })
-
-    // Log actual track data to see artwork URLs
-    if (userTracks.length > 0) {
-      console.log('🎨 User Tracks with Artwork:', userTracks.map((t: any) => ({
-        id: t.id,
-        title: t.title,
-        artist: t.artist,
-        artworkUrl: t.artworkUrl,
-        playbackUrl: t.playbackUrl,
-        hasListingItem: !!t.listingItem,
-      })))
-    }
-    if (marketTracks.length > 0) {
-      console.log('🛒 Market Tracks with Artwork:', marketTracks.slice(0, 5).map((t: any) => ({
-        id: t.id,
-        title: t.title,
-        artist: t.artist,
-        artworkUrl: t.artworkUrl,
-        playbackUrl: t.playbackUrl,
-        price: t.listingItem?.price,
-      })))
-    }
-
-    // Log any errors
+    // Log only errors to avoid console spam
     if (userError) {
-      console.error('❌ User query error:', userError)
+      console.error('❌ User query error:', userError.message)
     }
     if (tracksError) {
-      console.error('❌ Tracks query error:', tracksError)
+      console.error('❌ Tracks query error:', tracksError.message)
     }
     if (listingError) {
       console.error('❌ Listing query error:', listingError)
