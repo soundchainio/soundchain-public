@@ -400,7 +400,7 @@ function DEXDashboard() {
   })
 
   // GraphQL query for tracks by genre (Spotify-style horizontal scrolling)
-  // Note: Simplified query to avoid 400 errors - trackEdition nested fields removed
+  // Note: Simplified query - only request fields that exist in Track model
   const TRACKS_BY_GENRE_QUERY = gql`
     query TracksByGenre($limit: Float) {
       tracksByGenre(limit: $limit) {
@@ -408,19 +408,12 @@ function DEXDashboard() {
         tracks {
           id
           title
-          artwork
+          artworkUrl
           playbackUrl
           genres
           playbackCount
           favoriteCount
           createdAt
-          profile {
-            id
-            displayName
-            handle
-            avatar
-            verified
-          }
         }
       }
     }
