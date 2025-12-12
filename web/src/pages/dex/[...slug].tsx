@@ -572,67 +572,16 @@ function DEXDashboard() {
     // Previous auto-loading caused 502 errors from backend overload
   }, [listingData?.listingItems?.nodes?.length])
 
-  // Infinite scroll refs - auto-load more when scrolling near bottom
+  // Infinite scroll refs - DISABLED to prevent 502 errors and performance issues
+  // Users click "Load More" button for pagination instead
   const tracksScrollRef = useRef<HTMLDivElement>(null)
   const nftScrollRef = useRef<HTMLDivElement>(null)
   const listingsScrollRef = useRef<HTMLDivElement>(null)
-
-  // Auto-load more tracks when scrolling near bottom
-  useEffect(() => {
-    const ref = tracksScrollRef.current
-    if (!ref) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && tracksData?.groupedTracks?.pageInfo?.hasNextPage && !loadingMore) {
-          console.log('🔄 Auto-loading more tracks...')
-          handleLoadMore()
-        }
-      },
-      { threshold: 0.1, rootMargin: '200px' } // Trigger 200px before reaching bottom
-    )
-
-    observer.observe(ref)
-    return () => observer.disconnect()
-  }, [tracksData?.groupedTracks?.pageInfo?.hasNextPage, loadingMore, handleLoadMore])
-
-  // Auto-load more listings when scrolling near bottom
-  useEffect(() => {
-    const ref = listingsScrollRef.current
-    if (!ref) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && listingData?.listingItems?.pageInfo?.hasNextPage && !loadingMoreListings) {
-          console.log('🔄 Auto-loading more listings...')
-          handleLoadMoreListings()
-        }
-      },
-      { threshold: 0.1, rootMargin: '200px' }
-    )
-
-    observer.observe(ref)
-    return () => observer.disconnect()
-  }, [listingData?.listingItems?.pageInfo?.hasNextPage, loadingMoreListings, handleLoadMoreListings])
-
-  // Auto-load more NFTs when scrolling near bottom (separate from tracks since on different tab)
-  useEffect(() => {
-    const ref = nftScrollRef.current
-    if (!ref) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && tracksData?.groupedTracks?.pageInfo?.hasNextPage && !loadingMore) {
-          console.log('🔄 Auto-loading more NFTs...')
-          handleLoadMore()
-        }
-      },
-      { threshold: 0.1, rootMargin: '200px' }
-    )
-
-    observer.observe(ref)
-    return () => observer.disconnect()
-  }, [tracksData?.groupedTracks?.pageInfo?.hasNextPage, loadingMore, handleLoadMore])
+  // NOTE: All IntersectionObserver auto-loaders removed - they were causing:
+  // 1. Infinite loading loops
+  // 2. 502 backend errors from too many requests
+  // 3. Memory leaks from exponential data growth
+  // Manual "Load More" buttons are used instead
 
   // Explore Users Query - search for users/profiles
   // Pass undefined when no search to get all users, pass search string to filter
