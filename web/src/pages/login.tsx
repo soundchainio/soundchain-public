@@ -213,12 +213,18 @@ export default function LoginPage() {
         return;
       }
 
+      // Wait for Magic iframe to preload (required for OAuth to work)
+      console.log('[OAuth2] Waiting for Magic iframe preload...');
+      try {
+        await (authMagic as any).preload();
+        console.log('[OAuth2] Magic preload complete');
+      } catch (preloadErr) {
+        console.warn('[OAuth2] Preload warning (continuing):', preloadErr);
+      }
+
       const redirectURI = `${window.location.origin}/login`;
       console.log('[OAuth2] Starting OAuth for:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
-
-      // Wait briefly for Magic iframe to initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
       console.log('[OAuth2] Calling loginWithRedirect...');
 
       // Call loginWithRedirect - this should trigger browser navigation
