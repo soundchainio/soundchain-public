@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -6,7 +6,6 @@ import SEO from 'components/SEO';
 import { TopNavBarButton } from 'components/TopNavBarButton';
 import { config } from 'config';
 import { useLayoutContext } from 'hooks/useLayoutContext';
-import { useMagicContext } from 'hooks/useMagicContext';
 import { Google } from 'icons/Google';
 import { Discord } from 'icons/Discord';
 import { Twitch } from 'icons/Twitch';
@@ -22,8 +21,21 @@ import styled from 'styled-components';
 import { Magic } from 'magic-sdk';
 import { OAuthExtension } from '@magic-ext/oauth2';
 
-// Note: OAuth2 uses redirect flow. Network config is NOT needed for auth - only for wallet operations.
+// Auth-only Magic instance (no network config - just for authentication)
 const MAGIC_KEY = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
+
+// Create a single auth Magic instance - reuse across all login methods
+let authMagicInstance: any = null;
+const getAuthMagic = () => {
+  if (typeof window === 'undefined') return null;
+  if (!authMagicInstance) {
+    authMagicInstance = new Magic(MAGIC_KEY, {
+      extensions: [new OAuthExtension()],
+    });
+    console.log('[Auth] Created shared Magic auth instance');
+  }
+  return authMagicInstance;
+};
 
 const Overlay = styled.div`
   position: fixed;
@@ -94,16 +106,18 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const { data, loading: loadingMe } = useMeQuery({ skip: true });
   const me = data?.me;
-  const { magic } = useMagicContext();
   const router = useRouter();
   const magicParam = router.query.magic_credential?.toString();
   const [authMethod, setAuthMethod] = useState<AuthMethod[]>();
   const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
+  const authMagic = useRef<any>(null);
 
   useEffect(() => {
     setIsClient(true);
+    // Initialize auth Magic instance on client
+    authMagic.current = getAuthMagic();
     // Detect in-app browser and warn user
     if (isInAppBrowser()) {
       setInAppBrowserWarning(true);
@@ -153,18 +167,24 @@ export default function LoginPage() {
 
   useEffect(() => {
     const validateToken = async () => {
-      // Skip validation if user is already in login process
-      if (loggingIn) {
-        console.log('[validateToken] Skipping - login in progress');
+      // Skip validation if user is already in login process or not client-side
+      if (loggingIn || !isClient || !authMagic.current) {
+        console.log('[validateToken] Skipping - login in progress or not ready');
         return;
       }
 
       const storedToken = localStorage.getItem('didToken');
-      if (storedToken && magic) {
+      if (storedToken) {
         try {
-          const isLoggedIn = await magic.user.isLoggedIn();
+          // Use timeout to prevent hanging on isLoggedIn check
+          const isLoggedInPromise = authMagic.current.user.isLoggedIn();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('isLoggedIn timeout')), 5000)
+          );
+
+          const isLoggedIn = await Promise.race([isLoggedInPromise, timeoutPromise]);
           if (isLoggedIn) {
-            console.log('Validated stored didToken:', storedToken);
+            console.log('[validateToken] User is logged in, using stored token');
             const loginResult = await login({ variables: { input: { token: storedToken } } });
             if (loginResult.data?.login.jwt) {
               await setJwt(loginResult.data.login.jwt);
@@ -173,16 +193,20 @@ export default function LoginPage() {
               router.push(redirectUrl);
             }
           } else {
+            console.log('[validateToken] User not logged in, clearing token');
             localStorage.removeItem('didToken');
           }
-        } catch (error) {
-          console.error('Token validation error:', error);
-          localStorage.removeItem('didToken');
+        } catch (error: any) {
+          console.log('[validateToken] Check failed:', error.message);
+          // Don't clear token on timeout - just proceed with login flow
+          if (!error.message?.includes('timeout')) {
+            localStorage.removeItem('didToken');
+          }
         }
       }
     };
     validateToken();
-  }, [magic, login, router, loggingIn]);
+  }, [isClient, login, router, loggingIn]);
 
   const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
     console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
@@ -193,20 +217,21 @@ export default function LoginPage() {
         return;
       }
 
+      // Use shared auth Magic instance
+      const magic = authMagic.current;
+      if (!magic) {
+        setError('Login not ready. Please refresh the page.');
+        return;
+      }
+
       setLoggingIn(true);
       setError(null);
       localStorage.removeItem('didToken');
 
-      // Create fresh Magic instance each time to avoid stale iframe issues
-      console.log('[OAuth2] Creating fresh Magic instance...');
-      const authMagic = new Magic(MAGIC_KEY, {
-        extensions: [new OAuthExtension()],
-      });
+      console.log('[OAuth2] Using shared auth Magic instance');
+      console.log('[OAuth2] oauth2 extension:', !!(magic as any).oauth2);
 
-      console.log('[OAuth2] Magic instance created:', !!authMagic);
-      console.log('[OAuth2] oauth2 extension:', !!(authMagic as any).oauth2);
-
-      if (!(authMagic as any).oauth2) {
+      if (!(magic as any).oauth2) {
         console.error('[OAuth2] oauth2 extension not available');
         setError('OAuth not available. Please refresh the page.');
         setLoggingIn(false);
@@ -216,7 +241,7 @@ export default function LoginPage() {
       // Wait for Magic iframe to preload (required for OAuth to work)
       console.log('[OAuth2] Waiting for Magic iframe preload...');
       try {
-        await (authMagic as any).preload();
+        await (magic as any).preload();
         console.log('[OAuth2] Magic preload complete');
       } catch (preloadErr) {
         console.warn('[OAuth2] Preload warning (continuing):', preloadErr);
@@ -237,7 +262,7 @@ export default function LoginPage() {
 
       // Call loginWithRedirect - this should trigger browser navigation
       try {
-        await (authMagic as any).oauth2.loginWithRedirect({
+        await (magic as any).oauth2.loginWithRedirect({
           provider,
           redirectURI,
         });
@@ -268,14 +293,16 @@ export default function LoginPage() {
 
   useEffect(() => {
     async function handleMagicLink() {
+      const magic = authMagic.current;
       if (magic && magicParam && !loggingIn) {
         try {
           setLoggingIn(true);
           setError(null);
+          console.log('[MagicLink] Processing magic_credential callback');
           await magic.auth.loginWithCredential();
           const didToken = await magic.user.getIdToken();
-          console.log('Received didToken (credential):', didToken); // Added logging
-          localStorage.setItem('didToken', didToken); // Persist token
+          console.log('[MagicLink] Received didToken from credential');
+          localStorage.setItem('didToken', didToken);
           const loginResult = await login({ variables: { input: { token: didToken } } });
           if (loginResult.data?.login.jwt) {
             await setJwt(loginResult.data.login.jwt);
@@ -293,33 +320,25 @@ export default function LoginPage() {
       }
     }
     handleMagicLink();
-  }, [magic, magicParam, login, handleError]);
+  }, [isClient, magicParam, login, handleError, router]);
 
   // Handle OAuth2 redirect callback - ALWAYS try getRedirectResult on page load
   // Magic handles URL params internally, we shouldn't check for them ourselves
   useEffect(() => {
     async function handleOAuthRedirect() {
       // Skip if not client-side or already logging in
-      if (!isClient || loggingIn) return;
+      if (!isClient || loggingIn || !authMagic.current) return;
 
       console.log('[OAuth2] Checking for OAuth redirect result...');
       console.log('[OAuth2] Current URL:', window.location.href);
 
-      // Create fresh Magic instance for OAuth redirect handling
-      const authMagic = new Magic(MAGIC_KEY, {
-        extensions: [new OAuthExtension()],
-      });
-
-      if (!authMagic) {
-        console.log('[OAuth2] No Magic instance available');
-        return;
-      }
+      const magic = authMagic.current;
 
       try {
         // Always try to get redirect result - Magic handles state internally
         // This will return null/undefined if there's no OAuth redirect to process
         console.log('[OAuth2] Calling getRedirectResult...');
-        const result = await (authMagic as any).oauth2.getRedirectResult();
+        const result = await (magic as any).oauth2.getRedirectResult();
         console.log('[OAuth2] getRedirectResult returned:', result);
 
         if (result && result.magic?.idToken) {
@@ -357,12 +376,13 @@ export default function LoginPage() {
     // Small delay to ensure Magic SDK is fully initialized
     const timeoutId = setTimeout(handleOAuthRedirect, 100);
     return () => clearTimeout(timeoutId);
-  }, [isClient, login, router]);
+  }, [isClient, login, router, loggingIn]);
 
   async function handleSubmit(values: FormValues) {
     try {
-      if (!magic) throw new Error('Magic SDK not initialized');
-      console.log('Starting login process for email:', values.email);
+      const magic = authMagic.current;
+      if (!magic) throw new Error('Magic SDK not initialized. Please refresh the page.');
+      console.log('[Email] Starting login process for email:', values.email);
       setLoggingIn(true);
       setError(null);
 
@@ -370,7 +390,7 @@ export default function LoginPage() {
       // Use actual browser origin to handle both www and non-www domains
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
       const redirectURI = `${baseUrl}/login`;
-      console.log("Sending magic link to email...", { email: values.email, redirectURI });
+      console.log("[Email] Sending magic link to email...", { email: values.email, redirectURI });
 
       // Set a timeout - if magic link call hangs for more than 30 seconds, show error
       const timeoutPromise = new Promise((_, reject) => {
@@ -386,9 +406,9 @@ export default function LoginPage() {
           }),
           timeoutPromise
         ]);
-        console.log('Magic link sent successfully! Check your email.');
+        console.log('[Email] Magic link sent successfully! Check your email.');
       } catch (magicErr: any) {
-        console.error('Magic link error:', magicErr);
+        console.error('[Email] Magic link error:', magicErr);
         if (magicErr.message?.includes('timed out')) {
           setError('Request timed out. Please refresh and try again.');
           setLoggingIn(false);
@@ -399,7 +419,7 @@ export default function LoginPage() {
 
       // After user clicks the email link and returns, get the token
       const didToken = await magic.user.getIdToken();
-      console.log('Received didToken (magic link):', didToken);
+      console.log('[Email] Received didToken from magic link');
       localStorage.setItem('didToken', didToken);
 
       if (!didToken) {
@@ -407,7 +427,7 @@ export default function LoginPage() {
       }
 
       const result = await login({ variables: { input: { token: didToken } } });
-      console.log('GraphQL login mutation result:', result);
+      console.log('[Email] GraphQL login mutation result:', result.data?.login ? 'success' : 'failed');
 
       if (result.data?.login.jwt) {
         // Wait for JWT to be fully set before redirecting
@@ -417,13 +437,13 @@ export default function LoginPage() {
         await new Promise(resolve => setTimeout(resolve, 200));
 
         const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-        console.log('Redirecting to:', redirectUrl);
+        console.log('[Email] Redirecting to:', redirectUrl);
         router.push(redirectUrl);
       } else {
         throw new Error('Login failed: No JWT returned');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('[Email] Login error:', error);
       handleError(error as Error);
       setLoggingIn(false);
     }
