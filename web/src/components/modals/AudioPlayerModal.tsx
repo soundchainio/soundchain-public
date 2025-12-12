@@ -91,45 +91,47 @@ export const AudioPlayerModal = () => {
     setIsMobile(checkIsMobile)
   }, [])
 
-  // Fullscreen Desktop View - Split monitor style
-  if (isFullscreen && !isMobile) {
+  // Fullscreen View - Responsive for all screen sizes
+  // Breakpoints: watch (<200px), xxs (375px), xs (420px), sm (640px), md (768px), lg (1024px), xl (1280px), 2xl (1536px)
+  if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-[100] flex bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950">
-        {/* Close/Minimize Button */}
+      <div className="fixed inset-0 z-[100] flex flex-col lg:flex-row bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 overflow-hidden">
+        {/* Close/Minimize Button - scales for all screens including watch */}
         <button
           onClick={() => setIsFullscreen(false)}
-          className="absolute right-6 top-6 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+          className="absolute right-1 top-1 xxs:right-2 xxs:top-2 xs:right-4 xs:top-4 lg:right-6 lg:top-6 z-10 flex h-6 w-6 xxs:h-8 xxs:w-8 xs:h-10 xs:w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:bg-white/30 transition-colors"
           aria-label="Exit fullscreen"
         >
-          <ArrowsPointingInIcon className="h-5 w-5 text-white" />
+          <ArrowsPointingInIcon className="h-3 w-3 xxs:h-4 xxs:w-4 xs:h-5 xs:w-5 text-white" />
         </button>
 
-        {/* Left Side - Large Cover Art */}
-        <div className="flex w-1/2 items-center justify-center p-12">
-          <div className="relative aspect-square w-full max-w-[600px] overflow-hidden rounded-2xl shadow-2xl shadow-black/50">
-            <Asset src={currentSong.art} sizes="600px" />
-            {/* Gradient overlay for depth */}
+        {/* Cover Art Section - Responsive from watch to 4K */}
+        <div className="flex items-center justify-center p-2 xxs:p-3 xs:p-4 sm:p-6 md:p-8 lg:p-12 lg:w-1/2 flex-shrink-0">
+          <div className="relative aspect-square w-full max-w-[80px] xxs:max-w-[100px] xs:max-w-[140px] sm:max-w-[220px] md:max-w-[300px] lg:max-w-[420px] xl:max-w-[520px] 2xl:max-w-[600px] overflow-hidden rounded-lg xxs:rounded-xl sm:rounded-2xl shadow-2xl shadow-black/50">
+            <Asset src={currentSong.art} sizes="(max-width: 200px) 80px, (max-width: 375px) 100px, (max-width: 420px) 140px, (max-width: 640px) 220px, (max-width: 768px) 300px, (max-width: 1024px) 420px, 600px" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           </div>
         </div>
 
-        {/* Right Side - Track Details & Controls */}
-        <div className="flex w-1/2 flex-col justify-center overflow-y-auto p-12 text-white">
-          <div className="max-w-lg">
-            {/* Track Info */}
-            <div className="mb-8">
+        {/* Controls Section - Responsive layout */}
+        <div className="flex flex-1 flex-col justify-center overflow-y-auto p-1 xxs:p-2 xs:p-3 sm:p-4 md:p-6 lg:p-12 lg:w-1/2 text-white">
+          <div className="w-full max-w-lg mx-auto lg:mx-0">
+            {/* Track Info - Responsive text sizes from watch to desktop */}
+            <div className="mb-1 xxs:mb-2 xs:mb-3 sm:mb-4 lg:mb-8 text-center lg:text-left">
               <NextLink href={`/tracks/${currentSong.trackId}`} className="group">
-                <h1 className="text-5xl font-black tracking-tight group-hover:text-cyan-400 transition-colors">
+                <h1 className="text-xs xxs:text-sm xs:text-base sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-black tracking-tight group-hover:text-cyan-400 transition-colors line-clamp-2">
                   {currentSong.title || 'Unknown Title'}
                 </h1>
               </NextLink>
-              <p className="mt-2 text-2xl text-neutral-400">{currentSong.artist || 'Unknown Artist'}</p>
+              <p className="mt-0.5 xxs:mt-1 text-[10px] xxs:text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-neutral-400 truncate">
+                {currentSong.artist || 'Unknown Artist'}
+              </p>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mb-8">
+            {/* Progress Bar - Hidden on watch, shown on larger screens */}
+            <div className="hidden xxs:block mb-2 xs:mb-3 sm:mb-4 lg:mb-8">
               <AudioSlider className="audio-player" min={0} max={duration} value={progress} onChange={onSliderChange} />
-              <div className="mt-2 flex justify-between text-sm text-neutral-500">
+              <div className="mt-0.5 xs:mt-1 sm:mt-2 flex justify-between text-[8px] xxs:text-[10px] xs:text-xs sm:text-sm text-neutral-500">
                 <span>{timeFromSecs(progress || 0)}</span>
                 <span onClick={onPlaybackDurationClick} className="cursor-pointer hover:text-white">
                   {showTotalPlaybackDuration ? timeFromSecs(duration || 0) : remainingTime(progress, duration || 0)}
@@ -137,49 +139,58 @@ export const AudioPlayerModal = () => {
               </div>
             </div>
 
-            {/* Main Controls */}
-            <div className="mb-8 flex items-center justify-center gap-8">
+            {/* Main Controls - Optimized for all screens including watch */}
+            <div className="mb-2 xxs:mb-3 xs:mb-4 sm:mb-6 lg:mb-8 flex items-center justify-center gap-1 xxs:gap-2 xs:gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
+              {/* Shuffle - hidden on watch/tiny screens */}
               <button
                 aria-label={isShuffleOn ? 'Shuffle off' : 'Shuffle on'}
-                className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="hidden sm:flex h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
                 onClick={toggleShuffle}
               >
-                <Shuffle width={20} stroke={isShuffleOn ? '#22d3ee' : '#808080'} />
+                <Shuffle width={14} className="md:w-4 lg:w-5" stroke={isShuffleOn ? '#22d3ee' : '#808080'} />
               </button>
+              {/* Previous */}
               <button
-                className="flex h-14 w-14 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="flex h-8 w-8 xxs:h-9 xxs:w-9 xs:h-10 xs:w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-full hover:bg-white/10 active:bg-white/20 transition-colors"
                 aria-label="Previous track"
                 onClick={playPrevious}
               >
-                <Rewind className="h-6 w-6" />
+                <Rewind className="h-3 w-3 xxs:h-4 xxs:w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
               </button>
+              {/* Play/Pause - Main button, prominent on all screens */}
               <button
-                className="flex h-20 w-20 items-center justify-center rounded-full bg-white hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-white/20"
+                className="flex h-12 w-12 xxs:h-14 xxs:w-14 xs:h-16 xs:w-16 sm:h-18 sm:w-18 md:h-20 md:w-20 lg:h-24 lg:w-24 items-center justify-center rounded-full bg-white hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-white/20"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
                 onClick={togglePlay}
               >
-                {isPlaying ? <Pause fill="black" className="h-8 w-8" /> : <Play fill="black" className="h-8 w-8 ml-1" />}
+                {isPlaying ? (
+                  <Pause fill="black" className="h-4 w-4 xxs:h-5 xxs:w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10" />
+                ) : (
+                  <Play fill="black" className="h-4 w-4 xxs:h-5 xxs:w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10 ml-0.5 sm:ml-1" />
+                )}
               </button>
+              {/* Next */}
               <button
-                className="flex h-14 w-14 items-center justify-center rounded-full hover:bg-white/10 transition-colors disabled:opacity-50"
+                className="flex h-8 w-8 xxs:h-9 xxs:w-9 xs:h-10 xs:w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-full hover:bg-white/10 active:bg-white/20 transition-colors disabled:opacity-50"
                 aria-label="Next track"
                 onClick={playNext}
                 disabled={!hasNext}
               >
-                <Forward className="h-6 w-6" />
+                <Forward className="h-3 w-3 xxs:h-4 xxs:w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
               </button>
+              {/* Playlist - hidden on small screens */}
               <button
                 aria-label="Playlist"
-                className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="hidden sm:flex h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
                 onClick={() => setIsPlaylistOpen(!isPlaylistOpen)}
               >
                 <Playlists fillColor={isPlaylistOpen ? '#22d3ee' : '#808080'} />
               </button>
             </div>
 
-            {/* Volume Control */}
-            <div className="mb-8 flex items-center gap-4">
-              <SpeakerXMarkIcon className="h-5 w-5 text-neutral-500" />
+            {/* Volume Control - Hidden on watch/phone screens */}
+            <div className="hidden md:flex mb-4 lg:mb-8 items-center gap-2 md:gap-3 lg:gap-4">
+              <SpeakerXMarkIcon className="h-4 w-4 lg:h-5 lg:w-5 text-neutral-500" />
               <div className="flex-1">
                 <AudioSlider
                   className="volume-slider"
@@ -190,33 +201,35 @@ export const AudioPlayerModal = () => {
                   step={0.01}
                 />
               </div>
-              <SpeakerWaveIcon className="h-5 w-5 text-neutral-500" />
+              <SpeakerWaveIcon className="h-4 w-4 lg:h-5 lg:w-5 text-neutral-500" />
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-4">
+            {/* Action Buttons - Responsive layout, simplified on small screens */}
+            <div className="hidden xxs:flex items-center justify-center lg:justify-start gap-1 xs:gap-2 sm:gap-3 lg:gap-4 flex-wrap">
               <button
-                className="flex items-center gap-2 rounded-full bg-white/10 px-6 py-3 hover:bg-white/20 transition-colors"
+                className="flex items-center gap-0.5 xs:gap-1 sm:gap-2 rounded-full bg-white/10 px-2 py-1.5 xs:px-3 xs:py-2 sm:px-4 sm:py-2.5 lg:px-6 lg:py-3 hover:bg-white/20 active:bg-white/30 transition-colors text-[10px] xs:text-xs sm:text-sm"
                 onClick={handleFavorite}
               >
-                {isFavorite ? <HeartFull className="h-5 w-5" /> : <HeartBorder className="h-5 w-5" />}
-                <span>{isFavorite ? 'Liked' : 'Like'}</span>
+                {isFavorite ? <HeartFull className="h-3 w-3 xs:h-4 xs:w-4 lg:h-5 lg:w-5" /> : <HeartBorder className="h-3 w-3 xs:h-4 xs:w-4 lg:h-5 lg:w-5" />}
+                <span className="hidden xs:inline">{isFavorite ? 'Liked' : 'Like'}</span>
               </button>
-              <TrackShareButton trackId={currentSong.trackId} title={currentSong.title} artist={currentSong.artist} />
+              <div className="hidden xs:block">
+                <TrackShareButton trackId={currentSong.trackId} title={currentSong.title} artist={currentSong.artist} />
+              </div>
               <NextLink
                 href={`/tracks/${currentSong.trackId}`}
-                className="flex items-center gap-2 rounded-full bg-white/10 px-6 py-3 hover:bg-white/20 transition-colors"
+                className="hidden md:flex items-center gap-1 sm:gap-2 rounded-full bg-white/10 px-3 py-2 sm:px-4 sm:py-2.5 lg:px-6 lg:py-3 hover:bg-white/20 transition-colors text-xs sm:text-sm"
               >
-                <Info className="h-5 w-5" />
+                <Info className="h-4 w-4 lg:h-5 lg:w-5" />
                 <span>Details</span>
               </NextLink>
             </div>
 
-            {/* Playlist Section */}
+            {/* Playlist Section - Hidden on watch, responsive heights */}
             {isPlaylistOpen && (
-              <div className="mt-8 max-h-[300px] overflow-y-auto rounded-xl bg-white/5 p-4">
-                <h3 className="mb-4 text-lg font-bold">Up Next</h3>
-                <div className="space-y-2">
+              <div className="hidden sm:block mt-3 lg:mt-8 max-h-[120px] md:max-h-[180px] lg:max-h-[300px] overflow-y-auto rounded-lg lg:rounded-xl bg-white/5 p-2 sm:p-3 lg:p-4">
+                <h3 className="mb-1 lg:mb-4 text-xs md:text-sm lg:text-lg font-bold">Up Next</h3>
+                <div className="space-y-1 sm:space-y-2">
                   {playlist.map((song, idx) => (
                     <TrackListItem
                       key={song.trackId}
@@ -248,15 +261,13 @@ export const AudioPlayerModal = () => {
       }
       rightButton={
         <div className="mr-6 flex items-center gap-2">
-          {!isMobile && (
-            <button
-              aria-label="Fullscreen"
-              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10"
-              onClick={() => setIsFullscreen(true)}
-            >
-              <ArrowsPointingOutIcon className="h-5 w-5 text-white" />
-            </button>
-          )}
+          <button
+            aria-label="Fullscreen"
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10 active:bg-white/20"
+            onClick={() => setIsFullscreen(true)}
+          >
+            <ArrowsPointingOutIcon className="h-5 w-5 text-white" />
+          </button>
           <TrackShareButton trackId={currentSong.trackId} title={currentSong.title} artist={currentSong.artist} />
         </div>
       }

@@ -21,10 +21,14 @@ module.exports = {
   theme: {
     extend: {
       screens: {
+        // Wearables / Apple Watch (38mm-45mm displays ~130-200px)
+        watch: '130px',
+        // Very small phones
         xxs: '375px',
+        // Small phones
         xs: '420px',
         ...defaultTheme.screens,
-
+        // Large desktops
         '2k': { raw: '(min-width: 2000px)' },
         vsm: { raw: '(min-height: 600px)' },
         vmd: { raw: '(min-height: 800px)' },
