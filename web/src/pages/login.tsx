@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -24,22 +24,6 @@ import { OAuthExtension } from '@magic-ext/oauth2';
 
 // Note: OAuth2 uses redirect flow. Network config is NOT needed for auth - only for wallet operations.
 const MAGIC_KEY = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
-
-// Create auth-only Magic instance (NO network config - network config causes OAuth to hang)
-const createAuthMagic = () => {
-  if (typeof window === 'undefined') return null;
-  try {
-    const instance = new Magic(MAGIC_KEY, {
-      extensions: [new OAuthExtension()],
-    });
-    console.log('[OAuth] Created auth Magic instance:', instance);
-    console.log('[OAuth] oauth2 extension available:', !!(instance as any).oauth2);
-    return instance;
-  } catch (e) {
-    console.error('[OAuth] Failed to create auth Magic:', e);
-    return null;
-  }
-};
 
 const Overlay = styled.div`
   position: fixed;
@@ -118,19 +102,11 @@ export default function LoginPage() {
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
 
-  // Auth-only Magic instance for OAuth (no network config)
-  const authMagicRef = useRef<ReturnType<typeof createAuthMagic>>(null);
-
   useEffect(() => {
     setIsClient(true);
     // Detect in-app browser and warn user
     if (isInAppBrowser()) {
       setInAppBrowserWarning(true);
-    }
-    // Initialize auth-only Magic for OAuth (no network config - avoids OAuth hanging issue)
-    if (!authMagicRef.current) {
-      authMagicRef.current = createAuthMagic();
-      console.log('[OAuth] Auth-only Magic instance created:', !!authMagicRef.current);
     }
   }, []);
 
@@ -217,49 +193,52 @@ export default function LoginPage() {
         return;
       }
 
-      // Use auth-only Magic instance (NO network config - network blocks OAuth)
-      let authMagic = authMagicRef.current;
-      if (!authMagic) {
-        authMagic = createAuthMagic();
-        authMagicRef.current = authMagic;
-      }
-
-      if (!authMagic) {
-        console.error('[OAuth2] Failed to create Magic instance');
-        setError('Please refresh and try again.');
-        return;
-      }
-
-      // Verify oauth2 extension exists
-      if (!(authMagic as any).oauth2) {
-        console.error('[OAuth2] oauth2 extension not available');
-        setError('OAuth not available. Please refresh the page.');
-        return;
-      }
-
       setLoggingIn(true);
       setError(null);
       localStorage.removeItem('didToken');
 
+      // Create fresh Magic instance each time to avoid stale iframe issues
+      console.log('[OAuth2] Creating fresh Magic instance...');
+      const authMagic = new Magic(MAGIC_KEY, {
+        extensions: [new OAuthExtension()],
+      });
+
+      console.log('[OAuth2] Magic instance created:', !!authMagic);
+      console.log('[OAuth2] oauth2 extension:', !!(authMagic as any).oauth2);
+
+      if (!(authMagic as any).oauth2) {
+        console.error('[OAuth2] oauth2 extension not available');
+        setError('OAuth not available. Please refresh the page.');
+        setLoggingIn(false);
+        return;
+      }
+
       const redirectURI = `${window.location.origin}/login`;
       console.log('[OAuth2] Starting OAuth for:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
-      console.log('[OAuth2] Magic instance (no network config):', authMagic);
 
-      // loginWithRedirect triggers browser navigation
-      // This should immediately redirect - if it doesn't, something is wrong
-      (authMagic as any).oauth2.loginWithRedirect({
-        provider,
-        redirectURI,
-      }).then(() => {
-        console.log('[OAuth2] loginWithRedirect promise resolved (unexpected)');
-      }).catch((err: any) => {
-        console.error('[OAuth2] loginWithRedirect error:', err);
-        setError(err.message || `${provider} login failed`);
+      // Wait briefly for Magic iframe to initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('[OAuth2] Calling loginWithRedirect...');
+
+      // Call loginWithRedirect - this should trigger browser navigation
+      try {
+        await (authMagic as any).oauth2.loginWithRedirect({
+          provider,
+          redirectURI,
+        });
+        // If we get here, redirect didn't happen (unusual)
+        console.log('[OAuth2] loginWithRedirect returned without redirecting');
+      } catch (redirectErr: any) {
+        console.error('[OAuth2] loginWithRedirect threw:', redirectErr);
+        // Some errors are expected if user cancels, but others indicate real problems
+        if (redirectErr.message?.includes('user denied') || redirectErr.message?.includes('cancelled')) {
+          setError('Login cancelled');
+        } else {
+          setError(redirectErr.message || `${provider} login failed`);
+        }
         setLoggingIn(false);
-      });
-
-      console.log('[OAuth2] loginWithRedirect called - browser should redirect now...');
+      }
     } catch (error: any) {
       console.error('[OAuth2] Error caught:', error);
       setError(error.message || `${provider} login failed`);
