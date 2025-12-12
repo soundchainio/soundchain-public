@@ -342,7 +342,7 @@ function DEXDashboard() {
   }
 
   const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications'>(getInitialView())
-  const [selectedPurchaseType, setSelectedPurchaseType] = useState<'nft' | 'token' | 'bundle'>('nft')
+  const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -355,6 +355,7 @@ function DEXDashboard() {
   const [coverImageError, setCoverImageError] = useState(false)
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
   const [exploreTab, setExploreTab] = useState<'tracks' | 'users'>('users')
+  const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
 
   // Sync selectedView with URL changes (for back/forward navigation)
   useEffect(() => {
@@ -1217,10 +1218,10 @@ function DEXDashboard() {
               <div className="flex flex-col md:flex-row md:items-center gap-4">
                 {/* Scrollable tabs container on mobile */}
                 <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0 -mx-1 px-1 flex-shrink-0">
-                  {/* Marketplace only shows NFTs for sale, tokens, and bundles - tracks are streaming only */}
-                  {(['nft', 'token', 'bundle'] as const).map((type) => {
+                  {(['tracks', 'nft', 'token', 'bundle'] as const).map((type) => {
                     const isActive = selectedPurchaseType === type
                     const config = {
+                      tracks: { icon: Music, gradient: 'yellow-gradient-text', iconColor: 'text-yellow-400', bgColor: 'bg-yellow-500/10', hoverBg: 'hover:bg-yellow-500/10', label: 'Tracks' },
                       nft: { icon: ImageIcon, gradient: 'purple-gradient-text', iconColor: 'text-purple-400', bgColor: 'bg-purple-500/10', hoverBg: 'hover:bg-purple-500/10', label: 'NFTs' },
                       token: { icon: Coins, gradient: 'green-gradient-text', iconColor: 'text-green-400', bgColor: 'bg-green-500/10', hoverBg: 'hover:bg-green-500/10', label: 'Tokens' },
                       bundle: { icon: Package, gradient: 'green-yellow-gradient-text', iconColor: 'text-cyan-400', bgColor: 'bg-cyan-500/10', hoverBg: 'hover:bg-cyan-500/10', label: 'Bundles' },
@@ -1277,6 +1278,167 @@ function DEXDashboard() {
           </Card>
 
           {/* Content */}
+          {selectedPurchaseType === 'tracks' && (
+            <div className="space-y-6">
+              {/* Tracks view mode toggle */}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTracksViewMode('browse')}
+                    className={`transition-all duration-300 ${tracksViewMode === 'browse' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:bg-white/5'}`}
+                  >
+                    <Compass className="w-4 h-4 mr-2" />
+                    Browse
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setTracksViewMode('leaderboard')}
+                    className={`transition-all duration-300 ${tracksViewMode === 'leaderboard' ? 'bg-purple-500/20 text-purple-400' : 'text-gray-400 hover:bg-white/5'}`}
+                  >
+                    <Trophy className="w-4 h-4 mr-2" />
+                    Leaderboards
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  {genreTracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading genres...</Badge>}
+                  {genreTracksError && (
+                    <Badge className="bg-red-500/20 text-red-400">Error loading genres</Badge>
+                  )}
+                  {genreTracksData?.tracksByGenre && (
+                    <Badge className="bg-green-500/20 text-green-400">
+                      {genreTracksData.tracksByGenre.length} genres
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Browse Mode - Genre sections with horizontal scrolling */}
+              {tracksViewMode === 'browse' && (
+                <>
+                  {/* Top Charts Section - Most streamed tracks with gamification */}
+                  <TopChartsSection
+                    tracks={topTracksData?.tracks?.nodes || []}
+                    onPlayTrack={handlePlayTrack}
+                    isPlaying={isPlaying}
+                    currentTrackId={currentSong?.trackId}
+                    loading={topTracksLoading}
+                  />
+
+                  {/* Genre Sections - Spotify-style horizontal scrolling */}
+                  {genreTracksLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex items-center gap-3 text-cyan-400">
+                        <div className="animate-spin h-6 w-6 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                        <span>Loading genres...</span>
+                      </div>
+                    </div>
+                  ) : genreTracksData?.tracksByGenre?.length > 0 ? (
+                    <div className="space-y-2">
+                      {genreTracksData.tracksByGenre.map((genreData: any) => (
+                        <GenreSection
+                          key={genreData.genre}
+                          genre={genreData.genre}
+                          tracks={genreData.tracks}
+                          onPlayTrack={handlePlayTrack}
+                          isPlaying={isPlaying}
+                          currentTrackId={currentSong?.trackId}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="retro-card p-8 text-center">
+                      <Music className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
+                      <p className="text-gray-400">No tracks found. Upload your first track to get started!</p>
+                      <Link href="/upload">
+                        <Button className="retro-button mt-4">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Upload Track
+                        </Button>
+                      </Link>
+                    </Card>
+                  )}
+                </>
+              )}
+
+              {/* Leaderboard Mode - Genre standings with POAP badges */}
+              {tracksViewMode === 'leaderboard' && (
+                <>
+                  {genreTracksLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex items-center gap-3 text-purple-400">
+                        <div className="animate-spin h-6 w-6 border-2 border-purple-400 border-t-transparent rounded-full" />
+                        <span>Loading leaderboards...</span>
+                      </div>
+                    </div>
+                  ) : genreTracksData?.tracksByGenre?.length > 0 ? (
+                    <GenreLeaderboard
+                      genreData={genreTracksData.tracksByGenre}
+                      onPlayTrack={handlePlayTrack}
+                      isPlaying={isPlaying}
+                      currentTrackId={currentSong?.trackId}
+                    />
+                  ) : (
+                    <Card className="retro-card p-8 text-center">
+                      <Trophy className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
+                      <p className="text-gray-400">No tracks to rank yet. Upload tracks to compete!</p>
+                      <Link href="/upload">
+                        <Button className="retro-button mt-4">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Upload Track
+                        </Button>
+                      </Link>
+                    </Card>
+                  )}
+                </>
+              )}
+
+              {/* Marketplace section below genres */}
+              {marketTracks.length > 0 && (
+                <>
+                  <Separator className="my-8" />
+                  <h2 className="retro-title">Marketplace Listings ({listingData?.listingItems?.pageInfo?.totalCount || marketTracks.length})</h2>
+                  <p className="text-sm text-gray-400 mb-4">NFTs available for purchase</p>
+                  <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
+                    {marketTracks.map((track: any, index: number) => (
+                      <TrackNFTCard
+                        key={track.id}
+                        track={track}
+                        onPlay={() => handlePlayTrack(track, index, marketTracks)}
+                        isPlaying={isPlaying}
+                        isCurrentTrack={currentSong?.trackId === track.id}
+                        listView={viewMode === 'list'}
+                      />
+                    ))}
+                  </div>
+                  {/* Infinite scroll sentinel + Load More Marketplace Button */}
+                  <div ref={listingsScrollRef} className="h-4" />
+                  {(listingData?.listingItems?.pageInfo?.hasNextPage || loadingMoreListings) && (
+                    <div className="flex justify-center mt-6">
+                      {loadingMoreListings ? (
+                        <div className="flex items-center gap-2 text-cyan-400">
+                          <div className="animate-spin h-5 w-5 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                          <span>Loading more listings...</span>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={handleLoadMoreListings}
+                          disabled={loadingMoreListings}
+                          className="retro-button px-8"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Load More ({(listingData?.listingItems?.pageInfo?.totalCount || 0) - marketTracks.length} remaining)
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           {selectedPurchaseType === 'nft' && (
             <>
               {/* All tracks shown as NFT cards - Rarible inspired grid */}
@@ -1385,10 +1547,10 @@ function DEXDashboard() {
                   </div>
                   {/* Scrollable tabs container on mobile */}
                   <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0 -mx-1 px-1 flex-shrink-0">
-                    {/* Marketplace only shows NFTs for sale, tokens, and bundles - tracks are streaming only */}
-                    {(['nft', 'token', 'bundle'] as const).map((type) => {
+                    {(['tracks', 'nft', 'token', 'bundle'] as const).map((type) => {
                       const isActive = selectedPurchaseType === type
                       const config = {
+                        tracks: { icon: Music, gradient: 'yellow-gradient-text', iconColor: 'text-yellow-400', bgColor: 'bg-yellow-500/10', hoverBg: 'hover:bg-yellow-500/10', label: 'Tracks' },
                         nft: { icon: ImageIcon, gradient: 'purple-gradient-text', iconColor: 'text-purple-400', bgColor: 'bg-purple-500/10', hoverBg: 'hover:bg-purple-500/10', label: 'NFTs' },
                         token: { icon: Coins, gradient: 'green-gradient-text', iconColor: 'text-green-400', bgColor: 'bg-green-500/10', hoverBg: 'hover:bg-green-500/10', label: 'Tokens' },
                         bundle: { icon: Package, gradient: 'green-yellow-gradient-text', iconColor: 'text-cyan-400', bgColor: 'bg-cyan-500/10', hoverBg: 'hover:bg-cyan-500/10', label: 'Bundles' },
@@ -1412,6 +1574,21 @@ function DEXDashboard() {
                   </div>
                 </div>
               </Card>
+
+              {selectedPurchaseType === 'tracks' && marketTracks.length > 0 && (
+                <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
+                  {marketTracks.map((track: any, index: number) => (
+                    <TrackNFTCard
+                      key={track.id}
+                      track={track}
+                      onPlay={() => handlePlayTrack(track, index, marketTracks)}
+                      isPlaying={isPlaying}
+                      isCurrentTrack={currentSong?.trackId === track.id}
+                      listView={viewMode === 'list'}
+                    />
+                  ))}
+                </div>
+              )}
 
               {selectedPurchaseType === 'nft' && (
                 <>
@@ -1457,6 +1634,17 @@ function DEXDashboard() {
                 </Card>
               )}
 
+              {selectedPurchaseType === 'tracks' && marketTracks.length === 0 && (
+                <Card className="retro-card p-12 text-center">
+                  <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-cyan-400 opacity-50" />
+                  <h3 className="retro-title text-lg mb-2">No tracks listed for sale</h3>
+                  <p className="text-gray-400 mb-4">Be the first to list a track on the marketplace!</p>
+                  <Button onClick={handleCreateClick} className="retro-button">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Upload & List Track
+                  </Button>
+                </Card>
+              )}
             </div>
           )}
 
