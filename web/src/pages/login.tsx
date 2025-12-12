@@ -295,13 +295,10 @@ export default function LoginPage() {
       console.log('[OAuth2] Checking for OAuth redirect result...');
       console.log('[OAuth2] Current URL:', window.location.href);
 
-      // Create Magic instance if not exists
-      let authMagic = authMagicRef.current;
-      if (!authMagic) {
-        console.log('[OAuth2] Creating auth Magic instance...');
-        authMagic = createAuthMagic();
-        authMagicRef.current = authMagic;
-      }
+      // Create fresh Magic instance for OAuth redirect handling
+      const authMagic = new Magic(MAGIC_KEY, {
+        extensions: [new OAuthExtension()],
+      });
 
       if (!authMagic) {
         console.log('[OAuth2] No Magic instance available');
