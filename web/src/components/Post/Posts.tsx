@@ -119,9 +119,11 @@ export const Posts = ({ profileId }: PostsProps) => {
 
   return (
     <>
-      {/* View Mode Toggle */}
-      <div className="flex items-center justify-between mb-3 px-2">
-        <PostFormTimeline />
+      {/* Post Form */}
+      <PostFormTimeline />
+
+      {/* View Mode Toggle - Below post form, right aligned */}
+      <div className="flex justify-end mb-3 px-2">
         <div className="flex items-center gap-1 bg-neutral-800/50 rounded-lg p-1">
           <button
             onClick={() => setViewMode('list')}
