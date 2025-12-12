@@ -1545,12 +1545,11 @@ function DEXDashboard() {
                     <input type="text" placeholder="Search marketplace..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full bg-black/50 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-2 text-sm" />
                   </div>
-                  {/* Scrollable tabs container on mobile */}
+                  {/* Scrollable tabs container on mobile - Marketplace only shows items for sale (no streaming tracks) */}
                   <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0 -mx-1 px-1 flex-shrink-0">
-                    {(['tracks', 'nft', 'token', 'bundle'] as const).map((type) => {
+                    {(['nft', 'token', 'bundle'] as const).map((type) => {
                       const isActive = selectedPurchaseType === type
                       const config = {
-                        tracks: { icon: Music, gradient: 'yellow-gradient-text', iconColor: 'text-yellow-400', bgColor: 'bg-yellow-500/10', hoverBg: 'hover:bg-yellow-500/10', label: 'Tracks' },
                         nft: { icon: ImageIcon, gradient: 'purple-gradient-text', iconColor: 'text-purple-400', bgColor: 'bg-purple-500/10', hoverBg: 'hover:bg-purple-500/10', label: 'NFTs' },
                         token: { icon: Coins, gradient: 'green-gradient-text', iconColor: 'text-green-400', bgColor: 'bg-green-500/10', hoverBg: 'hover:bg-green-500/10', label: 'Tokens' },
                         bundle: { icon: Package, gradient: 'green-yellow-gradient-text', iconColor: 'text-cyan-400', bgColor: 'bg-cyan-500/10', hoverBg: 'hover:bg-cyan-500/10', label: 'Bundles' },
@@ -1574,21 +1573,6 @@ function DEXDashboard() {
                   </div>
                 </div>
               </Card>
-
-              {selectedPurchaseType === 'tracks' && marketTracks.length > 0 && (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
-                  {marketTracks.map((track: any, index: number) => (
-                    <TrackNFTCard
-                      key={track.id}
-                      track={track}
-                      onPlay={() => handlePlayTrack(track, index, marketTracks)}
-                      isPlaying={isPlaying}
-                      isCurrentTrack={currentSong?.trackId === track.id}
-                      listView={viewMode === 'list'}
-                    />
-                  ))}
-                </div>
-              )}
 
               {selectedPurchaseType === 'nft' && (
                 <>
@@ -1634,17 +1618,6 @@ function DEXDashboard() {
                 </Card>
               )}
 
-              {selectedPurchaseType === 'tracks' && marketTracks.length === 0 && (
-                <Card className="retro-card p-12 text-center">
-                  <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-cyan-400 opacity-50" />
-                  <h3 className="retro-title text-lg mb-2">No tracks listed for sale</h3>
-                  <p className="text-gray-400 mb-4">Be the first to list a track on the marketplace!</p>
-                  <Button onClick={handleCreateClick} className="retro-button">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Upload & List Track
-                  </Button>
-                </Card>
-              )}
             </div>
           )}
 
