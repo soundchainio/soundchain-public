@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, memo } from 'react'
 import { Card, CardContent, CardHeader } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
@@ -31,8 +31,9 @@ const chainNames: { [key: number]: string } = {
   784: 'Sui', 415: 'Hedera', 60: 'GoChain', 2: 'Litecoin', 1839: 'Bitcoin'
 }
 
-export const NFTCard: React.FC<NFTCardProps> = ({ nft, onPurchase, isWalletConnected, listView = false }) => {
+const NFTCardComponent: React.FC<NFTCardProps> = ({ nft, onPurchase, isWalletConnected, listView = false }) => {
   const [isFlipped, setIsFlipped] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   const formatNumber = (num: number) => {
     if (num < 0.001) return num.toFixed(6)
@@ -104,7 +105,14 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft, onPurchase, isWalletConne
             <div className="flip-hint"><RotateCcw className="w-2.5 h-2.5" /></div>
             {/* Image takes most of card - Rarible style */}
             <div className="aspect-square bg-gray-800 overflow-hidden relative">
-              <img src={nft.image} alt={nft.name} className="w-full h-full object-cover" loading="lazy" />
+              {!imageLoaded && <div className="absolute inset-0 bg-gray-700 animate-pulse" />}
+              <img
+                src={nft.image}
+                alt={nft.name}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                loading="lazy"
+                onLoad={() => setImageLoaded(true)}
+              />
               {/* Rarity badge overlay */}
               <Badge className={`${getRarityColor(nft.rarity)} absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0.5`}>{nft.rarity}</Badge>
             </div>
@@ -162,3 +170,13 @@ export const NFTCard: React.FC<NFTCardProps> = ({ nft, onPurchase, isWalletConne
     </div>
   )
 }
+
+// Memoize to prevent unnecessary re-renders
+export const NFTCard = memo(NFTCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.nft.id === nextProps.nft.id &&
+    prevProps.isWalletConnected === nextProps.isWalletConnected &&
+    prevProps.listView === nextProps.listView &&
+    prevProps.nft.price.value === nextProps.nft.price.value
+  )
+})

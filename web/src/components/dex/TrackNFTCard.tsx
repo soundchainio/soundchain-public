@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, memo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Card } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
@@ -47,7 +48,7 @@ interface TrackNFTCardProps {
   onTrackClick?: (trackId: string) => void
 }
 
-export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
+const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   track,
   onPlay,
   isPlaying,
@@ -59,6 +60,7 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
 }) => {
   const [isFlipped, setIsFlipped] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   const formatNumber = (num: number) => {
     if (num < 1000) return num.toString()
@@ -318,11 +320,16 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
 
             {/* Album art - square aspect ratio */}
             <div className="aspect-square bg-gray-800 overflow-hidden relative group">
+              {/* Skeleton placeholder */}
+              {!imageLoaded && (
+                <div className="absolute inset-0 bg-gray-700 animate-pulse" />
+              )}
               <img
                 src={track.artworkUrl || defaultImage}
                 alt={track.title}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                 loading="lazy"
+                onLoad={() => setImageLoaded(true)}
               />
 
               {/* Play overlay */}
@@ -445,3 +452,16 @@ export const TrackNFTCard: React.FC<TrackNFTCardProps> = ({
     </div>
   )
 }
+
+// Memoize to prevent unnecessary re-renders of cards that haven't changed
+export const TrackNFTCard = memo(TrackNFTCardComponent, (prevProps, nextProps) => {
+  // Only re-render if these specific props change
+  return (
+    prevProps.track.id === nextProps.track.id &&
+    prevProps.isPlaying === nextProps.isPlaying &&
+    prevProps.isCurrentTrack === nextProps.isCurrentTrack &&
+    prevProps.listView === nextProps.listView &&
+    prevProps.track.isFavorite === nextProps.track.isFavorite &&
+    prevProps.track.listingItem?.price === nextProps.track.listingItem?.price
+  )
+})
