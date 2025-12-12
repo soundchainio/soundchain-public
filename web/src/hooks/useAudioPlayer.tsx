@@ -65,9 +65,11 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const RESTART_TOLERANCE_TIME = 2 //2 seconds
 
   useEffect(() => {
-    const volume = localStorage.getItem(localStorageVolumeKey)
-    if (volume != null) {
-      setVolume(parseFloat(volume))
+    const storedVolume = localStorage.getItem(localStorageVolumeKey)
+    if (storedVolume != null) {
+      const parsedVolume = parseFloat(storedVolume)
+      // Ensure volume is at least 0.1 if it was saved as 0 (prevent stuck on mute)
+      setVolume(parsedVolume > 0 ? parsedVolume : 0.5)
     }
   }, [])
 
