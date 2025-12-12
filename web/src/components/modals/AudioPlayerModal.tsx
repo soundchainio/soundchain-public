@@ -92,10 +92,11 @@ export const AudioPlayerModal = () => {
   }, [])
 
   // Fullscreen View - Responsive for all screen sizes
-  // Breakpoints: watch (<200px), xxs (375px), xs (420px), sm (640px), md (768px), lg (1024px), xl (1280px), 2xl (1536px)
+  // Breakpoints: watch (<200px), glasses (400px), xxs (375px), xs (420px), sm (640px), md (768px), lg (1024px), xl (1280px), 2xl (1536px)
+  // Special: glasses-landscape for Meta Ray-Ban and similar smart glasses (wide but short viewport)
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col lg:flex-row bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 overflow-hidden">
+      <div className="fixed inset-0 z-[100] flex flex-col lg:flex-row glasses-landscape:flex-row bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 overflow-hidden">
         {/* Close/Minimize Button - scales for all screens including watch */}
         <button
           onClick={() => setIsFullscreen(false)}
@@ -105,17 +106,17 @@ export const AudioPlayerModal = () => {
           <ArrowsPointingInIcon className="h-3 w-3 xxs:h-4 xxs:w-4 xs:h-5 xs:w-5 text-white" />
         </button>
 
-        {/* Cover Art Section - Responsive from watch to 4K */}
-        <div className="flex items-center justify-center p-2 xxs:p-3 xs:p-4 sm:p-6 md:p-8 lg:p-12 lg:w-1/2 flex-shrink-0">
-          <div className="relative aspect-square w-full max-w-[80px] xxs:max-w-[100px] xs:max-w-[140px] sm:max-w-[220px] md:max-w-[300px] lg:max-w-[420px] xl:max-w-[520px] 2xl:max-w-[600px] overflow-hidden rounded-lg xxs:rounded-xl sm:rounded-2xl shadow-2xl shadow-black/50">
+        {/* Cover Art Section - Responsive from watch to 4K, optimized for glasses */}
+        <div className="flex items-center justify-center p-2 xxs:p-3 xs:p-4 sm:p-6 md:p-8 lg:p-12 lg:w-1/2 glasses-landscape:w-2/5 glasses-landscape:p-4 flex-shrink-0">
+          <div className="relative aspect-square w-full max-w-[80px] xxs:max-w-[100px] xs:max-w-[140px] sm:max-w-[220px] md:max-w-[300px] lg:max-w-[420px] xl:max-w-[520px] 2xl:max-w-[600px] glasses-landscape:max-w-[180px] overflow-hidden rounded-lg xxs:rounded-xl sm:rounded-2xl shadow-2xl shadow-black/50">
             <Asset src={currentSong.art} sizes="(max-width: 200px) 80px, (max-width: 375px) 100px, (max-width: 420px) 140px, (max-width: 640px) 220px, (max-width: 768px) 300px, (max-width: 1024px) 420px, 600px" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           </div>
         </div>
 
-        {/* Controls Section - Responsive layout */}
-        <div className="flex flex-1 flex-col justify-center overflow-y-auto p-1 xxs:p-2 xs:p-3 sm:p-4 md:p-6 lg:p-12 lg:w-1/2 text-white">
-          <div className="w-full max-w-lg mx-auto lg:mx-0">
+        {/* Controls Section - Responsive layout, optimized for glasses */}
+        <div className="flex flex-1 flex-col justify-center overflow-y-auto p-1 xxs:p-2 xs:p-3 sm:p-4 md:p-6 lg:p-12 lg:w-1/2 glasses-landscape:w-3/5 glasses-landscape:p-3 text-white">
+          <div className="w-full max-w-lg mx-auto lg:mx-0 glasses-landscape:max-w-none">
             {/* Track Info - Responsive text sizes from watch to desktop */}
             <div className="mb-1 xxs:mb-2 xs:mb-3 sm:mb-4 lg:mb-8 text-center lg:text-left">
               <NextLink href={`/tracks/${currentSong.trackId}`} className="group">
@@ -139,49 +140,50 @@ export const AudioPlayerModal = () => {
               </div>
             </div>
 
-            {/* Main Controls - Optimized for all screens including watch */}
-            <div className="mb-2 xxs:mb-3 xs:mb-4 sm:mb-6 lg:mb-8 flex items-center justify-center gap-1 xxs:gap-2 xs:gap-3 sm:gap-4 lg:gap-6 xl:gap-8">
-              {/* Shuffle - hidden on watch/tiny screens */}
+            {/* Main Controls - Optimized for all screens including watch and smart glasses */}
+            {/* glasses-landscape: larger touch targets, high contrast for outdoor use */}
+            <div className="mb-2 xxs:mb-3 xs:mb-4 sm:mb-6 lg:mb-8 glasses-landscape:mb-2 flex items-center justify-center gap-1 xxs:gap-2 xs:gap-3 sm:gap-4 lg:gap-6 xl:gap-8 glasses-landscape:gap-4">
+              {/* Shuffle - hidden on watch/tiny screens, shown on glasses */}
               <button
                 aria-label={isShuffleOn ? 'Shuffle off' : 'Shuffle on'}
-                className="hidden sm:flex h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="hidden sm:flex glasses-landscape:flex h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 glasses-landscape:h-10 glasses-landscape:w-10 items-center justify-center rounded-full hover:bg-white/10 glasses-landscape:bg-white/5 transition-colors"
                 onClick={toggleShuffle}
               >
-                <Shuffle width={14} className="md:w-4 lg:w-5" stroke={isShuffleOn ? '#22d3ee' : '#808080'} />
+                <Shuffle width={14} className="md:w-4 lg:w-5 glasses-landscape:w-5" stroke={isShuffleOn ? '#22d3ee' : '#808080'} />
               </button>
-              {/* Previous */}
+              {/* Previous - larger on glasses for voice/gesture control */}
               <button
-                className="flex h-8 w-8 xxs:h-9 xxs:w-9 xs:h-10 xs:w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-full hover:bg-white/10 active:bg-white/20 transition-colors"
+                className="flex h-8 w-8 xxs:h-9 xxs:w-9 xs:h-10 xs:w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 lg:h-14 lg:w-14 glasses-landscape:h-12 glasses-landscape:w-12 items-center justify-center rounded-full hover:bg-white/10 active:bg-white/20 glasses-landscape:bg-white/5 transition-colors"
                 aria-label="Previous track"
                 onClick={playPrevious}
               >
-                <Rewind className="h-3 w-3 xxs:h-4 xxs:w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                <Rewind className="h-3 w-3 xxs:h-4 xxs:w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 glasses-landscape:h-6 glasses-landscape:w-6" />
               </button>
-              {/* Play/Pause - Main button, prominent on all screens */}
+              {/* Play/Pause - Main button, extra prominent on glasses */}
               <button
-                className="flex h-12 w-12 xxs:h-14 xxs:w-14 xs:h-16 xs:w-16 sm:h-18 sm:w-18 md:h-20 md:w-20 lg:h-24 lg:w-24 items-center justify-center rounded-full bg-white hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-white/20"
+                className="flex h-12 w-12 xxs:h-14 xxs:w-14 xs:h-16 xs:w-16 sm:h-18 sm:w-18 md:h-20 md:w-20 lg:h-24 lg:w-24 glasses-landscape:h-16 glasses-landscape:w-16 items-center justify-center rounded-full bg-white hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-white/20 glasses-landscape:shadow-white/40"
                 aria-label={isPlaying ? 'Pause' : 'Play'}
                 onClick={togglePlay}
               >
                 {isPlaying ? (
-                  <Pause fill="black" className="h-4 w-4 xxs:h-5 xxs:w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10" />
+                  <Pause fill="black" className="h-4 w-4 xxs:h-5 xxs:w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10 glasses-landscape:h-8 glasses-landscape:w-8" />
                 ) : (
-                  <Play fill="black" className="h-4 w-4 xxs:h-5 xxs:w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10 ml-0.5 sm:ml-1" />
+                  <Play fill="black" className="h-4 w-4 xxs:h-5 xxs:w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10 glasses-landscape:h-8 glasses-landscape:w-8 ml-0.5 sm:ml-1" />
                 )}
               </button>
-              {/* Next */}
+              {/* Next - larger on glasses */}
               <button
-                className="flex h-8 w-8 xxs:h-9 xxs:w-9 xs:h-10 xs:w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 lg:h-14 lg:w-14 items-center justify-center rounded-full hover:bg-white/10 active:bg-white/20 transition-colors disabled:opacity-50"
+                className="flex h-8 w-8 xxs:h-9 xxs:w-9 xs:h-10 xs:w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 lg:h-14 lg:w-14 glasses-landscape:h-12 glasses-landscape:w-12 items-center justify-center rounded-full hover:bg-white/10 active:bg-white/20 glasses-landscape:bg-white/5 transition-colors disabled:opacity-50"
                 aria-label="Next track"
                 onClick={playNext}
                 disabled={!hasNext}
               >
-                <Forward className="h-3 w-3 xxs:h-4 xxs:w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
+                <Forward className="h-3 w-3 xxs:h-4 xxs:w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 glasses-landscape:h-6 glasses-landscape:w-6" />
               </button>
-              {/* Playlist - hidden on small screens */}
+              {/* Playlist - shown on glasses */}
               <button
                 aria-label="Playlist"
-                className="hidden sm:flex h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+                className="hidden sm:flex glasses-landscape:flex h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 glasses-landscape:h-10 glasses-landscape:w-10 items-center justify-center rounded-full hover:bg-white/10 glasses-landscape:bg-white/5 transition-colors"
                 onClick={() => setIsPlaylistOpen(!isPlaylistOpen)}
               >
                 <Playlists fillColor={isPlaylistOpen ? '#22d3ee' : '#808080'} />

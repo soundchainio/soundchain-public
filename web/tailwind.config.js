@@ -23,6 +23,8 @@ module.exports = {
       screens: {
         // Wearables / Apple Watch (38mm-45mm displays ~130-200px)
         watch: '130px',
+        // Meta Ray-Ban / Smart Glasses (~640x400 viewport, but content area ~400-500px)
+        glasses: '400px',
         // Very small phones
         xxs: '375px',
         // Small phones
@@ -30,6 +32,8 @@ module.exports = {
         ...defaultTheme.screens,
         // Large desktops
         '2k': { raw: '(min-width: 2000px)' },
+        // Smart glasses landscape orientation
+        'glasses-landscape': { raw: '(min-width: 500px) and (max-height: 450px)' },
         vsm: { raw: '(min-height: 600px)' },
         vmd: { raw: '(min-height: 800px)' },
         vlg: { raw: '(min-height: 900px)' },
