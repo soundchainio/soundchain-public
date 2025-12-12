@@ -10,7 +10,6 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, VariableSizeList as List, FixedSizeGrid as Grid } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { PostFormTimeline } from './PostFormTimeline'
 import { PostSkeleton } from './PostSkeleton'
 import { LayoutGrid, List as ListIcon } from 'lucide-react'
 
@@ -119,9 +118,8 @@ export const Posts = ({ profileId }: PostsProps) => {
 
   return (
     <>
-      {/* View Mode Toggle */}
-      <div className="flex items-center justify-between mb-3 px-2">
-        <PostFormTimeline />
+      {/* View Mode Toggle - Right aligned, no inline form */}
+      <div className="flex items-center justify-end mb-3 px-2">
         <div className="flex items-center gap-1 bg-neutral-800/50 rounded-lg p-1">
           <button
             onClick={() => setViewMode('list')}
