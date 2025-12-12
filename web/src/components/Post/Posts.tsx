@@ -2,15 +2,17 @@
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import { NoResultFound } from 'components/NoResultFound'
 import { Post } from './Post'
+import { CompactPost } from './CompactPost'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { Post as PostType, usePostsQuery, SortOrder, SortPostField } from 'lib/graphql'
-import React, { memo, useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import { areEqual, VariableSizeList as List } from 'react-window'
+import { areEqual, VariableSizeList as List, FixedSizeGrid as Grid } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
 import { PostFormTimeline } from './PostFormTimeline'
 import { PostSkeleton } from './PostSkeleton'
+import { LayoutGrid, List as ListIcon } from 'lucide-react'
 
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
@@ -19,7 +21,10 @@ interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
 const pageSize = 30
 const GAP = 8
 
+type ViewMode = 'list' | 'grid'
+
 export const Posts = ({ profileId }: PostsProps) => {
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
   const { playlistState } = useAudioPlayerContext()
   const { data, loading, refetch, fetchMore } = usePostsQuery({
     variables: {
@@ -95,45 +100,108 @@ export const Posts = ({ profileId }: PostsProps) => {
     }
   }
 
+  // Grid cell renderer for compact view
+  const GridCell = memo(({ columnIndex, rowIndex, style, data }: any) => {
+    const itemIndex = rowIndex * 2 + columnIndex // 2 columns
+    const posts = data.nodes
+    if (itemIndex >= posts.length) return null
+
+    const post = posts[itemIndex]
+    if (!post) return null
+
+    return (
+      <div style={{ ...style, padding: '4px' }}>
+        <CompactPost post={post} handleOnPlayClicked={data.handleOnPlayClicked} />
+      </div>
+    )
+  })
+  GridCell.displayName = 'GridCell'
+
   return (
     <>
-      <PostFormTimeline />
+      {/* View Mode Toggle */}
+      <div className="flex items-center justify-between mb-3 px-2">
+        <PostFormTimeline />
+        <div className="flex items-center gap-1 bg-neutral-800/50 rounded-lg p-1">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}`}
+            title="List view"
+          >
+            <ListIcon className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}`}
+            title="Grid view (compact)"
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
       <PullToRefresh onRefresh={refetch}>
         <AutoSizer>
           {({ height, width }) => (
             <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={postsCount} loadMoreItems={loadMoreItems}>
               {({ onItemsRendered, ref }) => (
-                <List
-                  height={height}
-                  width={width}
-                  onItemsRendered={onItemsRendered}
-                  ref={list => {
-                    typeof ref === 'function' && ref(list)
-                    listRef.current = list
-                  }}
-                  itemCount={postsCount}
-                  itemSize={getSize}
-                  itemData={nodes}
-                  overscanCount={5}
-                >
-                  {memo(
-                    ({ data, index, style }) => (
-                      <div style={style}>
-                        {!isItemLoaded(index) ? (
-                          <LoaderAnimation loadingMessage="Loading..." />
-                        ) : (
-                          <Row
-                            data={data as PostType[]}
-                            index={index}
-                            setSize={setSize}
-                            handleOnPlayClicked={handleOnPlayClicked}
-                          />
-                        )}
-                      </div>
-                    ),
-                    areEqual,
-                  )}
-                </List>
+                viewMode === 'list' ? (
+                  <List
+                    height={height}
+                    width={width}
+                    onItemsRendered={onItemsRendered}
+                    ref={list => {
+                      typeof ref === 'function' && ref(list)
+                      listRef.current = list
+                    }}
+                    itemCount={postsCount}
+                    itemSize={getSize}
+                    itemData={nodes}
+                    overscanCount={5}
+                  >
+                    {memo(
+                      ({ data, index, style }) => (
+                        <div style={style}>
+                          {!isItemLoaded(index) ? (
+                            <LoaderAnimation loadingMessage="Loading..." />
+                          ) : (
+                            <Row
+                              data={data as PostType[]}
+                              index={index}
+                              setSize={setSize}
+                              handleOnPlayClicked={handleOnPlayClicked}
+                            />
+                          )}
+                        </div>
+                      ),
+                      areEqual,
+                    )}
+                  </List>
+                ) : (
+                  // Grid view - 2 columns of compact cards
+                  <Grid
+                    height={height}
+                    width={width}
+                    columnCount={2}
+                    columnWidth={width / 2}
+                    rowCount={Math.ceil(nodes.length / 2)}
+                    rowHeight={200}
+                    itemData={{ nodes, handleOnPlayClicked }}
+                    onItemsRendered={({ visibleRowStartIndex, visibleRowStopIndex }) => {
+                      onItemsRendered({
+                        overscanStartIndex: visibleRowStartIndex * 2,
+                        overscanStopIndex: (visibleRowStopIndex + 1) * 2 - 1,
+                        visibleStartIndex: visibleRowStartIndex * 2,
+                        visibleStopIndex: (visibleRowStopIndex + 1) * 2 - 1,
+                      })
+                    }}
+                    ref={grid => {
+                      typeof ref === 'function' && ref(grid)
+                    }}
+                  >
+                    {GridCell}
+                  </Grid>
+                )
               )}
             </InfiniteLoader>
           )}

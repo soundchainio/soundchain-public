@@ -27,13 +27,13 @@ export const AudioSlider = React.forwardRef<HTMLDivElement, AudioSliderProps>(
         step={step}
         value={[value]}
         onValueChange={handleValueChange}
-        className={`relative flex w-full touch-none select-none items-center ${className || ''}`}
+        className={`relative flex w-full select-none items-center cursor-pointer ${className || ''}`}
         {...props}
       >
-        <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-gray-700">
+        <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-gray-700 cursor-pointer">
           <SliderPrimitive.Range className="absolute h-full bg-cyan-400" />
         </SliderPrimitive.Track>
-        <SliderPrimitive.Thumb className="block h-4 w-4 rounded-full border border-cyan-400 bg-white shadow-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-cyan-50 cursor-pointer" />
+        <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-cyan-400 bg-white shadow-lg ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-cyan-50 cursor-grab active:cursor-grabbing" />
       </SliderPrimitive.Root>
     )
   }
@@ -48,13 +48,13 @@ export const Slider = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
-    className={`relative flex w-full touch-none select-none items-center ${className || ''}`}
+    className={`relative flex w-full select-none items-center cursor-pointer ${className || ''}`}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-gray-700">
+    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-gray-700 cursor-pointer">
       <SliderPrimitive.Range className="absolute h-full bg-cyan-400" />
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="block h-4 w-4 rounded-full border border-cyan-400 bg-white shadow-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:pointer-events-none disabled:opacity-50 cursor-pointer" />
+    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-cyan-400 bg-white shadow-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:pointer-events-none disabled:opacity-50 cursor-grab active:cursor-grabbing" />
   </SliderPrimitive.Root>
 ))
 Slider.displayName = SliderPrimitive.Root.displayName

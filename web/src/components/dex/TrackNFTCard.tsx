@@ -127,185 +127,232 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
     )
   }
 
-  // Fullscreen modal
+  // Share track function
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/tracks/${track.id}`
+    const shareData = {
+      title: `${track.title} by ${track.artist}`,
+      text: `Listen to "${track.title}" by ${track.artist} on SoundChain`,
+      url: shareUrl,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareUrl)
+        alert('Link copied to clipboard!')
+      }
+    } catch (err) {
+      // User cancelled or error
+      console.log('Share cancelled or failed')
+    }
+  }, [track.id, track.title, track.artist])
+
+  // Fullscreen modal - render in portal for proper z-index
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 md:p-8">
-        <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden">
-          {/* Close button */}
-          <Button
-            onClick={() => setIsFullscreen(false)}
-            className="absolute top-4 right-4 z-10 bg-gray-800/80 hover:bg-gray-700 rounded-full p-2"
-          >
-            <X className="w-6 h-6" />
-          </Button>
+      <>
+        {/* Backdrop - click to close */}
+        <div
+          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm"
+          onClick={() => setIsFullscreen(false)}
+        />
+        {/* Modal content */}
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 md:p-8 pointer-events-none">
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden pointer-events-auto">
+            {/* Close button */}
+            <Button
+              onClick={() => setIsFullscreen(false)}
+              className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-gray-800/80 hover:bg-gray-700 rounded-full p-2"
+            >
+              <X className="w-5 h-5 md:w-6 md:h-6" />
+            </Button>
 
-          <div className="flex flex-col md:flex-row gap-6 bg-gray-900/90 rounded-2xl p-6 border border-cyan-500/30">
-            {/* Large artwork */}
-            <div className="relative w-full md:w-1/2 aspect-square rounded-xl overflow-hidden">
-              <img
-                src={track.artworkUrl || defaultImage}
-                alt={track.title}
-                className="w-full h-full object-cover"
-              />
-              {/* Play overlay */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity">
-                <Button
-                  onClick={onPlay}
-                  className="w-20 h-20 rounded-full bg-cyan-500 hover:bg-cyan-400 flex items-center justify-center"
-                >
-                  {isPlaying && isCurrentTrack ? <Pause className="w-10 h-10 text-black" /> : <Play className="w-10 h-10 text-black ml-1" />}
-                </Button>
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6 bg-gray-900/95 rounded-2xl p-4 md:p-6 border border-cyan-500/30 max-h-[85vh] overflow-y-auto">
+              {/* Large artwork */}
+              <div className="relative w-full md:w-1/2 aspect-square rounded-xl overflow-hidden flex-shrink-0">
+                {/* Fallback placeholder */}
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/20 to-purple-900/20 flex items-center justify-center">
+                  <Music2 className="w-16 h-16 text-cyan-500/30" />
+                </div>
+                <img
+                  src={track.artworkUrl || defaultImage}
+                  alt={track.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    // Hide broken image, show placeholder
+                    (e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+                {/* Play overlay */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 active:opacity-100 transition-opacity">
+                  <Button
+                    onClick={(e) => { e.stopPropagation(); onPlay() }}
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 flex items-center justify-center"
+                  >
+                    {isPlaying && isCurrentTrack ? <Pause className="w-8 h-8 md:w-10 md:h-10 text-black" /> : <Play className="w-8 h-8 md:w-10 md:h-10 text-black ml-1" />}
+                  </Button>
+                </div>
+                <Badge className={`${rarity.color} absolute top-3 right-3`}>{rarity.label}</Badge>
               </div>
-              <Badge className={`${rarity.color} absolute top-3 right-3`}>{rarity.label}</Badge>
-            </div>
 
-            {/* Details panel - scrollable */}
-            <div className="w-full md:w-1/2 flex flex-col max-h-[60vh] md:max-h-full">
-              <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
-                {/* Title & Artist */}
-                <div>
-                  <Link href={`/dex/track/${track.id}`}>
-                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 hover:text-cyan-400 transition-colors cursor-pointer">{track.title}</h1>
-                  </Link>
-                  {track.artistProfileId || track.artistId ? (
-                    <Link href={`/${track.artistProfileId || track.artistId}`}>
-                      <p className="text-lg text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer">{track.artist}</p>
+              {/* Details panel - scrollable */}
+              <div className="w-full md:w-1/2 flex flex-col">
+                <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
+                  {/* Title & Artist */}
+                  <div>
+                    <Link href={`/tracks/${track.id}`} onClick={() => setIsFullscreen(false)}>
+                      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 hover:text-cyan-400 transition-colors cursor-pointer">{track.title}</h1>
                     </Link>
-                  ) : (
-                    <p className="text-lg text-cyan-400">{track.artist}</p>
+                    {track.artistProfileId || track.artistId ? (
+                      <Link href={`/profiles/${track.artistProfileId || track.artistId}`} onClick={() => setIsFullscreen(false)}>
+                        <p className="text-base md:text-lg text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer">{track.artist}</p>
+                      </Link>
+                    ) : (
+                      <p className="text-base md:text-lg text-cyan-400">{track.artist}</p>
+                    )}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-2 md:gap-3">
+                    <div className="bg-gray-800/60 rounded-lg p-2 md:p-3 text-center">
+                      <div className="text-lg md:text-xl font-bold text-white">{formatNumber(track.playbackCount || 0)}</div>
+                      <div className="text-[10px] md:text-xs text-gray-400">Plays</div>
+                    </div>
+                    <div className="bg-gray-800/60 rounded-lg p-2 md:p-3 text-center">
+                      <div className="text-lg md:text-xl font-bold text-white">{track.favoriteCount || 0}</div>
+                      <div className="text-[10px] md:text-xs text-gray-400">Favorites</div>
+                    </div>
+                    <div className="bg-gray-800/60 rounded-lg p-2 md:p-3 text-center">
+                      <div className="text-lg md:text-xl font-bold text-white">{formatDuration(track.duration)}</div>
+                      <div className="text-[10px] md:text-xs text-gray-400">Duration</div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {track.description && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-400 mb-1">Description</h3>
+                      <p className="text-sm text-gray-300">{track.description}</p>
+                    </div>
+                  )}
+
+                  {/* Metadata */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-400">Track Info</h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      {(track.genres?.length ?? 0) > 0 && (
+                        <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
+                          <span className="text-gray-500">Genre</span>
+                          <span className="text-cyan-400">{track.genres?.[0]}</span>
+                        </div>
+                      )}
+                      {track.bpm && (
+                        <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
+                          <span className="text-gray-500">BPM</span>
+                          <span className="text-cyan-400">{track.bpm}</span>
+                        </div>
+                      )}
+                      {track.key && (
+                        <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
+                          <span className="text-gray-500">Key</span>
+                          <span className="text-cyan-400">{track.key}</span>
+                        </div>
+                      )}
+                      {track.releaseDate && (
+                        <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
+                          <span className="text-gray-500">Released</span>
+                          <span className="text-cyan-400">{new Date(track.releaseDate).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* NFT Data */}
+                  {track.nftData && (
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-semibold text-gray-400">NFT Info</h3>
+                      <div className="space-y-1 text-sm">
+                        {track.nftData.tokenId && (
+                          <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
+                            <span className="text-gray-500">Token ID</span>
+                            {track.nftData.transactionHash ? (
+                              <a
+                                href={`${config.polygonscan}tx/${track.nftData.transactionHash}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-cyan-400 font-mono hover:text-cyan-300 flex items-center gap-1"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {track.nftData.tokenId}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <span className="text-cyan-400 font-mono">{track.nftData.tokenId}</span>
+                            )}
+                          </div>
+                        )}
+                        {track.nftData.contractAddress && (
+                          <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
+                            <span className="text-gray-500">Contract</span>
+                            <a
+                              href={`${config.polygonscan}address/${track.nftData.contractAddress}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-cyan-400 font-mono text-xs hover:text-cyan-300 flex items-center gap-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {track.nftData.contractAddress.slice(0, 8)}...{track.nftData.contractAddress.slice(-6)}
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        )}
+                        <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
+                          <span className="text-gray-500">Chain</span>
+                          <span className="text-cyan-400">Polygon</span>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-gray-800/60 rounded-lg p-3 text-center">
-                    <div className="text-xl font-bold text-white">{formatNumber(track.playbackCount || 0)}</div>
-                    <div className="text-xs text-gray-400">Plays</div>
-                  </div>
-                  <div className="bg-gray-800/60 rounded-lg p-3 text-center">
-                    <div className="text-xl font-bold text-white">{track.favoriteCount || 0}</div>
-                    <div className="text-xs text-gray-400">Favorites</div>
-                  </div>
-                  <div className="bg-gray-800/60 rounded-lg p-3 text-center">
-                    <div className="text-xl font-bold text-white">{formatDuration(track.duration)}</div>
-                    <div className="text-xs text-gray-400">Duration</div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                {track.description && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-400 mb-1">Description</h3>
-                    <p className="text-sm text-gray-300">{track.description}</p>
-                  </div>
-                )}
-
-                {/* Metadata */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-400">Track Info</h3>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {(track.genres?.length ?? 0) > 0 && (
-                      <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
-                        <span className="text-gray-500">Genre</span>
-                        <span className="text-cyan-400">{track.genres?.[0]}</span>
-                      </div>
-                    )}
-                    {track.bpm && (
-                      <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
-                        <span className="text-gray-500">BPM</span>
-                        <span className="text-cyan-400">{track.bpm}</span>
-                      </div>
-                    )}
-                    {track.key && (
-                      <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
-                        <span className="text-gray-500">Key</span>
-                        <span className="text-cyan-400">{track.key}</span>
-                      </div>
-                    )}
-                    {track.releaseDate && (
-                      <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
-                        <span className="text-gray-500">Released</span>
-                        <span className="text-cyan-400">{new Date(track.releaseDate).toLocaleDateString()}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* NFT Data */}
-                {track.nftData && (
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-400">NFT Info</h3>
-                    <div className="space-y-1 text-sm">
-                      {track.nftData.tokenId && (
-                        <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
-                          <span className="text-gray-500">Token ID</span>
-                          {track.nftData.transactionHash ? (
-                            <a
-                              href={`${config.polygonscan}tx/${track.nftData.transactionHash}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-cyan-400 font-mono hover:text-cyan-300 flex items-center gap-1"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {track.nftData.tokenId}
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          ) : (
-                            <span className="text-cyan-400 font-mono">{track.nftData.tokenId}</span>
-                          )}
-                        </div>
-                      )}
-                      {track.nftData.contractAddress && (
-                        <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
-                          <span className="text-gray-500">Contract</span>
-                          <a
-                            href={`${config.polygonscan}address/${track.nftData.contractAddress}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-cyan-400 font-mono text-xs hover:text-cyan-300 flex items-center gap-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {track.nftData.contractAddress.slice(0, 8)}...{track.nftData.contractAddress.slice(-6)}
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                      )}
-                      <div className="flex justify-between bg-gray-800/40 rounded px-2 py-1">
-                        <span className="text-gray-500">Chain</span>
-                        <span className="text-cyan-400">Polygon</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Action buttons */}
-              <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-700">
-                <Button onClick={onPlay} className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-black font-bold">
-                  {isPlaying && isCurrentTrack ? <><Pause className="w-4 h-4 mr-2" /> Pause</> : <><Play className="w-4 h-4 mr-2" /> Play</>}
-                </Button>
-                <Link href={`/dex/track/${track.id}`}>
-                  <Button variant="outline" className="border-purple-500/50 hover:bg-purple-500/10 text-purple-400">
-                    <ExternalLink className="w-4 h-4 mr-2" /> Details
+                {/* Action buttons - always visible at bottom */}
+                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-700">
+                  <Button onClick={(e) => { e.stopPropagation(); onPlay() }} className="flex-1 bg-cyan-500 hover:bg-cyan-600 active:bg-cyan-700 text-black font-bold">
+                    {isPlaying && isCurrentTrack ? <><Pause className="w-4 h-4 mr-2" /> Pause</> : <><Play className="w-4 h-4 mr-2" /> Play</>}
                   </Button>
-                </Link>
-                <Button variant="outline" onClick={() => onFavorite?.()} className="border-gray-600 hover:bg-gray-800">
-                  <Heart className={`w-4 h-4 ${track.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-                </Button>
-                <Button variant="outline" className="border-gray-600 hover:bg-gray-800">
-                  <Share2 className="w-4 h-4" />
-                </Button>
-                {hasListing && (
-                  <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
-                    <ShoppingCart className="w-4 h-4 mr-2" /> {price} {currency}
+                  <Link href={`/tracks/${track.id}`} onClick={() => setIsFullscreen(false)}>
+                    <Button variant="outline" className="border-purple-500/50 hover:bg-purple-500/10 active:bg-purple-500/20 text-purple-400">
+                      <ExternalLink className="w-4 h-4 mr-2" /> Details
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    onClick={(e) => { e.stopPropagation(); onFavorite?.() }}
+                    className="border-gray-600 hover:bg-gray-800 active:bg-red-500/20"
+                  >
+                    <Heart className={`w-4 h-4 ${track.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                   </Button>
-                )}
+                  <Button
+                    variant="outline"
+                    onClick={(e) => { e.stopPropagation(); handleShare() }}
+                    className="border-gray-600 hover:bg-gray-800 active:bg-cyan-500/20"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </Button>
+                  {hasListing && (
+                    <Button className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-black font-bold">
+                      <ShoppingCart className="w-4 h-4 mr-2" /> {price} {currency}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </>
     )
   }
 
