@@ -367,16 +367,35 @@ export default function LoginPage() {
       setError(null);
 
       // Send magic link to email - user clicks link to complete login (no code pasting needed!)
-      // This is better UX than OTP - user just clicks the email link and is auto-logged in
       // Use actual browser origin to handle both www and non-www domains
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
       const redirectURI = `${baseUrl}/login`;
       console.log("Sending magic link to email...", { email: values.email, redirectURI });
-      await magic.auth.loginWithMagicLink({
-        email: values.email,
-        redirectURI,  // Must match Magic dashboard allowed URLs
-        showUI: true  // Show "check your email" UI
+
+      // Set a timeout - if magic link call hangs for more than 30 seconds, show error
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Magic link request timed out. Please try again.')), 30000);
       });
+
+      try {
+        await Promise.race([
+          magic.auth.loginWithMagicLink({
+            email: values.email,
+            redirectURI,  // Must match Magic dashboard allowed URLs
+            showUI: true  // Show "check your email" UI
+          }),
+          timeoutPromise
+        ]);
+        console.log('Magic link sent successfully! Check your email.');
+      } catch (magicErr: any) {
+        console.error('Magic link error:', magicErr);
+        if (magicErr.message?.includes('timed out')) {
+          setError('Request timed out. Please refresh and try again.');
+          setLoggingIn(false);
+          return;
+        }
+        throw magicErr;
+      }
 
       // After user clicks the email link and returns, get the token
       const didToken = await magic.user.getIdToken();
