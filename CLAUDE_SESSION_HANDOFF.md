@@ -1,5 +1,5 @@
 # Claude Code Session - SoundChain Development
-**Last Updated:** December 11, 2025 (5:30 PM)
+**Last Updated:** December 11, 2025 (Evening)
 **Agent:** Claude Code (Opus 4.5)
 **Branch:** production
 
@@ -7,7 +7,8 @@
 
 ## Summary for User (When You Return)
 
-### Commits Deployed Today (6 total)
+### Commits Deployed Today (11 total)
+Previous commits (from earlier session):
 1. `a1395cf0` - Genre error logging
 2. `42c0402c` - Handoff docs update
 3. `cfde6c6d` - OAuth: Don't await loginWithRedirect
@@ -15,82 +16,70 @@
 5. `64d432b9` - DEX real balances + backend stats
 6. `f3448755` - OAuth uses context Magic instance
 
-### OAuth Status
-- **loginWithPopup removed** - Was causing black screen
-- **loginWithRedirect now used** - Doesn't await, just fires and lets browser redirect
-- **Uses context Magic** - Properly initialized with network config
-- **Test needed:** Clear browser cache and try Google login again
+New commits (this session):
+7. `a89eeb64` - Use auth-only Magic without network config
+8. `b187ebac` - Create fresh Magic instance for OAuth with proper await
+9. `c15a8b71` - Add Magic preload before OAuth loginWithRedirect
+10. `b0218641` - Use fresh Magic instance for OAuth redirect handling
+11. `a8023c78` - Add 10s timeout for OAuth redirect to detect silent failures
 
-The new code should:
-1. Log `[OAuth2] Starting OAuth for: google`
-2. Log `[OAuth2] Redirect URI: https://www.soundchain.io/login`
-3. Then redirect browser to Google OAuth page
+### OAuth Status (Still Investigating)
+- **Problem:** Google OAuth button shows spinner but never redirects to Google
+- **Multiple fixes applied:**
+  - Using fresh Magic instance (no cached/stale state)
+  - Added `magic.preload()` to ensure iframe is ready
+  - Added 10-second timeout to detect silent failures
+  - Fixed broken reference to removed `createAuthMagic` function
 
-If still stuck on spinner, the console will show any errors.
-
-### DEX Improvements
-- **Wallet balances** now show real OGUN/MATIC from Magic context
-- **NFTs count** shows real total (618 tracks)
-- **Backend panel** shows real DB stats instead of fake "2.4M NFTs indexed"
-- **Genre error logging** added to debug the red badge issue
-
----
-
-## Active Issues
-
-### 1. OAuth Login (Google/Email)
-**Current behavior:** Shows spinner, no redirect happens
-**What we tried:**
-- Removed loginWithPopup (caused black screen)
-- Removed await on loginWithRedirect
-- Using context Magic instance (has network config)
-
-**To test when you return:**
-1. Hard refresh: Cmd+Shift+R
-2. Open DevTools console
+**To Test OAuth:**
+1. Clear browser cache completely
+2. Open DevTools Console
 3. Click "Login with Google"
-4. Check console for errors
+4. Watch console for these messages:
+   ```
+   [OAuth2] handleSocialLogin called for google
+   [OAuth2] Creating fresh Magic instance...
+   [OAuth2] Magic instance created: true
+   [OAuth2] oauth2 extension: true
+   [OAuth2] Waiting for Magic iframe preload...
+   [OAuth2] Magic preload complete
+   [OAuth2] Starting OAuth for: google
+   [OAuth2] Redirect URI: https://www.soundchain.io/login
+   [OAuth2] Calling loginWithRedirect...
+   ```
+5. If timeout message appears after 10s, Magic SDK is failing silently
+6. Check for CSP errors or iframe loading issues in console
 
-**Expected console output:**
-```
-[OAuth2] handleSocialLogin called for google
-[OAuth2] Starting OAuth for: google
-[OAuth2] Redirect URI: https://www.soundchain.io/login
-[OAuth2] loginWithRedirect called - waiting for browser redirect...
-```
-
-If redirect doesn't happen, check for errors after this line.
-
-### 2. Genre Loading Error (Red Badge)
-**API works:** `tracksByGenre` query returns data correctly
-**Added logging:** Will see `❌ Genre Tracks Query Error:` in console if fails
-**Likely cause:** Old cached error or network issue
+### Other Fixes Completed
+- **Mobile audio player:** Fixed cropped rendering with responsive CSS
+- **DEX crash on play:** Added error handling to handlePlayTrack
+- **Feed embed posts:** Increased overscanCount in react-window List
 
 ---
 
-## DEX Audit Results
+## Debugging OAuth If Still Broken
 
-### Working Features (15+)
-| Feature | Status |
-|---------|--------|
-| Track Browsing | ✅ 618 unique tracks |
-| Marketplace | ✅ Real NFT listings |
-| Search | ✅ Users + tracks |
-| Audio Playback | ✅ Full player |
-| Pagination | ✅ 20 items/page |
-| Genre Sections | ✅ Spotify-style |
-| Top Charts | ✅ Top 10 streamed |
-| User Profiles | ✅ Follow/unfollow |
-| Wallet Balances | ✅ Fixed today |
-| Backend Stats | ✅ Fixed today |
+### Possible Causes
+1. **Magic iframe not loading:** Check for CSP errors in browser Network tab
+2. **API key issue:** Verify `pk_live_858EC1BFF763F101` is valid in Magic dashboard
+3. **Redirect URI not whitelisted:** Check Magic dashboard for allowed redirect URIs
+4. **Google OAuth app config:** Publishing status may need to be "In Production"
 
-### Placeholder Features
-- Token Marketplace (UI only)
-- Bundle Marketplace (UI only)
-- Playlist DEX (UI only)
-- Messages (empty)
-- Notifications (empty)
-- ZetaChain Wallet (coming soon)
+### Console Commands for Debugging
+```javascript
+// Check if Magic is loading
+console.log(window.location.href);
+
+// Check for Magic iframes
+document.querySelectorAll('iframe[src*="magic"]');
+```
+
+### Magic Dashboard Checklist
+1. Go to https://dashboard.magic.link
+2. Find SoundChain app
+3. Check OAuth Providers > Google
+4. Verify redirect URI includes `https://www.soundchain.io/login`
+5. Check if Google OAuth credentials are configured
 
 ---
 
@@ -108,28 +97,36 @@ cd /Users/soundchain/soundchain/web && yarn dev
 
 ---
 
-## Files Modified Today
+## Files Modified This Session
 
 ### web/src/pages/login.tsx
-- Removed loginWithPopup (black screen)
-- Using context Magic instance
-- Not awaiting loginWithRedirect
+- Removed `createAuthMagic` factory function
+- Now creates fresh Magic instance inline
+- Added `preload()` before OAuth redirect
+- Added 10-second timeout for silent failure detection
+- Fixed broken `authMagicRef` reference in redirect handler
+
+### web/src/components/common/BottomAudioPlayer/MobileBottomAudioPlayer.tsx
+- Fixed mobile responsive layout (was rendering desktop styles)
+- Added `md:hidden`, proper truncation, safe area insets
 
 ### web/src/pages/dex/[...slug].tsx
-- Added useMagicContext
-- Real OGUN/MATIC balances
-- Real NFT count
+- Added error handling in handlePlayTrack
+- Real wallet balances
 - Real backend stats
-- Genre error logging
+
+### web/src/components/Post/Posts.tsx
+- Increased overscanCount from 3 to 5 for feed stability
 
 ---
 
 ## Next Steps
 
-1. **Test OAuth** - User needs to clear cache and test
-2. **Genre Error** - Check console for the actual error
-3. **If OAuth still fails** - May need to check Magic iframe loading
+1. **Test OAuth after cache clear** - The logging will show exactly where it fails
+2. **If 10s timeout triggers** - Magic SDK iframe isn't loading properly
+3. **Check Magic Dashboard** - Verify OAuth configuration
+4. **If still broken** - May need to contact Magic.link support
 
 ---
 
-**Status:** OAuth fix deployed (needs testing) | DEX improvements deployed | 6 commits today
+**Status:** OAuth fixes deployed (needs testing) | Mobile player fixed | DEX crash fixed | Feed fixed
