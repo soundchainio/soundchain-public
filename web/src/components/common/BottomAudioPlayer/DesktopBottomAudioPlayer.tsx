@@ -118,8 +118,8 @@ const TrackDetails = tw.div`
 `
 
 const ImageContainer = tw.div`
-  h-[120px]
-  w-[120px]
+  h-[90px]
+  w-[90px]
 `
 
 const Title = tw.div`

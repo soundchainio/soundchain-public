@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 export type Song = {
   src: string
@@ -71,8 +71,20 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     }
   }, [])
 
+  // Debounce localStorage write to prevent freezing on rapid volume changes
+  const volumeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   useEffect(() => {
-    localStorage.setItem(localStorageVolumeKey, volume.toString())
+    if (volumeTimeoutRef.current) {
+      clearTimeout(volumeTimeoutRef.current)
+    }
+    volumeTimeoutRef.current = setTimeout(() => {
+      localStorage.setItem(localStorageVolumeKey, volume.toString())
+    }, 200)
+    return () => {
+      if (volumeTimeoutRef.current) {
+        clearTimeout(volumeTimeoutRef.current)
+      }
+    }
   }, [volume])
 
   useEffect(() => {
