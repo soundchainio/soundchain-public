@@ -227,6 +227,14 @@ export default function LoginPage() {
       console.log('[OAuth2] Redirect URI:', redirectURI);
       console.log('[OAuth2] Calling loginWithRedirect...');
 
+      // Set a timeout - if redirect doesn't happen within 10 seconds, something is wrong
+      const redirectTimeout = setTimeout(() => {
+        console.error('[OAuth2] Redirect timeout! Magic SDK may have failed silently.');
+        console.error('[OAuth2] Check browser console for iframe loading errors or CSP issues.');
+        setError('Login is taking too long. Please refresh and try again.');
+        setLoggingIn(false);
+      }, 10000);
+
       // Call loginWithRedirect - this should trigger browser navigation
       try {
         await (authMagic as any).oauth2.loginWithRedirect({
@@ -235,7 +243,9 @@ export default function LoginPage() {
         });
         // If we get here, redirect didn't happen (unusual)
         console.log('[OAuth2] loginWithRedirect returned without redirecting');
+        clearTimeout(redirectTimeout);
       } catch (redirectErr: any) {
+        clearTimeout(redirectTimeout);
         console.error('[OAuth2] loginWithRedirect threw:', redirectErr);
         // Some errors are expected if user cancels, but others indicate real problems
         if (redirectErr.message?.includes('user denied') || redirectErr.message?.includes('cancelled')) {
