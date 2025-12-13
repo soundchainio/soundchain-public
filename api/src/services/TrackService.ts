@@ -182,9 +182,10 @@ export class TrackService extends ModelService<typeof Track> {
     const hasMoreResults = groupedResults.length > first;
     const pageResults = hasMoreResults ? groupedResults.slice(0, first) : groupedResults;
 
-    // Step 2: Fetch actual Track documents using find() - this returns proper Mongoose documents
+    // Step 2: Fetch actual Track documents using find() with lean() for plain objects
+    // Using lean() avoids mongoose internal symbol access issues during GraphQL serialization
     const trackIds = pageResults.map((r: any) => r.docId);
-    const tracks = await this.model.find({ _id: { $in: trackIds } }).exec();
+    const tracks = await this.model.find({ _id: { $in: trackIds } }).lean().exec();
 
     // Maintain the same order as the aggregation results
     const trackMap = new Map(tracks.map((t: Track) => [t._id.toString(), t]));
@@ -265,8 +266,8 @@ export class TrackService extends ModelService<typeof Track> {
         return { genre, tracks: [] };
       }
 
-      // Fetch actual Track documents
-      const tracks = await this.model.find({ _id: { $in: trackIds } }).exec();
+      // Fetch actual Track documents using lean() for plain objects
+      const tracks = await this.model.find({ _id: { $in: trackIds } }).lean().exec();
 
       // Maintain order from aggregation
       const trackMap = new Map(tracks.map((t: Track) => [t._id.toString(), t]));
