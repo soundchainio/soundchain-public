@@ -7,9 +7,20 @@ import * as yup from 'yup'
 import { AddCommentMutation, CommentDocument, useAddCommentMutation } from '../lib/graphql'
 import { Avatar } from 'components/Avatar'
 import { FlexareaField } from './FlexareaField'
-import { useEffect, useState } from 'react'
+import { StickerPicker } from './StickerPicker'
+import Picker from '@emoji-mart/react'
+import { useEffect, useState, useRef } from 'react'
 import { getNormalizedLink, IdentifySource, hasLink } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
+
+interface Emoji {
+  id: string
+  name: string
+  native: string
+  unified: string
+  keywords: string[]
+  shortcodes: string
+}
 
 export interface NewCommentFormProps {
   postId: string
@@ -29,6 +40,9 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   const me = useMe()
   const router = useRouter()
   const [linkPreview, setLinkPreview] = useState<string | undefined>(undefined)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showStickerPicker, setShowStickerPicker] = useState(false)
+  const pickerRef = useRef<HTMLDivElement>(null)
   const [addComment] = useAddCommentMutation({
     update: (cache, result) => {
       if (router.pathname === '/posts/[id]' && !router.query.cursor) {
@@ -72,12 +86,73 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
           detectLink()
         }, [values.body])
 
+        const handleEmojiSelect = (emoji: Emoji) => {
+          const currentBody = values.body || ''
+          if (currentBody.length < 160) {
+            // Use Formik's setFieldValue to update the body
+            const newBody = currentBody + emoji.native
+            // Access setFieldValue from Formik context
+            ;(document.getElementById('commentField') as HTMLTextAreaElement).value = newBody
+            // Trigger a change event
+            const event = new Event('input', { bubbles: true })
+            ;(document.getElementById('commentField') as HTMLTextAreaElement).dispatchEvent(event)
+          }
+          setShowEmojiPicker(false)
+        }
+
+        const handleStickerSelect = (sticker: string) => {
+          const currentBody = values.body || ''
+          if (currentBody.length + sticker.length <= 160) {
+            const textarea = document.getElementById('commentField') as HTMLTextAreaElement
+            if (textarea) {
+              textarea.value = currentBody + sticker
+              const event = new Event('input', { bubbles: true })
+              textarea.dispatchEvent(event)
+            }
+          }
+          setShowStickerPicker(false)
+        }
+
         return (
           <Form>
             <div className="flex flex-col bg-gray-25">
               <div className="flex flex-row items-start space-x-3 p-3">
                 <Avatar profile={me.profile} linkToProfile={false} />
-                <FlexareaField id="commentField" name="body" maxLength={160} placeholder="Write a comment..." />
+                <div className="flex-1 relative">
+                  <FlexareaField id="commentField" name="body" maxLength={160} placeholder="Write a comment..." />
+                  {/* Emoji/Sticker toolbar */}
+                  <div className="flex items-center gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false) }}
+                      className="text-lg hover:scale-110 transition-transform"
+                      title="Add emoji"
+                    >
+                      {showEmojiPicker ? '❌' : '😊'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false) }}
+                      className="text-lg hover:scale-110 transition-transform"
+                      title="Add sticker"
+                    >
+                      {showStickerPicker ? '❌' : '🎵'}
+                    </button>
+                    <span className="text-xs text-gray-500 ml-auto">{values.body?.length || 0}/160</span>
+                  </div>
+                  {/* Emoji Picker Dropdown */}
+                  {showEmojiPicker && (
+                    <div ref={pickerRef} className="absolute left-0 bottom-12 z-50">
+                      <Picker theme="dark" perLine={8} onEmojiSelect={handleEmojiSelect} />
+                    </div>
+                  )}
+                  {/* Sticker Picker Dropdown */}
+                  {showStickerPicker && (
+                    <div className="absolute left-0 bottom-12 z-50">
+                      <StickerPicker theme="dark" onSelect={handleStickerSelect} />
+                    </div>
+                  )}
+                </div>
                 <button type="submit" disabled={isSubmitting} className="pt-1">
                   <Send color={dirty && isValid ? 'green-blue' : undefined} />
                 </button>

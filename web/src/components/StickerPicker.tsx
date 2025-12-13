@@ -38,7 +38,23 @@ const kickStickers = [
   { id: 'kick-blessed', text: '🙏 BLESSED', name: 'Kick Blessed' },
 ]
 
-type StickerCategory = 'soundchain' | 'twitch' | 'kick'
+// Discord Stickers (popular server emotes style)
+const discordStickers = [
+  { id: 'discord-pepe', text: '🐸 Pepe', name: 'Pepe' },
+  { id: 'discord-pog', text: '😮 POG', name: 'POG' },
+  { id: 'discord-gg', text: '🎮 GG', name: 'GG' },
+  { id: 'discord-ez', text: '😎 EZ', name: 'EZ' },
+  { id: 'discord-copium', text: '💨 Copium', name: 'Copium' },
+  { id: 'discord-lets-go', text: '🚀 LETS GO', name: 'LETS GO' },
+  { id: 'discord-based', text: '💯 BASED', name: 'BASED' },
+  { id: 'discord-f', text: '🪦 F', name: 'Press F' },
+  { id: 'discord-catjam', text: '🐱🎵', name: 'CatJam' },
+  { id: 'discord-stonks', text: '📈 STONKS', name: 'Stonks' },
+  { id: 'discord-nft', text: '🖼️ NFT', name: 'NFT' },
+  { id: 'discord-wagmi', text: '🤝 WAGMI', name: 'WAGMI' },
+]
+
+type StickerCategory = 'soundchain' | 'twitch' | 'kick' | 'discord'
 
 interface StickerPickerProps {
   onSelect: (sticker: string) => void
@@ -52,6 +68,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     { id: 'soundchain' as const, label: 'SoundChain', icon: '🎵' },
     { id: 'twitch' as const, label: 'Twitch', icon: '💜' },
     { id: 'kick' as const, label: 'Kick', icon: '💚' },
+    { id: 'discord' as const, label: 'Discord', icon: '🎮' },
   ]
 
   const getActiveStickers = () => {
@@ -62,6 +79,8 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
         return twitchStickers
       case 'kick':
         return kickStickers
+      case 'discord':
+        return discordStickers
     }
   }
 

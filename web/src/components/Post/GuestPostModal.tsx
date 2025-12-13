@@ -1,7 +1,15 @@
 import React, { useState } from 'react'
 import { X } from 'lucide-react'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
+import { StickerPicker } from '../StickerPicker'
 import { useGuestCreatePostMutation } from 'lib/graphql'
+import Picker from '@emoji-mart/react'
+
+interface Emoji {
+  id: string
+  name: string
+  native: string
+}
 
 interface GuestPostModalProps {
   isOpen: boolean
@@ -14,12 +22,28 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
   const [mediaLink, setMediaLink] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showStickerPicker, setShowStickerPicker] = useState(false)
 
   const [guestCreatePost] = useGuestCreatePostMutation({
     refetchQueries: ['Posts'],
   })
 
   if (!isOpen) return null
+
+  const handleEmojiSelect = (emoji: Emoji) => {
+    if (body.length < 500) {
+      setBody(prev => prev + emoji.native)
+    }
+    setShowEmojiPicker(false)
+  }
+
+  const handleStickerSelect = (sticker: string) => {
+    if (body.length + sticker.length <= 500) {
+      setBody(prev => prev + sticker)
+    }
+    setShowStickerPicker(false)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,16 +109,49 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
         <form onSubmit={handleSubmit}>
           <div className="p-4 space-y-4">
             {/* Body textarea */}
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="What's on your mind?"
-              className="w-full h-32 bg-neutral-800 border border-neutral-700 rounded-xl p-3 text-neutral-100 placeholder-neutral-500 resize-none focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
-              maxLength={500}
-            />
+            <div className="relative">
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder="What's on your mind?"
+                className="w-full h-32 bg-neutral-800 border border-neutral-700 rounded-xl p-3 text-neutral-100 placeholder-neutral-500 resize-none focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
+                maxLength={500}
+              />
 
-            {/* Character count */}
-            <div className="flex justify-end">
+              {/* Emoji/Sticker Picker Dropdowns */}
+              {showEmojiPicker && (
+                <div className="absolute left-0 bottom-full mb-2 z-50">
+                  <Picker theme="dark" perLine={8} onEmojiSelect={handleEmojiSelect} />
+                </div>
+              )}
+              {showStickerPicker && (
+                <div className="absolute left-0 bottom-full mb-2 z-50">
+                  <StickerPicker theme="dark" onSelect={handleStickerSelect} />
+                </div>
+              )}
+            </div>
+
+            {/* Emoji/Sticker toolbar + Character count */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false) }}
+                  className="text-xl hover:scale-110 transition-transform"
+                  title="Add emoji"
+                >
+                  {showEmojiPicker ? '❌' : '😊'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false) }}
+                  className="text-xl hover:scale-110 transition-transform"
+                  title="Add sticker (SoundChain, Twitch, Discord)"
+                >
+                  {showStickerPicker ? '❌' : '🎵'}
+                </button>
+                <span className="text-xs text-neutral-500">Stickers: Twitch • Discord • Kick</span>
+              </div>
               <span className={`text-xs ${body.length > 450 ? 'text-yellow-400' : 'text-neutral-500'}`}>
                 {body.length}/500
               </span>
