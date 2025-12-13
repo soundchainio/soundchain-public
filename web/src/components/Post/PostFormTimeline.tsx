@@ -162,13 +162,41 @@ export const PostFormTimeline = () => {
     }
   }
 
+  // Handle wallet connection for guest posting
+  const handleConnectWallet = async () => {
+    try {
+      if (typeof window.ethereum === 'undefined') {
+        toast.error('MetaMask is not installed. Please install MetaMask extension.')
+        return
+      }
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      if (accounts && accounts.length > 0) {
+        const address = accounts[0]
+        localStorage.setItem('connectedWalletAddress', address)
+        setConnectedWallet(address)
+        toast.success('Wallet connected! You can now post as a guest.')
+      }
+    } catch (error: any) {
+      console.error('Wallet connection error:', error)
+      toast.error(error.message || 'Failed to connect wallet')
+    }
+  }
+
   // Don't show post form if not logged in and no wallet connected
   if (!me && !connectedWallet) {
     return (
       <div className="mb-[25px] rounded-md bg-neutral-800 py-[14px] px-[16px]">
-        <div className="flex items-center gap-3 text-neutral-400">
-          <Wallet className="w-5 h-5" />
-          <span className="text-sm">Connect your wallet to post</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 text-neutral-400">
+            <Wallet className="w-5 h-5" />
+            <span className="text-sm">Connect wallet to post</span>
+          </div>
+          <button
+            onClick={handleConnectWallet}
+            className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm font-semibold rounded-full hover:opacity-90 transition-opacity"
+          >
+            Connect Wallet
+          </button>
         </div>
       </div>
     )
