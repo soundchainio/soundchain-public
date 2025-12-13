@@ -63,12 +63,27 @@ export default function PostPage({ post }: PostPageProps) {
   const repost = repostData?.post
   const track = post.track || repost?.track
 
-  const title = track ? `${track.title} - song by ${track.artist} | SoundChain` : 'Post | SoundChain'
+  const title = track ? `${track.title} - song by ${track.artist} | SoundChain` : `${post.profile?.displayName || 'Post'} | SoundChain`
   const description = track
     ? `${!post.body ? '' : `${post.body} - `}Listen to ${track.title} on SoundChain. ${track.artist}. ${
         track.album || 'Song'
       }. ${!track.releaseYear ? '' : `${track.releaseYear}.`}`
-    : post.body || 'Check this post on SoundChain'
+    : post.body || `Check out this post by ${post.profile?.displayName || 'a user'} on SoundChain`
+
+  // Get best image for sharing - track artwork, YouTube thumbnail, or profile picture
+  const getShareImage = () => {
+    if (track?.artworkUrl) return track.artworkUrl
+    // Extract YouTube thumbnail if it's a YouTube embed
+    if (post.mediaLink) {
+      const youtubeMatch = post.mediaLink.match(/(?:youtube\.com\/embed\/|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/)
+      if (youtubeMatch && youtubeMatch[1]) {
+        return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`
+      }
+    }
+    // Fallback to profile picture
+    return post.profile?.profilePicture || null
+  }
+  const shareImage = getShareImage()
 
   useEffect(() => {
     setTopNavBarProps(topNavBarProps)
@@ -94,7 +109,7 @@ export default function PostPage({ post }: PostPageProps) {
 
   return (
     <>
-      <SEO title={title} canonicalUrl={`/posts/${post.id}/`} description={description} image={track?.artworkUrl} />
+      <SEO title={title} canonicalUrl={`/posts/${post.id}/`} description={description} image={shareImage} />
       {deleted ? (
         <NotAvailableMessage type="post" />
       ) : (

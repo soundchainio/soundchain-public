@@ -7,8 +7,9 @@ import { MediaProvider } from 'types/MediaProvider'
 
 const linksRegex = /\bhttps?:\/\/\S+/gi
 
-// YouTube - support watch, shorts, embed, youtu.be
+// YouTube - support watch, shorts, embed, youtu.be (including already embedded URLs)
 const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+const youtubeEmbedUrlRegex = /youtube\.com\/embed\//
 const youtubeEmbedRegex = /<iframe[^>]+src="([^"]+youtube[^"]+)"/
 
 // SoundCloud - support regular links and embed codes
@@ -417,7 +418,8 @@ export const IdentifySource = (str: string) => {
     value: str,
   }
 
-  if (youtubeRegex.test(str)) ret.type = MediaProvider.YOUTUBE
+  // Check for YouTube (including embed URLs that don't have video ID in standard format)
+  if (youtubeRegex.test(str) || youtubeEmbedUrlRegex.test(str)) ret.type = MediaProvider.YOUTUBE
   if (soundcloudRegex.test(str)) ret.type = MediaProvider.SOUNDCLOUD
   if (spotifyRegex.test(str)) ret.type = MediaProvider.SPOTIFY
   if (vimeoRegex.test(str)) ret.type = MediaProvider.VIMEO

@@ -1683,7 +1683,7 @@ function DEXDashboard() {
                 </div>
               </div>
 
-              {/* Browse Mode - Grid of user cards */}
+              {/* Browse Mode - Micro card grid of users (stacked, compact) */}
               {usersViewMode === 'browse' && (
                 <>
                   {exploreUsersLoading ? (
@@ -1694,31 +1694,58 @@ function DEXDashboard() {
                       </div>
                     </div>
                   ) : exploreUsersData?.exploreUsers?.nodes?.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                      {exploreUsersData.exploreUsers.nodes.map((profile: any) => (
-                        <Link key={profile.id} href={`/profiles/${profile.userHandle}`}>
-                          <Card className="retro-card hover:border-indigo-500/50 transition-all duration-300 cursor-pointer group">
-                            <CardContent className="p-4 text-center">
-                              <Avatar className="w-16 h-16 mx-auto mb-3 ring-2 ring-indigo-500/30 group-hover:ring-indigo-500/60">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2">
+                      {exploreUsersData.exploreUsers.nodes.map((profile: any) => {
+                        // Check if profile picture is a video/gif
+                        const isVideo = profile.profilePicture && /\.(mp4|mov|webm)$/i.test(profile.profilePicture)
+                        const isGif = profile.profilePicture && /\.gif$/i.test(profile.profilePicture)
+
+                        return (
+                          <Link key={profile.id} href={`/profiles/${profile.userHandle}`}>
+                            <div className="relative group cursor-pointer">
+                              {/* Micro card with avatar as main visual */}
+                              <div className="aspect-square rounded-lg overflow-hidden bg-neutral-800 ring-1 ring-neutral-700 group-hover:ring-indigo-500/60 transition-all duration-300">
                                 {profile.profilePicture ? (
-                                  <AvatarImage src={profile.profilePicture} />
-                                ) : null}
-                                <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-xl">
-                                  {(profile.displayName || profile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex items-center justify-center gap-1 mb-1">
-                                <span className="font-semibold text-white truncate text-sm">{profile.displayName || profile.userHandle}</span>
-                                {profile.verified && <BadgeCheck className="w-4 h-4 text-cyan-400 flex-shrink-0" />}
+                                  isVideo ? (
+                                    <video
+                                      src={profile.profilePicture}
+                                      className="w-full h-full object-cover"
+                                      autoPlay
+                                      muted
+                                      loop
+                                      playsInline
+                                    />
+                                  ) : (
+                                    <img
+                                      src={profile.profilePicture}
+                                      alt={profile.displayName || profile.userHandle}
+                                      className={`w-full h-full object-cover ${isGif ? '' : ''}`}
+                                      loading="lazy"
+                                    />
+                                  )
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-2xl font-bold">
+                                    {(profile.displayName || profile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
+                                  </div>
+                                )}
+                                {/* Hover overlay with info */}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-1">
+                                  <span className="text-white text-xs font-semibold truncate w-full text-center">{profile.displayName || profile.userHandle}</span>
+                                  <span className="text-indigo-300 text-[10px]">{profile.followerCount || 0} followers</span>
+                                </div>
+                                {/* Verified badge */}
+                                {profile.verified && (
+                                  <div className="absolute top-1 right-1">
+                                    <BadgeCheck className="w-4 h-4 text-cyan-400 drop-shadow-lg" />
+                                  </div>
+                                )}
                               </div>
-                              <p className="text-xs text-gray-400 truncate">@{profile.userHandle}</p>
-                              <div className="flex justify-center gap-4 mt-3 text-xs text-gray-500">
-                                <span>{profile.followerCount || 0} followers</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </Link>
-                      ))}
+                              {/* Name below card */}
+                              <p className="text-[10px] text-gray-400 truncate text-center mt-1 group-hover:text-indigo-300 transition-colors">@{profile.userHandle}</p>
+                            </div>
+                          </Link>
+                        )
+                      })}
                     </div>
                   ) : (
                     <Card className="retro-card p-8 text-center">
