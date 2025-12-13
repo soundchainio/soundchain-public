@@ -7,7 +7,7 @@ import { ImageUploadField } from 'components/ImageUploadField'
 import { Label } from 'components/Label'
 import { Form, Formik } from 'formik'
 import { useMe } from 'hooks/useMe'
-import { useMagic } from 'hooks/useMagic'
+import { useMagicContext } from 'hooks/useMagicContext'
 import { useUpdateProfilePictureMutation } from 'lib/graphql'
 import Image from 'next/image'
 import * as yup from 'yup'
@@ -35,7 +35,7 @@ const defaultProfilePictures = [
 
 export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: ProfilePictureFormProps) => {
   const me = useMe()
-  const { walletAddress } = useMagic()
+  const { account: walletAddress } = useMagicContext()
   const [defaultPicture, setDefaultPicture] = useState<string | null>(null)
   const [guestAvatar, setGuestAvatar] = useState<string | null>(null)
   const [updateProfilePicture] = useUpdateProfilePictureMutation()
