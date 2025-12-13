@@ -393,10 +393,10 @@ function DEXDashboard() {
     router.reload()
   }
 
-  // Real SoundChain data - YOUR profile
+  // Real SoundChain data - YOUR profile (only fetch if needed, use cache-first for speed)
   const { data: userData, loading: userLoading, error: userError } = useMeQuery({
     ssr: false,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first', // Speed: use cache, don't hit network unless stale
   })
 
   // GraphQL query for tracks by genre (Spotify-style horizontal scrolling)
@@ -420,31 +420,35 @@ function DEXDashboard() {
   `
 
   // Fetch tracks grouped by genre for the new Spotify-style UI
-  // Reduced limit to prevent Lambda timeout (502 errors)
+  // Only fetch when on dashboard view with tracks tab selected for SPEED
   const { data: genreTracksData, loading: genreTracksLoading, error: genreTracksError, refetch: refetchGenreTracks } = useQuery(TRACKS_BY_GENRE_QUERY, {
     variables: { limit: 8 }, // Reduced from 15 to 8 to prevent Lambda timeout
-    fetchPolicy: 'cache-first', // Use cache to reduce API calls
+    fetchPolicy: 'cache-first', // Speed: use cache, skip network when possible
     errorPolicy: 'all', // Return partial data on error
+    skip: selectedView !== 'dashboard', // SPEED: Only fetch when on dashboard
   })
 
   // Fetch Top 10 most streamed tracks for the Top Charts section
+  // SPEED: Only fetch when on dashboard, use cache-first
   const { data: topTracksData, loading: topTracksLoading } = useTracksQuery({
     variables: {
       sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
       page: { first: 10 },
     },
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first', // Speed: cache first, no network hit if cached
+    skip: selectedView !== 'dashboard', // SPEED: Only fetch when needed
   })
 
   // Fetch ALL unique tracks (618 tracks from 8,236 NFT editions) with pagination
+  // SPEED: Only fetch when on dashboard, cache-first
   const { data: tracksData, loading: tracksLoading, error: tracksError, refetch: refetchTracks, fetchMore: fetchMoreTracks } = useGroupedTracksQuery({
     variables: {
       filter: {}, // Empty filter to get ALL tracks
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
       page: { first: 20 }, // Start with 20 tracks for smooth rendering
     },
-    skip: false, // Always fetch
-    fetchPolicy: 'cache-and-network', // Use cache but also fetch fresh
+    skip: selectedView !== 'dashboard', // SPEED: Only fetch when on dashboard
+    fetchPolicy: 'cache-first', // Speed: cache-first for instant loads
     notifyOnNetworkStatusChange: true, // Get updates on refetch
   })
 
@@ -516,12 +520,13 @@ function DEXDashboard() {
   }, [tracksError])
 
   // Fetch all listing items for marketplace with pagination
-  // Reduced initial load and using cache-first to prevent Lambda timeout (502 errors)
+  // SPEED: Only fetch when on marketplace or dashboard, cache-first
   const { data: listingData, loading: listingLoading, error: listingError, fetchMore: fetchMoreListings, refetch: refetchListings } = useListingItemsQuery({
     variables: { page: { first: 10 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} }, // Reduced from 20 to 10
     ssr: false,
-    fetchPolicy: 'cache-first', // Use cache to reduce API calls
+    fetchPolicy: 'cache-first', // Speed: cache-first for instant loads
     errorPolicy: 'all', // Allow partial data even with errors
+    skip: selectedView !== 'marketplace' && selectedView !== 'dashboard', // SPEED: Only fetch when needed
   })
 
   // Load more listings
@@ -579,24 +584,25 @@ function DEXDashboard() {
   // Manual "Load More" buttons are used instead
 
   // Explore Users Query - search for users/profiles
-  // Pass undefined when no search to get all users, pass search string to filter
+  // SPEED: cache-first, only fetch when on explore view
   const { data: exploreUsersData, loading: exploreUsersLoading } = useExploreUsersQuery({
     variables: {
       search: exploreSearchQuery.trim() || undefined,
       page: { first: 20 }
     },
     skip: selectedView !== 'explore',
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first', // Speed: instant from cache
   })
 
   // Explore Tracks Query - search for tracks
+  // SPEED: cache-first, only fetch when on explore view
   const { data: exploreTracksData, loading: exploreTracksLoading } = useExploreTracksQuery({
     variables: {
       search: exploreSearchQuery.trim() || undefined,
       page: { first: 20 }
     },
     skip: selectedView !== 'explore',
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'cache-first', // Speed: instant from cache
   })
 
   // Follow/Unfollow mutations
