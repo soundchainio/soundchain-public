@@ -585,14 +585,14 @@ function DEXDashboard() {
   // Manual "Load More" buttons are used instead
 
   // Explore Users Query - search for users/profiles
-  // SPEED: cache-first, fetch when on explore OR users view
-  const { data: exploreUsersData, loading: exploreUsersLoading } = useExploreUsersQuery({
+  // Load all users when on users tab (no search filter = returns all sorted by follower count)
+  const { data: exploreUsersData, loading: exploreUsersLoading, refetch: refetchUsers } = useExploreUsersQuery({
     variables: {
-      search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view
-      page: { first: selectedView === 'users' ? 50 : 20 } // Load more users on users view
+      search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view = get ALL users
+      page: { first: selectedView === 'users' ? 200 : 20 } // Load more users on users view (200 for pagination)
     },
     skip: selectedView !== 'explore' && selectedView !== 'users',
-    fetchPolicy: 'cache-first', // Speed: instant from cache
+    fetchPolicy: selectedView === 'users' ? 'cache-and-network' : 'cache-first', // Fresh data for users tab
   })
 
   // Explore Tracks Query - search for tracks

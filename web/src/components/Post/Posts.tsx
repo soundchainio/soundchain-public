@@ -104,9 +104,19 @@ export const Posts = ({ profileId }: PostsProps) => {
     }
   }
 
+  // Calculate responsive column count based on width
+  // iPhone: 2 cols (~187px each), Desktop: 3-4 cols (~150px each) for tight stacking
+  const getColumnCount = (width: number) => {
+    if (width < 400) return 2      // Mobile: 2 columns
+    if (width < 600) return 3      // Small tablet: 3 columns
+    if (width < 900) return 4      // Tablet: 4 columns
+    return 5                        // Desktop: 5 columns for tight stacking
+  }
+
   // Grid cell renderer for compact view
   const GridCell = memo(({ columnIndex, rowIndex, style, data }: any) => {
-    const itemIndex = rowIndex * 2 + columnIndex // 2 columns
+    const columnCount = data.columnCount || 2
+    const itemIndex = rowIndex * columnCount + columnIndex
     const posts = data.nodes
     if (itemIndex >= posts.length) return null
 
@@ -114,7 +124,7 @@ export const Posts = ({ profileId }: PostsProps) => {
     if (!post) return null
 
     return (
-      <div style={{ ...style, padding: '4px' }}>
+      <div style={{ ...style, padding: '3px' }}>
         <CompactPost post={post} handleOnPlayClicked={data.handleOnPlayClicked} />
       </div>
     )
@@ -208,30 +218,38 @@ export const Posts = ({ profileId }: PostsProps) => {
                     )}
                   </List>
                 ) : (
-                  // Grid view - 2 columns of compact cards
-                  <Grid
-                    height={height}
-                    width={width}
-                    columnCount={2}
-                    columnWidth={width / 2}
-                    rowCount={Math.ceil(nodes.length / 2)}
-                    rowHeight={200}
-                    itemData={{ nodes, handleOnPlayClicked }}
-                    onItemsRendered={({ visibleRowStartIndex, visibleRowStopIndex }) => {
-                      onItemsRendered({
-                        overscanStartIndex: visibleRowStartIndex * 2,
-                        overscanStopIndex: (visibleRowStopIndex + 1) * 2 - 1,
-                        visibleStartIndex: visibleRowStartIndex * 2,
-                        visibleStopIndex: (visibleRowStopIndex + 1) * 2 - 1,
-                      })
-                    }}
-                    ref={grid => {
-                      typeof ref === 'function' && ref(grid)
-                      gridRef.current = grid
-                    }}
-                  >
-                    {GridCell}
-                  </Grid>
+                  // Grid view - responsive columns, tight stacking like iPhone
+                  (() => {
+                    const columnCount = getColumnCount(width)
+                    const columnWidth = width / columnCount
+                    // Smaller row height for tighter stacking (card is square + footer ~28px)
+                    const rowHeight = columnWidth + 28
+                    return (
+                      <Grid
+                        height={height}
+                        width={width}
+                        columnCount={columnCount}
+                        columnWidth={columnWidth}
+                        rowCount={Math.ceil(nodes.length / columnCount)}
+                        rowHeight={rowHeight}
+                        itemData={{ nodes, handleOnPlayClicked, columnCount }}
+                        onItemsRendered={({ visibleRowStartIndex, visibleRowStopIndex }) => {
+                          onItemsRendered({
+                            overscanStartIndex: visibleRowStartIndex * columnCount,
+                            overscanStopIndex: (visibleRowStopIndex + 1) * columnCount - 1,
+                            visibleStartIndex: visibleRowStartIndex * columnCount,
+                            visibleStopIndex: (visibleRowStopIndex + 1) * columnCount - 1,
+                          })
+                        }}
+                        ref={grid => {
+                          typeof ref === 'function' && ref(grid)
+                          gridRef.current = grid
+                        }}
+                      >
+                        {GridCell}
+                      </Grid>
+                    )
+                  })()
                 )
               )}
             </InfiniteLoader>
