@@ -62,11 +62,16 @@ export const PostFormTimeline = () => {
         await createPost({ variables: { input: newPostParams } })
         toast.success(`Post successfully created.`)
       } else {
-        // Public post - anonymous
+        // Public post - use a valid anonymous wallet address format
+        // Generate a pseudo-random address based on timestamp for uniqueness
+        const timestamp = Date.now().toString(16).padStart(12, '0')
+        const randomPart = Math.random().toString(16).substring(2, 30).padStart(28, '0')
+        const anonymousAddress = `0x${timestamp}${randomPart}`.substring(0, 42)
+
         await guestCreatePost({
           variables: {
             input: newPostParams,
-            walletAddress: 'anonymous',
+            walletAddress: anonymousAddress,
           },
         })
         toast.success(`Post created!`)

@@ -4,7 +4,7 @@ import { NoResultFound } from 'components/NoResultFound'
 import { Post } from './Post'
 import { CompactPost } from './CompactPost'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { Post as PostType, usePostsQuery, SortOrder, SortPostField } from 'lib/graphql'
+import { Post as PostType, usePostsQuery, usePostQuery, SortOrder, SortPostField } from 'lib/graphql'
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
@@ -12,7 +12,10 @@ import { areEqual, VariableSizeList as List, FixedSizeGrid as Grid } from 'react
 import InfiniteLoader from 'react-window-infinite-loader'
 import { PostFormTimeline } from './PostFormTimeline'
 import { PostSkeleton } from './PostSkeleton'
-import { LayoutGrid, List as ListIcon } from 'lucide-react'
+import { LayoutGrid, List as ListIcon, X, MessageCircle, Send } from 'lucide-react'
+import { PostActions } from './PostActions'
+import { PostStats } from './PostStats'
+import { Comments } from './Comments'
 
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
@@ -23,8 +26,65 @@ const GAP = 8
 
 type ViewMode = 'list' | 'grid'
 
+// Post Detail Modal Component
+const PostDetailModal = ({ postId, onClose, handleOnPlayClicked }: { postId: string; onClose: () => void; handleOnPlayClicked: (trackId: string) => void }) => {
+  const { data, loading } = usePostQuery({
+    variables: { id: postId },
+    skip: !postId,
+  })
+
+  if (!postId) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop with blur */}
+      <div
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal content */}
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-neutral-900 rounded-2xl border border-cyan-500/20 shadow-2xl shadow-cyan-500/10">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-neutral-800/80 backdrop-blur flex items-center justify-center hover:bg-neutral-700 transition-colors"
+        >
+          <X className="w-4 h-4 text-white" />
+        </button>
+
+        {loading ? (
+          <div className="p-8">
+            <PostSkeleton />
+          </div>
+        ) : data?.post ? (
+          <div>
+            {/* Full Post View */}
+            <Post post={data.post} handleOnPlayClicked={handleOnPlayClicked} />
+
+            {/* Comments Section */}
+            <div className="p-4 border-t border-neutral-800">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageCircle className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-white font-semibold">Comments</h3>
+                <span className="text-neutral-500 text-sm">({data.post.commentCount || 0})</span>
+              </div>
+              <Comments postId={postId} />
+            </div>
+          </div>
+        ) : (
+          <div className="p-8 text-center text-neutral-400">
+            Post not found
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export const Posts = ({ profileId }: PostsProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid') // Default to compact grid view
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const { playlistState } = useAudioPlayerContext()
   const { data, loading, refetch, fetchMore } = usePostsQuery({
     variables: {
@@ -113,6 +173,11 @@ export const Posts = ({ profileId }: PostsProps) => {
     return 5                        // Desktop: 5 columns for tight stacking
   }
 
+  // Handle post click to open modal
+  const handlePostClick = useCallback((postId: string) => {
+    setSelectedPostId(postId)
+  }, [])
+
   // Grid cell renderer for compact view
   const GridCell = memo(({ columnIndex, rowIndex, style, data }: any) => {
     const columnCount = data.columnCount || 2
@@ -124,8 +189,12 @@ export const Posts = ({ profileId }: PostsProps) => {
     if (!post) return null
 
     return (
-      <div style={{ ...style, padding: '3px' }}>
-        <CompactPost post={post} handleOnPlayClicked={data.handleOnPlayClicked} />
+      <div style={{ ...style, padding: '4px' }}>
+        <CompactPost
+          post={post}
+          handleOnPlayClicked={data.handleOnPlayClicked}
+          onPostClick={data.onPostClick}
+        />
       </div>
     )
   })
@@ -222,8 +291,8 @@ export const Posts = ({ profileId }: PostsProps) => {
                   (() => {
                     const columnCount = getColumnCount(width)
                     const columnWidth = width / columnCount
-                    // Smaller row height for tighter stacking (card is square + footer ~28px)
-                    const rowHeight = columnWidth + 28
+                    // Row height for premium cards (square aspect + footer ~60px for new design)
+                    const rowHeight = columnWidth + 60
                     return (
                       <Grid
                         height={height}
@@ -232,7 +301,7 @@ export const Posts = ({ profileId }: PostsProps) => {
                         columnWidth={columnWidth}
                         rowCount={Math.ceil(nodes.length / columnCount)}
                         rowHeight={rowHeight}
-                        itemData={{ nodes, handleOnPlayClicked, columnCount }}
+                        itemData={{ nodes, handleOnPlayClicked, columnCount, onPostClick: handlePostClick }}
                         onItemsRendered={({ visibleRowStartIndex, visibleRowStopIndex }) => {
                           onItemsRendered({
                             overscanStartIndex: visibleRowStartIndex * columnCount,
@@ -256,6 +325,15 @@ export const Posts = ({ profileId }: PostsProps) => {
           )}
         </AutoSizer>
       </PullToRefresh>
+
+      {/* Post Detail Modal */}
+      {selectedPostId && (
+        <PostDetailModal
+          postId={selectedPostId}
+          onClose={() => setSelectedPostId(null)}
+          handleOnPlayClicked={handleOnPlayClicked}
+        />
+      )}
     </>
   )
 }
