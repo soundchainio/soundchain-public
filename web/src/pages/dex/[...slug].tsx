@@ -1133,6 +1133,7 @@ function DEXDashboard() {
         {/* Main Content */}
         <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8">
           {/* View Tabs - LEGACY UI PATTERN WITH GRADIENT TEXT */}
+          {/* Order: Dashboard, Feed, Users first, then rest */}
           <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
             <Button
               variant="ghost"
@@ -1146,22 +1147,32 @@ function DEXDashboard() {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('marketplace')}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-purple-500/10 ${selectedView === 'marketplace' ? 'bg-purple-500/10' : ''}`}
-            >
-              <ShoppingBag className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'marketplace' ? 'text-purple-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'marketplace' ? 'purple-green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Marketplace
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
               onClick={() => setSelectedView('feed')}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${selectedView === 'feed' ? 'bg-green-500/10' : ''}`}
             >
               <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'feed' ? 'text-green-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'feed' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Feed
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedView('users')}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-indigo-500/10 ${selectedView === 'users' ? 'bg-indigo-500/10' : ''}`}
+            >
+              <Users className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'users' ? 'text-indigo-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'users' ? 'indigo-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Users
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedView('marketplace')}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-purple-500/10 ${selectedView === 'marketplace' ? 'bg-purple-500/10' : ''}`}
+            >
+              <ShoppingBag className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'marketplace' ? 'text-purple-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'marketplace' ? 'purple-green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Marketplace
               </span>
             </Button>
             <Button
@@ -1192,16 +1203,6 @@ function DEXDashboard() {
               <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'playlist' ? 'text-pink-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'playlist' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Playlist
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedView('users')}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-indigo-500/10 ${selectedView === 'users' ? 'bg-indigo-500/10' : ''}`}
-            >
-              <Users className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'users' ? 'text-indigo-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'users' ? 'indigo-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Users
               </span>
             </Button>
           </div>
