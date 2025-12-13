@@ -368,6 +368,19 @@ function DEXDashboard() {
     }
   }, [routeType])
 
+  // Restore wallet connection from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedAddress = localStorage.getItem('connectedWalletAddress')
+      const savedType = localStorage.getItem('connectedWalletType')
+      if (savedAddress && savedType) {
+        setConnectedWallet(savedAddress)
+        setIsWalletConnected(true)
+        console.log(`🔄 Restored wallet: ${savedType} - ${savedAddress}`)
+      }
+    }
+  }, [])
+
   // Navigate to a view and update URL
   const navigateToView = useCallback((view: string, id?: string) => {
     if (view === 'dashboard' || view === 'home') {
@@ -397,6 +410,17 @@ function DEXDashboard() {
       // No wallet, no account - prompt wallet connection
       setShowWalletModal(true)
     }
+  }
+
+  // Disconnect wallet handler
+  const handleWalletDisconnect = () => {
+    setIsWalletConnected(false)
+    setConnectedWallet(null)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('connectedWalletAddress')
+      localStorage.removeItem('connectedWalletType')
+    }
+    console.log('🔌 Wallet disconnected')
   }
 
   // Logout handler
@@ -902,7 +926,7 @@ function DEXDashboard() {
               </div>
 
               <Button
-                onClick={() => isWalletConnected ? setIsWalletConnected(false) : setShowWalletModal(true)}
+                onClick={() => isWalletConnected ? handleWalletDisconnect() : setShowWalletModal(true)}
                 className={isWalletConnected ? 'bg-green-600 hover:bg-green-700' : 'retro-button'}
               >
                 <Wallet className="w-4 h-4 mr-2" />
