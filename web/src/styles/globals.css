@@ -352,6 +352,18 @@ html {
   color: transparent;
 }
 
+.indigo-gradient-text {
+  background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.orange-gradient-text {
+  background: linear-gradient(90deg, #f97316 0%, #fbbf24 100%);
+  background-clip: text;
+  color: transparent;
+}
+
 .no-bg-selection::selection {
   background: transparent;
 }

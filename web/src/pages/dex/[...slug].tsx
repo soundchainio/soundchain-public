@@ -341,7 +341,7 @@ function DEXDashboard() {
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -356,11 +356,12 @@ function DEXDashboard() {
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
   const [exploreTab, setExploreTab] = useState<'tracks' | 'users'>('users')
   const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
+  const [usersViewMode, setUsersViewMode] = useState<'browse' | 'leaderboard'>('browse')
 
   // Sync selectedView with URL changes (for back/forward navigation)
   useEffect(() => {
     const newView = getInitialView()
-    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications'].includes(newView)) {
+    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
       setSelectedView(newView as any)
     }
   }, [routeType])
@@ -584,13 +585,13 @@ function DEXDashboard() {
   // Manual "Load More" buttons are used instead
 
   // Explore Users Query - search for users/profiles
-  // SPEED: cache-first, only fetch when on explore view
+  // SPEED: cache-first, fetch when on explore OR users view
   const { data: exploreUsersData, loading: exploreUsersLoading } = useExploreUsersQuery({
     variables: {
-      search: exploreSearchQuery.trim() || undefined,
-      page: { first: 20 }
+      search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view
+      page: { first: selectedView === 'users' ? 50 : 20 } // Load more users on users view
     },
-    skip: selectedView !== 'explore',
+    skip: selectedView !== 'explore' && selectedView !== 'users',
     fetchPolicy: 'cache-first', // Speed: instant from cache
   })
 
@@ -1193,6 +1194,16 @@ function DEXDashboard() {
                 Playlist
               </span>
             </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedView('users')}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-indigo-500/10 ${selectedView === 'users' ? 'bg-indigo-500/10' : ''}`}
+            >
+              <Users className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'users' ? 'text-indigo-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'users' ? 'indigo-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Users
+              </span>
+            </Button>
           </div>
 
           {/* Stats - Only shown when logged in, all 6 boxes same size on one row */}
@@ -1634,6 +1645,155 @@ function DEXDashboard() {
                 </Card>
               )}
 
+            </div>
+          )}
+
+          {/* Users View - Browse and Leaderboard for all profiles */}
+          {selectedView === 'users' && (
+            <div className="space-y-6">
+              {/* Users view mode toggle */}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setUsersViewMode('browse')}
+                    className={`transition-all duration-300 ${usersViewMode === 'browse' ? 'bg-indigo-500/20 text-indigo-400' : 'text-gray-400 hover:bg-white/5'}`}
+                  >
+                    <Compass className="w-4 h-4 mr-2" />
+                    Browse
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setUsersViewMode('leaderboard')}
+                    className={`transition-all duration-300 ${usersViewMode === 'leaderboard' ? 'bg-purple-500/20 text-purple-400' : 'text-gray-400 hover:bg-white/5'}`}
+                  >
+                    <Trophy className="w-4 h-4 mr-2" />
+                    Leaderboard
+                  </Button>
+                </div>
+                <div className="flex gap-2">
+                  {exploreUsersLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading users...</Badge>}
+                  {exploreUsersData?.exploreUsers?.nodes && (
+                    <Badge className="bg-green-500/20 text-green-400">
+                      {exploreUsersData.exploreUsers.nodes.length} users
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Browse Mode - Grid of user cards */}
+              {usersViewMode === 'browse' && (
+                <>
+                  {exploreUsersLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex items-center gap-3 text-indigo-400">
+                        <div className="animate-spin h-6 w-6 border-2 border-indigo-400 border-t-transparent rounded-full" />
+                        <span>Loading users...</span>
+                      </div>
+                    </div>
+                  ) : exploreUsersData?.exploreUsers?.nodes?.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                      {exploreUsersData.exploreUsers.nodes.map((profile: any) => (
+                        <Link key={profile.id} href={`/profiles/${profile.userHandle}`}>
+                          <Card className="retro-card hover:border-indigo-500/50 transition-all duration-300 cursor-pointer group">
+                            <CardContent className="p-4 text-center">
+                              <Avatar className="w-16 h-16 mx-auto mb-3 ring-2 ring-indigo-500/30 group-hover:ring-indigo-500/60">
+                                {profile.profilePicture ? (
+                                  <AvatarImage src={profile.profilePicture} />
+                                ) : null}
+                                <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-xl">
+                                  {(profile.displayName || profile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <span className="font-semibold text-white truncate text-sm">{profile.displayName || profile.userHandle}</span>
+                                {profile.verified && <BadgeCheck className="w-4 h-4 text-cyan-400 flex-shrink-0" />}
+                              </div>
+                              <p className="text-xs text-gray-400 truncate">@{profile.userHandle}</p>
+                              <div className="flex justify-center gap-4 mt-3 text-xs text-gray-500">
+                                <span>{profile.followerCount || 0} followers</span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="retro-card p-8 text-center">
+                      <Users className="w-12 h-12 mx-auto mb-4 text-indigo-400 opacity-50" />
+                      <p className="text-gray-400">No users found. Be the first to join SoundChain!</p>
+                    </Card>
+                  )}
+                </>
+              )}
+
+              {/* Leaderboard Mode - Top users by followers */}
+              {usersViewMode === 'leaderboard' && (
+                <>
+                  {exploreUsersLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="flex items-center gap-3 text-purple-400">
+                        <div className="animate-spin h-6 w-6 border-2 border-purple-400 border-t-transparent rounded-full" />
+                        <span>Loading leaderboard...</span>
+                      </div>
+                    </div>
+                  ) : exploreUsersData?.exploreUsers?.nodes?.length > 0 ? (
+                    <Card className="retro-card overflow-hidden">
+                      <div className="p-4 border-b border-cyan-500/30">
+                        <h3 className="retro-title flex items-center gap-2">
+                          <Trophy className="w-5 h-5 text-yellow-400" />
+                          Top Users by Followers
+                        </h3>
+                      </div>
+                      <div className="divide-y divide-cyan-500/20">
+                        {[...exploreUsersData.exploreUsers.nodes]
+                          .sort((a: any, b: any) => (b.followerCount || 0) - (a.followerCount || 0))
+                          .slice(0, 20)
+                          .map((profile: any, index: number) => (
+                            <Link key={profile.id} href={`/profiles/${profile.userHandle}`}>
+                              <div className="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors cursor-pointer">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                  index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black' :
+                                  index === 1 ? 'bg-gradient-to-br from-gray-300 to-slate-400 text-black' :
+                                  index === 2 ? 'bg-gradient-to-br from-amber-600 to-orange-700 text-white' :
+                                  'bg-gray-700 text-gray-300'
+                                }`}>
+                                  {index + 1}
+                                </div>
+                                <Avatar className="w-12 h-12">
+                                  {profile.profilePicture ? (
+                                    <AvatarImage src={profile.profilePicture} />
+                                  ) : null}
+                                  <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white">
+                                    {(profile.displayName || profile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-semibold text-white truncate">{profile.displayName || profile.userHandle}</span>
+                                    {profile.verified && <BadgeCheck className="w-4 h-4 text-cyan-400 flex-shrink-0" />}
+                                  </div>
+                                  <p className="text-xs text-gray-400 truncate">@{profile.userHandle}</p>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-lg font-bold text-indigo-400">{(profile.followerCount || 0).toLocaleString()}</div>
+                                  <div className="text-xs text-gray-500">followers</div>
+                                </div>
+                              </div>
+                            </Link>
+                          ))}
+                      </div>
+                    </Card>
+                  ) : (
+                    <Card className="retro-card p-8 text-center">
+                      <Trophy className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
+                      <p className="text-gray-400">No users to rank yet. Be the first!</p>
+                    </Card>
+                  )}
+                </>
+              )}
             </div>
           )}
 
