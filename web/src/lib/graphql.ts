@@ -1217,10 +1217,11 @@ export type Post = {
   createdAt: Scalars['DateTime']['output'];
   deleted: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
+  isGuest: Scalars['Boolean']['output'];
   mediaLink: Maybe<Scalars['String']['output']>;
   myReaction: Maybe<ReactionType>;
-  profile: Profile;
-  profileId: Scalars['ID']['output'];
+  profile: Maybe<Profile>;
+  profileId: Maybe<Scalars['ID']['output']>;
   repostCount: Scalars['Float']['output'];
   repostId: Maybe<Scalars['ID']['output']>;
   topReactions: Array<ReactionType>;
@@ -1229,6 +1230,7 @@ export type Post = {
   trackEditionId: Maybe<Scalars['ID']['output']>;
   trackId: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+  walletAddress: Maybe<Scalars['String']['output']>;
 };
 
 
@@ -7724,3 +7726,124 @@ export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhiteli
 export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
 export type WhitelistEntryByWalletSuspenseQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletSuspenseQuery>;
 export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;
+
+// ============================================
+// GUEST ACCESS MUTATIONS (wallet-only, no account required)
+// ============================================
+
+export type GuestReactToPostMutationVariables = Exact<{
+  input: ReactToPostInput;
+  walletAddress: Scalars['String']['input'];
+}>;
+
+export type GuestReactToPostMutation = { __typename?: 'Mutation', guestReactToPost: { __typename?: 'ReactToPostPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType> } } };
+
+export const GuestReactToPostDocument = gql`
+    mutation GuestReactToPost($input: ReactToPostInput!, $walletAddress: String!) {
+  guestReactToPost(input: $input, walletAddress: $walletAddress) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+    }
+  }
+}
+    `;
+export type GuestReactToPostMutationFn = Apollo.MutationFunction<GuestReactToPostMutation, GuestReactToPostMutationVariables>;
+
+export function useGuestReactToPostMutation(baseOptions?: Apollo.MutationHookOptions<GuestReactToPostMutation, GuestReactToPostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestReactToPostMutation, GuestReactToPostMutationVariables>(GuestReactToPostDocument, options);
+      }
+export type GuestReactToPostMutationHookResult = ReturnType<typeof useGuestReactToPostMutation>;
+export type GuestReactToPostMutationResult = Apollo.MutationResult<GuestReactToPostMutation>;
+export type GuestReactToPostMutationOptions = Apollo.BaseMutationOptions<GuestReactToPostMutation, GuestReactToPostMutationVariables>;
+
+export type GuestRetractReactionMutationVariables = Exact<{
+  postId: Scalars['String']['input'];
+  walletAddress: Scalars['String']['input'];
+}>;
+
+export type GuestRetractReactionMutation = { __typename?: 'Mutation', guestRetractReaction: { __typename?: 'RetractReactionPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType> } } };
+
+export const GuestRetractReactionDocument = gql`
+    mutation GuestRetractReaction($postId: String!, $walletAddress: String!) {
+  guestRetractReaction(postId: $postId, walletAddress: $walletAddress) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+    }
+  }
+}
+    `;
+export type GuestRetractReactionMutationFn = Apollo.MutationFunction<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>;
+
+export function useGuestRetractReactionMutation(baseOptions?: Apollo.MutationHookOptions<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>(GuestRetractReactionDocument, options);
+      }
+export type GuestRetractReactionMutationHookResult = ReturnType<typeof useGuestRetractReactionMutation>;
+export type GuestRetractReactionMutationResult = Apollo.MutationResult<GuestRetractReactionMutation>;
+export type GuestRetractReactionMutationOptions = Apollo.BaseMutationOptions<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>;
+
+export type GuestCreatePostMutationVariables = Exact<{
+  input: CreatePostInput;
+  walletAddress: Scalars['String']['input'];
+}>;
+
+export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, walletAddress: string | null, isGuest: boolean, createdAt: string, totalReactions: number, topReactions: Array<ReactionType>, commentCount: number } } };
+
+export const GuestCreatePostDocument = gql`
+    mutation GuestCreatePost($input: CreatePostInput!, $walletAddress: String!) {
+  guestCreatePost(input: $input, walletAddress: $walletAddress) {
+    post {
+      id
+      body
+      mediaLink
+      walletAddress
+      isGuest
+      createdAt
+      totalReactions
+      topReactions(top: 2)
+      commentCount
+    }
+  }
+}
+    `;
+export type GuestCreatePostMutationFn = Apollo.MutationFunction<GuestCreatePostMutation, GuestCreatePostMutationVariables>;
+
+export function useGuestCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<GuestCreatePostMutation, GuestCreatePostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestCreatePostMutation, GuestCreatePostMutationVariables>(GuestCreatePostDocument, options);
+      }
+export type GuestCreatePostMutationHookResult = ReturnType<typeof useGuestCreatePostMutation>;
+export type GuestCreatePostMutationResult = Apollo.MutationResult<GuestCreatePostMutation>;
+export type GuestCreatePostMutationOptions = Apollo.BaseMutationOptions<GuestCreatePostMutation, GuestCreatePostMutationVariables>;
+
+export type GuestDeletePostMutationVariables = Exact<{
+  postId: Scalars['String']['input'];
+  walletAddress: Scalars['String']['input'];
+}>;
+
+export type GuestDeletePostMutation = { __typename?: 'Mutation', guestDeletePost: { __typename?: 'DeletePostPayload', post: { __typename?: 'Post', id: string, deleted: boolean | null } } };
+
+export const GuestDeletePostDocument = gql`
+    mutation GuestDeletePost($postId: String!, $walletAddress: String!) {
+  guestDeletePost(postId: $postId, walletAddress: $walletAddress) {
+    post {
+      id
+      deleted
+    }
+  }
+}
+    `;
+export type GuestDeletePostMutationFn = Apollo.MutationFunction<GuestDeletePostMutation, GuestDeletePostMutationVariables>;
+
+export function useGuestDeletePostMutation(baseOptions?: Apollo.MutationHookOptions<GuestDeletePostMutation, GuestDeletePostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestDeletePostMutation, GuestDeletePostMutationVariables>(GuestDeletePostDocument, options);
+      }
+export type GuestDeletePostMutationHookResult = ReturnType<typeof useGuestDeletePostMutation>;
+export type GuestDeletePostMutationResult = Apollo.MutationResult<GuestDeletePostMutation>;
+export type GuestDeletePostMutationOptions = Apollo.BaseMutationOptions<GuestDeletePostMutation, GuestDeletePostMutationVariables>;

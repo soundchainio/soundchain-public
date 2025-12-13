@@ -1,0 +1,9 @@
+mutation GuestReactToPost($input: ReactToPostInput!, $walletAddress: String!) {
+  guestReactToPost(input: $input, walletAddress: $walletAddress) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+    }
+  }
+}

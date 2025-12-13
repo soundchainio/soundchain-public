@@ -1,0 +1,9 @@
+mutation GuestRetractReaction($postId: String!, $walletAddress: String!) {
+  guestRetractReaction(postId: $postId, walletAddress: $walletAddress) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+    }
+  }
+}

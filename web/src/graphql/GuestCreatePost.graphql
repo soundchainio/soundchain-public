@@ -1,0 +1,15 @@
+mutation GuestCreatePost($input: CreatePostInput!, $walletAddress: String!) {
+  guestCreatePost(input: $input, walletAddress: $walletAddress) {
+    post {
+      id
+      body
+      mediaLink
+      walletAddress
+      isGuest
+      createdAt
+      totalReactions
+      topReactions(top: 2)
+      commentCount
+    }
+  }
+}
