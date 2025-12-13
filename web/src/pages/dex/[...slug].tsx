@@ -54,6 +54,7 @@ const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAu
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
+const GuestPostModal = dynamic(() => import('components/Post/GuestPostModal').then(mod => ({ default: mod.GuestPostModal })), { ssr: false })
 const Notifications = dynamic(() => import('components/Notifications').then(mod => ({ default: mod.Notifications })), { ssr: false })
 
 // Real NFT data comes from the database via listingItems query
@@ -351,6 +352,7 @@ function DEXDashboard() {
   const [showBackendPanel, setShowBackendPanel] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showGuestPostModal, setShowGuestPostModal] = useState(false)
   const [profileImageError, setProfileImageError] = useState(false)
   const [coverImageError, setCoverImageError] = useState(false)
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
@@ -383,9 +385,18 @@ function DEXDashboard() {
   // Magic Wallet Context - Real balances from blockchain
   const { balance: maticBalance, ogunBalance, account: walletAccount } = useMagicContext()
 
-  // Create+ Button Handler (Legacy UI Pattern)
+  // Create+ Button Handler - Supports both members and guests
   const handleCreateClick = () => {
-    me ? dispatchShowCreateModal(true) : router.push('/login')
+    if (me) {
+      // Logged in member - use regular create modal
+      dispatchShowCreateModal(true)
+    } else if (isWalletConnected && connectedWallet) {
+      // Guest with wallet connected - show guest post modal
+      setShowGuestPostModal(true)
+    } else {
+      // No wallet, no account - prompt wallet connection
+      setShowWalletModal(true)
+    }
   }
 
   // Logout handler
@@ -3149,6 +3160,13 @@ function DEXDashboard() {
 
       {/* Modals */}
       <WalletConnectModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} onConnect={handleWalletConnect} />
+      {connectedWallet && (
+        <GuestPostModal
+          isOpen={showGuestPostModal}
+          onClose={() => setShowGuestPostModal(false)}
+          walletAddress={connectedWallet}
+        />
+      )}
       <BackendPanel
         isOpen={showBackendPanel}
         onClose={() => setShowBackendPanel(false)}
