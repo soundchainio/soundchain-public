@@ -9,9 +9,9 @@ export class Post extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field(() => ID)
-  @prop({ type: mongoose.Types.ObjectId, required: true })
-  profileId: mongoose.Types.ObjectId;
+  @Field(() => ID, { nullable: true })
+  @prop({ type: mongoose.Types.ObjectId, required: false })
+  profileId?: mongoose.Types.ObjectId;
 
   @Field(() => String, { nullable: true })
   @prop({ required: false })
@@ -20,6 +20,15 @@ export class Post extends Model {
   @Field(() => String, { nullable: true })
   @prop({ required: false })
   mediaLink?: string;
+
+  // Guest post fields (wallet-only, no account required)
+  @Field(() => String, { nullable: true })
+  @prop({ type: String, required: false, lowercase: true })
+  walletAddress?: string;
+
+  @Field(() => Boolean)
+  @prop({ type: Boolean, default: false })
+  isGuest: boolean;
 
   @prop({ required: true, default: {}, _id: false })
   reactionStats: ReactionStats;

@@ -216,4 +216,80 @@ export class PostResolver {
   async getOriginalPostFromTrack(@Ctx() { postService }: Context, @Arg('trackId') trackId: string): Promise<Post> {
     return postService.getOriginalFromTrack(trackId);
   }
+
+  // ============================================
+  // GUEST ACCESS MUTATIONS (wallet-only, no account required)
+  // These allow users to interact without signing up
+  // ============================================
+
+  @Mutation(() => ReactToPostPayload)
+  async guestReactToPost(
+    @Ctx() { postService }: Context,
+    @Arg('input') input: ReactToPostInput,
+    @Arg('walletAddress') walletAddress: string,
+  ): Promise<ReactToPostPayload> {
+    // Validate wallet address format
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new Error('Invalid wallet address');
+    }
+
+    const post = await postService.addGuestReactionToPost({
+      ...input,
+      postId: new mongoose.Types.ObjectId(input.postId),
+      walletAddress: walletAddress.toLowerCase(),
+    });
+    return { post };
+  }
+
+  @Mutation(() => RetractReactionPayload)
+  async guestRetractReaction(
+    @Ctx() { postService }: Context,
+    @Arg('postId') postId: string,
+    @Arg('walletAddress') walletAddress: string,
+  ): Promise<RetractReactionPayload> {
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new Error('Invalid wallet address');
+    }
+
+    const post = await postService.removeGuestReactionFromPost({
+      postId,
+      walletAddress: walletAddress.toLowerCase()
+    });
+    return { post };
+  }
+
+  @Mutation(() => CreatePostPayload)
+  async guestCreatePost(
+    @Ctx() { postService }: Context,
+    @Arg('input') { body, mediaLink }: CreatePostInput,
+    @Arg('walletAddress') walletAddress: string,
+  ): Promise<CreatePostPayload> {
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new Error('Invalid wallet address');
+    }
+
+    const post = await postService.createGuestPost({
+      walletAddress: walletAddress.toLowerCase(),
+      body,
+      mediaLink,
+    });
+    return { post };
+  }
+
+  @Mutation(() => DeletePostPayload)
+  async guestDeletePost(
+    @Ctx() { postService }: Context,
+    @Arg('postId') postId: string,
+    @Arg('walletAddress') walletAddress: string,
+  ): Promise<DeletePostPayload> {
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new Error('Invalid wallet address');
+    }
+
+    const post = await postService.deleteGuestPost({
+      postId,
+      walletAddress: walletAddress.toLowerCase(),
+    });
+    return { post };
+  }
 }

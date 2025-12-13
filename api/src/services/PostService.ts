@@ -17,6 +17,12 @@ interface NewPostParams {
   trackEditionId?: string;
 }
 
+interface GuestPostParams {
+  walletAddress: string;
+  body?: string;
+  mediaLink?: string;
+}
+
 interface RepostParams {
   profileId: string;
   body: string;
@@ -145,6 +151,65 @@ export class PostService extends ModelService<typeof Post> {
 
   countReposts(postId: string): Promise<number> {
     return PostModel.countDocuments({ repostId: postId }).exec();
+  }
+
+  // ============================================
+  // GUEST METHODS (wallet-only, no account required)
+  // ============================================
+
+  async addGuestReactionToPost({ walletAddress, postId, type }: { walletAddress: string; postId: mongoose.Types.ObjectId; type: string }): Promise<Post> {
+    const [post, alreadyReacted] = await Promise.all([
+      this.findOrFail(postId.toString()),
+      this.context.reactionService.existsByWallet({ postId, walletAddress }),
+    ]);
+
+    if (alreadyReacted) throw new UserInputError('You already reacted to this post.');
+
+    await this.context.reactionService.createGuestReaction({ postId, walletAddress, type });
+    await this.model.updateOne({ _id: postId }, { $inc: { [`reactionStats.${type}`]: 1 } });
+    post.reactionStats[type]++;
+    return post;
+  }
+
+  async removeGuestReactionFromPost({ walletAddress, postId }: { walletAddress: string; postId: string }): Promise<Post> {
+    const post = await this.findOrFail(postId);
+
+    const { type } = await this.context.reactionService.deleteGuestReaction({
+      postId: new mongoose.Types.ObjectId(postId),
+      walletAddress,
+    });
+    await this.model.updateOne(
+      { _id: postId, [`reactionStats.${type}`]: { $gt: 0 } },
+      { $inc: { [`reactionStats.${type}`]: -1 } },
+    );
+
+    if (post.reactionStats[type] > 0) {
+      post.reactionStats[type]--;
+    }
+
+    return post;
+  }
+
+  async createGuestPost(params: GuestPostParams): Promise<Post> {
+    const post = new this.model({
+      ...params,
+      walletAddress: params.walletAddress.toLowerCase(),
+      isGuest: true,
+    });
+    await post.save();
+    return post;
+  }
+
+  async deleteGuestPost({ walletAddress, postId }: { walletAddress: string; postId: string }): Promise<Post> {
+    const post = await this.model.findOne({ _id: postId, walletAddress: walletAddress.toLowerCase(), isGuest: true });
+
+    if (!post) {
+      throw new UserInputError("Can't delete post because it doesn't exist or you don't own it.");
+    }
+
+    post.deleted = true;
+    await post.save();
+    return post;
   }
 
   async getOriginalFromTrack(trackId: string): Promise<Post> {

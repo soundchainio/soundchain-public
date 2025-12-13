@@ -81,4 +81,37 @@ export class ReactionService extends ModelService<typeof Reaction, ReactionKeyCo
   async getReactions(postId: string, page?: PageInput): Promise<PaginateResult<Reaction>> {
     return this.paginate({ filter: { postId }, page });
   }
+
+  // ============================================
+  // GUEST METHODS (wallet-only, no account required)
+  // ============================================
+
+  async existsByWallet({ postId, walletAddress }: { postId: mongoose.Types.ObjectId; walletAddress: string }): Promise<boolean> {
+    const count = await this.model.countDocuments({ postId, walletAddress: walletAddress.toLowerCase() });
+    return count > 0;
+  }
+
+  async createGuestReaction({ postId, walletAddress, type }: { postId: mongoose.Types.ObjectId; walletAddress: string; type: string }): Promise<Reaction> {
+    const reaction = new this.model({
+      postId,
+      walletAddress: walletAddress.toLowerCase(),
+      type,
+      isGuest: true, // Flag to identify guest reactions
+    });
+    await reaction.save();
+    return reaction;
+  }
+
+  async deleteGuestReaction({ postId, walletAddress }: { postId: mongoose.Types.ObjectId; walletAddress: string }): Promise<Reaction> {
+    const reaction = await this.model.findOneAndDelete({
+      postId,
+      walletAddress: walletAddress.toLowerCase()
+    });
+
+    if (!reaction) {
+      throw new UserInputError("Can't delete reaction because it doesn't exist.");
+    }
+
+    return reaction;
+  }
 }
