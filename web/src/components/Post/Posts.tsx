@@ -12,10 +12,8 @@ import { areEqual, VariableSizeList as List, FixedSizeGrid as Grid } from 'react
 import InfiniteLoader from 'react-window-infinite-loader'
 import { PostFormTimeline } from './PostFormTimeline'
 import { PostSkeleton } from './PostSkeleton'
-import { LayoutGrid, List as ListIcon, X, MessageCircle, Send } from 'lucide-react'
-import { PostActions } from './PostActions'
-import { PostStats } from './PostStats'
-import { Comments } from './Comments'
+import { LayoutGrid, List as ListIcon, X, MessageCircle } from 'lucide-react'
+import { Comments } from '../Comment/Comments'
 
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
