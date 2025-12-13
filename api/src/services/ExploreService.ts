@@ -42,10 +42,16 @@ export class ExploreService extends Service {
     return result
   }
 
-  getExploreUsers(search: string, page?: PageInput): Promise<PaginateResult<Profile>> {
+  getExploreUsers(search?: string, page?: PageInput): Promise<PaginateResult<Profile>> {
+    // If no search query, return all users sorted by follower count (most popular first)
+    // If search query provided, filter by displayName or userHandle
+    const filter = search
+      ? { $or: [{ displayName: new RegExp(search, 'i') }, { userHandle: new RegExp(search, 'i') }] }
+      : {}; // No filter = get all users
+
     return this.context.profileService.paginate({
-      filter: { displayName: new RegExp(search, 'i') },
-      sort: { field: 'createdAt', order: SortOrder.DESC },
+      filter,
+      sort: { field: search ? 'createdAt' : 'followerCount', order: SortOrder.DESC },
       page,
     });
   }
