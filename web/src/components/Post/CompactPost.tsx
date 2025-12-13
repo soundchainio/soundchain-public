@@ -135,32 +135,39 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
                   </button>
                 </>
               ) : (
-                <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${mediaInfo?.color || 'from-cyan-900/20 to-purple-900/20'}`}>
+                /* Platform-branded media card for list view */
+                <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${mediaInfo?.color || 'from-cyan-900/20 to-purple-900/20'} relative overflow-hidden`}>
+                  {/* Background pattern */}
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.15),transparent_70%)]" />
+                  </div>
                   {mediaInfo?.icon ? (
-                    <>
+                    <div className="relative z-10 flex flex-col items-center">
                       {(() => {
                         const IconComponent = mediaInfo.icon
-                        return <IconComponent className="w-10 h-10 text-white mb-2 drop-shadow-lg" />
+                        return <IconComponent className="w-8 h-8 text-white drop-shadow-lg" strokeWidth={1.5} />
                       })()}
-                      <span className="text-sm text-white font-bold drop-shadow-lg">{mediaInfo.platform}</span>
-                    </>
+                      <span className="text-[10px] text-white font-bold mt-1">{mediaInfo.platform}</span>
+                    </div>
                   ) : (
-                    <Play className="w-8 h-8 text-white" />
+                    <Play className="w-6 h-6 text-white" />
                   )}
-                  {canPlayInline && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      if (canPlayInline) {
                         setIsPlaying(true)
-                      }}
-                      className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                        <Play className="w-6 h-6 text-black ml-0.5" fill="black" />
-                      </div>
-                    </button>
-                  )}
+                      } else if (post.mediaLink) {
+                        window.open(post.mediaLink, '_blank')
+                      }
+                    }}
+                    className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors cursor-pointer"
+                  >
+                    <div className="absolute bottom-1 right-1 w-6 h-6 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                      <Play className="w-3 h-3 text-black ml-0.5" fill="black" />
+                    </div>
+                  </button>
                 </div>
               )}
             </div>
@@ -271,33 +278,45 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
               </button>
             </>
           ) : (
-            <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${mediaInfo?.color || 'from-cyan-900/20 to-purple-900/20'} relative`}>
+            /* Platform-branded media card with prominent branding */
+            <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${mediaInfo?.color || 'from-cyan-900/20 to-purple-900/20'} relative overflow-hidden`}>
+              {/* Background pattern for visual interest */}
+              <div className="absolute inset-0 opacity-20">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.15),transparent_70%)]" />
+                <div className="absolute top-0 left-0 w-full h-full bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.03)_10px,rgba(255,255,255,0.03)_20px)]" />
+              </div>
+
+              {/* Platform icon and name - large and centered */}
               {mediaInfo?.icon ? (
-                <>
+                <div className="relative z-10 flex flex-col items-center">
                   {(() => {
                     const IconComponent = mediaInfo.icon
-                    return <IconComponent className="w-10 h-10 text-white mb-2 drop-shadow-lg" />
+                    return <IconComponent className="w-16 h-16 text-white mb-3 drop-shadow-2xl" strokeWidth={1.5} />
                   })()}
-                  <span className="text-sm text-white font-bold drop-shadow-lg">{mediaInfo.platform}</span>
-                </>
+                  <span className="text-lg text-white font-bold tracking-wide drop-shadow-lg">{mediaInfo.platform}</span>
+                  <span className="text-xs text-white/70 mt-1">Click to play</span>
+                </div>
               ) : (
-                <Play className="w-8 h-8 text-white" />
+                <Play className="w-12 h-12 text-white" />
               )}
-              {/* Play button overlay for media links */}
-              {canPlayInline && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
+
+              {/* Play button overlay - always visible for media links */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  if (canPlayInline) {
                     setIsPlaying(true)
-                  }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                    <Play className="w-6 h-6 text-black ml-0.5" fill="black" />
-                  </div>
-                </button>
-              )}
+                  } else if (post.mediaLink) {
+                    window.open(post.mediaLink, '_blank')
+                  }
+                }}
+                className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors cursor-pointer"
+              >
+                <div className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                  <Play className="w-5 h-5 text-black ml-0.5" fill="black" />
+                </div>
+              </button>
             </div>
           )}
 
