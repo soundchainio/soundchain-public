@@ -241,20 +241,21 @@ export class TrackService extends ModelService<typeof Track> {
 
     const genres = genresResult.map((g: any) => g._id);
 
-    // For each genre, get the most recent tracks (grouped by edition)
+    // For each genre, get tracks sorted by playback count (most streamed first)
+    // This connects with leaderboard stats - top streamed tracks lead each genre
     const genreTracksPromises = genres.map(async (genre: string) => {
-      // Use aggregation to get unique tracks by edition for this genre
+      // Use aggregation to get unique tracks by edition for this genre, sorted by streams
       const aggregationPipeline = [
         { $match: { title: { $exists: true }, deleted: false, genres: genre } },
-        { $sort: { createdAt: -1 } },
         {
           $group: {
             _id: { $ifNull: ['$trackEditionId', '$_id'] },
             docId: { $first: '$_id' },
+            playbackCount: { $sum: '$playbackCount' }, // Sum playbacks across editions
             createdAt: { $first: '$createdAt' },
           },
         },
-        { $sort: { createdAt: -1 } },
+        { $sort: { playbackCount: -1, createdAt: -1 } }, // Most streamed first, then newest
         { $limit: limit },
         { $project: { docId: 1 } },
       ];
