@@ -338,7 +338,9 @@ function DEXDashboard() {
       case 'settings': return 'settings'
       case 'messages': return 'messages'
       case 'notifications': return 'notifications'
-      default: return 'dashboard'
+      case 'users': return 'users'
+      case 'home': return 'feed' // Default /dex to feed
+      default: return 'feed' // Feed is the default landing view
     }
   }
 
@@ -1737,7 +1739,7 @@ function DEXDashboard() {
                         const isGif = profile.profilePicture && /\.gif$/i.test(profile.profilePicture)
 
                         return (
-                          <Link key={profile.id} href={`/profiles/${profile.userHandle}`}>
+                          <Link key={profile.id} href={`/dex/profile/${profile.userHandle}`}>
                             <div className="relative group cursor-pointer">
                               {/* Micro card with avatar as main visual */}
                               <div className="aspect-square rounded-lg overflow-hidden bg-neutral-800 ring-1 ring-neutral-700 group-hover:ring-indigo-500/60 transition-all duration-300">
@@ -1815,7 +1817,7 @@ function DEXDashboard() {
                           .sort((a: any, b: any) => (b.followerCount || 0) - (a.followerCount || 0))
                           .slice(0, 20)
                           .map((profile: any, index: number) => (
-                            <Link key={profile.id} href={`/profiles/${profile.userHandle}`}>
+                            <Link key={profile.id} href={`/dex/profile/${profile.userHandle}`}>
                               <div className="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors cursor-pointer">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                                   index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black' :

@@ -80,7 +80,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           </div>
         ) : (
           // Regular user post header
-          <Link href={`/profiles/${post.profile?.userHandle}`} className="flex items-center gap-2.5 min-w-0 flex-1">
+          <Link href={`/dex/profile/${post.profile?.userHandle}`} className="flex items-center gap-2.5 min-w-0 flex-1">
             <Avatar profile={post.profile!} pixels={32} className="flex-shrink-0 ring-2 ring-neutral-700" />
             <div className="min-w-0 flex-1">
               <DisplayName

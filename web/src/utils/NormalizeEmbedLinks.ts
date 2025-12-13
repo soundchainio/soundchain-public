@@ -444,3 +444,16 @@ export const hasLazyLoadWithThumbnailSupport = (mediaUrl: string) => {
     source === MediaProvider.FACEBOOK
   )
 }
+
+// Media providers that ReactPlayer can play (includes audio platforms)
+export const canPlayWithReactPlayer = (mediaUrl: string) => {
+  const source = IdentifySource(mediaUrl).type
+  return (
+    source === MediaProvider.YOUTUBE ||
+    source === MediaProvider.VIMEO ||
+    source === MediaProvider.FACEBOOK ||
+    source === MediaProvider.SOUNDCLOUD ||
+    source === MediaProvider.SPOTIFY ||
+    source === MediaProvider.TWITCH
+  )
+}

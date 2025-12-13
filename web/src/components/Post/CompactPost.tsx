@@ -5,7 +5,7 @@ import ReactPlayer from 'react-player'
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { Play, Heart, MessageCircle, Music, Video, Image as ImageIcon, ExternalLink, BadgeCheck } from 'lucide-react'
-import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+import { IdentifySource, hasLazyLoadWithThumbnailSupport, canPlayWithReactPlayer } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 
 interface CompactPostProps {
@@ -84,8 +84,8 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
     ? post.track?.artworkUrl
     : mediaInfo?.url
 
-  // Check if media link supports ReactPlayer
-  const canPlayInline = hasMediaLink && hasLazyLoadWithThumbnailSupport(post.mediaLink!)
+  // Check if media link supports ReactPlayer (video + audio platforms)
+  const canPlayInline = hasMediaLink && canPlayWithReactPlayer(post.mediaLink!)
 
   // List view - horizontal layout with larger media
   if (listView) {
@@ -177,7 +177,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
                   <span className="text-[8px] px-1 py-0.5 bg-neutral-700 text-neutral-300 rounded font-medium">Guest</span>
                 </>
               ) : (
-                <Link href={`/profiles/${post.profile?.userHandle}`} className="flex items-center gap-2 hover:opacity-80">
+                <Link href={`/dex/profile/${post.profile?.userHandle}`} className="flex items-center gap-2 hover:opacity-80">
                   <div className="relative">
                     <Avatar profile={post.profile!} pixels={24} />
                     {post.profile?.verified && (
@@ -352,7 +352,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
           </div>
         ) : (
           // Regular user footer
-          <Link href={`/profiles/${post.profile?.userHandle}`} className="flex items-center gap-1.5 min-w-0 hover:opacity-80 transition-opacity">
+          <Link href={`/dex/profile/${post.profile?.userHandle}`} className="flex items-center gap-1.5 min-w-0 hover:opacity-80 transition-opacity">
             <div className="relative flex-shrink-0">
               <Avatar profile={post.profile!} pixels={20} />
               {/* Verified badge */}
