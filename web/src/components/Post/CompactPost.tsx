@@ -15,49 +15,57 @@ interface CompactPostProps {
 }
 
 // Helper to get thumbnail URL for various media providers
-const getThumbnailUrl = (mediaLink: string): { url: string | null; icon: typeof Play | null; platform: string } => {
+const getThumbnailUrl = (mediaLink: string): { url: string | null; icon: typeof Play | null; platform: string; color: string } => {
   const source = IdentifySource(mediaLink)
 
   switch (source.type) {
     case MediaProvider.YOUTUBE: {
       const match = mediaLink.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
       if (match?.[1]) {
-        return { url: `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`, icon: Play, platform: 'YouTube' }
+        return { url: `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg`, icon: Play, platform: 'YouTube', color: 'from-red-600 to-red-800' }
       }
       break
     }
     case MediaProvider.VIMEO: {
-      // Vimeo thumbnails require API call, use icon fallback
-      return { url: null, icon: Video, platform: 'Vimeo' }
+      // Vimeo - cyan/blue gradient
+      return { url: null, icon: Video, platform: 'Vimeo', color: 'from-cyan-500 to-blue-600' }
     }
     case MediaProvider.SPOTIFY: {
-      return { url: null, icon: Music, platform: 'Spotify' }
+      // Spotify - green gradient
+      return { url: null, icon: Music, platform: 'Spotify', color: 'from-green-500 to-green-700' }
     }
     case MediaProvider.SOUNDCLOUD: {
-      return { url: null, icon: Music, platform: 'SoundCloud' }
+      // SoundCloud - orange gradient
+      return { url: null, icon: Music, platform: 'SoundCloud', color: 'from-orange-500 to-orange-700' }
     }
     case MediaProvider.INSTAGRAM: {
-      return { url: null, icon: ImageIcon, platform: 'Instagram' }
+      // Instagram - pink/purple gradient
+      return { url: null, icon: ImageIcon, platform: 'Instagram', color: 'from-pink-500 via-purple-500 to-orange-500' }
     }
     case MediaProvider.TIKTOK: {
-      return { url: null, icon: Video, platform: 'TikTok' }
+      // TikTok - cyan/pink gradient
+      return { url: null, icon: Video, platform: 'TikTok', color: 'from-cyan-400 to-pink-500' }
     }
     case MediaProvider.BANDCAMP: {
-      return { url: null, icon: Music, platform: 'Bandcamp' }
+      // Bandcamp - teal gradient
+      return { url: null, icon: Music, platform: 'Bandcamp', color: 'from-teal-500 to-cyan-600' }
     }
     case MediaProvider.X: {
-      return { url: null, icon: ExternalLink, platform: 'X' }
+      // X/Twitter - gray/black
+      return { url: null, icon: ExternalLink, platform: 'X', color: 'from-gray-700 to-gray-900' }
     }
     case MediaProvider.TWITCH: {
-      return { url: null, icon: Video, platform: 'Twitch' }
+      // Twitch - purple gradient
+      return { url: null, icon: Video, platform: 'Twitch', color: 'from-purple-600 to-purple-800' }
     }
     case MediaProvider.FACEBOOK: {
-      return { url: null, icon: Video, platform: 'Facebook' }
+      // Facebook - blue gradient
+      return { url: null, icon: Video, platform: 'Facebook', color: 'from-blue-600 to-blue-800' }
     }
     default:
-      return { url: null, icon: ExternalLink, platform: 'Link' }
+      return { url: null, icon: ExternalLink, platform: 'Link', color: 'from-gray-600 to-gray-800' }
   }
-  return { url: null, icon: Play, platform: 'Media' }
+  return { url: null, icon: Play, platform: 'Media', color: 'from-gray-600 to-gray-800' }
 }
 
 const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: CompactPostProps) => {
@@ -127,17 +135,17 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
                   </button>
                 </>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900/20 to-purple-900/20">
+                <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${mediaInfo?.color || 'from-cyan-900/20 to-purple-900/20'}`}>
                   {mediaInfo?.icon ? (
                     <>
                       {(() => {
                         const IconComponent = mediaInfo.icon
-                        return <IconComponent className="w-6 h-6 text-cyan-400 mb-1" />
+                        return <IconComponent className="w-10 h-10 text-white mb-2 drop-shadow-lg" />
                       })()}
-                      <span className="text-[10px] text-neutral-400 font-medium">{mediaInfo.platform}</span>
+                      <span className="text-sm text-white font-bold drop-shadow-lg">{mediaInfo.platform}</span>
                     </>
                   ) : (
-                    <Play className="w-6 h-6 text-neutral-500" />
+                    <Play className="w-8 h-8 text-white" />
                   )}
                   {canPlayInline && (
                     <button
@@ -146,10 +154,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
                         e.stopPropagation()
                         setIsPlaying(true)
                       }}
-                      className="absolute inset-0 flex items-center justify-center hover:bg-black/20 transition-colors"
+                      className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors"
                     >
-                      <div className="w-10 h-10 rounded-full bg-cyan-500/80 flex items-center justify-center">
-                        <Play className="w-5 h-5 text-black ml-0.5" fill="black" />
+                      <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                        <Play className="w-6 h-6 text-black ml-0.5" fill="black" />
                       </div>
                     </button>
                   )}
@@ -263,17 +271,17 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
               </button>
             </>
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-cyan-900/20 to-purple-900/20 relative">
+            <div className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${mediaInfo?.color || 'from-cyan-900/20 to-purple-900/20'} relative`}>
               {mediaInfo?.icon ? (
                 <>
                   {(() => {
                     const IconComponent = mediaInfo.icon
-                    return <IconComponent className="w-8 h-8 text-cyan-400 mb-1" />
+                    return <IconComponent className="w-10 h-10 text-white mb-2 drop-shadow-lg" />
                   })()}
-                  <span className="text-[10px] text-neutral-400 font-medium">{mediaInfo.platform}</span>
+                  <span className="text-sm text-white font-bold drop-shadow-lg">{mediaInfo.platform}</span>
                 </>
               ) : (
-                <Play className="w-8 h-8 text-neutral-500" />
+                <Play className="w-8 h-8 text-white" />
               )}
               {/* Play button overlay for media links */}
               {canPlayInline && (
@@ -283,9 +291,9 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, listView = false }: C
                     e.stopPropagation()
                     setIsPlaying(true)
                   }}
-                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <div className="w-12 h-12 rounded-full bg-cyan-500 flex items-center justify-center shadow-lg">
+                  <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
                     <Play className="w-6 h-6 text-black ml-0.5" fill="black" />
                   </div>
                 </button>

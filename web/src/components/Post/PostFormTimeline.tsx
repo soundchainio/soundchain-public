@@ -12,8 +12,8 @@ interface Emoji {
   shortcodes: string
 }
 import { Edit } from 'icons/Edit'
-import { CreatePostInput, useCreatePostMutation } from 'lib/graphql'
-import { ChangeEvent, useState } from 'react'
+import { CreatePostInput, useCreatePostMutation, useGuestCreatePostMutation } from 'lib/graphql'
+import { ChangeEvent, useState, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import tw from 'tailwind-styled-components'
 import { MediaProvider } from 'types/MediaProvider'
@@ -22,9 +22,26 @@ import { Button } from '../common/Buttons/Button'
 import { LinkFormFooter } from './PostFormTimelineComponents/LinkFormFooter'
 import { LinkItem } from './PostFormTimelineComponents/LinkItem'
 import { MediaLink } from './PostLinkInput'
+import { useMe } from 'hooks/useMe'
+import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
+import { Wallet } from 'lucide-react'
 
 export const PostFormTimeline = () => {
+  const me = useMe()
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
+  const [guestCreatePost] = useGuestCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
+
+  // Check for connected wallet (for guest posting)
+  const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedWallet = localStorage.getItem('connectedWalletAddress')
+      if (savedWallet) {
+        setConnectedWallet(savedWallet)
+      }
+    }
+  }, [])
   const [postBody, setPostBody] = useState('')
   const [isMusicLinkVisible, setMusicLinkVisible] = useState(false)
   const [isVideoLinkVisible, setVideoLinkVisible] = useState(false)
@@ -53,8 +70,22 @@ export const PostFormTimeline = () => {
     if (link && link.value) newPostParams.mediaLink = link.value
 
     try {
-      await createPost({ variables: { input: newPostParams } })
-      toast.success(`Post successfully created.`)
+      // Use guest post mutation if not logged in but has wallet connected
+      if (!me && connectedWallet) {
+        await guestCreatePost({
+          variables: {
+            input: newPostParams,
+            walletAddress: connectedWallet,
+          },
+        })
+        toast.success(`Post created as guest!`)
+      } else if (me) {
+        await createPost({ variables: { input: newPostParams } })
+        toast.success(`Post successfully created.`)
+      } else {
+        toast.error('Please connect your wallet or log in to post.')
+        return
+      }
       onLinkCancel()
       setPostBody('')
     } catch (error) {
@@ -131,10 +162,29 @@ export const PostFormTimeline = () => {
     }
   }
 
+  // Don't show post form if not logged in and no wallet connected
+  if (!me && !connectedWallet) {
+    return (
+      <div className="mb-[25px] rounded-md bg-neutral-800 py-[14px] px-[16px]">
+        <div className="flex items-center gap-3 text-neutral-400">
+          <Wallet className="w-5 h-5" />
+          <span className="text-sm">Connect your wallet to post</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mb-[25px] rounded-md bg-neutral-800 py-[14px] px-[16px]">
-      <div className="mb-[16px]">
+      <div className="mb-[16px] flex items-center justify-between">
         <span className="text-white">Post</span>
+        {!me && connectedWallet && (
+          <div className="flex items-center gap-2">
+            <GuestAvatar walletAddress={connectedWallet} pixels={20} />
+            <span className="text-xs text-neutral-400">{formatWalletAddress(connectedWallet)}</span>
+            <span className="text-[10px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full">Guest</span>
+          </div>
+        )}
       </div>
       <PostFormMiddleContainer>
         <PostFormTextArea

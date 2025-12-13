@@ -24,7 +24,7 @@ const GAP = 8
 type ViewMode = 'list' | 'grid'
 
 export const Posts = ({ profileId }: PostsProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('list')
+  const [viewMode, setViewMode] = useState<ViewMode>('grid') // Default to compact grid view
   const { playlistState } = useAudioPlayerContext()
   const { data, loading, refetch, fetchMore } = usePostsQuery({
     variables: {
