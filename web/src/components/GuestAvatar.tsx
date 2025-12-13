@@ -198,3 +198,41 @@ export const useGuestAvatar = (walletAddress: string | null) => {
 
   return { avatar, updateAvatar, clearAvatar }
 }
+
+/**
+ * Check if a guest avatar exists for a wallet address.
+ * Use this during signup to migrate the avatar to the user's profile.
+ */
+export const getGuestAvatarForMigration = (walletAddress: string): string | null => {
+  return getStoredAvatar(walletAddress)
+}
+
+/**
+ * Clear guest avatar after successful migration to profile.
+ * Call this after the avatar has been saved to the user's profile.
+ */
+export const clearGuestAvatarAfterMigration = (walletAddress: string): void => {
+  try {
+    const avatars = getStoredAvatars()
+    delete avatars[walletAddress.toLowerCase()]
+    localStorage.setItem(GUEST_AVATAR_STORAGE_KEY, JSON.stringify(avatars))
+  } catch (e) {
+    console.error('Failed to clear guest avatar after migration:', e)
+  }
+}
+
+/**
+ * Convert a base64 image to a File object for upload.
+ * Use this to convert the guest avatar to a format suitable for the profile picture API.
+ */
+export const base64ToFile = (base64: string, filename: string = 'avatar.jpg'): File => {
+  const arr = base64.split(',')
+  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg'
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
+  }
+  return new File([u8arr], filename, { type: mime })
+}
