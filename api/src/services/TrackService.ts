@@ -185,10 +185,10 @@ export class TrackService extends ModelService<typeof Track> {
     // Step 2: Fetch actual Track documents using find() with lean() for plain objects
     // Using lean() avoids mongoose internal symbol access issues during GraphQL serialization
     const trackIds = pageResults.map((r: any) => r.docId);
-    const tracks = await this.model.find({ _id: { $in: trackIds } }).lean().exec();
+    const tracks = await this.model.find({ _id: { $in: trackIds } }).lean().exec() as unknown as Track[];
 
     // Maintain the same order as the aggregation results
-    const trackMap = new Map(tracks.map((t: Track) => [t._id.toString(), t]));
+    const trackMap = new Map(tracks.map((t) => [t._id.toString(), t]));
     const nodes = trackIds
       .map((id: mongoose.Types.ObjectId) => trackMap.get(id.toString()))
       .filter((t: Track | undefined): t is Track => t !== undefined);
@@ -267,10 +267,10 @@ export class TrackService extends ModelService<typeof Track> {
       }
 
       // Fetch actual Track documents using lean() for plain objects
-      const tracks = await this.model.find({ _id: { $in: trackIds } }).lean().exec();
+      const tracks = await this.model.find({ _id: { $in: trackIds } }).lean().exec() as unknown as Track[];
 
       // Maintain order from aggregation
-      const trackMap = new Map(tracks.map((t: Track) => [t._id.toString(), t]));
+      const trackMap = new Map(tracks.map((t) => [t._id.toString(), t]));
       const orderedTracks = trackIds
         .map((id: mongoose.Types.ObjectId) => trackMap.get(id.toString()))
         .filter((t: Track | undefined): t is Track => t !== undefined);
