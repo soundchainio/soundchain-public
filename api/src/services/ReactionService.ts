@@ -10,7 +10,7 @@ import { ReactionType } from '../types/ReactionType';
 import { ModelService } from './ModelService';
 
 interface ReactionKeyComponents {
-  profileId: mongoose.Types.ObjectId;
+  profileId?: mongoose.Types.ObjectId;
   postId: mongoose.Types.ObjectId;
 }
 
@@ -91,7 +91,7 @@ export class ReactionService extends ModelService<typeof Reaction, ReactionKeyCo
     return count > 0;
   }
 
-  async createGuestReaction({ postId, walletAddress, type }: { postId: mongoose.Types.ObjectId; walletAddress: string; type: string }): Promise<Reaction> {
+  async createGuestReaction({ postId, walletAddress, type }: { postId: mongoose.Types.ObjectId; walletAddress: string; type: ReactionType }): Promise<Reaction> {
     const reaction = new this.model({
       postId,
       walletAddress: walletAddress.toLowerCase(),

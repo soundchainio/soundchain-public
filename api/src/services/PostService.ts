@@ -5,6 +5,7 @@ import { Post, PostModel } from '../models/Post';
 import { Context } from '../types/Context';
 import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
+import { ReactionType } from '../types/ReactionType';
 import { SortPostInput } from '../types/SortPostInput';
 import { ModelService } from './ModelService';
 import { NewReactionParams } from './ReactionService';
@@ -157,7 +158,7 @@ export class PostService extends ModelService<typeof Post> {
   // GUEST METHODS (wallet-only, no account required)
   // ============================================
 
-  async addGuestReactionToPost({ walletAddress, postId, type }: { walletAddress: string; postId: mongoose.Types.ObjectId; type: string }): Promise<Post> {
+  async addGuestReactionToPost({ walletAddress, postId, type }: { walletAddress: string; postId: mongoose.Types.ObjectId; type: ReactionType }): Promise<Post> {
     const [post, alreadyReacted] = await Promise.all([
       this.findOrFail(postId.toString()),
       this.context.reactionService.existsByWallet({ postId, walletAddress }),
