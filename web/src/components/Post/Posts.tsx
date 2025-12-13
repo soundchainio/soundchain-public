@@ -37,6 +37,10 @@ export const Posts = ({ profileId }: PostsProps) => {
   })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gridRef = useRef<any>(null)
+  // Track scroll position to preserve when switching views
+  const scrollPositionRef = useRef<{ list: number; grid: number }>({ list: 0, grid: 0 })
   const getSize = (index: number) => sizeMap[index] || 289
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
@@ -126,14 +130,38 @@ export const Posts = ({ profileId }: PostsProps) => {
       <div className="flex justify-end mb-3 px-2">
         <div className="flex items-center gap-1 bg-neutral-800/50 rounded-lg p-1">
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => {
+              // Save current grid scroll position before switching
+              if (viewMode === 'grid' && gridRef.current) {
+                scrollPositionRef.current.grid = gridRef.current.state?.scrollTop || 0
+              }
+              setViewMode('list')
+              // Restore list scroll position after render
+              setTimeout(() => {
+                if (listRef.current && scrollPositionRef.current.list > 0) {
+                  listRef.current.scrollTo(scrollPositionRef.current.list)
+                }
+              }, 50)
+            }}
             className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}`}
             title="List view"
           >
             <ListIcon className="w-4 h-4" />
           </button>
           <button
-            onClick={() => setViewMode('grid')}
+            onClick={() => {
+              // Save current list scroll position before switching
+              if (viewMode === 'list' && listRef.current) {
+                scrollPositionRef.current.list = listRef.current.state?.scrollOffset || 0
+              }
+              setViewMode('grid')
+              // Restore grid scroll position after render
+              setTimeout(() => {
+                if (gridRef.current && scrollPositionRef.current.grid > 0) {
+                  gridRef.current.scrollTo({ scrollTop: scrollPositionRef.current.grid })
+                }
+              }, 50)
+            }}
             className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}`}
             title="Grid view (compact)"
           >
@@ -199,6 +227,7 @@ export const Posts = ({ profileId }: PostsProps) => {
                     }}
                     ref={grid => {
                       typeof ref === 'function' && ref(grid)
+                      gridRef.current = grid
                     }}
                   >
                     {GridCell}

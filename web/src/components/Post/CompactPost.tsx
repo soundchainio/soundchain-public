@@ -40,7 +40,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked }: CompactPostProps) =
             </div>
           )}
 
-          {/* Play overlay for tracks */}
+          {/* Play button for tracks - ALWAYS visible */}
           {hasTrack && (
             <button
               onClick={(e) => {
@@ -48,10 +48,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked }: CompactPostProps) =
                 e.stopPropagation()
                 handleOnPlayClicked((post.track as Track).id)
               }}
-              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute inset-0 flex items-center justify-center"
             >
-              <div className="w-10 h-10 rounded-full bg-cyan-500 flex items-center justify-center">
-                <Play className="w-5 h-5 text-black ml-0.5" />
+              <div className="w-12 h-12 rounded-full bg-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/50 hover:scale-110 transition-transform">
+                <Play className="w-6 h-6 text-black ml-0.5" fill="black" />
               </div>
             </button>
           )}
