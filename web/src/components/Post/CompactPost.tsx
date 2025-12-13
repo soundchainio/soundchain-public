@@ -2,6 +2,7 @@ import { memo } from 'react'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
 import { Avatar } from '../Avatar'
+import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { Play, Heart, MessageCircle, Music, Video, Image as ImageIcon, ExternalLink, BadgeCheck } from 'lucide-react'
 import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
@@ -60,6 +61,7 @@ const getThumbnailUrl = (mediaLink: string): { url: string | null; icon: typeof 
 const CompactPostComponent = ({ post, handleOnPlayClicked }: CompactPostProps) => {
   if (!post || post.deleted) return null
 
+  const isGuest = post?.isGuest && post?.walletAddress
   const hasTrack = post.track && !post.track.deleted
   const hasMedia = post.mediaLink || hasTrack
 
@@ -132,27 +134,37 @@ const CompactPostComponent = ({ post, handleOnPlayClicked }: CompactPostProps) =
 
       {/* Footer */}
       <div className="p-2 border-t border-neutral-800 flex items-center justify-between">
-        <Link href={`/profiles/${post.profile.userHandle}`} className="flex items-center gap-1.5 min-w-0 hover:opacity-80 transition-opacity">
-          <div className="relative flex-shrink-0">
-            <Avatar profile={post.profile} pixels={20} />
-            {/* Verified badge */}
-            {post.profile.verified && (
-              <BadgeCheck className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-cyan-400 bg-neutral-900 rounded-full" />
-            )}
+        {isGuest ? (
+          // Guest post footer
+          <div className="flex items-center gap-1.5 min-w-0">
+            <GuestAvatar walletAddress={post.walletAddress!} pixels={20} />
+            <span className="text-[10px] text-neutral-400 truncate">{formatWalletAddress(post.walletAddress!)}</span>
+            <span className="text-[8px] px-1 py-0.5 bg-neutral-700 text-neutral-300 rounded font-medium">Guest</span>
           </div>
-          <span className="text-[10px] text-neutral-400 truncate">{post.profile.displayName}</span>
-          {/* POAP badges - show first 2 */}
-          {post.profile.badges && post.profile.badges.length > 0 && (
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-              {post.profile.badges.slice(0, 2).map((badge: string, i: number) => (
-                <span key={i} className="text-[8px]" title={badge}>{badge.includes('🎵') ? '🎵' : badge.includes('🔥') ? '🔥' : '🏆'}</span>
-              ))}
-              {post.profile.badges.length > 2 && (
-                <span className="text-[8px] text-neutral-500">+{post.profile.badges.length - 2}</span>
+        ) : (
+          // Regular user footer
+          <Link href={`/profiles/${post.profile?.userHandle}`} className="flex items-center gap-1.5 min-w-0 hover:opacity-80 transition-opacity">
+            <div className="relative flex-shrink-0">
+              <Avatar profile={post.profile!} pixels={20} />
+              {/* Verified badge */}
+              {post.profile?.verified && (
+                <BadgeCheck className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-cyan-400 bg-neutral-900 rounded-full" />
               )}
             </div>
-          )}
-        </Link>
+            <span className="text-[10px] text-neutral-400 truncate">{post.profile?.displayName}</span>
+            {/* POAP badges - show first 2 */}
+            {post.profile?.badges && post.profile.badges.length > 0 && (
+              <div className="flex items-center gap-0.5 flex-shrink-0">
+                {post.profile.badges.slice(0, 2).map((badge: string, i: number) => (
+                  <span key={i} className="text-[8px]" title={badge}>{badge.includes('🎵') ? '🎵' : badge.includes('🔥') ? '🔥' : '🏆'}</span>
+                ))}
+                {post.profile.badges.length > 2 && (
+                  <span className="text-[8px] text-neutral-500">+{post.profile.badges.length - 2}</span>
+                )}
+              </div>
+            )}
+          </Link>
+        )}
         <div className="flex items-center gap-2 text-neutral-500">
           {(post.totalReactions || 0) > 0 && (
             <span className="flex items-center gap-0.5 text-[10px]">

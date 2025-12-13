@@ -10,6 +10,7 @@ import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 
 import { Avatar } from '../Avatar'
+import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { DisplayName } from '../DisplayName'
 import { MiniAudioPlayer } from '../MiniAudioPlayer'
 import { NotAvailableMessage } from '../NotAvailableMessage'
@@ -31,7 +32,10 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 
   if (!post) return <PostSkeleton />
 
-  const isAuthor = post?.profile.id == me?.profile.id
+  const isGuest = post?.isGuest && post?.walletAddress
+  const isAuthor = isGuest
+    ? false // Guests can't edit through regular flow
+    : post?.profile?.id == me?.profile?.id
   const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember)
 
   const onEllipsisClick = () => {
@@ -53,24 +57,48 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
     <article className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-700 transition-colors">
       {/* Header - Instagram style compact */}
       <header className="flex items-center justify-between px-3 py-2.5">
-        <Link href={`/profiles/${post.profile.userHandle}`} className="flex items-center gap-2.5 min-w-0 flex-1">
-          <Avatar profile={post.profile} pixels={32} className="flex-shrink-0 ring-2 ring-neutral-700" />
-          <div className="min-w-0 flex-1">
-            <DisplayName
-              name={post.profile.displayName}
-              verified={post.profile.verified}
-              teamMember={post.profile.teamMember}
-              badges={post.profile.badges}
-              className="text-sm font-semibold"
-            />
-            <Timestamp
-              datetime={post.createdAt}
-              edited={post.createdAt !== post.updatedAt || false}
-              className="text-xs text-neutral-500"
-              small
-            />
+        {isGuest ? (
+          // Guest post header - wallet address only
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <GuestAvatar walletAddress={post.walletAddress!} pixels={32} className="ring-2 ring-neutral-700" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-semibold text-neutral-100">
+                  {formatWalletAddress(post.walletAddress!)}
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 bg-neutral-700 text-neutral-300 rounded-full font-medium">
+                  Guest
+                </span>
+              </div>
+              <Timestamp
+                datetime={post.createdAt}
+                edited={post.createdAt !== post.updatedAt || false}
+                className="text-xs text-neutral-500"
+                small
+              />
+            </div>
           </div>
-        </Link>
+        ) : (
+          // Regular user post header
+          <Link href={`/profiles/${post.profile?.userHandle}`} className="flex items-center gap-2.5 min-w-0 flex-1">
+            <Avatar profile={post.profile!} pixels={32} className="flex-shrink-0 ring-2 ring-neutral-700" />
+            <div className="min-w-0 flex-1">
+              <DisplayName
+                name={post.profile?.displayName || ''}
+                verified={post.profile?.verified}
+                teamMember={post.profile?.teamMember}
+                badges={post.profile?.badges}
+                className="text-sm font-semibold"
+              />
+              <Timestamp
+                datetime={post.createdAt}
+                edited={post.createdAt !== post.updatedAt || false}
+                className="text-xs text-neutral-500"
+                small
+              />
+            </div>
+          </Link>
+        )}
         {canEdit && (
           <button
             aria-label="More options"
