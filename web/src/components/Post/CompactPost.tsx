@@ -1,10 +1,10 @@
-import { memo, useState } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
-import { Play, Pause, Heart, MessageCircle, Share2, Sparkles, BadgeCheck, ExternalLink, Volume2 } from 'lucide-react'
+import { Play, Pause, Heart, MessageCircle, Share2, Sparkles, BadgeCheck, Volume2 } from 'lucide-react'
 import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from '../EmoteRenderer'
@@ -76,9 +76,123 @@ const getYouTubeId = (url: string): string | null => {
   return match?.[1] || null
 }
 
+// Get Spotify track/album ID for thumbnail via oEmbed
+const getSpotifyThumbnail = async (embedUrl: string): Promise<string | null> => {
+  try {
+    // Extract the original Spotify URL from embed URL
+    // Embed URL format: https://open.spotify.com/embed/track/xxx or /embed/album/xxx
+    const match = embedUrl.match(/spotify\.com\/embed\/(track|album|playlist)\/([a-zA-Z0-9]+)/)
+    if (!match) return null
+
+    const [, type, id] = match
+    const originalUrl = `https://open.spotify.com/${type}/${id}`
+
+    const response = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(originalUrl)}`)
+    if (!response.ok) return null
+
+    const data = await response.json()
+    return data.thumbnail_url || null
+  } catch {
+    return null
+  }
+}
+
+// Get SoundCloud thumbnail via oEmbed
+const getSoundCloudThumbnail = async (embedUrl: string): Promise<string | null> => {
+  try {
+    // SoundCloud embed URLs contain the track URL encoded or we can use the API directly
+    // For widget URLs like: https://w.soundcloud.com/player/?url=...
+    const urlMatch = embedUrl.match(/url=([^&]+)/)
+    if (!urlMatch) return null
+
+    const trackUrl = decodeURIComponent(urlMatch[1])
+    const response = await fetch(`https://soundcloud.com/oembed?url=${encodeURIComponent(trackUrl)}&format=json`)
+    if (!response.ok) return null
+
+    const data = await response.json()
+    return data.thumbnail_url || null
+  } catch {
+    return null
+  }
+}
+
+// Get Bandcamp album art from embed URL
+const getBandcampThumbnail = (embedUrl: string): string | null => {
+  try {
+    // Bandcamp embed URLs contain artwork_id parameter
+    // Format: https://bandcamp.com/EmbeddedPlayer/album=xxx/size=large/bgcol=ffffff/linkcol=0687f5/artwork=small/...
+    // Or we can extract from the URL pattern
+    const albumMatch = embedUrl.match(/album=(\d+)/)
+    if (albumMatch) {
+      // Bandcamp album art URL pattern (this is a common pattern, may not work for all)
+      return `https://f4.bcbits.com/img/a${albumMatch[1]}_10.jpg`
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+// Get Vimeo thumbnail
+const getVimeoThumbnail = async (embedUrl: string): Promise<string | null> => {
+  try {
+    const match = embedUrl.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+    if (!match) return null
+
+    const videoId = match[1]
+    const response = await fetch(`https://vimeo.com/api/v2/video/${videoId}.json`)
+    if (!response.ok) return null
+
+    const data = await response.json()
+    return data[0]?.thumbnail_large || data[0]?.thumbnail_medium || null
+  } catch {
+    return null
+  }
+}
+
+// Thumbnail cache to avoid re-fetching
+const thumbnailCache = new Map<string, string | null>()
+
 const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView = false }: CompactPostProps) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [fetchedThumbnail, setFetchedThumbnail] = useState<string | null>(null)
+
+  // Identify media platform (before conditional return)
+  const mediaSource = post?.mediaLink ? IdentifySource(post.mediaLink) : null
+  const platformType = mediaSource?.type || 'unknown'
+
+  // Fetch thumbnails for platforms that need oEmbed API
+  useEffect(() => {
+    if (!post?.mediaLink) return
+
+    const mediaLink = post.mediaLink
+
+    // Check cache first
+    if (thumbnailCache.has(mediaLink)) {
+      setFetchedThumbnail(thumbnailCache.get(mediaLink) || null)
+      return
+    }
+
+    const fetchThumbnail = async () => {
+      let thumbnail: string | null = null
+
+      if (platformType === MediaProvider.SPOTIFY) {
+        thumbnail = await getSpotifyThumbnail(mediaLink)
+      } else if (platformType === MediaProvider.SOUNDCLOUD) {
+        thumbnail = await getSoundCloudThumbnail(mediaLink)
+      } else if (platformType === MediaProvider.BANDCAMP) {
+        thumbnail = getBandcampThumbnail(mediaLink)
+      } else if (platformType === MediaProvider.VIMEO) {
+        thumbnail = await getVimeoThumbnail(mediaLink)
+      }
+
+      thumbnailCache.set(mediaLink, thumbnail)
+      setFetchedThumbnail(thumbnail)
+    }
+
+    fetchThumbnail()
+  }, [post?.mediaLink, platformType])
 
   if (!post || post.deleted) return null
 
@@ -88,17 +202,17 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const hasMediaLink = !!post.mediaLink
   const hasMedia = hasMediaLink || hasTrack
 
-  // Identify media platform
-  const mediaSource = post.mediaLink ? IdentifySource(post.mediaLink) : null
-  const platformType = mediaSource?.type || 'unknown'
   const platformBrand = PLATFORM_BRANDS[platformType] || { gradient: 'from-cyan-600 via-purple-500 to-pink-500', icon: '🔗', glow: 'shadow-cyan-500/50' }
 
-  // YouTube thumbnail
+  // YouTube thumbnail (synchronous)
   const youtubeId = post.mediaLink && platformType === MediaProvider.YOUTUBE ? getYouTubeId(post.mediaLink) : null
   const youtubeThumbnail = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null
 
   // Track artwork
   const trackArtwork = hasTrack ? post.track?.artworkUrl : null
+
+  // Combined thumbnail - use fetched thumbnail, YouTube thumbnail, or track artwork
+  const displayThumbnail = fetchedThumbnail || youtubeThumbnail || trackArtwork
 
   // Handle card click to open post modal
   const handleCardClick = (e: React.MouseEvent) => {
@@ -156,10 +270,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
         </div>
       ) : (
         <>
-          {/* YouTube thumbnail or Track artwork */}
-          {(youtubeThumbnail || trackArtwork) ? (
+          {/* Thumbnail from YouTube, Spotify, SoundCloud, Bandcamp, Vimeo, or Track artwork */}
+          {displayThumbnail ? (
             <img
-              src={youtubeThumbnail || trackArtwork || ''}
+              src={displayThumbnail}
               alt={hasTrack ? post.track?.title || 'Track' : 'Media'}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
