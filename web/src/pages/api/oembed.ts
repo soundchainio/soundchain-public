@@ -55,15 +55,45 @@ async function fetchThumbnail(mediaLink: string): Promise<string | null> {
   // SoundCloud - handles embed URLs with url= parameter and regular URLs
   if (mediaLink.includes('soundcloud.com')) {
     let trackUrl = mediaLink
-    // Extract URL from embed iframe src
+
+    // Extract URL from embed iframe src (w.soundcloud.com/player/?url=...)
     const urlMatch = mediaLink.match(/url=([^&]+)/)
     if (urlMatch) {
       trackUrl = decodeURIComponent(urlMatch[1])
     }
-    // Only call oEmbed if we have a valid SoundCloud URL
-    if (trackUrl.includes('soundcloud.com') && !trackUrl.includes('w.soundcloud.com')) {
-      const response = await axios.get(`https://soundcloud.com/oembed?url=${encodeURIComponent(trackUrl)}&format=json`, { timeout: 5000 })
-      return response.data?.thumbnail_url || null
+
+    // If we got an api.soundcloud.com URL, we need to resolve it to get artwork
+    // The API URL looks like: https://api.soundcloud.com/tracks/123456
+    if (trackUrl.includes('api.soundcloud.com/tracks/')) {
+      const trackIdMatch = trackUrl.match(/tracks\/(\d+)/)
+      if (trackIdMatch) {
+        try {
+          // Try to resolve the track via SoundCloud's resolve endpoint
+          // First fetch the track page to get the actual URL
+          const resolveUrl = `https://soundcloud.com/oembed?url=${encodeURIComponent(trackUrl)}&format=json`
+          const response = await axios.get(resolveUrl, { timeout: 5000 })
+          if (response.data?.thumbnail_url) {
+            // SoundCloud returns small thumbnails, try to get larger one
+            return response.data.thumbnail_url.replace('-large', '-t500x500').replace('-t200x200', '-t500x500')
+          }
+        } catch {
+          // API URLs don't always work with oEmbed, return null
+          return null
+        }
+      }
+    }
+
+    // Regular SoundCloud URL (soundcloud.com/artist/track)
+    if (trackUrl.includes('soundcloud.com') && !trackUrl.includes('w.soundcloud.com') && !trackUrl.includes('api.soundcloud.com')) {
+      try {
+        const response = await axios.get(`https://soundcloud.com/oembed?url=${encodeURIComponent(trackUrl)}&format=json`, { timeout: 5000 })
+        if (response.data?.thumbnail_url) {
+          // Get larger thumbnail
+          return response.data.thumbnail_url.replace('-large', '-t500x500').replace('-t200x200', '-t500x500')
+        }
+      } catch {
+        return null
+      }
     }
   }
 

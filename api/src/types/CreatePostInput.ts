@@ -14,6 +14,11 @@ export class CreatePostInput {
   @IsOptional()
   mediaLink?: string;
 
+  // Original URL before conversion to embed format (for oEmbed thumbnail lookups)
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  originalMediaLink?: string;
+
   @Field(() => String, { nullable: true })
   @IsOptional()
   trackId?: string;

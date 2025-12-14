@@ -28,6 +28,7 @@ interface PostFormProps {
   type: PostFormType
   initialValues: InitialValues
   postLink?: string
+  originalLink?: string
   afterSubmit: () => void
   onCancel: (setFieldValue: (field: string, value: string) => void) => void
   showNewPost: boolean
@@ -84,6 +85,10 @@ export const PostForm = ({ ...props }: PostFormProps) => {
 
         if (props.postLink?.length) {
           newPostParams.mediaLink = props.postLink
+          // Send original URL for oEmbed thumbnail lookups (SoundCloud, etc.)
+          if (props.originalLink?.length) {
+            newPostParams.originalMediaLink = props.originalLink
+          }
         }
 
         if (props.trackId) {

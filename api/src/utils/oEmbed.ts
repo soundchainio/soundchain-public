@@ -10,13 +10,26 @@ const youtubeRegex = /(?:youtube\.com|youtu\.be)/;
 /**
  * Fetches thumbnail URL for a media embed link via oEmbed APIs
  * This runs server-side to avoid CORS issues
+ * @param mediaLink - The embed URL (may be converted from original)
+ * @param originalMediaLink - The original user-submitted URL (better for oEmbed lookups)
  */
-export async function fetchMediaThumbnail(mediaLink: string): Promise<string | null> {
+export async function fetchMediaThumbnail(mediaLink: string, originalMediaLink?: string): Promise<string | null> {
   if (!mediaLink) return null;
 
+  // Use original URL if provided (better for oEmbed lookups)
+  const lookupUrl = originalMediaLink || mediaLink;
+
   try {
-    // Spotify - extract track/album/playlist URL from embed URL
+    // Spotify - prefer original URL for oEmbed
     if (spotifyRegex.test(mediaLink)) {
+      // First try with original URL if provided (open.spotify.com/track/xxx format)
+      if (originalMediaLink && spotifyRegex.test(originalMediaLink) && !originalMediaLink.includes('/embed/')) {
+        const response = await axios.get(`https://open.spotify.com/oembed?url=${encodeURIComponent(originalMediaLink)}`, {
+          timeout: 5000,
+        });
+        return response.data?.thumbnail_url || null;
+      }
+
       // Convert embed URL to regular URL for oEmbed
       const match = mediaLink.match(/spotify\.com\/embed\/(track|album|playlist)\/([a-zA-Z0-9]+)/);
       if (match) {
@@ -34,26 +47,70 @@ export async function fetchMediaThumbnail(mediaLink: string): Promise<string | n
       return response.data?.thumbnail_url || null;
     }
 
-    // SoundCloud - extract track URL from widget URL
+    // SoundCloud - use original URL for oEmbed (embed URLs contain api.soundcloud.com which doesn't work)
     if (soundcloudRegex.test(mediaLink)) {
+      // Prefer original URL if provided (soundcloud.com/artist/track format works with oEmbed)
+      if (originalMediaLink && soundcloudRegex.test(originalMediaLink) && !originalMediaLink.includes('w.soundcloud.com') && !originalMediaLink.includes('api.soundcloud.com')) {
+        const response = await axios.get(`https://soundcloud.com/oembed?url=${encodeURIComponent(originalMediaLink)}&format=json`, {
+          timeout: 5000,
+        });
+        // Get larger thumbnail (replace -large with -t500x500)
+        const thumbnail = response.data?.thumbnail_url;
+        if (thumbnail) {
+          return thumbnail.replace('-large', '-t500x500').replace('-t200x200', '-t500x500');
+        }
+        return null;
+      }
+
       // Widget URL format: https://w.soundcloud.com/player/?url=...
+      // The url= param contains api.soundcloud.com URLs which don't work with oEmbed
       const urlMatch = mediaLink.match(/url=([^&]+)/);
       if (urlMatch) {
         const trackUrl = decodeURIComponent(urlMatch[1]);
-        const response = await axios.get(`https://soundcloud.com/oembed?url=${encodeURIComponent(trackUrl)}&format=json`, {
+        // Only try oEmbed if it's a regular soundcloud.com URL (not api.soundcloud.com)
+        if (!trackUrl.includes('api.soundcloud.com')) {
+          const response = await axios.get(`https://soundcloud.com/oembed?url=${encodeURIComponent(trackUrl)}&format=json`, {
+            timeout: 5000,
+          });
+          const thumbnail = response.data?.thumbnail_url;
+          if (thumbnail) {
+            return thumbnail.replace('-large', '-t500x500').replace('-t200x200', '-t500x500');
+          }
+        }
+        return null;
+      }
+
+      // Try direct URL if not widget format
+      if (!mediaLink.includes('w.soundcloud.com') && !mediaLink.includes('api.soundcloud.com')) {
+        const response = await axios.get(`https://soundcloud.com/oembed?url=${encodeURIComponent(mediaLink)}&format=json`, {
           timeout: 5000,
         });
-        return response.data?.thumbnail_url || null;
+        const thumbnail = response.data?.thumbnail_url;
+        if (thumbnail) {
+          return thumbnail.replace('-large', '-t500x500').replace('-t200x200', '-t500x500');
+        }
       }
-      // Try direct URL
-      const response = await axios.get(`https://soundcloud.com/oembed?url=${encodeURIComponent(mediaLink)}&format=json`, {
-        timeout: 5000,
-      });
-      return response.data?.thumbnail_url || null;
+      return null;
     }
 
-    // Bandcamp - extract album art from embed URL
+    // Bandcamp - prefer original URL for fetching album art via page scraping
     if (bandcampRegex.test(mediaLink)) {
+      // If we have the original URL (e.g., artist.bandcamp.com/album/xxx), we can fetch the page
+      if (originalMediaLink && bandcampRegex.test(originalMediaLink) && !originalMediaLink.includes('EmbeddedPlayer')) {
+        try {
+          // Bandcamp pages have album art in meta tags
+          const response = await axios.get(originalMediaLink, { timeout: 5000 });
+          const html = response.data;
+          // Look for og:image meta tag
+          const ogImageMatch = html.match(/<meta property="og:image" content="([^"]+)"/);
+          if (ogImageMatch && ogImageMatch[1]) {
+            return ogImageMatch[1];
+          }
+        } catch {
+          // Fall through to embed URL parsing
+        }
+      }
+
       // Bandcamp embed URLs contain album= or track= parameters
       // Format: https://bandcamp.com/EmbeddedPlayer/album=xxx/...
       const albumMatch = mediaLink.match(/album=(\d+)/);

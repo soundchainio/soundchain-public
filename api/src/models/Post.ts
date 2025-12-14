@@ -21,6 +21,11 @@ export class Post extends Model {
   @prop({ required: false })
   mediaLink?: string;
 
+  // Original URL before conversion to embed format (for oEmbed lookups)
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  originalMediaLink?: string;
+
   @Field(() => String, { nullable: true })
   @prop({ required: false })
   mediaThumbnail?: string;

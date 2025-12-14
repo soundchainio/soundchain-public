@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { StickerPicker } from '../StickerPicker'
 import { useGuestCreatePostMutation } from 'lib/graphql'
 import Picker from '@emoji-mart/react'
+import { getNormalizedLink, hasLink } from 'utils/NormalizeEmbedLinks'
 
 interface Emoji {
   id: string
@@ -20,6 +21,7 @@ interface GuestPostModalProps {
 export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModalProps) => {
   const [body, setBody] = useState('')
   const [mediaLink, setMediaLink] = useState('')
+  const [normalizedLink, setNormalizedLink] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -28,6 +30,20 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
   const [guestCreatePost] = useGuestCreatePostMutation({
     refetchQueries: ['Posts'],
   })
+
+  // Normalize media link when it changes
+  useEffect(() => {
+    const normalizeLink = async () => {
+      if (mediaLink && hasLink(mediaLink)) {
+        const normalized = await getNormalizedLink(mediaLink)
+        setNormalizedLink(normalized || mediaLink)
+      } else {
+        setNormalizedLink('')
+      }
+    }
+    const timeout = setTimeout(normalizeLink, 500)
+    return () => clearTimeout(timeout)
+  }, [mediaLink])
 
   if (!isOpen) return null
 
@@ -63,7 +79,8 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
         variables: {
           input: {
             body: body.trim(),
-            mediaLink: mediaLink.trim() || undefined,
+            mediaLink: normalizedLink || undefined,
+            originalMediaLink: mediaLink.trim() || undefined,
           },
           walletAddress,
         },
@@ -72,6 +89,7 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
       // Success - close modal and reset form
       setBody('')
       setMediaLink('')
+      setNormalizedLink('')
       onClose()
     } catch (err: any) {
       setError(err.message || 'Failed to create post')

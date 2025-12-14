@@ -4,6 +4,8 @@ mutation CreatePost($input: CreatePostInput!) {
       id
       body
       mediaLink
+      originalMediaLink
+      mediaThumbnail
       createdAt
       updatedAt
       isGuest

@@ -109,10 +109,10 @@ export class PostResolver {
   @Authorized()
   async createPost(
     @Ctx() { postService }: Context,
-    @Arg('input') { body, mediaLink, trackId, trackEditionId }: CreatePostInput,
+    @Arg('input') { body, mediaLink, originalMediaLink, trackId, trackEditionId }: CreatePostInput,
     @CurrentUser() { profileId }: User,
   ): Promise<CreatePostPayload> {
-    const post = await postService.createPost({ profileId: profileId.toString(), body, mediaLink, trackId, trackEditionId });
+    const post = await postService.createPost({ profileId: profileId.toString(), body, mediaLink, originalMediaLink, trackId, trackEditionId });
     return { post };
   }
 
@@ -261,7 +261,7 @@ export class PostResolver {
   @Mutation(() => CreatePostPayload)
   async guestCreatePost(
     @Ctx() { postService }: Context,
-    @Arg('input') { body, mediaLink }: CreatePostInput,
+    @Arg('input') { body, mediaLink, originalMediaLink }: CreatePostInput,
     @Arg('walletAddress') walletAddress: string,
   ): Promise<CreatePostPayload> {
     if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
@@ -272,6 +272,7 @@ export class PostResolver {
       walletAddress: walletAddress.toLowerCase(),
       body,
       mediaLink,
+      originalMediaLink,
     });
     return { post };
   }

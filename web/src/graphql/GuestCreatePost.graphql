@@ -4,6 +4,8 @@ mutation GuestCreatePost($input: CreatePostInput!, $walletAddress: String!) {
       id
       body
       mediaLink
+      originalMediaLink
+      mediaThumbnail
       createdAt
       updatedAt
       isGuest

@@ -94,8 +94,10 @@ export type AudioHolder = {
 };
 
 export enum AuthMethod {
+  Discord = 'discord',
   Google = 'google',
-  MagicLink = 'magicLink'
+  MagicLink = 'magicLink',
+  Twitch = 'twitch'
 }
 
 export type AuthPayload = {
@@ -197,11 +199,13 @@ export type Comment = {
   createdAt: Scalars['DateTime']['output'];
   deleted: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
+  isGuest: Maybe<Scalars['Boolean']['output']>;
   post: Post;
   postId: Scalars['ID']['output'];
-  profile: Profile;
-  profileId: Scalars['ID']['output'];
+  profile: Maybe<Profile>;
+  profileId: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+  walletAddress: Maybe<Scalars['String']['output']>;
 };
 
 export type CommentConnection = {
@@ -260,6 +264,7 @@ export type CreatePlaylistTracks = {
 export type CreatePostInput = {
   body: Scalars['String']['input'];
   mediaLink?: InputMaybe<Scalars['String']['input']>;
+  originalMediaLink?: InputMaybe<Scalars['String']['input']>;
   trackEditionId?: InputMaybe<Scalars['String']['input']>;
   trackId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -601,6 +606,12 @@ export enum Genre {
   World = 'WORLD'
 }
 
+export type GenreTracks = {
+  __typename?: 'GenreTracks';
+  genre: Scalars['String']['output'];
+  tracks: Array<Track>;
+};
+
 export type GetPlaylistPayload = {
   __typename?: 'GetPlaylistPayload';
   nodes: Array<Playlist>;
@@ -733,6 +744,11 @@ export type Mutation = {
   deleteTrackEdition: Array<Track>;
   deleteTrackOnError: UpdateTrackPayload;
   followProfile: FollowProfilePayload;
+  guestAddComment: AddCommentPayload;
+  guestCreatePost: CreatePostPayload;
+  guestDeletePost: DeletePostPayload;
+  guestReactToPost: ReactToPostPayload;
+  guestRetractReaction: RetractReactionPayload;
   login: AuthPayload;
   pinJsonToIPFS: PinningPayload;
   pinToIPFS: PinningPayload;
@@ -848,6 +864,36 @@ export type MutationDeleteTrackOnErrorArgs = {
 
 export type MutationFollowProfileArgs = {
   input: FollowProfileInput;
+};
+
+
+export type MutationGuestAddCommentArgs = {
+  input: AddCommentInput;
+  walletAddress: Scalars['String']['input'];
+};
+
+
+export type MutationGuestCreatePostArgs = {
+  input: CreatePostInput;
+  walletAddress: Scalars['String']['input'];
+};
+
+
+export type MutationGuestDeletePostArgs = {
+  postId: Scalars['String']['input'];
+  walletAddress: Scalars['String']['input'];
+};
+
+
+export type MutationGuestReactToPostArgs = {
+  input: ReactToPostInput;
+  walletAddress: Scalars['String']['input'];
+};
+
+
+export type MutationGuestRetractReactionArgs = {
+  postId: Scalars['String']['input'];
+  walletAddress: Scalars['String']['input'];
 };
 
 
@@ -1221,6 +1267,7 @@ export type Post = {
   mediaLink: Maybe<Scalars['String']['output']>;
   mediaThumbnail: Maybe<Scalars['String']['output']>;
   myReaction: Maybe<ReactionType>;
+  originalMediaLink: Maybe<Scalars['String']['output']>;
   profile: Maybe<Profile>;
   profileId: Maybe<Scalars['ID']['output']>;
   repostCount: Scalars['Float']['output'];
@@ -1371,6 +1418,7 @@ export type Query = {
   track: Track;
   trackEdition: TrackEdition;
   tracks: TrackConnection;
+  tracksByGenre: Array<GenreTracks>;
   uploadUrl: UploadUrl;
   whitelistEntryByWallet: WhitelistEntry;
 };
@@ -1640,6 +1688,11 @@ export type QueryTracksArgs = {
 };
 
 
+export type QueryTracksByGenreArgs = {
+  limit?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
 export type QueryUploadUrlArgs = {
   fileType: Scalars['String']['input'];
 };
@@ -1663,11 +1716,13 @@ export type Reaction = {
   __typename?: 'Reaction';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
+  isGuest: Scalars['Boolean']['output'];
   postId: Scalars['ID']['output'];
   profile: Profile;
-  profileId: Scalars['ID']['output'];
+  profileId: Maybe<Scalars['ID']['output']>;
   type: ReactionType;
   updatedAt: Scalars['DateTime']['output'];
+  walletAddress: Maybe<Scalars['String']['output']>;
 };
 
 export type ReactionConnection = {
@@ -2076,7 +2131,10 @@ export type User = {
   authMethod: AuthMethod;
   createdAt: Scalars['DateTime']['output'];
   defaultWallet: DefaultWallet;
+  discordWalletAddress: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
+  emailWalletAddress: Maybe<Scalars['String']['output']>;
+  googleWalletAddress: Maybe<Scalars['String']['output']>;
   handle: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   isApprovedOnMarketplace: Scalars['Boolean']['output'];
@@ -2085,6 +2143,7 @@ export type User = {
   profile: Profile;
   profileId: Scalars['ID']['output'];
   roles: Array<Role>;
+  twitchWalletAddress: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };
 
@@ -2130,7 +2189,7 @@ export type AddCommentMutationVariables = Exact<{
 }>;
 
 
-export type AddCommentMutation = { __typename?: 'Mutation', addComment: { __typename?: 'AddCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, post: { __typename?: 'Post', id: string, commentCount: number }, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } } } };
+export type AddCommentMutation = { __typename?: 'Mutation', addComment: { __typename?: 'AddCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, post: { __typename?: 'Post', id: string, commentCount: number }, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null } } };
 
 export type AuctionEndedNotificationFieldsFragment = { __typename?: 'AuctionEndedNotification', id: string, type: NotificationType, createdAt: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number };
 
@@ -2223,9 +2282,9 @@ export type CommentQueryVariables = Exact<{
 }>;
 
 
-export type CommentQuery = { __typename?: 'Query', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } } };
+export type CommentQuery = { __typename?: 'Query', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null } };
 
-export type CommentComponentFieldsFragment = { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } };
+export type CommentComponentFieldsFragment = { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null };
 
 export type CommentNotificationFieldsFragment = { __typename?: 'CommentNotification', id: string, type: NotificationType, body: string, previewBody: string, link: string, createdAt: string, authorName: string, authorPicture: string | null };
 
@@ -2235,7 +2294,7 @@ export type CommentsQueryVariables = Exact<{
 }>;
 
 
-export type CommentsQuery = { __typename?: 'Query', comments: { __typename?: 'CommentConnection', nodes: Array<{ __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } }>, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null } } };
+export type CommentsQuery = { __typename?: 'Query', comments: { __typename?: 'CommentConnection', nodes: Array<{ __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasPreviousPage: boolean, hasNextPage: boolean, startCursor: string | null, endCursor: string | null } } };
 
 export type CountBidsQueryVariables = Exact<{
   tokenId: Scalars['Float']['input'];
@@ -2256,7 +2315,7 @@ export type CreatePostMutationVariables = Exact<{
 }>;
 
 
-export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null } } };
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null } } };
 
 export type CreateProfileVerificationRequestMutationVariables = Exact<{
   input: CreateProfileVerificationRequestInput;
@@ -2291,14 +2350,14 @@ export type DeleteCommentMutationVariables = Exact<{
 }>;
 
 
-export type DeleteCommentMutation = { __typename?: 'Mutation', deleteComment: { __typename?: 'DeleteCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } } } };
+export type DeleteCommentMutation = { __typename?: 'Mutation', deleteComment: { __typename?: 'DeleteCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null } } };
 
 export type DeletePostMutationVariables = Exact<{
   input: DeletePostInput;
 }>;
 
 
-export type DeletePostMutation = { __typename?: 'Mutation', deletePost: { __typename?: 'DeletePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } } };
+export type DeletePostMutation = { __typename?: 'Mutation', deletePost: { __typename?: 'DeletePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } } };
 
 export type DeleteTrackMutationVariables = Exact<{
   trackId: Scalars['String']['input'];
@@ -2363,7 +2422,7 @@ export type FeedQueryVariables = Exact<{
 }>;
 
 
-export type FeedQuery = { __typename?: 'Query', feed: { __typename?: 'FeedConnection', nodes: Array<{ __typename?: 'FeedItem', id: string, post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
+export type FeedQuery = { __typename?: 'Query', feed: { __typename?: 'FeedConnection', nodes: Array<{ __typename?: 'FeedItem', id: string, post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type FollowProfileMutationVariables = Exact<{
   input: FollowProfileInput;
@@ -2404,7 +2463,7 @@ export type GetOriginalPostFromTrackQueryVariables = Exact<{
 }>;
 
 
-export type GetOriginalPostFromTrackQuery = { __typename?: 'Query', getOriginalPostFromTrack: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
+export type GetOriginalPostFromTrackQuery = { __typename?: 'Query', getOriginalPostFromTrack: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
 
 export type GroupedTracksQueryVariables = Exact<{
   filter?: InputMaybe<FilterTrackInput>;
@@ -2414,6 +2473,46 @@ export type GroupedTracksQueryVariables = Exact<{
 
 
 export type GroupedTracksQuery = { __typename?: 'Query', groupedTracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
+
+export type GuestAddCommentMutationVariables = Exact<{
+  input: AddCommentInput;
+  walletAddress: Scalars['String']['input'];
+}>;
+
+
+export type GuestAddCommentMutation = { __typename?: 'Mutation', guestAddComment: { __typename?: 'AddCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, isGuest: boolean | null, walletAddress: string | null, createdAt: string, updatedAt: string, post: { __typename?: 'Post', id: string } } } };
+
+export type GuestCreatePostMutationVariables = Exact<{
+  input: CreatePostInput;
+  walletAddress: Scalars['String']['input'];
+}>;
+
+
+export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null } } };
+
+export type GuestDeletePostMutationVariables = Exact<{
+  postId: Scalars['String']['input'];
+  walletAddress: Scalars['String']['input'];
+}>;
+
+
+export type GuestDeletePostMutation = { __typename?: 'Mutation', guestDeletePost: { __typename?: 'DeletePostPayload', post: { __typename?: 'Post', id: string, deleted: boolean | null } } };
+
+export type GuestReactToPostMutationVariables = Exact<{
+  input: ReactToPostInput;
+  walletAddress: Scalars['String']['input'];
+}>;
+
+
+export type GuestReactToPostMutation = { __typename?: 'Mutation', guestReactToPost: { __typename?: 'ReactToPostPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType> } } };
+
+export type GuestRetractReactionMutationVariables = Exact<{
+  postId: Scalars['String']['input'];
+  walletAddress: Scalars['String']['input'];
+}>;
+
+
+export type GuestRetractReactionMutation = { __typename?: 'Mutation', guestRetractReaction: { __typename?: 'RetractReactionPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType> } } };
 
 export type HaveBidedQueryVariables = Exact<{
   auctionId: Scalars['String']['input'];
@@ -2465,7 +2564,7 @@ export type MaticUsdQuery = { __typename?: 'Query', maticUsd: string };
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, handle: string, email: string, magicWalletAddress: string | null, metaMaskWalletAddressees: Array<string> | null, defaultWallet: DefaultWallet, isApprovedOnMarketplace: boolean, roles: Array<Role>, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } } | null };
+export type MeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, handle: string, email: string, magicWalletAddress: string | null, googleWalletAddress: string | null, discordWalletAddress: string | null, twitchWalletAddress: string | null, emailWalletAddress: string | null, metaMaskWalletAddressees: Array<string> | null, defaultWallet: DefaultWallet, authMethod: AuthMethod, isApprovedOnMarketplace: boolean, roles: Array<Role>, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } } | null };
 
 export type MessageQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -2574,9 +2673,9 @@ export type PostQueryVariables = Exact<{
 }>;
 
 
-export type PostQuery = { __typename?: 'Query', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
+export type PostQuery = { __typename?: 'Query', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
 
-export type PostComponentFieldsFragment = { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null };
+export type PostComponentFieldsFragment = { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null };
 
 export type PostsQueryVariables = Exact<{
   filter?: InputMaybe<FilterPostInput>;
@@ -2585,7 +2684,7 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PostConnection', nodes: Array<{ __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
+export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PostConnection', nodes: Array<{ __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type ProfileQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -2731,6 +2830,13 @@ export type TracksQueryVariables = Exact<{
 
 export type TracksQuery = { __typename?: 'Query', tracks: { __typename?: 'TrackConnection', nodes: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
+export type TracksByGenreQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Float']['input']>;
+}>;
+
+
+export type TracksByGenreQuery = { __typename?: 'Query', tracksByGenre: Array<{ __typename?: 'GenreTracks', genre: string, tracks: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }> }> };
+
 export type UnfollowProfileMutationVariables = Exact<{
   input: UnfollowProfileInput;
 }>;
@@ -2762,7 +2868,7 @@ export type UpdateCommentMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCommentMutation = { __typename?: 'Mutation', updateComment: { __typename?: 'UpdateCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } } } };
+export type UpdateCommentMutation = { __typename?: 'Mutation', updateComment: { __typename?: 'UpdateCommentPayload', comment: { __typename?: 'Comment', id: string, body: string, createdAt: string, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null } } };
 
 export type UpdateCoverPictureMutationVariables = Exact<{
   input: UpdateProfileInput;
@@ -2939,6 +3045,8 @@ export const CommentComponentFieldsFragmentDoc = gql`
   body
   createdAt
   deleted
+  isGuest
+  walletAddress
   profile {
     id
     displayName
@@ -3256,6 +3364,7 @@ export const PostComponentFieldsFragmentDoc = gql`
   id
   body
   mediaLink
+  mediaThumbnail
   repostId
   createdAt
   updatedAt
@@ -4108,6 +4217,8 @@ export const CreatePostDocument = gql`
       id
       body
       mediaLink
+      originalMediaLink
+      mediaThumbnail
       createdAt
       updatedAt
       isGuest
@@ -4988,6 +5099,207 @@ export type GroupedTracksQueryHookResult = ReturnType<typeof useGroupedTracksQue
 export type GroupedTracksLazyQueryHookResult = ReturnType<typeof useGroupedTracksLazyQuery>;
 export type GroupedTracksSuspenseQueryHookResult = ReturnType<typeof useGroupedTracksSuspenseQuery>;
 export type GroupedTracksQueryResult = Apollo.QueryResult<GroupedTracksQuery, GroupedTracksQueryVariables>;
+export const GuestAddCommentDocument = gql`
+    mutation GuestAddComment($input: AddCommentInput!, $walletAddress: String!) {
+  guestAddComment(input: $input, walletAddress: $walletAddress) {
+    comment {
+      id
+      body
+      isGuest
+      walletAddress
+      createdAt
+      updatedAt
+      post {
+        id
+      }
+    }
+  }
+}
+    `;
+export type GuestAddCommentMutationFn = Apollo.MutationFunction<GuestAddCommentMutation, GuestAddCommentMutationVariables>;
+
+/**
+ * __useGuestAddCommentMutation__
+ *
+ * To run a mutation, you first call `useGuestAddCommentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useGuestAddCommentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [guestAddCommentMutation, { data, loading, error }] = useGuestAddCommentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useGuestAddCommentMutation(baseOptions?: Apollo.MutationHookOptions<GuestAddCommentMutation, GuestAddCommentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestAddCommentMutation, GuestAddCommentMutationVariables>(GuestAddCommentDocument, options);
+      }
+export type GuestAddCommentMutationHookResult = ReturnType<typeof useGuestAddCommentMutation>;
+export type GuestAddCommentMutationResult = Apollo.MutationResult<GuestAddCommentMutation>;
+export type GuestAddCommentMutationOptions = Apollo.BaseMutationOptions<GuestAddCommentMutation, GuestAddCommentMutationVariables>;
+export const GuestCreatePostDocument = gql`
+    mutation GuestCreatePost($input: CreatePostInput!, $walletAddress: String!) {
+  guestCreatePost(input: $input, walletAddress: $walletAddress) {
+    post {
+      id
+      body
+      mediaLink
+      originalMediaLink
+      mediaThumbnail
+      createdAt
+      updatedAt
+      isGuest
+      walletAddress
+    }
+  }
+}
+    `;
+export type GuestCreatePostMutationFn = Apollo.MutationFunction<GuestCreatePostMutation, GuestCreatePostMutationVariables>;
+
+/**
+ * __useGuestCreatePostMutation__
+ *
+ * To run a mutation, you first call `useGuestCreatePostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useGuestCreatePostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [guestCreatePostMutation, { data, loading, error }] = useGuestCreatePostMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useGuestCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<GuestCreatePostMutation, GuestCreatePostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestCreatePostMutation, GuestCreatePostMutationVariables>(GuestCreatePostDocument, options);
+      }
+export type GuestCreatePostMutationHookResult = ReturnType<typeof useGuestCreatePostMutation>;
+export type GuestCreatePostMutationResult = Apollo.MutationResult<GuestCreatePostMutation>;
+export type GuestCreatePostMutationOptions = Apollo.BaseMutationOptions<GuestCreatePostMutation, GuestCreatePostMutationVariables>;
+export const GuestDeletePostDocument = gql`
+    mutation GuestDeletePost($postId: String!, $walletAddress: String!) {
+  guestDeletePost(postId: $postId, walletAddress: $walletAddress) {
+    post {
+      id
+      deleted
+    }
+  }
+}
+    `;
+export type GuestDeletePostMutationFn = Apollo.MutationFunction<GuestDeletePostMutation, GuestDeletePostMutationVariables>;
+
+/**
+ * __useGuestDeletePostMutation__
+ *
+ * To run a mutation, you first call `useGuestDeletePostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useGuestDeletePostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [guestDeletePostMutation, { data, loading, error }] = useGuestDeletePostMutation({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useGuestDeletePostMutation(baseOptions?: Apollo.MutationHookOptions<GuestDeletePostMutation, GuestDeletePostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestDeletePostMutation, GuestDeletePostMutationVariables>(GuestDeletePostDocument, options);
+      }
+export type GuestDeletePostMutationHookResult = ReturnType<typeof useGuestDeletePostMutation>;
+export type GuestDeletePostMutationResult = Apollo.MutationResult<GuestDeletePostMutation>;
+export type GuestDeletePostMutationOptions = Apollo.BaseMutationOptions<GuestDeletePostMutation, GuestDeletePostMutationVariables>;
+export const GuestReactToPostDocument = gql`
+    mutation GuestReactToPost($input: ReactToPostInput!, $walletAddress: String!) {
+  guestReactToPost(input: $input, walletAddress: $walletAddress) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+    }
+  }
+}
+    `;
+export type GuestReactToPostMutationFn = Apollo.MutationFunction<GuestReactToPostMutation, GuestReactToPostMutationVariables>;
+
+/**
+ * __useGuestReactToPostMutation__
+ *
+ * To run a mutation, you first call `useGuestReactToPostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useGuestReactToPostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [guestReactToPostMutation, { data, loading, error }] = useGuestReactToPostMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useGuestReactToPostMutation(baseOptions?: Apollo.MutationHookOptions<GuestReactToPostMutation, GuestReactToPostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestReactToPostMutation, GuestReactToPostMutationVariables>(GuestReactToPostDocument, options);
+      }
+export type GuestReactToPostMutationHookResult = ReturnType<typeof useGuestReactToPostMutation>;
+export type GuestReactToPostMutationResult = Apollo.MutationResult<GuestReactToPostMutation>;
+export type GuestReactToPostMutationOptions = Apollo.BaseMutationOptions<GuestReactToPostMutation, GuestReactToPostMutationVariables>;
+export const GuestRetractReactionDocument = gql`
+    mutation GuestRetractReaction($postId: String!, $walletAddress: String!) {
+  guestRetractReaction(postId: $postId, walletAddress: $walletAddress) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+    }
+  }
+}
+    `;
+export type GuestRetractReactionMutationFn = Apollo.MutationFunction<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>;
+
+/**
+ * __useGuestRetractReactionMutation__
+ *
+ * To run a mutation, you first call `useGuestRetractReactionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useGuestRetractReactionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [guestRetractReactionMutation, { data, loading, error }] = useGuestRetractReactionMutation({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *      walletAddress: // value for 'walletAddress'
+ *   },
+ * });
+ */
+export function useGuestRetractReactionMutation(baseOptions?: Apollo.MutationHookOptions<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>(GuestRetractReactionDocument, options);
+      }
+export type GuestRetractReactionMutationHookResult = ReturnType<typeof useGuestRetractReactionMutation>;
+export type GuestRetractReactionMutationResult = Apollo.MutationResult<GuestRetractReactionMutation>;
+export type GuestRetractReactionMutationOptions = Apollo.BaseMutationOptions<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>;
 export const HaveBidedDocument = gql`
     query HaveBided($auctionId: String!, $bidder: String!) {
   haveBided(auctionId: $auctionId, bidder: $bidder) {
@@ -5240,8 +5552,13 @@ export const MeDocument = gql`
     handle
     email
     magicWalletAddress
+    googleWalletAddress
+    discordWalletAddress
+    twitchWalletAddress
+    emailWalletAddress
     metaMaskWalletAddressees
     defaultWallet
+    authMethod
     isApprovedOnMarketplace
     roles
     profile {
@@ -6799,6 +7116,49 @@ export type TracksQueryHookResult = ReturnType<typeof useTracksQuery>;
 export type TracksLazyQueryHookResult = ReturnType<typeof useTracksLazyQuery>;
 export type TracksSuspenseQueryHookResult = ReturnType<typeof useTracksSuspenseQuery>;
 export type TracksQueryResult = Apollo.QueryResult<TracksQuery, TracksQueryVariables>;
+export const TracksByGenreDocument = gql`
+    query TracksByGenre($limit: Float) {
+  tracksByGenre(limit: $limit) {
+    genre
+    tracks {
+      ...TrackComponentFields
+    }
+  }
+}
+    ${TrackComponentFieldsFragmentDoc}`;
+
+/**
+ * __useTracksByGenreQuery__
+ *
+ * To run a query within a React component, call `useTracksByGenreQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTracksByGenreQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTracksByGenreQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useTracksByGenreQuery(baseOptions?: Apollo.QueryHookOptions<TracksByGenreQuery, TracksByGenreQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TracksByGenreQuery, TracksByGenreQueryVariables>(TracksByGenreDocument, options);
+      }
+export function useTracksByGenreLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TracksByGenreQuery, TracksByGenreQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TracksByGenreQuery, TracksByGenreQueryVariables>(TracksByGenreDocument, options);
+        }
+export function useTracksByGenreSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TracksByGenreQuery, TracksByGenreQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<TracksByGenreQuery, TracksByGenreQueryVariables>(TracksByGenreDocument, options);
+        }
+export type TracksByGenreQueryHookResult = ReturnType<typeof useTracksByGenreQuery>;
+export type TracksByGenreLazyQueryHookResult = ReturnType<typeof useTracksByGenreLazyQuery>;
+export type TracksByGenreSuspenseQueryHookResult = ReturnType<typeof useTracksByGenreSuspenseQuery>;
+export type TracksByGenreQueryResult = Apollo.QueryResult<TracksByGenreQuery, TracksByGenreQueryVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {
@@ -7735,122 +8095,3 @@ export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhiteli
 export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
 export type WhitelistEntryByWalletSuspenseQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletSuspenseQuery>;
 export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;
-
-// ============================================
-// GUEST ACCESS MUTATIONS (wallet-only, no account required)
-// ============================================
-
-export type GuestReactToPostMutationVariables = Exact<{
-  input: ReactToPostInput;
-  walletAddress: Scalars['String']['input'];
-}>;
-
-export type GuestReactToPostMutation = { __typename?: 'Mutation', guestReactToPost: { __typename?: 'ReactToPostPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType> } } };
-
-export const GuestReactToPostDocument = gql`
-    mutation GuestReactToPost($input: ReactToPostInput!, $walletAddress: String!) {
-  guestReactToPost(input: $input, walletAddress: $walletAddress) {
-    post {
-      id
-      totalReactions
-      topReactions(top: 2)
-    }
-  }
-}
-    `;
-export type GuestReactToPostMutationFn = Apollo.MutationFunction<GuestReactToPostMutation, GuestReactToPostMutationVariables>;
-
-export function useGuestReactToPostMutation(baseOptions?: Apollo.MutationHookOptions<GuestReactToPostMutation, GuestReactToPostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<GuestReactToPostMutation, GuestReactToPostMutationVariables>(GuestReactToPostDocument, options);
-      }
-export type GuestReactToPostMutationHookResult = ReturnType<typeof useGuestReactToPostMutation>;
-export type GuestReactToPostMutationResult = Apollo.MutationResult<GuestReactToPostMutation>;
-export type GuestReactToPostMutationOptions = Apollo.BaseMutationOptions<GuestReactToPostMutation, GuestReactToPostMutationVariables>;
-
-export type GuestRetractReactionMutationVariables = Exact<{
-  postId: Scalars['String']['input'];
-  walletAddress: Scalars['String']['input'];
-}>;
-
-export type GuestRetractReactionMutation = { __typename?: 'Mutation', guestRetractReaction: { __typename?: 'RetractReactionPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType> } } };
-
-export const GuestRetractReactionDocument = gql`
-    mutation GuestRetractReaction($postId: String!, $walletAddress: String!) {
-  guestRetractReaction(postId: $postId, walletAddress: $walletAddress) {
-    post {
-      id
-      totalReactions
-      topReactions(top: 2)
-    }
-  }
-}
-    `;
-export type GuestRetractReactionMutationFn = Apollo.MutationFunction<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>;
-
-export function useGuestRetractReactionMutation(baseOptions?: Apollo.MutationHookOptions<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>(GuestRetractReactionDocument, options);
-      }
-export type GuestRetractReactionMutationHookResult = ReturnType<typeof useGuestRetractReactionMutation>;
-export type GuestRetractReactionMutationResult = Apollo.MutationResult<GuestRetractReactionMutation>;
-export type GuestRetractReactionMutationOptions = Apollo.BaseMutationOptions<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>;
-
-export type GuestCreatePostMutationVariables = Exact<{
-  input: CreatePostInput;
-  walletAddress: Scalars['String']['input'];
-}>;
-
-export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null } } };
-
-export const GuestCreatePostDocument = gql`
-    mutation GuestCreatePost($input: CreatePostInput!, $walletAddress: String!) {
-  guestCreatePost(input: $input, walletAddress: $walletAddress) {
-    post {
-      id
-      body
-      mediaLink
-      createdAt
-      updatedAt
-      isGuest
-      walletAddress
-    }
-  }
-}
-    `;
-export type GuestCreatePostMutationFn = Apollo.MutationFunction<GuestCreatePostMutation, GuestCreatePostMutationVariables>;
-
-export function useGuestCreatePostMutation(baseOptions?: Apollo.MutationHookOptions<GuestCreatePostMutation, GuestCreatePostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<GuestCreatePostMutation, GuestCreatePostMutationVariables>(GuestCreatePostDocument, options);
-      }
-export type GuestCreatePostMutationHookResult = ReturnType<typeof useGuestCreatePostMutation>;
-export type GuestCreatePostMutationResult = Apollo.MutationResult<GuestCreatePostMutation>;
-export type GuestCreatePostMutationOptions = Apollo.BaseMutationOptions<GuestCreatePostMutation, GuestCreatePostMutationVariables>;
-
-export type GuestDeletePostMutationVariables = Exact<{
-  postId: Scalars['String']['input'];
-  walletAddress: Scalars['String']['input'];
-}>;
-
-export type GuestDeletePostMutation = { __typename?: 'Mutation', guestDeletePost: { __typename?: 'DeletePostPayload', post: { __typename?: 'Post', id: string, deleted: boolean | null } } };
-
-export const GuestDeletePostDocument = gql`
-    mutation GuestDeletePost($postId: String!, $walletAddress: String!) {
-  guestDeletePost(postId: $postId, walletAddress: $walletAddress) {
-    post {
-      id
-      deleted
-    }
-  }
-}
-    `;
-export type GuestDeletePostMutationFn = Apollo.MutationFunction<GuestDeletePostMutation, GuestDeletePostMutationVariables>;
-
-export function useGuestDeletePostMutation(baseOptions?: Apollo.MutationHookOptions<GuestDeletePostMutation, GuestDeletePostMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<GuestDeletePostMutation, GuestDeletePostMutationVariables>(GuestDeletePostDocument, options);
-      }
-export type GuestDeletePostMutationHookResult = ReturnType<typeof useGuestDeletePostMutation>;
-export type GuestDeletePostMutationResult = Apollo.MutationResult<GuestDeletePostMutation>;
-export type GuestDeletePostMutationOptions = Apollo.BaseMutationOptions<GuestDeletePostMutation, GuestDeletePostMutationVariables>;

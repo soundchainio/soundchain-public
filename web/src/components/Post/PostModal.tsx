@@ -131,6 +131,7 @@ export const PostModal = () => {
           type={postType}
           initialValues={initialValues}
           postLink={postLink}
+          originalLink={originalLink}
           afterSubmit={clearState}
           onCancel={cancel}
           showNewPost={showNewPost}

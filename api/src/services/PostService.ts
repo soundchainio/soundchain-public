@@ -15,6 +15,7 @@ interface NewPostParams {
   profileId: string;
   body?: string;
   mediaLink?: string;
+  originalMediaLink?: string;
   trackId?: string;
   trackEditionId?: string;
 }
@@ -23,6 +24,7 @@ interface GuestPostParams {
   walletAddress: string;
   body?: string;
   mediaLink?: string;
+  originalMediaLink?: string;
 }
 
 interface RepostParams {
@@ -50,9 +52,10 @@ export class PostService extends ModelService<typeof Post> {
 
   async createPost(params: NewPostParams): Promise<Post> {
     // Fetch thumbnail for media embeds (Spotify, SoundCloud, Bandcamp, etc.)
+    // Use originalMediaLink for oEmbed lookups if available (better for platforms like SoundCloud)
     let mediaThumbnail: string | null = null;
     if (params.mediaLink) {
-      mediaThumbnail = await fetchMediaThumbnail(params.mediaLink);
+      mediaThumbnail = await fetchMediaThumbnail(params.mediaLink, params.originalMediaLink);
     }
 
     const post = new this.model({
@@ -210,9 +213,10 @@ export class PostService extends ModelService<typeof Post> {
 
   async createGuestPost(params: GuestPostParams): Promise<Post> {
     // Fetch thumbnail for media embeds (Spotify, SoundCloud, Bandcamp, etc.)
+    // Use originalMediaLink for oEmbed lookups if available (better for platforms like SoundCloud)
     let mediaThumbnail: string | null = null;
     if (params.mediaLink) {
-      mediaThumbnail = await fetchMediaThumbnail(params.mediaLink);
+      mediaThumbnail = await fetchMediaThumbnail(params.mediaLink, params.originalMediaLink);
     }
 
     const post = new this.model({
