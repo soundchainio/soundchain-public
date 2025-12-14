@@ -82,6 +82,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   if (!post || post.deleted) return null
 
   const isGuest = post?.isGuest && post?.walletAddress
+  const hasProfile = !!post?.profile
   const hasTrack = post.track && !post.track.deleted
   const hasMediaLink = !!post.mediaLink
   const hasMedia = hasMediaLink || hasTrack
@@ -248,12 +249,14 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                   <GuestAvatar walletAddress={post.walletAddress!} pixels={20} />
                   <span className="text-[10px] text-neutral-400 truncate">{formatWalletAddress(post.walletAddress!)}</span>
                 </>
-              ) : (
-                <Link href={`/dex/profile/${post.profile?.userHandle}`} className="flex items-center gap-1.5 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+              ) : hasProfile ? (
+                <Link href={`/dex/profile/${post.profile!.userHandle}`} className="flex items-center gap-1.5 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
                   <Avatar profile={post.profile!} pixels={20} />
-                  <span className="text-xs text-neutral-300 font-medium truncate">{post.profile?.displayName}</span>
-                  {post.profile?.verified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
+                  <span className="text-xs text-neutral-300 font-medium truncate">{post.profile!.displayName}</span>
+                  {post.profile!.verified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
                 </Link>
+              ) : (
+                <span className="text-xs text-neutral-500">Unknown user</span>
               )}
             </div>
 
@@ -327,9 +330,9 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                   Guest
                 </span>
               </div>
-            ) : (
+            ) : hasProfile ? (
               <Link
-                href={`/dex/profile/${post.profile?.userHandle}`}
+                href={`/dex/profile/${post.profile!.userHandle}`}
                 className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -337,15 +340,15 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                   <div className="w-6 h-6 rounded-full ring-2 ring-cyan-500/30 overflow-hidden">
                     <Avatar profile={post.profile!} pixels={24} />
                   </div>
-                  {post.profile?.verified && (
+                  {post.profile!.verified && (
                     <BadgeCheck className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 text-cyan-400 bg-neutral-900 rounded-full" />
                   )}
                 </div>
-                <span className="text-xs text-neutral-300 truncate font-medium">{post.profile?.displayName}</span>
+                <span className="text-xs text-neutral-300 truncate font-medium">{post.profile!.displayName}</span>
                 {/* POAP badges */}
-                {post.profile?.badges && post.profile.badges.length > 0 && (
+                {post.profile!.badges && post.profile!.badges.length > 0 && (
                   <div className="flex items-center gap-0.5 flex-shrink-0">
-                    {post.profile.badges.slice(0, 2).map((badge: string, i: number) => (
+                    {post.profile!.badges.slice(0, 2).map((badge: string, i: number) => (
                       <span key={i} className="text-xs" title={badge}>
                         {badge.includes('🎵') ? '🎵' : badge.includes('🔥') ? '🔥' : badge.includes('🏆') ? '🏆' : '⭐'}
                       </span>
@@ -353,6 +356,8 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                   </div>
                 )}
               </Link>
+            ) : (
+              <span className="text-xs text-neutral-500">Unknown user</span>
             )}
 
             {/* Stats with glow effect */}
