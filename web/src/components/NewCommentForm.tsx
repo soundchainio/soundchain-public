@@ -96,7 +96,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
-      {({ isSubmitting, isValid, dirty, values }: FormikProps<FormValues>) => {
+      {({ isSubmitting, isValid, dirty, values, setFieldValue }: FormikProps<FormValues>) => {
         // Detect and normalize links in comment body
         useEffect(() => {
           const detectLink = async () => {
@@ -113,13 +113,9 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
         const handleEmojiSelect = (emoji: Emoji) => {
           const currentBody = values.body || ''
           if (currentBody.length < 160) {
-            // Use Formik's setFieldValue to update the body
             const newBody = currentBody + emoji.native
-            // Access setFieldValue from Formik context
-            ;(document.getElementById('commentField') as HTMLTextAreaElement).value = newBody
-            // Trigger a change event
-            const event = new Event('input', { bubbles: true })
-            ;(document.getElementById('commentField') as HTMLTextAreaElement).dispatchEvent(event)
+            // Use Formik's setFieldValue to properly update form state
+            setFieldValue('body', newBody)
           }
           setShowEmojiPicker(false)
         }
@@ -127,14 +123,10 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
         const handleStickerSelect = (stickerUrl: string, stickerName: string) => {
           const currentBody = values.body || ''
           // Insert animated emote as markdown image
-          const emoteMarkdown = ` ![emote:${stickerName}](${stickerUrl}) `
+          const emoteMarkdown = `![emote:${stickerName}](${stickerUrl})`
           if (currentBody.length + emoteMarkdown.length <= 160) {
-            const textarea = document.getElementById('commentField') as HTMLTextAreaElement
-            if (textarea) {
-              textarea.value = currentBody + emoteMarkdown
-              const event = new Event('input', { bubbles: true })
-              textarea.dispatchEvent(event)
-            }
+            // Use Formik's setFieldValue to properly update form state
+            setFieldValue('body', currentBody + emoteMarkdown)
           }
           setShowStickerPicker(false)
         }
