@@ -112,7 +112,174 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
     }
   }
 
-  // Grid view (compact cards) - Premium Web3 Design
+  // Shared media render component for both views
+  const renderMediaPreview = (aspectClass: string, showFullControls: boolean = false) => (
+    <div className={`relative ${aspectClass} overflow-hidden bg-black`}>
+      {/* Playing state - show ReactPlayer with controls */}
+      {isPlaying && canPlayInline ? (
+        <div className="w-full h-full bg-black">
+          <ReactPlayer
+            url={post.mediaLink!}
+            width="100%"
+            height="100%"
+            playing={true}
+            controls
+            playsinline
+            light={false}
+            config={{
+              youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+              soundcloud: { options: { visual: true, buying: false, sharing: false } },
+            }}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsPlaying(false) }}
+            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/80 backdrop-blur flex items-center justify-center hover:bg-black transition-colors"
+          >
+            <Pause className="w-4 h-4 text-white" fill="white" />
+          </button>
+        </div>
+      ) : (
+        <>
+          {/* YouTube thumbnail or Track artwork */}
+          {(youtubeThumbnail || trackArtwork) ? (
+            <img
+              src={youtubeThumbnail || trackArtwork || ''}
+              alt={hasTrack ? post.track?.title || 'Track' : 'Media'}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
+          ) : hasMediaLink ? (
+            /* Live embed preview for Spotify, SoundCloud, Bandcamp - REAL WIDGET */
+            <div className="w-full h-full bg-black relative">
+              <ReactPlayer
+                url={post.mediaLink!}
+                width="100%"
+                height="100%"
+                playing={false}
+                controls={false}
+                muted={true}
+                light={false}
+                playsinline
+                config={{
+                  soundcloud: { options: { visual: true, show_artwork: true, show_user: false, buying: false, sharing: false, download: false, show_playcount: false } },
+                  spotify: { },
+                }}
+                style={{ pointerEvents: 'none' }}
+              />
+              {/* Subtle overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+            </div>
+          ) : (
+            /* Fallback for unknown platforms */
+            <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} flex items-center justify-center`}>
+              <span className="text-4xl">{platformBrand.icon}</span>
+            </div>
+          )}
+
+          {/* Platform badge - always show for media links */}
+          {hasMediaLink && !hasTrack && (
+            <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/70 backdrop-blur-sm border border-white/10 z-10">
+              <span className="text-sm">{platformBrand.icon}</span>
+              <span className="text-[10px] text-white/90 font-semibold uppercase tracking-wider">
+                {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
+                 platformType === MediaProvider.SPOTIFY ? 'Spotify' :
+                 platformType === MediaProvider.BANDCAMP ? 'Bandcamp' :
+                 platformType === MediaProvider.YOUTUBE ? 'YouTube' :
+                 platformType.charAt(0).toUpperCase() + platformType.slice(1).toLowerCase()}
+              </span>
+            </div>
+          )}
+
+          {/* Track info overlay */}
+          {hasTrack && (
+            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+              <div className="flex items-center gap-1.5">
+                <Volume2 className="w-3 h-3 text-cyan-400" />
+                <p className="text-white text-xs font-semibold truncate">{post.track?.title}</p>
+              </div>
+              <p className="text-neutral-400 text-[10px] truncate pl-4">{post.track?.artist}</p>
+            </div>
+          )}
+
+          {/* Play button overlay */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (hasTrack) {
+                handleOnPlayClicked((post.track as Track).id)
+              } else if (canPlayInline) {
+                setIsPlaying(true)
+              } else if (post.mediaLink) {
+                window.open(post.mediaLink, '_blank')
+              }
+            }}
+            className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          >
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg ${platformBrand.glow} hover:scale-110 transition-transform`}>
+              <Play className="w-5 h-5 text-black ml-0.5" fill="black" />
+            </div>
+          </button>
+        </>
+      )}
+    </div>
+  )
+
+  // LIST VIEW - Horizontal layout
+  if (listView) {
+    return (
+      <div
+        className="group bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden hover:border-cyan-500/30 transition-all cursor-pointer"
+        onClick={handleCardClick}
+      >
+        <div className="flex gap-3 p-2">
+          {/* Media - Left side */}
+          {hasMedia && (
+            <div className="w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+              {renderMediaPreview('w-full h-full', false)}
+            </div>
+          )}
+
+          {/* Content - Right side */}
+          <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+            {/* User info */}
+            <div className="flex items-center gap-2 mb-1">
+              {isGuest ? (
+                <>
+                  <GuestAvatar walletAddress={post.walletAddress!} pixels={20} />
+                  <span className="text-[10px] text-neutral-400 truncate">{formatWalletAddress(post.walletAddress!)}</span>
+                </>
+              ) : (
+                <Link href={`/dex/profile/${post.profile?.userHandle}`} className="flex items-center gap-1.5 hover:opacity-80" onClick={(e) => e.stopPropagation()}>
+                  <Avatar profile={post.profile!} pixels={20} />
+                  <span className="text-xs text-neutral-300 font-medium truncate">{post.profile?.displayName}</span>
+                  {post.profile?.verified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
+                </Link>
+              )}
+            </div>
+
+            {/* Body text */}
+            {post.body && <p className="text-xs text-neutral-200 line-clamp-2">{post.body}</p>}
+
+            {/* Stats */}
+            <div className="flex items-center gap-3 mt-1">
+              {(post.totalReactions || 0) > 0 && (
+                <span className="flex items-center gap-1 text-neutral-500 text-[10px]">
+                  <Heart className="w-3 h-3" /> {post.totalReactions}
+                </span>
+              )}
+              {(post.commentCount || 0) > 0 && (
+                <span className="flex items-center gap-1 text-neutral-500 text-[10px]">
+                  <MessageCircle className="w-3 h-3" /> {post.commentCount}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // GRID VIEW (compact cards) - Premium Web3 Design
   return (
     <div
       className="group relative bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-800 rounded-2xl overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
@@ -131,141 +298,8 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
 
       {/* Main content container */}
       <div className="relative bg-neutral-900 rounded-2xl overflow-hidden h-full flex flex-col">
-        {/* Media Section */}
-        {hasMedia && (
-          <div className="relative aspect-square overflow-hidden">
-            {/* Playing state - show ReactPlayer */}
-            {isPlaying && canPlayInline ? (
-              <div className="w-full h-full bg-black">
-                <ReactPlayer
-                  url={post.mediaLink!}
-                  width="100%"
-                  height="100%"
-                  playing={true}
-                  controls
-                  playsinline
-                  light={false}
-                  config={{
-                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-                    soundcloud: { options: { visual: true, buying: false, sharing: false } },
-                  }}
-                />
-                {/* Stop button overlay */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setIsPlaying(false)
-                  }}
-                  className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/80 backdrop-blur flex items-center justify-center hover:bg-black transition-colors"
-                >
-                  <Pause className="w-4 h-4 text-white" fill="white" />
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Thumbnail or Live Embed Preview */}
-                {(youtubeThumbnail || trackArtwork) ? (
-                  /* YouTube thumbnail or Track artwork */
-                  <img
-                    src={youtubeThumbnail || trackArtwork || ''}
-                    alt={hasTrack ? post.track?.title || 'Track' : 'Media'}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                ) : hasMediaLink ? (
-                  /* Live embed preview for Spotify, SoundCloud, Bandcamp, etc. */
-                  <div className="w-full h-full bg-black relative">
-                    <ReactPlayer
-                      url={post.mediaLink!}
-                      width="100%"
-                      height="100%"
-                      playing={false}
-                      controls={false}
-                      muted={true}
-                      light={false}
-                      playsinline
-                      config={{
-                        soundcloud: { options: { visual: true, show_artwork: true, show_user: false, buying: false, sharing: false, download: false, show_playcount: false } },
-                        spotify: { },
-                      }}
-                      style={{ pointerEvents: 'none' }}
-                    />
-                    {/* Overlay to prevent interaction and show play button */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
-                    {/* Platform badge */}
-                    <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/70 backdrop-blur-sm border border-white/10">
-                      <span className="text-sm">{platformBrand.icon}</span>
-                      <span className="text-[10px] text-white/90 font-semibold uppercase tracking-wider">
-                        {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
-                         platformType === MediaProvider.SPOTIFY ? 'Spotify' :
-                         platformType === MediaProvider.BANDCAMP ? 'Bandcamp' :
-                         platformType.charAt(0).toUpperCase() + platformType.slice(1).toLowerCase()}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  /* Fallback gradient for unknown platforms */
-                  <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} flex items-center justify-center`}>
-                    <span className="text-6xl">{platformBrand.icon}</span>
-                  </div>
-                )}
-
-                {/* Play Button Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      if (hasTrack) {
-                        handleOnPlayClicked((post.track as Track).id)
-                      } else if (canPlayInline) {
-                        setIsPlaying(true)
-                      } else if (post.mediaLink) {
-                        window.open(post.mediaLink, '_blank')
-                      }
-                    }}
-                    className={`
-                      w-16 h-16 rounded-full flex items-center justify-center
-                      bg-gradient-to-br from-cyan-400 via-cyan-500 to-cyan-600
-                      shadow-lg ${platformBrand.glow} shadow-xl
-                      transform transition-all duration-300
-                      hover:scale-110 hover:shadow-2xl
-                      opacity-0 group-hover:opacity-100
-                      backdrop-blur-sm
-                    `}
-                  >
-                    <Play className="w-7 h-7 text-black ml-1" fill="black" />
-                  </button>
-                </div>
-
-                {/* Platform badge - top left */}
-                {hasMediaLink && !hasTrack && (
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
-                    <span className="text-sm">{platformBrand.icon}</span>
-                    <span className="text-[10px] text-white/90 font-semibold uppercase tracking-wider">
-                      {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
-                       platformType === MediaProvider.YOUTUBE ? 'YouTube' :
-                       platformType.charAt(0).toUpperCase() + platformType.slice(1).toLowerCase()}
-                    </span>
-                  </div>
-                )}
-
-                {/* Track info overlay - bottom */}
-                {hasTrack && (
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
-                      <p className="text-white text-sm font-semibold truncate">{post.track?.title}</p>
-                    </div>
-                    <p className="text-neutral-400 text-xs truncate pl-5">{post.track?.artist}</p>
-                  </div>
-                )}
-
-                {/* Hover gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              </>
-            )}
-          </div>
-        )}
+        {/* Media Section - uses shared renderMediaPreview */}
+        {hasMedia && renderMediaPreview('aspect-square', true)}
 
         {/* Text-only posts - glassmorphism card */}
         {!hasMedia && post.body && (
