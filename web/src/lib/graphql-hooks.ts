@@ -12,6 +12,7 @@ export {
   useChangeReactionMutation,
   useReactToPostMutation,
   useRetractReactionMutation,
+  useGuestReactToPostMutation,
   DefaultWallet,
   ReactionType,
   UploadUrlDocument,  // This is a value (gql document), not just a type!
