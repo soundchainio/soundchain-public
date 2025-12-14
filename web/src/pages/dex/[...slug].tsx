@@ -623,15 +623,38 @@ function DEXDashboard() {
 
   // Explore Users Query - search for users/profiles
   // Load all users when on users tab (no search filter = returns all sorted by follower count)
-  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers } = useExploreUsersQuery({
+  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers, fetchMore: fetchMoreUsers } = useExploreUsersQuery({
     variables: {
       search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view = get ALL users
-      page: { first: 50 } // Max allowed by API validation is 50
+      page: { first: 200 } // Increased limit for users tab - show more profiles
     },
     skip: selectedView !== 'explore' && selectedView !== 'users',
     fetchPolicy: 'network-only', // Always fetch fresh data
     notifyOnNetworkStatusChange: true,
   })
+
+  // Load more users handler
+  const handleLoadMoreUsers = () => {
+    if (exploreUsersData?.exploreUsers?.pageInfo?.hasNextPage) {
+      fetchMoreUsers({
+        variables: {
+          page: {
+            first: 200,
+            after: exploreUsersData.exploreUsers.pageInfo.endCursor,
+          },
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev
+          return {
+            exploreUsers: {
+              ...fetchMoreResult.exploreUsers,
+              nodes: [...prev.exploreUsers.nodes, ...fetchMoreResult.exploreUsers.nodes],
+            },
+          }
+        },
+      })
+    }
+  }
 
   // Debug: Log users query state
   useEffect(() => {
@@ -1758,6 +1781,7 @@ function DEXDashboard() {
                       </div>
                     </div>
                   ) : exploreUsersData?.exploreUsers?.nodes?.length > 0 ? (
+                    <>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2">
                       {exploreUsersData.exploreUsers.nodes.map((profile: any) => {
                         // Check if profile picture is a video/gif
@@ -1811,6 +1835,27 @@ function DEXDashboard() {
                         )
                       })}
                     </div>
+                    {/* Load More Button */}
+                    {exploreUsersData?.exploreUsers?.pageInfo?.hasNextPage && (
+                      <div className="flex justify-center mt-6">
+                        <Button
+                          variant="outline"
+                          onClick={handleLoadMoreUsers}
+                          disabled={exploreUsersLoading}
+                          className="bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20"
+                        >
+                          {exploreUsersLoading ? (
+                            <>
+                              <div className="animate-spin h-4 w-4 border-2 border-indigo-400 border-t-transparent rounded-full mr-2" />
+                              Loading...
+                            </>
+                          ) : (
+                            <>Load More Users</>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                    </>
                   ) : (
                     <Card className="retro-card p-8 text-center">
                       <Users className="w-12 h-12 mx-auto mb-4 text-indigo-400 opacity-50" />

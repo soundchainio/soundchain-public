@@ -4,7 +4,7 @@ import { Field, InputType, Int } from 'type-graphql';
 @InputType()
 export class PageInput {
   @Min(1)
-  @Max(50)
+  @Max(200)
   @Field(() => Int, { nullable: true })
   first?: number;
 
