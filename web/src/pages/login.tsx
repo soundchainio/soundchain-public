@@ -338,24 +338,39 @@ export default function LoginPage() {
         // Always try to get redirect result - Magic handles state internally
         // This will return null/undefined if there's no OAuth redirect to process
         console.log('[OAuth2] Calling getRedirectResult...');
-        const result = await (magic as any).oauth2.getRedirectResult();
+
+        // Add timeout to prevent hanging indefinitely
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('OAuth redirect check timed out')), 8000)
+        );
+
+        const result = await Promise.race([
+          (magic as any).oauth2.getRedirectResult(),
+          timeoutPromise
+        ]);
         console.log('[OAuth2] getRedirectResult returned:', result);
 
         if (result && result.magic?.idToken) {
           console.log('[OAuth2] Got OAuth result with idToken!');
           setLoggingIn(true);
 
-          const didToken = result.magic.idToken;
-          localStorage.setItem('didToken', didToken);
+          try {
+            const didToken = result.magic.idToken;
+            localStorage.setItem('didToken', didToken);
 
-          const loginResult = await login({ variables: { input: { token: didToken } } });
-          if (loginResult.data?.login.jwt) {
-            await setJwt(loginResult.data.login.jwt);
-            await new Promise(resolve => setTimeout(resolve, 200));
-            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            router.push(redirectUrl);
-          } else {
-            throw new Error('Login failed: No JWT returned');
+            const loginResult = await login({ variables: { input: { token: didToken } } });
+            if (loginResult.data?.login.jwt) {
+              await setJwt(loginResult.data.login.jwt);
+              await new Promise(resolve => setTimeout(resolve, 200));
+              const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+              router.push(redirectUrl);
+            } else {
+              throw new Error('Login failed: No JWT returned');
+            }
+          } catch (loginErr: any) {
+            console.error('[OAuth2] Login mutation failed:', loginErr);
+            setError(loginErr.message || 'Login failed after OAuth');
+            setLoggingIn(false);
           }
         } else {
           console.log('[OAuth2] No OAuth redirect result (normal for fresh page load)');
@@ -363,7 +378,9 @@ export default function LoginPage() {
       } catch (error: any) {
         // getRedirectResult throws if there's no OAuth redirect in progress - this is expected
         const errorMsg = error?.message || '';
-        if (errorMsg.includes('Magic') || errorMsg.includes('oauth') || errorMsg.includes('redirect')) {
+        if (errorMsg.includes('timed out')) {
+          console.log('[OAuth2] getRedirectResult timed out (continuing without OAuth)');
+        } else if (errorMsg.includes('Magic') || errorMsg.includes('oauth') || errorMsg.includes('redirect')) {
           console.log('[OAuth2] No OAuth redirect to process (expected):', errorMsg);
         } else {
           console.error('[OAuth2] Unexpected error:', error);
