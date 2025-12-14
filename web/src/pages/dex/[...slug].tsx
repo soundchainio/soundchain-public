@@ -626,7 +626,7 @@ function DEXDashboard() {
   const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers } = useExploreUsersQuery({
     variables: {
       search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view = get ALL users
-      page: { first: selectedView === 'users' ? 200 : 20 } // Load more users on users view (200 for pagination)
+      page: { first: 50 } // Max allowed by API validation is 50
     },
     skip: selectedView !== 'explore' && selectedView !== 'users',
     fetchPolicy: 'network-only', // Always fetch fresh data

@@ -14,6 +14,7 @@ import { PostFormTimeline } from './PostFormTimeline'
 import { PostSkeleton } from './PostSkeleton'
 import { LayoutGrid, List as ListIcon, X, MessageCircle } from 'lucide-react'
 import { Comments } from '../Comment/Comments'
+import { NewCommentForm } from '../NewCommentForm'
 
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
@@ -89,6 +90,9 @@ const PostDetailModal = ({ postId, onClose, handleOnPlayClicked }: { postId: str
                 <h3 className="text-white font-semibold">Comments</h3>
                 <span className="text-neutral-500 text-sm">({data.post.commentCount || 0})</span>
               </div>
+              {/* New Comment Form with emoji/sticker support */}
+              <NewCommentForm postId={postId} />
+              {/* Existing Comments */}
               <Comments postId={postId} />
             </div>
           </div>

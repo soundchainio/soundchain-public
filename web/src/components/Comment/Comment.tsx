@@ -9,6 +9,7 @@ import { Avatar } from '../Avatar'
 import { CommentSkeleton } from './CommentSkeleton'
 import { DisplayName } from '../DisplayName'
 import { Timestamp } from '../Timestamp'
+import { EmoteRenderer } from '../EmoteRenderer'
 
 interface CommentProps {
   commentId: string
@@ -58,7 +59,7 @@ export const Comment = ({ commentId }: CommentProps) => {
           </div>
         </div>
         <pre className="mt-1 whitespace-pre-wrap break-words text-sm font-thin tracking-wide text-white">
-          {comment.body}
+          <EmoteRenderer text={comment.body} />
         </pre>
       </div>
     </div>

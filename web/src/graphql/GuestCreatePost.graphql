@@ -4,12 +4,10 @@ mutation GuestCreatePost($input: CreatePostInput!, $walletAddress: String!) {
       id
       body
       mediaLink
-      walletAddress
-      isGuest
       createdAt
-      totalReactions
-      topReactions(top: 2)
-      commentCount
+      updatedAt
+      isGuest
+      walletAddress
     }
   }
 }

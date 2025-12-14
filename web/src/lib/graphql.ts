@@ -2255,7 +2255,7 @@ export type CreatePostMutationVariables = Exact<{
 }>;
 
 
-export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string } } };
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null } } };
 
 export type CreateProfileVerificationRequestMutationVariables = Exact<{
   input: CreateProfileVerificationRequestInput;
@@ -2573,9 +2573,9 @@ export type PostQueryVariables = Exact<{
 }>;
 
 
-export type PostQuery = { __typename?: 'Query', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
+export type PostQuery = { __typename?: 'Query', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
 
-export type PostComponentFieldsFragment = { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null }, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null };
+export type PostComponentFieldsFragment = { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null };
 
 export type PostsQueryVariables = Exact<{
   filter?: InputMaybe<FilterPostInput>;
@@ -3264,6 +3264,8 @@ export const PostComponentFieldsFragmentDoc = gql`
   topReactions(top: 2)
   myReaction
   deleted
+  isGuest
+  walletAddress
   profile {
     id
     displayName
@@ -4103,6 +4105,12 @@ export const CreatePostDocument = gql`
   createPost(input: $input) {
     post {
       id
+      body
+      mediaLink
+      createdAt
+      updatedAt
+      isGuest
+      walletAddress
     }
   }
 }
@@ -7792,7 +7800,7 @@ export type GuestCreatePostMutationVariables = Exact<{
   walletAddress: Scalars['String']['input'];
 }>;
 
-export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, walletAddress: string | null, isGuest: boolean, createdAt: string, totalReactions: number, topReactions: Array<ReactionType>, commentCount: number } } };
+export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null } } };
 
 export const GuestCreatePostDocument = gql`
     mutation GuestCreatePost($input: CreatePostInput!, $walletAddress: String!) {
@@ -7801,12 +7809,10 @@ export const GuestCreatePostDocument = gql`
       id
       body
       mediaLink
-      walletAddress
-      isGuest
       createdAt
-      totalReactions
-      topReactions(top: 2)
-      commentCount
+      updatedAt
+      isGuest
+      walletAddress
     }
   }
 }

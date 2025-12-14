@@ -5,8 +5,9 @@ import ReactPlayer from 'react-player'
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { Play, Pause, Heart, MessageCircle, Share2, Sparkles, BadgeCheck, ExternalLink, Volume2 } from 'lucide-react'
-import { IdentifySource, canPlayWithReactPlayer } from 'utils/NormalizeEmbedLinks'
+import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
+import { EmoteRenderer } from '../EmoteRenderer'
 
 interface CompactPostProps {
   post: PostQuery['post']
@@ -99,9 +100,6 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   // Track artwork
   const trackArtwork = hasTrack ? post.track?.artworkUrl : null
 
-  // Can play inline with ReactPlayer
-  const canPlayInline = hasMediaLink && canPlayWithReactPlayer(post.mediaLink!)
-
   // Handle card click to open post modal
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger if clicking on play button or links
@@ -113,25 +111,42 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
     }
   }
 
+  // Check if this platform needs direct iframe (Spotify, SoundCloud, Bandcamp)
+  const needsDirectIframe = platformType === MediaProvider.SPOTIFY ||
+                            platformType === MediaProvider.SOUNDCLOUD ||
+                            platformType === MediaProvider.BANDCAMP
+
   // Shared media render component for both views
   const renderMediaPreview = (aspectClass: string, showFullControls: boolean = false) => (
     <div className={`relative ${aspectClass} overflow-hidden bg-black`}>
-      {/* Playing state - show ReactPlayer with controls */}
-      {isPlaying && canPlayInline ? (
+      {/* Playing state - show actual player */}
+      {isPlaying && hasMediaLink ? (
         <div className="w-full h-full bg-black">
-          <ReactPlayer
-            url={post.mediaLink!}
-            width="100%"
-            height="100%"
-            playing={true}
-            controls
-            playsinline
-            light={false}
-            config={{
-              youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-              soundcloud: { options: { visual: true, buying: false, sharing: false } },
-            }}
-          />
+          {needsDirectIframe ? (
+            // Direct iframe for Spotify/SoundCloud/Bandcamp - allows user interaction
+            <iframe
+              src={post.mediaLink!}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              className="w-full h-full"
+            />
+          ) : (
+            // ReactPlayer for YouTube/Vimeo/etc
+            <ReactPlayer
+              url={post.mediaLink!}
+              width="100%"
+              height="100%"
+              playing={true}
+              controls
+              playsinline
+              light={false}
+              config={{
+                youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+              }}
+            />
+          )}
           <button
             onClick={(e) => { e.stopPropagation(); setIsPlaying(false) }}
             className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/80 backdrop-blur flex items-center justify-center hover:bg-black transition-colors"
@@ -149,31 +164,38 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
-          ) : hasMediaLink ? (
-            /* Direct iframe embed for Spotify, SoundCloud, Bandcamp - shows actual widget artwork */
-            <div className="w-full h-full bg-black relative overflow-hidden">
-              <iframe
-                src={post.mediaLink!}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-                className="absolute inset-0 w-full h-full"
-                style={{
-                  pointerEvents: 'none',
-                  transform: platformType === MediaProvider.SPOTIFY ? 'scale(1.5)' :
-                             platformType === MediaProvider.SOUNDCLOUD ? 'scale(1.2)' : 'scale(1)',
-                  transformOrigin: 'center center'
-                }}
-              />
-              {/* Clickable overlay to prevent iframe interaction and add subtle gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
-            </div>
           ) : (
-            /* Fallback for unknown platforms */
-            <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} flex items-center justify-center`}>
-              <span className="text-4xl">{platformBrand.icon}</span>
+            /* Platform Branded Card - Premium Web3 Style for Spotify/SoundCloud/Bandcamp/etc */
+            <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} relative overflow-hidden`}>
+              {/* Animated mesh gradient background */}
+              <div className="absolute inset-0 opacity-30">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.3),transparent_50%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,255,255,0.2),transparent_50%)]" />
+                <div className="absolute inset-0 bg-[conic-gradient(from_90deg_at_50%_50%,transparent,rgba(255,255,255,0.1),transparent)]" />
+              </div>
+
+              {/* Animated particles/sparkles effect */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/40 rounded-full animate-pulse" />
+                <div className="absolute top-3/4 right-1/4 w-1.5 h-1.5 bg-white/30 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+                <div className="absolute bottom-1/4 left-1/3 w-1 h-1 bg-white/50 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+              </div>
+
+              {/* Platform icon - large and centered */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-5xl drop-shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
+                  {platformBrand.icon}
+                </span>
+                <span className="mt-2 text-white/90 font-bold text-sm tracking-wider drop-shadow-lg uppercase">
+                  {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
+                   platformType === MediaProvider.SPOTIFY ? 'Spotify' :
+                   platformType === MediaProvider.BANDCAMP ? 'Bandcamp' :
+                   platformType.charAt(0).toUpperCase() + platformType.slice(1).toLowerCase()}
+                </span>
+              </div>
+
+              {/* Glassmorphism overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>
           )}
 
@@ -208,10 +230,9 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               e.stopPropagation()
               if (hasTrack) {
                 handleOnPlayClicked((post.track as Track).id)
-              } else if (canPlayInline) {
+              } else if (hasMediaLink) {
+                // All media links are now playable inline
                 setIsPlaying(true)
-              } else if (post.mediaLink) {
-                window.open(post.mediaLink, '_blank')
               }
             }}
             className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity z-10"
@@ -260,8 +281,12 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               )}
             </div>
 
-            {/* Body text */}
-            {post.body && <p className="text-xs text-neutral-200 line-clamp-2">{post.body}</p>}
+            {/* Body text with animated emotes */}
+            {post.body && (
+              <p className="text-xs text-neutral-200 line-clamp-2">
+                <EmoteRenderer text={post.body} />
+              </p>
+            )}
 
             {/* Stats */}
             <div className="flex items-center gap-3 mt-1">
@@ -311,7 +336,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.1),transparent_70%)]" />
             <Sparkles className="absolute top-4 right-4 w-5 h-5 text-cyan-400/50" />
             <p className="text-sm text-neutral-200 line-clamp-6 relative z-10 text-center leading-relaxed">
-              {post.body}
+              <EmoteRenderer text={post.body} />
             </p>
           </div>
         )}

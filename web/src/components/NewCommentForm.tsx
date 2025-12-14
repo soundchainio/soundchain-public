@@ -100,12 +100,14 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
           setShowEmojiPicker(false)
         }
 
-        const handleStickerSelect = (sticker: string) => {
+        const handleStickerSelect = (stickerUrl: string, stickerName: string) => {
           const currentBody = values.body || ''
-          if (currentBody.length + sticker.length <= 160) {
+          // Insert animated emote as markdown image
+          const emoteMarkdown = ` ![emote:${stickerName}](${stickerUrl}) `
+          if (currentBody.length + emoteMarkdown.length <= 160) {
             const textarea = document.getElementById('commentField') as HTMLTextAreaElement
             if (textarea) {
-              textarea.value = currentBody + sticker
+              textarea.value = currentBody + emoteMarkdown
               const event = new Event('input', { bubbles: true })
               textarea.dispatchEvent(event)
             }

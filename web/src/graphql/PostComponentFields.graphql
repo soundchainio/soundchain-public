@@ -11,6 +11,8 @@ fragment PostComponentFields on Post {
   topReactions(top: 2)
   myReaction
   deleted
+  isGuest
+  walletAddress
   profile {
     id
     displayName

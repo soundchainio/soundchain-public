@@ -20,6 +20,7 @@ import { PostActions } from './PostActions'
 import { PostSkeleton } from './PostSkeleton'
 import { PostStats } from './PostStats'
 import { RepostPreview } from './RepostPreview'
+import { PostBodyWithEmotes } from '../EmoteRenderer'
 
 interface PostProps {
   post: PostQuery['post']
@@ -128,13 +129,14 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         )}
       </header>
 
-      {/* Body text - compact */}
+      {/* Body text - compact with animated emotes */}
       {post.body && (
         <div className="px-3 pb-2">
           <LinkItUrl className="text-cyan-400 hover:underline">
-            <p className="text-sm text-neutral-100 whitespace-pre-wrap break-words leading-relaxed">
-              {post.body}
-            </p>
+            <PostBodyWithEmotes
+              body={post.body}
+              className="text-sm text-neutral-100 whitespace-pre-wrap break-words leading-relaxed"
+            />
           </LinkItUrl>
         </div>
       )}

@@ -28,8 +28,18 @@ import { useMe } from 'hooks/useMe'
 
 export const PostFormTimeline = () => {
   const me = useMe()
-  const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
-  const [guestCreatePost] = useGuestCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
+
+  // Use refetchQueries to reload posts after creation
+  // This ensures the feed updates with the new post
+  const [createPost] = useCreatePostMutation({
+    refetchQueries: ['Posts'],
+    awaitRefetchQueries: true, // Wait for refetch to complete before success toast
+  })
+
+  const [guestCreatePost] = useGuestCreatePostMutation({
+    refetchQueries: ['Posts'],
+    awaitRefetchQueries: true,
+  })
 
   const [postBody, setPostBody] = useState('')
   const [isMusicLinkVisible, setMusicLinkVisible] = useState(false)
@@ -123,9 +133,11 @@ export const PostFormTimeline = () => {
     })
   }
 
-  const handleSelectSticker = (sticker: string) => {
+  const handleSelectSticker = (stickerUrl: string, stickerName: string) => {
+    // Insert emote as an inline image markdown that can be rendered
+    // Format: ![emote:name](url) - custom format for animated emotes
     setPostBody(currentBody => {
-      return `${currentBody}${sticker}`
+      return `${currentBody} ![emote:${stickerName}](${stickerUrl}) `
     })
   }
 
@@ -220,8 +232,8 @@ export const PostFormTimeline = () => {
                   </Popover.Button>
                   <Popover.Panel className="absolute left-0 z-50 mt-2">
                     <StickerPicker
-                      onSelect={(sticker) => {
-                        handleSelectSticker(sticker)
+                      onSelect={(stickerUrl, stickerName) => {
+                        handleSelectSticker(stickerUrl, stickerName)
                         close()
                       }}
                       theme="dark"
