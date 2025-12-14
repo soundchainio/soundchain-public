@@ -110,6 +110,11 @@ export const Posts = ({ profileId }: PostsProps) => {
     [sizeMap],
   )
 
+  // Handle post click to open modal - MUST be before any conditional returns
+  const handlePostClick = useCallback((postId: string) => {
+    setSelectedPostId(postId)
+  }, [])
+
   if (loading) {
     return (
       <div className="space-y-2">
@@ -170,11 +175,6 @@ export const Posts = ({ profileId }: PostsProps) => {
     if (width < 900) return 4      // Tablet: 4 columns
     return 5                        // Desktop: 5 columns for tight stacking
   }
-
-  // Handle post click to open modal
-  const handlePostClick = useCallback((postId: string) => {
-    setSelectedPostId(postId)
-  }, [])
 
   // Grid cell renderer for compact view
   const GridCell = memo(({ columnIndex, rowIndex, style, data }: any) => {
