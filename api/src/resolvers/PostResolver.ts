@@ -35,6 +35,10 @@ import { UpdatePostPayload } from '../types/UpdatePostPayload';
 export class PostResolver {
   @FieldResolver(() => Profile, { nullable: true })
   async profile(@Ctx() { profileService }: Context, @Root() post: Post): Promise<Profile | null> {
+    // Guest posts don't have a profileId - return null
+    if (!post.profileId) {
+      return null;
+    }
     try {
       const profile = await profileService.getProfile(post.profileId.toString());
       return profile || null;

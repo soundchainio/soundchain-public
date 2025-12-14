@@ -33,7 +33,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -338,7 +338,7 @@ function DEXDashboard() {
       case 'settings': return 'settings'
       case 'messages': return 'messages'
       case 'notifications': return 'notifications'
-      case 'users': return 'users'
+      case 'users': return routeId ? 'profile' : 'users' // /dex/users/handle -> profile view
       case 'home': return 'feed' // Default /dex to feed
       default: return 'feed' // Feed is the default landing view
     }
@@ -668,12 +668,24 @@ function DEXDashboard() {
     fetchPolicy: 'cache-and-network',
   })
 
-  // Profile Detail Query - fetch single profile when viewing /dex/profile/[handle]
-  const { data: profileDetailData, loading: profileDetailLoading, error: profileDetailError } = useProfileQuery({
+  // Profile Detail Query - fetch single profile when viewing /dex/profile/[id]
+  const { data: profileDetailData, loading: viewingProfileLoading, error: profileDetailError } = useProfileQuery({
     variables: { id: routeId || '' },
-    skip: selectedView !== 'profile' || !routeId,
+    skip: selectedView !== 'profile' || !routeId || routeType === 'users',
     fetchPolicy: 'cache-and-network',
   })
+
+  // Profile By Handle Query - fetch profile by userHandle when viewing /dex/users/[handle]
+  const { data: profileByHandleData, loading: profileByHandleLoading, error: profileByHandleError } = useProfileByHandleQuery({
+    variables: { handle: routeId || '' },
+    skip: selectedView !== 'profile' || !routeId || routeType !== 'users',
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Merge profile data from either query source
+  const viewingProfile = viewingProfile || profileByHandleData?.profileByHandle
+  const viewingProfileLoading = viewingProfileLoading || profileByHandleLoading
+  const viewingProfileError = profileDetailError || profileByHandleError
 
   // Handle follow toggle
   const handleFollowToggle = async (profileId: string, isFollowed: boolean, handle: string) => {
@@ -1184,18 +1196,8 @@ function DEXDashboard() {
         {/* Main Content */}
         <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8">
           {/* View Tabs - LEGACY UI PATTERN WITH GRADIENT TEXT */}
-          {/* Order: Dashboard, Feed, Users first, then rest */}
+          {/* Order: Feed, Dashboard, Users first, then rest */}
           <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedView('dashboard')}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${selectedView === 'dashboard' ? 'bg-cyan-500/10' : ''}`}
-            >
-              <Home className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'dashboard' ? 'text-cyan-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'dashboard' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Dashboard
-              </span>
-            </Button>
             <Button
               variant="ghost"
               onClick={() => setSelectedView('feed')}
@@ -1204,6 +1206,16 @@ function DEXDashboard() {
               <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'feed' ? 'text-green-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'feed' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Feed
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedView('dashboard')}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${selectedView === 'dashboard' ? 'bg-cyan-500/10' : ''}`}
+            >
+              <Home className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'dashboard' ? 'text-cyan-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'dashboard' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Dashboard
               </span>
             </Button>
             <Button
@@ -3029,7 +3041,7 @@ function DEXDashboard() {
           {/* Profile View - /dex/profile/[handle] */}
           {selectedView === 'profile' && routeId && (
             <div className="space-y-6 pb-32 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-              {profileDetailLoading && (
+              {viewingProfileLoading && (
                 <div className="flex items-center justify-center py-16">
                   <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
                   <span className="ml-3 text-cyan-400">Loading profile...</span>
@@ -3041,7 +3053,7 @@ function DEXDashboard() {
                   <p className="text-gray-500 text-sm">{profileDetailError.message}</p>
                 </Card>
               )}
-              {profileDetailData?.profile && (
+              {viewingProfile && (
                 <>
                   {/* Back Button */}
                   <Button variant="ghost" onClick={() => router.back()} className="mb-4 hover:bg-cyan-500/10">
@@ -3053,9 +3065,9 @@ function DEXDashboard() {
                   <Card className="retro-card overflow-hidden">
                     {/* Cover Photo */}
                     <div className="h-48 bg-gradient-to-r from-purple-600 to-cyan-600 relative">
-                      {profileDetailData.profile.coverPicture && (
+                      {viewingProfile.coverPicture && (
                         <img
-                          src={profileDetailData.profile.coverPicture}
+                          src={viewingProfile.coverPicture}
                           alt="Cover"
                           className="w-full h-full object-cover"
                         />
@@ -3065,44 +3077,44 @@ function DEXDashboard() {
                     {/* Profile Info */}
                     <div className="p-6 -mt-16 relative">
                       <Avatar className="w-32 h-32 border-4 border-gray-900 mb-4">
-                        <AvatarImage src={profileDetailData.profile.profilePicture || ''} />
+                        <AvatarImage src={viewingProfile.profilePicture || ''} />
                         <AvatarFallback className="text-4xl bg-gray-800">
-                          {profileDetailData.profile.displayName?.charAt(0) || '?'}
+                          {viewingProfile.displayName?.charAt(0) || '?'}
                         </AvatarFallback>
                       </Avatar>
 
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <h1 className="text-2xl font-bold text-white">{profileDetailData.profile.displayName}</h1>
-                            {profileDetailData.profile.verified && (
+                            <h1 className="text-2xl font-bold text-white">{viewingProfile.displayName}</h1>
+                            {viewingProfile.verified && (
                               <BadgeCheck className="w-6 h-6 text-cyan-400" />
                             )}
-                            {profileDetailData.profile.teamMember && (
+                            {viewingProfile.teamMember && (
                               <SoundchainGoldLogo className="w-6 h-6" />
                             )}
                           </div>
-                          <p className="text-cyan-400 mb-2">@{profileDetailData.profile.userHandle}</p>
-                          {profileDetailData.profile.bio && (
-                            <p className="text-gray-300 max-w-xl mb-4">{profileDetailData.profile.bio}</p>
+                          <p className="text-cyan-400 mb-2">@{viewingProfile.userHandle}</p>
+                          {viewingProfile.bio && (
+                            <p className="text-gray-300 max-w-xl mb-4">{viewingProfile.bio}</p>
                           )}
                         </div>
 
                         {/* Action Buttons */}
                         <div className="flex gap-3 mt-4 md:mt-0">
-                          {me?.profile?.id !== profileDetailData.profile.id && (
+                          {me?.profile?.id !== viewingProfile.id && (
                             <>
                               <Button
                                 onClick={() => handleFollowToggle(
-                                  profileDetailData.profile!.id,
-                                  profileDetailData.profile!.isFollowed || false,
-                                  profileDetailData.profile!.userHandle || ''
+                                  viewingProfile!.id,
+                                  viewingProfile!.isFollowed || false,
+                                  viewingProfile!.userHandle || ''
                                 )}
                                 disabled={followLoading || unfollowLoading}
-                                className={profileDetailData.profile.isFollowed ? 'bg-gray-700 hover:bg-gray-600' : 'retro-button'}
+                                className={viewingProfile.isFollowed ? 'bg-gray-700 hover:bg-gray-600' : 'retro-button'}
                               >
                                 <Users className="w-4 h-4 mr-2" />
-                                {profileDetailData.profile.isFollowed ? 'Following' : 'Follow'}
+                                {viewingProfile.isFollowed ? 'Following' : 'Follow'}
                               </Button>
                               <Button variant="outline" className="border-cyan-500/50 hover:bg-cyan-500/10">
                                 <MessageCircle className="w-4 h-4 mr-2" />
@@ -3116,11 +3128,11 @@ function DEXDashboard() {
                       {/* Stats */}
                       <div className="flex gap-6 mt-4">
                         <div className="text-center">
-                          <div className="text-xl font-bold text-white">{profileDetailData.profile.followerCount || 0}</div>
+                          <div className="text-xl font-bold text-white">{viewingProfile.followerCount || 0}</div>
                           <div className="text-xs text-gray-400">Followers</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-xl font-bold text-white">{profileDetailData.profile.followingCount || 0}</div>
+                          <div className="text-xl font-bold text-white">{viewingProfile.followingCount || 0}</div>
                           <div className="text-xs text-gray-400">Following</div>
                         </div>
                       </div>
@@ -3128,37 +3140,37 @@ function DEXDashboard() {
                   </Card>
 
                   {/* Social Links */}
-                  {profileDetailData.profile.socialMedias && (
+                  {viewingProfile.socialMedias && (
                     <Card className="retro-card">
                       <CardContent className="p-6">
                         <h2 className="retro-title text-lg mb-4">Social Links</h2>
                         <div className="flex flex-wrap gap-3">
-                          {profileDetailData.profile.socialMedias.twitter && (
-                            <a href={profileDetailData.profile.socialMedias.twitter} target="_blank" rel="noreferrer">
+                          {viewingProfile.socialMedias.twitter && (
+                            <a href={viewingProfile.socialMedias.twitter} target="_blank" rel="noreferrer">
                               <Button variant="outline" size="sm" className="border-blue-500/50 hover:bg-blue-500/10">
                                 Twitter
                                 <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                             </a>
                           )}
-                          {profileDetailData.profile.socialMedias.instagram && (
-                            <a href={profileDetailData.profile.socialMedias.instagram} target="_blank" rel="noreferrer">
+                          {viewingProfile.socialMedias.instagram && (
+                            <a href={viewingProfile.socialMedias.instagram} target="_blank" rel="noreferrer">
                               <Button variant="outline" size="sm" className="border-pink-500/50 hover:bg-pink-500/10">
                                 Instagram
                                 <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                             </a>
                           )}
-                          {profileDetailData.profile.socialMedias.spotify && (
-                            <a href={profileDetailData.profile.socialMedias.spotify} target="_blank" rel="noreferrer">
+                          {viewingProfile.socialMedias.spotify && (
+                            <a href={viewingProfile.socialMedias.spotify} target="_blank" rel="noreferrer">
                               <Button variant="outline" size="sm" className="border-green-500/50 hover:bg-green-500/10">
                                 Spotify
                                 <ExternalLink className="w-3 h-3 ml-2" />
                               </Button>
                             </a>
                           )}
-                          {profileDetailData.profile.socialMedias.soundcloud && (
-                            <a href={profileDetailData.profile.socialMedias.soundcloud} target="_blank" rel="noreferrer">
+                          {viewingProfile.socialMedias.soundcloud && (
+                            <a href={viewingProfile.socialMedias.soundcloud} target="_blank" rel="noreferrer">
                               <Button variant="outline" size="sm" className="border-orange-500/50 hover:bg-orange-500/10">
                                 SoundCloud
                                 <ExternalLink className="w-3 h-3 ml-2" />
@@ -3171,12 +3183,12 @@ function DEXDashboard() {
                   )}
 
                   {/* Favorite Genres */}
-                  {(profileDetailData.profile.favoriteGenres?.length ?? 0) > 0 && (
+                  {(viewingProfile.favoriteGenres?.length ?? 0) > 0 && (
                     <Card className="retro-card">
                       <CardContent className="p-6">
                         <h2 className="retro-title text-lg mb-4">Favorite Genres</h2>
                         <div className="flex flex-wrap gap-2">
-                          {profileDetailData.profile.favoriteGenres?.map((genre) => (
+                          {viewingProfile.favoriteGenres?.map((genre) => (
                             <Badge key={genre} className="bg-purple-500/20 text-purple-400">{genre}</Badge>
                           ))}
                         </div>
