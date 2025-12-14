@@ -1,8 +1,10 @@
 import React from 'react'
+import { LinkItUrl } from 'react-linkify-it'
 
 interface EmoteRendererProps {
   text: string
   className?: string
+  linkify?: boolean
 }
 
 // Regex to match our custom emote format: ![emote:name](url)
@@ -12,11 +14,19 @@ const EMOTE_REGEX = /!\[emote:([^\]]+)\]\(([^)]+)\)/g
  * Renders text with inline animated emotes
  * Converts ![emote:name](url) to actual <img> tags
  */
-export const EmoteRenderer = ({ text, className = '' }: EmoteRendererProps) => {
+export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRendererProps) => {
   if (!text) return null
 
   // Check if text contains any emotes
   if (!text.includes('![emote:')) {
+    // No emotes - just linkify if needed
+    if (linkify) {
+      return (
+        <LinkItUrl className="text-cyan-400 hover:underline">
+          <span className={className}>{text}</span>
+        </LinkItUrl>
+      )
+    }
     return <span className={className}>{text}</span>
   }
 
@@ -29,9 +39,18 @@ export const EmoteRenderer = ({ text, className = '' }: EmoteRendererProps) => {
   EMOTE_REGEX.lastIndex = 0
 
   while ((match = EMOTE_REGEX.exec(text)) !== null) {
-    // Add text before the emote
+    // Add text before the emote (with linkification if enabled)
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index))
+      const textBefore = text.slice(lastIndex, match.index)
+      if (linkify) {
+        parts.push(
+          <LinkItUrl key={`link-${lastIndex}`} className="text-cyan-400 hover:underline">
+            {textBefore}
+          </LinkItUrl>
+        )
+      } else {
+        parts.push(textBefore)
+      }
     }
 
     const emoteName = match[1]
@@ -44,7 +63,7 @@ export const EmoteRenderer = ({ text, className = '' }: EmoteRendererProps) => {
         src={emoteUrl}
         alt={emoteName}
         title={emoteName}
-        className="inline-block w-6 h-6 align-middle mx-0.5"
+        className="inline-block w-7 h-7 align-middle mx-0.5"
         loading="lazy"
       />
     )
@@ -52,18 +71,33 @@ export const EmoteRenderer = ({ text, className = '' }: EmoteRendererProps) => {
     lastIndex = match.index + match[0].length
   }
 
-  // Add remaining text after last emote
+  // Add remaining text after last emote (with linkification if enabled)
   if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex))
+    const textAfter = text.slice(lastIndex)
+    if (linkify) {
+      parts.push(
+        <LinkItUrl key={`link-${lastIndex}`} className="text-cyan-400 hover:underline">
+          {textAfter}
+        </LinkItUrl>
+      )
+    } else {
+      parts.push(textAfter)
+    }
   }
 
   return <span className={className}>{parts}</span>
 }
 
+interface PostBodyWithEmotesProps {
+  body: string
+  className?: string
+  linkify?: boolean
+}
+
 /**
  * Renders text with emotes, wrapped in a paragraph for posts
  */
-export const PostBodyWithEmotes = ({ body, className = '' }: { body: string; className?: string }) => {
+export const PostBodyWithEmotes = ({ body, className = '', linkify = false }: PostBodyWithEmotesProps) => {
   if (!body) return null
 
   // Split by newlines to preserve formatting
@@ -73,7 +107,7 @@ export const PostBodyWithEmotes = ({ body, className = '' }: { body: string; cla
     <p className={className}>
       {lines.map((line, i) => (
         <React.Fragment key={i}>
-          <EmoteRenderer text={line} />
+          <EmoteRenderer text={line} linkify={linkify} />
           {i < lines.length - 1 && <br />}
         </React.Fragment>
       ))}

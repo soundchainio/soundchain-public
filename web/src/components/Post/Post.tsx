@@ -5,7 +5,6 @@ import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
-import { LinkItUrl } from 'react-linkify-it'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
@@ -132,12 +131,11 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
       {/* Body text - compact with animated emotes */}
       {post.body && (
         <div className="px-3 pb-2">
-          <LinkItUrl className="text-cyan-400 hover:underline">
-            <PostBodyWithEmotes
-              body={post.body}
-              className="text-sm text-neutral-100 whitespace-pre-wrap break-words leading-relaxed"
-            />
-          </LinkItUrl>
+          <PostBodyWithEmotes
+            body={post.body}
+            className="text-sm text-neutral-100 whitespace-pre-wrap break-words leading-relaxed"
+            linkify
+          />
         </div>
       )}
 

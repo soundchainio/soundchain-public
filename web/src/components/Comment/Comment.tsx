@@ -59,7 +59,7 @@ export const Comment = ({ commentId }: CommentProps) => {
           </div>
         </div>
         <pre className="mt-1 whitespace-pre-wrap break-words text-sm font-thin tracking-wide text-white">
-          <EmoteRenderer text={comment.body} />
+          <EmoteRenderer text={comment.body} linkify />
         </pre>
       </div>
     </div>
