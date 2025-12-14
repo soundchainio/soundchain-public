@@ -33,6 +33,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   if (!post) return <PostSkeleton />
 
   const isGuest = post?.isGuest && post?.walletAddress
+  const hasProfile = !!post?.profile
   const isAuthor = isGuest
     ? false // Guests can't edit through regular flow
     : post?.profile?.id == me?.profile?.id
@@ -78,16 +79,16 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
               />
             </div>
           </div>
-        ) : (
+        ) : hasProfile ? (
           // Regular user post header
-          <Link href={`/dex/profile/${post.profile?.userHandle}`} className="flex items-center gap-2.5 min-w-0 flex-1">
+          <Link href={`/dex/profile/${post.profile!.userHandle}`} className="flex items-center gap-2.5 min-w-0 flex-1">
             <Avatar profile={post.profile!} pixels={32} className="flex-shrink-0 ring-2 ring-neutral-700" />
             <div className="min-w-0 flex-1">
               <DisplayName
-                name={post.profile?.displayName || ''}
-                verified={post.profile?.verified}
-                teamMember={post.profile?.teamMember}
-                badges={post.profile?.badges}
+                name={post.profile!.displayName || ''}
+                verified={post.profile!.verified}
+                teamMember={post.profile!.teamMember}
+                badges={post.profile!.badges}
                 className="text-sm font-semibold"
               />
               <Timestamp
@@ -98,6 +99,22 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
               />
             </div>
           </Link>
+        ) : (
+          // Fallback when profile is null
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center ring-2 ring-neutral-700">
+              <span className="text-neutral-400 text-xs">?</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-sm text-neutral-400">Unknown user</span>
+              <Timestamp
+                datetime={post.createdAt}
+                edited={post.createdAt !== post.updatedAt || false}
+                className="text-xs text-neutral-500"
+                small
+              />
+            </div>
+          </div>
         )}
         {canEdit && (
           <button
