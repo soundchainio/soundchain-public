@@ -163,43 +163,50 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               </div>
             ) : (
               <>
-                {/* Thumbnail Layer - YouTube or Track Artwork */}
+                {/* Thumbnail or Live Embed Preview */}
                 {(youtubeThumbnail || trackArtwork) ? (
+                  /* YouTube thumbnail or Track artwork */
                   <img
                     src={youtubeThumbnail || trackArtwork || ''}
                     alt={hasTrack ? post.track?.title || 'Track' : 'Media'}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
                   />
+                ) : hasMediaLink ? (
+                  /* Live embed preview for Spotify, SoundCloud, Bandcamp, etc. */
+                  <div className="w-full h-full bg-black relative">
+                    <ReactPlayer
+                      url={post.mediaLink!}
+                      width="100%"
+                      height="100%"
+                      playing={false}
+                      controls={false}
+                      muted={true}
+                      light={false}
+                      playsinline
+                      config={{
+                        soundcloud: { options: { visual: true, show_artwork: true, show_user: false, buying: false, sharing: false, download: false, show_playcount: false } },
+                        spotify: { },
+                      }}
+                      style={{ pointerEvents: 'none' }}
+                    />
+                    {/* Overlay to prevent interaction and show play button */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+                    {/* Platform badge */}
+                    <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/70 backdrop-blur-sm border border-white/10">
+                      <span className="text-sm">{platformBrand.icon}</span>
+                      <span className="text-[10px] text-white/90 font-semibold uppercase tracking-wider">
+                        {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
+                         platformType === MediaProvider.SPOTIFY ? 'Spotify' :
+                         platformType === MediaProvider.BANDCAMP ? 'Bandcamp' :
+                         platformType.charAt(0).toUpperCase() + platformType.slice(1).toLowerCase()}
+                      </span>
+                    </div>
+                  </div>
                 ) : (
-                  /* Platform Branded Card - Premium Web3 Style */
-                  <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} relative overflow-hidden`}>
-                    {/* Animated mesh gradient background */}
-                    <div className="absolute inset-0 opacity-30">
-                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.3),transparent_50%)]" />
-                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,255,255,0.2),transparent_50%)]" />
-                      <div className="absolute inset-0 bg-[conic-gradient(from_90deg_at_50%_50%,transparent,rgba(255,255,255,0.1),transparent)]" />
-                    </div>
-
-                    {/* Animated particles/sparkles effect */}
-                    <div className="absolute inset-0 overflow-hidden">
-                      <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/40 rounded-full animate-pulse" />
-                      <div className="absolute top-3/4 right-1/4 w-1.5 h-1.5 bg-white/30 rounded-full animate-pulse delay-150" />
-                      <div className="absolute bottom-1/4 left-1/3 w-1 h-1 bg-white/50 rounded-full animate-pulse delay-300" />
-                    </div>
-
-                    {/* Platform icon - large and centered */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-6xl drop-shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
-                        {platformBrand.icon}
-                      </span>
-                      <span className="mt-3 text-white/90 font-bold text-lg tracking-wider drop-shadow-lg">
-                        {platformType.charAt(0).toUpperCase() + platformType.slice(1).toLowerCase()}
-                      </span>
-                    </div>
-
-                    {/* Glassmorphism overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  /* Fallback gradient for unknown platforms */
+                  <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} flex items-center justify-center`}>
+                    <span className="text-6xl">{platformBrand.icon}</span>
                   </div>
                 )}
 
