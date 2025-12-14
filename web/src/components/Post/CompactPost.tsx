@@ -93,6 +93,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   // Track artwork
   const trackArtwork = hasTrack ? post.track?.artworkUrl : null
 
+  // Media thumbnail from server (Spotify, SoundCloud, Bandcamp, etc.)
+  // This is fetched server-side via oEmbed when the post is created
+  const serverThumbnail = (post as any).mediaThumbnail as string | undefined
+
   // Handle card click to open post modal
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger if clicking on play button or links
@@ -153,6 +157,14 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
+          ) : serverThumbnail ? (
+            /* Server-fetched thumbnail for Spotify/SoundCloud/Bandcamp/Vimeo/YouTube */
+            <img
+              src={serverThumbnail}
+              alt="Media thumbnail"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
           ) : canUseLightMode && post.mediaLink ? (
             /* ReactPlayer with light mode for YouTube/Vimeo/Facebook - auto-fetches thumbnails! */
             <div className="w-full h-full">
@@ -169,7 +181,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               />
             </div>
           ) : (
-            /* Platform Branded Card for Spotify/SoundCloud/Bandcamp/etc - no thumbnail available */
+            /* Platform Branded Card fallback - shows when no thumbnail available */
             <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} relative overflow-hidden`}>
               {/* Animated mesh gradient background */}
               <div className="absolute inset-0 opacity-30">

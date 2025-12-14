@@ -21,6 +21,10 @@ export class Post extends Model {
   @prop({ required: false })
   mediaLink?: string;
 
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  mediaThumbnail?: string;
+
   // Guest post fields (wallet-only, no account required)
   @Field(() => String, { nullable: true })
   @prop({ type: String, required: false, lowercase: true })

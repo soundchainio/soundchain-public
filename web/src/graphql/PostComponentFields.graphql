@@ -2,6 +2,7 @@ fragment PostComponentFields on Post {
   id
   body
   mediaLink
+  mediaThumbnail
   repostId
   createdAt
   updatedAt

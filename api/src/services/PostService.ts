@@ -9,6 +9,7 @@ import { ReactionType } from '../types/ReactionType';
 import { SortPostInput } from '../types/SortPostInput';
 import { ModelService } from './ModelService';
 import { NewReactionParams } from './ReactionService';
+import { fetchMediaThumbnail } from '../utils/oEmbed';
 
 interface NewPostParams {
   profileId: string;
@@ -48,7 +49,16 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async createPost(params: NewPostParams): Promise<Post> {
-    const post = new this.model(params);
+    // Fetch thumbnail for media embeds (Spotify, SoundCloud, Bandcamp, etc.)
+    let mediaThumbnail: string | null = null;
+    if (params.mediaLink) {
+      mediaThumbnail = await fetchMediaThumbnail(params.mediaLink);
+    }
+
+    const post = new this.model({
+      ...params,
+      mediaThumbnail,
+    });
     await post.save();
     this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
     this.context.feedService.addPostToFollowerFeeds(post);
@@ -81,11 +91,18 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async updatePost(params: UpdatePostParams): Promise<Post> {
+    // Fetch thumbnail if media link changed
+    let mediaThumbnail: string | null = null;
+    if (params.mediaLink) {
+      mediaThumbnail = await fetchMediaThumbnail(params.mediaLink);
+    }
+
     return await this.model.findOneAndUpdate(
       { _id: params.postId, profileId: params.profileId },
       {
         body: params.body,
         mediaLink: params.mediaLink,
+        mediaThumbnail,
       },
       { new: true },
     );
@@ -192,10 +209,17 @@ export class PostService extends ModelService<typeof Post> {
   }
 
   async createGuestPost(params: GuestPostParams): Promise<Post> {
+    // Fetch thumbnail for media embeds (Spotify, SoundCloud, Bandcamp, etc.)
+    let mediaThumbnail: string | null = null;
+    if (params.mediaLink) {
+      mediaThumbnail = await fetchMediaThumbnail(params.mediaLink);
+    }
+
     const post = new this.model({
       ...params,
       walletAddress: params.walletAddress.toLowerCase(),
       isGuest: true,
+      mediaThumbnail,
     });
     await post.save();
     return post;
