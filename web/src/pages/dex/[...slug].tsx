@@ -623,14 +623,28 @@ function DEXDashboard() {
 
   // Explore Users Query - search for users/profiles
   // Load all users when on users tab (no search filter = returns all sorted by follower count)
-  const { data: exploreUsersData, loading: exploreUsersLoading, refetch: refetchUsers } = useExploreUsersQuery({
+  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers } = useExploreUsersQuery({
     variables: {
       search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view = get ALL users
       page: { first: selectedView === 'users' ? 200 : 20 } // Load more users on users view (200 for pagination)
     },
     skip: selectedView !== 'explore' && selectedView !== 'users',
-    fetchPolicy: selectedView === 'users' ? 'cache-and-network' : 'cache-first', // Fresh data for users tab
+    fetchPolicy: 'network-only', // Always fetch fresh data
+    notifyOnNetworkStatusChange: true,
   })
+
+  // Debug: Log users query state
+  useEffect(() => {
+    if (selectedView === 'users') {
+      console.log('👥 Users Query State:', {
+        loading: exploreUsersLoading,
+        error: exploreUsersError?.message,
+        dataExists: !!exploreUsersData,
+        nodeCount: exploreUsersData?.exploreUsers?.nodes?.length,
+        selectedView
+      })
+    }
+  }, [selectedView, exploreUsersLoading, exploreUsersError, exploreUsersData])
 
   // Explore Tracks Query - search for tracks
   // SPEED: cache-first, only fetch when on explore view
