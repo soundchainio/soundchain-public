@@ -7,7 +7,8 @@ import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { LinkItUrl } from 'react-linkify-it'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { MediaProvider } from 'types/MediaProvider'
 
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
@@ -166,21 +167,32 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 />
               </div>
             ) : (
-              <div className="aspect-video relative">
-                {!mediaLoaded && (
-                  <div className="absolute inset-0 bg-neutral-800 animate-pulse flex items-center justify-center">
-                    <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+              // Iframe embed for Spotify, SoundCloud, Bandcamp, etc.
+              (() => {
+                const mediaType = IdentifySource(post.mediaLink).type
+                // Use appropriate heights for different embed types
+                const embedHeight = mediaType === MediaProvider.BANDCAMP ? '470px' :
+                                   mediaType === MediaProvider.SPOTIFY ? '352px' :
+                                   mediaType === MediaProvider.SOUNDCLOUD ? '166px' : '315px'
+                return (
+                  <div className="relative w-full" style={{ minHeight: embedHeight }}>
+                    {!mediaLoaded && (
+                      <div className="absolute inset-0 bg-neutral-800 animate-pulse flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    )}
+                    <iframe
+                      className={`w-full ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      style={{ height: embedHeight }}
+                      src={post.mediaLink}
+                      title="Media"
+                      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                      allowFullScreen
+                      onLoad={() => setMediaLoaded(true)}
+                    />
                   </div>
-                )}
-                <iframe
-                  className={`w-full h-full ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
-                  src={post.mediaLink}
-                  title="Media"
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                  allowFullScreen
-                  onLoad={() => setMediaLoaded(true)}
-                />
-              </div>
+                )
+              })()
             )
           )}
 
