@@ -4,6 +4,7 @@ import { MediaProvider } from 'types/MediaProvider'
 import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { Avatar } from '../Avatar'
 import { DisplayName } from '../DisplayName'
+import { EmoteRenderer } from '../EmoteRenderer'
 import { MiniAudioPlayer } from '../MiniAudioPlayer'
 import { NotAvailableMessage } from '../NotAvailableMessage'
 import { RepostPreviewSkeleton } from '../RepostPreviewSkeleton'
@@ -40,7 +41,9 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
               />
               <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
             </div>
-            <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">{post.body}</pre>
+            <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">
+              <EmoteRenderer text={post.body || ''} />
+            </pre>
             {post.mediaLink && (() => {
               const mediaSource = IdentifySource(post.mediaLink)
               const mediaType = mediaSource.type

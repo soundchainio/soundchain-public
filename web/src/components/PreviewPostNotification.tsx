@@ -1,6 +1,7 @@
 import { usePostQuery } from 'lib/graphql'
 import NextLink from 'next/link'
 import React from 'react'
+import { EmoteRenderer } from './EmoteRenderer'
 
 interface PreviewPostNotificationProps {
   postId: string
@@ -18,7 +19,9 @@ export const PreviewPostNotification = ({ postId }: PreviewPostNotificationProps
     <div className="mt-4 flex w-full rounded-xl bg-gray-30 p-4">
       <NextLink href={`/posts/${post.id}`}>
         <div>
-          <pre className="whitespace-pre-wrap text-sm text-gray-100">{post.body}</pre>
+          <pre className="whitespace-pre-wrap text-sm text-gray-100">
+            <EmoteRenderer text={post.body} />
+          </pre>
         </div>
       </NextLink>
       {post.mediaLink && (
