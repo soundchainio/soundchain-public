@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
@@ -8,6 +8,9 @@ import { Play, Pause, Heart, MessageCircle, Share2, Sparkles, BadgeCheck, Volume
 import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from '../EmoteRenderer'
+
+// Cache for fetched thumbnails to avoid redundant API calls
+const thumbnailCache = new Map<string, string | null>()
 
 interface CompactPostProps {
   post: PostQuery['post']
@@ -73,6 +76,35 @@ const PLATFORM_BRANDS: Record<string, { gradient: string; icon: string; glow: st
 const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView = false }: CompactPostProps) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [fetchedThumbnail, setFetchedThumbnail] = useState<string | null>(null)
+
+  // Fetch thumbnail via our server-side proxy (avoids CORS)
+  useEffect(() => {
+    if (!post?.mediaLink) return
+
+    // Skip if we already have a server thumbnail or if ReactPlayer can handle it
+    if (post.mediaThumbnail) return
+    if (hasLazyLoadWithThumbnailSupport(post.mediaLink)) return
+
+    const mediaLink = post.mediaLink
+
+    // Check cache first
+    if (thumbnailCache.has(mediaLink)) {
+      setFetchedThumbnail(thumbnailCache.get(mediaLink) || null)
+      return
+    }
+
+    // Fetch from our API proxy
+    fetch(`/api/oembed?url=${encodeURIComponent(mediaLink)}`)
+      .then(res => res.json())
+      .then(data => {
+        thumbnailCache.set(mediaLink, data.thumbnail_url)
+        setFetchedThumbnail(data.thumbnail_url)
+      })
+      .catch(() => {
+        thumbnailCache.set(mediaLink, null)
+      })
+  }, [post?.mediaLink, post?.mediaThumbnail])
 
   if (!post || post.deleted) return null
 
@@ -93,9 +125,8 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   // Track artwork
   const trackArtwork = hasTrack ? post.track?.artworkUrl : null
 
-  // Media thumbnail from server (Spotify, SoundCloud, Bandcamp, etc.)
-  // This is fetched server-side via oEmbed when the post is created
-  const serverThumbnail = post.mediaThumbnail
+  // Media thumbnail - prefer server-stored, then client-fetched
+  const displayThumbnail = post.mediaThumbnail || fetchedThumbnail
 
   // Handle card click to open post modal
   const handleCardClick = (e: React.MouseEvent) => {
@@ -157,10 +188,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
-          ) : serverThumbnail ? (
-            /* Server-fetched thumbnail for Spotify/SoundCloud/Bandcamp/Vimeo/YouTube */
+          ) : displayThumbnail ? (
+            /* Thumbnail for Spotify/SoundCloud/Bandcamp/Vimeo/YouTube */
             <img
-              src={serverThumbnail}
+              src={displayThumbnail}
               alt="Media thumbnail"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
