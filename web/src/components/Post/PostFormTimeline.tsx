@@ -1,6 +1,8 @@
 import { MusicalNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { Popover } from '@headlessui/react'
 import Picker from '@emoji-mart/react'
+import { StickerPicker } from '../StickerPicker'
+import { Sparkles } from 'lucide-react'
 
 // Extended Emoji type with native property from emoji-mart picker callback
 interface Emoji {
@@ -121,6 +123,12 @@ export const PostFormTimeline = () => {
     })
   }
 
+  const handleSelectSticker = (sticker: string) => {
+    setPostBody(currentBody => {
+      return `${currentBody}${sticker}`
+    })
+  }
+
   const resetLink = () => {
     setLink({ type: undefined, value: '' })
   }
@@ -183,6 +191,7 @@ export const PostFormTimeline = () => {
         ></PostFormTextArea>
         <div className="flex flex-row">
           <div className="flex basis-3/4">
+            {/* Emoji Picker */}
             <Popover className="relative">
               {({ open, close }) => (
                 <>
@@ -197,6 +206,25 @@ export const PostFormTimeline = () => {
                         handleSelectEmoji(e)
                         close()
                       }}
+                    />
+                  </Popover.Panel>
+                </>
+              )}
+            </Popover>
+            {/* Sticker Picker - Twitch, Discord, Kick stickers */}
+            <Popover className="relative">
+              {({ open, close }) => (
+                <>
+                  <Popover.Button className="mr-[8px] w-6 cursor-pointer focus:outline-none" title="Stickers">
+                    <Sparkles className={`m-auto w-5 ${open ? 'text-cyan-400' : 'text-gray-400'}`} />
+                  </Popover.Button>
+                  <Popover.Panel className="absolute left-0 z-50 mt-2">
+                    <StickerPicker
+                      onSelect={(sticker) => {
+                        handleSelectSticker(sticker)
+                        close()
+                      }}
+                      theme="dark"
                     />
                   </Popover.Panel>
                 </>
