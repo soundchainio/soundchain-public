@@ -16,9 +16,17 @@ export class Comment extends Model {
   @prop({ required: true, type: mongoose.Types.ObjectId })
   postId: mongoose.Types.ObjectId;
 
-  @Field(() => ID)
-  @prop({ required: true, type: mongoose.Types.ObjectId })
-  profileId: mongoose.Types.ObjectId;
+  @Field(() => ID, { nullable: true })
+  @prop({ required: false, type: mongoose.Types.ObjectId })
+  profileId?: mongoose.Types.ObjectId;
+
+  @Field(() => Boolean, { nullable: true })
+  @prop({ default: false })
+  isGuest?: boolean;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  walletAddress?: string;
 
   @Field(() => Boolean, { nullable: true })
   @prop({ default: false })

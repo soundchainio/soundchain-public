@@ -23,8 +23,12 @@ export class CommentResolver {
     return postService.getPost(comment.postId.toString());
   }
 
-  @FieldResolver(() => Profile)
-  profile(@Ctx() { profileService }: Context, @Root() comment: Comment): Promise<Profile> {
+  @FieldResolver(() => Profile, { nullable: true })
+  profile(@Ctx() { profileService }: Context, @Root() comment: Comment): Promise<Profile | null> {
+    // Guest comments don't have a profile
+    if (comment.isGuest || !comment.profileId) {
+      return Promise.resolve(null);
+    }
     return profileService.getProfile(comment.profileId.toString());
   }
 
@@ -42,6 +46,25 @@ export class CommentResolver {
   ): Promise<AddCommentPayload> {
     const comment = await commentService.createComment({
       profileId,
+      postId: new mongoose.Types.ObjectId(input.postId),
+      body: input.body,
+    });
+    return { comment };
+  }
+
+  @Mutation(() => AddCommentPayload)
+  async guestAddComment(
+    @Ctx() { commentService }: Context,
+    @Arg('input') input: AddCommentInput,
+    @Arg('walletAddress') walletAddress: string,
+  ): Promise<AddCommentPayload> {
+    // Validate wallet address format
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new Error('Invalid wallet address');
+    }
+
+    const comment = await commentService.createGuestComment({
+      walletAddress: walletAddress.toLowerCase(),
       postId: new mongoose.Types.ObjectId(input.postId),
       body: input.body,
     });

@@ -13,6 +13,12 @@ interface NewCommentParams {
   postId: mongoose.Types.ObjectId;
 }
 
+interface NewGuestCommentParams {
+  walletAddress: string;
+  body: string;
+  postId: mongoose.Types.ObjectId;
+}
+
 interface DeleteCommentParams {
   profileId: mongoose.Types.ObjectId;
   commentId: mongoose.Types.ObjectId;
@@ -42,6 +48,17 @@ export class CommentService extends ModelService<typeof Comment> {
         authorProfileId: params.profileId.toString(),
       });
     }
+    return newComment;
+  }
+
+  async createGuestComment(params: NewGuestCommentParams): Promise<Comment> {
+    const newComment = new CommentModel({
+      postId: params.postId,
+      body: params.body,
+      isGuest: true,
+      walletAddress: params.walletAddress,
+    });
+    await newComment.save();
     return newComment;
   }
 
