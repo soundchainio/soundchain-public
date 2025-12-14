@@ -87,10 +87,13 @@ export const PostFormTimeline = () => {
       }
       onLinkCancel()
       setPostBody('')
-    } catch (error) {
-      // good to log the error here on console in case the transaction can't be seen in sentry
-      console.log(error)
-      toast.error('We were unable to create your Post, try again in a few.')
+    } catch (error: any) {
+      // Log detailed error for debugging
+      console.error('Post creation error:', error)
+      console.error('Error message:', error?.message)
+      console.error('GraphQL errors:', error?.graphQLErrors)
+      console.error('Network error:', error?.networkError)
+      toast.error(error?.message || 'We were unable to create your Post, try again in a few.')
     }
   }
 
