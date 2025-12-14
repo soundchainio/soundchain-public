@@ -669,7 +669,7 @@ function DEXDashboard() {
   })
 
   // Profile Detail Query - fetch single profile when viewing /dex/profile/[id]
-  const { data: profileDetailData, loading: viewingProfileLoading, error: profileDetailError } = useProfileQuery({
+  const { data: profileDetailData, loading: profileDetailLoading, error: profileDetailError } = useProfileQuery({
     variables: { id: routeId || '' },
     skip: selectedView !== 'profile' || !routeId || routeType === 'users',
     fetchPolicy: 'cache-and-network',
@@ -683,8 +683,8 @@ function DEXDashboard() {
   })
 
   // Merge profile data from either query source
-  const viewingProfile = viewingProfile || profileByHandleData?.profileByHandle
-  const viewingProfileLoading = viewingProfileLoading || profileByHandleLoading
+  const viewingProfile = profileDetailData?.profile || profileByHandleData?.profileByHandle
+  const viewingProfileLoading = profileDetailLoading || profileByHandleLoading
   const viewingProfileError = profileDetailError || profileByHandleError
 
   // Handle follow toggle
