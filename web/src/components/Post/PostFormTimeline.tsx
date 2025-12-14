@@ -52,6 +52,12 @@ export const PostFormTimeline = () => {
       return
     }
 
+    // Require either text or a media link
+    if (!postBody.trim() && (!link || !link.value)) {
+      toast.warn('Please enter some text or add a media link.')
+      return
+    }
+
     const newPostParams: CreatePostInput = { body: postBody }
 
     if (link && link.value) newPostParams.mediaLink = link.value
@@ -62,11 +68,14 @@ export const PostFormTimeline = () => {
         await createPost({ variables: { input: newPostParams } })
         toast.success(`Post successfully created.`)
       } else {
-        // Public post - use a valid anonymous wallet address format
-        // Generate a pseudo-random address based on timestamp for uniqueness
-        const timestamp = Date.now().toString(16).padStart(12, '0')
-        const randomPart = Math.random().toString(16).substring(2, 30).padStart(28, '0')
-        const anonymousAddress = `0x${timestamp}${randomPart}`.substring(0, 42)
+        // Public post - generate valid Ethereum wallet address format
+        // Create 40 hex characters (20 bytes) for the address after 0x
+        const hexChars = '0123456789abcdef'
+        let addressBody = ''
+        for (let i = 0; i < 40; i++) {
+          addressBody += hexChars[Math.floor(Math.random() * 16)]
+        }
+        const anonymousAddress = `0x${addressBody}`
 
         await guestCreatePost({
           variables: {

@@ -149,25 +149,25 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               loading="lazy"
             />
           ) : hasMediaLink ? (
-            /* Live embed preview for Spotify, SoundCloud, Bandcamp - REAL WIDGET */
-            <div className="w-full h-full bg-black relative">
-              <ReactPlayer
-                url={post.mediaLink!}
+            /* Direct iframe embed for Spotify, SoundCloud, Bandcamp - shows actual widget artwork */
+            <div className="w-full h-full bg-black relative overflow-hidden">
+              <iframe
+                src={post.mediaLink!}
                 width="100%"
                 height="100%"
-                playing={false}
-                controls={false}
-                muted={true}
-                light={false}
-                playsinline
-                config={{
-                  soundcloud: { options: { visual: true, show_artwork: true, show_user: false, buying: false, sharing: false, download: false, show_playcount: false } },
-                  spotify: { },
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                className="absolute inset-0 w-full h-full"
+                style={{
+                  pointerEvents: 'none',
+                  transform: platformType === MediaProvider.SPOTIFY ? 'scale(1.5)' :
+                             platformType === MediaProvider.SOUNDCLOUD ? 'scale(1.2)' : 'scale(1)',
+                  transformOrigin: 'center center'
                 }}
-                style={{ pointerEvents: 'none' }}
               />
-              {/* Subtle overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
+              {/* Clickable overlay to prevent iframe interaction and add subtle gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/10" />
             </div>
           ) : (
             /* Fallback for unknown platforms */
