@@ -13,7 +13,10 @@ async function backfillThumbnails() {
   console.log('🚀 Starting thumbnail backfill migration...');
   console.log(`📦 Connecting to MongoDB: ${MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@')}`);
 
-  await mongoose.connect(MONGODB_URI);
+  await mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  } as any);
   console.log('✅ Connected to MongoDB');
 
   // Find all posts with mediaLink but no mediaThumbnail
