@@ -38,9 +38,11 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
     setShowEmojiPicker(false)
   }
 
-  const handleStickerSelect = (sticker: string) => {
-    if (body.length + sticker.length <= 500) {
-      setBody(prev => prev + sticker)
+  const handleStickerSelect = (stickerUrl: string, stickerName: string) => {
+    // Format as markdown that EmoteRenderer can parse: ![emote:name](url)
+    const emoteMarkdown = `![emote:${stickerName}](${stickerUrl})`
+    if (body.length + emoteMarkdown.length <= 500) {
+      setBody(prev => prev + emoteMarkdown)
     }
     setShowStickerPicker(false)
   }

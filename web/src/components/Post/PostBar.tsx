@@ -55,9 +55,11 @@ export const PostBar = ({
     }
   }
 
-  const handleSelectSticker = (sticker: string) => {
+  const handleSelectSticker = (stickerUrl: string, stickerName: string) => {
+    // Format as markdown that EmoteRenderer can parse: ![emote:name](url)
+    const emoteMarkdown = `![emote:${stickerName}](${stickerUrl})`
     if (getBodyCharacterCount(values.body) < maxLength) {
-      setFieldValue('body', `${values.body}${sticker}`)
+      setFieldValue('body', `${values.body}${emoteMarkdown}`)
     }
   }
 
