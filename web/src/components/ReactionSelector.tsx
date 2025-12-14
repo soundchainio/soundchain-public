@@ -4,6 +4,7 @@ import {
   useChangeReactionMutation,
   useReactToPostMutation,
   useRetractReactionMutation,
+  useGuestReactToPostMutation,
   ReactionType,
 } from 'lib/graphql-hooks'
 
@@ -12,6 +13,8 @@ interface ReactionSelectorProps {
   myReaction: ReactionType | null
   opened: boolean
   setOpened: (opened: boolean) => void
+  isGuest?: boolean
+  guestWallet?: string | null
 }
 
 const reactionTypes = [
@@ -25,12 +28,24 @@ const reactionTypes = [
 const baseListClasses =
   'list-none flex absolute right-0 duration-500 ease-in-out bg-gray-25 transform-gpu transform w-3/4'
 
-export const ReactionSelector = ({ postId, myReaction, opened, setOpened }: ReactionSelectorProps) => {
+export const ReactionSelector = ({ postId, myReaction, opened, setOpened, isGuest, guestWallet }: ReactionSelectorProps) => {
   const [reactToPost] = useReactToPostMutation()
   const [changeReaction] = useChangeReactionMutation()
   const [retractReaction] = useRetractReactionMutation()
+  const [guestReactToPost] = useGuestReactToPostMutation()
 
   const handleSelect = async (type: ReactionType) => {
+    // Guest reaction - use guest mutation
+    if (isGuest && guestWallet) {
+      await guestReactToPost({
+        variables: { input: { postId, type }, walletAddress: guestWallet },
+        refetchQueries: ['Post', 'Posts'],
+      })
+      setOpened(false)
+      return
+    }
+
+    // Logged-in user reactions
     if (type === myReaction) {
       await retractReaction({ variables: { input: { postId } } })
     } else if (myReaction) {

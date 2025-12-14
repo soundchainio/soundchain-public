@@ -23,8 +23,21 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
   const { dispatchSetRepostId, dispatchShowPostModal } = useModalDispatch()
   const [postLink, setPostLink] = useState('')
+  const [guestWallet, setGuestWallet] = useState<string | null>(null)
   const me = useMe()
   const router = useRouter()
+
+  // Check for guest wallet on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !me) {
+      const savedWallet = localStorage.getItem('connectedWalletAddress')
+      if (savedWallet) {
+        setGuestWallet(savedWallet)
+      }
+    }
+  }, [me])
+
+  const isGuest = !me && !!guestWallet
 
   const onRepostClick = () => {
     if (!me) return router.push('/login')
@@ -33,7 +46,8 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
   }
 
   const handleLikeButton = () => {
-    if (!me) return router.push('/login')
+    // Allow likes for logged-in users OR guests with connected wallet
+    if (!me && !guestWallet) return router.push('/login')
     setReactionSelectorOpened(!reactionSelectorOpened)
   }
 
@@ -78,6 +92,8 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
         myReaction={myReaction}
         opened={reactionSelectorOpened}
         setOpened={setReactionSelectorOpened}
+        isGuest={isGuest}
+        guestWallet={guestWallet}
       />
       <div className={commonClasses}>
         <NextLink href={`/posts/${postId}#openComment`} className="flex items-center font-bold">
