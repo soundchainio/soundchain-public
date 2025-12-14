@@ -24,6 +24,28 @@ const GAP = 8
 
 type ViewMode = 'list' | 'grid'
 
+// Grid cell renderer - MUST be outside component to avoid recreation
+const GridCell = memo(({ columnIndex, rowIndex, style, data }: any) => {
+  const columnCount = data.columnCount || 2
+  const itemIndex = rowIndex * columnCount + columnIndex
+  const posts = data.nodes
+  if (itemIndex >= posts.length) return null
+
+  const post = posts[itemIndex]
+  if (!post) return null
+
+  return (
+    <div style={{ ...style, padding: '4px' }}>
+      <CompactPost
+        post={post}
+        handleOnPlayClicked={data.handleOnPlayClicked}
+        onPostClick={data.onPostClick}
+      />
+    </div>
+  )
+})
+GridCell.displayName = 'GridCell'
+
 // Post Detail Modal Component
 const PostDetailModal = ({ postId, onClose, handleOnPlayClicked }: { postId: string; onClose: () => void; handleOnPlayClicked: (trackId: string) => void }) => {
   const { data, loading } = usePostQuery({
@@ -175,28 +197,6 @@ export const Posts = ({ profileId }: PostsProps) => {
     if (width < 900) return 4      // Tablet: 4 columns
     return 5                        // Desktop: 5 columns for tight stacking
   }
-
-  // Grid cell renderer for compact view
-  const GridCell = memo(({ columnIndex, rowIndex, style, data }: any) => {
-    const columnCount = data.columnCount || 2
-    const itemIndex = rowIndex * columnCount + columnIndex
-    const posts = data.nodes
-    if (itemIndex >= posts.length) return null
-
-    const post = posts[itemIndex]
-    if (!post) return null
-
-    return (
-      <div style={{ ...style, padding: '4px' }}>
-        <CompactPost
-          post={post}
-          handleOnPlayClicked={data.handleOnPlayClicked}
-          onPostClick={data.onPostClick}
-        />
-      </div>
-    )
-  })
-  GridCell.displayName = 'GridCell'
 
   return (
     <>
