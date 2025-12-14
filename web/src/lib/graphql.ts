@@ -1219,6 +1219,7 @@ export type Post = {
   id: Scalars['ID']['output'];
   isGuest: Scalars['Boolean']['output'];
   mediaLink: Maybe<Scalars['String']['output']>;
+  mediaThumbnail: Maybe<Scalars['String']['output']>;
   myReaction: Maybe<ReactionType>;
   profile: Maybe<Profile>;
   profileId: Maybe<Scalars['ID']['output']>;

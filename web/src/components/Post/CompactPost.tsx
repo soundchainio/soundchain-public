@@ -95,7 +95,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
 
   // Media thumbnail from server (Spotify, SoundCloud, Bandcamp, etc.)
   // This is fetched server-side via oEmbed when the post is created
-  const serverThumbnail = (post as any).mediaThumbnail as string | undefined
+  const serverThumbnail = post.mediaThumbnail
 
   // Handle card click to open post modal
   const handleCardClick = (e: React.MouseEvent) => {
@@ -240,7 +240,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
             </div>
           )}
 
-          {/* Play button overlay */}
+          {/* Play button overlay - always visible on mobile, hover on desktop */}
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -250,9 +250,9 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                 setIsPlaying(true)
               }
             }}
-            className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+            className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/20 transition-all z-10"
           >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg ${platformBrand.glow} hover:scale-110 transition-transform`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg ${platformBrand.glow} opacity-80 group-hover:opacity-100 hover:scale-110 transition-all`}>
               <Play className="w-5 h-5 text-black ml-0.5" fill="black" />
             </div>
           </button>
