@@ -79,12 +79,12 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const [fetchedThumbnail, setFetchedThumbnail] = useState<string | null>(null)
 
   // Fetch thumbnail via our server-side proxy (avoids CORS)
+  // Always fetch for ALL media types - ReactPlayer light mode doesn't work with embed URLs
   useEffect(() => {
     if (!post?.mediaLink) return
 
-    // Skip if we already have a server thumbnail or if ReactPlayer can handle it
+    // Skip only if we already have a server-stored thumbnail
     if (post.mediaThumbnail) return
-    if (hasLazyLoadWithThumbnailSupport(post.mediaLink)) return
 
     const mediaLink = post.mediaLink
 
@@ -94,7 +94,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
       return
     }
 
-    // Fetch from our API proxy
+    // Fetch from our API proxy - works for ALL platforms including YouTube/Vimeo
     fetch(`/api/oembed?url=${encodeURIComponent(mediaLink)}`)
       .then(res => res.json())
       .then(data => {
@@ -189,28 +189,20 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               loading="lazy"
             />
           ) : displayThumbnail ? (
-            /* Thumbnail for Spotify/SoundCloud/Bandcamp/Vimeo/YouTube */
+            /* Thumbnail from oEmbed proxy - works for ALL platforms */
             <img
               src={displayThumbnail}
               alt="Media thumbnail"
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
+              onError={(e) => {
+                // Fallback for failed thumbnail loads (e.g., maxresdefault not available)
+                const target = e.target as HTMLImageElement
+                if (target.src.includes('maxresdefault')) {
+                  target.src = target.src.replace('maxresdefault', 'hqdefault')
+                }
+              }}
             />
-          ) : canUseLightMode && post.mediaLink ? (
-            /* ReactPlayer with light mode for YouTube/Vimeo/Facebook - auto-fetches thumbnails! */
-            <div className="w-full h-full">
-              <ReactPlayer
-                url={post.mediaLink}
-                width="100%"
-                height="100%"
-                light={true}
-                playIcon={<></>} // Hide default play icon, we have our own
-                config={{
-                  youtube: { playerVars: { modestbranding: 1, rel: 0 } },
-                  vimeo: { playerOptions: { responsive: true } },
-                }}
-              />
-            </div>
           ) : (
             /* Platform Branded Card fallback - shows when no thumbnail available */
             <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} relative overflow-hidden`}>
@@ -445,9 +437,24 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                   <span className="text-xs font-medium">{post.commentCount}</span>
                 </span>
               )}
-              <span className="flex items-center text-neutral-500 hover:text-white transition-colors cursor-pointer">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const postUrl = `${window.location.origin}/posts/${post.id}`
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'SoundChain',
+                      text: 'Check out this post on SoundChain!',
+                      url: postUrl,
+                    }).catch(() => {})
+                  } else {
+                    navigator.clipboard.writeText(postUrl)
+                  }
+                }}
+                className="flex items-center text-neutral-500 hover:text-white transition-colors"
+              >
                 <Share2 className="w-3.5 h-3.5" />
-              </span>
+              </button>
             </div>
           </div>
         </div>

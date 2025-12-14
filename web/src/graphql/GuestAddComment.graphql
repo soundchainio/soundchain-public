@@ -1,0 +1,15 @@
+mutation GuestAddComment($input: AddCommentInput!, $walletAddress: String!) {
+  guestAddComment(input: $input, walletAddress: $walletAddress) {
+    comment {
+      id
+      body
+      isGuest
+      walletAddress
+      createdAt
+      updatedAt
+      post {
+        id
+      }
+    }
+  }
+}

@@ -4,8 +4,9 @@ import { useMe } from 'hooks/useMe'
 import { Send } from 'icons/Send'
 import { useRouter } from 'next/router'
 import * as yup from 'yup'
-import { AddCommentMutation, CommentDocument, useAddCommentMutation } from '../lib/graphql'
+import { AddCommentMutation, CommentDocument, useAddCommentMutation, useGuestAddCommentMutation } from '../lib/graphql'
 import { Avatar } from 'components/Avatar'
+import { GuestAvatar, formatWalletAddress } from 'components/GuestAvatar'
 import { FlexareaField } from './FlexareaField'
 import { StickerPicker } from './StickerPicker'
 import Picker from '@emoji-mart/react'
@@ -42,7 +43,19 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   const [linkPreview, setLinkPreview] = useState<string | undefined>(undefined)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showStickerPicker, setShowStickerPicker] = useState(false)
+  const [guestWallet, setGuestWallet] = useState<string | null>(null)
   const pickerRef = useRef<HTMLDivElement>(null)
+
+  // Check for guest wallet on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !me) {
+      const savedWallet = localStorage.getItem('connectedWalletAddress')
+      if (savedWallet) {
+        setGuestWallet(savedWallet)
+      }
+    }
+  }, [me])
+
   const [addComment] = useAddCommentMutation({
     update: (cache, result) => {
       if (router.pathname === '/posts/[id]' && !router.query.cursor) {
@@ -53,8 +66,16 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
     },
   })
 
+  const [guestAddComment] = useGuestAddCommentMutation({
+    refetchQueries: ['Comments'],
+  })
+
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    await addComment({ variables: { input: { postId, body } } })
+    if (me) {
+      await addComment({ variables: { input: { postId, body } } })
+    } else if (guestWallet) {
+      await guestAddComment({ variables: { input: { postId, body }, walletAddress: guestWallet } })
+    }
 
     if (router.query.commentId) {
       router.replace({ pathname: '/posts/[id]', query: { id: postId } }, `/posts/${postId}`, {
@@ -68,7 +89,10 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
     document.querySelector('#main')?.scrollTo(0, 0)
   }
 
-  if (!me) return null
+  // Show nothing if no user and no guest wallet
+  if (!me && !guestWallet) return null
+
+  const isGuest = !me && !!guestWallet
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
@@ -119,7 +143,16 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
           <Form>
             <div className="flex flex-col bg-gray-25">
               <div className="flex flex-row items-start space-x-3 p-3">
-                <Avatar profile={me.profile} linkToProfile={false} />
+                {isGuest ? (
+                  <div className="flex items-center gap-2">
+                    <GuestAvatar walletAddress={guestWallet!} pixels={40} />
+                    <span className="text-[8px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full font-medium">
+                      Guest
+                    </span>
+                  </div>
+                ) : (
+                  <Avatar profile={me!.profile} linkToProfile={false} />
+                )}
                 <div className="flex-1 relative">
                   <FlexareaField id="commentField" name="body" maxLength={160} placeholder="Write a comment..." />
                   {/* Emoji/Sticker toolbar */}

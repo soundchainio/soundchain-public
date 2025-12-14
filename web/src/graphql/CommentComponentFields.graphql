@@ -3,6 +3,8 @@ fragment CommentComponentFields on Comment {
   body
   createdAt
   deleted
+  isGuest
+  walletAddress
   profile {
     id
     displayName

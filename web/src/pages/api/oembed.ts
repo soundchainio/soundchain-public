@@ -28,9 +28,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 
 async function fetchThumbnail(mediaLink: string): Promise<string | null> {
-  // Spotify
+  // YouTube - direct URL (no API needed) - handles embed/, watch?v=, shorts/, youtu.be/
+  if (mediaLink.includes('youtube.com') || mediaLink.includes('youtu.be')) {
+    const match = mediaLink.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/)
+    if (match) {
+      // Try maxresdefault first, fallback to hqdefault
+      return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`
+    }
+  }
+
+  // Spotify - handles embed URLs and regular URLs
   if (mediaLink.includes('spotify.com')) {
-    const match = mediaLink.match(/spotify\.com\/embed\/(track|album|playlist)\/([a-zA-Z0-9]+)/)
+    // Match embed format: spotify.com/embed/track/xxx
+    const embedMatch = mediaLink.match(/spotify\.com\/embed\/(track|album|playlist)\/([a-zA-Z0-9]+)/)
+    // Match regular format: open.spotify.com/track/xxx
+    const regularMatch = mediaLink.match(/spotify\.com\/(track|album|playlist)\/([a-zA-Z0-9]+)/)
+    const match = embedMatch || regularMatch
     if (match) {
       const [, type, id] = match
       const originalUrl = `https://open.spotify.com/${type}/${id}`
@@ -39,25 +52,37 @@ async function fetchThumbnail(mediaLink: string): Promise<string | null> {
     }
   }
 
-  // SoundCloud
+  // SoundCloud - handles embed URLs with url= parameter and regular URLs
   if (mediaLink.includes('soundcloud.com')) {
+    let trackUrl = mediaLink
+    // Extract URL from embed iframe src
     const urlMatch = mediaLink.match(/url=([^&]+)/)
     if (urlMatch) {
-      const trackUrl = decodeURIComponent(urlMatch[1])
+      trackUrl = decodeURIComponent(urlMatch[1])
+    }
+    // Only call oEmbed if we have a valid SoundCloud URL
+    if (trackUrl.includes('soundcloud.com') && !trackUrl.includes('w.soundcloud.com')) {
       const response = await axios.get(`https://soundcloud.com/oembed?url=${encodeURIComponent(trackUrl)}&format=json`, { timeout: 5000 })
       return response.data?.thumbnail_url || null
     }
   }
 
-  // Bandcamp
+  // Bandcamp - extract album art from embed or page URL
   if (mediaLink.includes('bandcamp.com')) {
+    // Embed format: bandcamp.com/EmbeddedPlayer/album=xxx
     const albumMatch = mediaLink.match(/album=(\d+)/)
     if (albumMatch) {
+      // Bandcamp album art URL pattern
       return `https://f4.bcbits.com/img/a${albumMatch[1]}_10.jpg`
+    }
+    // Track format: bandcamp.com/EmbeddedPlayer/track=xxx
+    const trackMatch = mediaLink.match(/track=(\d+)/)
+    if (trackMatch) {
+      return `https://f4.bcbits.com/img/a${trackMatch[1]}_10.jpg`
     }
   }
 
-  // Vimeo
+  // Vimeo - handles embed and regular URLs
   if (mediaLink.includes('vimeo.com')) {
     const match = mediaLink.match(/vimeo\.com\/(?:video\/)?(\d+)/)
     if (match) {
@@ -66,11 +91,31 @@ async function fetchThumbnail(mediaLink: string): Promise<string | null> {
     }
   }
 
-  // YouTube - direct URL (no API needed)
-  if (mediaLink.includes('youtube.com') || mediaLink.includes('youtu.be')) {
-    const match = mediaLink.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
+  // Instagram - extract from embed URL or use oEmbed
+  if (mediaLink.includes('instagram.com')) {
+    const match = mediaLink.match(/instagram\.com\/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/)
     if (match) {
-      return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
+      // Instagram oEmbed endpoint
+      try {
+        const response = await axios.get(`https://graph.facebook.com/v18.0/instagram_oembed?url=https://www.instagram.com/p/${match[1]}/&access_token=public`, { timeout: 5000 })
+        return response.data?.thumbnail_url || null
+      } catch {
+        // Instagram oEmbed requires app token, fallback to null
+        return null
+      }
+    }
+  }
+
+  // TikTok - try oEmbed
+  if (mediaLink.includes('tiktok.com')) {
+    const match = mediaLink.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/)
+    if (match) {
+      try {
+        const response = await axios.get(`https://www.tiktok.com/oembed?url=${encodeURIComponent(mediaLink)}`, { timeout: 5000 })
+        return response.data?.thumbnail_url || null
+      } catch {
+        return null
+      }
     }
   }
 
