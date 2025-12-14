@@ -1,11 +1,11 @@
-import { memo, useState, useEffect } from 'react'
+import { memo, useState } from 'react'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { Play, Pause, Heart, MessageCircle, Share2, Sparkles, BadgeCheck, Volume2 } from 'lucide-react'
-import { IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from '../EmoteRenderer'
 
@@ -70,129 +70,9 @@ const PLATFORM_BRANDS: Record<string, { gradient: string; icon: string; glow: st
   },
 }
 
-// Get YouTube video ID for thumbnail
-const getYouTubeId = (url: string): string | null => {
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
-  return match?.[1] || null
-}
-
-// Get Spotify track/album ID for thumbnail via oEmbed
-const getSpotifyThumbnail = async (embedUrl: string): Promise<string | null> => {
-  try {
-    // Extract the original Spotify URL from embed URL
-    // Embed URL format: https://open.spotify.com/embed/track/xxx or /embed/album/xxx
-    const match = embedUrl.match(/spotify\.com\/embed\/(track|album|playlist)\/([a-zA-Z0-9]+)/)
-    if (!match) return null
-
-    const [, type, id] = match
-    const originalUrl = `https://open.spotify.com/${type}/${id}`
-
-    const response = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(originalUrl)}`)
-    if (!response.ok) return null
-
-    const data = await response.json()
-    return data.thumbnail_url || null
-  } catch {
-    return null
-  }
-}
-
-// Get SoundCloud thumbnail via oEmbed
-const getSoundCloudThumbnail = async (embedUrl: string): Promise<string | null> => {
-  try {
-    // SoundCloud embed URLs contain the track URL encoded or we can use the API directly
-    // For widget URLs like: https://w.soundcloud.com/player/?url=...
-    const urlMatch = embedUrl.match(/url=([^&]+)/)
-    if (!urlMatch) return null
-
-    const trackUrl = decodeURIComponent(urlMatch[1])
-    const response = await fetch(`https://soundcloud.com/oembed?url=${encodeURIComponent(trackUrl)}&format=json`)
-    if (!response.ok) return null
-
-    const data = await response.json()
-    return data.thumbnail_url || null
-  } catch {
-    return null
-  }
-}
-
-// Get Bandcamp album art from embed URL
-const getBandcampThumbnail = (embedUrl: string): string | null => {
-  try {
-    // Bandcamp embed URLs contain artwork_id parameter
-    // Format: https://bandcamp.com/EmbeddedPlayer/album=xxx/size=large/bgcol=ffffff/linkcol=0687f5/artwork=small/...
-    // Or we can extract from the URL pattern
-    const albumMatch = embedUrl.match(/album=(\d+)/)
-    if (albumMatch) {
-      // Bandcamp album art URL pattern (this is a common pattern, may not work for all)
-      return `https://f4.bcbits.com/img/a${albumMatch[1]}_10.jpg`
-    }
-    return null
-  } catch {
-    return null
-  }
-}
-
-// Get Vimeo thumbnail
-const getVimeoThumbnail = async (embedUrl: string): Promise<string | null> => {
-  try {
-    const match = embedUrl.match(/vimeo\.com\/(?:video\/)?(\d+)/)
-    if (!match) return null
-
-    const videoId = match[1]
-    const response = await fetch(`https://vimeo.com/api/v2/video/${videoId}.json`)
-    if (!response.ok) return null
-
-    const data = await response.json()
-    return data[0]?.thumbnail_large || data[0]?.thumbnail_medium || null
-  } catch {
-    return null
-  }
-}
-
-// Thumbnail cache to avoid re-fetching
-const thumbnailCache = new Map<string, string | null>()
-
 const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView = false }: CompactPostProps) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
-  const [fetchedThumbnail, setFetchedThumbnail] = useState<string | null>(null)
-
-  // Identify media platform (before conditional return)
-  const mediaSource = post?.mediaLink ? IdentifySource(post.mediaLink) : null
-  const platformType = mediaSource?.type || 'unknown'
-
-  // Fetch thumbnails for platforms that need oEmbed API
-  useEffect(() => {
-    if (!post?.mediaLink) return
-
-    const mediaLink = post.mediaLink
-
-    // Check cache first
-    if (thumbnailCache.has(mediaLink)) {
-      setFetchedThumbnail(thumbnailCache.get(mediaLink) || null)
-      return
-    }
-
-    const fetchThumbnail = async () => {
-      let thumbnail: string | null = null
-
-      if (platformType === MediaProvider.SPOTIFY) {
-        thumbnail = await getSpotifyThumbnail(mediaLink)
-      } else if (platformType === MediaProvider.SOUNDCLOUD) {
-        thumbnail = await getSoundCloudThumbnail(mediaLink)
-      } else if (platformType === MediaProvider.BANDCAMP) {
-        thumbnail = getBandcampThumbnail(mediaLink)
-      } else if (platformType === MediaProvider.VIMEO) {
-        thumbnail = await getVimeoThumbnail(mediaLink)
-      }
-
-      thumbnailCache.set(mediaLink, thumbnail)
-      setFetchedThumbnail(thumbnail)
-    }
-
-    fetchThumbnail()
-  }, [post?.mediaLink, platformType])
 
   if (!post || post.deleted) return null
 
@@ -202,17 +82,16 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const hasMediaLink = !!post.mediaLink
   const hasMedia = hasMediaLink || hasTrack
 
+  // Identify media platform
+  const mediaSource = post.mediaLink ? IdentifySource(post.mediaLink) : null
+  const platformType = mediaSource?.type || 'unknown'
   const platformBrand = PLATFORM_BRANDS[platformType] || { gradient: 'from-cyan-600 via-purple-500 to-pink-500', icon: '🔗', glow: 'shadow-cyan-500/50' }
 
-  // YouTube thumbnail (synchronous)
-  const youtubeId = post.mediaLink && platformType === MediaProvider.YOUTUBE ? getYouTubeId(post.mediaLink) : null
-  const youtubeThumbnail = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : null
+  // Check if ReactPlayer can show thumbnail with light mode (YouTube, Vimeo, Facebook)
+  const canUseLightMode = post.mediaLink ? hasLazyLoadWithThumbnailSupport(post.mediaLink) : false
 
   // Track artwork
   const trackArtwork = hasTrack ? post.track?.artworkUrl : null
-
-  // Combined thumbnail - use fetched thumbnail, YouTube thumbnail, or track artwork
-  const displayThumbnail = fetchedThumbnail || youtubeThumbnail || trackArtwork
 
   // Handle card click to open post modal
   const handleCardClick = (e: React.MouseEvent) => {
@@ -225,29 +104,14 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
     }
   }
 
-  // Check if this platform needs direct iframe (Spotify, SoundCloud, Bandcamp)
-  const needsDirectIframe = platformType === MediaProvider.SPOTIFY ||
-                            platformType === MediaProvider.SOUNDCLOUD ||
-                            platformType === MediaProvider.BANDCAMP
-
   // Shared media render component for both views
-  const renderMediaPreview = (aspectClass: string, showFullControls: boolean = false) => (
+  const renderMediaPreview = (aspectClass: string) => (
     <div className={`relative ${aspectClass} overflow-hidden bg-black`}>
       {/* Playing state - show actual player */}
       {isPlaying && hasMediaLink ? (
         <div className="w-full h-full bg-black">
-          {needsDirectIframe ? (
-            // Direct iframe for Spotify/SoundCloud/Bandcamp - allows user interaction
-            <iframe
-              src={post.mediaLink!}
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              className="w-full h-full"
-            />
-          ) : (
-            // ReactPlayer for YouTube/Vimeo/etc
+          {canUseLightMode ? (
+            // ReactPlayer for YouTube/Vimeo/Facebook - full controls
             <ReactPlayer
               url={post.mediaLink!}
               width="100%"
@@ -258,7 +122,18 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               light={false}
               config={{
                 youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                vimeo: { playerOptions: { responsive: true, playsinline: true } },
               }}
+            />
+          ) : (
+            // Direct iframe for Spotify/SoundCloud/Bandcamp - allows user interaction
+            <iframe
+              src={post.mediaLink!}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              className="w-full h-full"
             />
           )}
           <button
@@ -270,16 +145,31 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
         </div>
       ) : (
         <>
-          {/* Thumbnail from YouTube, Spotify, SoundCloud, Bandcamp, Vimeo, or Track artwork */}
-          {displayThumbnail ? (
+          {/* Track artwork */}
+          {trackArtwork ? (
             <img
-              src={displayThumbnail}
-              alt={hasTrack ? post.track?.title || 'Track' : 'Media'}
+              src={trackArtwork}
+              alt={post.track?.title || 'Track'}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
+          ) : canUseLightMode && post.mediaLink ? (
+            /* ReactPlayer with light mode for YouTube/Vimeo/Facebook - auto-fetches thumbnails! */
+            <div className="w-full h-full">
+              <ReactPlayer
+                url={post.mediaLink}
+                width="100%"
+                height="100%"
+                light={true}
+                playIcon={<></>} // Hide default play icon, we have our own
+                config={{
+                  youtube: { playerVars: { modestbranding: 1, rel: 0 } },
+                  vimeo: { playerOptions: { responsive: true } },
+                }}
+              />
+            </div>
           ) : (
-            /* Platform Branded Card - Premium Web3 Style for Spotify/SoundCloud/Bandcamp/etc */
+            /* Platform Branded Card for Spotify/SoundCloud/Bandcamp/etc - no thumbnail available */
             <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} relative overflow-hidden`}>
               {/* Animated mesh gradient background */}
               <div className="absolute inset-0 opacity-30">
@@ -345,7 +235,6 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               if (hasTrack) {
                 handleOnPlayClicked((post.track as Track).id)
               } else if (hasMediaLink) {
-                // All media links are now playable inline
                 setIsPlaying(true)
               }
             }}
@@ -371,7 +260,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
           {/* Media - Left side */}
           {hasMedia && (
             <div className="w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-              {renderMediaPreview('w-full h-full', false)}
+              {renderMediaPreview('w-full h-full')}
             </div>
           )}
 
@@ -441,7 +330,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
       {/* Main content container */}
       <div className="relative bg-neutral-900 rounded-2xl overflow-hidden h-full flex flex-col">
         {/* Media Section - uses shared renderMediaPreview */}
-        {hasMedia && renderMediaPreview('aspect-square', true)}
+        {hasMedia && renderMediaPreview('aspect-square')}
 
         {/* Text-only posts - glassmorphism card */}
         {!hasMedia && post.body && (
