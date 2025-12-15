@@ -246,7 +246,7 @@ export const PostFormTimeline = () => {
                     <StickerPicker
                       onSelect={(stickerUrl, stickerName) => {
                         handleSelectSticker(stickerUrl, stickerName)
-                        close()
+                        // Don't close - let users add multiple emotes in a flurry!
                       }}
                       theme="dark"
                     />

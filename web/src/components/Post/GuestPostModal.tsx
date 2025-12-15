@@ -61,7 +61,7 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
     if (body.length + emoteMarkdown.length <= 500) {
       setBody(prev => prev + emoteMarkdown)
     }
-    setShowStickerPicker(false)
+    // Don't close - let users add multiple emotes in a flurry!
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

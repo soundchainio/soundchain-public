@@ -151,6 +151,41 @@ export const AudioEngine = () => {
     }
   }, [hasNext, playNext, setPlayingState, setProgressState])
 
+  // Prevent playback interruption on device rotation / visibility changes
+  useEffect(() => {
+    let wasPlayingBeforeHidden = false
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is hidden - remember if we were playing
+        wasPlayingBeforeHidden = isPlaying
+      } else {
+        // Page is visible again - resume if we were playing
+        if (wasPlayingBeforeHidden && audioRef.current) {
+          audioRef.current.play().catch(() => {})
+        }
+      }
+    }
+
+    const handleOrientationChange = () => {
+      // Device rotated - ensure playback continues
+      if (isPlaying && audioRef.current?.paused) {
+        audioRef.current.play().catch(() => {})
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('orientationchange', handleOrientationChange)
+    // Also listen for resize which can indicate rotation
+    window.addEventListener('resize', handleOrientationChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('orientationchange', handleOrientationChange)
+      window.removeEventListener('resize', handleOrientationChange)
+    }
+  }, [isPlaying])
+
   function handleTimeUpdate() {
     if (audioRef.current?.currentTime) {
       setProgressState(Math.floor(audioRef.current.currentTime))
