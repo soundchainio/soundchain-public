@@ -1098,14 +1098,15 @@ function DEXDashboard() {
               <Button
                 onClick={() => isWalletConnected ? handleWalletDisconnect() : setShowWalletModal(true)}
                 className={isWalletConnected ? 'bg-green-600 hover:bg-green-700' : 'retro-button'}
+                size="sm"
               >
-                <Wallet className="w-4 h-4 mr-2" />
-                {isWalletConnected ? `${connectedWallet?.slice(0, 8)}...` : 'Connect'}
+                <Wallet className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{isWalletConnected ? `${connectedWallet?.slice(0, 6)}...` : 'Connect'}</span>
               </Button>
 
               <div className="relative">
                 <Avatar
-                  className="w-10 h-10 analog-glow cursor-pointer bg-gradient-to-br from-purple-600 to-cyan-600 hover:ring-2 hover:ring-cyan-400"
+                  className="w-8 h-8 sm:w-10 sm:h-10 analog-glow cursor-pointer bg-gradient-to-br from-purple-600 to-cyan-600 hover:ring-2 hover:ring-cyan-400"
                   onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false); }}
                 >
                   {user?.profilePicture && !profileImageError ? (
