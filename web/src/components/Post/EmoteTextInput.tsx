@@ -8,8 +8,9 @@ interface EmoteTextInputProps {
   className?: string
 }
 
-// Regex to match our custom emote format: ![emote:name](url)
-const EMOTE_REGEX = /!\[emote:([^\]]+)\]\(([^)]+)\)/g
+// Regex pattern for our custom emote format: ![emote:name](url)
+// Note: Create fresh regex instances in functions to avoid global flag lastIndex issues
+const EMOTE_PATTERN = '!\\[emote:([^\\]]+)\\]\\(([^)]+)\\)'
 
 /**
  * Get display length - counts emotes as 1 character each
@@ -18,7 +19,8 @@ const EMOTE_REGEX = /!\[emote:([^\]]+)\]\(([^)]+)\)/g
 export const getDisplayLength = (text: string): number => {
   if (!text) return 0
   // Replace each emote with a single placeholder character for counting
-  const textWithEmotesAsOne = text.replace(EMOTE_REGEX, '🔲')
+  const emoteRegex = new RegExp(EMOTE_PATTERN, 'g')
+  const textWithEmotesAsOne = text.replace(emoteRegex, '🔲')
   // Count graphemes (handles unicode emojis correctly)
   const splitter = new (Intl as any).Segmenter('en', { granularity: 'grapheme' })
   return [...splitter.segment(textWithEmotesAsOne)].length
@@ -36,8 +38,9 @@ const markdownToHtml = (text: string): string => {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
 
-  // Convert emote markdown to img tags
-  html = html.replace(EMOTE_REGEX, (_, name, url) => {
+  // Convert emote markdown to img tags (create fresh regex to avoid lastIndex issues)
+  const emoteRegex = new RegExp(EMOTE_PATTERN, 'g')
+  html = html.replace(emoteRegex, (_, name, url) => {
     // Decode the URL in case it was escaped
     const decodedUrl = url.replace(/&amp;/g, '&')
     return `<img src="${decodedUrl}" alt="${name}" title="${name}" class="inline-block w-6 h-6 align-middle mx-0.5" draggable="false" />`
