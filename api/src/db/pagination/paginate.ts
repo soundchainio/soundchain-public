@@ -65,13 +65,14 @@ export async function paginate<T extends typeof Model>(
   const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
 
-  // Query without .lean() to return proper mongoose documents
-  // IMPORTANT: .lean() breaks Typegoose document methods - never use it here
+  // Use .lean() to return plain objects for GraphQL serialization
+  // Without .lean(), mongoose Documents contain internal symbols that break serialization
   const [results, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
       .sort(querySort as Record<string, 1 | -1>)
       .limit(limit + 1)
+      .lean()
       .exec(),
     collection.find(filter).countDocuments().exec(),
   ]);
