@@ -92,21 +92,24 @@ export const EmoteTextInput = ({
   useEffect(() => {
     if (editorRef.current && value !== lastValueRef.current) {
       const html = markdownToHtml(value)
-      if (editorRef.current.innerHTML !== html) {
-        // Save selection
-        const selection = window.getSelection()
-        const hadFocus = document.activeElement === editorRef.current
+      const wasContentAdded = value.length > lastValueRef.current.length
 
+      if (editorRef.current.innerHTML !== html) {
         editorRef.current.innerHTML = html
         lastValueRef.current = value
 
-        // Restore cursor to end if we had focus
-        if (hadFocus && selection) {
-          const range = document.createRange()
-          range.selectNodeContents(editorRef.current)
-          range.collapse(false)
-          selection.removeAllRanges()
-          selection.addRange(range)
+        // If content was added (like emote insertion), focus and move cursor to end
+        // This ensures user can keep typing after adding emotes from picker
+        if (wasContentAdded) {
+          editorRef.current.focus()
+          const selection = window.getSelection()
+          if (selection) {
+            const range = document.createRange()
+            range.selectNodeContents(editorRef.current)
+            range.collapse(false) // Move to end
+            selection.removeAllRanges()
+            selection.addRange(range)
+          }
         }
       }
     }
