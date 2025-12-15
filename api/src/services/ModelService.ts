@@ -45,9 +45,10 @@ export class ModelService<T extends typeof Model, KeyComponents = string> extend
 
   createDataLoader(): DataLoader<string, DocumentType<InstanceType<T>> | undefined> {
     return new DataLoader(async (keys: readonly string[]) => {
-      const entities = await this.model.find(this.getFindConditionForKeys(keys));
+      // Use .lean() to return plain objects for GraphQL serialization
+      const entities = await this.model.find(this.getFindConditionForKeys(keys)).lean();
       const entitiesByKey = keyBy(entities, this.keyIteratee);
-      return keys.map((key) => entitiesByKey[key]);
+      return keys.map((key) => entitiesByKey[key]) as (DocumentType<InstanceType<T>> | undefined)[];
     });
   }
 
