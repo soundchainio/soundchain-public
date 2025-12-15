@@ -26,7 +26,7 @@ import { LinkFormFooter } from './PostFormTimelineComponents/LinkFormFooter'
 import { LinkItem } from './PostFormTimelineComponents/LinkItem'
 import { MediaLink } from './PostLinkInput'
 import { useMe } from 'hooks/useMe'
-import { EmoteTextInput } from './EmoteTextInput'
+import { EmoteTextInput, getDisplayLength } from './EmoteTextInput'
 
 export const PostFormTimeline = () => {
   const me = useMe()
@@ -64,7 +64,7 @@ export const PostFormTimeline = () => {
   const customProvider = MediaProvider.CUSTOM_HTML
 
   const onPostSubmit = async () => {
-    if (postBody.length > postMaxLength) {
+    if (getDisplayLength(postBody) > postMaxLength) {
       toast.warn(`Post can have a maximum of ${postMaxLength} characters count.`)
       return
     }
@@ -280,7 +280,7 @@ export const PostFormTimeline = () => {
           </div>
           <div className="basis-1/4">
             <span className="float-right text-gray-400">
-              {postBody.length} / {postMaxLength}
+              {getDisplayLength(postBody)} / {postMaxLength}
             </span>
           </div>
         </div>

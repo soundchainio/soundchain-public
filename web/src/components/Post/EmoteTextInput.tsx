@@ -12,6 +12,19 @@ interface EmoteTextInputProps {
 const EMOTE_REGEX = /!\[emote:([^\]]+)\]\(([^)]+)\)/g
 
 /**
+ * Get display length - counts emotes as 1 character each
+ * This is used for character limit validation
+ */
+export const getDisplayLength = (text: string): number => {
+  if (!text) return 0
+  // Replace each emote with a single placeholder character for counting
+  const textWithEmotesAsOne = text.replace(EMOTE_REGEX, '🔲')
+  // Count graphemes (handles unicode emojis correctly)
+  const splitter = new (Intl as any).Segmenter('en', { granularity: 'grapheme' })
+  return [...splitter.segment(textWithEmotesAsOne)].length
+}
+
+/**
  * Converts markdown emote format to HTML img tags for display
  */
 const markdownToHtml = (text: string): string => {
@@ -120,11 +133,10 @@ export const EmoteTextInput = ({
 
     const markdown = htmlToMarkdown(editorRef.current.innerHTML)
 
-    // Check max length (count graphemes for emojis)
-    const splitter = new (Intl as any).Segmenter('en', { granularity: 'grapheme' })
-    const graphemes = [...splitter.segment(markdown)].length
+    // Check max length - emotes count as 1 character each
+    const displayLength = getDisplayLength(markdown)
 
-    if (graphemes <= maxLength) {
+    if (displayLength <= maxLength) {
       lastValueRef.current = markdown
       onChange(markdown)
     } else {
