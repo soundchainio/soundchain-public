@@ -33,7 +33,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useScidByTrackQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -779,6 +779,13 @@ function DEXDashboard() {
     fetchPolicy: 'cache-and-network',
   })
 
+  // SCid Query - fetch SoundChain ID for track
+  const { data: scidData } = useScidByTrackQuery({
+    variables: { trackId: routeId || '' },
+    skip: selectedView !== 'track' || !routeId,
+    fetchPolicy: 'cache-and-network',
+  })
+
   // Profile Detail Query - fetch single profile when viewing /dex/profile/[id]
   const { data: profileDetailData, loading: profileDetailLoading, error: profileDetailError } = useProfileQuery({
     variables: { id: routeId || '' },
@@ -992,27 +999,40 @@ function DEXDashboard() {
                   </Link>
                 ))}
 
-                {/* Create+ Button - Legacy UI Pattern with Modal */}
-                {isMinting ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCreateClick}
-                    className="hover:bg-cyan-500/10 nyan-cat-animation"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Minting...
-                  </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCreateClick}
-                    className="hover:bg-cyan-500/10"
-                  >
-                    <NewPost className="w-4 h-4 mr-2" />
-                    Create
-                  </Button>
+                {/* Post+ Button - Create posts, embeds, stories */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCreateClick}
+                  className="hover:bg-cyan-500/10"
+                >
+                  <NewPost className="w-4 h-4 mr-2" />
+                  Post+
+                </Button>
+
+                {/* Mint+ Button - NFT Minting with TrackMetadataForm */}
+                {me && (
+                  isMinting ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => dispatchShowCreateModal(true)}
+                      className="hover:bg-purple-500/10 nyan-cat-animation"
+                    >
+                      <Music className="w-4 h-4 mr-2 text-purple-400" />
+                      <span className="text-purple-400">Minting...</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => dispatchShowCreateModal(true)}
+                      className="hover:bg-purple-500/10"
+                    >
+                      <Music className="w-4 h-4 mr-2 text-purple-400" />
+                      <span className="text-purple-400">Mint+</span>
+                    </Button>
+                  )
                 )}
               </div>
             </div>
@@ -2965,6 +2985,24 @@ function DEXDashboard() {
                           <Badge className="bg-green-500/20 text-green-400 text-lg px-4 py-2">
                             {trackDetailData.track.price.value} {trackDetailData.track.price.currency}
                           </Badge>
+                        )}
+
+                        {/* SCid (SoundChain ID) - Web3 Music Identifier */}
+                        {scidData?.scidByTrack?.scid && (
+                          <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/30 rounded-xl">
+                            <div className="flex-shrink-0 w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                              <span className="text-purple-400 font-mono text-sm">SC</span>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-400 uppercase tracking-wider">SoundChain ID</p>
+                              <p className="text-white font-mono text-sm">{scidData.scidByTrack.scid}</p>
+                              {scidData.scidByTrack.streamCount > 0 && (
+                                <p className="text-xs text-cyan-400 mt-0.5">
+                                  {scidData.scidByTrack.streamCount.toLocaleString()} streams · {scidData.scidByTrack.ogunRewardsEarned?.toFixed(2) || '0'} OGUN earned
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         )}
 
                         {/* Action Buttons */}

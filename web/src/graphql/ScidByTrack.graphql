@@ -1,0 +1,10 @@
+query ScidByTrack($trackId: String!) {
+  scidByTrack(trackId: $trackId) {
+    scid
+    chainCode
+    status
+    streamCount
+    ogunRewardsEarned
+    createdAt
+  }
+}
