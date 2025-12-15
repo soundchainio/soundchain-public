@@ -626,10 +626,11 @@ function DEXDashboard() {
 
   // Explore Users Query - search for users/profiles
   // Load all users when on users tab (no search filter = returns all sorted by follower count)
+  // NOTE: Using smaller page size (50) to avoid N+1 query overload - each profile triggers 4 field resolver queries
   const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers, fetchMore: fetchMoreUsers } = useExploreUsersQuery({
     variables: {
       search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view = get ALL users
-      page: { first: 200 } // Increased limit for users tab - show more profiles
+      page: { first: 50 } // Reduced from 200 to avoid backend overload
     },
     skip: selectedView !== 'explore' && selectedView !== 'users',
     fetchPolicy: 'network-only', // Always fetch fresh data
@@ -642,7 +643,7 @@ function DEXDashboard() {
       fetchMoreUsers({
         variables: {
           page: {
-            first: 200,
+            first: 50, // Match reduced page size
             after: exploreUsersData.exploreUsers.pageInfo.endCursor,
           },
         },
