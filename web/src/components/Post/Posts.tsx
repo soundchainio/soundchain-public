@@ -162,7 +162,25 @@ export const Posts = ({ profileId }: PostsProps) => {
     )
   }
 
-  if (!data) {
+  // Show error state if query failed
+  if (error && !data) {
+    console.error('📫 Posts query error:', error)
+    return (
+      <div className="p-8 text-center">
+        <p className="text-red-400 mb-2">Failed to load feed</p>
+        <p className="text-neutral-500 text-sm mb-4">{error.message}</p>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg"
+        >
+          Try again
+        </button>
+      </div>
+    )
+  }
+
+  if (!data || !data.posts || !data.posts.nodes) {
+    console.log('📫 Posts: No data available', { data, posts: data?.posts })
     return <NoResultFound type="posts" />
   }
 
