@@ -2,6 +2,7 @@ import React from 'react'
 
 import classNames from 'classnames'
 import { Timestamp } from 'components/Timestamp'
+import { EmoteRenderer } from 'components/EmoteRenderer'
 import { DeletedCommentNotification } from 'lib/graphql'
 
 interface DeletedCommentNotificationProps {
@@ -24,7 +25,9 @@ export const DeletedCommentNotificationItem = ({
         </div>
       </div>
       <div className="mt-4 flex">
-        <div className="w-full break-words rounded-xl bg-gray-30 p-4 text-sm text-gray-100">{previewBody}</div>
+        <div className="w-full break-words rounded-xl bg-gray-30 p-4 text-sm text-gray-100">
+          <EmoteRenderer text={previewBody} />
+        </div>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import { Avatar } from 'components/Avatar'
 import { CloseFunction } from 'components/common/PopOverButton/PopOverButton'
 import { Timestamp } from 'components/Timestamp'
+import { EmoteRenderer } from 'components/EmoteRenderer'
 import { Comment } from 'icons/Comment'
 import { CommentNotification } from 'lib/graphql'
 import NextLink from 'next/link'
@@ -37,7 +38,7 @@ export const CommentNotificationItem = ({
           <div>
             <span className="inline-block w-full items-center text-sm text-gray-100">
               <div className="flex flex-wrap">
-                <div className="font-semibold">{authorName}</div>&nbsp;{body}
+                <div className="font-semibold">{authorName}</div>&nbsp;<EmoteRenderer text={body} />
               </div>
             </span>
             <Timestamp small datetime={createdAt} className="text-sm" />
@@ -45,7 +46,7 @@ export const CommentNotificationItem = ({
         </div>
         <div className="mt-4 flex">
           <div className="w-full break-words rounded-xl bg-gray-20 p-4 text-sm text-gray-100 transition-colors group-hover:bg-gray-25">
-            {previewBody}
+            <EmoteRenderer text={previewBody} />
           </div>
         </div>
       </div>
