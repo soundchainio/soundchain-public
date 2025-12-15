@@ -2105,7 +2105,7 @@ function DEXDashboard() {
                         <div className="flex items-start gap-4">
                           {/* Avatar with Online Status */}
                           <div className="relative flex-shrink-0">
-                            <Link href={`/${user.userHandle || user.id}`}>
+                            <Link href={`/dex/users/${user.userHandle || user.id}`}>
                               <Avatar className="w-16 h-16 border-2 border-cyan-500/30">
                                 <AvatarImage src={user.profilePicture || '/default-avatar.png'} alt={user.displayName} className="object-cover" />
                                 <AvatarFallback className="bg-gray-700 text-white">{user.displayName?.charAt(0) || '?'}</AvatarFallback>
@@ -2116,7 +2116,7 @@ function DEXDashboard() {
                           </div>
                           {/* User Info */}
                           <div className="flex-1 min-w-0">
-                            <Link href={`/${user.userHandle || user.id}`}>
+                            <Link href={`/dex/users/${user.userHandle || user.id}`}>
                               <h3 className="text-white font-bold truncate hover:text-cyan-400 transition-colors flex items-center gap-1">
                                 {user.displayName || 'Unknown User'}
                                 {user.isVerified && <BadgeCheck className="w-4 h-4 text-cyan-400" />}
