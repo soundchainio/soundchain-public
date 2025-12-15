@@ -1048,14 +1048,14 @@ function DEXDashboard() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3 flex-shrink-0">
               <div className="relative hidden lg:block">
                 <input type="search" placeholder="Search..." className="w-60 bg-black/40 border border-cyan-500/20 rounded-full px-4 py-2 pl-10 text-sm" />
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-cyan-400/60" />
               </div>
 
-              {/* Backend Tab Button */}
-              <Button variant="ghost" size="sm" onClick={() => setShowBackendPanel(true)} className="hover:bg-purple-500/20">
+              {/* Backend Tab Button - hidden on mobile */}
+              <Button variant="ghost" size="sm" onClick={() => setShowBackendPanel(true)} className="hover:bg-purple-500/20 hidden sm:flex">
                 <Server className="w-5 h-5 text-purple-400" />
                 <span className="hidden xl:inline ml-2 text-purple-400">Backend</span>
               </Button>
