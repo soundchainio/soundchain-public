@@ -110,7 +110,7 @@ export const Posts = ({ profileId }: PostsProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid') // Default to compact grid view
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const { playlistState } = useAudioPlayerContext()
-  const { data, loading, refetch, fetchMore } = usePostsQuery({
+  const { data, loading, error, refetch, fetchMore } = usePostsQuery({
     variables: {
       filter: profileId ? { profileId } : undefined,
       page: { first: pageSize },
@@ -119,6 +119,17 @@ export const Posts = ({ profileId }: PostsProps) => {
     ssr: false,
     errorPolicy: 'all', // Return partial data even if some fields have errors
   })
+  // Debug: Log query state
+  useEffect(() => {
+    console.log('📫 Posts Query State:', {
+      loading,
+      error: error?.message,
+      hasData: !!data,
+      nodeCount: data?.posts?.nodes?.length,
+      nodes: data?.posts?.nodes?.slice(0, 3), // First 3 for debugging
+    })
+  }, [loading, error, data])
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = useRef<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
