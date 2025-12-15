@@ -66,18 +66,14 @@ export async function paginate<T extends typeof Model>(
   const querySort = buildQuerySort(field, ascending);
 
   // 1) Assert the .sort(...) argument
-  // 2) Use .lean() to get plain objects that serialize properly without mongoose symbols
-  const [rawResults, totalCount] = await Promise.all([
+  const [results, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
       .sort(querySort as Record<string, 1 | -1>)
       .limit(limit + 1)
-      .lean()
       .exec(),
     collection.find(filter).countDocuments().exec(),
   ]);
-
-  const results = rawResults as DocumentType<InstanceType<T>>[];
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
 }

@@ -2,7 +2,7 @@ import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validat
 import GraphemeSplitter from 'grapheme-splitter';
 
 const splitter = new GraphemeSplitter();
-const TEXT_LIMIT = 500;
+const TEXT_LIMIT = 1000; // Match web client limit
 
 @ValidatorConstraint({ name: 'CustomTextLength', async: false })
 export class CustomTextLength implements ValidatorConstraintInterface {

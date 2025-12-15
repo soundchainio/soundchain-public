@@ -12,6 +12,17 @@ export class UploadResolver {
     return uploadService.generateUploadUrl(fileType);
   }
 
+  // Guest upload URL - allows anonymous users to upload images for guest posts
+  @Query(() => UploadUrl)
+  guestUploadUrl(@Ctx() { uploadService }: Context, @Arg('fileType') fileType: string): Promise<UploadUrl> {
+    // Only allow image uploads for guests
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(fileType)) {
+      throw new Error('Guests can only upload images');
+    }
+    return uploadService.generateUploadUrl(fileType);
+  }
+
   @Query(() => MimeType)
   async mimeType(@Arg('url') url: string): Promise<MimeType> {
     const { headers } = await axios.head(url);
