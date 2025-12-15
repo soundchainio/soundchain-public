@@ -1,4 +1,4 @@
-import { useState, memo } from 'react'
+import { memo } from 'react'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
@@ -6,8 +6,7 @@ import { PostQuery, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
-import { MediaProvider } from 'types/MediaProvider'
+import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
@@ -29,7 +28,6 @@ interface PostProps {
 const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const me = useMe()
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
-  const [mediaLoaded, setMediaLoaded] = useState(false)
 
   if (!post) return <PostSkeleton />
 
@@ -142,57 +140,31 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
       {/* Media Section - Full width like Instagram */}
       {hasMedia && (
         <div className="relative bg-black">
-          {/* Embedded video/link */}
+          {/* Embedded video/link - Legacy UI style: simple, reliable rendering */}
           {post.mediaLink && (
             hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-              <div className="aspect-video">
-                <ReactPlayer
-                  width="100%"
-                  height="100%"
-                  url={post.mediaLink}
-                  playsinline
-                  controls
-                  light
-                  pip
-                  onReady={() => setMediaLoaded(true)}
-                  config={{
-                    youtube: {
-                      playerVars: { modestbranding: 1, rel: 0, playsinline: 1 },
-                    },
-                    vimeo: {
-                      playerOptions: { responsive: true, playsinline: true },
-                    },
-                    facebook: { appId: '' },
-                  }}
-                />
-              </div>
+              <ReactPlayer
+                width="100%"
+                height="400px"
+                url={post.mediaLink}
+                playsinline
+                controls
+                light
+                pip
+                config={{
+                  youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                  vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                }}
+              />
             ) : (
-              // Iframe embed for Spotify, SoundCloud, Bandcamp, etc.
-              (() => {
-                const mediaType = IdentifySource(post.mediaLink).type
-                // Use appropriate heights for different embed types
-                const embedHeight = mediaType === MediaProvider.BANDCAMP ? '470px' :
-                                   mediaType === MediaProvider.SPOTIFY ? '352px' :
-                                   mediaType === MediaProvider.SOUNDCLOUD ? '166px' : '315px'
-                return (
-                  <div className="relative w-full" style={{ minHeight: embedHeight }}>
-                    {!mediaLoaded && (
-                      <div className="absolute inset-0 bg-neutral-800 animate-pulse flex items-center justify-center">
-                        <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                    <iframe
-                      className={`w-full ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
-                      style={{ height: embedHeight }}
-                      src={post.mediaLink}
-                      title="Media"
-                      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                      allowFullScreen
-                      onLoad={() => setMediaLoaded(true)}
-                    />
-                  </div>
-                )
-              })()
+              // Simple iframe embed for Spotify, SoundCloud, Bandcamp - like legacy UI
+              <iframe
+                className="w-full min-h-[300px] bg-neutral-900"
+                src={post.mediaLink}
+                title="Media"
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                allowFullScreen
+              />
             )
           )}
 
