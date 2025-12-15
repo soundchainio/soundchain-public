@@ -6,3 +6,4 @@ soundchain_toc.json
 api-source.tar.gz
 soundchain/
 soundchain-contracts/
+../mux_exported/

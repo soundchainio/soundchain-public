@@ -36,6 +36,7 @@ import { UserResolver } from './UserResolver';
 import { VerificationRequestNotificationResolver } from './VerificationRequestNotificationResolver';
 import { WhitelistEntryResolver } from './WhitelistEntryResolver';
 import { WonAuctionNotificationResolver } from './WonAuctionNotificationResolver';
+import { SCidResolver } from './SCidResolver';
 
 export const resolvers = [
   AuctionEndedNotificationResolver,
@@ -76,4 +77,5 @@ export const resolvers = [
   WhitelistEntryResolver,
   AudioHolderResolver,
   TrackEditionResolver,
+  SCidResolver,
 ] as const;
