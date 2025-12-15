@@ -109,7 +109,8 @@ const PostDetailModal = ({ postId, onClose, handleOnPlayClicked }: { postId: str
 export const Posts = ({ profileId }: PostsProps) => {
   const [viewMode, setViewMode] = useState<ViewMode>('grid') // Default to compact grid view
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
-  const { playlistState } = useAudioPlayerContext()
+  const [activePostId, setActivePostId] = useState<string | null>(null) // Track last interacted/playing post
+  const { playlistState, currentSong, isPlaying } = useAudioPlayerContext()
   const { data, loading, error, refetch, fetchMore } = usePostsQuery({
     variables: {
       filter: profileId ? { profileId } : undefined,
@@ -150,7 +151,26 @@ export const Posts = ({ profileId }: PostsProps) => {
   // Handle post click to open modal - MUST be before any conditional returns
   const handlePostClick = useCallback((postId: string) => {
     setSelectedPostId(postId)
+    setActivePostId(postId) // Track this as active post
   }, [])
+
+  // Find index of a post by ID
+  const findPostIndex = useCallback((postId: string | null, posts: PostType[]) => {
+    if (!postId || !posts) return -1
+    return posts.findIndex(p => p.id === postId)
+  }, [])
+
+  // Scroll to a specific post index in current view
+  const scrollToPostIndex = useCallback((index: number, columnCount: number = 1) => {
+    if (index < 0) return
+
+    if (viewMode === 'list' && listRef.current) {
+      listRef.current.scrollToItem(index, 'center')
+    } else if (viewMode === 'grid' && gridRef.current) {
+      const rowIndex = Math.floor(index / columnCount)
+      gridRef.current.scrollToItem({ rowIndex, columnIndex: 0, align: 'center' })
+    }
+  }, [viewMode])
 
   if (loading) {
     return (
@@ -203,6 +223,12 @@ export const Posts = ({ profileId }: PostsProps) => {
 
   const handleOnPlayClicked = (trackId: string) => {
     if (nodes) {
+      // Find the post that contains this track and set it as active
+      const playingPost = (nodes as PostType[]).find(post => post.track?.id === trackId)
+      if (playingPost) {
+        setActivePostId(playingPost.id)
+      }
+
       const listOfTracks = (nodes as PostType[])
         .filter(post => post.track && post.track.deleted === false)
         .map(post => {
@@ -222,6 +248,23 @@ export const Posts = ({ profileId }: PostsProps) => {
     }
   }
 
+  // Find the currently playing post (for jump-to feature)
+  const playingPostId = useMemo(() => {
+    if (!isPlaying || !currentSong?.trackId || !nodes) return null
+    const post = (nodes as PostType[]).find(p => p.track?.id === currentSong.trackId)
+    return post?.id || null
+  }, [isPlaying, currentSong?.trackId, nodes])
+
+  // Jump to the currently playing or active post
+  const jumpToActivePost = useCallback((columnCount: number = 1) => {
+    const targetId = playingPostId || activePostId
+    if (!targetId || !nodes) return
+    const index = findPostIndex(targetId, nodes as PostType[])
+    if (index >= 0) {
+      scrollToPostIndex(index, columnCount)
+    }
+  }, [playingPostId, activePostId, nodes, findPostIndex, scrollToPostIndex])
+
   // Calculate responsive column count based on width
   // iPhone: 2 cols (~187px each), Desktop: 3-4 cols (~150px each) for tight stacking
   const getColumnCount = (width: number) => {
@@ -236,22 +279,46 @@ export const Posts = ({ profileId }: PostsProps) => {
       {/* Post Form */}
       <PostFormTimeline />
 
-      {/* View Mode Toggle - Below post form, right aligned */}
-      <div className="flex justify-end mb-3 px-2">
+      {/* View Mode Toggle & Now Playing Tracker */}
+      <div className="flex justify-between items-center mb-3 px-2">
+        {/* Now Playing Jump Button - Only shows when a track is playing */}
+        <div className="flex-1">
+          {(playingPostId || activePostId) && (
+            <button
+              onClick={() => jumpToActivePost(getColumnCount(window.innerWidth))}
+              className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 rounded-full text-xs text-cyan-400 hover:border-cyan-400/50 transition-all"
+              title="Jump to now playing"
+            >
+              {isPlaying ? (
+                <>
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span>Now Playing</span>
+                </>
+              ) : activePostId ? (
+                <>
+                  <span className="w-2 h-2 bg-cyan-400 rounded-full" />
+                  <span>Last Played</span>
+                </>
+              ) : null}
+            </button>
+          )}
+        </div>
+
+        {/* View Mode Toggle */}
         <div className="flex items-center gap-1 bg-neutral-800/50 rounded-lg p-1">
           <button
             onClick={() => {
-              // Save current grid scroll position before switching
-              if (viewMode === 'grid' && gridRef.current) {
-                scrollPositionRef.current.grid = gridRef.current.state?.scrollTop || 0
-              }
               setViewMode('list')
-              // Restore list scroll position after render
+              // Jump to active/playing post after switching to list view
               setTimeout(() => {
-                if (listRef.current && scrollPositionRef.current.list > 0) {
-                  listRef.current.scrollTo(scrollPositionRef.current.list)
+                const targetId = playingPostId || activePostId
+                if (targetId && nodes) {
+                  const index = findPostIndex(targetId, nodes as PostType[])
+                  if (index >= 0 && listRef.current) {
+                    listRef.current.scrollToItem(index, 'center')
+                  }
                 }
-              }, 50)
+              }, 100)
             }}
             className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}`}
             title="List view"
@@ -260,17 +327,19 @@ export const Posts = ({ profileId }: PostsProps) => {
           </button>
           <button
             onClick={() => {
-              // Save current list scroll position before switching
-              if (viewMode === 'list' && listRef.current) {
-                scrollPositionRef.current.list = listRef.current.state?.scrollOffset || 0
-              }
               setViewMode('grid')
-              // Restore grid scroll position after render
+              // Jump to active/playing post after switching to grid view
               setTimeout(() => {
-                if (gridRef.current && scrollPositionRef.current.grid > 0) {
-                  gridRef.current.scrollTo({ scrollTop: scrollPositionRef.current.grid })
+                const targetId = playingPostId || activePostId
+                if (targetId && nodes) {
+                  const index = findPostIndex(targetId, nodes as PostType[])
+                  if (index >= 0 && gridRef.current) {
+                    const columnCount = getColumnCount(window.innerWidth)
+                    const rowIndex = Math.floor(index / columnCount)
+                    gridRef.current.scrollToItem({ rowIndex, columnIndex: 0, align: 'center' })
+                  }
                 }
-              }, 50)
+              }, 100)
             }}
             className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white'}`}
             title="Grid view (compact)"
