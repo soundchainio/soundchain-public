@@ -66,12 +66,13 @@ export async function paginate<T extends typeof Model>(
   const querySort = buildQuerySort(field, ascending);
 
   // 1) Assert the .sort(...) argument
-  // 2) Assert the result of .exec() as DocumentType<InstanceType<T>>[]
+  // 2) Use .lean() to get plain objects that serialize properly without mongoose symbols
   const [rawResults, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
       .sort(querySort as Record<string, 1 | -1>)
       .limit(limit + 1)
+      .lean()
       .exec(),
     collection.find(filter).countDocuments().exec(),
   ]);
@@ -103,7 +104,7 @@ export async function paginateAggregated<T extends typeof Model>(
     collection.find(filter).countDocuments().exec(),
   ]);
 
-  // Assert .exec() result to DocumentType<InstanceType<T>>[]
+  // Aggregation already returns plain objects, cast to expected type
   const results = rawResults as DocumentType<InstanceType<T>>[];
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
