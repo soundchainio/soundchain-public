@@ -16,6 +16,26 @@ module.exports = {
   typescript: {
     ignoreBuildErrors: true, // Bypass TypeScript errors
   },
+  // Ensure all /dex/* routes are properly handled by Next.js catch-all
+  async rewrites() {
+    return [
+      // Ensure /dex/users/[handle] routes to the catch-all page
+      {
+        source: '/dex/users/:handle',
+        destination: '/dex/users/:handle',
+      },
+      // Ensure /dex/profile/[id] routes to the catch-all page
+      {
+        source: '/dex/profile/:id',
+        destination: '/dex/profile/:id',
+      },
+      // Ensure /dex/track/[id] routes to the catch-all page
+      {
+        source: '/dex/track/:id',
+        destination: '/dex/track/:id',
+      },
+    ]
+  },
   // Fix Google OAuth Permissions-Policy error
   async headers() {
     return [
