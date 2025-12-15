@@ -67,7 +67,7 @@ export async function paginate<T extends typeof Model>(
 
   // Use .lean() to return plain objects for GraphQL serialization
   // Without .lean(), mongoose Documents contain internal symbols that break serialization
-  const [results, totalCount] = await Promise.all([
+  const [rawResults, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
       .sort(querySort as Record<string, 1 | -1>)
@@ -76,6 +76,9 @@ export async function paginate<T extends typeof Model>(
       .exec(),
     collection.find(filter).countDocuments().exec(),
   ]);
+
+  // Cast lean results to expected type for prepareResult
+  const results = rawResults as unknown as DocumentType<InstanceType<T>>[];
 
   return prepareResult(field, last, limit, after, before, results, totalCount);
 }
