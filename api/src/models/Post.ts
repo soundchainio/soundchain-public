@@ -58,6 +58,23 @@ export class Post extends Model {
   @prop({ default: false })
   deleted?: boolean;
 
+  // Ephemeral media upload fields (24h Snapchat-style stories)
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  uploadedMediaUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  uploadedMediaType?: string; // 'image' | 'video' | 'audio'
+
+  @Field(() => Date, { nullable: true })
+  @prop({ required: false })
+  mediaExpiresAt?: Date;
+
+  @Field(() => Boolean, { nullable: true })
+  @prop({ default: false })
+  isEphemeral?: boolean;
+
   @Field(() => Date)
   createdAt: Date;
 

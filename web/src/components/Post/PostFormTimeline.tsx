@@ -2,7 +2,8 @@ import { MusicalNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/
 import { Popover } from '@headlessui/react'
 import Picker from '@emoji-mart/react'
 import { StickerPicker } from '../StickerPicker'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Camera } from 'lucide-react'
+import { PostMediaUploader } from './PostMediaUploader'
 
 // Extended Emoji type with native property from emoji-mart picker callback
 interface Emoji {
@@ -46,6 +47,9 @@ export const PostFormTimeline = () => {
   const [isVideoLinkVisible, setVideoLinkVisible] = useState(false)
   const [isPreviewVisible, setPreviewVisible] = useState(false)
   const [link, setLink] = useState<MediaLink>()
+  const [showMediaUploader, setShowMediaUploader] = useState(false)
+  const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | undefined>()
+  const [uploadedMediaType, setUploadedMediaType] = useState<'image' | 'video' | 'audio' | undefined>()
   const postMaxLength = 1000
   const soundProviders = [MediaProvider.BANDCAMP, MediaProvider.SPOTIFY, MediaProvider.SOUNDCLOUD]
   const videoProviders = [
@@ -64,15 +68,21 @@ export const PostFormTimeline = () => {
       return
     }
 
-    // Require either text or a media link
-    if (!postBody.trim() && (!link || !link.value)) {
-      toast.warn('Please enter some text or add a media link.')
+    // Require either text, a media link, or uploaded media
+    if (!postBody.trim() && (!link || !link.value) && !uploadedMediaUrl) {
+      toast.warn('Please enter some text, add a media link, or upload media.')
       return
     }
 
     const newPostParams: CreatePostInput = { body: postBody }
 
     if (link && link.value) newPostParams.mediaLink = link.value
+
+    // Add ephemeral media if uploaded
+    if (uploadedMediaUrl && uploadedMediaType) {
+      (newPostParams as any).uploadedMediaUrl = uploadedMediaUrl;
+      (newPostParams as any).uploadedMediaType = uploadedMediaType;
+    }
 
     try {
       // Create post - authenticated users use regular mutation, others use guest mutation
@@ -99,6 +109,10 @@ export const PostFormTimeline = () => {
       }
       onLinkCancel()
       setPostBody('')
+      // Reset uploaded media
+      setUploadedMediaUrl(undefined)
+      setUploadedMediaType(undefined)
+      setShowMediaUploader(false)
     } catch (error: any) {
       // Log detailed error for debugging
       console.error('Post creation error:', error)
@@ -256,6 +270,15 @@ export const PostFormTimeline = () => {
             >
               <VideoCameraIcon className="m-auto w-5 text-gray-400" />
             </button>
+            {/* Camera/Upload button for photos, videos, audio from phone */}
+            <button
+              className="ml-[8px] w-6 cursor-pointer text-center"
+              aria-label="Upload photo, video, or audio (24h)"
+              onClick={() => setShowMediaUploader(!showMediaUploader)}
+              title="Upload media (expires in 24h)"
+            >
+              <Camera className={`m-auto w-5 ${showMediaUploader || uploadedMediaUrl ? 'text-amber-400' : 'text-gray-400'}`} />
+            </button>
           </div>
           <div className="basis-1/4">
             <span className="float-right text-gray-400">
@@ -264,6 +287,22 @@ export const PostFormTimeline = () => {
           </div>
         </div>
       </PostFormMiddleContainer>
+
+      {/* Ephemeral Media Uploader (24h stories) */}
+      {(showMediaUploader || uploadedMediaUrl) && (
+        <PostMediaUploader
+          onMediaSelected={(url, type) => {
+            setUploadedMediaUrl(url)
+            setUploadedMediaType(type)
+          }}
+          onMediaRemoved={() => {
+            setUploadedMediaUrl(undefined)
+            setUploadedMediaType(undefined)
+          }}
+          currentUrl={uploadedMediaUrl}
+          currentType={uploadedMediaType}
+        />
+      )}
 
       {isMusicLinkVisible && !isVideoLinkVisible && !isPreviewVisible && (
         <PostFormLinkContainer>

@@ -18,6 +18,9 @@ interface NewPostParams {
   originalMediaLink?: string;
   trackId?: string;
   trackEditionId?: string;
+  // Ephemeral media (24h stories)
+  uploadedMediaUrl?: string;
+  uploadedMediaType?: string;
 }
 
 interface GuestPostParams {
@@ -25,6 +28,9 @@ interface GuestPostParams {
   body?: string;
   mediaLink?: string;
   originalMediaLink?: string;
+  // Ephemeral media (24h stories)
+  uploadedMediaUrl?: string;
+  uploadedMediaType?: string;
 }
 
 interface RepostParams {
@@ -58,9 +64,15 @@ export class PostService extends ModelService<typeof Post> {
       mediaThumbnail = await fetchMediaThumbnail(params.mediaLink, params.originalMediaLink);
     }
 
+    // Set ephemeral fields if uploaded media is provided (24h Snapchat-style stories)
+    const isEphemeral = !!params.uploadedMediaUrl;
+    const mediaExpiresAt = isEphemeral ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined;
+
     const post = new this.model({
       ...params,
       mediaThumbnail,
+      isEphemeral,
+      mediaExpiresAt,
     });
     await post.save();
     this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
@@ -219,11 +231,17 @@ export class PostService extends ModelService<typeof Post> {
       mediaThumbnail = await fetchMediaThumbnail(params.mediaLink, params.originalMediaLink);
     }
 
+    // Set ephemeral fields if uploaded media is provided (24h Snapchat-style stories)
+    const isEphemeral = !!params.uploadedMediaUrl;
+    const mediaExpiresAt = isEphemeral ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined;
+
     const post = new this.model({
       ...params,
       walletAddress: params.walletAddress.toLowerCase(),
       isGuest: true,
       mediaThumbnail,
+      isEphemeral,
+      mediaExpiresAt,
     });
     await post.save();
     return post;

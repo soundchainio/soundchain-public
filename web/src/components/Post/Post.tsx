@@ -4,7 +4,9 @@ import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
+import Image from 'next/image'
 import ReactPlayer from 'react-player'
+import { Clock } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 
@@ -51,7 +53,27 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
     return <NotAvailableMessage type="post" />
   }
 
-  const hasMedia = post.mediaLink || post.track || post.repostId
+  // Check if post has any media (embed links, tracks, reposts, or uploaded ephemeral media)
+  const hasUploadedMedia = !!(post as any).uploadedMediaUrl
+  const isEphemeral = !!(post as any).isEphemeral
+  const mediaExpiresAt = (post as any).mediaExpiresAt ? new Date((post as any).mediaExpiresAt) : null
+  const isExpired = mediaExpiresAt && mediaExpiresAt < new Date()
+  const uploadedMediaUrl = (post as any).uploadedMediaUrl as string | undefined
+  const uploadedMediaType = (post as any).uploadedMediaType as string | undefined
+
+  const hasMedia = post.mediaLink || post.track || post.repostId || hasUploadedMedia
+
+  // Calculate time remaining for ephemeral posts
+  const getTimeRemaining = () => {
+    if (!mediaExpiresAt) return null
+    const now = new Date()
+    const diff = mediaExpiresAt.getTime() - now.getTime()
+    if (diff <= 0) return 'Expired'
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+    if (hours > 0) return `${hours}h ${minutes}m`
+    return `${minutes}m`
+  }
 
   return (
     <article className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-700 transition-colors">
@@ -140,6 +162,60 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
       {/* Media Section - Full width like Instagram */}
       {hasMedia && (
         <div className="relative bg-black">
+          {/* Uploaded ephemeral media (24h stories) */}
+          {hasUploadedMedia && !isExpired && (
+            <div className="relative">
+              {/* Ephemeral badge */}
+              {isEphemeral && (
+                <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-1 bg-amber-500/90 rounded-full text-xs font-medium text-black">
+                  <Clock className="w-3 h-3" />
+                  <span>{getTimeRemaining()}</span>
+                </div>
+              )}
+
+              {/* Image */}
+              {uploadedMediaType === 'image' && uploadedMediaUrl && (
+                <div className="relative w-full aspect-video">
+                  <Image
+                    src={uploadedMediaUrl}
+                    alt="Post media"
+                    fill
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              )}
+
+              {/* Video */}
+              {uploadedMediaType === 'video' && uploadedMediaUrl && (
+                <video
+                  src={uploadedMediaUrl}
+                  controls
+                  className="w-full max-h-[500px]"
+                  playsInline
+                />
+              )}
+
+              {/* Audio */}
+              {uploadedMediaType === 'audio' && uploadedMediaUrl && (
+                <div className="p-4 flex items-center gap-3 bg-gradient-to-r from-cyan-900/30 to-purple-900/30">
+                  <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                    <span className="text-3xl">🎵</span>
+                  </div>
+                  <audio src={uploadedMediaUrl} controls className="flex-1" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Expired media placeholder */}
+          {hasUploadedMedia && isExpired && (
+            <div className="p-8 flex flex-col items-center justify-center text-neutral-500 bg-neutral-800/50">
+              <Clock className="w-8 h-8 mb-2" />
+              <span className="text-sm">Media expired</span>
+            </div>
+          )}
+
           {/* Embedded video/link - Legacy UI style: simple, reliable rendering */}
           {post.mediaLink && (
             hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (

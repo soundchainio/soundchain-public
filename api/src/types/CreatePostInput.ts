@@ -26,4 +26,13 @@ export class CreatePostInput {
   @Field(() => String, { nullable: true })
   @IsOptional()
   trackEditionId?: string;
+
+  // Ephemeral media upload fields (24h stories from phone library)
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  uploadedMediaUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  uploadedMediaType?: string; // 'image' | 'video' | 'audio'
 }
