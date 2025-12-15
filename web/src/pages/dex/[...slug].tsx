@@ -65,28 +65,31 @@ const Notifications = dynamic(() => import('components/Notifications').then(mod 
 // Navigation pages removed - all tabs now in main DEX view
 const navigationPages: { name: string; href: string; icon: React.ComponentType<{ className?: string }> }[] = []
 
-// WalletConnect Modal Component
+// WalletConnect Modal Component - Uses WalletConnect v2 with EthereumProvider
 function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; onClose: () => void; onConnect: (address: string, walletType: string) => void }) {
   const [connecting, setConnecting] = useState(false)
+  const [connectingWallet, setConnectingWallet] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const wallets = [
     { name: 'MetaMask', icon: '🦊', popular: true, id: 'metamask' },
-    { name: 'WalletConnect', icon: '🔗', popular: true, id: 'walletconnect' },
-    { name: 'Coinbase', icon: '🔵', popular: false, id: 'coinbase' },
-    { name: 'Rainbow', icon: '🌈', popular: false, id: 'rainbow' },
-    { name: 'Trust Wallet', icon: '💙', popular: false, id: 'trust' },
+    { name: 'WalletConnect', icon: '🔗', popular: true, id: 'walletconnect', description: 'Rainbow, Trust, Coinbase & 300+ wallets' },
   ]
+
+  // WalletConnect v2 Project ID - get from https://cloud.walletconnect.com/
+  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
 
   const handleMetaMaskConnect = async () => {
     try {
       setConnecting(true)
+      setConnectingWallet('metamask')
       setError(null)
 
       // Check if MetaMask is installed
       if (typeof window.ethereum === 'undefined') {
         setError('MetaMask is not installed. Please install MetaMask extension.')
         setConnecting(false)
+        setConnectingWallet(null)
         return
       }
 
@@ -112,15 +115,87 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
       }
     } finally {
       setConnecting(false)
+      setConnectingWallet(null)
+    }
+  }
+
+  const handleWalletConnectV2 = async () => {
+    try {
+      setConnecting(true)
+      setConnectingWallet('walletconnect')
+      setError(null)
+
+      // Check if project ID is configured
+      if (!projectId) {
+        setError('WalletConnect not configured. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID.')
+        console.error('❌ WalletConnect Project ID missing. Get one from https://cloud.walletconnect.com/')
+        setConnecting(false)
+        setConnectingWallet(null)
+        return
+      }
+
+      // Dynamic import to avoid SSR issues
+      const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
+
+      // Initialize WalletConnect v2 EthereumProvider
+      const provider = await EthereumProvider.init({
+        projectId,
+        chains: [137], // Polygon mainnet
+        optionalChains: [80002], // Polygon Amoy testnet
+        showQrModal: true, // Shows the WalletConnect QR modal automatically
+        metadata: {
+          name: 'SoundChain',
+          description: 'Web3 Music Platform - Stream, Collect, Earn',
+          url: 'https://soundchain.io',
+          icons: ['https://soundchain.io/soundchain-logo.png']
+        },
+        qrModalOptions: {
+          themeMode: 'dark',
+        }
+      })
+
+      console.log('🔗 WalletConnect v2 initialized, opening modal...')
+
+      // Connect - this opens the QR code modal
+      await provider.connect()
+
+      // Get connected accounts
+      const accounts = provider.accounts
+      if (accounts && accounts.length > 0) {
+        const address = accounts[0]
+        console.log('✅ WalletConnect connected:', address)
+        onConnect(address, 'WalletConnect')
+        onClose()
+
+        // Store provider reference for later use (transactions, signing)
+        ;(window as any).__wcProvider = provider
+
+        // Listen for disconnect
+        provider.on('disconnect', () => {
+          console.log('🔌 WalletConnect disconnected')
+          ;(window as any).__wcProvider = null
+        })
+      } else {
+        setError('No accounts returned from wallet.')
+      }
+    } catch (err: any) {
+      console.error('❌ WalletConnect error:', err)
+      if (err.message?.includes('User rejected')) {
+        setError('Connection cancelled.')
+      } else {
+        setError(err.message || 'Failed to connect via WalletConnect.')
+      }
+    } finally {
+      setConnecting(false)
+      setConnectingWallet(null)
     }
   }
 
   const handleWalletClick = async (walletId: string, walletName: string) => {
     if (walletId === 'metamask') {
       await handleMetaMaskConnect()
-    } else {
-      // For other wallets, show a "coming soon" message for now
-      setError(`${walletName} integration coming soon! Please use MetaMask for now.`)
+    } else if (walletId === 'walletconnect') {
+      await handleWalletConnectV2()
     }
   }
 
@@ -147,16 +222,25 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
               <Button
                 key={wallet.name}
                 variant="outline"
-                className="w-full justify-between retro-button hover:bg-cyan-500/20 disabled:opacity-50"
+                className="w-full justify-between retro-button hover:bg-cyan-500/20 disabled:opacity-50 h-auto py-3"
                 onClick={() => handleWalletClick(wallet.id, wallet.name)}
                 disabled={connecting}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{wallet.icon}</span>
-                  <span className="retro-text">{wallet.name}</span>
-                  {connecting && wallet.id === 'metamask' && <span className="text-xs text-cyan-400">Connecting...</span>}
+                  <span className="text-2xl">{wallet.icon}</span>
+                  <div className="text-left">
+                    <span className="retro-text block">{wallet.name}</span>
+                    {(wallet as any).description && (
+                      <span className="text-[10px] text-gray-400 block">{(wallet as any).description}</span>
+                    )}
+                  </div>
                 </div>
-                {wallet.popular && <Badge className="bg-yellow-500/20 text-yellow-400">Popular</Badge>}
+                <div className="flex items-center gap-2">
+                  {connectingWallet === wallet.id && (
+                    <span className="text-xs text-cyan-400 animate-pulse">Connecting...</span>
+                  )}
+                  {wallet.popular && !connectingWallet && <Badge className="bg-yellow-500/20 text-yellow-400">Popular</Badge>}
+                </div>
               </Button>
             ))}
           </div>
