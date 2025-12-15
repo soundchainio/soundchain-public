@@ -102,7 +102,7 @@ export class SCidService extends Service {
     const checksum = SCidGenerator.generateChecksum(scid);
 
     // Create SCid record
-    const scidRecord = await SCidModel.create({
+    const scidRecord = new SCidModel({
       scid,
       trackId,
       profileId,
@@ -119,6 +119,7 @@ export class SCidService extends Service {
       ogunRewardsEarned: 0,
       transferHistory: [],
     });
+    await scidRecord.save();
 
     return scidRecord;
   }
@@ -141,7 +142,7 @@ export class SCidService extends Service {
    * Get all SCids for a profile (artist)
    */
   async getByProfileId(profileId: string): Promise<SCid[]> {
-    return SCidModel.find({ profileId }).sort({ createdAt: -1 }).lean();
+    return SCidModel.find({ profileId }).sort({ createdAt: -1 }).lean() as unknown as SCid[];
   }
 
   /**
@@ -326,7 +327,7 @@ export class SCidService extends Service {
         .sort({ createdAt: -1 })
         .skip(query.offset || 0)
         .limit(query.limit || 50)
-        .lean(),
+        .lean() as unknown as SCid[],
       SCidModel.countDocuments(filter),
     ]);
 
