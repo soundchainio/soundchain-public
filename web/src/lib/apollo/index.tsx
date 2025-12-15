@@ -26,7 +26,9 @@ const jwtKey = 'token'
 
 let jwt = (isBrowser && Cookies.get(jwtKey)) || undefined
 
-const httpLink = createHttpLink({ uri: config.apiUrl ?? 'http://localhost:4000/graphql', fetch })
+const apiUrl = config.apiUrl ?? 'http://localhost:4000/graphql'
+console.log('🔗 Apollo API URL:', apiUrl, '| env:', config.apiUrl)
+const httpLink = createHttpLink({ uri: apiUrl, fetch })
 
 export function createApolloClient(context?: GetServerSidePropsContext) {
   const authLink = setContext(() => {

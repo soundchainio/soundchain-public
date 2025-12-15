@@ -723,40 +723,16 @@ function DEXDashboard() {
   // Manual "Load More" buttons are used instead
 
   // Explore Users Query - search for users/profiles
-  // Load all users when on users tab (no search filter = returns all sorted by follower count)
-  // NOTE: Using smaller page size (50) to avoid N+1 query overload - each profile triggers 4 field resolver queries
-  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers, fetchMore: fetchMoreUsers } = useExploreUsersQuery({
+  // Load ALL users at once (no pagination) to avoid duplicate rendering issues
+  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers } = useExploreUsersQuery({
     variables: {
       search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view = get ALL users
-      page: { first: 50 } // Reduced from 200 to avoid backend overload
+      page: { first: 500 } // Load all users at once - no pagination needed
     },
     skip: selectedView !== 'explore' && selectedView !== 'users',
-    fetchPolicy: 'network-only', // Always fetch fresh data
+    fetchPolicy: 'cache-and-network', // Use cache but also fetch fresh
     notifyOnNetworkStatusChange: true,
   })
-
-  // Load more users handler
-  const handleLoadMoreUsers = () => {
-    if (exploreUsersData?.exploreUsers?.pageInfo?.hasNextPage) {
-      fetchMoreUsers({
-        variables: {
-          page: {
-            first: 50, // Match reduced page size
-            after: exploreUsersData.exploreUsers.pageInfo.endCursor,
-          },
-        },
-        updateQuery: (prev, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return prev
-          return {
-            exploreUsers: {
-              ...fetchMoreResult.exploreUsers,
-              nodes: [...prev.exploreUsers.nodes, ...fetchMoreResult.exploreUsers.nodes],
-            },
-          }
-        },
-      })
-    }
-  }
 
   // Debug: Log users query state
   useEffect(() => {
@@ -1025,28 +1001,26 @@ function DEXDashboard() {
                 </Button>
 
                 {/* Mint+ Button - NFT Minting with TrackMetadataForm */}
-                {me && (
-                  isMinting ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => dispatchShowCreateModal(true)}
-                      className="hover:bg-purple-500/10 nyan-cat-animation"
-                    >
-                      <Music className="w-4 h-4 mr-2 text-purple-400" />
-                      <span className="text-purple-400">Minting...</span>
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => dispatchShowCreateModal(true)}
-                      className="hover:bg-purple-500/10"
-                    >
-                      <Music className="w-4 h-4 mr-2 text-purple-400" />
-                      <span className="text-purple-400">Mint+</span>
-                    </Button>
-                  )
+                {isMinting ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => me ? dispatchShowCreateModal(true) : router.push('/login')}
+                    className="hover:bg-purple-500/10 nyan-cat-animation"
+                  >
+                    <Music className="w-4 h-4 mr-2 text-purple-400" />
+                    <span className="text-purple-400">Minting...</span>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => me ? dispatchShowCreateModal(true) : router.push('/login')}
+                    className="hover:bg-purple-500/10"
+                  >
+                    <Music className="w-4 h-4 mr-2 text-purple-400" />
+                    <span className="text-purple-400">Mint+</span>
+                  </Button>
                 )}
               </div>
             </div>
@@ -1976,26 +1950,7 @@ function DEXDashboard() {
                         )
                       })}
                     </div>
-                    {/* Load More Button */}
-                    {exploreUsersData?.exploreUsers?.pageInfo?.hasNextPage && (
-                      <div className="flex justify-center mt-6">
-                        <Button
-                          variant="outline"
-                          onClick={handleLoadMoreUsers}
-                          disabled={exploreUsersLoading}
-                          className="bg-indigo-500/10 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20"
-                        >
-                          {exploreUsersLoading ? (
-                            <>
-                              <div className="animate-spin h-4 w-4 border-2 border-indigo-400 border-t-transparent rounded-full mr-2" />
-                              Loading...
-                            </>
-                          ) : (
-                            <>Load More Users</>
-                          )}
-                        </Button>
-                      </div>
-                    )}
+                    {/* All users loaded at once - no pagination needed */}
                     </>
                   ) : (
                     <Card className="retro-card p-8 text-center">
