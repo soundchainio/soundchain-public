@@ -33,7 +33,21 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useScidByTrackQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, SortTrackField, SortOrder } from 'lib/graphql'
+
+// SCid query - inline until codegen generates the hook
+const SCID_BY_TRACK_QUERY = gql`
+  query ScidByTrack($trackId: String!) {
+    scidByTrack(trackId: $trackId) {
+      scid
+      chainCode
+      status
+      streamCount
+      ogunRewardsEarned
+      createdAt
+    }
+  }
+`
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -780,7 +794,7 @@ function DEXDashboard() {
   })
 
   // SCid Query - fetch SoundChain ID for track
-  const { data: scidData } = useScidByTrackQuery({
+  const { data: scidData } = useQuery(SCID_BY_TRACK_QUERY, {
     variables: { trackId: routeId || '' },
     skip: selectedView !== 'track' || !routeId,
     fetchPolicy: 'cache-and-network',
