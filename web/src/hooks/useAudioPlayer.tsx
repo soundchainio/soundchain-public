@@ -38,6 +38,7 @@ interface AudioPlayerContextData {
   setPlayerFavorite: (isFavorite: boolean) => void
   setIsPlaylistOpen: (isPlaylistOpen: boolean) => void
   isPlaylistOpen: boolean
+  closePlayer: () => void
 }
 
 const localStorageVolumeKey = 'SOUNDCHAIN_VOLUME'
@@ -226,6 +227,19 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     [setIsFavorite],
   )
 
+  // Close the player entirely - stops playback and clears current song
+  const closePlayer = useCallback(() => {
+    setIsPlaying(false)
+    setCurrentSong({} as Song)
+    setPlaylist([])
+    setOriginalPlaylist([])
+    setCurrentPlaylistIndex(0)
+    setProgress(0)
+    setDuration(0)
+    setProgressFromSlider(null)
+    setIsPlaylistOpen(false)
+  }, [])
+
   return (
     <AudioPlayerContext.Provider
       value={{
@@ -257,6 +271,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         setPlayerFavorite,
         setIsPlaylistOpen,
         isPlaylistOpen,
+        closePlayer,
       }}
     >
       {children}

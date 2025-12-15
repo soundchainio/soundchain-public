@@ -7,12 +7,18 @@ import { useState } from 'react'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
 import { Playlists } from 'icons/Playlists'
-import { SpeakerXMarkIcon, SpeakerWaveIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
+import { SpeakerXMarkIcon, SpeakerWaveIcon, ArrowsPointingOutIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 
 /**
  * DesktopBottomAudioPlayer - UI only, no audio element
  * Audio is handled by AudioEngine component to prevent echo
+ *
+ * Features:
+ * - Click on cover art/title area to open fullscreen player
+ * - Close (X) button to dismiss the player entirely
+ * - Fullscreen expand button
+ * - Collapse/expand controls
  */
 export const BottomAudioPlayer = () => {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -22,6 +28,7 @@ export const BottomAudioPlayer = () => {
     setVolume,
     volume,
     setIsPlaylistOpen,
+    closePlayer,
   } = useAudioPlayerContext()
 
   const { dispatchShowAudioPlayerModal } = useModalDispatch()
@@ -32,6 +39,11 @@ export const BottomAudioPlayer = () => {
   }
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed)
+
+  // Click on cover art / title area to open fullscreen
+  const handleOpenFullscreen = () => {
+    dispatchShowAudioPlayerModal(true, true) // Open directly in fullscreen mode
+  }
 
   if (!currentSong.src) return null
 
@@ -46,8 +58,17 @@ export const BottomAudioPlayer = () => {
 
   return (
     <Container style={{ height: isCollapsed ? '60px' : '90px' }}>
+      {/* Close button (X) on the far left */}
+      <button
+        aria-label="Close player"
+        className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors ml-2 flex-shrink-0"
+        onClick={closePlayer}
+      >
+        <XMarkIcon className="h-4 w-4 text-white" />
+      </button>
+
       {!isCollapsed && (
-        <TrackDetails>
+        <TrackDetails onClick={handleOpenFullscreen} className="cursor-pointer hover:bg-white/5 transition-colors rounded-lg">
           <ImageContainer>
             <Asset src={currentSong.art} />
           </ImageContainer>
@@ -80,7 +101,7 @@ export const BottomAudioPlayer = () => {
         <button
           aria-label="Open fullscreen player"
           className="ml-2 hover:cursor-pointer flex items-center justify-center h-8 w-8 rounded-full hover:bg-white/10 transition-colors"
-          onClick={() => dispatchShowAudioPlayerModal(true, true)}
+          onClick={handleOpenFullscreen}
         >
           <ArrowsPointingOutIcon className="h-5 w-5 text-white" />
         </button>
