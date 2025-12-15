@@ -3393,6 +3393,17 @@ function DEXDashboard() {
                       </CardContent>
                     </Card>
                   )}
+
+                  {/* User's Posts - Same rendering as /dex feed */}
+                  <Card className="retro-card">
+                    <CardContent className="p-6">
+                      <h2 className="retro-title text-lg flex items-center gap-2 mb-4">
+                        <NewPost className="w-5 h-5 text-cyan-400" />
+                        Posts by @{viewingProfile.userHandle}
+                      </h2>
+                      <Posts profileId={viewingProfile.id} />
+                    </CardContent>
+                  </Card>
                 </>
               )}
             </div>
