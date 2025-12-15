@@ -45,6 +45,7 @@ export interface ModalState {
   showUnderDevelopment: boolean;
   showCreate: boolean;
   showAudioPlayer: boolean;
+  audioPlayerFullscreen: boolean;
   showApprove: boolean;
   showRemoveListing: boolean;
   showBidsHistory: boolean;
@@ -121,6 +122,7 @@ export const initialModalState = {
   showUnderDevelopment: false,
   showCreate: false,
   showAudioPlayer: false,
+  audioPlayerFullscreen: false,
   showApprove: false,
   showRemoveListing: false,
   showBidsHistory: false,
@@ -269,6 +271,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         showAudioPlayer: (action.payload as ShowAudioPlayerPayload).show,
+        audioPlayerFullscreen: (action.payload as ShowAudioPlayerPayload).fullscreen ?? false,
         anyModalOpened: (action.payload as ShowAudioPlayerPayload).show,
       };
     case ModalActionTypes.SHOW_TRANSFER_CONFIRMATION:

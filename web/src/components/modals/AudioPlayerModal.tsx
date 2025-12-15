@@ -59,6 +59,14 @@ export const AudioPlayerModal = () => {
   const me = useMe()
 
   const isOpen = modalState.showAudioPlayer
+  const shouldStartFullscreen = modalState.audioPlayerFullscreen
+
+  // Auto-expand to fullscreen when opened with fullscreen flag
+  useEffect(() => {
+    if (isOpen && shouldStartFullscreen) {
+      setIsFullscreen(true)
+    }
+  }, [isOpen, shouldStartFullscreen])
 
   const handleClose = () => {
     dispatchShowAudioPlayerModal(false)

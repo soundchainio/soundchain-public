@@ -4,6 +4,7 @@ import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import Asset from 'components/Asset/Asset'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
+import { ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 
 /**
  * MobileBottomAudioPlayer - UI only, no audio element
@@ -39,6 +40,14 @@ export const BottomAudioPlayer = () => {
           </div>
         </button>
         <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Direct fullscreen button - skips modal, goes straight to fullscreen */}
+          <button
+            aria-label="Open fullscreen player"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 active:bg-white/20"
+            onClick={() => dispatchShowAudioPlayerModal(true, true)}
+          >
+            <ArrowsPointingOutIcon className="h-5 w-5 text-white" />
+          </button>
           <FavoriteTrack />
           <button
             aria-label={isPlaying ? 'Pause' : 'Play'}

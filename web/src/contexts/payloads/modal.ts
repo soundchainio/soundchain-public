@@ -77,6 +77,7 @@ export interface ShowRemoveListing {
 
 export interface ShowAudioPlayerPayload {
   show: boolean;
+  fullscreen?: boolean;
 }
 
 export interface ShowOgunTransferConfirmationPayload {

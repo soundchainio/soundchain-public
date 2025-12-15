@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { BotttomPlayerTrackSlider } from './components/BotttomPlayerTrackSlider'
 import { Playlists } from 'icons/Playlists'
-import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
+import { SpeakerXMarkIcon, SpeakerWaveIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/outline'
 import { IoIosArrowUp, IoIosArrowDown } from 'react-icons/io'
 
 /**
@@ -77,6 +77,13 @@ export const BottomAudioPlayer = () => {
           </div>
           <SpeakerWaveIcon className="h-4 w-4 text-white ml-1" />
         </div>
+        <button
+          aria-label="Open fullscreen player"
+          className="ml-2 hover:cursor-pointer flex items-center justify-center h-8 w-8 rounded-full hover:bg-white/10 transition-colors"
+          onClick={() => dispatchShowAudioPlayerModal(true, true)}
+        >
+          <ArrowsPointingOutIcon className="h-5 w-5 text-white" />
+        </button>
         <IoIosArrowUp
           size={25}
           color="white"

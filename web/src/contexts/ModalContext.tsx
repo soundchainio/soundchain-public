@@ -34,8 +34,8 @@ export const useModalDispatch = () => {
   return {
     dispatchShowCreateModal: (show: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_CREATE, payload: { show } }),
-    dispatchShowAudioPlayerModal: (show: boolean) =>
-      dispatch({ type: ModalActionTypes.SHOW_AUDIO_PLAYER, payload: { show } }),
+    dispatchShowAudioPlayerModal: (show: boolean, fullscreen?: boolean) =>
+      dispatch({ type: ModalActionTypes.SHOW_AUDIO_PLAYER, payload: { show, fullscreen } }),
     dispatchShowFilterMarketplaceModal: (payload: any) =>
       dispatch({ type: ModalActionTypes.SHOW_FILTER_MARKETPLACE, payload }),
     dispatchShowNftTransferConfirmationModal: (payload: any) =>
