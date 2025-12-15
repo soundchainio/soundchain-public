@@ -1,10 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/dex/:path*",
-      "destination": "/dex/:path*"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
