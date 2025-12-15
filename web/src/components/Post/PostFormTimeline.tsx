@@ -26,6 +26,7 @@ import { LinkFormFooter } from './PostFormTimelineComponents/LinkFormFooter'
 import { LinkItem } from './PostFormTimelineComponents/LinkItem'
 import { MediaLink } from './PostLinkInput'
 import { useMe } from 'hooks/useMe'
+import { EmoteRenderer } from '../EmoteRenderer'
 
 export const PostFormTimeline = () => {
   const me = useMe()
@@ -215,6 +216,13 @@ export const PostFormTimeline = () => {
           onChange={onTextAreaChange}
           value={postBody}
         ></PostFormTextArea>
+        {/* Preview section - shows rendered emotes when post contains custom stickers */}
+        {postBody.includes('![emote:') && (
+          <div className="mt-2 mb-2 p-2 bg-neutral-800 rounded-md border border-neutral-700">
+            <span className="text-[10px] text-neutral-500 block mb-1">Preview:</span>
+            <EmoteRenderer text={postBody} className="text-xs text-white whitespace-pre-wrap" />
+          </div>
+        )}
         <div className="flex flex-row">
           <div className="flex basis-3/4">
             {/* Emoji Picker */}
