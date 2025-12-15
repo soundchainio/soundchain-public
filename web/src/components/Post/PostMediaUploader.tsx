@@ -10,6 +10,7 @@ interface PostMediaUploaderProps {
   onMediaRemoved: () => void
   currentUrl?: string
   currentType?: string
+  isGuest?: boolean // Use guest upload endpoint (images only)
 }
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
@@ -26,6 +27,7 @@ export const PostMediaUploader = ({
   onMediaRemoved,
   currentUrl,
   currentType,
+  isGuest,
 }: PostMediaUploaderProps) => {
   const [preview, setPreview] = useState<string | null>(currentUrl || null)
   const [mediaType, setMediaType] = useState<'image' | 'video' | 'audio' | null>(
@@ -38,7 +40,7 @@ export const PostMediaUploader = ({
     if (url && mediaType) {
       onMediaSelected(url, mediaType)
     }
-  })
+  }, isGuest)
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {

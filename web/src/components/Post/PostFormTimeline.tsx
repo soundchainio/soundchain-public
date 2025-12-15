@@ -301,6 +301,7 @@ export const PostFormTimeline = () => {
           }}
           currentUrl={uploadedMediaUrl}
           currentType={uploadedMediaType}
+          isGuest={!me} // Use guest upload for unauthenticated users
         />
       )}
 
