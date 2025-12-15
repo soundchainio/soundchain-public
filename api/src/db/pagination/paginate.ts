@@ -66,6 +66,7 @@ export async function paginate<T extends typeof Model>(
   const querySort = buildQuerySort(field, ascending);
 
   // Query without .lean() to return proper mongoose documents
+  // IMPORTANT: .lean() breaks Typegoose document methods - never use it here
   const [results, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
