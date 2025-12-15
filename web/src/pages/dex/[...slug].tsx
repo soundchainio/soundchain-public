@@ -979,6 +979,29 @@ function DEXDashboard() {
                 </span>
               </Link>
 
+              {/* Mobile Post+ and Mint+ buttons - visible on small screens */}
+              <div className="flex lg:hidden items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCreateClick}
+                  className="hover:bg-cyan-500/10 px-2"
+                  title="Create Post"
+                >
+                  <NewPost className="w-5 h-5 text-cyan-400" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => me ? dispatchShowCreateModal(true) : router.push('/login')}
+                  className="hover:bg-purple-500/10 px-2"
+                  title="Mint NFT"
+                >
+                  <Music className="w-5 h-5 text-purple-400" />
+                </Button>
+              </div>
+
+              {/* Desktop navigation with full labels - visible on large screens */}
               <div className="hidden lg:flex items-center space-x-2">
                 {navigationPages.map((page) => (
                   <Link key={page.name} href={page.href}>

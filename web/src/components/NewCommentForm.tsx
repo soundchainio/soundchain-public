@@ -75,6 +75,15 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
       await addComment({ variables: { input: { postId, body } } })
     } else if (guestWallet) {
       await guestAddComment({ variables: { input: { postId, body }, walletAddress: guestWallet } })
+    } else {
+      // Anonymous comment - generate a random wallet address like public posts
+      const hexChars = '0123456789abcdef'
+      let addressBody = ''
+      for (let i = 0; i < 40; i++) {
+        addressBody += hexChars[Math.floor(Math.random() * 16)]
+      }
+      const anonymousAddress = `0x${addressBody}`
+      await guestAddComment({ variables: { input: { postId, body }, walletAddress: anonymousAddress } })
     }
 
     if (router.query.commentId) {
@@ -89,10 +98,9 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
     document.querySelector('#main')?.scrollTo(0, 0)
   }
 
-  // Show nothing if no user and no guest wallet
-  if (!me && !guestWallet) return null
-
+  // Allow commenting for everyone - logged in users, guests with wallet, or anonymous
   const isGuest = !me && !!guestWallet
+  const isAnonymous = !me && !guestWallet
 
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
@@ -135,7 +143,9 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
           <Form>
             <div className="flex flex-col bg-gray-25">
               <div className="flex flex-row items-start space-x-3 p-3">
-                {isGuest ? (
+                {me ? (
+                  <Avatar profile={me.profile} linkToProfile={false} />
+                ) : isGuest ? (
                   <div className="flex items-center gap-2">
                     <GuestAvatar walletAddress={guestWallet!} pixels={40} />
                     <span className="text-[8px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full font-medium">
@@ -143,7 +153,15 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
                     </span>
                   </div>
                 ) : (
-                  <Avatar profile={me!.profile} linkToProfile={false} />
+                  // Anonymous user - show generic avatar
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400">
+                      👤
+                    </div>
+                    <span className="text-[8px] px-1.5 py-0.5 bg-neutral-600 text-neutral-300 rounded-full font-medium">
+                      Public
+                    </span>
+                  </div>
                 )}
                 <div className="flex-1 relative">
                   <FlexareaField id="commentField" name="body" maxLength={160} placeholder="Write a comment..." />
