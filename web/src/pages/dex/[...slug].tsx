@@ -47,7 +47,7 @@ import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
-  Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass
+  Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw
 } from 'lucide-react'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
@@ -363,12 +363,15 @@ function DEXDashboard() {
   const [usersViewMode, setUsersViewMode] = useState<'browse' | 'leaderboard'>('browse')
 
   // Sync selectedView with URL changes (for back/forward navigation)
+  // Also sync when router becomes ready (router.query is empty until ready)
   useEffect(() => {
+    if (!router.isReady) return
     const newView = getInitialView()
     if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
+      console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, isReady: router.isReady })
       setSelectedView(newView as any)
     }
-  }, [routeType])
+  }, [routeType, router.isReady])
 
   // Restore wallet connection from localStorage on mount
   useEffect(() => {
@@ -1760,13 +1763,32 @@ function DEXDashboard() {
                     Leaderboard
                   </Button>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {exploreUsersLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading users...</Badge>}
+                  {exploreUsersError && (
+                    <Badge className="bg-red-500/20 text-red-400">
+                      Error: {exploreUsersError.message}
+                    </Badge>
+                  )}
                   {exploreUsersData?.exploreUsers?.nodes && (
                     <Badge className="bg-green-500/20 text-green-400">
                       {exploreUsersData.exploreUsers.nodes.length} users
                     </Badge>
                   )}
+                  {!exploreUsersLoading && !exploreUsersData?.exploreUsers?.nodes && !exploreUsersError && (
+                    <Badge className="bg-orange-500/20 text-orange-400">
+                      No data yet
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => refetchUsers()}
+                    className="text-cyan-400 hover:bg-cyan-500/10"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Refetch
+                  </Button>
                 </div>
               </div>
 
