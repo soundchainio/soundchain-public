@@ -2134,7 +2134,12 @@ function DEXDashboard() {
                     </Card>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {exploreUsersData?.exploreUsers?.nodes?.map((user: any) => (
+                    {/* Deduplicate users by ID to prevent duplicate avatars */}
+                    {exploreUsersData?.exploreUsers?.nodes
+                      ?.filter((user: any, index: number, self: any[]) =>
+                        self.findIndex((u: any) => u.id === user.id) === index
+                      )
+                      ?.map((user: any) => (
                       <Card key={user.id} className="retro-card p-4 hover:border-cyan-500/50 transition-all">
                         <div className="flex items-start gap-4">
                           {/* Avatar with Online Status */}
@@ -3251,10 +3256,20 @@ function DEXDashboard() {
                   <span className="ml-3 text-cyan-400">Loading profile...</span>
                 </div>
               )}
-              {profileDetailError && (
+              {viewingProfileError && (
                 <Card className="retro-card p-6 text-center">
                   <p className="text-red-400 mb-2">Error loading profile</p>
-                  <p className="text-gray-500 text-sm">{profileDetailError.message}</p>
+                  <p className="text-gray-500 text-sm">{viewingProfileError.message}</p>
+                </Card>
+              )}
+              {!viewingProfileLoading && !viewingProfileError && !viewingProfile && (
+                <Card className="retro-card p-6 text-center">
+                  <p className="text-yellow-400 mb-2">Profile not found</p>
+                  <p className="text-gray-500 text-sm">The user "{routeId}" doesn't exist or may have been deleted.</p>
+                  <Button variant="ghost" onClick={() => router.back()} className="mt-4 hover:bg-cyan-500/10">
+                    <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
+                    Go Back
+                  </Button>
                 </Card>
               )}
               {viewingProfile && (
