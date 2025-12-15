@@ -16,7 +16,7 @@ interface Emoji {
 }
 import { Edit } from 'icons/Edit'
 import { CreatePostInput, useCreatePostMutation, useGuestCreatePostMutation } from 'lib/graphql'
-import { ChangeEvent, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify'
 import tw from 'tailwind-styled-components'
 import { MediaProvider } from 'types/MediaProvider'
@@ -26,7 +26,7 @@ import { LinkFormFooter } from './PostFormTimelineComponents/LinkFormFooter'
 import { LinkItem } from './PostFormTimelineComponents/LinkItem'
 import { MediaLink } from './PostLinkInput'
 import { useMe } from 'hooks/useMe'
-import { EmoteRenderer } from '../EmoteRenderer'
+import { EmoteTextInput } from './EmoteTextInput'
 
 export const PostFormTimeline = () => {
   const me = useMe()
@@ -124,10 +124,6 @@ export const PostFormTimeline = () => {
     }
   }
 
-  const onTextAreaChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setPostBody(event.target.value)
-  }
-
   const onMusicLinkClick = () => {
     setMusicLinkVisible(!isMusicLinkVisible)
     setVideoLinkVisible(false)
@@ -210,19 +206,13 @@ export const PostFormTimeline = () => {
         )}
       </div>
       <PostFormMiddleContainer>
-        <PostFormTextArea
+        <EmoteTextInput
           placeholder="What's happening?"
           maxLength={postMaxLength}
-          onChange={onTextAreaChange}
+          onChange={setPostBody}
           value={postBody}
-        ></PostFormTextArea>
-        {/* Preview section - shows rendered emotes when post contains custom stickers */}
-        {postBody.includes('![emote:') && (
-          <div className="mt-2 mb-2 p-2 bg-neutral-800 rounded-md border border-neutral-700">
-            <span className="text-[10px] text-neutral-500 block mb-1">Preview:</span>
-            <EmoteRenderer text={postBody} className="text-xs text-white whitespace-pre-wrap" />
-          </div>
-        )}
+          className="w-full text-xs text-white placeholder-neutral-500"
+        />
         <div className="flex flex-row">
           <div className="flex basis-3/4">
             {/* Emoji Picker */}
@@ -400,17 +390,6 @@ const PostFormMiddleContainer = tw.div`
   border-neutral-700
   bg-neutral-900
   py-[8px] px-[12px]
-`
-
-const PostFormTextArea = tw.textarea`
-  w-full
-  resize-none
-  border-0
-  bg-neutral-900
-  text-xs
-  text-white
-  placeholder-neutral-500
-  focus:ring-0
 `
 
 const PostFormLinkContainer = tw.div`

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { StickerPicker } from '../StickerPicker'
-import { EmoteRenderer } from '../EmoteRenderer'
+import { EmoteTextInput } from './EmoteTextInput'
 import { useGuestCreatePostMutation } from 'lib/graphql'
 import Picker from '@emoji-mart/react'
 import { getNormalizedLink, hasLink } from 'utils/NormalizeEmbedLinks'
@@ -129,23 +129,17 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
         {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="p-4 space-y-4">
-            {/* Body textarea */}
+            {/* Body input with inline emote rendering */}
             <div className="relative">
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="What's on your mind?"
-                className="w-full h-32 bg-neutral-800 border border-neutral-700 rounded-xl p-3 text-neutral-100 placeholder-neutral-500 resize-none focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50"
-                maxLength={500}
-              />
-
-              {/* Preview section - shows rendered emotes when post contains custom stickers */}
-              {body.includes('![emote:') && (
-                <div className="mt-2 p-2 bg-neutral-700/50 rounded-lg border border-neutral-600">
-                  <span className="text-[10px] text-neutral-400 block mb-1">Preview:</span>
-                  <EmoteRenderer text={body} className="text-sm text-neutral-100 whitespace-pre-wrap" />
-                </div>
-              )}
+              <div className="w-full min-h-[128px] bg-neutral-800 border border-neutral-700 rounded-xl p-3 focus-within:border-cyan-500/50 focus-within:ring-1 focus-within:ring-cyan-500/50">
+                <EmoteTextInput
+                  value={body}
+                  onChange={setBody}
+                  placeholder="What's on your mind?"
+                  maxLength={500}
+                  className="text-neutral-100 placeholder-neutral-500"
+                />
+              </div>
 
               {/* Emoji/Sticker Picker Dropdowns */}
               {showEmojiPicker && (
