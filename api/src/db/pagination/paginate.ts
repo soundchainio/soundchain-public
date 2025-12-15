@@ -65,7 +65,7 @@ export async function paginate<T extends typeof Model>(
   const cursorFilter = buildCursorFilter(field, ascending, before, after, inclusive);
   const querySort = buildQuerySort(field, ascending);
 
-  // 1) Assert the .sort(...) argument
+  // Query without .lean() to return proper mongoose documents
   const [results, totalCount] = await Promise.all([
     collection
       .find({ $and: [cursorFilter, filter] })
