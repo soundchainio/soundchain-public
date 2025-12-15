@@ -1,0 +1,19 @@
+{
+  "rewrites": [
+    {
+      "source": "/dex/:path*",
+      "destination": "/dex/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    }
+  ]
+}
