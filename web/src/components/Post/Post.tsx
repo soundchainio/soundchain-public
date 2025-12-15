@@ -236,10 +236,13 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
               // Simple iframe embed for Spotify, SoundCloud, Bandcamp - like legacy UI
               <iframe
                 className="w-full min-h-[300px] bg-neutral-900"
-                src={post.mediaLink}
+                src={post.mediaLink?.replace(/^http:/, 'https:')}
                 title="Media"
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
                 allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
               />
             )
           )}
