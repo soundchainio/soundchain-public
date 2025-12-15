@@ -35,9 +35,9 @@ export class Post extends Model {
   @prop({ type: String, required: false, lowercase: true })
   walletAddress?: string;
 
-  @Field(() => Boolean)
+  @Field(() => Boolean, { nullable: true })
   @prop({ type: Boolean, default: false })
-  isGuest: boolean;
+  isGuest?: boolean;
 
   @prop({ required: true, default: {}, _id: false })
   reactionStats: ReactionStats;
