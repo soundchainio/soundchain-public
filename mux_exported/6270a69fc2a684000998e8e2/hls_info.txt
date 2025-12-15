@@ -1,3 +1,0 @@
-HLS URL: https://stream.mux.com/oE4M3b7t4GywHJxhsV01kDvTffiFEPDSaDtvCe9GYfNI.m3u8
-Note: Use ffmpeg to download HLS stream if needed:
-ffmpeg -i "https://stream.mux.com/oE4M3b7t4GywHJxhsV01kDvTffiFEPDSaDtvCe9GYfNI.m3u8" -c copy "/Users/soundchain/soundchain/mux_exported/6270a69fc2a684000998e8e2/audio.mp4"
