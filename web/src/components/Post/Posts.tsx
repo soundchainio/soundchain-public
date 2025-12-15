@@ -172,6 +172,26 @@ export const Posts = ({ profileId }: PostsProps) => {
     }
   }, [viewMode])
 
+  // Get nodes for hooks that need them (safe even if data not loaded yet)
+  const nodes = data?.posts?.nodes
+
+  // Find the currently playing post (for jump-to feature) - MUST be before conditional returns
+  const playingPostId = useMemo(() => {
+    if (!isPlaying || !currentSong?.trackId || !nodes) return null
+    const post = (nodes as PostType[]).find(p => p.track?.id === currentSong.trackId)
+    return post?.id || null
+  }, [isPlaying, currentSong?.trackId, nodes])
+
+  // Jump to the currently playing or active post - MUST be before conditional returns
+  const jumpToActivePost = useCallback((columnCount: number = 1) => {
+    const targetId = playingPostId || activePostId
+    if (!targetId || !nodes) return
+    const index = findPostIndex(targetId, nodes as PostType[])
+    if (index >= 0) {
+      scrollToPostIndex(index, columnCount)
+    }
+  }, [playingPostId, activePostId, nodes, findPostIndex, scrollToPostIndex])
+
   if (loading) {
     return (
       <div className="space-y-2">
@@ -204,7 +224,7 @@ export const Posts = ({ profileId }: PostsProps) => {
     return <NoResultFound type="posts" />
   }
 
-  const { nodes, pageInfo } = data.posts
+  const { pageInfo } = data.posts
 
   const loadMore = () => {
     fetchMore({
@@ -218,8 +238,8 @@ export const Posts = ({ profileId }: PostsProps) => {
   }
 
   const loadMoreItems = loading ? () => null : loadMore
-  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes.length
-  const postsCount = pageInfo.hasNextPage ? nodes.length + 1 : nodes.length
+  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes!.length
+  const postsCount = pageInfo.hasNextPage ? nodes!.length + 1 : nodes!.length
 
   const handleOnPlayClicked = (trackId: string) => {
     if (nodes) {
@@ -247,23 +267,6 @@ export const Posts = ({ profileId }: PostsProps) => {
       playlistState(listOfTracks, trackIndex)
     }
   }
-
-  // Find the currently playing post (for jump-to feature)
-  const playingPostId = useMemo(() => {
-    if (!isPlaying || !currentSong?.trackId || !nodes) return null
-    const post = (nodes as PostType[]).find(p => p.track?.id === currentSong.trackId)
-    return post?.id || null
-  }, [isPlaying, currentSong?.trackId, nodes])
-
-  // Jump to the currently playing or active post
-  const jumpToActivePost = useCallback((columnCount: number = 1) => {
-    const targetId = playingPostId || activePostId
-    if (!targetId || !nodes) return
-    const index = findPostIndex(targetId, nodes as PostType[])
-    if (index >= 0) {
-      scrollToPostIndex(index, columnCount)
-    }
-  }, [playingPostId, activePostId, nodes, findPostIndex, scrollToPostIndex])
 
   // Calculate responsive column count based on width
   // iPhone: 2 cols (~187px each), Desktop: 3-4 cols (~150px each) for tight stacking
@@ -399,7 +402,7 @@ export const Posts = ({ profileId }: PostsProps) => {
                         width={width}
                         columnCount={columnCount}
                         columnWidth={columnWidth}
-                        rowCount={Math.ceil(nodes.length / columnCount)}
+                        rowCount={Math.ceil(nodes!.length / columnCount)}
                         rowHeight={rowHeight}
                         itemData={{ nodes, handleOnPlayClicked, columnCount, onPostClick: handlePostClick }}
                         onItemsRendered={({ visibleRowStartIndex, visibleRowStopIndex }) => {
