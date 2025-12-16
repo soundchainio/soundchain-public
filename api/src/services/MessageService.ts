@@ -47,14 +47,17 @@ export class MessageService extends ModelService<typeof Message> {
   }
 
   getChats(profileId: string, page?: PageInput): Promise<PaginateResult<Message>> {
+    // Convert profileId string to ObjectId for proper comparison in MongoDB aggregation
+    const profileObjectId = new mongoose.Types.ObjectId(profileId);
+
     return this.paginateAggregated({
       filter: {
         $or: [
           {
-            fromId: profileId,
+            fromId: profileObjectId,
           },
           {
-            toId: profileId,
+            toId: profileObjectId,
           },
         ],
       },
@@ -62,7 +65,7 @@ export class MessageService extends ModelService<typeof Message> {
         _id: {
           $cond: {
             if: {
-              $eq: ['$fromId', profileId],
+              $eq: ['$fromId', profileObjectId],
             },
             then: '$toId',
             else: '$fromId',
