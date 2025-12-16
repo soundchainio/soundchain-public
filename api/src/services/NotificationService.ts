@@ -71,11 +71,26 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyNewReaction({ postId, profileId, type: reactionType }: Reaction): Promise<void> {
-    const [{ profileId: postProfileId }, { displayName: authorName, profilePicture: authorPicture }] =
+    // Skip notification if postId or profileId is missing
+    if (!postId || !profileId) {
+      console.warn('[NotificationService] Skipping reaction notification - missing postId or profileId');
+      return;
+    }
+
+    const [post, authorProfile] =
       await Promise.all([
         this.context.postService.getPost(postId.toString()),
         this.context.profileService.getProfile(profileId.toString()),
       ]);
+
+    // Skip if post or author profile not found
+    if (!post || !authorProfile) {
+      console.warn('[NotificationService] Skipping reaction notification - post or author not found');
+      return;
+    }
+
+    const { profileId: postProfileId } = post;
+    const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
 
     const metadata = {
       authorName,
