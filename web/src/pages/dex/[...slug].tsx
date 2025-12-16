@@ -34,7 +34,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, SortTrackField, SortOrder } from 'lib/graphql'
 
 // SCid query - inline until codegen generates the hook
 const SCID_BY_TRACK_QUERY = gql`
@@ -486,6 +486,10 @@ function DEXDashboard() {
   const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
   const [usersViewMode, setUsersViewMode] = useState<'browse' | 'leaderboard'>('browse')
 
+  // Messaging state
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
+  const [messageInput, setMessageInput] = useState('')
+
   // Sync selectedView with URL changes (for back/forward navigation)
   // Also sync when router becomes ready (router.query is empty until ready)
   useEffect(() => {
@@ -772,6 +776,35 @@ function DEXDashboard() {
       })
     }
   }, [selectedView, exploreUsersLoading, exploreUsersError, exploreUsersData])
+
+  // Chats/Messages Query - fetch all conversations
+  const { data: chatsData, loading: chatsLoading, refetch: refetchChats } = useChatsQuery({
+    skip: selectedView !== 'messages' || !user,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Lazy query for loading chat history when a conversation is selected
+  const [loadChatHistory, { data: chatHistoryData, loading: chatHistoryLoading }] = useChatHistoryLazyQuery({
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Send message mutation
+  const [sendMessage, { loading: sendingMessage }] = useSendMessageMutation({
+    onCompleted: () => {
+      setMessageInput('')
+      refetchChats()
+      if (selectedChatId) {
+        loadChatHistory({ variables: { profileId: selectedChatId } })
+      }
+    }
+  })
+
+  // Load chat history when a conversation is selected
+  useEffect(() => {
+    if (selectedChatId && selectedView === 'messages') {
+      loadChatHistory({ variables: { profileId: selectedChatId } })
+    }
+  }, [selectedChatId, selectedView, loadChatHistory])
 
   // Explore Tracks Query - search for tracks
   // SPEED: cache-first, only fetch when on explore view
@@ -3061,20 +3094,159 @@ function DEXDashboard() {
             </div>
           )}
 
-          {/* Messages View */}
+          {/* Messages View - Full DM System */}
           {selectedView === 'messages' && (
-            <div className="space-y-6">
-              <Card className="retro-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <MessageCircle className="w-8 h-8 text-blue-400" />
-                  <h2 className="retro-title text-xl">Messages</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+              {/* Conversations List */}
+              <Card className="retro-card overflow-hidden lg:col-span-1">
+                <div className="p-4 border-b border-cyan-500/30">
+                  <div className="flex items-center gap-3">
+                    <MessageCircle className="w-6 h-6 text-blue-400" />
+                    <h2 className="retro-title text-lg">Messages</h2>
+                  </div>
                 </div>
-                <p className="text-gray-400 mb-6">Your conversations with other artists and fans.</p>
-                <div className="text-center py-8">
-                  <MessageCircle className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">No messages yet</p>
-                  <p className="text-xs text-gray-500 mt-2">Start a conversation by visiting an artist's profile</p>
+                <div className="overflow-y-auto h-[calc(100%-60px)]">
+                  {chatsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                    </div>
+                  ) : (chatsData?.chats?.nodes?.length ?? 0) > 0 ? (
+                    <div className="divide-y divide-gray-800">
+                      {chatsData?.chats?.nodes?.map((chat: any) => (
+                        <div
+                          key={chat._id}
+                          onClick={() => setSelectedChatId(chat._id)}
+                          className={`p-4 cursor-pointer hover:bg-cyan-500/5 transition-colors ${selectedChatId === chat._id ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-12 h-12">
+                              {chat.profile?.profilePicture ? (
+                                <AvatarImage src={chat.profile.profilePicture} />
+                              ) : null}
+                              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white">
+                                {chat.profile?.displayName?.charAt(0)?.toUpperCase() || '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-white truncate">{chat.profile?.displayName || 'Unknown'}</p>
+                                {chat.unread && (
+                                  <span className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0" />
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-400 truncate">{chat.message}</p>
+                              <p className="text-xs text-gray-600">{new Date(chat.createdAt).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-400 text-sm">No conversations yet</p>
+                      <p className="text-xs text-gray-600 mt-1">Visit an artist's profile to start a chat</p>
+                    </div>
+                  )}
                 </div>
+              </Card>
+
+              {/* Chat Window */}
+              <Card className="retro-card overflow-hidden lg:col-span-2 flex flex-col">
+                {selectedChatId ? (
+                  <>
+                    {/* Chat Header */}
+                    <div className="p-4 border-b border-cyan-500/30 flex items-center gap-3">
+                      {chatHistoryData?.chatHistory?.nodes?.[0]?.fromProfile && (
+                        <>
+                          <Avatar className="w-10 h-10">
+                            {(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.profilePicture ? (
+                              <AvatarImage src={(chatHistoryData.chatHistory.nodes[0].fromProfile as any).profilePicture} />
+                            ) : null}
+                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white">
+                              {(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName?.charAt(0) || '?'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-white">{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName}</p>
+                            <p className="text-xs text-gray-400">@{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.userHandle}</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {chatHistoryLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                        </div>
+                      ) : (
+                        chatHistoryData?.chatHistory?.nodes?.map((message: any) => {
+                          const isMe = message.fromId === user?.id
+                          return (
+                            <div key={message._id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                              <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${isMe ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-white'}`}>
+                                <p className="text-sm">{message.message}</p>
+                                <p className={`text-xs mt-1 ${isMe ? 'text-cyan-900' : 'text-gray-500'}`}>
+                                  {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+
+                    {/* Message Input */}
+                    <div className="p-4 border-t border-cyan-500/30">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault()
+                          if (messageInput.trim() && selectedChatId) {
+                            sendMessage({
+                              variables: {
+                                input: {
+                                  message: messageInput.trim(),
+                                  toId: selectedChatId,
+                                }
+                              }
+                            })
+                          }
+                        }}
+                        className="flex gap-3"
+                      >
+                        <input
+                          type="text"
+                          value={messageInput}
+                          onChange={(e) => setMessageInput(e.target.value)}
+                          placeholder="Type a message..."
+                          className="flex-1 bg-black/50 border border-gray-700 rounded-xl px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+                          maxLength={1000}
+                        />
+                        <Button
+                          type="submit"
+                          className="retro-button"
+                          disabled={!messageInput.trim() || sendingMessage}
+                        >
+                          {sendingMessage ? (
+                            <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full" />
+                          ) : (
+                            'Send'
+                          )}
+                        </Button>
+                      </form>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400">Select a conversation</p>
+                      <p className="text-xs text-gray-600 mt-1">Choose from your messages on the left</p>
+                    </div>
+                  </div>
+                )}
               </Card>
             </div>
           )}
