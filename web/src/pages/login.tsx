@@ -409,24 +409,22 @@ export default function LoginPage() {
       const redirectURI = `${baseUrl}/login`;
       console.log("[Email] Sending magic link to email...", { email: values.email, redirectURI });
 
-      // Use showUI: false to avoid iframe loading issues in browsers with strict privacy settings
-      // We'll show our own "Check your email" message instead
-      console.log('[Email] Sending magic link (showUI: false)...');
+      // Use showUI: true to let Magic handle the email verification UI
+      // This shows Magic's built-in widget prompts for "check your email" etc.
+      console.log('[Email] Sending magic link (showUI: true)...');
 
       // The loginWithMagicLink promise resolves when user clicks link and returns
-      // Meanwhile, show a "check your email" message
+      // Magic's widget will show the "check your email" message
       setError(null);
 
       // Create a promise that will be resolved when user returns from clicking the link
       const loginPromise = magic.auth.loginWithMagicLink({
         email: values.email,
         redirectURI,  // Must match Magic dashboard allowed URLs
-        showUI: false  // Don't use Magic's iframe - we show our own UI
+        showUI: true  // Let Magic's widget handle the UI
       });
 
-      // Show user-friendly message while waiting
-      setError('Check your email! Click the magic link to log in.');
-      console.log('[Email] Magic link sent! Waiting for user to click link...');
+      console.log('[Email] Magic link sent! Magic widget should show instructions...');
 
       try {
         await loginPromise;
