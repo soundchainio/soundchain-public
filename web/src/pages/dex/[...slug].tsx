@@ -467,13 +467,15 @@ function DEXDashboard() {
       case 'settings': return 'settings'
       case 'messages': return 'messages'
       case 'notifications': return 'notifications'
+      case 'feedback': return 'feedback'
+      case 'admin': return 'admin'
       case 'users': return routeId ? 'profile' : 'users' // /dex/users/handle -> profile view
       case 'home': return 'feed' // Default /dex to feed
       default: return 'feed' // Feed is the default landing view
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -1313,22 +1315,22 @@ function DEXDashboard() {
                                 <ExternalLink className="w-3 h-3 ml-auto" />
                               </Button>
                             </Link>
-                            <Link href="/feedback">
-                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => setShowUserMenu(false)}>
+                            <Link href="/dex/feedback">
+                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('feedback')}}>
                                 <Feedback className="w-4 h-4 mr-3" />
                                 Leave Feedback
                               </Button>
                             </Link>
                             {userData?.me?.roles?.includes(Role.Admin) && (
-                              <Link href="/manage-requests">
-                                <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => setShowUserMenu(false)}>
+                              <Link href="/dex/admin">
+                                <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('admin')}}>
                                   <VerifiedIcon className="w-4 h-4 mr-3" />
                                   Admin Panel
                                 </Button>
                               </Link>
                             )}
-                            <Link href="/settings">
-                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => setShowUserMenu(false)}>
+                            <Link href="/dex/settings">
+                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('settings')}}>
                                 <SettingsIcon className="w-4 h-4 mr-3" />
                                 Account Settings
                               </Button>
@@ -3598,6 +3600,44 @@ function DEXDashboard() {
                     <p className="text-xs text-gray-500">When you get likes, follows, or sales you'll see them here</p>
                   </div>
                 )}
+              </Card>
+            </div>
+          )}
+
+          {/* Feedback View - Google Forms iframe */}
+          {selectedView === 'feedback' && (
+            <div className="space-y-6">
+              <Card className="retro-card overflow-hidden">
+                <div className="flex items-center gap-3 p-4 border-b border-cyan-500/30">
+                  <Feedback className="w-6 h-6 text-cyan-400" />
+                  <h2 className="retro-title text-lg">Leave Feedback</h2>
+                </div>
+                <iframe
+                  src="https://docs.google.com/forms/d/e/1FAIpQLScmoMksAwl26GABnutNksgWOlfDGvfZbGeEqAiaSqIHo5sI9g/viewform?embedded=true"
+                  className="w-full h-[calc(100vh-200px)] min-h-[600px]"
+                  title="Feedback form"
+                />
+              </Card>
+            </div>
+          )}
+
+          {/* Admin Panel View - Verification Requests */}
+          {selectedView === 'admin' && userData?.me?.roles?.includes(Role.Admin) && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <VerifiedIcon className="w-8 h-8 text-green-400" />
+                  <h2 className="retro-title text-xl">Admin Panel</h2>
+                </div>
+                <p className="text-gray-400 mb-4">Manage verification requests and platform administration.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link href="/manage-requests">
+                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                      <h3 className="font-bold text-white">Verification Requests</h3>
+                      <p className="text-xs text-gray-400">Review pending artist verification requests</p>
+                    </Card>
+                  </Link>
+                </div>
               </Card>
             </div>
           )}
