@@ -253,18 +253,14 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
               </div>
 
               {/* Real-time Stats Grid */}
-              <div className="grid grid-cols-3 gap-3 lg:gap-4">
-                <div className="metadata-section p-3 lg:p-4 text-center">
-                  <div className="retro-text text-xl lg:text-2xl">{userData.tracks}</div>
-                  <div className="metadata-label text-xs">Tracks</div>
-                </div>
+              <div className="grid grid-cols-2 gap-3 lg:gap-4">
                 <div className="metadata-section p-3 lg:p-4 text-center">
                   <div className="retro-text text-xl lg:text-2xl">{userData.followers.toLocaleString()}</div>
                   <div className="metadata-label text-xs">Followers</div>
                 </div>
                 <div className="metadata-section p-3 lg:p-4 text-center">
                   <div className="retro-text text-xl lg:text-2xl">{userData.likes.toLocaleString()}</div>
-                  <div className="metadata-label text-xs">Likes</div>
+                  <div className="metadata-label text-xs">Following</div>
                 </div>
               </div>
 
