@@ -1095,9 +1095,9 @@ function DEXDashboard() {
                   onClick={() => { setShowNotifications(!showNotifications); setShowUserMenu(false); }}
                 >
                   <Bell className="w-5 h-5" />
-                  {user?.unreadNotificationCount > 0 && (
+                  {(user?.unreadNotificationCount ?? 0) > 0 && (
                     <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full">
-                      {user.unreadNotificationCount}
+                      {user?.unreadNotificationCount}
                     </Badge>
                   )}
                 </Button>
@@ -1945,10 +1945,10 @@ function DEXDashboard() {
                         <span>Loading users...</span>
                       </div>
                     </div>
-                  ) : exploreUsersData?.exploreUsers?.nodes?.length > 0 ? (
+                  ) : (exploreUsersData?.exploreUsers?.nodes?.length ?? 0) > 0 ? (
                     <>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2">
-                      {exploreUsersData.exploreUsers.nodes.map((profile: any) => {
+                      {exploreUsersData?.exploreUsers?.nodes?.map((profile: any) => {
                         // Check if profile picture is a video/gif
                         const isVideo = profile.profilePicture && /\.(mp4|mov|webm)$/i.test(profile.profilePicture)
                         const isGif = profile.profilePicture && /\.gif$/i.test(profile.profilePicture)
@@ -2021,7 +2021,7 @@ function DEXDashboard() {
                         <span>Loading leaderboard...</span>
                       </div>
                     </div>
-                  ) : exploreUsersData?.exploreUsers?.nodes?.length > 0 ? (
+                  ) : (exploreUsersData?.exploreUsers?.nodes?.length ?? 0) > 0 ? (
                     <Card className="retro-card overflow-hidden">
                       <div className="p-4 border-b border-cyan-500/30">
                         <h3 className="retro-title flex items-center gap-2">
@@ -2030,7 +2030,7 @@ function DEXDashboard() {
                         </h3>
                       </div>
                       <div className="divide-y divide-cyan-500/20">
-                        {[...exploreUsersData.exploreUsers.nodes]
+                        {[...(exploreUsersData?.exploreUsers?.nodes || [])]
                           .sort((a: any, b: any) => (b.followerCount || 0) - (a.followerCount || 0))
                           .slice(0, 20)
                           .map((profile: any, index: number) => (
