@@ -685,7 +685,7 @@ function DEXDashboard() {
   // Fetch all listing items for marketplace with pagination
   // SPEED: Only fetch when on marketplace or dashboard, cache-first
   const { data: listingData, loading: listingLoading, error: listingError, fetchMore: fetchMoreListings, refetch: refetchListings } = useListingItemsQuery({
-    variables: { page: { first: 10 }, sort: SelectToApolloQuery[SortListingItem.CreatedAt], filter: {} }, // Reduced from 20 to 10
+    variables: { page: { first: 50 }, sort: SelectToApolloQuery[SortListingItem.PriceDesc], filter: {} }, // Sort by price DESC to show priced items first
     ssr: false,
     fetchPolicy: 'cache-first', // Speed: cache-first for instant loads
     errorPolicy: 'all', // Allow partial data even with errors
