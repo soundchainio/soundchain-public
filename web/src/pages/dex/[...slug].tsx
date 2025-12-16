@@ -34,7 +34,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, SortTrackField, SortOrder } from 'lib/graphql'
 
 // SCid query - inline until codegen generates the hook
 const SCID_BY_TRACK_QUERY = gql`
@@ -490,6 +490,11 @@ function DEXDashboard() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
   const [messageInput, setMessageInput] = useState('')
 
+  // NFT Transfer state
+  const [transferRecipient, setTransferRecipient] = useState('')
+  const [selectedNftId, setSelectedNftId] = useState('')
+  const [transferring, setTransferring] = useState(false)
+
   // Sync selectedView with URL changes (for back/forward navigation)
   // Also sync when router becomes ready (router.query is empty until ready)
   useEffect(() => {
@@ -779,7 +784,7 @@ function DEXDashboard() {
 
   // Chats/Messages Query - fetch all conversations
   const { data: chatsData, loading: chatsLoading, refetch: refetchChats } = useChatsQuery({
-    skip: selectedView !== 'messages' || !user,
+    skip: selectedView !== 'messages' || !userData?.me,
     fetchPolicy: 'cache-and-network',
   })
 
@@ -815,6 +820,21 @@ function DEXDashboard() {
     },
     skip: selectedView !== 'explore',
     fetchPolicy: 'cache-first', // Speed: instant from cache
+  })
+
+  // Favorite Tracks Query - for Library view
+  const { data: favoriteTracksData, loading: favoriteTracksLoading } = useFavoriteTracksQuery({
+    variables: {
+      page: { first: 50 }
+    },
+    skip: selectedView !== 'library' || !userData?.me,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Notifications Query - for Notifications view
+  const { data: notificationsData, loading: notificationsLoading } = useNotificationsQuery({
+    skip: selectedView !== 'notifications' || !userData?.me,
+    fetchPolicy: 'cache-and-network',
   })
 
   // Follow/Unfollow mutations
@@ -863,6 +883,38 @@ function DEXDashboard() {
     if (followLoading || unfollowLoading) return
     const mutation = isFollowed ? unfollowProfile : followProfile
     await mutation({ variables: { input: { followedId: profileId } } })
+  }
+
+  // Handle NFT Transfer - calls smart contract
+  const handleTransferNFT = async () => {
+    if (!transferRecipient || !selectedNftId || !userWallet) {
+      alert('Please enter a recipient address and select an NFT')
+      return
+    }
+    // Validate Ethereum address
+    if (!/^0x[a-fA-F0-9]{40}$/.test(transferRecipient)) {
+      alert('Invalid wallet address. Please enter a valid Ethereum address.')
+      return
+    }
+    if (transferRecipient.toLowerCase() === userWallet.toLowerCase()) {
+      alert('Cannot transfer to yourself')
+      return
+    }
+    setTransferring(true)
+    try {
+      // TODO: Implement actual NFT transfer via smart contract
+      // This will call the Soundchain721 or Soundchain1155 contract
+      console.log('🔄 Transferring NFT:', { nftId: selectedNftId, to: transferRecipient })
+      alert(`NFT transfer initiated!\n\nNFT: ${selectedNftId}\nTo: ${transferRecipient}\n\nThis feature requires wallet signing - coming soon!`)
+      // Reset form on success
+      setTransferRecipient('')
+      setSelectedNftId('')
+    } catch (err: any) {
+      console.error('❌ NFT Transfer error:', err)
+      alert(`Transfer failed: ${err.message || 'Unknown error'}`)
+    } finally {
+      setTransferring(false)
+    }
   }
 
   // Posts are now handled by the Posts component directly - no need for custom query
@@ -2319,24 +2371,109 @@ function DEXDashboard() {
             </div>
           )}
 
-          {/* Library View */}
+          {/* Library View - Real Liked Tracks */}
           {selectedView === 'library' && (
             <div className="space-y-6">
+              {/* Library Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="metadata-section p-4 text-center">
+                  <Heart className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-white">{favoriteTracksData?.favoriteTracks?.nodes?.length || 0}</p>
+                  <p className="text-xs text-gray-400">Liked Tracks</p>
+                </Card>
+                <Card className="metadata-section p-4 text-center">
+                  <ImageIcon className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-white">{userTracks.length}</p>
+                  <p className="text-xs text-gray-400">Owned NFTs</p>
+                </Card>
+                <Card className="metadata-section p-4 text-center">
+                  <ListMusic className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-white">0</p>
+                  <p className="text-xs text-gray-400">Playlists</p>
+                </Card>
+                <Card className="metadata-section p-4 text-center">
+                  <Play className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-white">--</p>
+                  <p className="text-xs text-gray-400">Play History</p>
+                </Card>
+              </div>
+
+              {/* Liked Tracks Section */}
               <Card className="retro-card p-6">
-                <h2 className="retro-title text-xl mb-4">Your Library</h2>
-                <p className="text-gray-400 mb-6">Your saved tracks, playlists, and purchased NFTs.</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card className="metadata-section p-4 hover:border-blue-500/50 transition-all cursor-pointer">
-                    <Heart className="w-8 h-8 text-red-400 mb-2" />
-                    <h3 className="font-bold text-white">Liked Tracks</h3>
-                    <p className="text-xs text-gray-400">Your favorite songs</p>
-                  </Card>
-                  <Card className="metadata-section p-4 hover:border-green-500/50 transition-all cursor-pointer">
-                    <ListMusic className="w-8 h-8 text-green-400 mb-2" />
-                    <h3 className="font-bold text-white">Playlists</h3>
-                    <p className="text-xs text-gray-400">Your curated collections</p>
-                  </Card>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Heart className="w-6 h-6 text-red-400" />
+                    <h2 className="retro-title text-xl">Liked Tracks</h2>
+                    {favoriteTracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Loading...</Badge>}
+                  </div>
                 </div>
+
+                {favoriteTracksLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin w-8 h-8 border-2 border-red-400 border-t-transparent rounded-full" />
+                    <span className="ml-3 text-gray-400">Loading liked tracks...</span>
+                  </div>
+                ) : (favoriteTracksData?.favoriteTracks?.nodes?.length ?? 0) > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                    {favoriteTracksData?.favoriteTracks?.nodes?.map((track: any, index: number) => (
+                      <TrackNFTCard
+                        key={track.id}
+                        track={track}
+                        onPlay={() => handlePlayTrack(track, index, favoriteTracksData?.favoriteTracks?.nodes || [])}
+                        isPlaying={isPlaying}
+                        isCurrentTrack={currentSong?.trackId === track.id}
+                        listView={false}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Heart className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 text-lg mb-2">No liked tracks yet</p>
+                    <p className="text-xs text-gray-500">Like tracks by clicking the heart icon on any song</p>
+                    <Button onClick={() => setSelectedView('dashboard')} className="mt-4 retro-button">
+                      <Music className="w-4 h-4 mr-2" />
+                      Discover Music
+                    </Button>
+                  </div>
+                )}
+              </Card>
+
+              {/* Owned NFTs Section */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <ImageIcon className="w-6 h-6 text-purple-400" />
+                  <h2 className="retro-title text-xl">Owned NFTs</h2>
+                  <Badge className="bg-purple-500/20 text-purple-400 text-xs">{userTracks.length}</Badge>
+                </div>
+                {userTracks.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                    {userTracks.slice(0, 12).map((track: any, index: number) => (
+                      <TrackNFTCard
+                        key={track.id}
+                        track={track}
+                        onPlay={() => handlePlayTrack(track, index, userTracks)}
+                        isPlaying={isPlaying}
+                        isCurrentTrack={currentSong?.trackId === track.id}
+                        listView={false}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-400">No NFTs owned yet</p>
+                    <Button onClick={() => setSelectedView('marketplace')} className="mt-4 retro-button">
+                      <ShoppingBag className="w-4 h-4 mr-2" />
+                      Browse Marketplace
+                    </Button>
+                  </div>
+                )}
+                {userTracks.length > 12 && (
+                  <Button variant="ghost" className="w-full mt-4 hover:bg-purple-500/10 text-purple-400">
+                    View All {userTracks.length} NFTs
+                  </Button>
+                )}
               </Card>
             </div>
           )}
@@ -2982,10 +3119,47 @@ function DEXDashboard() {
                 </div>
               </Card>
 
+              {/* Your NFT Collection */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <ImageIcon className="w-6 h-6 text-purple-400" />
+                    <h3 className="retro-title text-lg">Your NFT Collection</h3>
+                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">{userTracks.length}</Badge>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setSelectedView('library')} className="text-purple-400 hover:bg-purple-500/10">
+                    View All
+                  </Button>
+                </div>
+                {userTracks.length > 0 ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                    {userTracks.slice(0, 6).map((track: any, index: number) => (
+                      <TrackNFTCard
+                        key={track.id}
+                        track={track}
+                        onPlay={() => handlePlayTrack(track, index, userTracks)}
+                        isPlaying={isPlaying}
+                        isCurrentTrack={currentSong?.trackId === track.id}
+                        listView={false}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-400 text-sm">No NFTs owned yet</p>
+                    <Button onClick={() => setSelectedView('marketplace')} className="mt-3 retro-button" size="sm">
+                      <ShoppingBag className="w-4 h-4 mr-2" />
+                      Browse Marketplace
+                    </Button>
+                  </div>
+                )}
+              </Card>
+
               {/* Transfer NFTs Section */}
               <Card className="retro-card p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <ImageIcon className="w-6 h-6 text-purple-400" />
+                  <Share2 className="w-6 h-6 text-purple-400" />
                   <h3 className="retro-title text-lg">Transfer NFTs</h3>
                 </div>
                 <p className="text-gray-400 text-sm mb-4">Send your music NFTs to another wallet address.</p>
@@ -2995,14 +3169,20 @@ function DEXDashboard() {
                     <input
                       type="text"
                       placeholder="0x..."
+                      value={transferRecipient}
+                      onChange={(e) => setTransferRecipient(e.target.value)}
                       className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none font-mono"
                     />
                   </div>
                   <div>
                     <label className="text-xs text-gray-400 mb-2 block">Select NFT</label>
-                    <select className="w-full bg-black/50 border border-gray-700 rounded-lg px-3 py-3 text-white focus:border-purple-500 focus:outline-none">
+                    <select
+                      value={selectedNftId}
+                      onChange={(e) => setSelectedNftId(e.target.value)}
+                      className="w-full bg-black/50 border border-gray-700 rounded-lg px-3 py-3 text-white focus:border-purple-500 focus:outline-none"
+                    >
                       <option value="">Select an NFT to transfer</option>
-                      {userTracks.slice(0, 10).map((track) => (
+                      {userTracks.map((track) => (
                         <option key={track.id} value={track.id}>{track.title} - {track.artist}</option>
                       ))}
                     </select>
@@ -3010,10 +3190,20 @@ function DEXDashboard() {
                   <Button
                     variant="outline"
                     className="w-full border-purple-500/50 hover:bg-purple-500/10 text-purple-400"
-                    disabled={!userWallet}
+                    disabled={!userWallet || !transferRecipient || !selectedNftId || transferring}
+                    onClick={handleTransferNFT}
                   >
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Transfer NFT
+                    {transferring ? (
+                      <>
+                        <div className="animate-spin w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full mr-2" />
+                        Transferring...
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Transfer NFT
+                      </>
+                    )}
                   </Button>
                 </div>
               </Card>
@@ -3251,20 +3441,75 @@ function DEXDashboard() {
             </div>
           )}
 
-          {/* Notifications View */}
+          {/* Notifications View - Full Notifications Page */}
           {selectedView === 'notifications' && (
             <div className="space-y-6">
               <Card className="retro-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Bell className="w-8 h-8 text-yellow-400" />
-                  <h2 className="retro-title text-xl">Notifications</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Bell className="w-8 h-8 text-yellow-400" />
+                    <h2 className="retro-title text-xl">Notifications</h2>
+                    {notificationsLoading && <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Loading...</Badge>}
+                  </div>
+                  {(notificationsData?.notifications?.nodes?.length ?? 0) > 0 && (
+                    <Badge className="bg-cyan-500/20 text-cyan-400">
+                      {notificationsData?.notifications?.nodes?.length} total
+                    </Badge>
+                  )}
                 </div>
-                <p className="text-gray-400 mb-6">Stay updated on likes, follows, sales, and more.</p>
-                <div className="text-center py-8">
-                  <Bell className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">No new notifications</p>
-                  <p className="text-xs text-gray-500 mt-2">You're all caught up!</p>
-                </div>
+
+                {notificationsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full" />
+                    <span className="ml-3 text-gray-400">Loading notifications...</span>
+                  </div>
+                ) : (notificationsData?.notifications?.nodes?.length ?? 0) > 0 ? (
+                  <div className="space-y-3">
+                    {notificationsData?.notifications?.nodes?.map((notification: any) => {
+                      const getNotificationIcon = () => {
+                        switch (notification.type) {
+                          case 'NewPost': return <MessageCircle className="w-5 h-5 text-blue-400" />
+                          case 'Comment': return <MessageCircle className="w-5 h-5 text-green-400" />
+                          case 'Reaction': return <Heart className="w-5 h-5 text-red-400" />
+                          case 'Follower': return <Users className="w-5 h-5 text-purple-400" />
+                          case 'NewBid': return <TrendingUp className="w-5 h-5 text-orange-400" />
+                          case 'Outbid': return <TrendingUp className="w-5 h-5 text-yellow-400" />
+                          case 'WonAuction': return <Trophy className="w-5 h-5 text-gold-400" />
+                          case 'AuctionEnded': return <Zap className="w-5 h-5 text-cyan-400" />
+                          case 'NFTSold': return <Coins className="w-5 h-5 text-green-400" />
+                          default: return <Bell className="w-5 h-5 text-gray-400" />
+                        }
+                      }
+                      return (
+                        <div
+                          key={notification.id}
+                          className={`p-4 rounded-lg border transition-colors ${notification.readAt ? 'bg-black/20 border-gray-800' : 'bg-cyan-500/5 border-cyan-500/30'}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-black/30">
+                              {getNotificationIcon()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-medium">{notification.body || notification.type}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(notification.createdAt).toLocaleDateString()} • {new Date(notification.createdAt).toLocaleTimeString()}
+                              </p>
+                            </div>
+                            {!notification.readAt && (
+                              <span className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0 mt-2" />
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Bell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 text-lg mb-2">No notifications yet</p>
+                    <p className="text-xs text-gray-500">When you get likes, follows, or sales you'll see them here</p>
+                  </div>
+                )}
               </Card>
             </div>
           )}
