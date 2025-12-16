@@ -44,6 +44,7 @@ export interface ModalState {
   showOnlyDeleteOption?: boolean;
   showUnderDevelopment: boolean;
   showCreate: boolean;
+  createModalTab?: 'post' | 'mint';
   showAudioPlayer: boolean;
   audioPlayerFullscreen: boolean;
   showApprove: boolean;
@@ -121,6 +122,7 @@ export const initialModalState = {
   showOnlyDeleteOption: false,
   showUnderDevelopment: false,
   showCreate: false,
+  createModalTab: undefined,
   showAudioPlayer: false,
   audioPlayerFullscreen: false,
   showApprove: false,
@@ -245,6 +247,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         showCreate: (action.payload as ShowCreatePayload).show,
+        createModalTab: (action.payload as ShowCreatePayload).tab,
         anyModalOpened: (action.payload as ShowCreatePayload).show,
       };
     case ModalActionTypes.SHOW_APPROVE:

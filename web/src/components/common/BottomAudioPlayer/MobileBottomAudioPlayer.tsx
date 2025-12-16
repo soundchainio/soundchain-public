@@ -35,7 +35,7 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex flex-col bg-neutral-900 py-2 px-3 animate-slide-up shadow-[0_-4px_20px_rgba(0,0,0,0.5)] safe-area-inset-bottom">
+    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex flex-col bg-neutral-900 py-2 px-3 pb-safe animate-slide-up shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
       <div className="flex items-center justify-between gap-2 w-full max-w-full overflow-hidden">
         {/* Close button (X) on the left */}
         <button

@@ -4223,6 +4223,10 @@ export const CreatePostDocument = gql`
       updatedAt
       isGuest
       walletAddress
+      uploadedMediaUrl
+      uploadedMediaType
+      mediaExpiresAt
+      isEphemeral
     }
   }
 }
@@ -5156,6 +5160,10 @@ export const GuestCreatePostDocument = gql`
       updatedAt
       isGuest
       walletAddress
+      uploadedMediaUrl
+      uploadedMediaType
+      mediaExpiresAt
+      isEphemeral
     }
   }
 }

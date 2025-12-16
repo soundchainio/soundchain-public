@@ -32,8 +32,8 @@ export const useModalDispatch = () => {
     throw new Error('useModalDispatch must be used within ModalProvider');
   }
   return {
-    dispatchShowCreateModal: (show: boolean) =>
-      dispatch({ type: ModalActionTypes.SHOW_CREATE, payload: { show } }),
+    dispatchShowCreateModal: (show: boolean, tab?: 'post' | 'mint') =>
+      dispatch({ type: ModalActionTypes.SHOW_CREATE, payload: { show, tab } }),
     dispatchShowAudioPlayerModal: (show: boolean, fullscreen?: boolean) =>
       dispatch({ type: ModalActionTypes.SHOW_AUDIO_PLAYER, payload: { show, fullscreen } }),
     dispatchShowFilterMarketplaceModal: (payload: any) =>

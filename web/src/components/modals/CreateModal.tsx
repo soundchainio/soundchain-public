@@ -75,6 +75,14 @@ export const CreateModal = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asPath])
 
+  // Handle tab parameter from modal dispatch - if 'post' is requested, immediately open PostModal
+  useEffect(() => {
+    if (modalState.showCreate && modalState.createModalTab === 'post') {
+      dispatchShowCreateModal(false)
+      dispatchShowPostModal(true)
+    }
+  }, [modalState.showCreate, modalState.createModalTab, dispatchShowCreateModal, dispatchShowPostModal])
+
   const handleFileDrop = (file: File) => {
     musicMetadata.parseBlob(file).then(({ common: fileMetadata }) => {
       let artworkFile

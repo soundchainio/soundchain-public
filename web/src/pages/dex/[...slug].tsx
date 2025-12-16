@@ -73,6 +73,11 @@ const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/Au
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
 const GuestPostModal = dynamic(() => import('components/Post/GuestPostModal').then(mod => ({ default: mod.GuestPostModal })), { ssr: false })
 const Notifications = dynamic(() => import('components/Notifications').then(mod => ({ default: mod.Notifications })), { ssr: false })
+const BioForm = dynamic(() => import('components/forms/profile/BioForm').then(mod => ({ default: mod.BioForm })), { ssr: false })
+const ProfilePictureForm = dynamic(() => import('components/forms/profile/ProfilePictureForm').then(mod => ({ default: mod.ProfilePictureForm })), { ssr: false })
+const CoverPictureForm = dynamic(() => import('components/forms/profile/CoverPictureForm').then(mod => ({ default: mod.CoverPictureForm })), { ssr: false })
+const SocialLinksForm = dynamic(() => import('components/forms/profile/SocialLinksForm').then(mod => ({ default: mod.SocialLinksForm })), { ssr: false })
+const SecurityForm = dynamic(() => import('components/forms/profile/SecurityForm').then(mod => ({ default: mod.SecurityForm })), { ssr: false })
 
 // Real NFT data comes from the database via listingItems query
 // NFT listings with prices will be shown in the NFT tab
@@ -539,8 +544,8 @@ function DEXDashboard() {
   // Create+ Button Handler - Supports both members and guests
   const handleCreateClick = () => {
     if (me) {
-      // Logged in member - use regular create modal
-      dispatchShowCreateModal(true)
+      // Logged in member - use regular create modal with post tab
+      dispatchShowCreateModal(true, 'post')
     } else if (isWalletConnected && connectedWallet) {
       // Guest with wallet connected - show guest post modal
       setShowGuestPostModal(true)
@@ -1104,7 +1109,7 @@ function DEXDashboard() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => me ? dispatchShowCreateModal(true) : router.push('/login')}
+                  onClick={() => me ? dispatchShowCreateModal(true, 'mint') : router.push('/login')}
                   className="hover:bg-purple-500/10 px-2"
                   title="Mint NFT"
                 >
@@ -1139,7 +1144,7 @@ function DEXDashboard() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => me ? dispatchShowCreateModal(true) : router.push('/login')}
+                    onClick={() => me ? dispatchShowCreateModal(true, 'mint') : router.push('/login')}
                     className="hover:bg-purple-500/10 nyan-cat-animation"
                   >
                     <Music className="w-4 h-4 mr-2 text-purple-400" />
@@ -1149,7 +1154,7 @@ function DEXDashboard() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => me ? dispatchShowCreateModal(true) : router.push('/login')}
+                    onClick={() => me ? dispatchShowCreateModal(true, 'mint') : router.push('/login')}
                     className="hover:bg-purple-500/10"
                   >
                     <Music className="w-4 h-4 mr-2 text-purple-400" />
@@ -1161,7 +1166,25 @@ function DEXDashboard() {
 
             <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3 flex-shrink-0">
               <div className="relative hidden lg:block">
-                <input type="search" placeholder="Search..." className="w-60 bg-black/40 border border-cyan-500/20 rounded-full px-4 py-2 pl-10 text-sm" />
+                <input
+                  type="search"
+                  placeholder="Search tracks, users..."
+                  value={exploreSearchQuery}
+                  onChange={(e) => {
+                    setExploreSearchQuery(e.target.value)
+                    if (e.target.value.length >= 2 && selectedView !== 'explore') {
+                      setSelectedView('explore')
+                      router.push('/dex/explore', undefined, { shallow: true })
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && exploreSearchQuery.length >= 1) {
+                      setSelectedView('explore')
+                      router.push('/dex/explore', undefined, { shallow: true })
+                    }
+                  }}
+                  className="w-60 bg-black/40 border border-cyan-500/20 rounded-full px-4 py-2 pl-10 text-sm focus:outline-none focus:border-cyan-500/50 transition-colors"
+                />
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-cyan-400/60" />
               </div>
 
@@ -1277,8 +1300,8 @@ function DEXDashboard() {
 
                           {/* Main Menu Items */}
                           <div className="py-3 space-y-1 border-b border-cyan-500/30">
-                            <Link href="/dex">
-                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('dashboard')}}>
+                            <Link href="/dex/wallet">
+                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('wallet')}}>
                                 <WalletIcon className="w-4 h-4 mr-3" />
                                 Wallet
                               </Button>
@@ -3258,51 +3281,94 @@ function DEXDashboard() {
           {/* Settings View */}
           {selectedView === 'settings' && (
             <div className="space-y-6">
-              <Card className="retro-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <SettingsIcon className="w-8 h-8 text-gray-400" />
-                  <h2 className="retro-title text-xl">Settings</h2>
-                </div>
-                <p className="text-gray-400 mb-6">Manage your account, profile, and preferences.</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Link href="/settings/name">
-                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                      <h3 className="font-bold text-white">Display Name</h3>
-                      <p className="text-xs text-gray-400">Update your name</p>
-                    </Card>
-                  </Link>
-                  <Link href="/settings/username">
-                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                      <h3 className="font-bold text-white">Username</h3>
-                      <p className="text-xs text-gray-400">Change your @handle</p>
-                    </Card>
-                  </Link>
-                  <Link href="/settings/bio">
-                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                      <h3 className="font-bold text-white">Bio</h3>
-                      <p className="text-xs text-gray-400">Tell your story</p>
-                    </Card>
-                  </Link>
-                  <Link href="/settings/profile-picture">
-                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                      <h3 className="font-bold text-white">Profile Picture</h3>
-                      <p className="text-xs text-gray-400">Update your avatar</p>
-                    </Card>
-                  </Link>
-                  <Link href="/settings/social-links">
-                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                      <h3 className="font-bold text-white">Social Links</h3>
-                      <p className="text-xs text-gray-400">Connect your socials</p>
-                    </Card>
-                  </Link>
-                  <Link href="/settings/security">
-                    <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                      <h3 className="font-bold text-white">Security</h3>
-                      <p className="text-xs text-gray-400">2FA and security options</p>
-                    </Card>
-                  </Link>
-                </div>
-              </Card>
+              {/* Settings sub-route forms */}
+              {routeId === 'bio' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Edit Bio</h2>
+                  </div>
+                  <BioForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Bio" />
+                </Card>
+              )}
+              {routeId === 'profile-picture' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Profile Picture</h2>
+                  </div>
+                  <ProfilePictureForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Picture" />
+                </Card>
+              )}
+              {routeId === 'cover-picture' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Cover Picture</h2>
+                  </div>
+                  <CoverPictureForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Cover" />
+                </Card>
+              )}
+              {routeId === 'social-links' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Social Links</h2>
+                  </div>
+                  <SocialLinksForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Links" />
+                </Card>
+              )}
+              {routeId === 'security' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Security</h2>
+                  </div>
+                  <SecurityForm afterSubmit={() => router.push('/dex/settings')} />
+                </Card>
+              )}
+              {/* Main settings menu - show when no sub-route */}
+              {!routeId && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <SettingsIcon className="w-8 h-8 text-gray-400" />
+                    <h2 className="retro-title text-xl">Settings</h2>
+                  </div>
+                  <p className="text-gray-400 mb-6">Manage your account, profile, and preferences.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Link href="/dex/settings/bio">
+                      <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                        <h3 className="font-bold text-white">Bio</h3>
+                        <p className="text-xs text-gray-400">Tell your story</p>
+                      </Card>
+                    </Link>
+                    <Link href="/dex/settings/profile-picture">
+                      <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                        <h3 className="font-bold text-white">Profile Picture</h3>
+                        <p className="text-xs text-gray-400">Update your avatar</p>
+                      </Card>
+                    </Link>
+                    <Link href="/dex/settings/cover-picture">
+                      <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                        <h3 className="font-bold text-white">Cover Picture</h3>
+                        <p className="text-xs text-gray-400">Update your banner</p>
+                      </Card>
+                    </Link>
+                    <Link href="/dex/settings/social-links">
+                      <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                        <h3 className="font-bold text-white">Social Links</h3>
+                        <p className="text-xs text-gray-400">Connect your socials</p>
+                      </Card>
+                    </Link>
+                    <Link href="/dex/settings/security">
+                      <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                        <h3 className="font-bold text-white">Security</h3>
+                        <p className="text-xs text-gray-400">2FA and security options</p>
+                      </Card>
+                    </Link>
+                  </div>
+                </Card>
+              )}
             </div>
           )}
 

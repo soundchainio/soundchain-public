@@ -57,6 +57,7 @@ export interface ShowReactionsPayload {
 
 export interface ShowCreatePayload {
   show: boolean;
+  tab?: 'post' | 'mint';
 }
 
 export interface ShowApprove {
