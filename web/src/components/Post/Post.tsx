@@ -54,12 +54,14 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   }
 
   // Check if post has any media (embed links, tracks, reposts, or uploaded ephemeral media)
-  const hasUploadedMedia = !!(post as any).uploadedMediaUrl
-  const isEphemeral = !!(post as any).isEphemeral
-  const mediaExpiresAt = (post as any).mediaExpiresAt ? new Date((post as any).mediaExpiresAt) : null
+  // These fields are requested via PostComponentFields fragment but the prop type may not include them
+  const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null; uploadedMediaType?: string | null; mediaExpiresAt?: string | null; isEphemeral?: boolean | null }
+  const hasUploadedMedia = !!postWithMedia.uploadedMediaUrl
+  const isEphemeral = !!postWithMedia.isEphemeral
+  const mediaExpiresAt = postWithMedia.mediaExpiresAt ? new Date(postWithMedia.mediaExpiresAt) : null
   const isExpired = mediaExpiresAt && mediaExpiresAt < new Date()
-  const uploadedMediaUrl = (post as any).uploadedMediaUrl as string | undefined
-  const uploadedMediaType = (post as any).uploadedMediaType as string | undefined
+  const uploadedMediaUrl = postWithMedia.uploadedMediaUrl
+  const uploadedMediaType = postWithMedia.uploadedMediaType
 
   const hasMedia = post.mediaLink || post.track || post.repostId || hasUploadedMedia
 

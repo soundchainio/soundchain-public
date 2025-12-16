@@ -28,7 +28,7 @@ export const SoundChainPopOver = (props: SoundChainPopOverProps) => {
         </div>
       </Popover.Button>
       <Popover.Panel
-        className="text-sm/6 data-[closed]:-translate-y-1 data-[closed]:opacity-0 absolute right-0 z-50 mt-2 w-[400px] translate-y-2   translate-x-[-1.5rem] transform rounded-lg bg-gray-15 transition duration-200 ease-in-out"
+        className="text-sm/6 data-[closed]:-translate-y-1 data-[closed]:opacity-0 absolute left-0 z-50 mt-2 w-[320px] max-w-[90vw] translate-y-2 transform rounded-lg bg-gray-15 transition duration-200 ease-in-out shadow-xl"
       >
         {({ close: closePopOver }) => (
           <div className="max-h-[500px] overflow-y-auto">

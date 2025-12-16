@@ -11,6 +11,7 @@ import {
 import { useEffect, useState } from 'react'
 import { PostFormType } from 'types/PostFormType'
 import { MediaProvider } from 'types/MediaProvider'
+import { toast } from 'react-toastify'
 import * as yup from 'yup'
 import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { Button } from '../common/Buttons/Button'
@@ -43,8 +44,15 @@ export interface FormValues {
   mediaLink?: string
 }
 
+// Base schema - body is optional for reposts
 const postSchema: yup.Schema<FormValues> = yup.object().shape({
-  body: yup.string().required(),
+  body: yup.string().default(''),
+  mediaLink: yup.string(),
+})
+
+// Schema for new posts and edits - body is required
+const newPostSchema: yup.Schema<FormValues> = yup.object().shape({
+  body: yup.string().required('Post body is required'),
   mediaLink: yup.string(),
 })
 
@@ -67,50 +75,60 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   }
 
   const onSubmit = async (values: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    switch (props.type) {
-      case PostFormType.REPOST:
-        await createRepost({ variables: { input: { body: values.body, repostId: repostId as string } } })
-        break
-      case PostFormType.EDIT:
-        const updateParams: UpdatePostInput = { body: values.body, postId: editPostId as string }
+    try {
+      switch (props.type) {
+        case PostFormType.REPOST:
+          await createRepost({ variables: { input: { body: values.body || '', repostId: repostId as string } } })
+          toast.success('Reposted successfully!')
+          break
+        case PostFormType.EDIT:
+          const updateParams: UpdatePostInput = { body: values.body, postId: editPostId as string }
 
-        if (props.postLink?.length) {
-          updateParams.mediaLink = props.postLink
-        }
-
-        await editPost({ variables: { input: updateParams } })
-        break
-      case PostFormType.NEW:
-        const newPostParams: CreatePostInput = { body: values.body }
-
-        if (props.postLink?.length) {
-          newPostParams.mediaLink = props.postLink
-          // Send original URL for oEmbed thumbnail lookups (SoundCloud, etc.)
-          if (props.originalLink?.length) {
-            newPostParams.originalMediaLink = props.originalLink
+          if (props.postLink?.length) {
+            updateParams.mediaLink = props.postLink
           }
-        }
 
-        if (props.trackId) {
-          newPostParams.trackId = props.trackId
-        }
+          await editPost({ variables: { input: updateParams } })
+          toast.success('Post updated!')
+          break
+        case PostFormType.NEW:
+          const newPostParams: CreatePostInput = { body: values.body }
 
-        await createPost({ variables: { input: newPostParams } })
+          if (props.postLink?.length) {
+            newPostParams.mediaLink = props.postLink
+            // Send original URL for oEmbed thumbnail lookups (SoundCloud, etc.)
+            if (props.originalLink?.length) {
+              newPostParams.originalMediaLink = props.originalLink
+            }
+          }
+
+          if (props.trackId) {
+            newPostParams.trackId = props.trackId
+          }
+
+          await createPost({ variables: { input: newPostParams } })
+          toast.success('Post created!')
+      }
+
+      resetForm()
+      props.afterSubmit()
+    } catch (error: any) {
+      console.error('Post submission error:', error)
+      toast.error(error?.message || 'Failed to submit post. Please try again.')
     }
-
-    resetForm()
-
-    props.afterSubmit()
   }
 
   const onTextAreaChange = (newVal: string) => {
     props.setBodyValue(newVal)
   }
+  // Use different validation based on post type - reposts don't require body text
+  const validationSchema = props.type === PostFormType.REPOST ? postSchema : newPostSchema
+
   return (
     <Formik
       enableReinitialize={true}
       initialValues={props.initialValues || defaultInitialValues}
-      validationSchema={postSchema}
+      validationSchema={validationSchema}
       onSubmit={onSubmit}
     >
       {({ values, setFieldValue }) => (
