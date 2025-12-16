@@ -1,7 +1,78 @@
 # Claude Code Session - SoundChain Development
-**Last Updated:** December 11, 2025 (Evening)
+**Last Updated:** December 16, 2025
 **Agent:** Claude Code (Opus 4.5)
 **Branch:** production
+
+---
+
+## 🗺️ ARCHITECTURE MAP - Legacy to DEX Migration
+
+### Page Route Mapping (from commit f841a178d)
+
+| Legacy Route | DEX Route | Status |
+|--------------|-----------|--------|
+| `/wallet` | `/dex/wallet` | ✅ Migrated + ZetaChain Swap Portal added |
+| `/notifications` | `/dex/notifications` | ✅ Migrated (inline view) |
+| `/messages/*` | `/dex/messages/*` | ✅ Migrated (placeholder) |
+| `/settings/*` | `/dex/settings/*` | ✅ Migrated (links to legacy settings pages) |
+| `/marketplace` | `/dex` | ✅ Redirects to DEX |
+
+### Key DEX Views (`web/src/pages/dex/[...slug].tsx`)
+
+```
+selectedView === 'dashboard'   → Main DEX dashboard with stats, genre charts
+selectedView === 'feed'        → Social feed with posts
+selectedView === 'users'       → User discovery + leaderboard
+selectedView === 'buy'         → Marketplace (tracks, NFTs, tokens, bundles)
+selectedView === 'sell'        → Sell interface
+selectedView === 'library'     → User's saved tracks, playlists, NFTs
+selectedView === 'wallet'      → COMPREHENSIVE wallet page:
+                                 • OAuth wallets (Email, Google, Discord, Twitch)
+                                 • MATIC/OGUN balances (real from Magic context)
+                                 • NFT count from database
+                                 • Quick actions (Buy, Send, Receive, Swap)
+                                 • ZetaChain Omnichain Swap Portal (NEW!)
+                                 • Transfer NFTs section (NEW!)
+                                 • Bridge section (Polygon, ZetaChain)
+                                 • Transaction history
+selectedView === 'settings'    → Settings menu (links to /settings/* pages)
+selectedView === 'messages'    → Messages placeholder
+selectedView === 'notifications' → Notifications placeholder
+selectedView === 'profile'     → User/artist profile view
+selectedView === 'track'       → Track detail view (/dex/track/[id])
+selectedView === 'mint'        → Mint new NFT view
+```
+
+### Menu Items (Header Right Side)
+
+1. **Backend Panel** (admin only - furdA1, JSan619, TitoMag) - Shows real DB stats
+2. **Notifications Bell** - Dropdown modal with all notification types
+3. **Wallet Connect** - Connect/disconnect wallet button
+4. **User Avatar** - Opens dropdown menu with:
+   - Profile link
+   - Alerts (notifications)
+   - Inbox (messages)
+   - Wallet
+   - Docs (GitBook)
+   - Leave Feedback (Google Form)
+   - Admin Panel (founders only)
+   - Account Settings
+   - Logout
+
+### ZetaChain Integration (Omnichain)
+
+**Files:**
+- `web/src/hooks/useOmnichain.tsx` - Cross-chain swaps, NFT bridging, fee calculation
+- `web/src/components/CrossChainPurchase.tsx` - Cross-chain NFT purchase UI
+- `web/src/constants/chains.ts` - 23+ supported chains config
+
+**Supported Chains:**
+- Layer 1: Bitcoin, Ethereum, Solana, Avalanche
+- Layer 2: Polygon, Arbitrum, Optimism, Base, Blast
+- Omnichain: ZetaChain (hub)
+- Specialized: Ronin, Zora, ApeChain, etc.
+
+**Fee Structure:** 0.05% (5 basis points) → Gnosis Safe
 
 ---
 

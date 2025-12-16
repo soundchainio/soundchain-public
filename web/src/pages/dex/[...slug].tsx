@@ -56,6 +56,8 @@ import { AudioPlayerProvider } from 'hooks/useAudioPlayer'
 import { TrackProvider } from 'hooks/useTrack'
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
 import { LayoutContextProvider } from 'hooks/useLayoutContext'
+import { useOmnichain } from 'hooks/useOmnichain'
+import { ENABLED_CHAINS, getChainsByCategory } from 'constants/chains'
 import { ToastContainer } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import {
@@ -1100,9 +1102,9 @@ function DEXDashboard() {
                   )}
                 </Button>
 
-                {/* Notifications Dropdown */}
+                {/* Notifications Dropdown - Mobile: full width right-aligned, Desktop: fixed width */}
                 {showNotifications && (
-                  <Card className="absolute right-0 top-12 w-96 retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden">
+                  <Card className="absolute right-0 sm:right-0 top-12 w-[calc(100vw-24px)] sm:w-96 max-w-[400px] retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden transform sm:translate-x-0">
                     <div className="flex items-center justify-between p-3 border-b border-cyan-500/30">
                       <h3 className="retro-title text-sm flex items-center gap-2">
                         <Bell className="w-4 h-4 text-yellow-400" />
@@ -2799,6 +2801,187 @@ function DEXDashboard() {
                       </ul>
                     </div>
                   </div>
+                </div>
+              </Card>
+
+              {/* ZetaChain Omnichain Swap Portal */}
+              <Card className="retro-card p-6 border-green-500/30 relative overflow-hidden">
+                {/* Animated background glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-cyan-500/5 animate-pulse" />
+
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-cyan-500/20 border border-green-500/30">
+                        <span className="text-2xl">ζ</span>
+                      </div>
+                      <div>
+                        <h3 className="retro-title text-lg flex items-center gap-2">
+                          Omnichain Swap Portal
+                          <Badge className="bg-green-500/20 text-green-400 text-xs">LIVE</Badge>
+                        </h3>
+                        <p className="text-gray-400 text-sm">Swap tokens across 23+ blockchains</p>
+                      </div>
+                    </div>
+                    <a href="https://www.zetachain.com" target="_blank" rel="noreferrer">
+                      <Button variant="ghost" size="sm" className="text-green-400 hover:bg-green-500/10">
+                        <span className="text-xs">Powered by ZetaChain</span>
+                        <ExternalLink className="w-3 h-3 ml-1" />
+                      </Button>
+                    </a>
+                  </div>
+
+                  {/* Swap Interface */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* From Section */}
+                    <Card className="metadata-section p-4 border-gray-700">
+                      <p className="text-xs text-gray-400 mb-3">From</p>
+                      <div className="flex items-center gap-3 mb-4">
+                        <select className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none">
+                          <option value="polygon">⬡ Polygon (MATIC)</option>
+                          <option value="ethereum">🔷 Ethereum (ETH)</option>
+                          <option value="bitcoin">₿ Bitcoin (BTC)</option>
+                          <option value="bnb">🟡 BNB Chain</option>
+                          <option value="base">🔵 Base</option>
+                          <option value="arbitrum">🔵 Arbitrum</option>
+                          <option value="optimism">🔴 Optimism</option>
+                          <option value="avalanche">🔺 Avalanche</option>
+                          <option value="solana">◎ Solana</option>
+                        </select>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          placeholder="0.0"
+                          className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-xl text-white focus:border-green-500 focus:outline-none"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                          <Button variant="ghost" size="sm" className="text-green-400 text-xs h-7 px-2">MAX</Button>
+                          <span className="text-gray-400">MATIC</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">Balance: {maticBalance || '0.00'} MATIC</p>
+                    </Card>
+
+                    {/* To Section */}
+                    <Card className="metadata-section p-4 border-gray-700">
+                      <p className="text-xs text-gray-400 mb-3">To</p>
+                      <div className="flex items-center gap-3 mb-4">
+                        <select className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none">
+                          <option value="ogun">🪙 OGUN Token</option>
+                          <option value="zeta">ζ ZETA</option>
+                          <option value="usdc">💵 USDC</option>
+                          <option value="usdt">💵 USDT</option>
+                          <option value="eth">🔷 ETH</option>
+                          <option value="btc">₿ BTC</option>
+                          <option value="matic">⬡ MATIC</option>
+                        </select>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          placeholder="0.0"
+                          readOnly
+                          className="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-3 text-xl text-white cursor-not-allowed"
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <span className="text-gray-400">OGUN</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">You will receive (after 0.05% fee)</p>
+                    </Card>
+                  </div>
+
+                  {/* Swap Arrow */}
+                  <div className="flex justify-center -my-2 relative z-20">
+                    <Button variant="outline" size="sm" className="rounded-full w-10 h-10 border-green-500/50 hover:bg-green-500/10">
+                      <RefreshCw className="w-4 h-4 text-green-400" />
+                    </Button>
+                  </div>
+
+                  {/* Supported Chains Grid */}
+                  <div className="mt-6">
+                    <p className="text-xs text-gray-400 mb-3">Supported Chains (23+)</p>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-11 gap-2">
+                      {[
+                        { icon: '₿', name: 'Bitcoin', color: '#F7931A' },
+                        { icon: '🔷', name: 'Ethereum', color: '#627EEA' },
+                        { icon: '⬡', name: 'Polygon', color: '#8247E5' },
+                        { icon: '🔵', name: 'Base', color: '#0052FF' },
+                        { icon: '🔵', name: 'Arbitrum', color: '#28A0F0' },
+                        { icon: '🔴', name: 'Optimism', color: '#FF0420' },
+                        { icon: '🔺', name: 'Avalanche', color: '#E84142' },
+                        { icon: '🟡', name: 'BNB', color: '#F0B90B' },
+                        { icon: '◎', name: 'Solana', color: '#14F195' },
+                        { icon: 'ζ', name: 'ZetaChain', color: '#00D4AA' },
+                        { icon: '💥', name: 'Blast', color: '#FCFC03' },
+                      ].map((chain) => (
+                        <div
+                          key={chain.name}
+                          className="flex flex-col items-center p-2 rounded-lg bg-black/30 border border-gray-800 hover:border-green-500/50 transition-all cursor-pointer group"
+                        >
+                          <span className="text-lg mb-1">{chain.icon}</span>
+                          <span className="text-[10px] text-gray-500 group-hover:text-green-400 transition-colors truncate w-full text-center">{chain.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Swap Button */}
+                  <Button
+                    className="w-full mt-6 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 text-black font-bold py-3 rounded-xl"
+                    disabled={!userWallet}
+                  >
+                    {userWallet ? '⚡ Swap via ZetaChain' : 'Connect Wallet to Swap'}
+                  </Button>
+
+                  {/* Info Footer */}
+                  <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center gap-4">
+                      <span>Fee: 0.05%</span>
+                      <span>•</span>
+                      <span>Est. Time: ~30s</span>
+                    </div>
+                    <a href="https://explorer.zetachain.com" target="_blank" rel="noreferrer" className="text-green-400 hover:text-green-300 flex items-center gap-1">
+                      ZetaScan <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Transfer NFTs Section */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <ImageIcon className="w-6 h-6 text-purple-400" />
+                  <h3 className="retro-title text-lg">Transfer NFTs</h3>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">Send your music NFTs to another wallet address.</p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs text-gray-400 mb-2 block">Recipient Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x..."
+                      className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-2 block">Select NFT</label>
+                    <select className="w-full bg-black/50 border border-gray-700 rounded-lg px-3 py-3 text-white focus:border-purple-500 focus:outline-none">
+                      <option value="">Select an NFT to transfer</option>
+                      {userTracks.slice(0, 10).map((track) => (
+                        <option key={track.id} value={track.id}>{track.title} - {track.artist}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full border-purple-500/50 hover:bg-purple-500/10 text-purple-400"
+                    disabled={!userWallet}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Transfer NFT
+                  </Button>
                 </div>
               </Card>
 
