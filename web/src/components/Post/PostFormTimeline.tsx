@@ -1,5 +1,4 @@
 import { MusicalNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/24/outline'
-import { Popover } from '@headlessui/react'
 import Picker from '@emoji-mart/react'
 import { StickerPicker } from '../StickerPicker'
 import { Sparkles, Camera } from 'lucide-react'
@@ -49,6 +48,8 @@ export const PostFormTimeline = () => {
   const [isPreviewVisible, setPreviewVisible] = useState(false)
   const [link, setLink] = useState<MediaLink>()
   const [showMediaUploader, setShowMediaUploader] = useState(false)
+  const [isEmojiPickerOpen, setEmojiPickerOpen] = useState(false)
+  const [isStickerPickerOpen, setStickerPickerOpen] = useState(false)
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | undefined>()
   const [uploadedMediaType, setUploadedMediaType] = useState<'image' | 'video' | 'audio' | undefined>()
   const postMaxLength = 1000
@@ -216,49 +217,57 @@ export const PostFormTimeline = () => {
         />
         <div className="flex flex-row">
           <div className="flex basis-3/4">
-            {/* Emoji Picker - stays open for emoji flurries! */}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <Popover.Button className="mr-[8px] w-6 cursor-pointer focus:outline-none">
-                    {open ? '❌' : '😃'}
-                  </Popover.Button>
-                  {open && (
-                    <Popover.Panel static className="absolute left-0 z-50 mt-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                      <Picker
-                        theme="dark"
-                        perLine={7}
-                        onEmojiSelect={(e: Emoji) => {
-                          handleSelectEmoji(e)
-                          // Picker stays open - blast those emojis! 🔥
-                        }}
-                      />
-                    </Popover.Panel>
-                  )}
-                </>
+            {/* Emoji Picker - controlled state to stay open for emoji flurries! */}
+            <div className="relative">
+              <button
+                type="button"
+                className="mr-[8px] w-6 cursor-pointer focus:outline-none"
+                onClick={() => {
+                  setEmojiPickerOpen(!isEmojiPickerOpen)
+                  setStickerPickerOpen(false) // Close sticker picker if open
+                }}
+              >
+                {isEmojiPickerOpen ? '❌' : '😃'}
+              </button>
+              {isEmojiPickerOpen && (
+                <div className="absolute left-0 z-50 mt-2" onClick={(e) => e.stopPropagation()}>
+                  <Picker
+                    theme="dark"
+                    perLine={7}
+                    onEmojiSelect={(e: Emoji) => {
+                      handleSelectEmoji(e)
+                      // Picker stays open - blast those emojis! 🔥
+                    }}
+                    onClickOutside={() => setEmojiPickerOpen(false)}
+                  />
+                </div>
               )}
-            </Popover>
-            {/* Sticker Picker - Twitch, Discord, Kick stickers - stays open for flurries! */}
-            <Popover className="relative">
-              {({ open }) => (
-                <>
-                  <Popover.Button className="mr-[8px] w-6 cursor-pointer focus:outline-none" title="Stickers">
-                    <Sparkles className={`m-auto w-5 ${open ? 'text-cyan-400' : 'text-gray-400'}`} />
-                  </Popover.Button>
-                  {open && (
-                    <Popover.Panel static className="absolute left-0 z-50 mt-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-                      <StickerPicker
-                        onSelect={(stickerUrl, stickerName) => {
-                          handleSelectSticker(stickerUrl, stickerName)
-                          // Picker stays open - add multiple stickers! 🎵
-                        }}
-                        theme="dark"
-                      />
-                    </Popover.Panel>
-                  )}
-                </>
+            </div>
+            {/* Sticker Picker - controlled state to stay open for sticker flurries! */}
+            <div className="relative">
+              <button
+                type="button"
+                className="mr-[8px] w-6 cursor-pointer focus:outline-none"
+                title="Stickers"
+                onClick={() => {
+                  setStickerPickerOpen(!isStickerPickerOpen)
+                  setEmojiPickerOpen(false) // Close emoji picker if open
+                }}
+              >
+                <Sparkles className={`m-auto w-5 ${isStickerPickerOpen ? 'text-cyan-400' : 'text-gray-400'}`} />
+              </button>
+              {isStickerPickerOpen && (
+                <div className="absolute left-0 z-50 mt-2" onClick={(e) => e.stopPropagation()}>
+                  <StickerPicker
+                    onSelect={(stickerUrl, stickerName) => {
+                      handleSelectSticker(stickerUrl, stickerName)
+                      // Picker stays open - add multiple stickers! 🎵
+                    }}
+                    theme="dark"
+                  />
+                </div>
               )}
-            </Popover>
+            </div>
             <button
               className="mr-[8px] w-6 cursor-pointer text-center"
               aria-label="Embed a song to your post"
