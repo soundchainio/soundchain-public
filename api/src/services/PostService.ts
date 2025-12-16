@@ -78,7 +78,8 @@ export class PostService extends ModelService<typeof Post> {
     this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
     this.context.feedService.addPostToFollowerFeeds(post);
     this.context.notificationService.notifyNewPostForSubscribers(post);
-    return post;
+    // Return plain object for GraphQL serialization
+    return post.toObject();
   }
 
   async createRepost(params: RepostParams): Promise<Post> {
@@ -86,7 +87,7 @@ export class PostService extends ModelService<typeof Post> {
     await post.save();
     this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
     this.context.feedService.addPostToFollowerFeeds(post);
-    return post;
+    return post.toObject();
   }
 
   async deletePost(params: DeletePostParams): Promise<Post> {
@@ -95,12 +96,12 @@ export class PostService extends ModelService<typeof Post> {
       { _id: params.postId, profileId: params.profileId },
       { deleted: true },
       { new: true },
-    );
+    ).lean();
   }
 
   async deletePostByAdmin(params: DeletePostParams): Promise<Post> {
     this.context.feedService.deleteItemsByPostId(params.postId);
-    const deletedPost = await PostModel.findOneAndUpdate({ _id: params.postId }, { deleted: true }, { new: true });
+    const deletedPost = await PostModel.findOneAndUpdate({ _id: params.postId }, { deleted: true }, { new: true }).lean();
     this.context.notificationService.notifyPostDeletedByAdmin(deletedPost);
     return deletedPost;
   }
@@ -120,7 +121,7 @@ export class PostService extends ModelService<typeof Post> {
         mediaThumbnail,
       },
       { new: true },
-    );
+    ).lean();
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {
@@ -244,7 +245,7 @@ export class PostService extends ModelService<typeof Post> {
       mediaExpiresAt,
     });
     await post.save();
-    return post;
+    return post.toObject();
   }
 
   async deleteGuestPost({ walletAddress, postId }: { walletAddress: string; postId: string }): Promise<Post> {
@@ -256,7 +257,7 @@ export class PostService extends ModelService<typeof Post> {
 
     post.deleted = true;
     await post.save();
-    return post;
+    return post.toObject();
   }
 
   async getOriginalFromTrack(trackId: string): Promise<Post> {
@@ -271,6 +272,7 @@ export class PostService extends ModelService<typeof Post> {
     return this.model
       .findOne({ $or: ors })
       .sort({ createdAt: 1 })
+      .lean()
       .exec();
   }
 }
