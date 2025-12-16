@@ -1921,16 +1921,21 @@ function DEXDashboard() {
 
               {selectedPurchaseType === 'nft' && (
                 <>
-                  {/* Real NFT listings from marketplace */}
-                  {filteredMarketTracks.filter((t: any) => t.listingItem?.pricePerItem || t.listingItem?.pricePerItemToShow).length > 0 ? (
+                  {/* Real NFT listings from marketplace - show ALL listings with listingItem */}
+                  {listingLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
+                      <span className="ml-3 text-gray-400">Loading marketplace...</span>
+                    </div>
+                  ) : filteredMarketTracks.filter((t: any) => t.listingItem).length > 0 ? (
                     <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
                       {filteredMarketTracks
-                        .filter((t: any) => t.listingItem?.pricePerItem || t.listingItem?.pricePerItemToShow)
+                        .filter((t: any) => t.listingItem)
                         .map((track: any, index: number) => (
                           <TrackNFTCard
                             key={track.id}
                             track={track}
-                            onPlay={() => handlePlayTrack(track, index, filteredMarketTracks.filter((t: any) => t.listingItem?.pricePerItem || t.listingItem?.pricePerItemToShow))}
+                            onPlay={() => handlePlayTrack(track, index, filteredMarketTracks.filter((t: any) => t.listingItem))}
                             isPlaying={isPlaying}
                             isCurrentTrack={currentSong?.trackId === track.id}
                             listView={viewMode === 'list'}
@@ -1941,7 +1946,13 @@ function DEXDashboard() {
                     <Card className="retro-card p-8 text-center">
                       <ImageIcon className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
                       <h3 className="retro-title mb-2">No NFTs Listed</h3>
-                      <p className="text-gray-400 text-sm">NFTs with sale prices will appear here.</p>
+                      <p className="text-gray-400 text-sm mb-4">NFTs available for purchase will appear here.</p>
+                      {listingError && (
+                        <p className="text-xs text-red-400 mt-2">Error: {listingError.message}</p>
+                      )}
+                      <p className="text-xs text-gray-600">
+                        Total in query: {marketTracks.length} | With listingItem: {marketTracks.filter((t: any) => t.listingItem).length}
+                      </p>
                     </Card>
                   )}
                 </>
@@ -2824,7 +2835,7 @@ function DEXDashboard() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                   <Button className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 flex-col h-auto py-4">
                     <Plus className="w-5 h-5 mb-1" />
                     <span className="text-xs">Buy Crypto</span>
@@ -2840,6 +2851,17 @@ function DEXDashboard() {
                   <Button variant="outline" className="border-yellow-500/50 hover:bg-yellow-500/10 flex-col h-auto py-4">
                     <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                     <span className="text-xs">Swap</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-orange-500/50 hover:bg-orange-500/10 flex-col h-auto py-4 relative"
+                    onClick={() => alert('🧹 Sweep Tool Coming Soon!\n\nSweep airdrops and batch transfer NFTs with a single transaction.\n\nPowered by SoundChain Sweep Proxy Contract.')}
+                  >
+                    <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                    <span className="text-xs">Sweep</span>
+                    <Badge className="absolute -top-2 -right-2 bg-orange-500/20 text-orange-400 text-[8px] px-1">Soon</Badge>
                   </Button>
                 </div>
               </Card>
