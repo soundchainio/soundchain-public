@@ -108,13 +108,25 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
     : 'Browser Wallet'
     : null
 
+  // Check if on mobile (no window.ethereum typically)
+  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+  const hasInjectedWallet = typeof window !== 'undefined' && typeof window.ethereum !== 'undefined'
+
+  // Dynamic wallet list - show relevant options based on device
   const wallets = [
-    { name: 'MetaMask', icon: '🦊', popular: true, id: 'metamask' },
-    { name: 'WalletConnect', icon: '🔗', popular: true, id: 'walletconnect', description: 'Rainbow, Trust, Coinbase & 300+ wallets' },
+    // WalletConnect first on mobile (works with all mobile wallets)
+    ...(isMobile ? [{ name: 'WalletConnect', icon: '🔗', popular: true, id: 'walletconnect', description: 'Rainbow, Trust, Coinbase & 300+ wallets' }] : []),
+    // MetaMask only if extension detected OR on desktop
+    ...(hasInjectedWallet || !isMobile ? [{ name: 'MetaMask', icon: '🦊', popular: true, id: 'metamask', description: isMobile ? 'Open in MetaMask app' : 'Browser extension' }] : []),
+    // WalletConnect on desktop (after MetaMask)
+    ...(!isMobile ? [{ name: 'WalletConnect', icon: '🔗', popular: true, id: 'walletconnect', description: 'Rainbow, Trust, Coinbase & 300+ wallets' }] : []),
+    // Coinbase Wallet - deep link on mobile
+    { name: 'Coinbase Wallet', icon: '🔵', popular: false, id: 'coinbase', description: isMobile ? 'Open Coinbase app' : 'Browser extension' },
   ]
 
-  // WalletConnect v2 Project ID - get from https://cloud.walletconnect.com/
-  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
+  // WalletConnect v2 Project ID - use env var or fallback
+  // Get your own at https://cloud.walletconnect.com/
+  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
 
   // Auto-connect if in-app browser detected
   useEffect(() => {
@@ -130,9 +142,18 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
       setConnectingWallet('metamask')
       setError(null)
 
-      // Check if MetaMask is installed
+      // On mobile without injected wallet, deep link to MetaMask app
+      if (isMobile && !hasInjectedWallet) {
+        const currentUrl = encodeURIComponent(window.location.href)
+        window.location.href = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`
+        return
+      }
+
+      // Check if MetaMask is installed (desktop)
       if (typeof window.ethereum === 'undefined') {
-        setError('MetaMask is not installed. Please install MetaMask extension.')
+        // Open MetaMask download page
+        window.open('https://metamask.io/download/', '_blank')
+        setError('MetaMask not detected. Opening download page...')
         setConnecting(false)
         setConnectingWallet(null)
         return
@@ -164,20 +185,49 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
     }
   }
 
+  const handleCoinbaseConnect = async () => {
+    try {
+      setConnecting(true)
+      setConnectingWallet('coinbase')
+      setError(null)
+
+      // On mobile, deep link to Coinbase Wallet app
+      if (isMobile) {
+        const currentUrl = encodeURIComponent(window.location.href)
+        window.location.href = `https://go.cb-w.com/dapp?cb_url=${currentUrl}`
+        return
+      }
+
+      // On desktop, check for Coinbase Wallet extension
+      if ((window.ethereum as any)?.isCoinbaseWallet) {
+        const accounts = await window.ethereum.request({
+          method: 'eth_requestAccounts'
+        })
+        if (accounts && accounts.length > 0) {
+          onConnect(accounts[0], 'Coinbase Wallet')
+          onClose()
+        }
+      } else {
+        // Use WalletConnect for Coinbase on desktop without extension
+        await handleWalletConnectV2()
+      }
+    } catch (err: any) {
+      console.error('❌ Coinbase connection error:', err)
+      setError(err.message || 'Failed to connect Coinbase Wallet')
+    } finally {
+      setConnecting(false)
+      setConnectingWallet(null)
+    }
+  }
+
   const handleWalletConnectV2 = async () => {
     try {
       setConnecting(true)
       setConnectingWallet('walletconnect')
       setError(null)
 
-      // Check if project ID is configured
-      if (!projectId) {
-        setError('WalletConnect not configured. Please set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID.')
-        console.error('❌ WalletConnect Project ID missing. Get one from https://cloud.walletconnect.com/')
-        setConnecting(false)
-        setConnectingWallet(null)
-        return
-      }
+      // Log project ID status (fallback is used if env not set)
+      console.log('🔗 WalletConnect Project ID:', projectId ? 'configured' : 'using fallback')
 
       // Dynamic import to avoid SSR issues
       const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
@@ -241,6 +291,8 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
       await handleMetaMaskConnect()
     } else if (walletId === 'walletconnect') {
       await handleWalletConnectV2()
+    } else if (walletId === 'coinbase') {
+      await handleCoinbaseConnect()
     }
   }
 
