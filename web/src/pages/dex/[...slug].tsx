@@ -248,52 +248,99 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <Card className="retro-card relative z-10 w-full max-w-md mx-4">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="retro-title text-lg">Connect Wallet</h2>
-            <Button variant="ghost" size="sm" onClick={onClose} disabled={connecting}><X className="w-4 h-4" /></Button>
-          </div>
+      {/* Blur.io style backdrop with heavy blur */}
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={onClose} />
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-sm text-red-400">{error}</p>
+      {/* Modal container with glassmorphism effect */}
+      <div className="relative z-10 w-full max-w-sm mx-4 overflow-hidden rounded-2xl border border-gray-700/50 bg-gray-900/95 shadow-2xl shadow-cyan-500/10">
+        {/* Header with gradient accent */}
+        <div className="relative px-6 pt-6 pb-4">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            disabled={connecting}
+            className="absolute top-4 right-4 w-8 h-8 p-0 rounded-full hover:bg-gray-800"
+          >
+            <X className="w-4 h-4 text-gray-400" />
+          </Button>
+
+          {/* Logo and Title - Blur.io style */}
+          <div className="flex flex-col items-center text-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center mb-4 shadow-lg shadow-cyan-500/20">
+              <span className="text-3xl">🔐</span>
             </div>
-          )}
+            <h2 className="text-xl font-bold text-white mb-1">Sign into SoundChain.io</h2>
+            <p className="text-sm text-gray-400">Connect your wallet to continue</p>
+          </div>
+        </div>
 
-          <div className="space-y-3">
-            {wallets.map((wallet) => (
-              <Button
-                key={wallet.name}
-                variant="outline"
-                className="w-full justify-between retro-button hover:bg-cyan-500/20 disabled:opacity-50 h-auto py-3"
-                onClick={() => handleWalletClick(wallet.id, wallet.name)}
-                disabled={connecting}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{wallet.icon}</span>
-                  <div className="text-left">
-                    <span className="retro-text block">{wallet.name}</span>
-                    {(wallet as any).description && (
-                      <span className="text-[10px] text-gray-400 block">{(wallet as any).description}</span>
-                    )}
-                  </div>
+        {/* Error display */}
+        {error && (
+          <div className="mx-6 mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
+            <p className="text-sm text-red-400 text-center">{error}</p>
+          </div>
+        )}
+
+        {/* Wallet options - Clean list style like Blur.io */}
+        <div className="px-6 pb-4 space-y-2">
+          {wallets.map((wallet) => (
+            <button
+              key={wallet.name}
+              onClick={() => handleWalletClick(wallet.id, wallet.name)}
+              disabled={connecting}
+              className={`
+                w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200
+                ${connectingWallet === wallet.id
+                  ? 'border-cyan-500/50 bg-cyan-500/10'
+                  : 'border-gray-700/50 hover:border-gray-600 hover:bg-gray-800/50'
+                }
+                disabled:opacity-50 disabled:cursor-not-allowed
+              `}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-xl">
+                  {wallet.icon}
                 </div>
-                <div className="flex items-center gap-2">
-                  {connectingWallet === wallet.id && (
-                    <span className="text-xs text-cyan-400 animate-pulse">Connecting...</span>
+                <div className="text-left">
+                  <span className="font-semibold text-white block">{wallet.name}</span>
+                  {(wallet as any).description && (
+                    <span className="text-xs text-gray-500">{(wallet as any).description}</span>
                   )}
-                  {wallet.popular && !connectingWallet && <Badge className="bg-yellow-500/20 text-yellow-400">Popular</Badge>}
                 </div>
-              </Button>
-            ))}
+              </div>
+              <div className="flex items-center gap-2">
+                {connectingWallet === wallet.id ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs text-cyan-400">Signing...</span>
+                  </div>
+                ) : wallet.popular && (
+                  <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 text-xs rounded-full font-medium">
+                    Popular
+                  </span>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Footer - Signature message info */}
+        <div className="px-6 py-4 bg-gray-800/50 border-t border-gray-700/50">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            <span className="text-xs text-gray-400">Secure signature verification</span>
           </div>
-          <div className="text-xs retro-json text-center mt-4 pt-4 border-t border-cyan-500/30">
-            By connecting, you agree to Terms of Service
-          </div>
-        </CardContent>
-      </Card>
+          <p className="text-[10px] text-gray-500 text-center leading-relaxed">
+            You will be asked to sign a message to verify wallet ownership.
+            This signature request is free and doesn't cost any gas.
+          </p>
+        </div>
+
+        {/* Bottom accent */}
+        <div className="h-1 bg-gradient-to-r from-purple-500 via-cyan-500 to-green-500" />
+      </div>
     </div>
   )
 }
@@ -631,6 +678,19 @@ function DEXDashboard() {
     skip: selectedView !== 'dashboard', // SPEED: Only fetch when on dashboard
     fetchPolicy: 'cache-first', // Speed: cache-first for instant loads
     notifyOnNetworkStatusChange: true, // Get updates on refetch
+  })
+
+  // Fetch USER-OWNED NFTs for wallet page - filter by wallet address
+  // Note: Use userData?.me?.defaultWallet directly since userWallet is defined later
+  const walletAddress = userData?.me?.defaultWallet
+  const { data: ownedTracksData, loading: ownedTracksLoading, error: ownedTracksError } = useGroupedTracksQuery({
+    variables: {
+      filter: walletAddress ? { nftData: { owner: walletAddress } } : {},
+      sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
+      page: { first: 50 }, // Load more for wallet view
+    },
+    skip: selectedView !== 'wallet' || !walletAddress, // Only fetch on wallet page when user has wallet
+    fetchPolicy: 'cache-and-network', // Fresher data for owned NFTs
   })
 
   // Track if we're loading more
@@ -976,6 +1036,7 @@ function DEXDashboard() {
   const user = userData?.me?.profile
   const userWallet = userData?.me?.defaultWallet
   const userTracks = tracksData?.groupedTracks?.nodes || []
+  const ownedTracks = ownedTracksData?.groupedTracks?.nodes || [] // User-owned NFTs for wallet page
   const marketTracks = listingData?.listingItems?.nodes || []
 
   // Debug badge display
@@ -1371,8 +1432,8 @@ function DEXDashboard() {
           </div>
         </nav>
 
-        {/* Profile Header - Only shown when logged in */}
-        {user && (
+        {/* Profile Header - Only shown when logged in on feed view */}
+        {user && selectedView === 'feed' && (
         <div className="relative z-10 pt-8 pb-6">
           <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
@@ -2848,7 +2909,9 @@ function DEXDashboard() {
                   <Card className="metadata-section p-4 text-center hover:border-cyan-500/50 transition-all">
                     <ImageIcon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
                     <p className="text-xs text-gray-400 mb-1">NFTs</p>
-                    <p className="text-xl font-bold text-cyan-400">{tracksData?.groupedTracks?.pageInfo?.totalCount || 0}</p>
+                    <p className="text-xl font-bold text-cyan-400">
+                      {ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}
+                    </p>
                     <p className="text-xs text-gray-500">Owned</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-green-500/50 transition-all">
@@ -3055,6 +3118,7 @@ function DEXDashboard() {
                       <p className="text-xs text-gray-400 mb-3">From</p>
                       <div className="flex items-center gap-3 mb-4">
                         <select className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none">
+                          <option value="ogun">🪙 OGUN Token</option>
                           <option value="polygon">⬡ Polygon (MATIC)</option>
                           <option value="ethereum">🔷 Ethereum (ETH)</option>
                           <option value="bitcoin">₿ Bitcoin (BTC)</option>
@@ -3064,6 +3128,7 @@ function DEXDashboard() {
                           <option value="optimism">🔴 Optimism</option>
                           <option value="avalanche">🔺 Avalanche</option>
                           <option value="solana">◎ Solana</option>
+                          <option value="zeta">ζ ZETA</option>
                         </select>
                       </div>
                       <div className="relative">
@@ -3166,25 +3231,32 @@ function DEXDashboard() {
                 </div>
               </Card>
 
-              {/* Your NFT Collection */}
+              {/* Your NFT Collection - Shows OWNED NFTs */}
               <Card className="retro-card p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <ImageIcon className="w-6 h-6 text-purple-400" />
                     <h3 className="retro-title text-lg">Your NFT Collection</h3>
-                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">{userTracks.length}</Badge>
+                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">
+                      {ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || ownedTracks.length}
+                    </Badge>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => setSelectedView('library')} className="text-purple-400 hover:bg-purple-500/10">
                     View All
                   </Button>
                 </div>
-                {userTracks.length > 0 ? (
+                {ownedTracksLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
+                    <span className="ml-3 text-gray-400">Loading your NFTs...</span>
+                  </div>
+                ) : ownedTracks.length > 0 ? (
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
-                    {userTracks.slice(0, 6).map((track: any, index: number) => (
+                    {ownedTracks.slice(0, 12).map((track: any, index: number) => (
                       <TrackNFTCard
                         key={track.id}
                         track={track}
-                        onPlay={() => handlePlayTrack(track, index, userTracks)}
+                        onPlay={() => handlePlayTrack(track, index, ownedTracks)}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
                         listView={false}
@@ -3195,6 +3267,7 @@ function DEXDashboard() {
                   <div className="text-center py-8">
                     <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-400 text-sm">No NFTs owned yet</p>
+                    <p className="text-gray-500 text-xs mt-1">Wallet: {userWallet?.slice(0, 8)}...{userWallet?.slice(-6)}</p>
                     <Button onClick={() => setSelectedView('marketplace')} className="mt-3 retro-button" size="sm">
                       <ShoppingBag className="w-4 h-4 mr-2" />
                       Browse Marketplace
@@ -3229,7 +3302,7 @@ function DEXDashboard() {
                       className="w-full bg-black/50 border border-gray-700 rounded-lg px-3 py-3 text-white focus:border-purple-500 focus:outline-none"
                     >
                       <option value="">Select an NFT to transfer</option>
-                      {userTracks.map((track) => (
+                      {ownedTracks.map((track) => (
                         <option key={track.id} value={track.id}>{track.title} - {track.artist}</option>
                       ))}
                     </select>
