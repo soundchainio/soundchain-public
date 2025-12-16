@@ -190,7 +190,8 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
     followers: 3537,
     likes: 1237,
     avatar: profileAvatar,
-    isVerified: true
+    isVerified: true,
+    coverPicture: undefined as string | undefined,
   }
 
   const userData = user || defaultUser

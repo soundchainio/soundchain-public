@@ -32,12 +32,12 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
         ) : (
           <>
             <div className="flex items-center">
-              <Avatar className="mr-4" profile={post.profile} />
+              <Avatar className="mr-4" profile={post.profile || undefined} />
               <DisplayName
-                name={post.profile.displayName}
-                verified={post.profile.verified}
-                teamMember={post.profile.teamMember}
-                badges={post.profile.badges}
+                name={post.profile?.displayName || 'Unknown'}
+                verified={post.profile?.verified || false}
+                teamMember={post.profile?.teamMember || false}
+                badges={post.profile?.badges || null}
               />
               <Timestamp datetime={post.createdAt} className="flex-1 text-right text-gray-60" />
             </div>
