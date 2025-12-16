@@ -38,7 +38,7 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
     context,
   })
 
-  if (error) {
+  if (error || !data?.post) {
     return { notFound: true }
   }
 
