@@ -112,8 +112,6 @@ export default function LoginPage() {
   const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [sentToEmail, setSentToEmail] = useState('');
   const authMagic = useRef<any>(null);
 
   useEffect(() => {
@@ -404,70 +402,47 @@ export default function LoginPage() {
       console.log('[Email] Starting login process for email:', values.email);
       setLoggingIn(true);
       setError(null);
-      setEmailSent(false);
 
-      // Send magic link to email - user clicks link to complete login (no code pasting needed!)
-      // Use actual browser origin to handle both www and non-www domains
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : (config.domainUrl || 'https://soundchain.io');
-      const redirectURI = `${baseUrl}/login`;
-      console.log("[Email] Sending magic link to email...", { email: values.email, redirectURI });
+      // Use Email OTP - user gets a 6-digit code in email, enters it in Magic's UI
+      // This is simpler than magic links - no redirects, works reliably across all browsers
+      console.log('[Email] Sending OTP code to email...');
 
-      // Use showUI: false - we'll show our own "check your email" UI
-      // Magic's built-in UI can be unreliable and cause page navigation issues
-      console.log('[Email] Sending magic link (showUI: false, we show our own UI)...');
+      const didToken = await magic.auth.loginWithEmailOTP({
+        email: values.email,
+      });
 
-      // Show our "check your email" UI immediately
-      setSentToEmail(values.email);
-      setEmailSent(true);
+      console.log('[Email] OTP authentication completed!');
+      console.log('[Email] Received didToken');
+      localStorage.setItem('didToken', didToken);
 
-      // Create a promise that will be resolved when user returns from clicking the link
-      // The user will click the link in their email, which redirects back here with magic_credential
-      try {
-        const didToken = await magic.auth.loginWithMagicLink({
-          email: values.email,
-          redirectURI,  // Must match Magic dashboard allowed URLs
-          showUI: false  // We show our own UI to avoid navigation issues
-        });
-
-        console.log('[Email] Magic link authentication completed!');
-        console.log('[Email] Received didToken from magic link');
-        localStorage.setItem('didToken', didToken);
-
-        if (!didToken) {
-          throw new Error('Error connecting Magic: No token returned');
-        }
-
-        const result = await login({ variables: { input: { token: didToken } } });
-        console.log('[Email] GraphQL login mutation result:', result.data?.login ? 'success' : 'failed');
-
-        if (result.data?.login.jwt) {
-          // Wait for JWT to be fully set before redirecting
-          await setJwt(result.data.login.jwt);
-
-          // Additional delay to ensure Apollo cache is ready
-          await new Promise(resolve => setTimeout(resolve, 200));
-
-          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-          console.log('[Email] Redirecting to:', redirectUrl);
-          router.push(redirectUrl);
-        } else {
-          throw new Error('Login failed: No JWT returned');
-        }
-      } catch (magicErr: any) {
-        console.error('[Email] Magic link error:', magicErr);
-        // If user closes the tab or the link expires, they can try again
-        if (magicErr.message?.includes('User denied') || magicErr.message?.includes('cancelled')) {
-          setError('Login cancelled. Please try again.');
-        } else {
-          throw magicErr;
-        }
-        setEmailSent(false);
-        setLoggingIn(false);
+      if (!didToken) {
+        throw new Error('Error connecting Magic: No token returned');
       }
-    } catch (error) {
+
+      const result = await login({ variables: { input: { token: didToken } } });
+      console.log('[Email] GraphQL login mutation result:', result.data?.login ? 'success' : 'failed');
+
+      if (result.data?.login.jwt) {
+        // Wait for JWT to be fully set before redirecting
+        await setJwt(result.data.login.jwt);
+
+        // Additional delay to ensure Apollo cache is ready
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+        console.log('[Email] Redirecting to:', redirectUrl);
+        router.push(redirectUrl);
+      } else {
+        throw new Error('Login failed: No JWT returned');
+      }
+    } catch (error: any) {
       console.error('[Email] Login error:', error);
-      handleError(error as Error);
-      setEmailSent(false);
+      // Handle user cancellation gracefully
+      if (error.message?.includes('User denied') || error.message?.includes('cancelled')) {
+        setError('Login cancelled. Please try again.');
+      } else {
+        handleError(error as Error);
+      }
       setLoggingIn(false);
     }
   }
@@ -521,33 +496,9 @@ export default function LoginPage() {
     return (
       <>
         <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
-        <div className="flex h-full w-full flex-col items-center justify-center py-3 text-center font-bold sm:px-4">
-          {emailSent ? (
-            <>
-              <div className="mb-6 text-4xl">📧</div>
-              <h2 className="text-xl text-white mb-2">Check your email!</h2>
-              <p className="text-gray-400 text-sm mb-4">
-                We sent a magic link to <span className="text-cyan-400">{sentToEmail}</span>
-              </p>
-              <p className="text-gray-500 text-xs">
-                Click the link in your email to log in.
-              </p>
-              <button
-                className="mt-6 text-sm text-gray-400 underline hover:text-white"
-                onClick={() => {
-                  setEmailSent(false);
-                  setLoggingIn(false);
-                }}
-              >
-                Use a different email
-              </button>
-            </>
-          ) : (
-            <>
-              <LoaderAnimation ring />
-              <span className="text-white">Logging in</span>
-            </>
-          )}
+        <div className="flex h-full w-full items-center justify-center py-3 text-center font-bold sm:px-4">
+          <LoaderAnimation ring />
+          <span className="text-white ml-2">Logging in...</span>
         </div>
       </>
     );
