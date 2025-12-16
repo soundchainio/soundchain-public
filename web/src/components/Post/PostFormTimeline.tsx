@@ -228,7 +228,7 @@ export const PostFormTimeline = () => {
                       perLine={7}
                       onEmojiSelect={(e: Emoji) => {
                         handleSelectEmoji(e)
-                        close()
+                        // Don't close - let users add multiple emojis!
                       }}
                     />
                   </Popover.Panel>

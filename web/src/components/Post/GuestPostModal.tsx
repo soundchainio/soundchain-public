@@ -52,7 +52,7 @@ export const GuestPostModal = ({ isOpen, onClose, walletAddress }: GuestPostModa
     if (body.length < 500) {
       setBody(prev => prev + emoji.native)
     }
-    setShowEmojiPicker(false)
+    // Don't close - let users add multiple emojis in a flurry!
   }
 
   const handleStickerSelect = (stickerUrl: string, stickerName: string) => {
