@@ -3272,7 +3272,9 @@ function DEXDashboard() {
                       likes: viewingProfile.followingCount || 0,
                       avatar: viewingProfile.profilePicture || undefined,
                       isVerified: viewingProfile.verified || viewingProfile.teamMember || false,
+                      coverPicture: viewingProfile.coverPicture || undefined,
                     }}
+                    isOwnProfile={me?.profile?.id === viewingProfile.id}
                   />
 
                   {/* Social Links */}

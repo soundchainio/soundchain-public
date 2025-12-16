@@ -31,7 +31,9 @@ interface ProfileHeaderProps {
     likes: number
     avatar?: string
     isVerified?: boolean
+    coverPicture?: string
   }
+  isOwnProfile?: boolean // Only show portfolio/sensitive data if viewing own profile
 }
 
 function BlurAggregatorPanel() {
@@ -178,7 +180,7 @@ function BlurAggregatorPanel() {
   )
 }
 
-export function ProfileHeader({ user }: ProfileHeaderProps) {
+export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps) {
   const defaultUser = {
     name: "Xamã",
     username: "@xama",
@@ -199,7 +201,22 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
   }
 
   return (
-    <div className="relative z-10 pt-8 pb-6">
+    <div className="relative z-10">
+      {/* Full-screen Background Cover */}
+      <div className="absolute inset-0 -z-10 h-80 lg:h-96">
+        {userData.coverPicture ? (
+          <img
+            src={userData.coverPicture}
+            alt="Cover"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-purple-900 via-cyan-900 to-black" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black" />
+      </div>
+
+      <div className="pt-32 lg:pt-48 pb-6">
       <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
           {/* Left Side - User Profile */}
@@ -301,13 +318,16 @@ export function ProfileHeader({ user }: ProfileHeaderProps) {
             </div>
           </div>
 
-          {/* Right Side - Blur-style Aggregator */}
-          <div className="xl:flex xl:justify-end">
-            <div className="w-full max-w-md">
-              <BlurAggregatorPanel />
+          {/* Right Side - Blur-style Aggregator (Only visible to profile owner) */}
+          {isOwnProfile && (
+            <div className="xl:flex xl:justify-end">
+              <div className="w-full max-w-md">
+                <BlurAggregatorPanel />
+              </div>
             </div>
-          </div>
+          )}
         </div>
+      </div>
       </div>
     </div>
   )
