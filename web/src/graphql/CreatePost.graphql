@@ -10,6 +10,10 @@ mutation CreatePost($input: CreatePostInput!) {
       updatedAt
       isGuest
       walletAddress
+      uploadedMediaUrl
+      uploadedMediaType
+      mediaExpiresAt
+      isEphemeral
     }
   }
 }

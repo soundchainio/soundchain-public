@@ -2315,7 +2315,7 @@ export type CreatePostMutationVariables = Exact<{
 }>;
 
 
-export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null } } };
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null } } };
 
 export type CreateProfileVerificationRequestMutationVariables = Exact<{
   input: CreateProfileVerificationRequestInput;
@@ -2488,7 +2488,7 @@ export type GuestCreatePostMutationVariables = Exact<{
 }>;
 
 
-export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null } } };
+export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null } } };
 
 export type GuestDeletePostMutationVariables = Exact<{
   postId: Scalars['String']['input'];
