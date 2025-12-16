@@ -19,7 +19,15 @@ export class FeedService extends ModelService<typeof FeedItem> {
   }
 
   async addPostToFollowerFeeds(post: Post): Promise<void> {
+    // Guard against undefined profileId
+    if (!post?.profileId) {
+      console.warn('[FeedService] Skipping addPostToFollowerFeeds - post or profileId is undefined');
+      return;
+    }
+
     const followerIds = await this.context.followService.getFollowerIds(post.profileId.toString());
+    if (!followerIds.length) return; // No followers to notify
+
     const feedItems = followerIds.map(
       profileId => new this.model({ profileId, postId: post._id, postedAt: post.createdAt }),
     );

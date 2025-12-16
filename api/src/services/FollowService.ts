@@ -58,8 +58,9 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
   }
 
   async getFollowerIds(profileId: string): Promise<string[]> {
-    const rest = await this.model.find({ followedId: profileId }, { followerId: 1, _id: 0 });
-    return rest.map(({ followerId }) => followerId.toString());
+    // Use .lean() to get plain objects and avoid mongoose document symbol issues
+    const rest = await this.model.find({ followedId: profileId }, { followerId: 1, _id: 0 }).lean();
+    return rest.map(({ followerId }) => followerId?.toString() || '').filter(Boolean);
   }
 
   async getFollowers(profileId: string, page: PageInput): Promise<PaginateResult<Follow>> {

@@ -67,7 +67,8 @@ export class SubscriptionService extends ModelService<typeof Subscription, Subsc
   }
 
   async getSubscriberIds(profileId: string): Promise<string[]> {
-    const subscriptions = await this.model.find({ profileId }, { subscriberId: 1, _id: 0 });
-    return subscriptions.map(({ subscriberId }) => subscriberId.toString());
+    // Use .lean() to get plain objects and avoid mongoose document symbol issues
+    const subscriptions = await this.model.find({ profileId }, { subscriberId: 1, _id: 0 }).lean();
+    return subscriptions.map(({ subscriberId }) => subscriberId?.toString() || '').filter(Boolean);
   }
 }

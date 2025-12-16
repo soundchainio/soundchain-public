@@ -75,9 +75,19 @@ export class PostService extends ModelService<typeof Post> {
       mediaExpiresAt,
     });
     await post.save();
-    this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
-    this.context.feedService.addPostToFollowerFeeds(post);
-    this.context.notificationService.notifyNewPostForSubscribers(post);
+
+    // Only create feed items and notifications if profileId is present (not a guest post without profile)
+    if (post.profileId) {
+      try {
+        this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
+        this.context.feedService.addPostToFollowerFeeds(post);
+        this.context.notificationService.notifyNewPostForSubscribers(post);
+      } catch (feedError) {
+        // Log but don't fail the post creation if feed/notification fails
+        console.error('[PostService] Error creating feed items or notifications:', feedError);
+      }
+    }
+
     // Return plain object for GraphQL serialization (cast through unknown for Typegoose compatibility)
     return post.toObject() as unknown as Post;
   }

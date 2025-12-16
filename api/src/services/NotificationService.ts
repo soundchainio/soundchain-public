@@ -218,21 +218,38 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyNewPostForSubscribers(post: Post): Promise<void> {
-    const authorProfile = await this.context.profileService.getProfile(post.profileId.toString());
-    const subscribersIds = await this.context.subscriptionService.getSubscriberIds(post.profileId.toString());
-    const metadata: NewPostNotificationMetadata = {
-      authorName: authorProfile.displayName,
-      authorPicture: authorProfile.profilePicture,
-      postBody: post.body,
-      postId: post._id,
-      postLink: post.mediaLink,
-      trackId: post.trackId,
-    };
-    const notifications = subscribersIds.map(
-      profileId => new this.model({ type: NotificationType.NewPost, profileId, metadata }),
-    );
-    await ProfileModel.updateMany({ _id: { $in: subscribersIds } }, { $inc: { unreadNotificationCount: 1 } });
-    await this.model.insertMany(notifications);
+    // Guard against undefined post or profileId
+    if (!post?.profileId) {
+      console.warn('[NotificationService] Skipping notifyNewPostForSubscribers - post or profileId is undefined');
+      return;
+    }
+
+    try {
+      const authorProfile = await this.context.profileService.getProfile(post.profileId.toString());
+      if (!authorProfile) {
+        console.warn('[NotificationService] Author profile not found for post notifications');
+        return;
+      }
+
+      const subscribersIds = await this.context.subscriptionService.getSubscriberIds(post.profileId.toString());
+      if (!subscribersIds.length) return; // No subscribers to notify
+
+      const metadata: NewPostNotificationMetadata = {
+        authorName: authorProfile.displayName,
+        authorPicture: authorProfile.profilePicture,
+        postBody: post.body,
+        postId: post._id,
+        postLink: post.mediaLink,
+        trackId: post.trackId,
+      };
+      const notifications = subscribersIds.map(
+        profileId => new this.model({ type: NotificationType.NewPost, profileId, metadata }),
+      );
+      await ProfileModel.updateMany({ _id: { $in: subscribersIds } }, { $inc: { unreadNotificationCount: 1 } });
+      await this.model.insertMany(notifications);
+    } catch (error) {
+      console.error('[NotificationService] Error in notifyNewPostForSubscribers:', error);
+    }
   }
 
   async notifyVerificationRequestUpdate(profileId: string): Promise<void> {
