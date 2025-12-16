@@ -57,6 +57,7 @@ export const PostBar = ({
 
   const handleSelectSticker = (stickerUrl: string, stickerName: string) => {
     // Format as markdown that EmoteRenderer can parse: ![emote:name](url)
+    // No extra spaces - let user control spacing for char count
     const emoteMarkdown = `![emote:${stickerName}](${stickerUrl})`
     if (getBodyCharacterCount(values.body) < maxLength) {
       setFieldValue('body', `${values.body}${emoteMarkdown}`)
@@ -126,8 +127,8 @@ export const PostBar = ({
       )}
       <div className="flex-1 justify-self-end text-right text-gray-400">{charCounter}</div>
       {isEmojiPickerVisible && (
-        <div className="fixed left-16 bottom-0 z-50">
-          <Picker theme="dark" perLine={8} onSelect={(e: Emoji) => handleSelectEmoji(e, values, setFieldValue)} />
+        <div className="fixed left-16 bottom-0 z-50" onClick={(e) => e.stopPropagation()}>
+          <Picker theme="dark" perLine={8} onEmojiSelect={(e: Emoji) => handleSelectEmoji(e, values, setFieldValue)} />
         </div>
       )}
       {isStickerPickerVisible && (

@@ -147,8 +147,9 @@ export const PostFormTimeline = () => {
   const handleSelectSticker = (stickerUrl: string, stickerName: string) => {
     // Insert emote as an inline image markdown that can be rendered
     // Format: ![emote:name](url) - custom format for animated emotes
+    // No extra spaces added - let user control spacing
     setPostBody(currentBody => {
-      return `${currentBody} ![emote:${stickerName}](${stickerUrl}) `
+      return `${currentBody}![emote:${stickerName}](${stickerUrl})`
     })
   }
 
@@ -215,42 +216,46 @@ export const PostFormTimeline = () => {
         />
         <div className="flex flex-row">
           <div className="flex basis-3/4">
-            {/* Emoji Picker */}
+            {/* Emoji Picker - stays open for emoji flurries! */}
             <Popover className="relative">
-              {({ open, close }) => (
+              {({ open }) => (
                 <>
                   <Popover.Button className="mr-[8px] w-6 cursor-pointer focus:outline-none">
                     {open ? '❌' : '😃'}
                   </Popover.Button>
-                  <Popover.Panel className="absolute left-0 z-50 mt-2">
-                    <Picker
-                      theme="dark"
-                      perLine={7}
-                      onEmojiSelect={(e: Emoji) => {
-                        handleSelectEmoji(e)
-                        // Don't close - let users add multiple emojis!
-                      }}
-                    />
-                  </Popover.Panel>
+                  {open && (
+                    <Popover.Panel static className="absolute left-0 z-50 mt-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                      <Picker
+                        theme="dark"
+                        perLine={7}
+                        onEmojiSelect={(e: Emoji) => {
+                          handleSelectEmoji(e)
+                          // Picker stays open - blast those emojis! 🔥
+                        }}
+                      />
+                    </Popover.Panel>
+                  )}
                 </>
               )}
             </Popover>
-            {/* Sticker Picker - Twitch, Discord, Kick stickers */}
+            {/* Sticker Picker - Twitch, Discord, Kick stickers - stays open for flurries! */}
             <Popover className="relative">
-              {({ open, close }) => (
+              {({ open }) => (
                 <>
                   <Popover.Button className="mr-[8px] w-6 cursor-pointer focus:outline-none" title="Stickers">
                     <Sparkles className={`m-auto w-5 ${open ? 'text-cyan-400' : 'text-gray-400'}`} />
                   </Popover.Button>
-                  <Popover.Panel className="absolute left-0 z-50 mt-2">
-                    <StickerPicker
-                      onSelect={(stickerUrl, stickerName) => {
-                        handleSelectSticker(stickerUrl, stickerName)
-                        // Don't close - let users add multiple emotes in a flurry!
-                      }}
-                      theme="dark"
-                    />
-                  </Popover.Panel>
+                  {open && (
+                    <Popover.Panel static className="absolute left-0 z-50 mt-2" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                      <StickerPicker
+                        onSelect={(stickerUrl, stickerName) => {
+                          handleSelectSticker(stickerUrl, stickerName)
+                          // Picker stays open - add multiple stickers! 🎵
+                        }}
+                        theme="dark"
+                      />
+                    </Popover.Panel>
+                  )}
                 </>
               )}
             </Popover>
