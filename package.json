@@ -1,6 +1,7 @@
 {
   "name": "soundchain",
   "version": "1.0.0",
+  "private": true,
   "license": "MIT",
   "scripts": {
     "bootstrap": "lerna bootstrap && husky install",
