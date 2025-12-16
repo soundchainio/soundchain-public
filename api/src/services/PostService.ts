@@ -78,8 +78,8 @@ export class PostService extends ModelService<typeof Post> {
     this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
     this.context.feedService.addPostToFollowerFeeds(post);
     this.context.notificationService.notifyNewPostForSubscribers(post);
-    // Return plain object for GraphQL serialization (cast to Post for proper typing)
-    return post.toObject() as Post;
+    // Return plain object for GraphQL serialization (cast through unknown for Typegoose compatibility)
+    return post.toObject() as unknown as Post;
   }
 
   async createRepost(params: RepostParams): Promise<Post> {
@@ -87,7 +87,7 @@ export class PostService extends ModelService<typeof Post> {
     await post.save();
     this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
     this.context.feedService.addPostToFollowerFeeds(post);
-    return post.toObject() as Post;
+    return post.toObject() as unknown as Post;
   }
 
   async deletePost(params: DeletePostParams): Promise<Post> {
@@ -97,14 +97,14 @@ export class PostService extends ModelService<typeof Post> {
       { deleted: true },
       { new: true },
     ).lean();
-    return result as Post;
+    return result as unknown as Post;
   }
 
   async deletePostByAdmin(params: DeletePostParams): Promise<Post> {
     this.context.feedService.deleteItemsByPostId(params.postId);
     const deletedPost = await PostModel.findOneAndUpdate({ _id: params.postId }, { deleted: true }, { new: true }).lean();
-    this.context.notificationService.notifyPostDeletedByAdmin(deletedPost as Post);
-    return deletedPost as Post;
+    this.context.notificationService.notifyPostDeletedByAdmin(deletedPost as unknown as Post);
+    return deletedPost as unknown as Post;
   }
 
   async updatePost(params: UpdatePostParams): Promise<Post> {
@@ -123,7 +123,7 @@ export class PostService extends ModelService<typeof Post> {
       },
       { new: true },
     ).lean();
-    return result as Post;
+    return result as unknown as Post;
   }
 
   getPosts(filter?: FilterPostInput, sort?: SortPostInput, page?: PageInput): Promise<PaginateResult<Post>> {
@@ -247,7 +247,7 @@ export class PostService extends ModelService<typeof Post> {
       mediaExpiresAt,
     });
     await post.save();
-    return post.toObject() as Post;
+    return post.toObject() as unknown as Post;
   }
 
   async deleteGuestPost({ walletAddress, postId }: { walletAddress: string; postId: string }): Promise<Post> {
@@ -259,7 +259,7 @@ export class PostService extends ModelService<typeof Post> {
 
     post.deleted = true;
     await post.save();
-    return post.toObject() as Post;
+    return post.toObject() as unknown as Post;
   }
 
   async getOriginalFromTrack(trackId: string): Promise<Post> {
@@ -276,6 +276,6 @@ export class PostService extends ModelService<typeof Post> {
       .sort({ createdAt: 1 })
       .lean()
       .exec();
-    return result as Post;
+    return result as unknown as Post;
   }
 }
