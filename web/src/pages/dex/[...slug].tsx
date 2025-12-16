@@ -86,6 +86,21 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
   const [connectingWallet, setConnectingWallet] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // Detect if we're in an in-app browser (MetaMask, Trust, Coinbase, etc.)
+  const isInAppBrowser = typeof window !== 'undefined' && (
+    (window.ethereum as any)?.isMetaMask ||
+    (window.ethereum as any)?.isTrust ||
+    (window.ethereum as any)?.isCoinbaseWallet ||
+    (window.ethereum as any)?.isTokenPocket
+  )
+
+  const detectedWallet = typeof window !== 'undefined' && window.ethereum
+    ? (window.ethereum as any)?.isMetaMask ? 'MetaMask'
+    : (window.ethereum as any)?.isTrust ? 'Trust Wallet'
+    : (window.ethereum as any)?.isCoinbaseWallet ? 'Coinbase Wallet'
+    : 'Browser Wallet'
+    : null
+
   const wallets = [
     { name: 'MetaMask', icon: '🦊', popular: true, id: 'metamask' },
     { name: 'WalletConnect', icon: '🔗', popular: true, id: 'walletconnect', description: 'Rainbow, Trust, Coinbase & 300+ wallets' },
@@ -93,6 +108,14 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
 
   // WalletConnect v2 Project ID - get from https://cloud.walletconnect.com/
   const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
+
+  // Auto-connect if in-app browser detected
+  useEffect(() => {
+    if (isOpen && isInAppBrowser && !connecting) {
+      console.log(`🔗 Detected ${detectedWallet} in-app browser, auto-connecting...`)
+      handleMetaMaskConnect()
+    }
+  }, [isOpen, isInAppBrowser])
 
   const handleMetaMaskConnect = async () => {
     try {
