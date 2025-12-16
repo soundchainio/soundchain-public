@@ -74,6 +74,25 @@ selectedView === 'mint'        → Mint new NFT view
 
 **Fee Structure:** 0.05% (5 basis points) → Gnosis Safe
 
+### Messaging/DM System Architecture
+
+**API Backend:**
+- `Message` model: fromId, toId, message, readAt, timestamps
+- `MessageService`: createMessage, getMessages, getChats, markAsRead
+- `ChatResolver`: chats query, chatHistory query
+- `MessageResolver`: sendMessage mutation
+
+**Web Frontend (DEX Integration):**
+- `useChatsQuery` - Fetch all conversations
+- `useChatHistoryLazyQuery` - Load messages for selected chat
+- `useSendMessageMutation` - Send new message
+
+**DEX Messages View:**
+- Two-panel layout (responsive)
+- Left: Conversation list with avatars, last message, unread indicator
+- Right: Chat window with message bubbles, timestamps, send form
+- Auto-refresh on send, proper loading/empty states
+
 ---
 
 ## Summary for User (When You Return)
