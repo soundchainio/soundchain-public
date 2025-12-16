@@ -19,6 +19,7 @@ import { useMe } from 'hooks/useMe'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { NFTCard } from 'components/dex/NFTCard'
+import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
@@ -3259,83 +3260,20 @@ function DEXDashboard() {
                     Back
                   </Button>
 
-                  {/* Profile Header */}
-                  <Card className="retro-card overflow-hidden">
-                    {/* Cover Photo */}
-                    <div className="h-48 bg-gradient-to-r from-purple-600 to-cyan-600 relative">
-                      {viewingProfile.coverPicture && (
-                        <img
-                          src={viewingProfile.coverPicture}
-                          alt="Cover"
-                          className="w-full h-full object-cover"
-                        />
-                      )}
-                    </div>
-
-                    {/* Profile Info */}
-                    <div className="p-6 -mt-16 relative">
-                      <Avatar className="w-32 h-32 border-4 border-gray-900 mb-4">
-                        <AvatarImage src={viewingProfile.profilePicture || ''} />
-                        <AvatarFallback className="text-4xl bg-gray-800">
-                          {viewingProfile.displayName?.charAt(0) || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="flex flex-col md:flex-row md:items-start md:justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h1 className="text-2xl font-bold text-white">{viewingProfile.displayName}</h1>
-                            {viewingProfile.verified && (
-                              <BadgeCheck className="w-6 h-6 text-cyan-400" />
-                            )}
-                            {viewingProfile.teamMember && (
-                              <SoundchainGoldLogo className="w-6 h-6" />
-                            )}
-                          </div>
-                          <p className="text-cyan-400 mb-2">@{viewingProfile.userHandle}</p>
-                          {viewingProfile.bio && (
-                            <p className="text-gray-300 max-w-xl mb-4">{viewingProfile.bio}</p>
-                          )}
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-3 mt-4 md:mt-0">
-                          {me?.profile?.id !== viewingProfile.id && (
-                            <>
-                              <Button
-                                onClick={() => handleFollowToggle(
-                                  viewingProfile!.id,
-                                  viewingProfile!.isFollowed || false,
-                                  viewingProfile!.userHandle || ''
-                                )}
-                                disabled={followLoading || unfollowLoading}
-                                className={viewingProfile.isFollowed ? 'bg-gray-700 hover:bg-gray-600' : 'retro-button'}
-                              >
-                                <Users className="w-4 h-4 mr-2" />
-                                {viewingProfile.isFollowed ? 'Following' : 'Follow'}
-                              </Button>
-                              <Button variant="outline" className="border-cyan-500/50 hover:bg-cyan-500/10">
-                                <MessageCircle className="w-4 h-4 mr-2" />
-                                Message
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="flex gap-6 mt-4">
-                        <div className="text-center">
-                          <div className="text-xl font-bold text-white">{viewingProfile.followerCount || 0}</div>
-                          <div className="text-xs text-gray-400">Followers</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-xl font-bold text-white">{viewingProfile.followingCount || 0}</div>
-                          <div className="text-xs text-gray-400">Following</div>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
+                  {/* Full Profile Header Component */}
+                  <ProfileHeader
+                    user={{
+                      name: viewingProfile.displayName || 'Unknown',
+                      username: `@${viewingProfile.userHandle}`,
+                      bio: viewingProfile.bio || '',
+                      walletAddress: viewingProfile.magicWalletAddress || '0x...',
+                      tracks: 0, // TODO: Add tracks count to profile query
+                      followers: viewingProfile.followerCount || 0,
+                      likes: viewingProfile.followingCount || 0,
+                      avatar: viewingProfile.profilePicture || undefined,
+                      isVerified: viewingProfile.verified || viewingProfile.teamMember || false,
+                    }}
+                  />
 
                   {/* Social Links */}
                   {viewingProfile.socialMedias && (
