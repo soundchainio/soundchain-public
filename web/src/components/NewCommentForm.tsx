@@ -125,7 +125,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
             // Use Formik's setFieldValue to properly update form state
             setFieldValue('body', newBody)
           }
-          setShowEmojiPicker(false)
+          // Don't close picker - allow emoji flurries!
         }
 
         const handleStickerSelect = (stickerUrl: string, stickerName: string) => {
@@ -136,7 +136,7 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
             // Use Formik's setFieldValue to properly update form state
             setFieldValue('body', currentBody + emoteMarkdown)
           }
-          setShowStickerPicker(false)
+          // Don't close picker - allow sticker flurries!
         }
 
         return (
