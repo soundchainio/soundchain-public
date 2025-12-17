@@ -1,7 +1,7 @@
 # SoundChain Session Handoff - December 17, 2024 (Evening Session)
 
 ## Session Summary
-Major features implemented: **Bookmark System** and **SoundCloud-style Waveform Comments**
+Major features implemented: **Bookmark System**, **SoundCloud-style Waveform Comments**, and **Web3 Archive System**
 
 ---
 
@@ -119,6 +119,57 @@ function TrackPlayer({ trackId, audioUrl, duration }) {
 
 ---
 
+## Feature 4: Web3 Archive System (THE GAME CHANGER!)
+
+### Philosophy
+**Your content. Your device. Your control.** - True Web3 ownership of ephemeral content.
+
+### What Was Built
+
+**Core Library:**
+- `web/src/lib/postArchive.ts` - Archive utility functions
+  - `createPostArchive()` - Creates `.soundchain` zip bundle with post JSON + media
+  - `downloadArchive()` - Handles desktop/mobile download (uses `navigator.share` on mobile)
+  - `readPostArchive()` - Reads and parses archive files
+  - `generateArchiveFilename()` - Creates filename like `username_2024-12-17_14-30-00.soundchain`
+  - `isMobileDevice()` - Detects mobile for share API
+  - `isValidArchiveFile()` - Validates archive files
+
+**Frontend Components:**
+- `web/src/components/ArchiveImport.tsx` - Import component
+  - Drag-and-drop file upload
+  - Preview mode showing post body, media, metadata, and original stats
+  - "Repost to Feed" action
+
+- `web/src/pages/dex/archive-import.tsx` - Dedicated import page at `/dex/archive-import`
+  - Re-uploads media to S3 for new 24h post
+  - Consistent styling with bookmarks page
+  - Login required for import
+
+- `web/src/components/Post/PostActions.tsx` - Added Archive button
+  - Only shows for ephemeral posts owned by the current user
+  - Info icon (ℹ️) with hover tooltip explaining Web3 archive philosophy
+  - Shows "Saving..." state during archive creation
+
+- `web/src/components/Post/Post.tsx` - Passes archive props
+  - Passes `isEphemeral`, `isOwner`, and `postData` to PostActions
+
+### How It Works
+1. **Archive**: User clicks Archive button on their 24h post → Downloads `.soundchain` file to device
+2. **Import**: User visits `/dex/archive-import` → Uploads archive → Preview → Repost to Feed
+
+### Archive File Format (.soundchain)
+```
+archive.soundchain (ZIP format)
+├── post.json          # Metadata: body, timestamps, profile, stats
+└── media.jpg/mp4/mp3  # Original media file (if any)
+```
+
+### Dependencies Added
+- `jszip` - For creating/reading ZIP archives
+
+---
+
 ## Bug Fixes This Session
 
 1. **SCid Model Enum Fix** - Fixed `enum: ChainCode` to use `enum: Object.values(ChainCode)` for transpile-only compatibility
@@ -146,8 +197,8 @@ api/src/models/SCid.ts (MODIFIED - fixed enum)
 ### Web
 ```
 web/src/components/WaveformWithComments.tsx (NEW)
-web/src/components/Post/Post.tsx (MODIFIED - Instagram style)
-web/src/components/Post/PostActions.tsx (MODIFIED - bookmark button)
+web/src/components/Post/Post.tsx (MODIFIED - Instagram style, archive props)
+web/src/components/Post/PostActions.tsx (MODIFIED - bookmark + archive buttons)
 web/src/hooks/useTrackComments.ts (NEW)
 web/src/pages/dex/bookmarks.tsx (NEW)
 web/src/graphql/BookmarkPost.graphql (NEW)
@@ -159,6 +210,11 @@ web/src/graphql/CreateTrackComment.graphql (NEW)
 web/src/graphql/LikeTrackComment.graphql (NEW)
 web/src/graphql/DeleteTrackComment.graphql (NEW)
 web/src/graphql/TrackCommentCount.graphql (NEW)
+
+# Archive System
+web/src/lib/postArchive.ts (NEW - core archive utility)
+web/src/components/ArchiveImport.tsx (NEW - import component)
+web/src/pages/dex/archive-import.tsx (NEW - import page)
 ```
 
 ---
@@ -169,6 +225,7 @@ web/src/graphql/TrackCommentCount.graphql (NEW)
 2. **Integrate WaveformWithComments** - Add to track detail page, MiniAudioPlayer, etc.
 3. **DNS Update** - Still waiting for Tito to update `api.soundchain.io` -> `44.209.136.62`
 4. **Deploy** - Once DNS is updated, deploy API and Web changes
+5. **Archive Feature Testing** - Test archive/import flow on mobile devices for share API
 
 ---
 

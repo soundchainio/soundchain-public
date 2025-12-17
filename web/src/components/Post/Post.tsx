@@ -295,7 +295,28 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         />
       </div>
       <div className="px-2 pb-2">
-        <PostActions postId={post.id} myReaction={post.myReaction} isBookmarked={post.isBookmarked} />
+        <PostActions
+          postId={post.id}
+          myReaction={post.myReaction}
+          isBookmarked={post.isBookmarked}
+          isEphemeral={isEphemeral}
+          isOwner={isAuthor}
+          postData={isEphemeral ? {
+            id: post.id,
+            body: post.body,
+            createdAt: post.createdAt,
+            uploadedMediaUrl,
+            uploadedMediaType,
+            totalReactions: post.totalReactions,
+            commentCount: post.commentCount,
+            repostCount: post.repostCount,
+            profile: post.profile ? {
+              id: post.profile.id,
+              displayName: post.profile.displayName,
+              userHandle: post.profile.userHandle,
+            } : null,
+          } : undefined}
+        />
       </div>
     </article>
   )
