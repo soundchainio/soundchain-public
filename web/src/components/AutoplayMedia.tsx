@@ -112,7 +112,7 @@ export const AutoplayVideo = memo(({
         src={src}
         className={`w-full max-h-[500px] cursor-pointer ${className}`}
         playsInline
-        muted={muted}
+        muted={isMuted}
         loop={loop}
         onClick={handleClick}
       />
