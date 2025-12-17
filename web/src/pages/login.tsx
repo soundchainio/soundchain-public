@@ -210,17 +210,24 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
     console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
+    console.log('[OAuth2] Magic Public Key:', MAGIC_KEY?.substring(0, 15) + '...');
 
     try {
-      if (isInAppBrowser() && provider === 'google') {
-        setError('Google login is blocked in this browser. Please open in Safari or Chrome.');
-        return;
+      // Check for in-app browser (Google blocks OAuth in these)
+      if (isInAppBrowser()) {
+        if (provider === 'google') {
+          setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
+          return;
+        }
+        // Discord and Twitch may also have issues in in-app browsers
+        console.warn('[OAuth2] In-app browser detected, OAuth may fail');
       }
 
       // Use shared auth Magic instance
       const magic = authMagic.current;
       if (!magic) {
-        setError('Login not ready. Please refresh the page.');
+        console.error('[OAuth2] Magic instance not initialized');
+        setError('Login not ready. Please refresh the page and try again.');
         return;
       }
 
@@ -229,11 +236,12 @@ export default function LoginPage() {
       localStorage.removeItem('didToken');
 
       console.log('[OAuth2] Using shared auth Magic instance');
-      console.log('[OAuth2] oauth2 extension:', !!(magic as any).oauth2);
+      console.log('[OAuth2] oauth2 extension available:', !!(magic as any).oauth2);
+      console.log('[OAuth2] Window origin:', window.location.origin);
 
       if (!(magic as any).oauth2) {
-        console.error('[OAuth2] oauth2 extension not available');
-        setError('OAuth not available. Please refresh the page.');
+        console.error('[OAuth2] oauth2 extension not available - SDK may not have loaded correctly');
+        setError('OAuth not available. Please refresh the page and try again.');
         setLoggingIn(false);
         return;
       }
@@ -243,46 +251,63 @@ export default function LoginPage() {
       try {
         await (magic as any).preload();
         console.log('[OAuth2] Magic preload complete');
-      } catch (preloadErr) {
-        console.warn('[OAuth2] Preload warning (continuing):', preloadErr);
+      } catch (preloadErr: any) {
+        console.warn('[OAuth2] Preload warning:', preloadErr?.message || preloadErr);
+        // Continue anyway - preload failures don't always mean OAuth will fail
       }
 
+      // Build redirect URI - MUST match exactly what's in Magic Dashboard
       const redirectURI = `${window.location.origin}/login`;
       console.log('[OAuth2] Starting OAuth for:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
-      console.log('[OAuth2] Calling loginWithRedirect...');
+      console.log('[OAuth2] NOTE: This redirect URI must be configured in Magic Dashboard');
 
       // Set a timeout - if redirect doesn't happen within 10 seconds, something is wrong
       const redirectTimeout = setTimeout(() => {
-        console.error('[OAuth2] Redirect timeout! Magic SDK may have failed silently.');
-        console.error('[OAuth2] Check browser console for iframe loading errors or CSP issues.');
-        setError('Login is taking too long. Please refresh and try again.');
+        console.error('[OAuth2] ⚠️ Redirect timeout!');
+        console.error('[OAuth2] Possible causes:');
+        console.error('  1. Magic iframe failed to load (check CSP headers)');
+        console.error('  2. OAuth provider not configured in Magic Dashboard');
+        console.error('  3. Redirect URI mismatch between code and Magic Dashboard');
+        console.error('  4. Network/firewall blocking Magic SDK');
+        setError(`${provider} login is taking too long. Please check your connection and try again.`);
         setLoggingIn(false);
       }, 10000);
 
-      // Call loginWithRedirect - this should trigger browser navigation
+      // Call loginWithRedirect - this should trigger browser navigation to provider
+      console.log('[OAuth2] Calling loginWithRedirect...');
       try {
         await (magic as any).oauth2.loginWithRedirect({
           provider,
           redirectURI,
         });
-        // If we get here, redirect didn't happen (unusual)
-        console.log('[OAuth2] loginWithRedirect returned without redirecting');
+        // If we reach here, redirect didn't happen (unusual - usually throws or redirects)
+        console.log('[OAuth2] loginWithRedirect returned without redirecting - this is unexpected');
         clearTimeout(redirectTimeout);
       } catch (redirectErr: any) {
         clearTimeout(redirectTimeout);
-        console.error('[OAuth2] loginWithRedirect threw:', redirectErr);
-        // Some errors are expected if user cancels, but others indicate real problems
-        if (redirectErr.message?.includes('user denied') || redirectErr.message?.includes('cancelled')) {
-          setError('Login cancelled');
+        console.error('[OAuth2] loginWithRedirect error:', redirectErr);
+        console.error('[OAuth2] Error code:', redirectErr.code);
+        console.error('[OAuth2] Error message:', redirectErr.message);
+
+        const errorMsg = redirectErr.message?.toLowerCase() || '';
+
+        if (errorMsg.includes('user denied') || errorMsg.includes('cancelled') || errorMsg.includes('user rejected')) {
+          setError('Login cancelled. Please try again.');
+        } else if (errorMsg.includes('not configured') || errorMsg.includes('provider')) {
+          setError(`${provider} login is not configured. Please contact support or use Email login.`);
+        } else if (errorMsg.includes('popup') || errorMsg.includes('blocked')) {
+          setError('Popup blocked. Please allow popups for this site and try again.');
+        } else if (errorMsg.includes('network') || errorMsg.includes('failed to fetch')) {
+          setError('Network error. Please check your connection and try again.');
         } else {
-          setError(redirectErr.message || `${provider} login failed`);
+          setError(redirectErr.message || `${provider} login failed. Please try again.`);
         }
         setLoggingIn(false);
       }
     } catch (error: any) {
-      console.error('[OAuth2] Error caught:', error);
-      setError(error.message || `${provider} login failed`);
+      console.error('[OAuth2] Unexpected error:', error);
+      setError(error.message || `${provider} login failed. Please try again or use Email login.`);
       setLoggingIn(false);
     }
   };
@@ -322,26 +347,49 @@ export default function LoginPage() {
     handleMagicLink();
   }, [isClient, magicParam, login, handleError, router]);
 
-  // Handle OAuth2 redirect callback - ALWAYS try getRedirectResult on page load
-  // Magic handles URL params internally, we shouldn't check for them ourselves
+  // Handle OAuth2 redirect callback
+  // Check for OAuth-related URL params that indicate a callback
+  const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
+
   useEffect(() => {
     async function handleOAuthRedirect() {
       // Skip if not client-side or already logging in
-      if (!isClient || loggingIn || !authMagic.current) return;
+      if (!isClient || !authMagic.current) return;
 
-      console.log('[OAuth2] Checking for OAuth redirect result...');
+      // Check if this looks like an OAuth callback by checking URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.slice(1));
+
+      // Magic OAuth uses these params: magic_oauth_request_id, magic_credential, provider, state
+      const hasOAuthParams = urlParams.has('magic_oauth_request_id') ||
+                             urlParams.has('magic_credential') ||
+                             urlParams.has('provider') ||
+                             urlParams.has('state') ||
+                             hashParams.has('access_token') ||
+                             hashParams.has('state');
+
+      console.log('[OAuth2] Checking for OAuth redirect...');
       console.log('[OAuth2] Current URL:', window.location.href);
+      console.log('[OAuth2] Has OAuth params:', hasOAuthParams);
+
+      // Only process if we have OAuth params - don't waste time on fresh page loads
+      if (!hasOAuthParams) {
+        console.log('[OAuth2] No OAuth params found, skipping getRedirectResult');
+        return;
+      }
+
+      // Show loading state immediately when processing OAuth callback
+      setIsProcessingOAuth(true);
+      setLoggingIn(true);
 
       const magic = authMagic.current;
 
       try {
-        // Always try to get redirect result - Magic handles state internally
-        // This will return null/undefined if there's no OAuth redirect to process
-        console.log('[OAuth2] Calling getRedirectResult...');
+        console.log('[OAuth2] OAuth params detected, calling getRedirectResult...');
 
-        // Add timeout to prevent hanging indefinitely
+        // Add longer timeout for getRedirectResult (15 seconds)
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('OAuth redirect check timed out')), 8000)
+          setTimeout(() => reject(new Error('OAuth processing timed out. Please try again.')), 15000)
         );
 
         const result = await Promise.race([
@@ -352,7 +400,6 @@ export default function LoginPage() {
 
         if (result && result.magic?.idToken) {
           console.log('[OAuth2] Got OAuth result with idToken!');
-          setLoggingIn(true);
 
           try {
             const didToken = result.magic.idToken;
@@ -364,36 +411,62 @@ export default function LoginPage() {
               await new Promise(resolve => setTimeout(resolve, 200));
               const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
               router.push(redirectUrl);
+              return; // Success - exit early
             } else {
-              throw new Error('Login failed: No JWT returned');
+              throw new Error('Login failed: No JWT returned from server');
             }
           } catch (loginErr: any) {
             console.error('[OAuth2] Login mutation failed:', loginErr);
-            setError(loginErr.message || 'Login failed after OAuth');
-            setLoggingIn(false);
+            // Check for "already exists" which means user needs to login with different method
+            if (loginErr.message?.includes('already exists')) {
+              const authMethodFromError = loginErr.graphQLErrors?.find((err: any) => err.extensions?.with)?.extensions?.with;
+              if (authMethodFromError) {
+                setAuthMethod([authMethodFromError]);
+              }
+            } else if (loginErr.message?.includes('invalid credentials') || loginErr.message?.includes('Invalid credentials')) {
+              // User doesn't exist, redirect to create account
+              router.push('/create-account');
+              return;
+            }
+            setError(loginErr.message || 'Login failed after Google authentication');
           }
         } else {
-          console.log('[OAuth2] No OAuth redirect result (normal for fresh page load)');
+          console.log('[OAuth2] getRedirectResult returned empty result');
+          setError('Google login did not complete. Please try again.');
         }
       } catch (error: any) {
-        // getRedirectResult throws if there's no OAuth redirect in progress - this is expected
+        console.error('[OAuth2] OAuth callback error:', error);
         const errorMsg = error?.message || '';
+
         if (errorMsg.includes('timed out')) {
-          console.log('[OAuth2] getRedirectResult timed out (continuing without OAuth)');
-        } else if (errorMsg.includes('Magic') || errorMsg.includes('oauth') || errorMsg.includes('redirect')) {
-          console.log('[OAuth2] No OAuth redirect to process (expected):', errorMsg);
+          setError('Login timed out. Please check your connection and try again.');
+        } else if (errorMsg.includes('user denied') || errorMsg.includes('cancelled') || errorMsg.includes('User denied')) {
+          setError('Login was cancelled. Please try again.');
+        } else if (errorMsg.includes('popup') || errorMsg.includes('blocked')) {
+          setError('Popup was blocked. Please allow popups and try again.');
         } else {
-          console.error('[OAuth2] Unexpected error:', error);
-          setError(error.message || 'OAuth login failed');
+          setError(errorMsg || 'Google login failed. Please try again.');
         }
+      } finally {
+        setIsProcessingOAuth(false);
         setLoggingIn(false);
+        // Clean up URL params after processing
+        if (hasOAuthParams) {
+          window.history.replaceState({}, '', '/login');
+        }
       }
     }
 
-    // Small delay to ensure Magic SDK is fully initialized
-    const timeoutId = setTimeout(handleOAuthRedirect, 100);
-    return () => clearTimeout(timeoutId);
-  }, [isClient, login, router, loggingIn]);
+    // Run after a short delay to ensure Magic SDK is ready
+    // Use requestIdleCallback if available for better performance
+    if (typeof requestIdleCallback !== 'undefined') {
+      const idleId = requestIdleCallback(() => handleOAuthRedirect(), { timeout: 500 });
+      return () => cancelIdleCallback(idleId);
+    } else {
+      const timeoutId = setTimeout(handleOAuthRedirect, 150);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isClient, login, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
@@ -496,9 +569,16 @@ export default function LoginPage() {
     return (
       <>
         <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
-        <div className="flex h-full w-full items-center justify-center py-3 text-center font-bold sm:px-4">
+        <div className="flex h-full w-full flex-col items-center justify-center py-3 text-center font-bold sm:px-4">
           <LoaderAnimation ring />
-          <span className="text-white ml-2">Logging in...</span>
+          <span className="text-white ml-2 mt-4">
+            {isProcessingOAuth ? 'Processing Google login...' : 'Logging in...'}
+          </span>
+          {isProcessingOAuth && (
+            <span className="text-gray-400 text-sm mt-2">
+              Please wait, this may take a few seconds
+            </span>
+          )}
         </div>
       </>
     );
