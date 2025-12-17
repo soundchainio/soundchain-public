@@ -1,4 +1,5 @@
 import { memo, useState, useEffect, useRef } from 'react'
+import { FastAudioPlayer } from '../FastAudioPlayer'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
@@ -206,49 +207,16 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
             </div>
           )}
           {uploadedMediaType === 'audio' && (
-            <div className="relative w-full h-full bg-gradient-to-br from-cyan-900/50 via-purple-900/50 to-pink-900/50 flex flex-col items-center justify-center">
-              {/* Audio visualizer aesthetic */}
-              <div className="absolute inset-0 overflow-hidden">
-                <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.2),transparent_70%)] ${audioPlaying ? 'animate-pulse' : ''}`} />
-              </div>
-
-              {/* Audio icon */}
-              <div className="relative z-10 w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center mb-2">
-                <span className="text-3xl">🎵</span>
-              </div>
-
-              {/* Hidden audio element */}
-              <audio
-                ref={audioRef}
+            <div
+              className="relative w-full h-full bg-gradient-to-br from-cyan-900/50 via-purple-900/50 to-pink-900/50 flex flex-col items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FastAudioPlayer
                 src={uploadedMediaUrl!}
-                loop
-                onPlay={() => setAudioPlaying(true)}
-                onPause={() => setAudioPlaying(false)}
+                loop={true}
+                compact={true}
+                className="w-full h-full"
               />
-
-              {/* Play/Pause button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (audioRef.current) {
-                    if (audioPlaying) {
-                      audioRef.current.pause()
-                    } else {
-                      audioRef.current.play()
-                    }
-                  }
-                }}
-                className="relative z-10 w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
-              >
-                {audioPlaying ? (
-                  <Pause className="w-5 h-5 text-white" fill="white" />
-                ) : (
-                  <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
-                )}
-              </button>
-
-              {/* Audio label */}
-              <span className="relative z-10 mt-2 text-xs text-white/70">Tap to {audioPlaying ? 'pause' : 'play'}</span>
             </div>
           )}
         </>

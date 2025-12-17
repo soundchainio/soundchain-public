@@ -22,6 +22,7 @@ import { PostStats } from './PostStats'
 import { RepostPreview } from './RepostPreview'
 import { PostBodyWithEmotes } from '../EmoteRenderer'
 import { AutoplayVideo } from '../AutoplayMedia'
+import { FastAudioPlayer } from '../FastAudioPlayer'
 
 interface PostProps {
   post: PostQuery['post']
@@ -198,14 +199,13 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 />
               )}
 
-              {/* Audio - loops to keep the vibe going */}
+              {/* Audio - lightning fast playback with preloading */}
               {uploadedMediaType === 'audio' && uploadedMediaUrl && (
-                <div className="p-4 flex items-center gap-3 bg-gradient-to-r from-cyan-900/30 to-purple-900/30">
-                  <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">🎵</span>
-                  </div>
-                  <audio src={uploadedMediaUrl} controls loop className="flex-1" />
-                </div>
+                <FastAudioPlayer
+                  src={uploadedMediaUrl}
+                  loop={true}
+                  className="m-3"
+                />
               )}
             </div>
           )}
