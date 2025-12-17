@@ -1,0 +1,6 @@
+mutation UnbookmarkPost($postId: String!) {
+  unbookmarkPost(postId: $postId) {
+    id
+    postId
+  }
+}

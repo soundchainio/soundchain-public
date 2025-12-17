@@ -33,6 +33,8 @@ import { UserService } from '../services/UserService';
 import { WhitelistEntryService } from '../services/WhitelistEntryService';
 import { PlaylistService } from '../services/PlaylistService';
 import { SCidService } from '../services/SCidService';
+import { BookmarkService } from '../services/BookmarkService';
+import { TrackCommentService } from '../services/TrackCommentService';
 
 export class Context {
   auctionItemService: AuctionItemService;
@@ -70,6 +72,8 @@ export class Context {
   listingCountByTrackEdition = ListingCountByTrackEdition();
   mailchimpService: MailchimpService;
   scidService: SCidService;
+  bookmarkService: BookmarkService;
+  trackCommentService: TrackCommentService;
 
   constructor(jwtUser?: JwtUser) {
     this.auctionItemService = new AuctionItemService(this);
@@ -105,6 +109,8 @@ export class Context {
     this.trackEditionService = new TrackEditionService(this);
     this.mailchimpService = new MailchimpService(this);
     this.scidService = new SCidService(this);
+    this.bookmarkService = new BookmarkService(this);
+    this.trackCommentService = new TrackCommentService(this);
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);
   }
 }

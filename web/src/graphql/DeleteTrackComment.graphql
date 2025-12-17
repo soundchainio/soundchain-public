@@ -1,0 +1,6 @@
+mutation DeleteTrackComment($commentId: String!) {
+  deleteTrackComment(commentId: $commentId) {
+    id
+    deleted
+  }
+}

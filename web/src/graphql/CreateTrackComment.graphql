@@ -1,0 +1,16 @@
+mutation CreateTrackComment($trackId: String!, $text: String!, $timestamp: Float!, $replyToId: String) {
+  createTrackComment(trackId: $trackId, text: $text, timestamp: $timestamp, replyToId: $replyToId) {
+    id
+    text
+    timestamp
+    likeCount
+    isPinned
+    createdAt
+    profile {
+      id
+      displayName
+      profilePicture
+      userHandle
+    }
+  }
+}

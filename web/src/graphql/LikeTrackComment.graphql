@@ -1,0 +1,6 @@
+mutation LikeTrackComment($commentId: String!) {
+  likeTrackComment(commentId: $commentId) {
+    id
+    likeCount
+  }
+}

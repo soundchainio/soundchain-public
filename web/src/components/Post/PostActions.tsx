@@ -5,27 +5,39 @@ import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { ReactionEmoji } from 'icons/ReactionEmoji'
 import { delayFocus } from 'lib/delayFocus'
-import { ReactionType } from 'lib/graphql'
+import { ReactionType, useBookmarkPostMutation, useUnbookmarkPostMutation } from 'lib/graphql'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 
 import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
+import { Bookmark } from 'lucide-react'
 
 interface PostActionsProps {
   postId: string
   myReaction: ReactionType | null
+  isBookmarked?: boolean
 }
 
 const commonClasses = 'text-white text-sm text-gray-80 text-center flex-1 flex justify-center px-1'
 
-export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
+export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
   const { dispatchSetRepostId, dispatchShowPostModal } = useModalDispatch()
   const [postLink, setPostLink] = useState('')
   const [guestWallet, setGuestWallet] = useState<string | null>(null)
+  const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked ?? false)
   const me = useMe()
   const router = useRouter()
+
+  // Bookmark mutations
+  const [bookmarkPost, { loading: bookmarking }] = useBookmarkPostMutation()
+  const [unbookmarkPost, { loading: unbookmarking }] = useUnbookmarkPostMutation()
+
+  // Sync local state with prop
+  useEffect(() => {
+    setIsBookmarked(initialIsBookmarked ?? false)
+  }, [initialIsBookmarked])
 
   // Check for guest wallet on mount
   useEffect(() => {
@@ -67,6 +79,26 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
     } catch (err) {
       navigator.clipboard.writeText(postLink)
       toast('URL copied to clipboard')
+    }
+  }
+
+  const handleBookmarkClick = async () => {
+    if (!me) return // Bookmarks only for logged-in users
+    if (bookmarking || unbookmarking) return
+
+    try {
+      if (isBookmarked) {
+        await unbookmarkPost({ variables: { postId } })
+        setIsBookmarked(false)
+        toast('Removed from bookmarks')
+      } else {
+        await bookmarkPost({ variables: { postId } })
+        setIsBookmarked(true)
+        toast('Added to bookmarks')
+      }
+    } catch (err) {
+      console.error('Bookmark error:', err)
+      toast('Failed to update bookmark')
     }
   }
 
@@ -113,6 +145,23 @@ export const PostActions = ({ postId, myReaction }: PostActionsProps) => {
           Share
         </button>
       </div>
+      {/* Bookmark button - only for logged-in users */}
+      {me && (
+        <div className={commonClasses}>
+          <button
+            className={`flex items-center font-bold ${bookmarking || unbookmarking ? 'opacity-50' : ''}`}
+            onClick={handleBookmarkClick}
+            disabled={bookmarking || unbookmarking}
+          >
+            {isBookmarked ? (
+              <Bookmark className="mr-1 h-4 w-4 text-[#62AAFF] fill-[#62AAFF]" />
+            ) : (
+              <Bookmark className="mr-1 h-4 w-4" />
+            )}
+            <span className={isBookmarked ? 'text-[#62AAFF]' : ''}>Save</span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }

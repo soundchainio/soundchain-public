@@ -80,7 +80,7 @@ export class SCid extends Model {
    * Blockchain this SCid is registered on
    */
   @Field(() => ChainCode)
-  @prop({ required: true, enum: ChainCode })
+  @prop({ required: true, enum: Object.values(ChainCode), type: String })
   chainCode: ChainCode;
 
   /**

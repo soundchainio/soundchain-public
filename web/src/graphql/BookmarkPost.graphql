@@ -1,0 +1,7 @@
+mutation BookmarkPost($postId: String!) {
+  bookmarkPost(postId: $postId) {
+    id
+    postId
+    createdAt
+  }
+}

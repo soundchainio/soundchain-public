@@ -134,6 +134,29 @@ export type BidsWithInfoPayload = {
   bids: Maybe<Array<BidsWithInfo>>;
 };
 
+export type Bookmark = {
+  __typename?: 'Bookmark';
+  createdAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  post: Post;
+  postId: Scalars['ID']['output'];
+  profileId: Scalars['ID']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type BookmarkConnection = {
+  __typename?: 'BookmarkConnection';
+  nodes: Array<Bookmark>;
+  pageInfo: PageInfo;
+};
+
+export type BulkRegisterPayload = {
+  __typename?: 'BulkRegisterPayload';
+  errors: Array<Scalars['String']['output']>;
+  registered: Scalars['Int']['output'];
+  skipped: Scalars['Int']['output'];
+};
+
 export type BuyNowItem = {
   __typename?: 'BuyNowItem';
   OGUNPricePerItem: Scalars['String']['output'];
@@ -160,6 +183,18 @@ export type BuyNowPayload = {
   __typename?: 'BuyNowPayload';
   buyNowItem: Maybe<BuyNowItem>;
 };
+
+/** Blockchain network codes for SCid */
+export enum ChainCode {
+  Arbitrum = 'ARBITRUM',
+  Avalanche = 'AVALANCHE',
+  Base = 'BASE',
+  Binance = 'BINANCE',
+  Ethereum = 'ETHEREUM',
+  Polygon = 'POLYGON',
+  Solana = 'SOLANA',
+  Zetachain = 'ZETACHAIN'
+}
 
 export type ChangeReactionInput = {
   postId: Scalars['String']['input'];
@@ -267,6 +302,8 @@ export type CreatePostInput = {
   originalMediaLink?: InputMaybe<Scalars['String']['input']>;
   trackEditionId?: InputMaybe<Scalars['String']['input']>;
   trackId?: InputMaybe<Scalars['String']['input']>;
+  uploadedMediaType?: InputMaybe<Scalars['String']['input']>;
+  uploadedMediaUrl?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type CreatePostPayload = {
@@ -683,6 +720,19 @@ export type ListingItemWithPrice = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+export type LogStreamInput = {
+  duration: Scalars['Int']['input'];
+  listenerWallet?: InputMaybe<Scalars['String']['input']>;
+  scid: Scalars['String']['input'];
+};
+
+export type LogStreamPayload = {
+  __typename?: 'LogStreamPayload';
+  ogunReward: Scalars['Float']['output'];
+  success: Scalars['Boolean']['output'];
+  totalStreams: Scalars['Int']['output'];
+};
+
 export type LoginInput = {
   token: Scalars['String']['input'];
 };
@@ -726,6 +776,8 @@ export enum MusicianType {
 export type Mutation = {
   __typename?: 'Mutation';
   addComment: AddCommentPayload;
+  bookmarkPost: Bookmark;
+  bulkRegisterScids: BulkRegisterPayload;
   changeReaction: ChangeReactionPayload;
   claimBadgeProfile: UpdateProfilePayload;
   clearNotifications: ClearNotificationsPayload;
@@ -749,11 +801,14 @@ export type Mutation = {
   guestDeletePost: DeletePostPayload;
   guestReactToPost: ReactToPostPayload;
   guestRetractReaction: RetractReactionPayload;
+  logStream: LogStreamPayload;
   login: AuthPayload;
+  markScidRegistered: Maybe<SCid>;
   pinJsonToIPFS: PinningPayload;
   pinToIPFS: PinningPayload;
   reactToPost: ReactToPostPayload;
   register: AuthPayload;
+  registerScid: RegisterSCidPayload;
   removeProfileVerificationRequest: ProfileVerificationRequestPayload;
   resetNotificationCount: Profile;
   resetUnreadMessageCount: Profile;
@@ -763,6 +818,8 @@ export type Mutation = {
   toggleFavorite: ToggleFavoritePayload;
   togglePlaylistFavorite: FavoritePlaylist;
   togglePlaylistFollow: FavoritePlaylist;
+  transferScid: SCid;
+  unbookmarkPost: Bookmark;
   unfollowProfile: UnfollowProfilePayload;
   unsubscribeFromProfile: UnsubscribeFromProfilePayload;
   updateComment: UpdateCommentPayload;
@@ -784,6 +841,17 @@ export type Mutation = {
 
 export type MutationAddCommentArgs = {
   input: AddCommentInput;
+};
+
+
+export type MutationBookmarkPostArgs = {
+  postId: Scalars['String']['input'];
+};
+
+
+export type MutationBulkRegisterScidsArgs = {
+  chainCode?: InputMaybe<ChainCode>;
+  trackIds: Array<Scalars['String']['input']>;
 };
 
 
@@ -897,8 +965,21 @@ export type MutationGuestRetractReactionArgs = {
 };
 
 
+export type MutationLogStreamArgs = {
+  input: LogStreamInput;
+};
+
+
 export type MutationLoginArgs = {
   input: LoginInput;
+};
+
+
+export type MutationMarkScidRegisteredArgs = {
+  blockNumber: Scalars['Int']['input'];
+  contractAddress: Scalars['String']['input'];
+  scid: Scalars['String']['input'];
+  transactionHash: Scalars['String']['input'];
 };
 
 
@@ -919,6 +1000,11 @@ export type MutationReactToPostArgs = {
 
 export type MutationRegisterArgs = {
   input: RegisterInput;
+};
+
+
+export type MutationRegisterScidArgs = {
+  input: RegisterSCidInput;
 };
 
 
@@ -954,6 +1040,16 @@ export type MutationTogglePlaylistFavoriteArgs = {
 
 export type MutationTogglePlaylistFollowArgs = {
   playlistId: Scalars['String']['input'];
+};
+
+
+export type MutationTransferScidArgs = {
+  input: TransferSCidInput;
+};
+
+
+export type MutationUnbookmarkPostArgs = {
+  postId: Scalars['String']['input'];
 };
 
 
@@ -1263,7 +1359,10 @@ export type Post = {
   createdAt: Scalars['DateTime']['output'];
   deleted: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['ID']['output'];
-  isGuest: Scalars['Boolean']['output'];
+  isBookmarked: Scalars['Boolean']['output'];
+  isEphemeral: Maybe<Scalars['Boolean']['output']>;
+  isGuest: Maybe<Scalars['Boolean']['output']>;
+  mediaExpiresAt: Maybe<Scalars['DateTime']['output']>;
   mediaLink: Maybe<Scalars['String']['output']>;
   mediaThumbnail: Maybe<Scalars['String']['output']>;
   myReaction: Maybe<ReactionType>;
@@ -1278,6 +1377,8 @@ export type Post = {
   trackEditionId: Maybe<Scalars['ID']['output']>;
   trackId: Maybe<Scalars['ID']['output']>;
   updatedAt: Scalars['DateTime']['output'];
+  uploadedMediaType: Maybe<Scalars['String']['output']>;
+  uploadedMediaUrl: Maybe<Scalars['String']['output']>;
   walletAddress: Maybe<Scalars['String']['output']>;
 };
 
@@ -1371,6 +1472,7 @@ export type Query = {
   audioHolderByWallet: AudioHolder;
   bandcampLink: Scalars['String']['output'];
   bidsWithInfo: BidsWithInfoPayload;
+  bookmarkCount: Scalars['Float']['output'];
   buyNowItem: BuyNowPayload;
   buyNowListingItems: ListingItemConnection;
   chatHistory: MessageConnection;
@@ -1394,7 +1496,9 @@ export type Query = {
   getUserByWallet: Maybe<User>;
   getUserPlaylists: GetPlaylistPayload;
   groupedTracks: TrackConnection;
+  guestUploadUrl: UploadUrl;
   haveBided: Bided;
+  isPostBookmarked: Scalars['Boolean']['output'];
   listableOwnedTracks: TrackConnection;
   listingItem: Maybe<ListingItem>;
   listingItems: ListingItemConnection;
@@ -1402,7 +1506,9 @@ export type Query = {
   me: Maybe<User>;
   message: Message;
   mimeType: MimeType;
+  myBookmarks: BookmarkConnection;
   myProfile: Profile;
+  myScids: Array<SCid>;
   notification: Notification;
   notifications: NotificationConnection;
   ownedBuyNowListingItems: ListingItemConnection;
@@ -1410,16 +1516,23 @@ export type Query = {
   pendingRequestsBadgeNumber: Scalars['Float']['output'];
   post: Post;
   posts: PostConnection;
+  previewScid: Scalars['String']['output'];
   profile: Profile;
   profileByHandle: Profile;
   profileVerificationRequest: ProfileVerificationRequest;
   profileVerificationRequests: ProfileVerificationRequestConnection;
   reactions: ReactionConnection;
+  scid: Maybe<SCid>;
+  scidByTrack: Maybe<SCid>;
+  scidStats: SCidStatsPayload;
+  scidsByProfile: Array<SCid>;
+  searchScids: SCidSearchResult;
   track: Track;
   trackEdition: TrackEdition;
   tracks: TrackConnection;
   tracksByGenre: Array<GenreTracks>;
   uploadUrl: UploadUrl;
+  validateScid: SCidValidationResult;
   whitelistEntryByWallet: WhitelistEntry;
 };
 
@@ -1576,9 +1689,19 @@ export type QueryGroupedTracksArgs = {
 };
 
 
+export type QueryGuestUploadUrlArgs = {
+  fileType: Scalars['String']['input'];
+};
+
+
 export type QueryHaveBidedArgs = {
   auctionId: Scalars['String']['input'];
   bidder: Scalars['String']['input'];
+};
+
+
+export type QueryIsPostBookmarkedArgs = {
+  postId: Scalars['String']['input'];
 };
 
 
@@ -1606,6 +1729,11 @@ export type QueryMessageArgs = {
 
 export type QueryMimeTypeArgs = {
   url: Scalars['String']['input'];
+};
+
+
+export type QueryMyBookmarksArgs = {
+  page?: InputMaybe<PageInput>;
 };
 
 
@@ -1643,6 +1771,13 @@ export type QueryPostsArgs = {
 };
 
 
+export type QueryPreviewScidArgs = {
+  artistIdentifier: Scalars['String']['input'];
+  chainCode?: InputMaybe<ChainCode>;
+  sequenceNumber: Scalars['Int']['input'];
+};
+
+
 export type QueryProfileArgs = {
   id: Scalars['String']['input'];
 };
@@ -1671,6 +1806,26 @@ export type QueryReactionsArgs = {
 };
 
 
+export type QueryScidArgs = {
+  scid: Scalars['String']['input'];
+};
+
+
+export type QueryScidByTrackArgs = {
+  trackId: Scalars['String']['input'];
+};
+
+
+export type QueryScidsByProfileArgs = {
+  profileId: Scalars['String']['input'];
+};
+
+
+export type QuerySearchScidsArgs = {
+  input: SCidSearchInput;
+};
+
+
 export type QueryTrackArgs = {
   id: Scalars['String']['input'];
 };
@@ -1695,6 +1850,11 @@ export type QueryTracksByGenreArgs = {
 
 export type QueryUploadUrlArgs = {
   fileType: Scalars['String']['input'];
+};
+
+
+export type QueryValidateScidArgs = {
+  scid: Scalars['String']['input'];
 };
 
 
@@ -1758,6 +1918,17 @@ export type RegisterInput = {
   token: Scalars['String']['input'];
 };
 
+export type RegisterSCidInput = {
+  chainCode?: InputMaybe<ChainCode>;
+  metadataHash?: InputMaybe<Scalars['String']['input']>;
+  trackId: Scalars['String']['input'];
+};
+
+export type RegisterSCidPayload = {
+  __typename?: 'RegisterSCidPayload';
+  scid: SCid;
+};
+
 export type RetractReactionInput = {
   postId: Scalars['String']['input'];
 };
@@ -1774,6 +1945,76 @@ export enum Role {
   TeamMember = 'TEAM_MEMBER',
   User = 'USER'
 }
+
+export type SCid = {
+  __typename?: 'SCid';
+  artistHash: Scalars['String']['output'];
+  artistName: Maybe<Scalars['String']['output']>;
+  blockNumber: Maybe<Scalars['Float']['output']>;
+  chainCode: ChainCode;
+  chainId: Maybe<Scalars['Float']['output']>;
+  checksum: Maybe<Scalars['String']['output']>;
+  contractAddress: Maybe<Scalars['String']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  formattedScid: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  lastStreamAt: Maybe<Scalars['DateTime']['output']>;
+  metadataHash: Maybe<Scalars['String']['output']>;
+  ogunRewardsEarned: Scalars['Float']['output'];
+  previousOwnerId: Maybe<Scalars['String']['output']>;
+  profileId: Scalars['String']['output'];
+  registeredAt: Maybe<Scalars['DateTime']['output']>;
+  scid: Scalars['String']['output'];
+  sequence: Scalars['Float']['output'];
+  status: SCidStatus;
+  streamCount: Scalars['Float']['output'];
+  trackId: Scalars['String']['output'];
+  trackTitle: Maybe<Scalars['String']['output']>;
+  transactionHash: Maybe<Scalars['String']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  walletAddress: Maybe<Scalars['String']['output']>;
+  year: Scalars['String']['output'];
+};
+
+export type SCidSearchInput = {
+  chainCode?: InputMaybe<ChainCode>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  profileId?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<SCidStatus>;
+  year?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SCidSearchResult = {
+  __typename?: 'SCidSearchResult';
+  scids: Array<SCid>;
+  total: Scalars['Int']['output'];
+};
+
+export type SCidStatsPayload = {
+  __typename?: 'SCidStatsPayload';
+  totalOgunRewarded: Scalars['Float']['output'];
+  totalScids: Scalars['Int']['output'];
+  totalStreams: Scalars['Int']['output'];
+};
+
+/** Status of SCid registration */
+export enum SCidStatus {
+  Pending = 'PENDING',
+  Registered = 'REGISTERED',
+  Revoked = 'REVOKED',
+  Transferred = 'TRANSFERRED'
+}
+
+export type SCidValidationResult = {
+  __typename?: 'SCidValidationResult';
+  artistHash: Maybe<Scalars['String']['output']>;
+  chainCode: Maybe<Scalars['String']['output']>;
+  error: Maybe<Scalars['String']['output']>;
+  sequence: Maybe<Scalars['String']['output']>;
+  valid: Scalars['Boolean']['output'];
+  year: Maybe<Scalars['String']['output']>;
+};
 
 export enum SaleType {
   Auction = 'AUCTION',
@@ -1992,6 +2233,12 @@ export type TrackWithListingItem = {
   trackEditionId: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   utilityInfo: Maybe<Scalars['String']['output']>;
+};
+
+export type TransferSCidInput = {
+  reason?: InputMaybe<Scalars['String']['input']>;
+  scid: Scalars['String']['input'];
+  toProfileId: Scalars['String']['input'];
 };
 
 export type UnfollowProfileInput = {
@@ -2223,6 +2470,13 @@ export type BidsWithInfoQueryVariables = Exact<{
 
 export type BidsWithInfoQuery = { __typename?: 'Query', bidsWithInfo: { __typename?: 'BidsWithInfoPayload', bids: Array<{ __typename?: 'BidsWithInfo', amount: string, amountToShow: number, userId: string, profileId: string, createdAt: string, profile: { __typename?: 'Profile', profilePicture: string | null, displayName: string, userHandle: string, verified: boolean | null, teamMember: boolean, badges: Array<Badge> | null } }> | null } };
 
+export type BookmarkPostMutationVariables = Exact<{
+  postId: Scalars['String']['input'];
+}>;
+
+
+export type BookmarkPostMutation = { __typename?: 'Mutation', bookmarkPost: { __typename?: 'Bookmark', id: string, postId: string, createdAt: string } };
+
 export type BuyNowItemQueryVariables = Exact<{
   input: FilterListingItemInput;
 }>;
@@ -2315,7 +2569,7 @@ export type CreatePostMutationVariables = Exact<{
 }>;
 
 
-export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null } } };
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null } } };
 
 export type CreateProfileVerificationRequestMutationVariables = Exact<{
   input: CreateProfileVerificationRequestInput;
@@ -2357,7 +2611,7 @@ export type DeletePostMutationVariables = Exact<{
 }>;
 
 
-export type DeletePostMutation = { __typename?: 'Mutation', deletePost: { __typename?: 'DeletePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } } };
+export type DeletePostMutation = { __typename?: 'Mutation', deletePost: { __typename?: 'DeletePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null, isBookmarked: boolean, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } } };
 
 export type DeleteTrackMutationVariables = Exact<{
   trackId: Scalars['String']['input'];
@@ -2422,7 +2676,7 @@ export type FeedQueryVariables = Exact<{
 }>;
 
 
-export type FeedQuery = { __typename?: 'Query', feed: { __typename?: 'FeedConnection', nodes: Array<{ __typename?: 'FeedItem', id: string, post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
+export type FeedQuery = { __typename?: 'Query', feed: { __typename?: 'FeedConnection', nodes: Array<{ __typename?: 'FeedItem', id: string, post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null, isBookmarked: boolean, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type FollowProfileMutationVariables = Exact<{
   input: FollowProfileInput;
@@ -2463,7 +2717,7 @@ export type GetOriginalPostFromTrackQueryVariables = Exact<{
 }>;
 
 
-export type GetOriginalPostFromTrackQuery = { __typename?: 'Query', getOriginalPostFromTrack: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
+export type GetOriginalPostFromTrackQuery = { __typename?: 'Query', getOriginalPostFromTrack: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null, isBookmarked: boolean, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
 
 export type GroupedTracksQueryVariables = Exact<{
   filter?: InputMaybe<FilterTrackInput>;
@@ -2488,7 +2742,7 @@ export type GuestCreatePostMutationVariables = Exact<{
 }>;
 
 
-export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null } } };
+export type GuestCreatePostMutation = { __typename?: 'Mutation', guestCreatePost: { __typename?: 'CreatePostPayload', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, originalMediaLink: string | null, mediaThumbnail: string | null, createdAt: string, updatedAt: string, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null } } };
 
 export type GuestDeletePostMutationVariables = Exact<{
   postId: Scalars['String']['input'];
@@ -2513,6 +2767,13 @@ export type GuestRetractReactionMutationVariables = Exact<{
 
 
 export type GuestRetractReactionMutation = { __typename?: 'Mutation', guestRetractReaction: { __typename?: 'RetractReactionPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType> } } };
+
+export type GuestUploadUrlQueryVariables = Exact<{
+  fileType: Scalars['String']['input'];
+}>;
+
+
+export type GuestUploadUrlQuery = { __typename?: 'Query', guestUploadUrl: { __typename?: 'UploadUrl', uploadUrl: string, fileName: string, readUrl: string } };
 
 export type HaveBidedQueryVariables = Exact<{
   auctionId: Scalars['String']['input'];
@@ -2581,6 +2842,13 @@ export type MimeTypeQueryVariables = Exact<{
 
 
 export type MimeTypeQuery = { __typename?: 'Query', mimeType: { __typename?: 'MimeType', value: string } };
+
+export type MyBookmarksQueryVariables = Exact<{
+  page?: InputMaybe<PageInput>;
+}>;
+
+
+export type MyBookmarksQuery = { __typename?: 'Query', myBookmarks: { __typename?: 'BookmarkConnection', nodes: Array<{ __typename?: 'Bookmark', id: string, postId: string, createdAt: string, post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null, isBookmarked: boolean, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } }>, pageInfo: { __typename?: 'PageInfo', totalCount: number, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type NftSoldNotificationFieldsFragment = { __typename?: 'NFTSoldNotification', id: string, type: NotificationType, createdAt: string, buyerName: string, buyerPicture: string, buyerProfileId: string, trackId: string, trackName: string, artist: string, artworkUrl: string, price: number, sellType: SellType, isPaymentOgun: boolean | null };
 
@@ -2673,9 +2941,9 @@ export type PostQueryVariables = Exact<{
 }>;
 
 
-export type PostQuery = { __typename?: 'Query', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
+export type PostQuery = { __typename?: 'Query', post: { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null, isBookmarked: boolean, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null } };
 
-export type PostComponentFieldsFragment = { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null };
+export type PostComponentFieldsFragment = { __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null, isBookmarked: boolean, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null };
 
 export type PostsQueryVariables = Exact<{
   filter?: InputMaybe<FilterPostInput>;
@@ -2684,7 +2952,7 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PostConnection', nodes: Array<{ __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean, walletAddress: string | null, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
+export type PostsQuery = { __typename?: 'Query', posts: { __typename?: 'PostConnection', nodes: Array<{ __typename?: 'Post', id: string, body: string | null, mediaLink: string | null, mediaThumbnail: string | null, repostId: string | null, createdAt: string, updatedAt: string, commentCount: number, repostCount: number, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null, deleted: boolean | null, isGuest: boolean | null, walletAddress: string | null, uploadedMediaUrl: string | null, uploadedMediaType: string | null, mediaExpiresAt: string | null, isEphemeral: boolean | null, isBookmarked: boolean, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, verified: boolean | null, teamMember: boolean, userHandle: string, badges: Array<Badge> | null } | null, track: { __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
 
 export type ProfileQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -2782,6 +3050,13 @@ export type RetractReactionMutationVariables = Exact<{
 
 export type RetractReactionMutation = { __typename?: 'Mutation', retractReaction: { __typename?: 'RetractReactionPayload', post: { __typename?: 'Post', id: string, totalReactions: number, topReactions: Array<ReactionType>, myReaction: ReactionType | null } } };
 
+export type ScidByTrackQueryVariables = Exact<{
+  trackId: Scalars['String']['input'];
+}>;
+
+
+export type ScidByTrackQuery = { __typename?: 'Query', scidByTrack: { __typename?: 'SCid', scid: string, chainCode: ChainCode, status: SCidStatus, streamCount: number, ogunRewardsEarned: number, createdAt: string } | null };
+
 export type SendMessageMutationVariables = Exact<{
   input: SendMessageInput;
 }>;
@@ -2836,6 +3111,13 @@ export type TracksByGenreQueryVariables = Exact<{
 
 
 export type TracksByGenreQuery = { __typename?: 'Query', tracksByGenre: Array<{ __typename?: 'GenreTracks', genre: string, tracks: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }> }> };
+
+export type UnbookmarkPostMutationVariables = Exact<{
+  postId: Scalars['String']['input'];
+}>;
+
+
+export type UnbookmarkPostMutation = { __typename?: 'Mutation', unbookmarkPost: { __typename?: 'Bookmark', id: string, postId: string } };
 
 export type UnfollowProfileMutationVariables = Exact<{
   input: UnfollowProfileInput;
@@ -3380,6 +3662,7 @@ export const PostComponentFieldsFragmentDoc = gql`
   uploadedMediaType
   mediaExpiresAt
   isEphemeral
+  isBookmarked
   profile {
     id
     displayName
@@ -3698,6 +3981,41 @@ export type BidsWithInfoQueryHookResult = ReturnType<typeof useBidsWithInfoQuery
 export type BidsWithInfoLazyQueryHookResult = ReturnType<typeof useBidsWithInfoLazyQuery>;
 export type BidsWithInfoSuspenseQueryHookResult = ReturnType<typeof useBidsWithInfoSuspenseQuery>;
 export type BidsWithInfoQueryResult = Apollo.QueryResult<BidsWithInfoQuery, BidsWithInfoQueryVariables>;
+export const BookmarkPostDocument = gql`
+    mutation BookmarkPost($postId: String!) {
+  bookmarkPost(postId: $postId) {
+    id
+    postId
+    createdAt
+  }
+}
+    `;
+export type BookmarkPostMutationFn = Apollo.MutationFunction<BookmarkPostMutation, BookmarkPostMutationVariables>;
+
+/**
+ * __useBookmarkPostMutation__
+ *
+ * To run a mutation, you first call `useBookmarkPostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBookmarkPostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bookmarkPostMutation, { data, loading, error }] = useBookmarkPostMutation({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *   },
+ * });
+ */
+export function useBookmarkPostMutation(baseOptions?: Apollo.MutationHookOptions<BookmarkPostMutation, BookmarkPostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<BookmarkPostMutation, BookmarkPostMutationVariables>(BookmarkPostDocument, options);
+      }
+export type BookmarkPostMutationHookResult = ReturnType<typeof useBookmarkPostMutation>;
+export type BookmarkPostMutationResult = Apollo.MutationResult<BookmarkPostMutation>;
+export type BookmarkPostMutationOptions = Apollo.BaseMutationOptions<BookmarkPostMutation, BookmarkPostMutationVariables>;
 export const BuyNowItemDocument = gql`
     query BuyNowItem($input: FilterListingItemInput!) {
   buyNowItem(input: $input) {
@@ -5312,6 +5630,48 @@ export function useGuestRetractReactionMutation(baseOptions?: Apollo.MutationHoo
 export type GuestRetractReactionMutationHookResult = ReturnType<typeof useGuestRetractReactionMutation>;
 export type GuestRetractReactionMutationResult = Apollo.MutationResult<GuestRetractReactionMutation>;
 export type GuestRetractReactionMutationOptions = Apollo.BaseMutationOptions<GuestRetractReactionMutation, GuestRetractReactionMutationVariables>;
+export const GuestUploadUrlDocument = gql`
+    query GuestUploadUrl($fileType: String!) {
+  guestUploadUrl(fileType: $fileType) {
+    uploadUrl
+    fileName
+    readUrl
+  }
+}
+    `;
+
+/**
+ * __useGuestUploadUrlQuery__
+ *
+ * To run a query within a React component, call `useGuestUploadUrlQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGuestUploadUrlQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGuestUploadUrlQuery({
+ *   variables: {
+ *      fileType: // value for 'fileType'
+ *   },
+ * });
+ */
+export function useGuestUploadUrlQuery(baseOptions: Apollo.QueryHookOptions<GuestUploadUrlQuery, GuestUploadUrlQueryVariables> & ({ variables: GuestUploadUrlQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GuestUploadUrlQuery, GuestUploadUrlQueryVariables>(GuestUploadUrlDocument, options);
+      }
+export function useGuestUploadUrlLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GuestUploadUrlQuery, GuestUploadUrlQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GuestUploadUrlQuery, GuestUploadUrlQueryVariables>(GuestUploadUrlDocument, options);
+        }
+export function useGuestUploadUrlSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GuestUploadUrlQuery, GuestUploadUrlQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GuestUploadUrlQuery, GuestUploadUrlQueryVariables>(GuestUploadUrlDocument, options);
+        }
+export type GuestUploadUrlQueryHookResult = ReturnType<typeof useGuestUploadUrlQuery>;
+export type GuestUploadUrlLazyQueryHookResult = ReturnType<typeof useGuestUploadUrlLazyQuery>;
+export type GuestUploadUrlSuspenseQueryHookResult = ReturnType<typeof useGuestUploadUrlSuspenseQuery>;
+export type GuestUploadUrlQueryResult = Apollo.QueryResult<GuestUploadUrlQuery, GuestUploadUrlQueryVariables>;
 export const HaveBidedDocument = gql`
     query HaveBided($auctionId: String!, $bidder: String!) {
   haveBided(auctionId: $auctionId, bidder: $bidder) {
@@ -5691,6 +6051,58 @@ export type MimeTypeQueryHookResult = ReturnType<typeof useMimeTypeQuery>;
 export type MimeTypeLazyQueryHookResult = ReturnType<typeof useMimeTypeLazyQuery>;
 export type MimeTypeSuspenseQueryHookResult = ReturnType<typeof useMimeTypeSuspenseQuery>;
 export type MimeTypeQueryResult = Apollo.QueryResult<MimeTypeQuery, MimeTypeQueryVariables>;
+export const MyBookmarksDocument = gql`
+    query MyBookmarks($page: PageInput) {
+  myBookmarks(page: $page) {
+    nodes {
+      id
+      postId
+      createdAt
+      post {
+        ...PostComponentFields
+      }
+    }
+    pageInfo {
+      totalCount
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+    ${PostComponentFieldsFragmentDoc}`;
+
+/**
+ * __useMyBookmarksQuery__
+ *
+ * To run a query within a React component, call `useMyBookmarksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMyBookmarksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMyBookmarksQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *   },
+ * });
+ */
+export function useMyBookmarksQuery(baseOptions?: Apollo.QueryHookOptions<MyBookmarksQuery, MyBookmarksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<MyBookmarksQuery, MyBookmarksQueryVariables>(MyBookmarksDocument, options);
+      }
+export function useMyBookmarksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MyBookmarksQuery, MyBookmarksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<MyBookmarksQuery, MyBookmarksQueryVariables>(MyBookmarksDocument, options);
+        }
+export function useMyBookmarksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<MyBookmarksQuery, MyBookmarksQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<MyBookmarksQuery, MyBookmarksQueryVariables>(MyBookmarksDocument, options);
+        }
+export type MyBookmarksQueryHookResult = ReturnType<typeof useMyBookmarksQuery>;
+export type MyBookmarksLazyQueryHookResult = ReturnType<typeof useMyBookmarksLazyQuery>;
+export type MyBookmarksSuspenseQueryHookResult = ReturnType<typeof useMyBookmarksSuspenseQuery>;
+export type MyBookmarksQueryResult = Apollo.QueryResult<MyBookmarksQuery, MyBookmarksQueryVariables>;
 export const NotificationDocument = gql`
     query Notification($id: String!) {
   notification(id: $id) {
@@ -6891,6 +7303,51 @@ export function useRetractReactionMutation(baseOptions?: Apollo.MutationHookOpti
 export type RetractReactionMutationHookResult = ReturnType<typeof useRetractReactionMutation>;
 export type RetractReactionMutationResult = Apollo.MutationResult<RetractReactionMutation>;
 export type RetractReactionMutationOptions = Apollo.BaseMutationOptions<RetractReactionMutation, RetractReactionMutationVariables>;
+export const ScidByTrackDocument = gql`
+    query ScidByTrack($trackId: String!) {
+  scidByTrack(trackId: $trackId) {
+    scid
+    chainCode
+    status
+    streamCount
+    ogunRewardsEarned
+    createdAt
+  }
+}
+    `;
+
+/**
+ * __useScidByTrackQuery__
+ *
+ * To run a query within a React component, call `useScidByTrackQuery` and pass it any options that fit your needs.
+ * When your component renders, `useScidByTrackQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useScidByTrackQuery({
+ *   variables: {
+ *      trackId: // value for 'trackId'
+ *   },
+ * });
+ */
+export function useScidByTrackQuery(baseOptions: Apollo.QueryHookOptions<ScidByTrackQuery, ScidByTrackQueryVariables> & ({ variables: ScidByTrackQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ScidByTrackQuery, ScidByTrackQueryVariables>(ScidByTrackDocument, options);
+      }
+export function useScidByTrackLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ScidByTrackQuery, ScidByTrackQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ScidByTrackQuery, ScidByTrackQueryVariables>(ScidByTrackDocument, options);
+        }
+export function useScidByTrackSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ScidByTrackQuery, ScidByTrackQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ScidByTrackQuery, ScidByTrackQueryVariables>(ScidByTrackDocument, options);
+        }
+export type ScidByTrackQueryHookResult = ReturnType<typeof useScidByTrackQuery>;
+export type ScidByTrackLazyQueryHookResult = ReturnType<typeof useScidByTrackLazyQuery>;
+export type ScidByTrackSuspenseQueryHookResult = ReturnType<typeof useScidByTrackSuspenseQuery>;
+export type ScidByTrackQueryResult = Apollo.QueryResult<ScidByTrackQuery, ScidByTrackQueryVariables>;
 export const SendMessageDocument = gql`
     mutation SendMessage($input: SendMessageInput!) {
   sendMessage(input: $input) {
@@ -7171,6 +7628,40 @@ export type TracksByGenreQueryHookResult = ReturnType<typeof useTracksByGenreQue
 export type TracksByGenreLazyQueryHookResult = ReturnType<typeof useTracksByGenreLazyQuery>;
 export type TracksByGenreSuspenseQueryHookResult = ReturnType<typeof useTracksByGenreSuspenseQuery>;
 export type TracksByGenreQueryResult = Apollo.QueryResult<TracksByGenreQuery, TracksByGenreQueryVariables>;
+export const UnbookmarkPostDocument = gql`
+    mutation UnbookmarkPost($postId: String!) {
+  unbookmarkPost(postId: $postId) {
+    id
+    postId
+  }
+}
+    `;
+export type UnbookmarkPostMutationFn = Apollo.MutationFunction<UnbookmarkPostMutation, UnbookmarkPostMutationVariables>;
+
+/**
+ * __useUnbookmarkPostMutation__
+ *
+ * To run a mutation, you first call `useUnbookmarkPostMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnbookmarkPostMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unbookmarkPostMutation, { data, loading, error }] = useUnbookmarkPostMutation({
+ *   variables: {
+ *      postId: // value for 'postId'
+ *   },
+ * });
+ */
+export function useUnbookmarkPostMutation(baseOptions?: Apollo.MutationHookOptions<UnbookmarkPostMutation, UnbookmarkPostMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UnbookmarkPostMutation, UnbookmarkPostMutationVariables>(UnbookmarkPostDocument, options);
+      }
+export type UnbookmarkPostMutationHookResult = ReturnType<typeof useUnbookmarkPostMutation>;
+export type UnbookmarkPostMutationResult = Apollo.MutationResult<UnbookmarkPostMutation>;
+export type UnbookmarkPostMutationOptions = Apollo.BaseMutationOptions<UnbookmarkPostMutation, UnbookmarkPostMutationVariables>;
 export const UnfollowProfileDocument = gql`
     mutation UnfollowProfile($input: UnfollowProfileInput!) {
   unfollowProfile(input: $input) {

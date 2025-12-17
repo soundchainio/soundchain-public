@@ -18,6 +18,7 @@ fragment PostComponentFields on Post {
   uploadedMediaType
   mediaExpiresAt
   isEphemeral
+  isBookmarked
   profile {
     id
     displayName

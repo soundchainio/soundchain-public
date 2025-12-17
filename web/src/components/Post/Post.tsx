@@ -80,9 +80,9 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   }
 
   return (
-    <article className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-700 transition-colors">
+    <article className="bg-neutral-900 overflow-hidden border-b border-neutral-800/50">
       {/* Header - Instagram style compact */}
-      <header className="flex items-center justify-between px-3 py-2.5">
+      <header className="flex items-center justify-between px-4 py-3">
         {isGuest ? (
           // Guest post header - wallet address only
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -152,9 +152,9 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         )}
       </header>
 
-      {/* Body text - compact with animated emotes */}
+      {/* Body text - Instagram style padding */}
       {post.body && (
-        <div className="px-3 pb-2">
+        <div className="px-4 pb-3">
           <PostBodyWithEmotes
             body={post.body}
             className="text-sm text-neutral-100 whitespace-pre-wrap break-words leading-relaxed"
@@ -284,8 +284,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         </div>
       )}
 
-      {/* Stats & Actions - Instagram style bottom section */}
-      <div className="px-3 py-2 border-t border-neutral-800">
+      {/* Stats & Actions - Instagram style */}
+      <div className="px-4 py-2">
         <PostStats
           totalReactions={post.totalReactions}
           topReactions={post.topReactions}
@@ -294,8 +294,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           postId={post.id}
         />
       </div>
-      <div className="border-t border-neutral-800">
-        <PostActions postId={post.id} myReaction={post.myReaction} />
+      <div className="px-2 pb-2">
+        <PostActions postId={post.id} myReaction={post.myReaction} isBookmarked={post.isBookmarked} />
       </div>
     </article>
   )
@@ -304,5 +304,6 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 export const Post = memo(PostComponent, (prev, next) => {
   return prev.post?.id === next.post?.id &&
          prev.post?.myReaction === next.post?.myReaction &&
-         prev.post?.totalReactions === next.post?.totalReactions
+         prev.post?.totalReactions === next.post?.totalReactions &&
+         prev.post?.isBookmarked === next.post?.isBookmarked
 })

@@ -88,6 +88,16 @@ export class PostResolver {
     return reaction ? reaction.type : null;
   }
 
+  @FieldResolver(() => Boolean)
+  async isBookmarked(
+    @Ctx() { bookmarkService }: Context,
+    @Root() { _id: postId }: Post,
+    @CurrentUser() user?: User,
+  ): Promise<boolean> {
+    if (!user) return false;
+    return bookmarkService.isBookmarked(user.profileId, postId);
+  }
+
   @FieldResolver(() => Track, { nullable: true })
   async track(@Ctx() { trackService }: Context, @Root() { trackId, trackEditionId }: Post): Promise<Track | null> {
     if (!trackId) return null;

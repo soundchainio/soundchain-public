@@ -1,0 +1,23 @@
+query TrackComments($trackId: String!, $page: PageInput) {
+  trackComments(trackId: $trackId, page: $page) {
+    nodes {
+      id
+      text
+      timestamp
+      likeCount
+      isPinned
+      createdAt
+      profile {
+        id
+        displayName
+        profilePicture
+        userHandle
+      }
+    }
+    pageInfo {
+      totalCount
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
