@@ -103,9 +103,10 @@ export async function setJwt(newJwt?: string) {
         console.warn('Apollo resetStore warning:', error)
       }
     } else {
-      // Logout flow
+      // Logout flow - clear all auth tokens
       Cookies.remove(jwtKey, { path: '/' })
       localStorage.removeItem('jwt_fallback')
+      localStorage.removeItem('didToken') // Clear Magic session token to prevent auto-login
       await apolloClient.clearStore()
     }
   }

@@ -673,10 +673,25 @@ function DEXDashboard() {
     console.log('🔌 Wallet disconnected')
   }
 
-  // Logout handler
+  // Logout handler - clear all auth tokens to prevent auto-login
   const onLogout = async () => {
-    await setJwt()
-    router.reload()
+    try {
+      // Clear all auth tokens from localStorage
+      localStorage.removeItem('didToken')
+      localStorage.removeItem('jwt_fallback')
+      localStorage.removeItem('connectedWalletAddress')
+      localStorage.removeItem('connectedWalletType')
+
+      // Clear JWT cookie and Apollo cache
+      await setJwt()
+
+      // Force full page reload to clear all state
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force reload even on error to ensure user is logged out
+      window.location.href = '/login'
+    }
   }
 
   // Real SoundChain data - YOUR profile (only fetch if needed, use cache-first for speed)

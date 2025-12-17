@@ -49,11 +49,28 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
       return false
     }
 
-    if (magic && magic.user) {
-      await magic.user.logout()
+    try {
+      // Clear Magic session first
+      if (magic && magic.user) {
+        await magic.user.logout()
+      }
+
+      // Clear all auth tokens from localStorage
+      localStorage.removeItem('didToken')
+      localStorage.removeItem('jwt_fallback')
+      localStorage.removeItem('connectedWalletAddress')
+      localStorage.removeItem('connectedWalletType')
+
+      // Clear JWT cookie and Apollo cache
+      await setJwt()
+
+      // Force full page reload to clear all state
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Force reload even on error to ensure user is logged out
+      window.location.href = '/login'
     }
-    setJwt()
-    router.reload()
   }
 
   const onFollowers = () => {
