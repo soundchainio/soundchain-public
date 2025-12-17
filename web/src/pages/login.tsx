@@ -246,14 +246,19 @@ export default function LoginPage() {
         return;
       }
 
-      // Wait for Magic iframe to preload (required for OAuth to work)
+      // Wait for Magic iframe to preload with timeout (prevent infinite hang)
       console.log('[OAuth2] Waiting for Magic iframe preload...');
       try {
-        await (magic as any).preload();
+        const preloadPromise = (magic as any).preload();
+        const preloadTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Preload timeout')), 8000)
+        );
+        await Promise.race([preloadPromise, preloadTimeout]);
         console.log('[OAuth2] Magic preload complete');
       } catch (preloadErr: any) {
         console.warn('[OAuth2] Preload warning:', preloadErr?.message || preloadErr);
         // Continue anyway - preload failures don't always mean OAuth will fail
+        // If preload times out, we'll still try the OAuth redirect
       }
 
       // Build redirect URI - MUST match exactly what's in Magic Dashboard
