@@ -175,15 +175,14 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 </div>
               )}
 
-              {/* Image */}
+              {/* Image - full width, auto height */}
               {uploadedMediaType === 'image' && uploadedMediaUrl && (
-                <div className="relative w-full aspect-video">
-                  <Image
+                <div className="relative w-full">
+                  <img
                     src={uploadedMediaUrl}
                     alt="Post media"
-                    fill
-                    className="object-contain"
-                    unoptimized
+                    className="w-full h-auto max-h-[600px] object-contain"
+                    loading="eager"
                   />
                 </div>
               )}

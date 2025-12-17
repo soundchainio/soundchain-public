@@ -112,7 +112,16 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const hasProfile = !!post?.profile
   const hasTrack = post.track && !post.track.deleted
   const hasMediaLink = !!post.mediaLink
-  const hasMedia = hasMediaLink || hasTrack
+
+  // Check for uploaded media (images/videos from posts)
+  const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null; uploadedMediaType?: string | null; mediaExpiresAt?: string | null; isEphemeral?: boolean | null }
+  const uploadedMediaUrl = postWithMedia.uploadedMediaUrl
+  const uploadedMediaType = postWithMedia.uploadedMediaType
+  const hasUploadedMedia = !!uploadedMediaUrl
+  const mediaExpiresAt = postWithMedia.mediaExpiresAt ? new Date(postWithMedia.mediaExpiresAt) : null
+  const isExpired = mediaExpiresAt && mediaExpiresAt < new Date()
+
+  const hasMedia = hasMediaLink || hasTrack || (hasUploadedMedia && !isExpired)
 
   // Identify media platform
   const mediaSource = post.mediaLink ? IdentifySource(post.mediaLink) : null
@@ -142,8 +151,32 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   // Shared media render component for both views
   const renderMediaPreview = (aspectClass: string) => (
     <div className={`relative ${aspectClass} overflow-hidden bg-black`}>
+      {/* Uploaded media (images/videos) - priority display */}
+      {hasUploadedMedia && !isExpired && (
+        <>
+          {uploadedMediaType === 'image' && (
+            <img
+              src={uploadedMediaUrl!}
+              alt="Post media"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="eager"
+            />
+          )}
+          {uploadedMediaType === 'video' && (
+            <video
+              src={uploadedMediaUrl!}
+              className="w-full h-full object-cover"
+              playsInline
+              muted
+              loop
+              autoPlay
+            />
+          )}
+        </>
+      )}
+
       {/* Playing state - show actual player */}
-      {isPlaying && hasMediaLink ? (
+      {!hasUploadedMedia && isPlaying && hasMediaLink ? (
         <div className="w-full h-full bg-black">
           {canUseLightMode ? (
             // ReactPlayer for YouTube/Vimeo/Facebook - full controls
@@ -178,7 +211,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
             <Pause className="w-4 h-4 text-white" fill="white" />
           </button>
         </div>
-      ) : (
+      ) : !hasUploadedMedia && (
         <>
           {/* Track artwork */}
           {trackArtwork ? (
@@ -367,15 +400,25 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
         {/* Media Section - uses shared renderMediaPreview */}
         {hasMedia && renderMediaPreview('aspect-square')}
 
-        {/* Text-only posts - glassmorphism card */}
+        {/* Text-only posts - clean card with small emojis at footer */}
         {!hasMedia && post.body && (
-          <div className="aspect-square p-4 flex items-center justify-center bg-gradient-to-br from-cyan-900/20 via-purple-900/20 to-pink-900/20 relative overflow-hidden">
+          <div className="aspect-square flex flex-col bg-gradient-to-br from-neutral-800/50 via-neutral-900 to-neutral-800/50 relative overflow-hidden">
             {/* Animated background */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.1),transparent_70%)]" />
-            <Sparkles className="absolute top-4 right-4 w-5 h-5 text-cyan-400/50" />
-            <p className="text-sm text-neutral-200 line-clamp-6 relative z-10 text-center leading-relaxed">
-              <EmoteRenderer text={post.body} />
-            </p>
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.05),transparent_70%)]" />
+
+            {/* Main text content - centered */}
+            <div className="flex-1 flex items-center justify-center p-4">
+              <p className="text-sm text-neutral-200 line-clamp-5 text-center leading-relaxed [&_img]:hidden">
+                {post.body.replace(/:\w+:/g, '').trim() || post.body}
+              </p>
+            </div>
+
+            {/* Emotes at footer - small size like NFT cards */}
+            {post.body.match(/:\w+:/g) && (
+              <div className="px-3 pb-2 flex items-center justify-center gap-1 [&_img]:w-4 [&_img]:h-4">
+                <EmoteRenderer text={post.body.match(/:\w+:/g)?.slice(0, 5).join('') || ''} />
+              </div>
+            )}
           </div>
         )}
 
