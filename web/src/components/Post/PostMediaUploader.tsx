@@ -13,7 +13,7 @@ interface PostMediaUploaderProps {
   isGuest?: boolean // Use guest upload endpoint (images only)
 }
 
-const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
+const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB - SoundChain supports large audio/video files
 
 // Accepted file types for posts (same as NFT minting)
 const acceptedTypes = {
@@ -97,7 +97,7 @@ export const PostMediaUploader = ({
     onDropRejected: (rejections) => {
       const rejection = rejections[0]
       if (rejection?.errors[0]?.code === 'file-too-large') {
-        setError('File too large. Max size is 100MB.')
+        setError('File too large. Max size is 1GB.')
       } else {
         setError('Invalid file type')
       }

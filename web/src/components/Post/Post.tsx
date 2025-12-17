@@ -21,6 +21,7 @@ import { PostSkeleton } from './PostSkeleton'
 import { PostStats } from './PostStats'
 import { RepostPreview } from './RepostPreview'
 import { PostBodyWithEmotes } from '../EmoteRenderer'
+import { AutoplayVideo } from '../AutoplayMedia'
 
 interface PostProps {
   post: PostQuery['post']
@@ -187,13 +188,13 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 </div>
               )}
 
-              {/* Video */}
+              {/* Video - autoplay on scroll like IG/X */}
               {uploadedMediaType === 'video' && uploadedMediaUrl && (
-                <video
+                <AutoplayVideo
                   src={uploadedMediaUrl}
-                  controls
                   className="w-full max-h-[500px]"
-                  playsInline
+                  muted={true}
+                  loop={true}
                 />
               )}
 
