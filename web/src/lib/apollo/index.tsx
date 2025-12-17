@@ -48,7 +48,18 @@ export const apolloClient = createApolloClient()
 
 export function getJwt() {
   if (isBrowser) {
-    return Cookies.get(jwtKey)
+    // Try cookie first, then localStorage fallback
+    const cookieJwt = Cookies.get(jwtKey)
+    if (cookieJwt) return cookieJwt
+
+    // Fallback to localStorage if cookie not available
+    const localStorageJwt = localStorage.getItem('jwt_fallback')
+    if (localStorageJwt) {
+      console.log('Using JWT from localStorage fallback')
+      return localStorageJwt
+    }
+
+    return undefined
   }
   return jwt
 }
@@ -64,7 +75,21 @@ export async function setJwt(newJwt?: string) {
         expires: 7,  // 7 days expiry
         path: '/',   // Available on all paths
       })
-      console.log('JWT cookie set successfully:', jwt.substring(0, 20) + '...')
+
+      // Verify cookie was set
+      const savedJwt = Cookies.get(jwtKey)
+      if (savedJwt) {
+        console.log('JWT cookie set and verified:', savedJwt.substring(0, 20) + '...')
+      } else {
+        console.error('JWT cookie was NOT saved! Browser may be blocking cookies.')
+        // Try localStorage as fallback
+        try {
+          localStorage.setItem('jwt_fallback', jwt)
+          console.log('JWT saved to localStorage as fallback')
+        } catch (e) {
+          console.error('Failed to save JWT to localStorage:', e)
+        }
+      }
 
       // Small delay to ensure cookie is fully set before Apollo reset
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -72,6 +97,7 @@ export async function setJwt(newJwt?: string) {
       try {
         // Only reset if we have a token (not on logout)
         await apolloClient.resetStore()
+        console.log('Apollo cache reset complete')
       } catch (error) {
         // Ignore errors from resetStore - queries will refetch naturally
         console.warn('Apollo resetStore warning:', error)
@@ -79,6 +105,7 @@ export async function setJwt(newJwt?: string) {
     } else {
       // Logout flow
       Cookies.remove(jwtKey, { path: '/' })
+      localStorage.removeItem('jwt_fallback')
       await apolloClient.clearStore()
     }
   }

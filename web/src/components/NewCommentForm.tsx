@@ -102,21 +102,24 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
   const isGuest = !me && !!guestWallet
   const isAnonymous = !me && !guestWallet
 
+  // Use ref for debounced link detection
+  const linkDetectionRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   return (
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ isSubmitting, isValid, dirty, values, setFieldValue }: FormikProps<FormValues>) => {
-        // Detect and normalize links in comment body
-        useEffect(() => {
-          const detectLink = async () => {
-            if (hasLink(values.body)) {
-              const normalizedLink = await getNormalizedLink(values.body)
-              setLinkPreview(normalizedLink)
-            } else {
-              setLinkPreview(undefined)
-            }
+        // Debounced link detection - safe inside render prop as it uses refs
+        if (linkDetectionRef.current) {
+          clearTimeout(linkDetectionRef.current)
+        }
+        linkDetectionRef.current = setTimeout(async () => {
+          if (hasLink(values.body)) {
+            const normalizedLink = await getNormalizedLink(values.body)
+            setLinkPreview(normalizedLink)
+          } else {
+            setLinkPreview(undefined)
           }
-          detectLink()
-        }, [values.body])
+        }, 500)
 
         const handleEmojiSelect = (emoji: Emoji) => {
           const currentBody = values.body || ''
