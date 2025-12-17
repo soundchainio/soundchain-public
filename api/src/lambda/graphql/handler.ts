@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+// Trigger deploy - restore env vars - Dec 17 2025
 import { ApolloServer } from 'apollo-server-lambda';
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import express from 'express';
