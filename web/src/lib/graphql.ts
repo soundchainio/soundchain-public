@@ -3376,6 +3376,10 @@ export const PostComponentFieldsFragmentDoc = gql`
   deleted
   isGuest
   walletAddress
+  uploadedMediaUrl
+  uploadedMediaType
+  mediaExpiresAt
+  isEphemeral
   profile {
     id
     displayName
