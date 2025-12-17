@@ -114,18 +114,26 @@ export const EmoteTextInput = ({
         editorRef.current.innerHTML = html
         lastValueRef.current = value
 
-        // If content was added (like emote insertion), focus and move cursor to end
-        // This ensures user can keep typing after adding emotes from picker
+        // If content was added (like emote insertion), move cursor to end
+        // On mobile: DON'T focus to avoid keyboard popup - allows emoji flurries!
+        // On desktop: focus and position cursor for seamless typing
         if (wasContentAdded) {
-          editorRef.current.focus()
-          const selection = window.getSelection()
-          if (selection) {
-            const range = document.createRange()
-            range.selectNodeContents(editorRef.current)
-            range.collapse(false) // Move to end
-            selection.removeAllRanges()
-            selection.addRange(range)
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                           (typeof window !== 'undefined' && window.innerWidth < 768)
+
+          if (!isMobile) {
+            // Desktop: focus and position cursor at end
+            editorRef.current.focus()
+            const selection = window.getSelection()
+            if (selection) {
+              const range = document.createRange()
+              range.selectNodeContents(editorRef.current)
+              range.collapse(false) // Move to end
+              selection.removeAllRanges()
+              selection.addRange(range)
+            }
           }
+          // Mobile: skip focus to prevent keyboard popup - user can tap to type when ready
         }
       }
     }

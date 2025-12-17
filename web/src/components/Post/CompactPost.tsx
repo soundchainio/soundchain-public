@@ -447,25 +447,18 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
         {/* Media Section - uses shared renderMediaPreview */}
         {hasMedia && renderMediaPreview('aspect-square')}
 
-        {/* Text-only posts - clean card with small emojis at footer */}
+        {/* Text-only posts - clean card with emotes rendered inline */}
         {!hasMedia && post.body && (
           <div className="aspect-square flex flex-col bg-gradient-to-br from-neutral-800/50 via-neutral-900 to-neutral-800/50 relative overflow-hidden">
             {/* Animated background */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.05),transparent_70%)]" />
 
-            {/* Main text content - centered */}
+            {/* Main text content with emotes - centered */}
             <div className="flex-1 flex items-center justify-center p-4">
-              <p className="text-sm text-neutral-200 line-clamp-5 text-center leading-relaxed [&_img]:hidden">
-                {post.body.replace(/:\w+:/g, '').trim() || post.body}
-              </p>
-            </div>
-
-            {/* Emotes at footer - small size like NFT cards */}
-            {post.body.match(/:\w+:/g) && (
-              <div className="px-3 pb-2 flex items-center justify-center gap-1 [&_img]:w-4 [&_img]:h-4">
-                <EmoteRenderer text={post.body.match(/:\w+:/g)?.slice(0, 5).join('') || ''} />
+              <div className="text-sm text-neutral-200 line-clamp-5 text-center leading-relaxed [&_img]:w-6 [&_img]:h-6 [&_img]:inline-block [&_img]:align-middle">
+                <EmoteRenderer text={post.body} />
               </div>
-            )}
+            </div>
           </div>
         )}
 

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { X, Camera, Clock } from 'lucide-react'
+import { X, Clock } from 'lucide-react'
 import { useUpload } from 'hooks/useUpload'
 import { imageMimeTypes, videoMimeTypes, audioMimeTypes } from 'lib/mimeTypes'
 import Image from 'next/image'
@@ -181,7 +181,6 @@ export const PostMediaUploader = ({
         `}
       >
         <input {...getInputProps()} />
-        <Camera className={`w-5 h-5 ${isDragActive ? 'text-cyan-400' : 'text-gray-400'}`} />
         <span className={`text-sm ${isDragActive ? 'text-cyan-400' : 'text-gray-400'}`}>
           {isDragActive ? 'Drop file here' : 'Add photo, video, or audio (24h)'}
         </span>
