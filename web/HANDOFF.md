@@ -1,76 +1,75 @@
 # SoundChain DEX Handoff Summary
 **Date:** December 16, 2025
 **Branch:** production
-**Latest Commit:** 425390cee
+**Latest Commit:** f9736196d
 
-## Recent Session Changes
+## Latest Session Work
 
-### 1. Wallet Page Improvements
+### Mobile Wallet Connect Fixes (JUST PUSHED)
+- **File:** `src/pages/dex/[...slug].tsx` (lines 111-302)
+- **Problem:** WalletConnect showing "not configured" error, no mobile wallet options
+- **Solution:**
+  1. Added fallback WalletConnect project ID: `8e33134dfeea545054faa3493a504b8d`
+  2. Mobile detection: `isMobile` and `hasInjectedWallet` checks
+  3. Dynamic wallet list based on device type
+  4. MetaMask deep link for mobile: `https://metamask.app.link/dapp/...`
+  5. Coinbase Wallet deep link: `https://go.cb-w.com/dapp?cb_url=...`
+  6. WalletConnect shown FIRST on mobile
+  7. Removed strict project ID error check
 
-#### Profile Header Visibility
-- **File:** `src/pages/dex/[...slug].tsx` (line 1375)
-- Profile header box now only shows on `feed` view
-- Cover art background remains visible everywhere when logged in
-- Changed condition from `user &&` to `user && selectedView === 'feed' &&`
+### Wallet Page Improvements (Previous Push)
+- Profile header only shows on `feed` view
+- Cover art background stays everywhere when logged in
+- OGUN and ZETA added to swap "From" dropdown
+- User-owned NFTs load filtered by wallet address
+- Transfer NFTs dropdown uses owned tracks only
+- NFT count shows actual owned count
+- Blur.io-style wallet connect modal with "Sign into SoundChain.io"
 
-#### OGUN Token in Swap Section
-- **File:** `src/pages/dex/[...slug].tsx` (line 3058)
-- Added OGUN Token as first option in "From" dropdown
-- Added ZETA token to the list
-- Swap section now has full token options for omnichain swaps
+## Key Code Changes
 
-#### User-Owned NFTs Loading
-- **File:** `src/pages/dex/[...slug].tsx` (lines 636-647, 990)
-- Added new `useGroupedTracksQuery` specifically for wallet page
-- Filters by `nftData.owner` matching user's wallet address
-- Only fetches when on wallet view and user has connected wallet
-- NFT collection section shows user's owned NFTs with loading state
-- Transfer NFTs dropdown uses `ownedTracks` instead of all tracks
-- Balance card shows correct owned NFT count from `ownedTracksData`
+### Mobile Wallet Detection (line 111-125)
+```typescript
+const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+const hasInjectedWallet = typeof window !== 'undefined' && typeof window.ethereum !== 'undefined'
 
-### 2. Wallet Connect Modal Redesign (Blur.io Style)
-- **File:** `src/pages/dex/[...slug].tsx` (lines 249-346)
-- Modern glassmorphism design with `backdrop-blur-xl`
-- "Sign into SoundChain.io" header with lock icon
-- Gradient accent bars (cyan/purple/pink) at top and bottom
-- Clean wallet selection buttons with hover states
-- Shows "Signing..." spinner during connection
-- Footer explains signature verification is free and gasless
-- Heavy dark backdrop (90% opacity) for focus
+const wallets = [
+  // WalletConnect first on mobile
+  ...(isMobile ? [{ name: 'WalletConnect', ... }] : []),
+  // MetaMask only if extension detected OR on desktop
+  ...(hasInjectedWallet || !isMobile ? [{ name: 'MetaMask', ... }] : []),
+  // etc.
+]
+```
 
-## Key Files Modified
-- `src/pages/dex/[...slug].tsx` - Main DEX dashboard page
+### Fallback Project ID (line 129)
+```typescript
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
+```
 
-## GraphQL Queries Used
-- `useGroupedTracksQuery` with `filter: { nftData: { owner: walletAddress } }` for owned NFTs
+### Deep Links for Mobile
+- MetaMask: `https://metamask.app.link/dapp/${host}${path}`
+- Coinbase: `https://go.cb-w.com/dapp?cb_url=${encodedUrl}`
 
-## Testing Checklist
-- [ ] Navigate to wallet page - profile header should NOT appear
-- [ ] Cover art background should show on all pages when logged in
-- [ ] Wallet page should load user's owned NFTs (filtered by wallet)
-- [ ] NFT count should show actual owned count
-- [ ] Transfer NFTs dropdown should only show owned NFTs
-- [ ] Swap "From" dropdown should have OGUN as first option
-- [ ] Click "Connect Wallet" - should show new blur.io-style modal
-- [ ] Modal should say "Sign into SoundChain.io"
+## Testing Checklist (Mobile)
+- [ ] Open wallet connect modal on mobile
+- [ ] Should NOT show "WalletConnect not configured" error
+- [ ] WalletConnect should be first option on mobile
+- [ ] Clicking MetaMask on mobile should open MetaMask app
+- [ ] Clicking Coinbase on mobile should open Coinbase app
+- [ ] WalletConnect should show QR code modal
 
-## Previous Session Work (Summary)
-- Fixed wallet page menu button href and view
-- Fixed image uploader GraphQL mutation fields
-- Wired header search bar to explore functionality
-- Fixed Mint+/Post+ modal tab parameter system
-- Added account settings sub-route rendering
-- Fixed mobile audio player CSS (pb-safe)
-- Fixed feedback and admin page routing
+## Important Reminders
+- **Mobile-first design** is critical - high traffic from mobile users
+- Use Tailwind responsive prefixes: `sm:`, `md:`, `lg:`, `xl:`
+- Touch targets minimum 44px
+- Test on 375px width (iPhone SE) and 390px (iPhone 14)
 
-## Known Pre-existing TypeScript Errors
-These errors existed before this session and are unrelated to the changes:
-- SocialLinksForm.tsx - Yup schema type mismatch
-- CreateModal.tsx - Buffer type incompatibility
-- NFTPlayer.tsx - TorrentFile types
-- Various web3 contract type mismatches
+## Files Modified This Session
+- `src/pages/dex/[...slug].tsx` - Main DEX page with wallet connect modal
 
-## Environment Notes
-- Polygon mainnet (chainId: 137)
-- WalletConnect v2 with project ID from env
-- GraphQL API for track queries
+## Git Log
+```
+f9736196d fix: Mobile wallet connect - add fallback project ID and deep links
+425390cee feat: Wallet page improvements and blur.io-style connect modal
+```

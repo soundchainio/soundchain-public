@@ -2701,8 +2701,11 @@ function DEXDashboard() {
                     <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Active</Badge>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {/* Magic Wallet - Default */}
-                    <button className="p-3 rounded-lg border-2 border-cyan-500 bg-cyan-500/10 text-left transition-all hover:bg-cyan-500/20">
+                    {/* Magic Wallet - Default (already connected via login) */}
+                    <button
+                      className="p-3 rounded-lg border-2 border-cyan-500 bg-cyan-500/10 text-left transition-all hover:bg-cyan-500/20"
+                      onClick={() => alert('✨ Magic Wallet\n\nThis is your default wallet, automatically connected when you log in.\n\nWallet: ' + (userWallet || 'Not connected'))}
+                    >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">✨</span>
                         <span className="font-bold text-cyan-400 text-sm">Magic</span>
@@ -2710,7 +2713,10 @@ function DEXDashboard() {
                       <p className="text-xs text-gray-400">Native wallet</p>
                     </button>
                     {/* WalletConnect (includes MetaMask, Rainbow, Trust, etc.) */}
-                    <button className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
+                    <button
+                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10"
+                      onClick={() => setShowWalletModal(true)}
+                    >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">🔗</span>
                         <span className="font-bold text-gray-400 text-sm">WalletConnect</span>
@@ -2718,7 +2724,10 @@ function DEXDashboard() {
                       <p className="text-xs text-gray-500">300+ wallets</p>
                     </button>
                     {/* Coinbase Wallet */}
-                    <button className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10">
+                    <button
+                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10"
+                      onClick={() => setShowWalletModal(true)}
+                    >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">🔵</span>
                         <span className="font-bold text-gray-400 text-sm">Coinbase</span>
@@ -2726,7 +2735,10 @@ function DEXDashboard() {
                       <p className="text-xs text-gray-500">Coinbase Wallet</p>
                     </button>
                     {/* ZetaChain */}
-                    <button className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-green-500/50 hover:bg-green-500/10 relative">
+                    <button
+                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-green-500/50 hover:bg-green-500/10 relative"
+                      onClick={() => alert('🟢 ZetaChain Wallet\n\nOmnichain wallet integration coming soon!\n\nThis will enable universal cross-chain transactions across Bitcoin, Ethereum, BNB, Polygon & more.')}
+                    >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">🟢</span>
                         <span className="font-bold text-gray-400 text-sm">ZetaChain</span>
@@ -2976,19 +2988,41 @@ function DEXDashboard() {
 
                 {/* Quick Actions */}
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                  <Button className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 flex-col h-auto py-4">
+                  <Button
+                    className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 flex-col h-auto py-4"
+                    onClick={() => document.getElementById('buy-crypto-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
                     <Plus className="w-5 h-5 mb-1" />
                     <span className="text-xs">Buy Crypto</span>
                   </Button>
-                  <Button variant="outline" className="border-cyan-500/50 hover:bg-cyan-500/10 flex-col h-auto py-4">
+                  <Button
+                    variant="outline"
+                    className="border-cyan-500/50 hover:bg-cyan-500/10 flex-col h-auto py-4"
+                    onClick={() => alert('💸 Send Crypto\n\nUse the Transfer NFTs section below to send NFTs.\n\nFor token transfers, use your connected wallet app directly.')}
+                  >
                     <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                     <span className="text-xs">Send</span>
                   </Button>
-                  <Button variant="outline" className="border-purple-500/50 hover:bg-purple-500/10 flex-col h-auto py-4">
+                  <Button
+                    variant="outline"
+                    className="border-purple-500/50 hover:bg-purple-500/10 flex-col h-auto py-4"
+                    onClick={() => {
+                      if (userWallet) {
+                        navigator.clipboard.writeText(userWallet)
+                        alert(`📥 Receive Crypto\n\nYour wallet address copied to clipboard:\n\n${userWallet}\n\nSend MATIC or OGUN to this address on Polygon network.`)
+                      } else {
+                        alert('Please connect your wallet first.')
+                      }
+                    }}
+                  >
                     <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
                     <span className="text-xs">Receive</span>
                   </Button>
-                  <Button variant="outline" className="border-yellow-500/50 hover:bg-yellow-500/10 flex-col h-auto py-4">
+                  <Button
+                    variant="outline"
+                    className="border-yellow-500/50 hover:bg-yellow-500/10 flex-col h-auto py-4"
+                    onClick={() => document.getElementById('swap-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
                     <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                     <span className="text-xs">Swap</span>
                   </Button>
@@ -3007,7 +3041,7 @@ function DEXDashboard() {
               </Card>
 
               {/* Buy Crypto Section */}
-              <Card className="retro-card p-6">
+              <Card id="buy-crypto-section" className="retro-card p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Plus className="w-6 h-6 text-green-400" />
                   <h3 className="retro-title text-lg">Buy Crypto</h3>
@@ -3137,7 +3171,7 @@ function DEXDashboard() {
               </Card>
 
               {/* ZetaChain Omnichain Swap Portal */}
-              <Card className="retro-card p-6 border-green-500/30 relative overflow-hidden">
+              <Card id="swap-section" className="retro-card p-6 border-green-500/30 relative overflow-hidden">
                 {/* Animated background glow */}
                 <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-cyan-500/5 animate-pulse" />
 

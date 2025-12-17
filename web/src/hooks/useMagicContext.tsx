@@ -148,18 +148,19 @@ export function MagicProvider({ children }: MagicProviderProps) {
     }
   }, [account, handleError, web3])
 
-  const handleUseEffect = useCallback(async () => {
-    if (!account) await handleSetAccount()
-    if (account) {
-      await handleSetOgunBalance()
-      await handleSetBalance()
-    }
-  }, [account, handleSetAccount, handleSetBalance, handleSetOgunBalance])
-
+  // Fetch account when web3 is ready
   useEffect(() => {
     if (!me || !web3) return
-    handleUseEffect()
-  }, [handleUseEffect, me, web3])
+    handleSetAccount()
+  }, [me, web3, handleSetAccount])
+
+  // Fetch balances when account is set (separate effect to avoid stale closure)
+  useEffect(() => {
+    if (!account || !web3) return
+    console.log('💰 Fetching balances for account:', account)
+    handleSetBalance()
+    handleSetOgunBalance()
+  }, [account, web3, handleSetBalance, handleSetOgunBalance])
 
   return (
     <MagicContext.Provider
