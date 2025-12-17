@@ -68,12 +68,14 @@ export const AutoplayVideo = memo(({
             console.log('Autoplay prevented:', err.message)
           })
       }
-    } else {
-      // Pause when out of view
+    } else if (!hasInteracted) {
+      // Only pause when out of view if user hasn't interacted yet
+      // Once they've tapped to unmute, keep the vibe going!
       video.pause()
       onPause?.()
     }
-  }, [isInView, onPlay, onPause])
+    // If hasInteracted is true, don't pause - let it keep playing
+  }, [isInView, hasInteracted, onPlay, onPause])
 
   const handleClick = () => {
     const video = videoRef.current
