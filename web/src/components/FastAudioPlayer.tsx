@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, memo } from 'react'
+import { useEffect, useRef, memo, useReducer } from 'react'
 import { Play, Pause, Volume2, VolumeX, Loader2 } from 'lucide-react'
 
 interface FastAudioPlayerProps {
@@ -11,15 +11,68 @@ interface FastAudioPlayerProps {
   onPause?: () => void
 }
 
+// State machine for audio player - single source of truth
+type PlayerState = 'loading' | 'ready' | 'playing' | 'error'
+
+interface AudioState {
+  status: PlayerState
+  progress: number
+  duration: number
+  muted: number // 0 = muted, 1 = unmuted (using number avoids boolean)
+  retries: number
+  errorMsg: string
+}
+
+type AudioAction =
+  | { type: 'LOAD_START' }
+  | { type: 'READY'; duration: number }
+  | { type: 'PLAY' }
+  | { type: 'PAUSE' }
+  | { type: 'ERROR'; msg: string }
+  | { type: 'RETRY' }
+  | { type: 'PROGRESS'; value: number }
+  | { type: 'TOGGLE_MUTE' }
+  | { type: 'SEEK'; value: number }
+
+const initialState: AudioState = {
+  status: 'loading',
+  progress: 0,
+  duration: 0,
+  muted: 1, // 1 = unmuted
+  retries: 0,
+  errorMsg: '',
+}
+
+function audioReducer(state: AudioState, action: AudioAction): AudioState {
+  switch (action.type) {
+    case 'LOAD_START':
+      return { ...state, status: 'loading', errorMsg: '' }
+    case 'READY':
+      return { ...state, status: 'ready', duration: action.duration, errorMsg: '' }
+    case 'PLAY':
+      return { ...state, status: 'playing' }
+    case 'PAUSE':
+      return { ...state, status: 'ready' }
+    case 'ERROR':
+      return { ...state, status: 'error', errorMsg: action.msg }
+    case 'RETRY':
+      return { ...state, status: 'loading', retries: state.retries + 1 }
+    case 'PROGRESS':
+      return { ...state, progress: action.value }
+    case 'TOGGLE_MUTE':
+      return { ...state, muted: state.muted === 1 ? 0 : 1 }
+    case 'SEEK':
+      return { ...state, progress: action.value }
+    default:
+      return state
+  }
+}
+
 /**
  * FastAudioPlayer - Lightning-fast audio playback component
  *
- * Optimizations:
- * - preload="auto" for immediate buffering
- * - Loading state with spinner
- * - canplaythrough event for ready state
- * - Retry logic for failed loads
- * - Progress bar for visual feedback
+ * Uses state machine pattern instead of booleans for cleaner, more predictable state management.
+ * Single source of truth prevents impossible state combinations.
  */
 export const FastAudioPlayer = memo(({
   src,
@@ -31,14 +84,7 @@ export const FastAudioPlayer = memo(({
   onPause,
 }: FastAudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isReady, setIsReady] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [progress, setProgress] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [isMuted, setIsMuted] = useState(false)
-  const [retryCount, setRetryCount] = useState(0)
+  const [state, dispatch] = useReducer(audioReducer, initialState)
 
   // Preload audio on mount
   useEffect(() => {
@@ -50,60 +96,54 @@ export const FastAudioPlayer = memo(({
 
     const handleCanPlayThrough = () => {
       console.log('[FastAudio] Ready to play:', src.substring(0, 50))
-      setIsLoading(false)
-      setIsReady(true)
-      setError(null)
+      dispatch({ type: 'READY', duration: audio.duration })
     }
 
     const handleLoadStart = () => {
       console.log('[FastAudio] Loading started:', src.substring(0, 50))
-      setIsLoading(true)
+      dispatch({ type: 'LOAD_START' })
     }
 
     const handleProgress = () => {
-      // Audio is buffering
+      // Audio is buffering - log progress
       if (audio.buffered.length > 0) {
         const bufferedEnd = audio.buffered.end(audio.buffered.length - 1)
-        const duration = audio.duration
-        if (duration > 0) {
-          console.log(`[FastAudio] Buffered: ${Math.round((bufferedEnd / duration) * 100)}%`)
+        const dur = audio.duration
+        if (dur > 0) {
+          console.log(`[FastAudio] Buffered: ${Math.round((bufferedEnd / dur) * 100)}%`)
         }
       }
     }
 
-    const handleError = (e: Event) => {
-      console.error('[FastAudio] Error loading audio:', e)
-      setIsLoading(false)
-
-      // Retry up to 3 times
-      if (retryCount < 3) {
-        console.log(`[FastAudio] Retrying... (${retryCount + 1}/3)`)
-        setRetryCount(prev => prev + 1)
-        setTimeout(() => {
-          audio.load()
-        }, 1000 * (retryCount + 1)) // Exponential backoff
+    const handleError = () => {
+      console.error('[FastAudio] Error loading audio')
+      // Retry up to 3 times with exponential backoff
+      if (state.retries < 3) {
+        console.log(`[FastAudio] Retrying... (${state.retries + 1}/3)`)
+        dispatch({ type: 'RETRY' })
+        setTimeout(() => audio.load(), 1000 * (state.retries + 1))
       } else {
-        setError('Failed to load audio')
+        dispatch({ type: 'ERROR', msg: 'Failed to load audio' })
       }
     }
 
     const handleLoadedMetadata = () => {
-      setDuration(audio.duration)
+      dispatch({ type: 'READY', duration: audio.duration })
     }
 
     const handleTimeUpdate = () => {
       if (audio.duration > 0) {
-        setProgress((audio.currentTime / audio.duration) * 100)
+        dispatch({ type: 'PROGRESS', value: (audio.currentTime / audio.duration) * 100 })
       }
     }
 
     const handlePlay = () => {
-      setIsPlaying(true)
+      dispatch({ type: 'PLAY' })
       onPlay?.()
     }
 
     const handlePause = () => {
-      setIsPlaying(false)
+      dispatch({ type: 'PAUSE' })
       onPause?.()
     }
 
@@ -126,20 +166,20 @@ export const FastAudioPlayer = memo(({
       audio.removeEventListener('play', handlePlay)
       audio.removeEventListener('pause', handlePause)
     }
-  }, [src, retryCount, onPlay, onPause])
+  }, [src, state.retries, onPlay, onPause])
 
   // Autoplay when ready
   useEffect(() => {
-    if (autoplay && isReady && audioRef.current) {
+    if (autoplay && state.status === 'ready' && audioRef.current) {
       audioRef.current.play().catch(console.error)
     }
-  }, [autoplay, isReady])
+  }, [autoplay, state.status])
 
   const togglePlay = () => {
     const audio = audioRef.current
     if (!audio) return
 
-    if (isPlaying) {
+    if (state.status === 'playing') {
       audio.pause()
     } else {
       audio.play().catch(console.error)
@@ -150,8 +190,8 @@ export const FastAudioPlayer = memo(({
     const audio = audioRef.current
     if (!audio) return
 
-    audio.muted = !audio.muted
-    setIsMuted(!isMuted)
+    audio.muted = state.muted === 1 // Will toggle to opposite
+    dispatch({ type: 'TOGGLE_MUTE' })
   }
 
   const formatTime = (seconds: number) => {
@@ -162,12 +202,12 @@ export const FastAudioPlayer = memo(({
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const audio = audioRef.current
-    if (!audio || !duration) return
+    if (!audio || !state.duration) return
 
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const percentage = x / rect.width
-    audio.currentTime = percentage * duration
+    audio.currentTime = percentage * state.duration
   }
 
   // Compact view for grid
@@ -185,7 +225,7 @@ export const FastAudioPlayer = memo(({
 
         {/* Audio visualizer aesthetic */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.2),transparent_70%)] ${isPlaying ? 'animate-pulse' : ''}`} />
+          <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.2),transparent_70%)] ${state.status === 'playing' ? 'animate-pulse' : ''}`} />
         </div>
 
         {/* Audio icon */}
@@ -196,14 +236,14 @@ export const FastAudioPlayer = memo(({
         {/* Play/Pause/Loading button */}
         <button
           onClick={togglePlay}
-          disabled={isLoading || !!error}
+          disabled={state.status === 'loading' || state.status === 'error'}
           className="relative z-10 w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all disabled:opacity-50"
         >
-          {isLoading ? (
+          {state.status === 'loading' ? (
             <Loader2 className="w-5 h-5 text-white animate-spin" />
-          ) : error ? (
+          ) : state.status === 'error' ? (
             <span className="text-red-400 text-xs">Error</span>
-          ) : isPlaying ? (
+          ) : state.status === 'playing' ? (
             <Pause className="w-5 h-5 text-white" fill="white" />
           ) : (
             <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
@@ -212,7 +252,7 @@ export const FastAudioPlayer = memo(({
 
         {/* Status label */}
         <span className="relative z-10 mt-2 text-xs text-white/70">
-          {isLoading ? 'Loading...' : error ? 'Failed' : `Tap to ${isPlaying ? 'pause' : 'play'}`}
+          {state.status === 'loading' ? 'Loading...' : state.status === 'error' ? 'Failed' : `Tap to ${state.status === 'playing' ? 'pause' : 'play'}`}
         </span>
       </div>
     )
@@ -242,14 +282,14 @@ export const FastAudioPlayer = memo(({
             {/* Play/Pause button */}
             <button
               onClick={togglePlay}
-              disabled={isLoading || !!error}
+              disabled={state.status === 'loading' || state.status === 'error'}
               className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all disabled:opacity-50"
             >
-              {isLoading ? (
+              {state.status === 'loading' ? (
                 <Loader2 className="w-5 h-5 text-white animate-spin" />
-              ) : error ? (
+              ) : state.status === 'error' ? (
                 <span className="text-red-400 text-lg">!</span>
-              ) : isPlaying ? (
+              ) : state.status === 'playing' ? (
                 <Pause className="w-5 h-5 text-white" fill="white" />
               ) : (
                 <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
@@ -261,7 +301,7 @@ export const FastAudioPlayer = memo(({
               onClick={toggleMute}
               className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
             >
-              {isMuted ? (
+              {state.muted === 0 ? (
                 <VolumeX className="w-4 h-4 text-white/70" />
               ) : (
                 <Volume2 className="w-4 h-4 text-white" />
@@ -270,17 +310,17 @@ export const FastAudioPlayer = memo(({
 
             {/* Time display */}
             <span className="text-xs text-white/60 font-mono">
-              {formatTime((progress / 100) * duration)} / {formatTime(duration || 0)}
+              {formatTime((state.progress / 100) * state.duration)} / {formatTime(state.duration || 0)}
             </span>
 
-            {/* Status indicator */}
-            {isLoading && (
+            {/* Status indicator based on single state */}
+            {state.status === 'loading' && (
               <span className="text-xs text-cyan-400 animate-pulse">Loading...</span>
             )}
-            {error && (
-              <span className="text-xs text-red-400">{error}</span>
+            {state.status === 'error' && (
+              <span className="text-xs text-red-400">{state.errorMsg}</span>
             )}
-            {isReady && !isPlaying && !isLoading && (
+            {state.status === 'ready' && (
               <span className="text-xs text-green-400">Ready</span>
             )}
           </div>
@@ -292,7 +332,7 @@ export const FastAudioPlayer = memo(({
           >
             <div
               className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-100"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${state.progress}%` }}
             />
           </div>
         </div>
