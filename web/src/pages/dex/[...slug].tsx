@@ -602,6 +602,11 @@ function DEXDashboard() {
   const [selectedNftId, setSelectedNftId] = useState('')
   const [transferring, setTransferring] = useState(false)
 
+  // Swap state - track selected tokens for dynamic labels
+  const [swapFromToken, setSwapFromToken] = useState<Token>('MATIC')
+  const [swapToToken, setSwapToToken] = useState<Token>('OGUN')
+  const [swapFromAmount, setSwapFromAmount] = useState('')
+
   // Sync selectedView with URL changes (for back/forward navigation)
   // Also sync when router becomes ready (router.query is empty until ready)
   useEffect(() => {
@@ -3218,9 +3223,13 @@ function DEXDashboard() {
                     <Card className="metadata-section p-4 border-gray-700">
                       <p className="text-xs text-gray-400 mb-3">From</p>
                       <div className="flex items-center gap-3 mb-4">
-                        <select className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none">
+                        <select
+                          value={swapFromToken}
+                          onChange={(e) => setSwapFromToken(e.target.value as Token)}
+                          className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none"
+                        >
                           {SUPPORTED_TOKENS.map((token) => (
-                            <option key={token} value={token.toLowerCase()}>
+                            <option key={token} value={token}>
                               {TOKEN_INFO[token].icon || '🪙'} {token} - {TOKEN_INFO[token].name}
                             </option>
                           ))}
@@ -3230,23 +3239,31 @@ function DEXDashboard() {
                         <input
                           type="number"
                           placeholder="0.0"
+                          value={swapFromAmount}
+                          onChange={(e) => setSwapFromAmount(e.target.value)}
                           className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-xl text-white focus:border-green-500 focus:outline-none"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                           <Button variant="ghost" size="sm" className="text-green-400 text-xs h-7 px-2">MAX</Button>
-                          <span className="text-gray-400">MATIC</span>
+                          <span className="text-gray-400 flex items-center gap-1">
+                            {TOKEN_INFO[swapFromToken]?.icon} {swapFromToken}
+                          </span>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">Balance: {maticBalance || '0.00'} MATIC</p>
+                      <p className="text-xs text-gray-500 mt-2">Balance: {swapFromToken === 'MATIC' ? (maticBalance || '0.00') : swapFromToken === 'OGUN' ? (ogunBalance || '0.00') : '0.00'} {swapFromToken}</p>
                     </Card>
 
                     {/* To Section */}
                     <Card className="metadata-section p-4 border-gray-700">
                       <p className="text-xs text-gray-400 mb-3">To</p>
                       <div className="flex items-center gap-3 mb-4">
-                        <select className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none">
+                        <select
+                          value={swapToToken}
+                          onChange={(e) => setSwapToToken(e.target.value as Token)}
+                          className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none"
+                        >
                           {SUPPORTED_TOKENS.map((token) => (
-                            <option key={token} value={token.toLowerCase()}>
+                            <option key={token} value={token}>
                               {TOKEN_INFO[token].icon || '🪙'} {token} - {TOKEN_INFO[token].name}
                             </option>
                           ))}
@@ -3256,11 +3273,14 @@ function DEXDashboard() {
                         <input
                           type="number"
                           placeholder="0.0"
+                          value={swapFromAmount ? (parseFloat(swapFromAmount) * 0.9995).toFixed(4) : ''}
                           readOnly
                           className="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-3 text-xl text-white cursor-not-allowed"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                          <span className="text-gray-400">OGUN</span>
+                          <span className="text-gray-400 flex items-center gap-1">
+                            {TOKEN_INFO[swapToToken]?.icon} {swapToToken}
+                          </span>
                         </div>
                       </div>
                       <p className="text-xs text-gray-500 mt-2">You will receive (after 0.05% fee)</p>
