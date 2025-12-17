@@ -58,6 +58,7 @@ import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
 import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { useOmnichain } from 'hooks/useOmnichain'
 import { ENABLED_CHAINS, getChainsByCategory } from 'constants/chains'
+import { SUPPORTED_TOKENS, TOKEN_INFO, Token } from 'constants/tokens'
 import { ToastContainer } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import {
@@ -3218,17 +3219,11 @@ function DEXDashboard() {
                       <p className="text-xs text-gray-400 mb-3">From</p>
                       <div className="flex items-center gap-3 mb-4">
                         <select className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none">
-                          <option value="ogun">🪙 OGUN Token</option>
-                          <option value="polygon">⬡ Polygon (MATIC)</option>
-                          <option value="ethereum">🔷 Ethereum (ETH)</option>
-                          <option value="bitcoin">₿ Bitcoin (BTC)</option>
-                          <option value="bnb">🟡 BNB Chain</option>
-                          <option value="base">🔵 Base</option>
-                          <option value="arbitrum">🔵 Arbitrum</option>
-                          <option value="optimism">🔴 Optimism</option>
-                          <option value="avalanche">🔺 Avalanche</option>
-                          <option value="solana">◎ Solana</option>
-                          <option value="zeta">ζ ZETA</option>
+                          {SUPPORTED_TOKENS.map((token) => (
+                            <option key={token} value={token.toLowerCase()}>
+                              {TOKEN_INFO[token].icon || '🪙'} {token} - {TOKEN_INFO[token].name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div className="relative">
@@ -3250,13 +3245,11 @@ function DEXDashboard() {
                       <p className="text-xs text-gray-400 mb-3">To</p>
                       <div className="flex items-center gap-3 mb-4">
                         <select className="flex-1 bg-black/50 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-green-500 focus:outline-none">
-                          <option value="ogun">🪙 OGUN Token</option>
-                          <option value="zeta">ζ ZETA</option>
-                          <option value="usdc">💵 USDC</option>
-                          <option value="usdt">💵 USDT</option>
-                          <option value="eth">🔷 ETH</option>
-                          <option value="btc">₿ BTC</option>
-                          <option value="matic">⬡ MATIC</option>
+                          {SUPPORTED_TOKENS.map((token) => (
+                            <option key={token} value={token.toLowerCase()}>
+                              {TOKEN_INFO[token].icon || '🪙'} {token} - {TOKEN_INFO[token].name}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div className="relative">
