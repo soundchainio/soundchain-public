@@ -76,6 +76,7 @@ jobs:
           build_and_push "playbackcount"
           build_and_push "processauctions"
           build_and_push "processpending"
+          build_and_push "cleanupephemeral"
 
       - name: Install Serverless Framework
         run: npm install -g serverless
@@ -123,6 +124,7 @@ jobs:
           PLAYBACKCOUNT_IMAGE_URI: ${{ env.PLAYBACKCOUNT_IMAGE_URI }}
           PROCESSAUCTIONS_IMAGE_URI: ${{ env.PROCESSAUCTIONS_IMAGE_URI }}
           PROCESSPENDING_IMAGE_URI: ${{ env.PROCESSPENDING_IMAGE_URI }}
+          CLEANUPEPHEMERAL_IMAGE_URI: ${{ env.CLEANUPEPHEMERAL_IMAGE_URI }}
         run: |
           echo "Deploying with images:"
           echo "GraphQL: $GRAPHQL_IMAGE_URI"
@@ -132,6 +134,7 @@ jobs:
           echo "Playback Count: $PLAYBACKCOUNT_IMAGE_URI"
           echo "Process Auctions: $PROCESSAUCTIONS_IMAGE_URI"
           echo "Process Pending: $PROCESSPENDING_IMAGE_URI"
+          echo "Cleanup Ephemeral: $CLEANUPEPHEMERAL_IMAGE_URI"
           serverless deploy -s ${GITHUB_REF#refs/heads/} --verbose
 
       - name: Trigger migrate lambda function

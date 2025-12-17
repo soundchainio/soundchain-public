@@ -45,6 +45,11 @@ functions:
     image: ${env:PROCESSPENDING_IMAGE_URI}
     events:
       - schedule: rate(30 minutes)
+  cleanupephemeral:
+    image: ${env:CLEANUPEPHEMERAL_IMAGE_URI}
+    timeout: 60
+    events:
+      - schedule: rate(1 hour)
 
 build:
   external:
@@ -120,6 +125,7 @@ provider:
             - s3:PutObject
             - s3:GetObject
             - s3:PutObjectAcl
+            - s3:DeleteObject
           Resource:
             - arn:aws:s3:::${self:custom.uploadsBucket.name}/*
 
