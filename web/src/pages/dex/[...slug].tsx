@@ -748,7 +748,7 @@ function DEXDashboard() {
   // Track if we're loading more
   const [loadingMore, setLoadingMore] = useState(false)
 
-  // Load more tracks using cursor pagination
+  // Load more tracks using cursor pagination with deduplication
   const handleLoadMore = useCallback(async () => {
     if (!tracksData?.groupedTracks?.pageInfo?.hasNextPage || loadingMore) return
 
@@ -763,13 +763,27 @@ function DEXDashboard() {
         },
         updateQuery: (prev, { fetchMoreResult }) => {
           if (!fetchMoreResult) return prev
+
+          // Deduplicate: only add nodes that don't already exist
+          const existingIds = new Set(prev.groupedTracks?.nodes?.map((n: any) => n.id) || [])
+          const newNodes = (fetchMoreResult.groupedTracks?.nodes || []).filter(
+            (node: any) => !existingIds.has(node.id)
+          )
+
+          console.log('📦 Load More:', {
+            existing: prev.groupedTracks?.nodes?.length || 0,
+            fetched: fetchMoreResult.groupedTracks?.nodes?.length || 0,
+            newUnique: newNodes.length,
+            cursor: fetchMoreResult.groupedTracks?.pageInfo?.endCursor
+          })
+
           return {
             ...fetchMoreResult,
             groupedTracks: {
               ...fetchMoreResult.groupedTracks,
               nodes: [
                 ...(prev.groupedTracks?.nodes || []),
-                ...(fetchMoreResult.groupedTracks?.nodes || []),
+                ...newNodes,
               ],
             },
           }
@@ -1325,9 +1339,9 @@ function DEXDashboard() {
                   )}
                 </Button>
 
-                {/* Notifications Dropdown - Mobile: full width right-aligned, Desktop: fixed width */}
+                {/* Notifications Dropdown - Right-aligned, proper width for mobile */}
                 {showNotifications && (
-                  <Card className="absolute right-0 sm:right-0 top-12 w-[calc(100vw-24px)] sm:w-96 max-w-[400px] retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden transform sm:translate-x-0">
+                  <Card className="absolute right-0 top-12 w-80 sm:w-96 retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden">
                     <div className="flex items-center justify-between p-3 border-b border-cyan-500/30">
                       <h3 className="retro-title text-sm flex items-center gap-2">
                         <Bell className="w-4 h-4 text-yellow-400" />
