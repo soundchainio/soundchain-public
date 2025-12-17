@@ -1,10 +1,10 @@
-import { memo, useState, useEffect } from 'react'
+import { memo, useState, useEffect, useRef } from 'react'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
-import { Play, Pause, Heart, MessageCircle, Share2, Sparkles, BadgeCheck, Volume2 } from 'lucide-react'
+import { Play, Pause, Heart, MessageCircle, Share2, Sparkles, BadgeCheck, Volume2, VolumeX } from 'lucide-react'
 import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from '../EmoteRenderer'
@@ -77,6 +77,10 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const [isPlaying, setIsPlaying] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [fetchedThumbnail, setFetchedThumbnail] = useState<string | null>(null)
+  const [isMuted, setIsMuted] = useState(true) // Videos start muted for autoplay
+  const [audioPlaying, setAudioPlaying] = useState(false) // For audio posts
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   // Fetch thumbnail via our server-side proxy (avoids CORS)
   // Always fetch for ALL media types - ReactPlayer light mode doesn't work with embed URLs
@@ -151,7 +155,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   // Shared media render component for both views
   const renderMediaPreview = (aspectClass: string) => (
     <div className={`relative ${aspectClass} overflow-hidden bg-black`}>
-      {/* Uploaded media (images/videos) - priority display */}
+      {/* Uploaded media (images/videos/audio) - priority display */}
       {hasUploadedMedia && !isExpired && (
         <>
           {uploadedMediaType === 'image' && (
@@ -163,14 +167,89 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
             />
           )}
           {uploadedMediaType === 'video' && (
-            <video
-              src={uploadedMediaUrl!}
-              className="w-full h-full object-cover"
-              playsInline
-              muted
-              loop
-              autoPlay
-            />
+            <div className="relative w-full h-full">
+              <video
+                ref={videoRef}
+                src={uploadedMediaUrl!}
+                className="w-full h-full object-cover"
+                playsInline
+                muted={isMuted}
+                loop
+                autoPlay
+              />
+              {/* Unmute button overlay - tap to unmute like IG/X */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const newMuted = !isMuted
+                  if (videoRef.current) {
+                    videoRef.current.muted = newMuted
+                  }
+                  setIsMuted(newMuted)
+                }}
+                className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full bg-black/70 backdrop-blur flex items-center justify-center hover:bg-black/90 transition-colors"
+                title={isMuted ? 'Tap to unmute' : 'Tap to mute'}
+              >
+                {isMuted ? (
+                  <VolumeX className="w-4 h-4 text-white" />
+                ) : (
+                  <Volume2 className="w-4 h-4 text-cyan-400" />
+                )}
+              </button>
+              {/* Muted indicator hint */}
+              {isMuted && (
+                <div className="absolute bottom-2 left-2 z-10 px-2 py-1 bg-black/70 backdrop-blur rounded-full text-white text-[10px] flex items-center gap-1">
+                  <VolumeX className="w-3 h-3" />
+                  <span>Tap to unmute</span>
+                </div>
+              )}
+            </div>
+          )}
+          {uploadedMediaType === 'audio' && (
+            <div className="relative w-full h-full bg-gradient-to-br from-cyan-900/50 via-purple-900/50 to-pink-900/50 flex flex-col items-center justify-center">
+              {/* Audio visualizer aesthetic */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.2),transparent_70%)] ${audioPlaying ? 'animate-pulse' : ''}`} />
+              </div>
+
+              {/* Audio icon */}
+              <div className="relative z-10 w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center mb-2">
+                <span className="text-3xl">🎵</span>
+              </div>
+
+              {/* Hidden audio element */}
+              <audio
+                ref={audioRef}
+                src={uploadedMediaUrl!}
+                loop
+                onPlay={() => setAudioPlaying(true)}
+                onPause={() => setAudioPlaying(false)}
+              />
+
+              {/* Play/Pause button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (audioRef.current) {
+                    if (audioPlaying) {
+                      audioRef.current.pause()
+                    } else {
+                      audioRef.current.play()
+                    }
+                  }
+                }}
+                className="relative z-10 w-12 h-12 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-all"
+              >
+                {audioPlaying ? (
+                  <Pause className="w-5 h-5 text-white" fill="white" />
+                ) : (
+                  <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
+                )}
+              </button>
+
+              {/* Audio label */}
+              <span className="relative z-10 mt-2 text-xs text-white/70">Tap to {audioPlaying ? 'pause' : 'play'}</span>
+            </div>
           )}
         </>
       )}
