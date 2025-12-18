@@ -236,8 +236,16 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
       // Initialize WalletConnect v2 EthereumProvider
       const provider = await EthereumProvider.init({
         projectId,
-        chains: [137], // Polygon mainnet
-        optionalChains: [80002], // Polygon Amoy testnet
+        chains: [137], // Polygon mainnet (default)
+        optionalChains: [
+          1,      // Ethereum mainnet
+          8453,   // Base (Coinbase L2)
+          42161,  // Arbitrum
+          10,     // Optimism
+          43114,  // Avalanche
+          7000,   // ZetaChain
+          80002,  // Polygon Amoy testnet
+        ],
         showQrModal: true, // Shows the WalletConnect QR modal automatically
         metadata: {
           name: 'SoundChain',

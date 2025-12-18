@@ -16,6 +16,10 @@ export const useWalletConnect = () => {
         rpc: {
           137: mainNetwork.rpc,
           80002: testnetNetwork.rpc,
+          8453: 'https://mainnet.base.org',     // Base (Coinbase L2)
+          1: 'https://eth.llamarpc.com',        // Ethereum mainnet
+          42161: 'https://arb1.arbitrum.io/rpc', // Arbitrum
+          10: 'https://mainnet.optimism.io',    // Optimism
         },
       })
       walletProvider.updateRpcUrl(137)
