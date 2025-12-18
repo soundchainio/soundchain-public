@@ -10,6 +10,20 @@ import { Clock } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 
+// Helper to extract YouTube video ID and generate thumbnail URL
+const getYouTubeThumbnail = (url: string): string | null => {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
+  }
+  return null
+}
+
+// Helper to get Vimeo thumbnail (requires oEmbed, fallback to true)
+const getVimeoThumbnail = (url: string): boolean => {
+  return true // Let ReactPlayer handle Vimeo thumbnails
+}
+
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { DisplayName } from '../DisplayName'
@@ -256,7 +270,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 url={post.mediaLink}
                 playsinline
                 controls
-                light
+                light={getYouTubeThumbnail(post.mediaLink) || true}
                 pip
                 config={{
                   youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
