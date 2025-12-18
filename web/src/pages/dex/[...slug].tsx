@@ -2858,7 +2858,7 @@ function DEXDashboard() {
                 </Card>
 
                 {/* Connected Wallets */}
-                {userWallet ? (
+                {walletAccount ? (
                   <div className="space-y-3 mb-6">
                     {/* Primary Wallet (Current Session) */}
                     <Card className="metadata-section p-4 border-cyan-500/50">
@@ -2869,10 +2869,10 @@ function DEXDashboard() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <p className="text-xs text-gray-400">Active Wallet</p>
-                              <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Default</Badge>
+                              <p className="text-xs text-gray-400">SoundChain Wallet</p>
+                              <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Active</Badge>
                             </div>
-                            <p className="font-mono text-cyan-400 text-sm">{userWallet.slice(0, 10)}...{userWallet.slice(-8)}</p>
+                            <p className="font-mono text-cyan-400 text-sm">{walletAccount.slice(0, 10)}...{walletAccount.slice(-8)}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -2880,12 +2880,12 @@ function DEXDashboard() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => { navigator.clipboard.writeText(userWallet); }}
+                            onClick={() => { navigator.clipboard.writeText(walletAccount); }}
                             className="hover:bg-cyan-500/20"
                           >
                             <Copy className="w-4 h-4 text-cyan-400" />
                           </Button>
-                          <a href={`https://polygonscan.com/address/${userWallet}`} target="_blank" rel="noreferrer">
+                          <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
                             <Button variant="ghost" size="sm" className="hover:bg-purple-500/20">
                               <ExternalLink className="w-4 h-4 text-purple-400" />
                             </Button>
@@ -2990,6 +2990,18 @@ function DEXDashboard() {
                 )}
 
                 {/* Balance Cards - Real data from Magic wallet */}
+                {walletAccount && (
+                  <div className="mb-2 text-center">
+                    <a
+                      href={`https://polygonscan.com/address/${walletAccount}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
+                    >
+                      Verify on Polygonscan: {walletAccount.slice(0, 8)}...{walletAccount.slice(-6)} ↗
+                    </a>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <Card className="metadata-section p-4 text-center hover:border-yellow-500/50 transition-all">
                     <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
