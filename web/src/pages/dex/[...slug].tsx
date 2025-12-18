@@ -21,6 +21,7 @@ import { useMagicContext } from 'hooks/useMagicContext'
 import { NFTCard } from 'components/dex/NFTCard'
 import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
+import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
 import { GenreLeaderboard } from 'components/dex/GenreLeaderboard'
@@ -2639,15 +2640,33 @@ function DEXDashboard() {
                   <Badge className="bg-purple-500/20 text-purple-400 text-xs">{userTracks.length}</Badge>
                 </div>
                 {userTracks.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+                  <div className="space-y-1">
                     {userTracks.slice(0, 12).map((track: any, index: number) => (
-                      <TrackNFTCard
+                      <CoinbaseNFTCard
                         key={track.id}
-                        track={track}
+                        track={{
+                          id: track.id,
+                          title: track.title,
+                          artist: track.artist || track.profile?.displayName || 'Unknown Artist',
+                          artistProfileId: track.profile?.id,
+                          artworkUrl: track.artworkMedia?.url || track.coverMedia?.url,
+                          playbackCount: track.playbackCount,
+                          playbackCountFormatted: track.playbackCount?.toLocaleString(),
+                          nftData: {
+                            tokenId: track.tokenId,
+                            owner: track.owner,
+                          },
+                          listingItem: track.listingItem ? {
+                            price: track.listingItem.price,
+                            pricePerItem: track.listingItem.pricePerItem,
+                            pricePerItemToShow: track.listingItem.pricePerItemToShow,
+                            acceptsOGUN: track.listingItem.acceptsOGUN,
+                          } : undefined,
+                        }}
                         onPlay={() => handlePlayTrack(track, index, userTracks)}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
-                        listView={false}
+                        onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
                       />
                     ))}
                   </div>
@@ -3399,15 +3418,33 @@ function DEXDashboard() {
                     <span className="ml-3 text-gray-400">Loading your NFTs...</span>
                   </div>
                 ) : ownedTracks.length > 0 ? (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+                  <div className="space-y-1">
                     {ownedTracks.slice(0, 12).map((track: any, index: number) => (
-                      <TrackNFTCard
+                      <CoinbaseNFTCard
                         key={track.id}
-                        track={track}
+                        track={{
+                          id: track.id,
+                          title: track.title,
+                          artist: track.artist || track.profile?.displayName || 'Unknown Artist',
+                          artistProfileId: track.profile?.id,
+                          artworkUrl: track.artworkMedia?.url || track.coverMedia?.url,
+                          playbackCount: track.playbackCount,
+                          playbackCountFormatted: track.playbackCount?.toLocaleString(),
+                          nftData: {
+                            tokenId: track.tokenId,
+                            owner: track.owner,
+                          },
+                          listingItem: track.listingItem ? {
+                            price: track.listingItem.price,
+                            pricePerItem: track.listingItem.pricePerItem,
+                            pricePerItemToShow: track.listingItem.pricePerItemToShow,
+                            acceptsOGUN: track.listingItem.acceptsOGUN,
+                          } : undefined,
+                        }}
                         onPlay={() => handlePlayTrack(track, index, ownedTracks)}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
-                        listView={false}
+                        onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
                       />
                     ))}
                   </div>
