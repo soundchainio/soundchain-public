@@ -22,7 +22,8 @@ export const Comment = ({ commentId }: CommentProps) => {
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
   const comment = data?.comment
   const isGuest = comment?.isGuest && comment?.walletAddress
-  const isAuthor = !isGuest && comment?.profile?.id == me?.profile.id
+  const hasProfile = !!comment?.profile
+  const isAuthor = !isGuest && hasProfile && comment?.profile?.id === me?.profile?.id
   const canEdit = isAuthor || me?.roles?.includes(Role.Admin) || me?.roles?.includes(Role.TeamMember)
 
   const onEllipsisClick = () => {
@@ -44,8 +45,10 @@ export const Comment = ({ commentId }: CommentProps) => {
     <div className="flex flex-row space-x-3">
       {isGuest ? (
         <GuestAvatar walletAddress={comment.walletAddress!} pixels={40} className="mt-4" />
-      ) : (
+      ) : hasProfile ? (
         <Avatar profile={comment.profile!} className="mt-4" />
+      ) : (
+        <div className="mt-4 w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400 text-sm">?</div>
       )}
       <div className="min-w-0 flex-1 rounded-xl bg-gray-20 py-4 px-4">
         <div className="flex min-w-0 items-center">
@@ -59,7 +62,7 @@ export const Comment = ({ commentId }: CommentProps) => {
                   Guest
                 </span>
               </div>
-            ) : (
+            ) : hasProfile ? (
               <NextLink href={`/profiles/${comment.profile!.userHandle}`}>
                 <DisplayName
                   name={comment.profile!.displayName}
@@ -68,6 +71,8 @@ export const Comment = ({ commentId }: CommentProps) => {
                   badges={comment.profile!.badges}
                 />
               </NextLink>
+            ) : (
+              <span className="text-sm text-neutral-400">Unknown user</span>
             )}
             <Timestamp className="flex-1" datetime={comment.createdAt} />
           </div>
