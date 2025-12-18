@@ -47,134 +47,47 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
             {post.mediaLink && (() => {
               const mediaSource = IdentifySource(post.mediaLink)
               const mediaType = mediaSource.type
-              let enhancedUrl = post.mediaLink
+              const mediaUrl = post.mediaLink.replace(/^http:/, 'https:')
 
-              // Platform-specific enhancements
-              if (mediaType === MediaProvider.YOUTUBE) {
-                const url = new URL(enhancedUrl)
-                url.searchParams.set('iv_load_policy', '3')
-                url.searchParams.set('modestbranding', '1')
-                url.searchParams.set('rel', '0')
-                enhancedUrl = url.toString()
+              // Platform name and icon
+              const platformName = mediaType === MediaProvider.BANDCAMP ? 'Bandcamp' :
+                                  mediaType === MediaProvider.SPOTIFY ? 'Spotify' :
+                                  mediaType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
+                                  mediaType === MediaProvider.YOUTUBE ? 'YouTube' :
+                                  mediaType === MediaProvider.VIMEO ? 'Vimeo' :
+                                  mediaType === MediaProvider.INSTAGRAM ? 'Instagram' :
+                                  mediaType === MediaProvider.TIKTOK ? 'TikTok' :
+                                  mediaType === MediaProvider.X ? 'X' :
+                                  mediaType === MediaProvider.TWITCH ? 'Twitch' :
+                                  mediaType === MediaProvider.DISCORD ? 'Discord' : 'Link'
+              const platformIcon = mediaType === MediaProvider.BANDCAMP ? '💿' :
+                                  mediaType === MediaProvider.SPOTIFY ? '🎵' :
+                                  mediaType === MediaProvider.SOUNDCLOUD ? '☁️' :
+                                  mediaType === MediaProvider.YOUTUBE ? '▶️' :
+                                  mediaType === MediaProvider.VIMEO ? '🎬' :
+                                  mediaType === MediaProvider.INSTAGRAM ? '📸' :
+                                  mediaType === MediaProvider.TIKTOK ? '🎭' :
+                                  mediaType === MediaProvider.X ? '𝕏' :
+                                  mediaType === MediaProvider.TWITCH ? '🎮' :
+                                  mediaType === MediaProvider.DISCORD ? '💬' : '🔗'
 
-                return (
-                  <iframe
-                    frameBorder="0"
-                    className="mt-4 w-full bg-gray-20 aspect-video"
-                    allowFullScreen
-                    src={enhancedUrl}
-                    title="Media preview"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  />
-                )
-              }
-
-              if (mediaType === MediaProvider.VIMEO) {
-                const url = new URL(enhancedUrl)
-                url.searchParams.set('autopause', '0')
-                enhancedUrl = url.toString()
-
-                return (
-                  <iframe
-                    frameBorder="0"
-                    className="mt-4 w-full bg-gray-20 aspect-video"
-                    allowFullScreen
-                    src={enhancedUrl}
-                    title="Media preview"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                  />
-                )
-              }
-
-              if (mediaType === MediaProvider.INSTAGRAM) {
-                return (
-                  <iframe
-                    frameBorder="0"
-                    className="mt-4 w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[700px]"
-                    allowFullScreen
-                    scrolling="no"
-                    src={enhancedUrl}
-                    title="Media preview"
-                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                  />
-                )
-              }
-
-              if (mediaType === MediaProvider.TIKTOK) {
-                return (
-                  <iframe
-                    frameBorder="0"
-                    className="mt-4 w-full bg-gray-20 h-[80vh] max-h-[650px] md:h-[650px]"
-                    allowFullScreen
-                    scrolling="no"
-                    src={enhancedUrl}
-                    title="Media preview"
-                    allow="autoplay; encrypted-media; accelerometer; gyroscope"
-                  />
-                )
-              }
-
-              if (mediaType === MediaProvider.X) {
-                return (
-                  <iframe
-                    frameBorder="0"
-                    className="mt-4 w-full bg-gray-20 h-[70vh] max-h-[700px] md:h-[700px]"
-                    allowFullScreen
-                    scrolling="no"
-                    src={enhancedUrl}
-                    title="Media preview"
-                  />
-                )
-              }
-
-              if (mediaType === MediaProvider.BANDCAMP) {
-                return (
-                  <iframe
-                    frameBorder="0"
-                    className="mt-4 w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[600px]"
-                    allowFullScreen
-                    seamless
-                    src={enhancedUrl}
-                    title="Media preview"
-                  />
-                )
-              }
-
-              if (mediaType === MediaProvider.TWITCH) {
-                return (
-                  <iframe
-                    frameBorder="0"
-                    className="mt-4 w-full bg-gray-20 aspect-video"
-                    allowFullScreen
-                    src={enhancedUrl}
-                    title="Media preview"
-                    allow="autoplay; fullscreen; picture-in-picture"
-                  />
-                )
-              }
-
-              if (mediaType === MediaProvider.DISCORD) {
-                return (
-                  <iframe
-                    frameBorder="0"
-                    className="mt-4 w-full bg-gray-20 h-[500px] md:h-[600px]"
-                    src={enhancedUrl}
-                    title="Media preview"
-                    sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                  />
-                )
-              }
-
-              // Default iframe for SoundCloud, Spotify, Custom HTML
+              // Show link card for all platforms
               return (
-                <iframe
-                  frameBorder="0"
-                  className="mt-4 w-full bg-gray-20 aspect-video"
-                  allowFullScreen
-                  src={enhancedUrl}
-                  title="Media preview"
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                />
+                <a
+                  href={mediaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 block p-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{platformIcon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold">Open on {platformName}</p>
+                      <p className="text-neutral-400 text-sm truncate">{mediaUrl}</p>
+                    </div>
+                    <span className="text-cyan-400">→</span>
+                  </div>
+                </a>
               )
             })()}
             {post.track && !post.track.deleted && (

@@ -1,17 +1,14 @@
-import { memo, useState, useEffect, useRef } from 'react'
+import { memo, useState, useRef } from 'react'
 import { FastAudioPlayer } from '../FastAudioPlayer'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
-import ReactPlayer from 'react-player'
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
-import { Play, Pause, Heart, MessageCircle, Share2, Sparkles, BadgeCheck, Volume2, VolumeX } from 'lucide-react'
-import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+import { Play, Heart, MessageCircle, Share2, BadgeCheck, Volume2, VolumeX } from 'lucide-react'
+import { IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from '../EmoteRenderer'
 
-// Cache for fetched thumbnails to avoid redundant API calls
-const thumbnailCache = new Map<string, string | null>()
 
 interface CompactPostProps {
   post: PostQuery['post']
@@ -75,41 +72,9 @@ const PLATFORM_BRANDS: Record<string, { gradient: string; icon: string; glow: st
 }
 
 const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView = false }: CompactPostProps) => {
-  const [isPlaying, setIsPlaying] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
-  const [fetchedThumbnail, setFetchedThumbnail] = useState<string | null>(null)
   const [isMuted, setIsMuted] = useState(true) // Videos start muted for autoplay
-  const [audioPlaying, setAudioPlaying] = useState(false) // For audio posts
   const videoRef = useRef<HTMLVideoElement>(null)
-  const audioRef = useRef<HTMLAudioElement>(null)
-
-  // Fetch thumbnail via our server-side proxy (avoids CORS)
-  // Always fetch for ALL media types - ReactPlayer light mode doesn't work with embed URLs
-  useEffect(() => {
-    if (!post?.mediaLink) return
-
-    // Skip only if we already have a server-stored thumbnail
-    if (post.mediaThumbnail) return
-
-    const mediaLink = post.mediaLink
-
-    // Check cache first
-    if (thumbnailCache.has(mediaLink)) {
-      setFetchedThumbnail(thumbnailCache.get(mediaLink) || null)
-      return
-    }
-
-    // Fetch from our API proxy - works for ALL platforms including YouTube/Vimeo
-    fetch(`/api/oembed?url=${encodeURIComponent(mediaLink)}`)
-      .then(res => res.json())
-      .then(data => {
-        thumbnailCache.set(mediaLink, data.thumbnail_url)
-        setFetchedThumbnail(data.thumbnail_url)
-      })
-      .catch(() => {
-        thumbnailCache.set(mediaLink, null)
-      })
-  }, [post?.mediaLink, post?.mediaThumbnail])
 
   if (!post || post.deleted) return null
 
@@ -133,14 +98,8 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const platformType = mediaSource?.type || 'unknown'
   const platformBrand = PLATFORM_BRANDS[platformType] || { gradient: 'from-cyan-600 via-purple-500 to-pink-500', icon: '🔗', glow: 'shadow-cyan-500/50' }
 
-  // Check if ReactPlayer can show thumbnail with light mode (YouTube, Vimeo, Facebook)
-  const canUseLightMode = post.mediaLink ? hasLazyLoadWithThumbnailSupport(post.mediaLink) : false
-
   // Track artwork
   const trackArtwork = hasTrack ? post.track?.artworkUrl : null
-
-  // Media thumbnail - prefer server-stored, then client-fetched
-  const displayThumbnail = post.mediaThumbnail || fetchedThumbnail
 
   // Handle card click to open post modal
   const handleCardClick = (e: React.MouseEvent) => {
@@ -222,168 +181,59 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
         </>
       )}
 
-      {/* Playing state - show actual player */}
-      {!hasUploadedMedia && isPlaying && hasMediaLink ? (
-        <div className="w-full h-full bg-black">
-          {canUseLightMode ? (
-            // ReactPlayer for YouTube/Vimeo/Facebook - full controls
-            <ReactPlayer
-              url={post.mediaLink!}
-              width="100%"
-              height="100%"
-              playing={true}
-              controls
-              playsinline
-              light={false}
-              config={{
-                youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-                vimeo: { playerOptions: { responsive: true, playsinline: true } },
-              }}
-            />
-          ) : (() => {
-            const mediaUrl = post.mediaLink!.replace(/^http:/, 'https:')
-            // Check if URL is a proper embed URL
-            const isProperEmbed =
-              mediaUrl.includes('EmbeddedPlayer') || // Bandcamp
-              mediaUrl.includes('open.spotify.com/embed') || // Spotify
-              mediaUrl.includes('w.soundcloud.com/player') || // SoundCloud
-              mediaUrl.includes('youtube.com/embed') || // YouTube
-              mediaUrl.includes('player.vimeo.com') // Vimeo
-
-            if (!isProperEmbed) {
-              // Show link instead of broken iframe
-              return (
-                <a
-                  href={mediaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900 hover:from-neutral-700 transition-colors p-4"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <span className="text-4xl mb-2">{platformBrand.icon}</span>
-                  <p className="text-white font-semibold text-sm">Open externally</p>
-                  <p className="text-cyan-400 text-xs">Tap to view →</p>
-                </a>
-              )
-            }
-
-            // Proper embed URL - show iframe
-            return (
-              <iframe
-                src={mediaUrl}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                className="w-full h-full"
-              />
-            )
-          })()}
-          <button
-            onClick={(e) => { e.stopPropagation(); setIsPlaying(false) }}
-            className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/80 backdrop-blur flex items-center justify-center hover:bg-black transition-colors"
-          >
-            <Pause className="w-4 h-4 text-white" fill="white" />
-          </button>
-        </div>
-      ) : !hasUploadedMedia && (
+      {/* Media link - show link card (tapping opens external link) */}
+      {!hasUploadedMedia && hasMediaLink && !hasTrack ? (
+        <a
+          href={post.mediaLink!.replace(/^http:/, 'https:')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${platformBrand.gradient} hover:opacity-80 transition-opacity`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span className="text-5xl mb-2 drop-shadow-lg">{platformBrand.icon}</span>
+          <p className="text-white font-bold text-sm drop-shadow">
+            {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
+             platformType === MediaProvider.SPOTIFY ? 'Spotify' :
+             platformType === MediaProvider.BANDCAMP ? 'Bandcamp' :
+             platformType === MediaProvider.YOUTUBE ? 'YouTube' :
+             platformType === MediaProvider.VIMEO ? 'Vimeo' :
+             platformType === MediaProvider.INSTAGRAM ? 'Instagram' :
+             platformType === MediaProvider.TIKTOK ? 'TikTok' :
+             platformType === MediaProvider.X ? 'X' :
+             platformType === MediaProvider.TWITCH ? 'Twitch' : 'Link'}
+          </p>
+          <p className="text-white/70 text-xs mt-1">Tap to open →</p>
+        </a>
+      ) : !hasUploadedMedia && hasTrack && (
         <>
           {/* Track artwork */}
-          {trackArtwork ? (
+          {trackArtwork && (
             <img
               src={trackArtwork}
               alt={post.track?.title || 'Track'}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
             />
-          ) : displayThumbnail ? (
-            /* Thumbnail from oEmbed proxy - works for ALL platforms */
-            <img
-              src={displayThumbnail}
-              alt="Media thumbnail"
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-              onError={(e) => {
-                // Fallback for failed thumbnail loads (e.g., maxresdefault not available)
-                const target = e.target as HTMLImageElement
-                if (target.src.includes('maxresdefault')) {
-                  target.src = target.src.replace('maxresdefault', 'hqdefault')
-                }
-              }}
-            />
-          ) : (
-            /* Platform Branded Card fallback - shows when no thumbnail available */
-            <div className={`w-full h-full bg-gradient-to-br ${platformBrand.gradient} relative overflow-hidden`}>
-              {/* Animated mesh gradient background */}
-              <div className="absolute inset-0 opacity-30">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.3),transparent_50%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(255,255,255,0.2),transparent_50%)]" />
-                <div className="absolute inset-0 bg-[conic-gradient(from_90deg_at_50%_50%,transparent,rgba(255,255,255,0.1),transparent)]" />
-              </div>
-
-              {/* Animated particles/sparkles effect */}
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/40 rounded-full animate-pulse" />
-                <div className="absolute top-3/4 right-1/4 w-1.5 h-1.5 bg-white/30 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-                <div className="absolute bottom-1/4 left-1/3 w-1 h-1 bg-white/50 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
-              </div>
-
-              {/* Platform icon - large and centered */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-5xl drop-shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
-                  {platformBrand.icon}
-                </span>
-                <span className="mt-2 text-white/90 font-bold text-sm tracking-wider drop-shadow-lg uppercase">
-                  {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
-                   platformType === MediaProvider.SPOTIFY ? 'Spotify' :
-                   platformType === MediaProvider.BANDCAMP ? 'Bandcamp' :
-                   platformType.charAt(0).toUpperCase() + platformType.slice(1).toLowerCase()}
-                </span>
-              </div>
-
-              {/* Glassmorphism overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            </div>
-          )}
-
-          {/* Platform badge - always show for media links */}
-          {hasMediaLink && !hasTrack && (
-            <div className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/70 backdrop-blur-sm border border-white/10 z-10">
-              <span className="text-sm">{platformBrand.icon}</span>
-              <span className="text-[10px] text-white/90 font-semibold uppercase tracking-wider">
-                {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
-                 platformType === MediaProvider.SPOTIFY ? 'Spotify' :
-                 platformType === MediaProvider.BANDCAMP ? 'Bandcamp' :
-                 platformType === MediaProvider.YOUTUBE ? 'YouTube' :
-                 platformType.charAt(0).toUpperCase() + platformType.slice(1).toLowerCase()}
-              </span>
-            </div>
           )}
 
           {/* Track info overlay */}
-          {hasTrack && (
-            <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-              <div className="flex items-center gap-1.5">
-                <Volume2 className="w-3 h-3 text-cyan-400" />
-                <p className="text-white text-xs font-semibold truncate">{post.track?.title}</p>
-              </div>
-              <p className="text-neutral-400 text-[10px] truncate pl-4">{post.track?.artist}</p>
+          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+            <div className="flex items-center gap-1.5">
+              <Volume2 className="w-3 h-3 text-cyan-400" />
+              <p className="text-white text-xs font-semibold truncate">{post.track?.title}</p>
             </div>
-          )}
+            <p className="text-neutral-400 text-[10px] truncate pl-4">{post.track?.artist}</p>
+          </div>
 
-          {/* Play button overlay - always visible on mobile, hover on desktop */}
+          {/* Play button overlay for tracks */}
           <button
             onClick={(e) => {
               e.stopPropagation()
-              if (hasTrack) {
-                handleOnPlayClicked((post.track as Track).id)
-              } else if (hasMediaLink) {
-                setIsPlaying(true)
-              }
+              handleOnPlayClicked((post.track as Track).id)
             }}
             className="absolute inset-0 flex items-center justify-center bg-black/0 hover:bg-black/20 transition-all z-10"
           >
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg ${platformBrand.glow} opacity-80 group-hover:opacity-100 hover:scale-110 transition-all`}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-500/50 opacity-80 group-hover:opacity-100 hover:scale-110 transition-all">
               <Play className="w-5 h-5 text-black ml-0.5" fill="black" />
             </div>
           </button>

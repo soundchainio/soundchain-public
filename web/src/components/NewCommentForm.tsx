@@ -224,106 +224,44 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
                 const mediaSource = IdentifySource(linkPreview)
                 const mediaType = mediaSource.type
 
-                // Platform-specific thumbnail rendering (no autoplay)
-                if (mediaType === MediaProvider.YOUTUBE) {
-                  return (
-                    <div className="px-3 pb-3">
-                      <iframe
-                        className="w-full bg-gray-20"
-                        style={{ height: '300px', minHeight: '300px' }}
-                        frameBorder="0"
-                        src={linkPreview}
-                        title="Link preview"
-                        allow="encrypted-media; gyroscope; picture-in-picture"
-                      />
-                    </div>
-                  )
-                }
+                // Platform name and icon
+                const platformName = mediaType === MediaProvider.BANDCAMP ? 'Bandcamp' :
+                                    mediaType === MediaProvider.SPOTIFY ? 'Spotify' :
+                                    mediaType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
+                                    mediaType === MediaProvider.YOUTUBE ? 'YouTube' :
+                                    mediaType === MediaProvider.VIMEO ? 'Vimeo' :
+                                    mediaType === MediaProvider.INSTAGRAM ? 'Instagram' :
+                                    mediaType === MediaProvider.TIKTOK ? 'TikTok' :
+                                    mediaType === MediaProvider.X ? 'X' :
+                                    mediaType === MediaProvider.TWITCH ? 'Twitch' : 'Link'
+                const platformIcon = mediaType === MediaProvider.BANDCAMP ? '💿' :
+                                    mediaType === MediaProvider.SPOTIFY ? '🎵' :
+                                    mediaType === MediaProvider.SOUNDCLOUD ? '☁️' :
+                                    mediaType === MediaProvider.YOUTUBE ? '▶️' :
+                                    mediaType === MediaProvider.VIMEO ? '🎬' :
+                                    mediaType === MediaProvider.INSTAGRAM ? '📸' :
+                                    mediaType === MediaProvider.TIKTOK ? '🎭' :
+                                    mediaType === MediaProvider.X ? '𝕏' :
+                                    mediaType === MediaProvider.TWITCH ? '🎮' : '🔗'
 
-                if (mediaType === MediaProvider.VIMEO) {
-                  return (
-                    <div className="px-3 pb-3">
-                      <iframe
-                        className="w-full bg-gray-20"
-                        style={{ height: '300px', minHeight: '300px' }}
-                        frameBorder="0"
-                        src={linkPreview}
-                        title="Link preview"
-                        allow="fullscreen; picture-in-picture"
-                      />
-                    </div>
-                  )
-                }
-
-                if (mediaType === MediaProvider.INSTAGRAM) {
-                  return (
-                    <div className="px-3 pb-3">
-                      <iframe
-                        className="w-full bg-gray-20"
-                        style={{ height: '400px', minHeight: '400px' }}
-                        frameBorder="0"
-                        scrolling="no"
-                        src={linkPreview}
-                        title="Link preview"
-                      />
-                    </div>
-                  )
-                }
-
-                if (mediaType === MediaProvider.TIKTOK) {
-                  return (
-                    <div className="px-3 pb-3">
-                      <iframe
-                        className="w-full bg-gray-20"
-                        style={{ height: '400px', minHeight: '400px' }}
-                        frameBorder="0"
-                        scrolling="no"
-                        src={linkPreview}
-                        title="Link preview"
-                      />
-                    </div>
-                  )
-                }
-
-                if (mediaType === MediaProvider.X) {
-                  return (
-                    <div className="px-3 pb-3">
-                      <iframe
-                        className="w-full bg-gray-20"
-                        style={{ height: '400px', minHeight: '400px' }}
-                        frameBorder="0"
-                        scrolling="no"
-                        src={linkPreview}
-                        title="Link preview"
-                      />
-                    </div>
-                  )
-                }
-
-                if (mediaType === MediaProvider.SOUNDCLOUD || mediaType === MediaProvider.SPOTIFY) {
-                  return (
-                    <div className="px-3 pb-3">
-                      <iframe
-                        className="w-full bg-gray-20"
-                        style={{ height: '150px', minHeight: '150px' }}
-                        frameBorder="0"
-                        src={linkPreview}
-                        title="Link preview"
-                        allow="encrypted-media"
-                      />
-                    </div>
-                  )
-                }
-
-                // Default thumbnail for other links
+                // Show link card for all platforms
                 return (
                   <div className="px-3 pb-3">
-                    <div className="rounded bg-gray-20 p-3 text-sm text-gray-100">
-                      <div className="font-bold mb-1">Link Preview:</div>
-                      <a href={linkPreview} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all">
-                        {linkPreview}
-                      </a>
-                    </div>
+                    <a
+                      href={linkPreview}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-3 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{platformIcon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-semibold text-sm">{platformName} link</p>
+                          <p className="text-neutral-400 text-xs truncate">{linkPreview}</p>
+                        </div>
+                        <span className="text-cyan-400 text-sm">→</span>
+                      </div>
+                    </a>
                   </div>
                 )
               })()}
