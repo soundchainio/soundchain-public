@@ -191,32 +191,29 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 </div>
               )}
 
-              {/* Image - full width, auto height */}
+              {/* Image - full width, natural height like Instagram */}
               {uploadedMediaType === 'image' && uploadedMediaUrl && (
-                <div className="relative w-full">
-                  <img
-                    src={uploadedMediaUrl}
-                    alt="Post media"
-                    className="w-full h-auto max-h-[600px] object-contain"
-                    loading="eager"
-                    onError={(e) => {
-                      // Hide broken image and show placeholder
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                      const parent = target.parentElement
-                      if (parent) {
-                        parent.innerHTML = '<div class="p-8 flex flex-col items-center justify-center text-neutral-500 bg-neutral-800/50"><span class="text-sm">Image unavailable</span></div>'
-                      }
-                    }}
-                  />
-                </div>
+                <img
+                  src={uploadedMediaUrl}
+                  alt="Post media"
+                  className="w-full h-auto"
+                  loading="eager"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    const parent = target.parentElement
+                    if (parent) {
+                      parent.innerHTML = '<div class="p-4 flex items-center justify-center text-neutral-500"><span class="text-sm">Image unavailable</span></div>'
+                    }
+                  }}
+                />
               )}
 
               {/* Video - autoplay on scroll like IG/X */}
               {uploadedMediaType === 'video' && uploadedMediaUrl && (
                 <AutoplayVideo
                   src={uploadedMediaUrl}
-                  className="w-full max-h-[500px]"
+                  className="w-full"
                   muted={true}
                   loop={true}
                 />
@@ -233,22 +230,20 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 
               {/* Fallback for unknown media type - try to render as image */}
               {uploadedMediaUrl && !['image', 'video', 'audio'].includes(uploadedMediaType || '') && (
-                <div className="relative w-full">
-                  <img
-                    src={uploadedMediaUrl}
-                    alt="Post media"
-                    className="w-full h-auto max-h-[600px] object-contain"
-                    loading="eager"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = 'none'
-                      const parent = target.parentElement
-                      if (parent) {
-                        parent.innerHTML = '<div class="p-8 flex flex-col items-center justify-center text-neutral-500 bg-neutral-800/50"><span class="text-sm">Media unavailable</span></div>'
-                      }
-                    }}
-                  />
-                </div>
+                <img
+                  src={uploadedMediaUrl}
+                  alt="Post media"
+                  className="w-full h-auto"
+                  loading="eager"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    const parent = target.parentElement
+                    if (parent) {
+                      parent.innerHTML = '<div class="p-4 flex items-center justify-center text-neutral-500"><span class="text-sm">Media unavailable</span></div>'
+                    }
+                  }}
+                />
               )}
             </div>
           )}
@@ -261,33 +256,33 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           )}
 
-          {/* Embedded video/link - Legacy UI style: simple, reliable rendering */}
+          {/* Embedded video/link */}
           {post.mediaLink && (
             hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-              <ReactPlayer
-                width="100%"
-                height="400px"
-                url={post.mediaLink}
-                playsinline
-                controls
-                light={getYouTubeThumbnail(post.mediaLink) || true}
-                pip
-                config={{
-                  youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-                  vimeo: { playerOptions: { responsive: true, playsinline: true } },
-                }}
-              />
+              <div className="relative w-full aspect-video">
+                <ReactPlayer
+                  width="100%"
+                  height="100%"
+                  url={post.mediaLink}
+                  playsinline
+                  controls
+                  light={getYouTubeThumbnail(post.mediaLink) || true}
+                  pip
+                  config={{
+                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                  }}
+                />
+              </div>
             ) : (
-              // Simple iframe embed for Spotify, SoundCloud, Bandcamp - like legacy UI
+              // Simple iframe embed for Spotify, SoundCloud, Bandcamp
               <iframe
-                className="w-full min-h-[300px] bg-neutral-900"
+                className="w-full aspect-video bg-neutral-900"
                 src={post.mediaLink?.replace(/^http:/, 'https:')}
                 title="Media"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
                 allowFullScreen
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation"
               />
             )
           )}

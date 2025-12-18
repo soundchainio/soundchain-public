@@ -1,7 +1,7 @@
 import { MusicalNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import Picker from '@emoji-mart/react'
 import { StickerPicker } from '../StickerPicker'
-import { Sparkles, Camera } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { PostMediaUploader } from './PostMediaUploader'
 
 // Extended Emoji type with native property from emoji-mart picker callback
@@ -47,7 +47,7 @@ export const PostFormTimeline = () => {
   const [isVideoLinkVisible, setVideoLinkVisible] = useState(false)
   const [isPreviewVisible, setPreviewVisible] = useState(false)
   const [link, setLink] = useState<MediaLink>()
-  const [showMediaUploader, setShowMediaUploader] = useState(false)
+  const [showMediaUploader] = useState(true) // Always show media uploader
   const [isEmojiPickerOpen, setEmojiPickerOpen] = useState(false)
   const [isStickerPickerOpen, setStickerPickerOpen] = useState(false)
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | undefined>()
@@ -114,7 +114,6 @@ export const PostFormTimeline = () => {
       // Reset uploaded media
       setUploadedMediaUrl(undefined)
       setUploadedMediaType(undefined)
-      setShowMediaUploader(false)
     } catch (error: any) {
       // Log detailed error for debugging
       console.error('Post creation error:', error)
@@ -281,15 +280,6 @@ export const PostFormTimeline = () => {
               onClick={onVideoLinkClick}
             >
               <VideoCameraIcon className="m-auto w-5 text-gray-400" />
-            </button>
-            {/* Camera/Upload button for photos, videos, audio from phone */}
-            <button
-              className="ml-[8px] w-6 cursor-pointer text-center"
-              aria-label="Upload photo, video, or audio (24h)"
-              onClick={() => setShowMediaUploader(!showMediaUploader)}
-              title="Upload media (expires in 24h)"
-            >
-              <Camera className={`m-auto w-5 ${showMediaUploader || uploadedMediaUrl ? 'text-amber-400' : 'text-gray-400'}`} />
             </button>
           </div>
           <div className="basis-1/4">
