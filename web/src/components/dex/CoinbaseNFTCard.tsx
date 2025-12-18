@@ -49,11 +49,11 @@ const CoinbaseNFTCardComponent: React.FC<CoinbaseNFTCardProps> = ({
     >
       {/* Left: Artwork + Info */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
-        {/* Circular artwork with play overlay */}
+        {/* Square artwork with play overlay */}
         <div className="relative w-12 h-12 flex-shrink-0">
-          <div className="w-full h-full rounded-full overflow-hidden bg-neutral-800">
+          <div className="w-full h-full rounded-md overflow-hidden bg-neutral-800">
             {!imageLoaded && (
-              <div className="absolute inset-0 bg-neutral-700 animate-pulse rounded-full" />
+              <div className="absolute inset-0 bg-neutral-700 animate-pulse rounded-md" />
             )}
             <img
               src={track.artworkUrl || defaultImage}
@@ -65,7 +65,7 @@ const CoinbaseNFTCardComponent: React.FC<CoinbaseNFTCardProps> = ({
           {/* Play button overlay on hover */}
           <button
             onClick={(e) => { e.stopPropagation(); onPlay() }}
-            className={`absolute inset-0 flex items-center justify-center rounded-full bg-black/60 transition-opacity ${
+            className={`absolute inset-0 flex items-center justify-center rounded-md bg-black/60 transition-opacity ${
               isCurrentTrack ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
             }`}
           >
@@ -77,7 +77,7 @@ const CoinbaseNFTCardComponent: React.FC<CoinbaseNFTCardProps> = ({
           </button>
           {/* Playing indicator ring */}
           {isCurrentTrack && isPlaying && (
-            <div className="absolute inset-0 rounded-full border-2 border-cyan-400 animate-pulse" />
+            <div className="absolute inset-0 rounded-md border-2 border-cyan-400 animate-pulse" />
           )}
         </div>
 
