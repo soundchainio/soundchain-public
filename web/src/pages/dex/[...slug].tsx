@@ -561,7 +561,7 @@ function DEXDashboard() {
   const me = useMe()
   const { isMinting } = useHideBottomNavBar()
 
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
 
   // Determine initial view based on URL slug
   const getInitialView = () => {
