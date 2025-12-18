@@ -107,7 +107,7 @@ const PostDetailModal = ({ postId, onClose, handleOnPlayClicked }: { postId: str
 }
 
 export const Posts = ({ profileId }: PostsProps) => {
-  const [viewMode, setViewMode] = useState<ViewMode>('grid') // Default to compact grid view
+  const [viewMode, setViewMode] = useState<ViewMode>('list') // Default to list view for better content visibility
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [activePostId, setActivePostId] = useState<string | null>(null) // Track last interacted/playing post
   const { playlistState, currentSong, isPlaying } = useAudioPlayerContext()

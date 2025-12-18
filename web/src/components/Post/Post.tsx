@@ -185,6 +185,15 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                     alt="Post media"
                     className="w-full h-auto max-h-[600px] object-contain"
                     loading="eager"
+                    onError={(e) => {
+                      // Hide broken image and show placeholder
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        parent.innerHTML = '<div class="p-8 flex flex-col items-center justify-center text-neutral-500 bg-neutral-800/50"><span class="text-sm">Image unavailable</span></div>'
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -206,6 +215,26 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                   loop={true}
                   className="m-3"
                 />
+              )}
+
+              {/* Fallback for unknown media type - try to render as image */}
+              {uploadedMediaUrl && !['image', 'video', 'audio'].includes(uploadedMediaType || '') && (
+                <div className="relative w-full">
+                  <img
+                    src={uploadedMediaUrl}
+                    alt="Post media"
+                    className="w-full h-auto max-h-[600px] object-contain"
+                    loading="eager"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        parent.innerHTML = '<div class="p-8 flex flex-col items-center justify-center text-neutral-500 bg-neutral-800/50"><span class="text-sm">Media unavailable</span></div>'
+                      }
+                    }}
+                  />
+                </div>
               )}
             </div>
           )}
