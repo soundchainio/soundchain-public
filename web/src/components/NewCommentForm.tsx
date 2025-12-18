@@ -201,8 +201,16 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
                     </div>
                   )}
                 </div>
-                <button type="submit" disabled={isSubmitting} className="pt-1">
-                  <Send color={dirty && isValid ? 'green-blue' : undefined} />
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !dirty || !isValid}
+                  className={`pt-1 transition-opacity ${isSubmitting ? 'opacity-50' : ''}`}
+                >
+                  {isSubmitting ? (
+                    <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Send color={dirty && isValid ? 'green-blue' : undefined} />
+                  )}
                 </button>
               </div>
               {linkPreview && (() => {
