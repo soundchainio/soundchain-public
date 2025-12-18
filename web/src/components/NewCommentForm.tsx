@@ -25,6 +25,8 @@ interface Emoji {
 
 export interface NewCommentFormProps {
   postId: string
+  onSuccess?: () => void
+  compact?: boolean
 }
 
 interface FormValues {
@@ -37,7 +39,7 @@ const validationSchema: yup.Schema<FormValues> = yup.object().shape({
 
 const initialValues: FormValues = { body: '' }
 
-export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
+export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormProps) => {
   const me = useMe()
   const router = useRouter()
   const [linkPreview, setLinkPreview] = useState<string | undefined>(undefined)
@@ -95,7 +97,12 @@ export const NewCommentForm = ({ postId }: NewCommentFormProps) => {
       setLinkPreview(undefined)
     }
 
-    document.querySelector('#main')?.scrollTo(0, 0)
+    // Call onSuccess callback if provided (for modal usage)
+    if (onSuccess) {
+      onSuccess()
+    } else {
+      document.querySelector('#main')?.scrollTo(0, 0)
+    }
   }
 
   // Allow commenting for everyone - logged in users, guests with wallet, or anonymous

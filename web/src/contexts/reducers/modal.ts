@@ -33,6 +33,7 @@ import { SaleTypeLabel } from 'utils/SaleTypeLabel';
 export interface ModalState {
   showNewPost: boolean;
   showCommentModal: boolean;
+  commentModalPostId?: string;
   anyModalOpened: boolean;
   repostId?: string;
   editPostId?: string;
@@ -112,6 +113,7 @@ export interface ModalState {
 export const initialModalState = {
   showNewPost: false,
   showCommentModal: false,
+  commentModalPostId: undefined,
   anyModalOpened: false,
   repostId: undefined,
   editPostId: undefined,
@@ -192,6 +194,7 @@ export const modalReducer = (state: ModalState, action: Action) => {
       return {
         ...state,
         showCommentModal: (action.payload as ShowCommentModalPayload).show,
+        commentModalPostId: (action.payload as ShowCommentModalPayload).postId,
         anyModalOpened: (action.payload as ShowCommentModalPayload).show,
       };
     case ModalActionTypes.SET_REPOST_ID:

@@ -42,7 +42,7 @@ const commonClasses = 'text-white text-sm text-gray-80 text-center flex-1 flex j
 
 export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, isEphemeral, isOwner, postData }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
-  const { dispatchSetRepostId, dispatchShowPostModal } = useModalDispatch()
+  const { dispatchSetRepostId, dispatchShowPostModal, dispatchShowCommentModal } = useModalDispatch()
   const [postLink, setPostLink] = useState('')
   const [guestWallet, setGuestWallet] = useState<string | null>(null)
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked ?? false)
@@ -177,10 +177,13 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
         guestWallet={guestWallet}
       />
       <div className={commonClasses}>
-        <NextLink href={`/posts/${postId}#openComment`} className="flex items-center font-bold">
+        <button
+          className="flex items-center font-bold"
+          onClick={() => dispatchShowCommentModal({ show: true, postId })}
+        >
           <ChatBubbleLeftIcon className="mr-1 h-4 w-4" />
           Comment
-        </NextLink>
+        </button>
       </div>
       <div className={commonClasses}>
         <button className="flex items-center font-bold" onClick={onRepostClick}>

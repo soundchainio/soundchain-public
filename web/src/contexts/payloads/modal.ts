@@ -24,6 +24,7 @@ export interface ShowTransferNftConfirmationPayload {
 
 export interface ShowCommentModalPayload {
   show: boolean;
+  postId?: string;
 }
 
 export interface ShowUnderDevelopmentPayload {
