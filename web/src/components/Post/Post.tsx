@@ -8,7 +8,8 @@ import Image from 'next/image'
 import ReactPlayer from 'react-player'
 import { Clock } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { MediaProvider } from 'types/MediaProvider'
 
 // Helper to extract YouTube video ID and generate thumbnail URL
 const getYouTubeThumbnail = (url: string): string | null => {
@@ -273,15 +274,78 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 />
               </div>
             ) : (
-              // Simple iframe embed for Spotify, SoundCloud, Bandcamp
-              <iframe
-                className="w-full aspect-video bg-neutral-900"
-                src={post.mediaLink?.replace(/^http:/, 'https:')}
-                title="Media"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
-                allowFullScreen
-                loading="lazy"
-              />
+              // Iframe embed for Spotify, SoundCloud, Bandcamp, etc.
+              (() => {
+                const mediaType = IdentifySource(post.mediaLink).type
+                const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
+
+                // Check if URL is a proper embed URL (not raw page URL)
+                const isProperEmbed =
+                  mediaUrl.includes('EmbeddedPlayer') || // Bandcamp
+                  mediaUrl.includes('open.spotify.com/embed') || // Spotify
+                  mediaUrl.includes('w.soundcloud.com/player') || // SoundCloud
+                  mediaUrl.includes('player.vimeo.com') || // Vimeo
+                  mediaUrl.includes('youtube.com/embed') || // YouTube
+                  mediaUrl.includes('instagram.com/embed') || // Instagram
+                  mediaUrl.includes('tiktok.com/embed') || // TikTok
+                  mediaUrl.includes('platform.twitter.com/embed') || // X/Twitter
+                  mediaUrl.includes('player.twitch.tv') || // Twitch
+                  mediaUrl.includes('facebook.com/plugins') // Facebook
+
+                // If not a proper embed URL, show a clickable link card instead
+                if (!isProperEmbed) {
+                  const platformName = mediaType === MediaProvider.BANDCAMP ? 'Bandcamp' :
+                                      mediaType === MediaProvider.SPOTIFY ? 'Spotify' :
+                                      mediaType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
+                                      mediaType === MediaProvider.INSTAGRAM ? 'Instagram' :
+                                      mediaType === MediaProvider.TIKTOK ? 'TikTok' :
+                                      mediaType === MediaProvider.X ? 'X' : 'Link'
+                  const platformIcon = mediaType === MediaProvider.BANDCAMP ? '💿' :
+                                      mediaType === MediaProvider.SPOTIFY ? '🎵' :
+                                      mediaType === MediaProvider.SOUNDCLOUD ? '☁️' :
+                                      mediaType === MediaProvider.INSTAGRAM ? '📸' :
+                                      mediaType === MediaProvider.TIKTOK ? '🎭' :
+                                      mediaType === MediaProvider.X ? '𝕏' : '🔗'
+                  return (
+                    <a
+                      href={mediaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-4 bg-gradient-to-r from-neutral-800 to-neutral-900 hover:from-neutral-700 hover:to-neutral-800 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">{platformIcon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-semibold">Open on {platformName}</p>
+                          <p className="text-neutral-400 text-sm truncate">{mediaUrl}</p>
+                        </div>
+                        <span className="text-cyan-400">→</span>
+                      </div>
+                    </a>
+                  )
+                }
+
+                // Use appropriate heights for different embed types
+                const embedHeight = mediaType === MediaProvider.BANDCAMP ? '470px' :
+                                   mediaType === MediaProvider.SPOTIFY ? '352px' :
+                                   mediaType === MediaProvider.SOUNDCLOUD ? '166px' :
+                                   mediaType === MediaProvider.INSTAGRAM ? '480px' :
+                                   mediaType === MediaProvider.TIKTOK ? '575px' :
+                                   mediaType === MediaProvider.X ? '400px' : '315px'
+                return (
+                  <div className="relative w-full bg-neutral-900" style={{ minHeight: embedHeight }}>
+                    <iframe
+                      className="w-full"
+                      style={{ height: embedHeight }}
+                      src={mediaUrl}
+                      title="Media"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                      allowFullScreen
+                      loading="lazy"
+                    />
+                  </div>
+                )
+              })()
             )
           )}
 

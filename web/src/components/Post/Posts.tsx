@@ -281,14 +281,14 @@ export const Posts = ({ profileId }: PostsProps) => {
     <>
       {/* Post Form - Centered like Instagram */}
       <div className="flex justify-center px-4 mb-4">
-        <div className="w-full max-w-[470px]">
+        <div className="w-full max-w-[614px]">
           <PostFormTimeline />
         </div>
       </div>
 
       {/* View Mode Toggle & Now Playing Tracker */}
       <div className="flex justify-center px-4 mb-3">
-        <div className="w-full max-w-[470px] flex justify-between items-center">
+        <div className="w-full max-w-[614px] flex justify-between items-center">
         {/* Now Playing Jump Button - Only shows when a track is playing */}
         <div className="flex-1">
           {(playingPostId || activePostId) && (
@@ -481,7 +481,7 @@ const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
 
   return (
     <div ref={rowRef} className="flex justify-center px-4">
-      <div className="w-full max-w-[470px]">
+      <div className="w-full max-w-[614px]">
         <Post key={data[index].id} post={data[index]} handleOnPlayClicked={handleOnPlayClicked} />
       </div>
     </div>

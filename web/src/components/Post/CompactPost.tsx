@@ -240,17 +240,45 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                 vimeo: { playerOptions: { responsive: true, playsinline: true } },
               }}
             />
-          ) : (
-            // Direct iframe for Spotify/SoundCloud/Bandcamp - allows user interaction
-            <iframe
-              src={post.mediaLink!}
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-              className="w-full h-full"
-            />
-          )}
+          ) : (() => {
+            const mediaUrl = post.mediaLink!.replace(/^http:/, 'https:')
+            // Check if URL is a proper embed URL
+            const isProperEmbed =
+              mediaUrl.includes('EmbeddedPlayer') || // Bandcamp
+              mediaUrl.includes('open.spotify.com/embed') || // Spotify
+              mediaUrl.includes('w.soundcloud.com/player') || // SoundCloud
+              mediaUrl.includes('youtube.com/embed') || // YouTube
+              mediaUrl.includes('player.vimeo.com') // Vimeo
+
+            if (!isProperEmbed) {
+              // Show link instead of broken iframe
+              return (
+                <a
+                  href={mediaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900 hover:from-neutral-700 transition-colors p-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <span className="text-4xl mb-2">{platformBrand.icon}</span>
+                  <p className="text-white font-semibold text-sm">Open externally</p>
+                  <p className="text-cyan-400 text-xs">Tap to view →</p>
+                </a>
+              )
+            }
+
+            // Proper embed URL - show iframe
+            return (
+              <iframe
+                src={mediaUrl}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                className="w-full h-full"
+              />
+            )
+          })()}
           <button
             onClick={(e) => { e.stopPropagation(); setIsPlaying(false) }}
             className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/80 backdrop-blur flex items-center justify-center hover:bg-black transition-colors"
