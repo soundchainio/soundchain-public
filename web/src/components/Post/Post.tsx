@@ -94,9 +94,9 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   }
 
   return (
-    <article className="bg-neutral-900 overflow-hidden border-b border-neutral-800/50">
-      {/* Header - Instagram style compact */}
-      <header className="flex items-center justify-between px-4 py-3">
+    <article className="bg-black border border-neutral-800 rounded-lg overflow-hidden mb-4">
+      {/* Header - Instagram style */}
+      <header className="flex items-center justify-between px-3 py-2.5">
         {isGuest ? (
           // Guest post header - wallet address only
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -155,15 +155,13 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           </div>
         )}
-        {canEdit && (
-          <button
-            aria-label="More options"
-            className="p-2 -mr-1 rounded-full hover:bg-neutral-800 transition-colors"
-            onClick={onEllipsisClick}
-          >
-            <Ellipsis className="h-4 w-4 text-neutral-400" />
-          </button>
-        )}
+        <button
+          aria-label="More options"
+          className="p-1.5 rounded-full hover:bg-neutral-800 transition-colors"
+          onClick={onEllipsisClick}
+        >
+          <Ellipsis className="h-5 w-5 text-neutral-400" />
+        </button>
       </header>
 
       {/* Body text - Instagram style padding */}

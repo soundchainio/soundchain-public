@@ -279,11 +279,16 @@ export const Posts = ({ profileId }: PostsProps) => {
 
   return (
     <>
-      {/* Post Form */}
-      <PostFormTimeline />
+      {/* Post Form - Centered like Instagram */}
+      <div className="flex justify-center px-4 mb-4">
+        <div className="w-full max-w-[470px]">
+          <PostFormTimeline />
+        </div>
+      </div>
 
       {/* View Mode Toggle & Now Playing Tracker */}
-      <div className="flex justify-between items-center mb-3 px-2">
+      <div className="flex justify-center px-4 mb-3">
+        <div className="w-full max-w-[470px] flex justify-between items-center">
         {/* Now Playing Jump Button - Only shows when a track is playing */}
         <div className="flex-1">
           {(playingPostId || activePostId) && (
@@ -349,6 +354,7 @@ export const Posts = ({ profileId }: PostsProps) => {
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
+        </div>
         </div>
       </div>
 
@@ -474,8 +480,10 @@ const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
   }
 
   return (
-    <div ref={rowRef}>
-      <Post key={data[index].id} post={data[index]} handleOnPlayClicked={handleOnPlayClicked} />
+    <div ref={rowRef} className="flex justify-center px-4">
+      <div className="w-full max-w-[470px]">
+        <Post key={data[index].id} post={data[index]} handleOnPlayClicked={handleOnPlayClicked} />
+      </div>
     </div>
   )
 }
