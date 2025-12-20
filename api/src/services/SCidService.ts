@@ -7,6 +7,7 @@
 import mongoose from 'mongoose';
 import { SCid, SCidModel, SCidStatus, SCidTransfer } from '../models/SCid';
 import { SCidGenerator, ChainCode, CHAIN_ID_MAP } from '../utils/SCidGenerator';
+import { SCidContract, OnChainRegistrationResult } from '../utils/SCidContract';
 import { Context } from '../types/Context';
 import { Service } from './Service';
 
@@ -165,6 +166,102 @@ export class SCidService extends Service {
       },
       { new: true }
     ).lean();
+  }
+
+  /**
+   * Register SCid on-chain via smart contract
+   * This is the main method for on-chain registration after off-chain creation
+   */
+  async registerOnChain(
+    scidCode: string,
+    ownerWallet: string,
+    tokenId: number,
+    nftContract: string,
+    metadataHash?: string,
+    chainId: number = 137
+  ): Promise<OnChainRegistrationResult & { scid?: SCid }> {
+    // Get the SCid record
+    const scidRecord = await this.getBySCid(scidCode);
+    if (!scidRecord) {
+      return { success: false, error: `SCid not found: ${scidCode}` };
+    }
+
+    // Check if already registered
+    if (scidRecord.status === SCidStatus.REGISTERED) {
+      return {
+        success: false,
+        error: `SCid already registered on-chain: ${scidRecord.transactionHash}`,
+      };
+    }
+
+    // Check if contract is configured for this chain
+    const scidContract = new SCidContract(chainId);
+    if (!scidContract.isConfigured()) {
+      console.warn(`[SCidService] SCidRegistry not deployed on chain ${chainId}. Skipping on-chain registration.`);
+      return {
+        success: false,
+        error: `SCidRegistry not deployed on chain ${chainId}`,
+      };
+    }
+
+    // Initialize with signer
+    const privateKey = process.env.SCID_REGISTRY_SIGNER_KEY;
+    if (!privateKey) {
+      console.warn('[SCidService] SCID_REGISTRY_SIGNER_KEY not set. Skipping on-chain registration.');
+      return {
+        success: false,
+        error: 'On-chain registration signer not configured',
+      };
+    }
+
+    scidContract.initWithSigner(privateKey);
+
+    // Register on-chain
+    const result = await scidContract.register(
+      scidCode,
+      ownerWallet,
+      tokenId,
+      nftContract,
+      metadataHash || scidRecord.metadataHash || ''
+    );
+
+    if (result.success && result.transactionHash && result.blockNumber) {
+      // Update database record
+      const contractAddress = scidContract.getContractAddress();
+      const updatedScid = await this.markRegistered(
+        scidCode,
+        result.transactionHash,
+        result.blockNumber,
+        contractAddress || ''
+      );
+
+      console.log(`[SCidService] SCid ${scidCode} registered on-chain: ${result.transactionHash}`);
+
+      return {
+        ...result,
+        scid: updatedScid || undefined,
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Verify SCid ownership on-chain
+   */
+  async verifyOnChainOwnership(scidCode: string, claimedOwner: string, chainId: number = 137): Promise<boolean> {
+    const scidContract = new SCidContract(chainId);
+    if (!scidContract.isConfigured()) return false;
+    return scidContract.verifyOwnership(scidCode, claimedOwner);
+  }
+
+  /**
+   * Check if SCid is registered on-chain
+   */
+  async isRegisteredOnChain(scidCode: string, chainId: number = 137): Promise<boolean> {
+    const scidContract = new SCidContract(chainId);
+    if (!scidContract.isConfigured()) return false;
+    return scidContract.isRegistered(scidCode);
   }
 
   /**
