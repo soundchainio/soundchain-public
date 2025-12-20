@@ -10,7 +10,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import WaveSurfer from 'wavesurfer.js'
+import type WaveSurferType from 'wavesurfer.js'
 import { MessageCircle, Send, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useMe } from 'hooks/useMe'
@@ -145,7 +145,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   className = '',
 }) => {
   const waveformRef = useRef<HTMLDivElement>(null)
-  const wavesurfer = useRef<WaveSurfer | null>(null)
+  const wavesurfer = useRef<WaveSurferType | null>(null)
   const me = useMe()
 
   const [isReady, setIsReady] = useState(false)
@@ -171,37 +171,49 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
     return gradient
   }, [])
 
-  // Initialize WaveSurfer
+  // Initialize WaveSurfer (dynamic import for SSR compatibility)
   useEffect(() => {
     if (!waveformRef.current) return
 
-    wavesurfer.current = WaveSurfer.create({
-      container: waveformRef.current,
-      waveColor: '#333',
-      progressColor: buildWaveformGradient(),
-      cursorColor: '#62AAFF',
-      cursorWidth: 2,
-      barWidth: 2,
-      barGap: 1,
-      barRadius: 2,
-      height: 80,
-      normalize: true,
-      hideScrollbar: true,
-      interact: true,
-    })
+    let mounted = true
 
-    wavesurfer.current.load(audioUrl)
+    const initWaveSurfer = async () => {
+      // Dynamic import to avoid SSR issues
+      const WaveSurfer = (await import('wavesurfer.js')).default
 
-    wavesurfer.current.on('ready', () => {
-      setIsReady(true)
-    })
+      if (!mounted || !waveformRef.current) return
 
-    wavesurfer.current.on('click', (relativeX: number) => {
-      const clickTime = relativeX * duration
-      if (onSeek) onSeek(clickTime)
-    })
+      wavesurfer.current = WaveSurfer.create({
+        container: waveformRef.current,
+        waveColor: '#333',
+        progressColor: buildWaveformGradient(),
+        cursorColor: '#62AAFF',
+        cursorWidth: 2,
+        barWidth: 2,
+        barGap: 1,
+        barRadius: 2,
+        height: 80,
+        normalize: true,
+        hideScrollbar: true,
+        interact: true,
+      })
+
+      wavesurfer.current.load(audioUrl)
+
+      wavesurfer.current.on('ready', () => {
+        if (mounted) setIsReady(true)
+      })
+
+      wavesurfer.current.on('click', (relativeX: number) => {
+        const clickTime = relativeX * duration
+        if (onSeek) onSeek(clickTime)
+      })
+    }
+
+    initWaveSurfer()
 
     return () => {
+      mounted = false
       wavesurfer.current?.destroy()
     }
   }, [audioUrl, duration, buildWaveformGradient, onSeek])
