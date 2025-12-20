@@ -73,6 +73,9 @@ import {
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
+const CreateModal = dynamic(() => import('components/modals/CreateModal'), { ssr: false })
+const PostModal = dynamic(() => import('components/Post/PostModal').then(mod => ({ default: mod.PostModal })), { ssr: false })
+const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActionsModal').then(mod => ({ default: mod.AuthorActionsModal })), { ssr: false })
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
 const Tracks = dynamic(() => import('components/profile/Tracks').then(mod => ({ default: mod.Tracks })), { ssr: false })
 const GuestPostModal = dynamic(() => import('components/Post/GuestPostModal').then(mod => ({ default: mod.GuestPostModal })), { ssr: false })
@@ -4452,7 +4455,14 @@ DEXDashboard.getLayout = (page: ReactElement) => {
                   }}
                 />
                 {/* Portal container for modals - required for Posts video/music embed modals */}
-                <div id="modals"></div>
+                <div id="modals">
+                  {/* NFT Minting Modal */}
+                  <CreateModal />
+                  {/* Post Creation Modal */}
+                  <PostModal />
+                  {/* Post Actions (edit/delete) Modal */}
+                  <AuthorActionsModal />
+                </div>
               </TrackProvider>
             </AudioPlayerProvider>
           </LayoutContextProvider>
