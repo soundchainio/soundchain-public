@@ -2,12 +2,40 @@ import { memo, useState, useRef } from 'react'
 import { FastAudioPlayer } from '../FastAudioPlayer'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
+import ReactPlayer from 'react-player'
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
 import { Play, Heart, MessageCircle, Share2, BadgeCheck, Volume2, VolumeX } from 'lucide-react'
-import { IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from '../EmoteRenderer'
+
+// Helper to extract YouTube video ID and generate thumbnail URL
+const getYouTubeThumbnail = (url: string): string | null => {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
+  }
+  return null
+}
+
+// Get embed height for platform (scaled for compact cards)
+const getCompactEmbedHeight = (mediaType: string) => {
+  switch (mediaType) {
+    // Audio platforms
+    case MediaProvider.BANDCAMP: return '320px'
+    case MediaProvider.SPOTIFY: return '280px'
+    case MediaProvider.SOUNDCLOUD: return '166px'
+    // Social platforms
+    case MediaProvider.INSTAGRAM: return '320px'
+    case MediaProvider.TIKTOK: return '400px'
+    case MediaProvider.X: return '280px'
+    case MediaProvider.TWITCH: return '280px'
+    case MediaProvider.DISCORD: return '280px'
+    case MediaProvider.CUSTOM_HTML: return '280px'
+    default: return '200px'
+  }
+}
 
 
 interface CompactPostProps {
@@ -17,59 +45,6 @@ interface CompactPostProps {
   listView?: boolean
 }
 
-// Platform brand colors and logos for premium Web3 aesthetic
-const PLATFORM_BRANDS: Record<string, { gradient: string; icon: string; glow: string }> = {
-  [MediaProvider.YOUTUBE]: {
-    gradient: 'from-red-600 via-red-500 to-red-700',
-    icon: '▶️',
-    glow: 'shadow-red-500/50'
-  },
-  [MediaProvider.SPOTIFY]: {
-    gradient: 'from-green-500 via-emerald-400 to-green-600',
-    icon: '🎵',
-    glow: 'shadow-green-500/50'
-  },
-  [MediaProvider.SOUNDCLOUD]: {
-    gradient: 'from-orange-500 via-amber-400 to-orange-600',
-    icon: '☁️',
-    glow: 'shadow-orange-500/50'
-  },
-  [MediaProvider.BANDCAMP]: {
-    gradient: 'from-teal-500 via-cyan-400 to-teal-600',
-    icon: '💿',
-    glow: 'shadow-teal-500/50'
-  },
-  [MediaProvider.VIMEO]: {
-    gradient: 'from-cyan-500 via-blue-400 to-cyan-600',
-    icon: '🎬',
-    glow: 'shadow-cyan-500/50'
-  },
-  [MediaProvider.INSTAGRAM]: {
-    gradient: 'from-pink-500 via-purple-500 to-orange-400',
-    icon: '📸',
-    glow: 'shadow-pink-500/50'
-  },
-  [MediaProvider.TIKTOK]: {
-    gradient: 'from-black via-pink-500 to-cyan-400',
-    icon: '🎭',
-    glow: 'shadow-pink-500/50'
-  },
-  [MediaProvider.TWITCH]: {
-    gradient: 'from-purple-600 via-violet-500 to-purple-700',
-    icon: '🎮',
-    glow: 'shadow-purple-500/50'
-  },
-  [MediaProvider.FACEBOOK]: {
-    gradient: 'from-blue-600 via-blue-500 to-blue-700',
-    icon: '📘',
-    glow: 'shadow-blue-500/50'
-  },
-  [MediaProvider.X]: {
-    gradient: 'from-gray-800 via-gray-700 to-black',
-    icon: '𝕏',
-    glow: 'shadow-gray-500/50'
-  },
-}
 
 const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView = false }: CompactPostProps) => {
   const [isHovered, setIsHovered] = useState(false)
@@ -96,7 +71,6 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   // Identify media platform
   const mediaSource = post.mediaLink ? IdentifySource(post.mediaLink) : null
   const platformType = mediaSource?.type || 'unknown'
-  const platformBrand = PLATFORM_BRANDS[platformType] || { gradient: 'from-cyan-600 via-purple-500 to-pink-500', icon: '🔗', glow: 'shadow-cyan-500/50' }
 
   // Track artwork
   const trackArtwork = hasTrack ? post.track?.artworkUrl : null
@@ -181,29 +155,39 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
         </>
       )}
 
-      {/* Media link - show link card (tapping opens external link) */}
-      {!hasUploadedMedia && hasMediaLink && !hasTrack ? (
-        <a
-          href={post.mediaLink!.replace(/^http:/, 'https:')}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`w-full h-full flex flex-col items-center justify-center bg-gradient-to-br ${platformBrand.gradient} hover:opacity-80 transition-opacity`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <span className="text-5xl mb-2 drop-shadow-lg">{platformBrand.icon}</span>
-          <p className="text-white font-bold text-sm drop-shadow">
-            {platformType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
-             platformType === MediaProvider.SPOTIFY ? 'Spotify' :
-             platformType === MediaProvider.BANDCAMP ? 'Bandcamp' :
-             platformType === MediaProvider.YOUTUBE ? 'YouTube' :
-             platformType === MediaProvider.VIMEO ? 'Vimeo' :
-             platformType === MediaProvider.INSTAGRAM ? 'Instagram' :
-             platformType === MediaProvider.TIKTOK ? 'TikTok' :
-             platformType === MediaProvider.X ? 'X' :
-             platformType === MediaProvider.TWITCH ? 'Twitch' : 'Link'}
-          </p>
-          <p className="text-white/70 text-xs mt-1">Tap to open →</p>
-        </a>
+      {/* Media link - Legacy-style iframe embeds */}
+      {!hasUploadedMedia && hasMediaLink && post.mediaLink && !hasTrack ? (
+        <div className="w-full h-full" onClick={(e) => e.stopPropagation()}>
+          {hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
+            // YouTube, Vimeo, Facebook - use ReactPlayer (legacy style)
+            <ReactPlayer
+              width="100%"
+              height="100%"
+              url={post.mediaLink}
+              playsinline
+              controls
+              light={getYouTubeThumbnail(post.mediaLink) || true}
+              pip
+              config={{
+                youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                facebook: { appId: '' },
+              }}
+            />
+          ) : (
+            // All other platforms (audio + social) - use iframe embed (legacy style)
+            <iframe
+              frameBorder="0"
+              className="w-full h-full bg-neutral-900"
+              style={{ minHeight: getCompactEmbedHeight(platformType) }}
+              src={post.mediaLink.replace(/^http:/, 'https:')}
+              title="Media"
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          )}
+        </div>
       ) : !hasUploadedMedia && hasTrack && (
         <>
           {/* Track artwork */}
