@@ -46,7 +46,6 @@ interface PostProps {
 const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const me = useMe()
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
-  const [mediaLoaded, setMediaLoaded] = useState(false)
 
   if (!post) return <PostSkeleton />
 
@@ -255,54 +254,62 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           )}
 
-          {/* Embedded video/link */}
+          {/* Embedded video/link - Legacy style with new platform support */}
           {post.mediaLink && (
             hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-              // YouTube, Vimeo, Facebook - use ReactPlayer with thumbnail support
-              <div className="relative w-full aspect-video">
-                <ReactPlayer
-                  width="100%"
-                  height="100%"
-                  url={post.mediaLink}
-                  playsinline
-                  controls
-                  light={getYouTubeThumbnail(post.mediaLink) || true}
-                  pip
-                  config={{
-                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
-                  }}
-                />
-              </div>
+              // YouTube, Vimeo, Facebook - use ReactPlayer (legacy: 600px height)
+              <ReactPlayer
+                width="100%"
+                height="600px"
+                style={{ marginTop: '1rem' }}
+                url={post.mediaLink}
+                playsinline
+                controls
+                light={getYouTubeThumbnail(post.mediaLink) || true}
+                pip
+                config={{
+                  youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                  vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                  facebook: { appId: '' },
+                }}
+              />
             ) : (
-              // Audio/other platforms - use iframe embed directly
+              // All other platforms (audio + social) - use iframe embed (legacy style)
               (() => {
                 const mediaType = IdentifySource(post.mediaLink).type
                 const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
 
-                // Platform-specific heights for best display
-                const embedHeight = mediaType === MediaProvider.BANDCAMP ? '470px' :
-                                   mediaType === MediaProvider.SPOTIFY ? '352px' :
-                                   mediaType === MediaProvider.SOUNDCLOUD ? '166px' : '315px'
+                // Platform-specific embed heights (legacy was min-h-[250px] for all)
+                // New platforms get optimized heights
+                const getEmbedHeight = () => {
+                  switch (mediaType) {
+                    // Audio platforms (optimized)
+                    case MediaProvider.BANDCAMP: return '470px'
+                    case MediaProvider.SPOTIFY: return '352px'
+                    case MediaProvider.SOUNDCLOUD: return '166px'
+                    // Social platforms (new - optimized for each)
+                    case MediaProvider.INSTAGRAM: return '540px'  // Instagram posts are taller
+                    case MediaProvider.TIKTOK: return '740px'     // TikTok vertical videos
+                    case MediaProvider.X: return '400px'          // Twitter/X tweets
+                    case MediaProvider.TWITCH: return '378px'     // Twitch 16:9
+                    case MediaProvider.DISCORD: return '400px'    // Discord widget
+                    case MediaProvider.CUSTOM_HTML: return '400px'
+                    default: return '250px'  // Legacy fallback
+                  }
+                }
+                const embedHeight = getEmbedHeight()
 
                 return (
-                  <div className="relative w-full" style={{ minHeight: embedHeight }}>
-                    {!mediaLoaded && (
-                      <div className="absolute inset-0 bg-neutral-800 animate-pulse flex items-center justify-center">
-                        <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-                    <iframe
-                      className={`w-full transition-opacity duration-300 ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
-                      style={{ height: embedHeight, border: 'none' }}
-                      src={mediaUrl}
-                      title="Media embed"
-                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
-                      allowFullScreen
-                      referrerPolicy="no-referrer-when-downgrade"
-                      onLoad={() => setMediaLoaded(true)}
-                    />
-                  </div>
+                  <iframe
+                    frameBorder="0"
+                    className="mt-4 w-full bg-neutral-900"
+                    style={{ minHeight: embedHeight }}
+                    src={mediaUrl}
+                    title="Media"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                    allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
                 )
               })()
             )

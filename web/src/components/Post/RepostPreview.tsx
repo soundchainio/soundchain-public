@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import { Track, usePostQuery } from 'lib/graphql'
 import { MediaProvider } from 'types/MediaProvider'
@@ -20,7 +19,6 @@ interface RepostPreviewProps {
 export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: RepostPreviewProps) => {
   const { data } = usePostQuery({ variables: { id: postId } })
   const post = data?.post
-  const [mediaLoaded, setMediaLoaded] = useState(false)
 
   if (!post) return <RepostPreviewSkeleton />
 
@@ -47,57 +45,65 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
             <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">
               <EmoteRenderer text={post.body || ''} />
             </pre>
-            {post.mediaLink && (() => {
-              const mediaType = IdentifySource(post.mediaLink).type
-              const mediaUrl = post.mediaLink.replace(/^http:/, 'https:')
+            {/* Embedded media - Legacy style with all platform support */}
+            {post.mediaLink && (
+              hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
+                // YouTube, Vimeo, Facebook - use ReactPlayer (legacy style)
+                <ReactPlayer
+                  width="100%"
+                  height="400px"
+                  style={{ marginTop: '1rem' }}
+                  url={post.mediaLink}
+                  playsinline
+                  controls
+                  light={true}
+                  pip
+                  config={{
+                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                    facebook: { appId: '' },
+                  }}
+                />
+              ) : (
+                // All other platforms - iframe embed (legacy style with new platforms)
+                (() => {
+                  const mediaType = IdentifySource(post.mediaLink).type
+                  const mediaUrl = post.mediaLink.replace(/^http:/, 'https:')
 
-              // Platform-specific embed heights
-              const embedHeight = mediaType === MediaProvider.BANDCAMP ? '470px' :
-                                 mediaType === MediaProvider.SPOTIFY ? '352px' :
-                                 mediaType === MediaProvider.SOUNDCLOUD ? '166px' : '315px'
+                  // Platform-specific heights (legacy + new platforms)
+                  const getEmbedHeight = () => {
+                    switch (mediaType) {
+                      // Audio platforms
+                      case MediaProvider.BANDCAMP: return '470px'
+                      case MediaProvider.SPOTIFY: return '352px'
+                      case MediaProvider.SOUNDCLOUD: return '166px'
+                      // Social platforms (new)
+                      case MediaProvider.INSTAGRAM: return '540px'
+                      case MediaProvider.TIKTOK: return '600px'
+                      case MediaProvider.X: return '350px'
+                      case MediaProvider.TWITCH: return '300px'
+                      case MediaProvider.DISCORD: return '350px'
+                      case MediaProvider.CUSTOM_HTML: return '350px'
+                      default: return '250px'
+                    }
+                  }
+                  const embedHeight = getEmbedHeight()
 
-              // Use ReactPlayer for YouTube/Vimeo with thumbnail support
-              if (hasLazyLoadWithThumbnailSupport(post.mediaLink)) {
-                return (
-                  <div className="relative w-full aspect-video mt-4 rounded-lg overflow-hidden">
-                    <ReactPlayer
-                      width="100%"
-                      height="100%"
-                      url={post.mediaLink}
-                      playsinline
-                      controls
-                      light={true}
-                      pip
-                      config={{
-                        youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-                        vimeo: { playerOptions: { responsive: true, playsinline: true } },
-                      }}
+                  return (
+                    <iframe
+                      frameBorder="0"
+                      className="mt-4 w-full bg-neutral-900 rounded-lg"
+                      style={{ minHeight: embedHeight }}
+                      src={mediaUrl}
+                      title="Media"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
                     />
-                  </div>
-                )
-              }
-
-              // Use iframe for audio platforms (Spotify, SoundCloud, Bandcamp)
-              return (
-                <div className="relative w-full mt-4 rounded-lg overflow-hidden" style={{ minHeight: embedHeight }}>
-                  {!mediaLoaded && (
-                    <div className="absolute inset-0 bg-neutral-800 animate-pulse flex items-center justify-center">
-                      <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  )}
-                  <iframe
-                    className={`w-full transition-opacity duration-300 ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    style={{ height: embedHeight, border: 'none' }}
-                    src={mediaUrl}
-                    title="Media embed"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
-                    allowFullScreen
-                    referrerPolicy="no-referrer-when-downgrade"
-                    onLoad={() => setMediaLoaded(true)}
-                  />
-                </div>
+                  )
+                })()
               )
-            })()}
+            )}
             {post.track && !post.track.deleted && (
               <MiniAudioPlayer
                 song={{
