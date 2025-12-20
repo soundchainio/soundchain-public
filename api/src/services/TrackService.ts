@@ -305,6 +305,22 @@ export class TrackService extends ModelService<typeof Track> {
     track.muxAsset = { id: asset.id, playbackId: asset.playback_ids[0].id };
 
     await track.save();
+
+    // Auto-generate SCid for the new track
+    try {
+      const walletAddress = data.nftData?.minter || data.nftData?.owner;
+      await this.context.scidService.register({
+        trackId: track._id.toString(),
+        profileId,
+        walletAddress,
+        chainId: 137, // Polygon by default
+      });
+      console.log(`[SCid] Auto-registered SCid for track ${track._id}`);
+    } catch (scidError) {
+      // Log but don't fail track creation if SCid registration fails
+      console.error(`[SCid] Failed to auto-register SCid for track ${track._id}:`, scidError);
+    }
+
     return track;
   }
 

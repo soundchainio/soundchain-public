@@ -3,6 +3,7 @@ import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } 
 import { CurrentUser } from '../decorators/current-user';
 import { FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { ListingItem } from '../models/ListingItem';
+import { SCid } from '../models/SCid';
 import { Track } from '../models/Track';
 import { TrackEdition } from '../models/TrackEdition';
 import { User } from '../models/User';
@@ -35,6 +36,14 @@ import { GenreTracks } from '../types/GenreTracks';
 
 @Resolver(Track)
 export class TrackResolver {
+  /**
+   * Get the SCid (SoundChain ID) for this track
+   */
+  @FieldResolver(() => SCid, { nullable: true })
+  async scid(@Ctx() { scidService }: Context, @Root() { _id }: Track): Promise<SCid | null> {
+    return scidService.getByTrackId(_id.toString());
+  }
+
   @FieldResolver(() => String)
   playbackUrl(@Root() { muxAsset }: Track): string {
     return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
