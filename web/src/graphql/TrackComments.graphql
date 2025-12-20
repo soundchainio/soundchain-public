@@ -1,23 +1,41 @@
 query TrackComments($trackId: String!, $page: PageInput) {
   trackComments(trackId: $trackId, page: $page) {
     nodes {
-      id
-      text
-      timestamp
-      likeCount
-      isPinned
-      createdAt
-      profile {
-        id
-        displayName
-        profilePicture
-        userHandle
-      }
+      ...TrackCommentComponentFields
     }
     pageInfo {
-      totalCount
-      hasNextPage
       hasPreviousPage
+      hasNextPage
+      startCursor
+      endCursor
     }
+  }
+}
+
+query TrackCommentCount($trackId: String!) {
+  trackCommentCount(trackId: $trackId)
+}
+
+query TrackComment($commentId: String!) {
+  trackComment(commentId: $commentId) {
+    ...TrackCommentComponentFields
+  }
+}
+
+mutation CreateTrackComment($trackId: String!, $text: String!, $timestamp: Float!, $replyToId: String) {
+  createTrackComment(trackId: $trackId, text: $text, timestamp: $timestamp, replyToId: $replyToId) {
+    ...TrackCommentComponentFields
+  }
+}
+
+mutation DeleteTrackComment($commentId: String!) {
+  deleteTrackComment(commentId: $commentId) {
+    ...TrackCommentComponentFields
+  }
+}
+
+mutation LikeTrackComment($commentId: String!) {
+  likeTrackComment(commentId: $commentId) {
+    ...TrackCommentComponentFields
   }
 }

@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import { Track, usePostQuery } from 'lib/graphql'
 import { MediaProvider } from 'types/MediaProvider'
-import { IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { Avatar } from '../Avatar'
 import { DisplayName } from '../DisplayName'
 import { EmoteRenderer } from '../EmoteRenderer'
@@ -9,6 +10,7 @@ import { MiniAudioPlayer } from '../MiniAudioPlayer'
 import { NotAvailableMessage } from '../NotAvailableMessage'
 import { RepostPreviewSkeleton } from '../RepostPreviewSkeleton'
 import { Timestamp } from '../Timestamp'
+import ReactPlayer from 'react-player'
 
 interface RepostPreviewProps {
   postId: string
@@ -18,6 +20,7 @@ interface RepostPreviewProps {
 export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: RepostPreviewProps) => {
   const { data } = usePostQuery({ variables: { id: postId } })
   const post = data?.post
+  const [mediaLoaded, setMediaLoaded] = useState(false)
 
   if (!post) return <RepostPreviewSkeleton />
 
@@ -45,49 +48,54 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
               <EmoteRenderer text={post.body || ''} />
             </pre>
             {post.mediaLink && (() => {
-              const mediaSource = IdentifySource(post.mediaLink)
-              const mediaType = mediaSource.type
+              const mediaType = IdentifySource(post.mediaLink).type
               const mediaUrl = post.mediaLink.replace(/^http:/, 'https:')
 
-              // Platform name and icon
-              const platformName = mediaType === MediaProvider.BANDCAMP ? 'Bandcamp' :
-                                  mediaType === MediaProvider.SPOTIFY ? 'Spotify' :
-                                  mediaType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
-                                  mediaType === MediaProvider.YOUTUBE ? 'YouTube' :
-                                  mediaType === MediaProvider.VIMEO ? 'Vimeo' :
-                                  mediaType === MediaProvider.INSTAGRAM ? 'Instagram' :
-                                  mediaType === MediaProvider.TIKTOK ? 'TikTok' :
-                                  mediaType === MediaProvider.X ? 'X' :
-                                  mediaType === MediaProvider.TWITCH ? 'Twitch' :
-                                  mediaType === MediaProvider.DISCORD ? 'Discord' : 'Link'
-              const platformIcon = mediaType === MediaProvider.BANDCAMP ? '💿' :
-                                  mediaType === MediaProvider.SPOTIFY ? '🎵' :
-                                  mediaType === MediaProvider.SOUNDCLOUD ? '☁️' :
-                                  mediaType === MediaProvider.YOUTUBE ? '▶️' :
-                                  mediaType === MediaProvider.VIMEO ? '🎬' :
-                                  mediaType === MediaProvider.INSTAGRAM ? '📸' :
-                                  mediaType === MediaProvider.TIKTOK ? '🎭' :
-                                  mediaType === MediaProvider.X ? '𝕏' :
-                                  mediaType === MediaProvider.TWITCH ? '🎮' :
-                                  mediaType === MediaProvider.DISCORD ? '💬' : '🔗'
+              // Platform-specific embed heights
+              const embedHeight = mediaType === MediaProvider.BANDCAMP ? '470px' :
+                                 mediaType === MediaProvider.SPOTIFY ? '352px' :
+                                 mediaType === MediaProvider.SOUNDCLOUD ? '166px' : '315px'
 
-              // Show link card for all platforms
-              return (
-                <a
-                  href={mediaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 block p-4 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{platformIcon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold">Open on {platformName}</p>
-                      <p className="text-neutral-400 text-sm truncate">{mediaUrl}</p>
-                    </div>
-                    <span className="text-cyan-400">→</span>
+              // Use ReactPlayer for YouTube/Vimeo with thumbnail support
+              if (hasLazyLoadWithThumbnailSupport(post.mediaLink)) {
+                return (
+                  <div className="relative w-full aspect-video mt-4 rounded-lg overflow-hidden">
+                    <ReactPlayer
+                      width="100%"
+                      height="100%"
+                      url={post.mediaLink}
+                      playsinline
+                      controls
+                      light={true}
+                      pip
+                      config={{
+                        youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                        vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                      }}
+                    />
                   </div>
-                </a>
+                )
+              }
+
+              // Use iframe for audio platforms (Spotify, SoundCloud, Bandcamp)
+              return (
+                <div className="relative w-full mt-4 rounded-lg overflow-hidden" style={{ minHeight: embedHeight }}>
+                  {!mediaLoaded && (
+                    <div className="absolute inset-0 bg-neutral-800 animate-pulse flex items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                  <iframe
+                    className={`w-full transition-opacity duration-300 ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    style={{ height: embedHeight, border: 'none' }}
+                    src={mediaUrl}
+                    title="Media embed"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                    allowFullScreen
+                    referrerPolicy="no-referrer-when-downgrade"
+                    onLoad={() => setMediaLoaded(true)}
+                  />
+                </div>
               )
             })()}
             {post.track && !post.track.deleted && (

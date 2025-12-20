@@ -1,10 +1,9 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
-import Image from 'next/image'
 import ReactPlayer from 'react-player'
 import { Clock } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
@@ -47,6 +46,7 @@ interface PostProps {
 const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const me = useMe()
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
+  const [mediaLoaded, setMediaLoaded] = useState(false)
 
   if (!post) return <PostSkeleton />
 
@@ -258,6 +258,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           {/* Embedded video/link */}
           {post.mediaLink && (
             hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
+              // YouTube, Vimeo, Facebook - use ReactPlayer with thumbnail support
               <div className="relative w-full aspect-video">
                 <ReactPlayer
                   width="100%"
@@ -274,49 +275,34 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 />
               </div>
             ) : (
-              // Show link card for all non-video platforms (Spotify, SoundCloud, Bandcamp, etc.)
+              // Audio/other platforms - use iframe embed directly
               (() => {
                 const mediaType = IdentifySource(post.mediaLink).type
                 const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
 
-                const platformName = mediaType === MediaProvider.BANDCAMP ? 'Bandcamp' :
-                                    mediaType === MediaProvider.SPOTIFY ? 'Spotify' :
-                                    mediaType === MediaProvider.SOUNDCLOUD ? 'SoundCloud' :
-                                    mediaType === MediaProvider.INSTAGRAM ? 'Instagram' :
-                                    mediaType === MediaProvider.TIKTOK ? 'TikTok' :
-                                    mediaType === MediaProvider.X ? 'X' :
-                                    mediaType === MediaProvider.TWITCH ? 'Twitch' : 'Link'
-                const platformIcon = mediaType === MediaProvider.BANDCAMP ? '💿' :
-                                    mediaType === MediaProvider.SPOTIFY ? '🎵' :
-                                    mediaType === MediaProvider.SOUNDCLOUD ? '☁️' :
-                                    mediaType === MediaProvider.INSTAGRAM ? '📸' :
-                                    mediaType === MediaProvider.TIKTOK ? '🎭' :
-                                    mediaType === MediaProvider.X ? '𝕏' :
-                                    mediaType === MediaProvider.TWITCH ? '🎮' : '🔗'
-                const platformGradient = mediaType === MediaProvider.BANDCAMP ? 'from-teal-900/50 to-cyan-900/50' :
-                                        mediaType === MediaProvider.SPOTIFY ? 'from-green-900/50 to-emerald-900/50' :
-                                        mediaType === MediaProvider.SOUNDCLOUD ? 'from-orange-900/50 to-amber-900/50' :
-                                        mediaType === MediaProvider.INSTAGRAM ? 'from-pink-900/50 to-purple-900/50' :
-                                        mediaType === MediaProvider.TIKTOK ? 'from-pink-900/50 to-cyan-900/50' :
-                                        mediaType === MediaProvider.X ? 'from-gray-900/50 to-neutral-900/50' :
-                                        mediaType === MediaProvider.TWITCH ? 'from-purple-900/50 to-violet-900/50' : 'from-neutral-800 to-neutral-900'
+                // Platform-specific heights for best display
+                const embedHeight = mediaType === MediaProvider.BANDCAMP ? '470px' :
+                                   mediaType === MediaProvider.SPOTIFY ? '352px' :
+                                   mediaType === MediaProvider.SOUNDCLOUD ? '166px' : '315px'
 
                 return (
-                  <a
-                    href={mediaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`block p-6 bg-gradient-to-r ${platformGradient} hover:opacity-80 transition-opacity border-y border-neutral-800`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <span className="text-4xl">{platformIcon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-semibold text-lg">Listen on {platformName}</p>
-                        <p className="text-neutral-400 text-sm truncate">{mediaUrl}</p>
+                  <div className="relative w-full" style={{ minHeight: embedHeight }}>
+                    {!mediaLoaded && (
+                      <div className="absolute inset-0 bg-neutral-800 animate-pulse flex items-center justify-center">
+                        <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
                       </div>
-                      <span className="text-cyan-400 text-2xl">→</span>
-                    </div>
-                  </a>
+                    )}
+                    <iframe
+                      className={`w-full transition-opacity duration-300 ${mediaLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      style={{ height: embedHeight, border: 'none' }}
+                      src={mediaUrl}
+                      title="Media embed"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                      onLoad={() => setMediaLoaded(true)}
+                    />
+                  </div>
                 )
               })()
             )

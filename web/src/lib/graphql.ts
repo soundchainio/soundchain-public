@@ -8598,3 +8598,221 @@ export type WhitelistEntryByWalletQueryHookResult = ReturnType<typeof useWhiteli
 export type WhitelistEntryByWalletLazyQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletLazyQuery>;
 export type WhitelistEntryByWalletSuspenseQueryHookResult = ReturnType<typeof useWhitelistEntryByWalletSuspenseQuery>;
 export type WhitelistEntryByWalletQueryResult = Apollo.QueryResult<WhitelistEntryByWalletQuery, WhitelistEntryByWalletQueryVariables>;
+
+// ==========================================
+// TrackComment Types (manually added)
+// ==========================================
+
+export type TrackComment = {
+  __typename?: 'TrackComment';
+  id: Scalars['ID']['output'];
+  trackId: Scalars['ID']['output'];
+  profileId: Scalars['ID']['output'];
+  text: Scalars['String']['output'];
+  timestamp: Scalars['Float']['output'];
+  replyToId: Maybe<Scalars['ID']['output']>;
+  likeCount: Scalars['Int']['output'];
+  isPinned: Scalars['Boolean']['output'];
+  deleted: Scalars['Boolean']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  profile: Profile;
+};
+
+export type TrackCommentConnection = {
+  __typename?: 'TrackCommentConnection';
+  nodes: Array<TrackComment>;
+  pageInfo: PageInfo;
+};
+
+export type TrackCommentComponentFieldsFragment = {
+  __typename?: 'TrackComment';
+  id: string;
+  trackId: string;
+  text: string;
+  timestamp: number;
+  likeCount: number;
+  isPinned: boolean;
+  deleted: boolean;
+  createdAt: string;
+  updatedAt: string;
+  profile: {
+    __typename?: 'Profile';
+    id: string;
+    displayName: string;
+    profilePicture: string | null;
+    userHandle: string;
+    verified: boolean | null;
+  };
+};
+
+export type TrackCommentsQueryVariables = Exact<{
+  trackId: Scalars['String']['input'];
+  page?: InputMaybe<PageInput>;
+}>;
+
+export type TrackCommentsQuery = {
+  __typename?: 'Query';
+  trackComments: {
+    __typename?: 'TrackCommentConnection';
+    nodes: Array<TrackCommentComponentFieldsFragment>;
+    pageInfo: { __typename?: 'PageInfo'; hasPreviousPage: boolean; hasNextPage: boolean; startCursor: string | null; endCursor: string | null };
+  };
+};
+
+export type TrackCommentCountQueryVariables = Exact<{
+  trackId: Scalars['String']['input'];
+}>;
+
+export type TrackCommentCountQuery = {
+  __typename?: 'Query';
+  trackCommentCount: number;
+};
+
+export type CreateTrackCommentMutationVariables = Exact<{
+  trackId: Scalars['String']['input'];
+  text: Scalars['String']['input'];
+  timestamp: Scalars['Float']['input'];
+  replyToId?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+export type CreateTrackCommentMutation = {
+  __typename?: 'Mutation';
+  createTrackComment: TrackCommentComponentFieldsFragment;
+};
+
+export type DeleteTrackCommentMutationVariables = Exact<{
+  commentId: Scalars['String']['input'];
+}>;
+
+export type DeleteTrackCommentMutation = {
+  __typename?: 'Mutation';
+  deleteTrackComment: TrackCommentComponentFieldsFragment;
+};
+
+export type LikeTrackCommentMutationVariables = Exact<{
+  commentId: Scalars['String']['input'];
+}>;
+
+export type LikeTrackCommentMutation = {
+  __typename?: 'Mutation';
+  likeTrackComment: TrackCommentComponentFieldsFragment;
+};
+
+// TrackComment Fragment
+export const TrackCommentComponentFieldsFragmentDoc = gql`
+  fragment TrackCommentComponentFields on TrackComment {
+    id
+    trackId
+    text
+    timestamp
+    likeCount
+    isPinned
+    deleted
+    createdAt
+    updatedAt
+    profile {
+      id
+      displayName
+      profilePicture
+      userHandle
+      verified
+    }
+  }
+`;
+
+// TrackComments Query
+export const TrackCommentsDocument = gql`
+  query TrackComments($trackId: String!, $page: PageInput) {
+    trackComments(trackId: $trackId, page: $page) {
+      nodes {
+        ...TrackCommentComponentFields
+      }
+      pageInfo {
+        hasPreviousPage
+        hasNextPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+  ${TrackCommentComponentFieldsFragmentDoc}
+`;
+
+export function useTrackCommentsQuery(baseOptions: Apollo.QueryHookOptions<TrackCommentsQuery, TrackCommentsQueryVariables> & ({ variables: TrackCommentsQueryVariables; skip?: boolean; } | { skip: boolean; })) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TrackCommentsQuery, TrackCommentsQueryVariables>(TrackCommentsDocument, options);
+}
+
+export function useTrackCommentsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrackCommentsQuery, TrackCommentsQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TrackCommentsQuery, TrackCommentsQueryVariables>(TrackCommentsDocument, options);
+}
+
+export type TrackCommentsQueryHookResult = ReturnType<typeof useTrackCommentsQuery>;
+export type TrackCommentsLazyQueryHookResult = ReturnType<typeof useTrackCommentsLazyQuery>;
+
+// TrackCommentCount Query
+export const TrackCommentCountDocument = gql`
+  query TrackCommentCount($trackId: String!) {
+    trackCommentCount(trackId: $trackId)
+  }
+`;
+
+export function useTrackCommentCountQuery(baseOptions: Apollo.QueryHookOptions<TrackCommentCountQuery, TrackCommentCountQueryVariables> & ({ variables: TrackCommentCountQueryVariables; skip?: boolean; } | { skip: boolean; })) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TrackCommentCountQuery, TrackCommentCountQueryVariables>(TrackCommentCountDocument, options);
+}
+
+export type TrackCommentCountQueryHookResult = ReturnType<typeof useTrackCommentCountQuery>;
+
+// CreateTrackComment Mutation
+export const CreateTrackCommentDocument = gql`
+  mutation CreateTrackComment($trackId: String!, $text: String!, $timestamp: Float!, $replyToId: String) {
+    createTrackComment(trackId: $trackId, text: $text, timestamp: $timestamp, replyToId: $replyToId) {
+      ...TrackCommentComponentFields
+    }
+  }
+  ${TrackCommentComponentFieldsFragmentDoc}
+`;
+
+export function useCreateTrackCommentMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackCommentMutation, CreateTrackCommentMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateTrackCommentMutation, CreateTrackCommentMutationVariables>(CreateTrackCommentDocument, options);
+}
+
+export type CreateTrackCommentMutationHookResult = ReturnType<typeof useCreateTrackCommentMutation>;
+
+// DeleteTrackComment Mutation
+export const DeleteTrackCommentDocument = gql`
+  mutation DeleteTrackComment($commentId: String!) {
+    deleteTrackComment(commentId: $commentId) {
+      ...TrackCommentComponentFields
+    }
+  }
+  ${TrackCommentComponentFieldsFragmentDoc}
+`;
+
+export function useDeleteTrackCommentMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTrackCommentMutation, DeleteTrackCommentMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteTrackCommentMutation, DeleteTrackCommentMutationVariables>(DeleteTrackCommentDocument, options);
+}
+
+export type DeleteTrackCommentMutationHookResult = ReturnType<typeof useDeleteTrackCommentMutation>;
+
+// LikeTrackComment Mutation
+export const LikeTrackCommentDocument = gql`
+  mutation LikeTrackComment($commentId: String!) {
+    likeTrackComment(commentId: $commentId) {
+      ...TrackCommentComponentFields
+    }
+  }
+  ${TrackCommentComponentFieldsFragmentDoc}
+`;
+
+export function useLikeTrackCommentMutation(baseOptions?: Apollo.MutationHookOptions<LikeTrackCommentMutation, LikeTrackCommentMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<LikeTrackCommentMutation, LikeTrackCommentMutationVariables>(LikeTrackCommentDocument, options);
+}
+
+export type LikeTrackCommentMutationHookResult = ReturnType<typeof useLikeTrackCommentMutation>;

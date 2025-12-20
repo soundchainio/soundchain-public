@@ -1,0 +1,18 @@
+fragment TrackCommentComponentFields on TrackComment {
+  id
+  trackId
+  text
+  timestamp
+  likeCount
+  isPinned
+  deleted
+  createdAt
+  updatedAt
+  profile {
+    id
+    displayName
+    profilePicture
+    userHandle
+    verified
+  }
+}

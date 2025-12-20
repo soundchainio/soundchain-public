@@ -5,7 +5,9 @@ import { Divider } from 'components/common'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { ProfileWithAvatar } from 'components/ProfileWithAvatar'
 import { TrackShareButton } from 'components/TrackShareButton'
+import { WaveformWithComments } from 'components/WaveformWithComments'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { useTrackComments } from 'hooks/useTrackComments'
 import { MeQuery, TrackQuery, useProfileLazyQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { LinkItUrl } from 'react-linkify-it'
@@ -26,7 +28,21 @@ export const DesktopTrackCard = (props: Props) => {
   const { track } = props
 
   const [profile, { data: profileInfo }] = useProfileLazyQuery()
-  const { playlistState, isCurrentlyPlaying } = useAudioPlayerContext()
+  const { playlistState, isCurrentlyPlaying, duration, progress, setProgressStateFromSlider, togglePlay } = useAudioPlayerContext()
+
+  // Track comments for waveform
+  const { comments, addComment, likeComment } = useTrackComments({ trackId: track?.id || '' })
+
+  // Convert progress percentage to current time in seconds
+  const currentTime = (progress / 100) * duration
+
+  // Seek function - converts time in seconds to percentage
+  const handleSeek = (timeInSeconds: number) => {
+    if (duration > 0) {
+      const percentage = (timeInSeconds / duration) * 100
+      setProgressStateFromSlider(percentage)
+    }
+  }
 
   const handleOnPlayClicked = () => {
     if (track) {
@@ -91,6 +107,24 @@ export const DesktopTrackCard = (props: Props) => {
               <FavoriteTrack />
             </div>
           </ArtistNameContainer>
+
+          {/* SoundCloud-style waveform with timestamped comments */}
+          {track.playbackUrl && duration > 0 && (
+            <div className="mt-4 px-2">
+              <WaveformWithComments
+                trackId={track.id}
+                audioUrl={track.playbackUrl}
+                duration={duration}
+                comments={comments}
+                onAddComment={addComment}
+                onLikeComment={likeComment}
+                isPlaying={isPlaying}
+                currentTime={currentTime}
+                onSeek={handleSeek}
+                onPlayPause={togglePlay}
+              />
+            </div>
+          )}
         </ArtistContainer>
 
         <DescriptionContainer>
