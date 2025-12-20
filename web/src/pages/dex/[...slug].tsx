@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
 import Image from 'next/image'
+import Head from 'next/head'
+import { config } from 'config'
 import { Logo } from 'icons/Logo'
 import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 import { Verified as VerifiedIcon } from 'icons/Verified'
@@ -13,7 +15,6 @@ import { Wallet as WalletIcon } from 'icons/Wallet'
 import { NewPost } from 'icons/NewPost'
 import { Role } from 'lib/graphql'
 import { setJwt } from 'lib/apollo'
-import { config } from 'config'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
@@ -73,6 +74,7 @@ const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAu
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
+const Tracks = dynamic(() => import('components/profile/Tracks').then(mod => ({ default: mod.Tracks })), { ssr: false })
 const GuestPostModal = dynamic(() => import('components/Post/GuestPostModal').then(mod => ({ default: mod.GuestPostModal })), { ssr: false })
 const Notifications = dynamic(() => import('components/Notifications').then(mod => ({ default: mod.Notifications })), { ssr: false })
 const BioForm = dynamic(() => import('components/forms/profile/BioForm').then(mod => ({ default: mod.BioForm })), { ssr: false })
@@ -4239,6 +4241,33 @@ function DEXDashboard() {
           {/* Profile View - /dex/profile/[handle] */}
           {selectedView === 'profile' && routeId && (
             <div className="space-y-6 pb-32 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
+              {viewingProfile && (
+                <Head>
+                  <title>{viewingProfile.displayName || viewingProfile.userHandle} | SoundChain</title>
+                  <meta name="description" content={viewingProfile.bio || `Check out ${viewingProfile.displayName || viewingProfile.userHandle} on SoundChain - Web3 Music Platform`} />
+
+                  {/* OpenGraph for Facebook/LinkedIn */}
+                  <meta property="og:title" content={`${viewingProfile.displayName || viewingProfile.userHandle} | SoundChain`} />
+                  <meta property="og:description" content={viewingProfile.bio || `Join SoundChain to connect with ${viewingProfile.displayName || viewingProfile.userHandle}`} />
+                  <meta property="og:image" content={viewingProfile.profilePicture || `${config.domainUrl}/soundchain-meta-logo.png`} />
+                  <meta property="og:image:width" content="1200" />
+                  <meta property="og:image:height" content="1200" />
+                  <meta property="og:type" content="profile" />
+                  <meta property="og:url" content={`${config.domainUrl}/dex/users/${viewingProfile.userHandle}`} />
+                  <meta property="og:site_name" content="SoundChain" />
+
+                  {/* Twitter Card - Large Image */}
+                  <meta name="twitter:card" content="summary_large_image" />
+                  <meta name="twitter:title" content={`${viewingProfile.displayName || viewingProfile.userHandle} | SoundChain`} />
+                  <meta name="twitter:description" content={viewingProfile.bio || `Web3 Music Artist on SoundChain`} />
+                  <meta name="twitter:image" content={viewingProfile.profilePicture || `${config.domainUrl}/soundchain-meta-logo.png`} />
+                  <meta name="twitter:site" content="@SoundChainFM" />
+
+                  {/* Canonical URL */}
+                  <link rel="canonical" href={`${config.domainUrl}/dex/users/${viewingProfile.userHandle}`} />
+                </Head>
+              )}
               {viewingProfileLoading && (
                 <div className="flex items-center justify-center py-16">
                   <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
@@ -4342,6 +4371,17 @@ function DEXDashboard() {
                       </CardContent>
                     </Card>
                   )}
+
+                  {/* User's Tracks - Legacy style */}
+                  <Card className="retro-card">
+                    <CardContent className="p-6">
+                      <h2 className="retro-title text-lg flex items-center gap-2 mb-4">
+                        <Music className="w-5 h-5 text-purple-400" />
+                        Tracks by @{viewingProfile.userHandle}
+                      </h2>
+                      <Tracks profileId={viewingProfile.id} />
+                    </CardContent>
+                  </Card>
 
                   {/* User's Posts - Same rendering as /dex feed */}
                   <Card className="retro-card">
