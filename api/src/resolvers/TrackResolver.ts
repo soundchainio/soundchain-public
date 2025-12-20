@@ -259,7 +259,7 @@ export class TrackResolver {
   @Mutation(() => UpdateTrackPayload)
   @Authorized()
   async updateTrack(
-    @Ctx() { trackService }: Context,
+    @Ctx() { trackService, scidService }: Context,
     @Arg('input') { trackId, profileId, ...changes }: UpdateTrackInput,
   ): Promise<UpdateTrackPayload> {
     const trackChanges = {
@@ -267,6 +267,31 @@ export class TrackResolver {
       ...(profileId && { profileId: new mongoose.Types.ObjectId(profileId) }),
     };
     const track = await trackService.updateTrack(new mongoose.Types.ObjectId(trackId), trackChanges);
+
+    // Auto-register SCid on-chain when NFT data is added (minting complete)
+    if (changes.nftData?.tokenId !== undefined && changes.nftData?.contract) {
+      try {
+        const scid = await scidService.getByTrackId(trackId);
+        if (scid && scid.status === 'PENDING') {
+          const ownerWallet = changes.nftData.owner || changes.nftData.minter;
+          if (ownerWallet) {
+            console.log(`[TrackResolver] Auto-registering SCid ${scid.scid} on-chain...`);
+            await scidService.registerOnChain(
+              scid.scid,
+              ownerWallet,
+              changes.nftData.tokenId,
+              changes.nftData.contract,
+              scid.metadataHash,
+              scid.chainId || 137
+            );
+          }
+        }
+      } catch (scidError) {
+        // Don't fail the track update if SCid registration fails
+        console.error(`[TrackResolver] SCid on-chain registration failed:`, scidError);
+      }
+    }
+
     return { track };
   }
 

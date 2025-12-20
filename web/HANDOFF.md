@@ -246,13 +246,36 @@ Key commits:
 - MATIC for gas
 
 ### 2.6 SCid (SoundChain ID)
-**Status:** Recently added feature
+**Status:** Complete with on-chain registry
 
-Key commit: `2606be3e4` - Add SCid (SoundChain ID) - Web3 replacement for ISRC
+Key commits:
+- `2606be3e4` - Add SCid (SoundChain ID) - Web3 replacement for ISRC
+- `c41e227ea` - Auto-generate SCid during track creation
+- `3dc976594` - Add on-chain SCid registration to SCidService
 
-- Unique identifier for tracks across blockchains
-- Format: `SC-{CHAIN}-{TIMESTAMP}-{HASH}`
-- Replaces traditional ISRC codes
+**SCid Format:** `SC-[CHAIN]-[ARTIST_HASH]-[YEAR][SEQUENCE]`
+- Example: `SC-POL-7B3A-2400001`
+- Components: Prefix + Chain Code + 4-char Artist Hash + 2-digit Year + 5-digit Sequence
+
+**Smart Contract:** `SCidRegistry.sol` (UUPS Upgradeable Proxy)
+- On-chain registration of SCids with ownership verification
+- Batch registration support (up to 100 per tx)
+- Cross-chain verification queries
+- Registrar role for backend authorization
+- Deploy: `npx hardhat run scripts/deploy-scid-registry.ts --network polygon`
+
+**API Integration:**
+- Auto-generates SCid when track is created (`TrackService.createTrack`)
+- `SCidService.registerOnChain()` - Register on-chain after creation
+- `SCidContract.ts` - Ethers.js utility for contract interaction
+- Requires `SCID_REGISTRY_SIGNER_KEY` env var for signing
+
+**Files:**
+- `api/src/utils/SCidGenerator.ts` - SCid generation logic
+- `api/src/models/SCid.ts` - MongoDB model with status tracking
+- `api/src/services/SCidService.ts` - Registration, streaming, OGUN rewards
+- `api/src/utils/SCidContract.ts` - Smart contract interaction
+- `soundchain-contracts/contracts/SCidRegistry.sol` - On-chain registry
 
 ---
 
