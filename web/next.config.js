@@ -16,6 +16,14 @@ module.exports = {
   typescript: {
     ignoreBuildErrors: true, // Bypass TypeScript errors
   },
+  // Fix @web3modal/ethers5 module resolution - it looks for 'ethers5' instead of 'ethers'
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'ethers5': 'ethers',
+    };
+    return config;
+  },
   // Fix Google OAuth Permissions-Policy error
   async headers() {
     return [
