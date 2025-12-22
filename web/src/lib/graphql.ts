@@ -8918,6 +8918,25 @@ export type GetUserPlaylistsQuery = {
             playbackCountFormatted: Maybe<string>;
             isFavorite: boolean;
             duration: Maybe<number>;
+            favoriteCount: number;
+            saleType: string;
+            editionSize: number;
+            listingCount: number;
+            price: { __typename?: 'TrackPrice'; value: number; currency: CurrencyType };
+            listingItem: Maybe<{
+              __typename?: 'ListingItem';
+              id: string;
+              pricePerItemToShow: Maybe<number>;
+              OGUNPricePerItemToShow: Maybe<number>;
+              acceptsMATIC: Maybe<boolean>;
+              acceptsOGUN: Maybe<boolean>;
+            }>;
+            nftData: Maybe<{
+              __typename?: 'NftDataType';
+              tokenId: number;
+              contract: string;
+              owner: string;
+            }>;
           };
         }>>;
         pageInfo: { __typename?: 'PageInfo'; hasNextPage: boolean; endCursor: Maybe<string> };
@@ -8957,6 +8976,26 @@ export const GetUserPlaylistsDocument = gql`
               playbackCountFormatted
               isFavorite
               duration
+              favoriteCount
+              saleType
+              editionSize
+              listingCount
+              price {
+                value
+                currency
+              }
+              listingItem {
+                id
+                pricePerItemToShow
+                OGUNPricePerItemToShow
+                acceptsMATIC
+                acceptsOGUN
+              }
+              nftData {
+                tokenId
+                contract
+                owner
+              }
             }
           }
           pageInfo {
