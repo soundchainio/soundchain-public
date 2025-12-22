@@ -63,7 +63,6 @@ import { ENABLED_CHAINS, getChainsByCategory } from 'constants/chains'
 import { SUPPORTED_TOKENS, TOKEN_INFO, Token } from 'constants/tokens'
 import { ToastContainer } from 'react-toastify'
 import dynamic from 'next/dynamic'
-import { useWeb3Modal, useWeb3ModalAccount } from '@web3modal/ethers5/react'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
@@ -674,11 +673,7 @@ function DEXDashboard() {
     skip: !walletAccount, // Only fetch when wallet is connected
   })
 
-  // Web3Modal hooks for external wallet connection (modern UI like OpenSea/Blur)
-  const { open: openWeb3Modal } = useWeb3Modal()
-  const { address: web3ModalAddress, isConnected: isWeb3ModalConnected } = useWeb3ModalAccount()
-
-  // Unified Wallet Context - synced across all pages
+  // Unified Wallet Context - synced across all pages (includes Web3Modal)
   const {
     activeWalletType,
     activeAddress,
@@ -686,9 +681,14 @@ function DEXDashboard() {
     activeOgunBalance,
     isConnected: isUnifiedWalletConnected,
     chainName,
-    connectWeb3Modal: unifiedConnectWeb3Modal,
+    connectWeb3Modal: openWeb3Modal,
     disconnectWallet: unifiedDisconnectWallet,
+    isWeb3ModalReady,
   } = useUnifiedWallet()
+
+  // For backwards compatibility
+  const web3ModalAddress = activeWalletType === 'web3modal' ? activeAddress : null
+  const isWeb3ModalConnected = activeWalletType === 'web3modal' && isUnifiedWalletConnected
 
   // Create+ Button Handler - Supports both members and guests
   const handleCreateClick = () => {
