@@ -1,0 +1,123 @@
+# Playlist queries and mutations
+
+query GetUserPlaylists($profileId: String!, $page: Pagination, $sort: SortPlaylistInput) {
+  getUserPlaylists(profileId: $profileId, page: $page, sort: $sort) {
+    nodes {
+      id
+      title
+      description
+      artworkUrl
+      profileId
+      favoriteCount
+      followCount
+      isFavorite
+      isFollowed
+      createdAt
+      updatedAt
+      tracks {
+        nodes {
+          id
+          trackId
+          playlistId
+          createdAt
+          track {
+            id
+            title
+            artist
+            artworkUrl
+            playbackUrl
+            playbackCountFormatted
+            isFavorite
+            duration
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      startCursor
+      endCursor
+    }
+  }
+}
+
+mutation CreatePlaylist($input: CreatePlaylistData!) {
+  createPlaylist(input: $input) {
+    playlist {
+      id
+      title
+      description
+      artworkUrl
+      profileId
+      createdAt
+    }
+  }
+}
+
+mutation UpdatePlaylist($input: EditPlaylistData!) {
+  updatePlaylist(input: $input) {
+    playlist {
+      id
+      title
+      description
+      artworkUrl
+    }
+  }
+}
+
+mutation CreatePlaylistTracks($input: CreatePlaylistTracks!) {
+  createPlaylistTracks(input: $input) {
+    playlist {
+      id
+      title
+      tracks {
+        nodes {
+          id
+          trackId
+          playlistId
+          track {
+            id
+            title
+            artist
+            artworkUrl
+          }
+        }
+      }
+    }
+  }
+}
+
+mutation DeletePlaylistTracks($input: DeletePlaylistTracks!) {
+  deletePlaylistTracks(input: $input) {
+    playlist {
+      id
+      tracks {
+        nodes {
+          id
+          trackId
+        }
+      }
+    }
+  }
+}
+
+mutation TogglePlaylistFavorite($playlistId: String!) {
+  togglePlaylistFavorite(playlistId: $playlistId) {
+    id
+    playlistId
+    isFavorite
+  }
+}
+
+mutation TogglePlaylistFollow($playlistId: String!) {
+  togglePlaylistFollow(playlistId: $playlistId) {
+    id
+    playlistId
+    isFollowed
+  }
+}

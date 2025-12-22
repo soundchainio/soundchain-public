@@ -65,6 +65,8 @@ import { ToastContainer } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { LeftSidebar, RightSidebar } from 'components/Sidebar'
+import { PlaylistCard, PlaylistDetail, CreatePlaylistModal } from 'components/Playlist'
+import { useGetUserPlaylistsQuery, GetUserPlaylistsQuery } from 'lib/graphql'
 import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
@@ -613,6 +615,10 @@ function DEXDashboard() {
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
   const [messageInput, setMessageInput] = useState('')
 
+  // Playlist state
+  const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false)
+  const [selectedPlaylist, setSelectedPlaylist] = useState<GetUserPlaylistsQuery['getUserPlaylists']['nodes'][0] | null>(null)
+
   // NFT Transfer state
   const [transferRecipient, setTransferRecipient] = useState('')
   const [selectedNftId, setSelectedNftId] = useState('')
@@ -1031,6 +1037,13 @@ function DEXDashboard() {
   // Notifications Query - for Notifications view
   const { data: notificationsData, loading: notificationsLoading } = useNotificationsQuery({
     skip: selectedView !== 'notifications' || !userData?.me,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Playlists Query - for Playlist view
+  const { data: playlistsData, loading: playlistsLoading, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
+    variables: { profileId: userData?.me?.profile?.id || '' },
+    skip: selectedView !== 'playlist' || !userData?.me?.profile?.id,
     fetchPolicy: 'cache-and-network',
   })
 
@@ -2732,40 +2745,103 @@ function DEXDashboard() {
             </div>
           )}
 
-          {/* Playlist View - Ready for OGUN rewards integration */}
+          {/* Playlist View - Full Implementation */}
           {selectedView === 'playlist' && (
             <div className="space-y-6">
+              {/* Header */}
               <Card className="retro-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <ListMusic className="w-8 h-8 text-pink-400" />
-                  <h2 className="retro-title text-xl">Playlist DEX</h2>
-                  <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs">Coming Soon</Badge>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                      <ListMusic className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="retro-title text-xl">My Playlists</h2>
+                      <p className="text-gray-400 text-sm">Curate and share your music collections</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => setShowCreatePlaylistModal(true)}
+                    className="retro-button bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Playlist
+                  </Button>
                 </div>
-                <p className="text-gray-400 mb-6">Create and trade playlists. Earn OGUN rewards for curating fire playlists that others enjoy!</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <Card className="metadata-section p-4 text-center">
-                    <div className="text-3xl font-bold text-pink-400">🎵</div>
-                    <h3 className="font-bold text-white mt-2">Create Playlists</h3>
-                    <p className="text-xs text-gray-400">Curate your best tracks</p>
-                  </Card>
-                  <Card className="metadata-section p-4 text-center">
-                    <div className="text-3xl font-bold text-purple-400">💰</div>
-                    <h3 className="font-bold text-white mt-2">Earn OGUN</h3>
+
+                {/* OGUN Rewards Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="p-4 rounded-xl bg-pink-500/10 border border-pink-500/20 text-center">
+                    <div className="text-2xl mb-1">🎵</div>
+                    <h3 className="font-bold text-white text-sm">Curate</h3>
+                    <p className="text-xs text-gray-400">Build your perfect playlists</p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
+                    <div className="text-2xl mb-1">💰</div>
+                    <h3 className="font-bold text-white text-sm">Earn OGUN</h3>
                     <p className="text-xs text-gray-400">Get rewarded for plays</p>
-                  </Card>
-                  <Card className="metadata-section p-4 text-center">
-                    <div className="text-3xl font-bold text-cyan-400">🔥</div>
-                    <h3 className="font-bold text-white mt-2">Trade & Collect</h3>
-                    <p className="text-xs text-gray-400">Buy/sell top playlists</p>
-                  </Card>
+                  </div>
+                  <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-center">
+                    <div className="text-2xl mb-1">🔥</div>
+                    <h3 className="font-bold text-white text-sm">Share</h3>
+                    <p className="text-xs text-gray-400">Build your audience</p>
+                  </div>
                 </div>
-                <Button disabled className="retro-button opacity-50 cursor-not-allowed">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Playlist (Coming Soon)
-                </Button>
               </Card>
+
+              {/* Playlists Grid */}
+              {playlistsLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="aspect-square bg-neutral-800 rounded-2xl animate-pulse" />
+                  ))}
+                </div>
+              ) : playlistsData?.getUserPlaylists?.nodes && playlistsData.getUserPlaylists.nodes.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {playlistsData.getUserPlaylists.nodes.map((playlist) => (
+                    <PlaylistCard
+                      key={playlist.id}
+                      playlist={playlist}
+                      onSelect={(p) => setSelectedPlaylist(p)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <Card className="retro-card p-12 text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-neutral-800 flex items-center justify-center">
+                    <ListMusic className="w-10 h-10 text-neutral-600" />
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-2">No playlists yet</h3>
+                  <p className="text-gray-400 mb-6">Create your first playlist to start curating your music collection</p>
+                  <Button
+                    onClick={() => setShowCreatePlaylistModal(true)}
+                    className="retro-button bg-gradient-to-r from-pink-500 to-purple-500"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Playlist
+                  </Button>
+                </Card>
+              )}
             </div>
           )}
+
+          {/* Playlist Detail Modal */}
+          {selectedPlaylist && (
+            <PlaylistDetail
+              playlist={selectedPlaylist}
+              onClose={() => setSelectedPlaylist(null)}
+              isOwner={selectedPlaylist.profileId === userData?.me?.profile?.id}
+            />
+          )}
+
+          {/* Create Playlist Modal */}
+          <CreatePlaylistModal
+            isOpen={showCreatePlaylistModal}
+            onClose={() => setShowCreatePlaylistModal(false)}
+            onSuccess={() => {
+              refetchPlaylists()
+            }}
+          />
 
           {/* Wallet View - Comprehensive DEX Wallet Management */}
           {selectedView === 'wallet' && (

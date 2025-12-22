@@ -8816,3 +8816,294 @@ export function useLikeTrackCommentMutation(baseOptions?: Apollo.MutationHookOpt
 }
 
 export type LikeTrackCommentMutationHookResult = ReturnType<typeof useLikeTrackCommentMutation>;
+
+// ============================================
+// PLAYLIST QUERIES AND MUTATIONS
+// ============================================
+
+// GetUserPlaylists Query
+export type GetUserPlaylistsQueryVariables = Exact<{
+  profileId: Scalars['String']['input'];
+  page?: InputMaybe<Pagination>;
+  sort?: InputMaybe<SortPlaylistInput>;
+}>;
+
+export type GetUserPlaylistsQuery = {
+  __typename?: 'Query';
+  getUserPlaylists: {
+    __typename?: 'GetPlaylistPayload';
+    nodes: Array<{
+      __typename?: 'Playlist';
+      id: string;
+      title: string;
+      description: Maybe<string>;
+      artworkUrl: Maybe<string>;
+      profileId: string;
+      favoriteCount: number;
+      followCount: number;
+      isFavorite: boolean;
+      isFollowed: boolean;
+      createdAt: string;
+      updatedAt: string;
+      tracks: Maybe<{
+        __typename?: 'GetTracksFromPlaylist';
+        nodes: Maybe<Array<{
+          __typename?: 'PlaylistTrack';
+          id: string;
+          trackId: string;
+          playlistId: string;
+          createdAt: string;
+          track: {
+            __typename?: 'Track';
+            id: string;
+            title: string;
+            artist: string;
+            artworkUrl: Maybe<string>;
+            playbackUrl: string;
+            playbackCountFormatted: Maybe<string>;
+            isFavorite: boolean;
+            duration: Maybe<number>;
+          };
+        }>>;
+        pageInfo: { __typename?: 'PageInfo'; hasNextPage: boolean; endCursor: Maybe<string> };
+      }>;
+    }>;
+    pageInfo: { __typename?: 'PageInfo'; hasNextPage: boolean; hasPreviousPage: boolean; startCursor: Maybe<string>; endCursor: Maybe<string> };
+  };
+};
+
+export const GetUserPlaylistsDocument = gql`
+  query GetUserPlaylists($profileId: String!, $page: Pagination, $sort: SortPlaylistInput) {
+    getUserPlaylists(profileId: $profileId, page: $page, sort: $sort) {
+      nodes {
+        id
+        title
+        description
+        artworkUrl
+        profileId
+        favoriteCount
+        followCount
+        isFavorite
+        isFollowed
+        createdAt
+        updatedAt
+        tracks {
+          nodes {
+            id
+            trackId
+            playlistId
+            createdAt
+            track {
+              id
+              title
+              artist
+              artworkUrl
+              playbackUrl
+              playbackCountFormatted
+              isFavorite
+              duration
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+`;
+
+export function useGetUserPlaylistsQuery(baseOptions: Apollo.QueryHookOptions<GetUserPlaylistsQuery, GetUserPlaylistsQueryVariables> & ({ variables: GetUserPlaylistsQueryVariables; skip?: boolean; } | { skip: boolean; })) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<GetUserPlaylistsQuery, GetUserPlaylistsQueryVariables>(GetUserPlaylistsDocument, options);
+}
+
+export function useGetUserPlaylistsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetUserPlaylistsQuery, GetUserPlaylistsQueryVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<GetUserPlaylistsQuery, GetUserPlaylistsQueryVariables>(GetUserPlaylistsDocument, options);
+}
+
+// CreatePlaylist Mutation
+export type CreatePlaylistMutationVariables = Exact<{
+  input: CreatePlaylistData;
+}>;
+
+export type CreatePlaylistMutation = {
+  __typename?: 'Mutation';
+  createPlaylist: {
+    __typename?: 'CreatePlaylistPayload';
+    playlist: {
+      __typename?: 'Playlist';
+      id: string;
+      title: string;
+      description: Maybe<string>;
+      artworkUrl: Maybe<string>;
+      profileId: string;
+      createdAt: string;
+    };
+  };
+};
+
+export const CreatePlaylistDocument = gql`
+  mutation CreatePlaylist($input: CreatePlaylistData!) {
+    createPlaylist(input: $input) {
+      playlist {
+        id
+        title
+        description
+        artworkUrl
+        profileId
+        createdAt
+      }
+    }
+  }
+`;
+
+export function useCreatePlaylistMutation(baseOptions?: Apollo.MutationHookOptions<CreatePlaylistMutation, CreatePlaylistMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreatePlaylistMutation, CreatePlaylistMutationVariables>(CreatePlaylistDocument, options);
+}
+
+// CreatePlaylistTracks Mutation
+export type CreatePlaylistTracksMutationVariables = Exact<{
+  input: CreatePlaylistTracks;
+}>;
+
+export type CreatePlaylistTracksMutation = {
+  __typename?: 'Mutation';
+  createPlaylistTracks: {
+    __typename?: 'CreatePlaylistPayload';
+    playlist: {
+      __typename?: 'Playlist';
+      id: string;
+      title: string;
+      tracks: Maybe<{
+        __typename?: 'GetTracksFromPlaylist';
+        nodes: Maybe<Array<{
+          __typename?: 'PlaylistTrack';
+          id: string;
+          trackId: string;
+          playlistId: string;
+          track: {
+            __typename?: 'Track';
+            id: string;
+            title: string;
+            artist: string;
+            artworkUrl: Maybe<string>;
+          };
+        }>>;
+      }>;
+    };
+  };
+};
+
+export const CreatePlaylistTracksDocument = gql`
+  mutation CreatePlaylistTracks($input: CreatePlaylistTracks!) {
+    createPlaylistTracks(input: $input) {
+      playlist {
+        id
+        title
+        tracks {
+          nodes {
+            id
+            trackId
+            playlistId
+            track {
+              id
+              title
+              artist
+              artworkUrl
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export function useCreatePlaylistTracksMutation(baseOptions?: Apollo.MutationHookOptions<CreatePlaylistTracksMutation, CreatePlaylistTracksMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreatePlaylistTracksMutation, CreatePlaylistTracksMutationVariables>(CreatePlaylistTracksDocument, options);
+}
+
+// DeletePlaylistTracks Mutation
+export type DeletePlaylistTracksMutationVariables = Exact<{
+  input: DeletePlaylistTracks;
+}>;
+
+export type DeletePlaylistTracksMutation = {
+  __typename?: 'Mutation';
+  deletePlaylistTracks: {
+    __typename?: 'DeletePlaylistPayload';
+    playlist: {
+      __typename?: 'Playlist';
+      id: string;
+      tracks: Maybe<{
+        __typename?: 'GetTracksFromPlaylist';
+        nodes: Maybe<Array<{
+          __typename?: 'PlaylistTrack';
+          id: string;
+          trackId: string;
+        }>>;
+      }>;
+    };
+  };
+};
+
+export const DeletePlaylistTracksDocument = gql`
+  mutation DeletePlaylistTracks($input: DeletePlaylistTracks!) {
+    deletePlaylistTracks(input: $input) {
+      playlist {
+        id
+        tracks {
+          nodes {
+            id
+            trackId
+          }
+        }
+      }
+    }
+  }
+`;
+
+export function useDeletePlaylistTracksMutation(baseOptions?: Apollo.MutationHookOptions<DeletePlaylistTracksMutation, DeletePlaylistTracksMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeletePlaylistTracksMutation, DeletePlaylistTracksMutationVariables>(DeletePlaylistTracksDocument, options);
+}
+
+// TogglePlaylistFavorite Mutation
+export type TogglePlaylistFavoriteMutationVariables = Exact<{
+  playlistId: Scalars['String']['input'];
+}>;
+
+export type TogglePlaylistFavoriteMutation = {
+  __typename?: 'Mutation';
+  togglePlaylistFavorite: {
+    __typename?: 'FavoritePlaylist';
+    id: string;
+    playlistId: string;
+    isFavorite: boolean;
+  };
+};
+
+export const TogglePlaylistFavoriteDocument = gql`
+  mutation TogglePlaylistFavorite($playlistId: String!) {
+    togglePlaylistFavorite(playlistId: $playlistId) {
+      id
+      playlistId
+      isFavorite
+    }
+  }
+`;
+
+export function useTogglePlaylistFavoriteMutation(baseOptions?: Apollo.MutationHookOptions<TogglePlaylistFavoriteMutation, TogglePlaylistFavoriteMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<TogglePlaylistFavoriteMutation, TogglePlaylistFavoriteMutationVariables>(TogglePlaylistFavoriteDocument, options);
+}
