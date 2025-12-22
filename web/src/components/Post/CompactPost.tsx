@@ -175,11 +175,11 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               }}
             />
           ) : (
-            // All other platforms (audio + social) - use iframe embed (legacy style)
+            // All other platforms (audio + social) - airtight iframe embed
             <iframe
               frameBorder="0"
-              className="w-full h-full bg-neutral-900"
-              style={{ minHeight: getCompactEmbedHeight(platformType) }}
+              className="w-full h-full bg-black"
+              style={{ height: getCompactEmbedHeight(platformType) }}
               src={post.mediaLink.replace(/^http:/, 'https:')}
               title="Media"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
