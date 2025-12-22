@@ -58,6 +58,7 @@
     "@types/react-scroll": "^1.8.10",
     "@walletconnect/ethereum-provider": "^2.21.6",
     "@walletconnect/web3-provider": "^1.8.0",
+    "@web3modal/ethers5": "^5.1.11",
     "axios": "^1.7.3",
     "bip39": "^3.1.0",
     "body-scroll-lock": "^4.0.0-beta.0",
