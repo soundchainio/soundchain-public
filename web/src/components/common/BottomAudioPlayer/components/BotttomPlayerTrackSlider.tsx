@@ -7,16 +7,18 @@ import { Rewind } from 'icons/RewindButton'
 import { Shuffle } from 'icons/Shuffle'
 import tw from 'tailwind-styled-components'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
+import { MiniWaveform } from './MiniWaveform'
 
 interface BotttomPlayerTrackSliderProps {
   song: Song
   hideSlider?: boolean
   hideShuffle?: boolean
   playerClassNames?: string
+  showWaveform?: boolean
 }
 
 export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) => {
-  const { song, hideSlider, hideShuffle, playerClassNames } = props
+  const { song, hideSlider, hideShuffle, playerClassNames, showWaveform = true } = props
   const {
     duration,
     progress,
@@ -72,15 +74,25 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
 
       {!hideSlider && (
         <div className="flex items-center">
-          <div className="text-neutral-400">{timeFromSecs(progress || 0)}</div>
-          <AudioSlider
-            className="audio-player mx-4 w-[300px]"
-            min={0}
-            max={duration}
-            value={progress}
-            onChange={onSliderChange}
-          />
-          <div className="text-neutral-400">{remainingTime(progress, duration || 0)}</div>
+          <div className="text-neutral-400 text-sm w-12 text-right">{timeFromSecs(progress || 0)}</div>
+          {showWaveform ? (
+            <MiniWaveform
+              progress={duration > 0 ? progress / duration : 0}
+              duration={duration}
+              className="mx-4 w-[300px]"
+              barCount={60}
+              onClick={(p) => onSliderChange(p * duration)}
+            />
+          ) : (
+            <AudioSlider
+              className="audio-player mx-4 w-[300px]"
+              min={0}
+              max={duration}
+              value={progress}
+              onChange={onSliderChange}
+            />
+          )}
+          <div className="text-neutral-400 text-sm w-12">{remainingTime(progress, duration || 0)}</div>
         </div>
       )}
     </Container>

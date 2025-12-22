@@ -619,6 +619,9 @@ function DEXDashboard() {
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false)
   const [selectedPlaylist, setSelectedPlaylist] = useState<GetUserPlaylistsQuery['getUserPlaylists']['nodes'][0] | null>(null)
 
+  // Profile tab state (Feed | Music | Playlists)
+  const [profileTab, setProfileTab] = useState<'feed' | 'music' | 'playlists'>('feed')
+
   // NFT Transfer state
   const [transferRecipient, setTransferRecipient] = useState('')
   const [selectedNftId, setSelectedNftId] = useState('')
@@ -4594,27 +4597,88 @@ function DEXDashboard() {
                     </Card>
                   )}
 
-                  {/* User's Tracks - Legacy style */}
-                  <Card className="retro-card">
-                    <CardContent className="p-6">
-                      <h2 className="retro-title text-lg flex items-center gap-2 mb-4">
-                        <Music className="w-5 h-5 text-purple-400" />
-                        Tracks by @{viewingProfile.userHandle}
-                      </h2>
-                      <Tracks profileId={viewingProfile.id} />
-                    </CardContent>
-                  </Card>
+                  {/* Profile Tabs - Feed | Music | Playlists */}
+                  <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-neutral-800">
+                    <div className="flex">
+                      <button
+                        onClick={() => setProfileTab('feed')}
+                        className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
+                          profileTab === 'feed'
+                            ? 'text-white border-b-2 border-cyan-400'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                        }`}
+                      >
+                        <NewPost className="w-4 h-4" fillColor={profileTab === 'feed' ? '#22d3ee' : '#6b7280'} />
+                        Feed
+                      </button>
+                      <button
+                        onClick={() => setProfileTab('music')}
+                        className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
+                          profileTab === 'music'
+                            ? 'text-white border-b-2 border-purple-400'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                        }`}
+                      >
+                        <Music className={`w-4 h-4 ${profileTab === 'music' ? 'text-purple-400' : ''}`} />
+                        Music
+                      </button>
+                      <button
+                        onClick={() => setProfileTab('playlists')}
+                        className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
+                          profileTab === 'playlists'
+                            ? 'text-white border-b-2 border-pink-400'
+                            : 'text-neutral-500 hover:text-neutral-300'
+                        }`}
+                      >
+                        <ListMusic className={`w-4 h-4 ${profileTab === 'playlists' ? 'text-pink-400' : ''}`} />
+                        Playlists
+                      </button>
+                    </div>
+                  </div>
 
-                  {/* User's Posts - Same rendering as /dex feed */}
-                  <Card className="retro-card">
-                    <CardContent className="p-6">
-                      <h2 className="retro-title text-lg flex items-center gap-2 mb-4">
-                        <NewPost className="w-5 h-5 text-cyan-400" />
-                        Posts by @{viewingProfile.userHandle}
-                      </h2>
+                  {/* Tab Content */}
+                  <div className="mt-4">
+                    {profileTab === 'feed' && (
                       <Posts profileId={viewingProfile.id} />
-                    </CardContent>
-                  </Card>
+                    )}
+                    {profileTab === 'music' && (
+                      <Tracks profileId={viewingProfile.id} />
+                    )}
+                    {profileTab === 'playlists' && (
+                      <div className="space-y-4">
+                        {/* Playlists Section */}
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-white font-semibold">Playlists</h3>
+                          {me?.profile?.id === viewingProfile.id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowCreatePlaylistModal(true)}
+                              className="border-pink-500/50 hover:bg-pink-500/10 text-pink-400"
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Create Playlist
+                            </Button>
+                          )}
+                        </div>
+                        {/* User playlists will be loaded here - for now show placeholder */}
+                        <div className="text-center py-8 text-neutral-500">
+                          <ListMusic className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                          <p>No playlists yet</p>
+                          {me?.profile?.id === viewingProfile.id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowCreatePlaylistModal(true)}
+                              className="mt-3 text-pink-400 hover:bg-pink-500/10"
+                            >
+                              Create your first playlist
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>

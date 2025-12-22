@@ -6,6 +6,23 @@ import Asset from 'components/Asset/Asset'
 import { FavoriteTrack } from 'components/common/Buttons/FavoriteTrack/FavoriteTrack'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 
+// Gradient progress bar component
+const GradientProgressBar = ({ progress, duration }: { progress: number; duration: number }) => {
+  const percentage = duration > 0 ? (progress / duration) * 100 : 0
+
+  return (
+    <div className="absolute top-0 left-0 right-0 h-1 bg-neutral-800/50">
+      <div
+        className="h-full transition-all duration-100"
+        style={{
+          width: `${percentage}%`,
+          background: 'linear-gradient(90deg, #26D1A8 0%, #62AAFF 25%, #AC4EFD 50%, #F1419E 75%, #FED503 100%)',
+        }}
+      />
+    </div>
+  )
+}
+
 /**
  * MobileBottomAudioPlayer - UI only, no audio element
  * Audio is handled by AudioEngine component to prevent echo
@@ -21,6 +38,8 @@ export const BottomAudioPlayer = () => {
     isPlaying,
     togglePlay,
     closePlayer,
+    progress,
+    duration,
   } = useAudioPlayerContext()
 
   const { dispatchShowAudioPlayerModal } = useModalDispatch()
@@ -36,7 +55,10 @@ export const BottomAudioPlayer = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex flex-col bg-neutral-900 py-2 px-3 pb-safe animate-slide-up shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
-      <div className="flex items-center justify-between gap-2 w-full max-w-full overflow-hidden">
+      {/* Gradient progress bar at top */}
+      <GradientProgressBar progress={progress} duration={duration} />
+
+      <div className="flex items-center justify-between gap-2 w-full max-w-full overflow-hidden mt-1">
         {/* Close button (X) on the left */}
         <button
           aria-label="Close player"

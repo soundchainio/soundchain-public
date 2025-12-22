@@ -129,8 +129,8 @@ export const AudioPlayerModal = () => {
     <Modal
       show={isOpen}
       title=""
-      leftButton={null}
-      rightButton={null}
+      leftButton={undefined}
+      rightButton={undefined}
       onClose={handleClose}
       fullScreen
     >

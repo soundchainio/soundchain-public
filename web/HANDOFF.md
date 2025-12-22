@@ -1,6 +1,6 @@
 # SoundChain Codebase Handoff Document
 
-**Last Updated:** December 19, 2025
+**Last Updated:** December 22, 2025
 **Total Commits:** 4,637+ on production branch
 **Project Start:** July 14, 2021
 
@@ -245,7 +245,56 @@ Key commits:
 - OGUN token for payments
 - MATIC for gas
 
-### 2.6 SCid (SoundChain ID)
+### 2.6 Universal Playlist (NEW - December 2025)
+**Status:** Complete - Full implementation for mobile and desktop
+
+**Vision:** SoundChain playlists are the world's first universal music aggregator that supports:
+- **SoundChain NFTs** - Owned and marketplace tracks
+- **External URLs** - YouTube, SoundCloud, Bandcamp, Spotify, Apple Music, Tidal, Vimeo, custom links
+- **User Uploads** - Drag-and-drop audio files (S3 integration pending)
+
+**Why This Matters:** This makes soundchain.io the only site that allows any link or file from private hosts to be added to playlists alongside SoundChain NFTs. Foundation for OGUN streaming rewards integration.
+
+**API Files:**
+- `api/src/models/PlaylistTrack.ts` - Extended with `sourceType`, `externalUrl`, `uploadedFileUrl`, `title`, `artist`, `artworkUrl`, `duration`, `position`
+- `api/src/types/AddPlaylistItem.ts` - Input type for universal playlist items
+- `api/src/types/AddPlaylistItemPayload.ts` - Mutation response types
+- `api/src/services/PlaylistService.ts` - Added `addPlaylistItem()`, `deletePlaylistItem()`, `reorderPlaylistItems()`
+- `api/src/resolvers/PlaylistResolver.ts` - Added mutations for universal playlist
+
+**Frontend Files:**
+- `web/src/components/Playlist/AddToPlaylistModal.tsx` - URL input + drag-drop UI
+- `web/src/components/Playlist/PlaylistDetail.tsx` - Updated to render mixed sources
+- `web/src/components/Playlist/PlaylistCard.tsx` - Updated mosaic for mixed sources
+- `web/src/lib/graphql.ts` - Added `PlaylistTrackSourceType` enum and mutations
+
+**Source Types (PlaylistTrackSourceType):**
+```typescript
+enum PlaylistTrackSourceType {
+  Nft = 'nft',           // SoundChain NFT track
+  Youtube = 'youtube',   // YouTube video/music
+  Soundcloud = 'soundcloud',
+  Bandcamp = 'bandcamp',
+  Spotify = 'spotify',
+  AppleMusic = 'apple_music',
+  Tidal = 'tidal',
+  Vimeo = 'vimeo',
+  Upload = 'upload',     // User-uploaded file
+  Custom = 'custom',     // Any other URL
+}
+```
+
+**Playback Behavior:**
+- **NFT tracks:** Full playback with audio player
+- **Uploaded files:** Full playback with audio player (when S3 integration complete)
+- **External URLs:** Opens in new tab (embeds planned for future)
+
+**Mutations:**
+- `addPlaylistItem(input: AddPlaylistItemInput)` - Add any source type
+- `deletePlaylistItem(playlistItemId: String)` - Remove item by ID
+- `reorderPlaylistItems(playlistId: String, itemIds: [String])` - Reorder items
+
+### 2.7 SCid (SoundChain ID)
 **Status:** Complete with on-chain registry
 
 Key commits:
@@ -342,7 +391,66 @@ soundchain/
 
 ## 5. RECENT CHANGES (December 2025)
 
-### Completed Today
+### Completed December 22 (Late Session)
+
+1. **Site Crash Fix** - Fixed `TypeError: Cannot read properties of undefined (reading 'FollowerCount')`
+   - Removed non-existent `SortUserField.FollowerCount` from `RightSidebar.tsx`
+   - Fixed field names in `LeftSidebar.tsx`: `coverPictureUrl` → `coverPicture`, `artistProfileId` → `profileId`
+
+2. **Playlist Creation Fix** - Fixed mobile playlist creation failure
+   - Added `errorPolicy: 'all'` to `CreatePlaylistModal.tsx` to handle partial GraphQL errors
+   - API: Refetch document after save in `PlaylistService.ts` to avoid mongoose Symbol serialization error
+
+3. **Now Playing Modal Redesign** - Matched legacy Figma design
+   - Fire icon for favorites (with glow effect when active)
+   - Rainbow gradient progress bar (teal → blue → purple → pink → yellow)
+   - Mobile-first fullscreen layout
+   - Expandable playlist section
+   - File: `src/components/modals/AudioPlayerModal.tsx`
+
+4. **Waveform in Bottom Player** - Added visual waveform like legacy
+   - New `MiniWaveform` component with CSS-only animated bars
+   - Rainbow gradient progress visualization
+   - Click-to-seek support
+   - Added to desktop bottom player (`BotttomPlayerTrackSlider.tsx`)
+   - Mobile player gets gradient progress bar at top
+   - Files: `src/components/common/BottomAudioPlayer/components/MiniWaveform.tsx`
+
+5. **PlaylistDetail Enhancements** - BUY/LIST/EDIT buttons per track
+   - Color-coded action buttons: cyan=buy, yellow=edit, purple=list, pink=auction
+   - Shows NFT ownership status and pricing
+   - Added NFT/pricing fields to GraphQL query
+
+6. **Cloudflare Tunnel** - Quick tunnel for mobile remote testing
+   - Current URL: `https://hourly-boulevard-epa-capable.trycloudflare.com`
+   - URLs expire periodically, restart with: `launchctl stop/start com.cloudflare.tunnel`
+   - Fixed IPv6 issue - now uses 127.0.0.1 instead of localhost in plist config
+
+7. **Profile Page Tabs** - Added Feed | Music | Playlists tabs like legacy Figma
+   - Tab bar with colored underlines (cyan=feed, purple=music, pink=playlists)
+   - Feed tab shows posts, Music tab shows tracks, Playlists tab placeholder
+   - Create Playlist button visible on own profile
+   - File: `src/pages/dex/[...slug].tsx` (profile view section ~line 4600)
+
+8. **Create Playlist Modal Redesign** - Matched legacy Figma design
+   - Three tabs: Post | Playlist | Mint (green active indicator)
+   - Change Artwork section with ImagePlus icon
+   - Name input field with placeholder "Banging Beats"
+   - Add track button with search dropdown (searches all tracks)
+   - Selected tracks list with REMOVE buttons
+   - Green "CREATE PLAYLIST" button
+   - File: `src/components/Playlist/CreatePlaylistModal.tsx`
+
+### Completed December 22 (Earlier)
+1. **Universal Playlist Aggregator** - Full implementation for mobile and desktop
+   - SoundChain playlists now support NFTs, external URLs, and file uploads
+   - API: `PlaylistTrack` model extended, new mutations added
+   - Web: `AddToPlaylistModal` with URL input and drag-drop zone
+   - `PlaylistDetail` updated to render mixed sources with platform badges
+   - Source icons: YouTube (red), SoundCloud (orange), Spotify (green), etc.
+   - External links open in new tab, NFTs/uploads play in audio player
+
+### Completed December 19-21
 1. **Embed Fix** - Restored iframe embeds for Spotify/SoundCloud/Bandcamp (LEGACY UI STYLE)
    - Posts now show embedded players INSIDE the post cards (not redirect links)
    - Uses direct iframe with `post.mediaLink` URL
