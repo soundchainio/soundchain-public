@@ -95,7 +95,7 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
                     <iframe
                       frameBorder="0"
                       className="mt-3 w-full bg-black rounded-lg"
-                      style={{ height: embedHeight }}
+                      style={{ minHeight: embedHeight }}
                       src={mediaUrl}
                       title="Media"
                       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"

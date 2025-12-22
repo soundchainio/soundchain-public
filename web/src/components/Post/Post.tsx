@@ -305,7 +305,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                   <iframe
                     frameBorder="0"
                     className="w-full bg-black"
-                    style={{ height: embedHeight }}
+                    style={{ minHeight: embedHeight }}
                     src={mediaUrl}
                     title="Media"
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"

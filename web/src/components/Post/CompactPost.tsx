@@ -179,7 +179,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
             <iframe
               frameBorder="0"
               className="w-full h-full bg-black"
-              style={{ height: getCompactEmbedHeight(platformType) }}
+              style={{ minHeight: getCompactEmbedHeight(platformType) }}
               src={post.mediaLink.replace(/^http:/, 'https:')}
               title="Media"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
