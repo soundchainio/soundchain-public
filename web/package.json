@@ -69,6 +69,7 @@
     "decimal.js": "^10.4.3",
     "emoji-mart": "5.6.0",
     "ethers": "^5.7.2",
+    "ethers5": "npm:ethers@^5.7.2",
     "formik": "^2.4.6",
     "grapheme-splitter": "^1.0.4",
     "graphql": "^16.9.0",
