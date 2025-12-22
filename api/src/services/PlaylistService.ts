@@ -5,13 +5,14 @@ import { FavoritePlaylist, FavoritePlaylistModel } from '../models/FavoritePlayl
 import { FollowPlaylist, FollowPlaylistModel } from '../models/FollowPlaylist';
 import { Playlist, PlaylistModel } from '../models/Playlist';
 import { TrackModel } from '../models/Track';
-import { PlaylistTrack, PlaylistTrackModel } from '../models/PlaylistTrack';
+import { PlaylistTrack, PlaylistTrackModel, PlaylistTrackSourceType } from '../models/PlaylistTrack';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { ModelService } from './ModelService';
 import { SortPlaylistInput } from './SortPlaylistInput';
 import { CreatePlaylistTracks } from '../types/CreatePlaylistTracks';
 import { DeletePlaylistTracks } from '../types/DeletePlaylistTracks';
+import { AddPlaylistItemInput } from '../types/AddPlaylistItem';
 
 interface CreatePlaylistParams {
   title: string;
@@ -59,7 +60,9 @@ export class PlaylistService extends ModelService<typeof Playlist> {
       await this.createPlaylistTrack(trackIds, profileId, playlist);
     }
 
-    return playlist;
+    // Refetch to ensure document is properly hydrated for GraphQL field resolution
+    const savedPlaylist = await this.model.findById(playlist._id);
+    return savedPlaylist!;
   }
 
   async updatePlaylist(params: EditPlaylistParams): Promise<Playlist> {
@@ -199,5 +202,96 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     const filter = { playlistId, deleted: false };
 
     return paginate(PlaylistTrackModel, { filter: { ...filter }, sort, page });
+  }
+
+  // Universal playlist support - add any source type
+  async addPlaylistItem(input: AddPlaylistItemInput, profileId: string): Promise<PlaylistTrack> {
+    const { playlistId, sourceType, trackId, externalUrl, uploadedFileUrl, title, artist, artworkUrl, duration, position } = input;
+
+    // Verify playlist exists and user owns it
+    const playlist = await this.model.findOne({ _id: playlistId, profileId, deleted: false });
+    if (!playlist) {
+      throw new Error('Playlist not found or you do not have permission to modify it');
+    }
+
+    // Validate based on source type
+    if (sourceType === PlaylistTrackSourceType.NFT) {
+      if (!trackId) {
+        throw new Error('trackId is required for NFT source type');
+      }
+      // Verify the track exists
+      const track = await TrackModel.findById(trackId);
+      if (!track) {
+        throw new Error('Track not found');
+      }
+    } else if (sourceType === PlaylistTrackSourceType.UPLOAD) {
+      if (!uploadedFileUrl) {
+        throw new Error('uploadedFileUrl is required for UPLOAD source type');
+      }
+      if (!title) {
+        throw new Error('title is required for uploaded files');
+      }
+    } else {
+      // External URL sources (YouTube, SoundCloud, Bandcamp, etc.)
+      if (!externalUrl) {
+        throw new Error('externalUrl is required for external source types');
+      }
+    }
+
+    // Get the next position if not specified
+    let itemPosition = position;
+    if (itemPosition === undefined) {
+      const lastTrack = await PlaylistTrackModel.findOne({ playlistId })
+        .sort({ position: -1 })
+        .select('position');
+      itemPosition = lastTrack ? lastTrack.position + 1 : 0;
+    }
+
+    // Create the playlist track
+    const playlistTrack = new PlaylistTrackModel({
+      playlistId,
+      profileId,
+      sourceType,
+      trackId: sourceType === PlaylistTrackSourceType.NFT ? trackId : undefined,
+      externalUrl: externalUrl || undefined,
+      uploadedFileUrl: uploadedFileUrl || undefined,
+      title: title || undefined,
+      artist: artist || undefined,
+      artworkUrl: artworkUrl || undefined,
+      duration: duration || undefined,
+      position: itemPosition,
+    });
+
+    await playlistTrack.save();
+    return playlistTrack;
+  }
+
+  // Delete a playlist item by ID
+  async deletePlaylistItem(playlistItemId: string, profileId: string): Promise<boolean> {
+    const result = await PlaylistTrackModel.deleteOne({
+      _id: playlistItemId,
+      profileId,
+    });
+    return result.deletedCount > 0;
+  }
+
+  // Reorder playlist items
+  async reorderPlaylistItems(playlistId: string, itemIds: string[], profileId: string): Promise<boolean> {
+    // Verify ownership
+    const playlist = await this.model.findOne({ _id: playlistId, profileId, deleted: false });
+    if (!playlist) {
+      throw new Error('Playlist not found or you do not have permission to modify it');
+    }
+
+    // Update positions in order
+    const updates = itemIds.map((itemId, index) => ({
+      updateOne: {
+        filter: { _id: itemId, playlistId },
+        update: { $set: { position: index } },
+      },
+    }));
+
+    await PlaylistTrackModel.bulkWrite(updates);
+    return true;
   }
 }

@@ -19,6 +19,8 @@ import { GetTracksFromPlaylist } from '../types/GetTracksFromPlaylist';
 import { CreatePlaylistTracks } from '../types/CreatePlaylistTracks';
 import { DeletePlaylistTracks } from '../types/DeletePlaylistTracks';
 import { DeletePlaylistPayload } from '../types/DeletePlaylistPayload';
+import { AddPlaylistItemInput } from '../types/AddPlaylistItem';
+import { AddPlaylistItemPayload, DeletePlaylistItemPayload, ReorderPlaylistItemsPayload } from '../types/AddPlaylistItemPayload';
 
 @Resolver(Playlist)
 export class PlaylistResolver {
@@ -148,9 +150,56 @@ export class PlaylistResolver {
       field:  SortTrackField.CREATED_AT,
       order: SortOrder.DESC
     };
-    
+
     const tracks = await playlistService.getTracksFromPlaylist(_id.toString(), sort, page);
 
     return tracks;
+  }
+
+  // Universal playlist mutations - add external URLs, uploads, NFTs
+  @Mutation(() => AddPlaylistItemPayload)
+  @Authorized()
+  async addPlaylistItem(
+    @Ctx() { playlistService }: Context,
+    @Arg('input') input: AddPlaylistItemInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<AddPlaylistItemPayload> {
+    try {
+      const playlistTrack = await playlistService.addPlaylistItem(input, profileId.toString());
+      return { playlistTrack, success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  @Mutation(() => DeletePlaylistItemPayload)
+  @Authorized()
+  async deletePlaylistItem(
+    @Ctx() { playlistService }: Context,
+    @Arg('playlistItemId') playlistItemId: string,
+    @CurrentUser() { profileId }: User,
+  ): Promise<DeletePlaylistItemPayload> {
+    try {
+      const success = await playlistService.deletePlaylistItem(playlistItemId, profileId.toString());
+      return { success };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  @Mutation(() => ReorderPlaylistItemsPayload)
+  @Authorized()
+  async reorderPlaylistItems(
+    @Ctx() { playlistService }: Context,
+    @Arg('playlistId') playlistId: string,
+    @Arg('itemIds', () => [String]) itemIds: string[],
+    @CurrentUser() { profileId }: User,
+  ): Promise<ReorderPlaylistItemsPayload> {
+    try {
+      const success = await playlistService.reorderPlaylistItems(playlistId, itemIds, profileId.toString());
+      return { success };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
   }
 }
