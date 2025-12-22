@@ -1311,14 +1311,69 @@ export type Playlist = {
   updatedAt: Scalars['DateTime']['output'];
 };
 
+// Source types for universal playlist support
+export enum PlaylistTrackSourceType {
+  Nft = 'nft',
+  Youtube = 'youtube',
+  Soundcloud = 'soundcloud',
+  Bandcamp = 'bandcamp',
+  Spotify = 'spotify',
+  AppleMusic = 'apple_music',
+  Tidal = 'tidal',
+  Vimeo = 'vimeo',
+  Upload = 'upload',
+  Custom = 'custom',
+}
+
 export type PlaylistTrack = {
   __typename?: 'PlaylistTrack';
   createdAt: Scalars['DateTime']['output'];
   id: Scalars['ID']['output'];
   playlistId: Scalars['ID']['output'];
   profileId: Scalars['ID']['output'];
-  trackId: Scalars['ID']['output'];
+  trackId: Maybe<Scalars['ID']['output']>;
+  sourceType: PlaylistTrackSourceType;
+  externalUrl: Maybe<Scalars['String']['output']>;
+  uploadedFileUrl: Maybe<Scalars['String']['output']>;
+  title: Maybe<Scalars['String']['output']>;
+  artist: Maybe<Scalars['String']['output']>;
+  artworkUrl: Maybe<Scalars['String']['output']>;
+  duration: Maybe<Scalars['Float']['output']>;
+  position: Scalars['Float']['output'];
   updatedAt: Scalars['DateTime']['output'];
+};
+
+// Input for adding a single item to a playlist (NFT, external URL, or uploaded file)
+export type AddPlaylistItemInput = {
+  playlistId: Scalars['String']['input'];
+  sourceType: PlaylistTrackSourceType;
+  trackId?: InputMaybe<Scalars['String']['input']>;
+  externalUrl?: InputMaybe<Scalars['String']['input']>;
+  uploadedFileUrl?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  artist?: InputMaybe<Scalars['String']['input']>;
+  artworkUrl?: InputMaybe<Scalars['String']['input']>;
+  duration?: InputMaybe<Scalars['Float']['input']>;
+  position?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type AddPlaylistItemPayload = {
+  __typename?: 'AddPlaylistItemPayload';
+  playlistTrack: Maybe<PlaylistTrack>;
+  success: Scalars['Boolean']['output'];
+  error: Maybe<Scalars['String']['output']>;
+};
+
+export type DeletePlaylistItemPayload = {
+  __typename?: 'DeletePlaylistItemPayload';
+  success: Scalars['Boolean']['output'];
+  error: Maybe<Scalars['String']['output']>;
+};
+
+export type ReorderPlaylistItemsPayload = {
+  __typename?: 'ReorderPlaylistItemsPayload';
+  success: Scalars['Boolean']['output'];
+  error: Maybe<Scalars['String']['output']>;
 };
 
 export type PolygonscanResult = {
@@ -9106,4 +9161,116 @@ export const TogglePlaylistFavoriteDocument = gql`
 export function useTogglePlaylistFavoriteMutation(baseOptions?: Apollo.MutationHookOptions<TogglePlaylistFavoriteMutation, TogglePlaylistFavoriteMutationVariables>) {
   const options = { ...defaultOptions, ...baseOptions };
   return Apollo.useMutation<TogglePlaylistFavoriteMutation, TogglePlaylistFavoriteMutationVariables>(TogglePlaylistFavoriteDocument, options);
+}
+
+// AddPlaylistItem Mutation - Universal playlist support
+export type AddPlaylistItemMutationVariables = Exact<{
+  input: AddPlaylistItemInput;
+}>;
+
+export type AddPlaylistItemMutation = {
+  __typename?: 'Mutation';
+  addPlaylistItem: {
+    __typename?: 'AddPlaylistItemPayload';
+    success: boolean;
+    error: Maybe<string>;
+    playlistTrack: Maybe<{
+      __typename?: 'PlaylistTrack';
+      id: string;
+      playlistId: string;
+      sourceType: PlaylistTrackSourceType;
+      trackId: Maybe<string>;
+      externalUrl: Maybe<string>;
+      uploadedFileUrl: Maybe<string>;
+      title: Maybe<string>;
+      artist: Maybe<string>;
+      artworkUrl: Maybe<string>;
+      duration: Maybe<number>;
+      position: number;
+    }>;
+  };
+};
+
+export const AddPlaylistItemDocument = gql`
+  mutation AddPlaylistItem($input: AddPlaylistItemInput!) {
+    addPlaylistItem(input: $input) {
+      success
+      error
+      playlistTrack {
+        id
+        playlistId
+        sourceType
+        trackId
+        externalUrl
+        uploadedFileUrl
+        title
+        artist
+        artworkUrl
+        duration
+        position
+      }
+    }
+  }
+`;
+
+export function useAddPlaylistItemMutation(baseOptions?: Apollo.MutationHookOptions<AddPlaylistItemMutation, AddPlaylistItemMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddPlaylistItemMutation, AddPlaylistItemMutationVariables>(AddPlaylistItemDocument, options);
+}
+
+// DeletePlaylistItem Mutation
+export type DeletePlaylistItemMutationVariables = Exact<{
+  playlistItemId: Scalars['String']['input'];
+}>;
+
+export type DeletePlaylistItemMutation = {
+  __typename?: 'Mutation';
+  deletePlaylistItem: {
+    __typename?: 'DeletePlaylistItemPayload';
+    success: boolean;
+    error: Maybe<string>;
+  };
+};
+
+export const DeletePlaylistItemDocument = gql`
+  mutation DeletePlaylistItem($playlistItemId: String!) {
+    deletePlaylistItem(playlistItemId: $playlistItemId) {
+      success
+      error
+    }
+  }
+`;
+
+export function useDeletePlaylistItemMutation(baseOptions?: Apollo.MutationHookOptions<DeletePlaylistItemMutation, DeletePlaylistItemMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeletePlaylistItemMutation, DeletePlaylistItemMutationVariables>(DeletePlaylistItemDocument, options);
+}
+
+// ReorderPlaylistItems Mutation
+export type ReorderPlaylistItemsMutationVariables = Exact<{
+  playlistId: Scalars['String']['input'];
+  itemIds: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+export type ReorderPlaylistItemsMutation = {
+  __typename?: 'Mutation';
+  reorderPlaylistItems: {
+    __typename?: 'ReorderPlaylistItemsPayload';
+    success: boolean;
+    error: Maybe<string>;
+  };
+};
+
+export const ReorderPlaylistItemsDocument = gql`
+  mutation ReorderPlaylistItems($playlistId: String!, $itemIds: [String!]!) {
+    reorderPlaylistItems(playlistId: $playlistId, itemIds: $itemIds) {
+      success
+      error
+    }
+  }
+`;
+
+export function useReorderPlaylistItemsMutation(baseOptions?: Apollo.MutationHookOptions<ReorderPlaylistItemsMutation, ReorderPlaylistItemsMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<ReorderPlaylistItemsMutation, ReorderPlaylistItemsMutationVariables>(ReorderPlaylistItemsDocument, options);
 }

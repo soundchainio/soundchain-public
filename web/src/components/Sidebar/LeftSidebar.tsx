@@ -13,7 +13,7 @@ export const LeftSidebar = () => {
   // Get user's recent tracks (if they're an artist)
   const { data: tracksData } = useTracksQuery({
     variables: {
-      filter: { artistProfileId: profile?.id },
+      filter: { profileId: profile?.id },
       page: { first: 6 },
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
     },
@@ -81,9 +81,9 @@ export const LeftSidebar = () => {
         <div className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl overflow-hidden border border-cyan-500/20">
           {/* Cover Image or Gradient */}
           <div className="h-20 bg-gradient-to-r from-cyan-500/30 via-purple-500/30 to-pink-500/30 relative">
-            {profile.coverPictureUrl && (
+            {profile.coverPicture && (
               <img
-                src={profile.coverPictureUrl}
+                src={profile.coverPicture}
                 alt="Cover"
                 className="w-full h-full object-cover"
               />
@@ -114,7 +114,7 @@ export const LeftSidebar = () => {
               </div>
               <div className="flex items-center gap-1.5">
                 <Music className="w-4 h-4 text-purple-400" />
-                <span className="text-white font-medium">{profile.trackCount || 0}</span>
+                <span className="text-white font-medium">{recentTracks.length || 0}</span>
                 <span className="text-gray-500">tracks</span>
               </div>
             </div>
@@ -138,8 +138,8 @@ export const LeftSidebar = () => {
                   className="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity relative group"
                 >
                   <img
-                    src={track.artworkUrl || '/images/default-artwork.png'}
-                    alt={track.title}
+                    src={track.artworkUrl ?? '/images/default-artwork.png'}
+                    alt={track.title ?? 'Track'}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -171,8 +171,8 @@ export const LeftSidebar = () => {
                   className="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity relative group"
                 >
                   <img
-                    src={track.artworkUrl || '/images/default-artwork.png'}
-                    alt={track.title}
+                    src={track.artworkUrl ?? '/images/default-artwork.png'}
+                    alt={track.title ?? 'Track'}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useTracksQuery, useExploreUsersQuery, SortTrackField, SortOrder, SortUserField } from 'lib/graphql'
+import { useTracksQuery, useExploreUsersQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { Avatar } from '../Avatar'
 import { TrendingUp, Flame, Play, Users, BadgeCheck, Sparkles } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
@@ -17,12 +17,10 @@ export const RightSidebar = () => {
     },
   })
 
-  // Get featured/top users
+  // Get featured/top users - no sort field available, just get recent
   const { data: usersData } = useExploreUsersQuery({
     variables: {
-      filter: {},
       page: { first: 5 },
-      sort: { field: SortUserField.FollowerCount, order: SortOrder.Desc },
     },
   })
 
@@ -76,8 +74,8 @@ export const RightSidebar = () => {
                 {/* Artwork */}
                 <div className="w-10 h-10 rounded-lg overflow-hidden relative flex-shrink-0">
                   <img
-                    src={track.artworkUrl || '/images/default-artwork.png'}
-                    alt={track.title}
+                    src={track.artworkUrl ?? '/images/default-artwork.png'}
+                    alt={track.title ?? 'Track'}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
