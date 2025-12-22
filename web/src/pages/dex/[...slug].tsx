@@ -64,6 +64,7 @@ import { SUPPORTED_TOKENS, TOKEN_INFO, Token } from 'constants/tokens'
 import { ToastContainer } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
+import { LeftSidebar, RightSidebar } from 'components/Sidebar'
 import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
@@ -2390,10 +2391,19 @@ function DEXDashboard() {
             </div>
           )}
 
-          {/* Feed View - Using the same component as /home page */}
+          {/* Feed View - 3-column desktop layout */}
           {selectedView === 'feed' && (
-            <div style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-              <Posts />
+            <div className="flex justify-center gap-6 px-4">
+              {/* Left Sidebar - Desktop only */}
+              <LeftSidebar />
+
+              {/* Main Feed */}
+              <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+                <Posts />
+              </div>
+
+              {/* Right Sidebar - Desktop only */}
+              <RightSidebar />
             </div>
           )}
 
