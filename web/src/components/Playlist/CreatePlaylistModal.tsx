@@ -37,13 +37,20 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
             description: description.trim() || null,
           },
         },
+        // Use 'all' errorPolicy to get data even with partial GraphQL errors
+        // (e.g., non-critical field resolver issues)
+        errorPolicy: 'all',
       })
 
+      // Check for successful playlist creation even if there are partial errors
       if (result.data?.createPlaylist?.playlist?.id) {
         onSuccess?.(result.data.createPlaylist.playlist.id)
         setTitle('')
         setDescription('')
         onClose()
+      } else if (result.errors?.length) {
+        console.error('GraphQL errors:', result.errors)
+        setError('Failed to create playlist. Please try again.')
       }
     } catch (err) {
       console.error('Failed to create playlist:', err)
