@@ -254,25 +254,27 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           )}
 
-          {/* Embedded video/link - Legacy style with new platform support */}
+          {/* Embedded video/link - Responsive with proper aspect ratio */}
           {post.mediaLink && (
             hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-              // YouTube, Vimeo, Facebook - use ReactPlayer (legacy: 600px height)
-              <ReactPlayer
-                width="100%"
-                height="600px"
-                style={{ marginTop: '1rem' }}
-                url={post.mediaLink}
-                playsinline
-                controls
-                light={getYouTubeThumbnail(post.mediaLink) || true}
-                pip
-                config={{
-                  youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-                  vimeo: { playerOptions: { responsive: true, playsinline: true } },
-                  facebook: { appId: '' },
-                }}
-              />
+              // YouTube, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
+              <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+                <ReactPlayer
+                  width="100%"
+                  height="100%"
+                  style={{ position: 'absolute', top: 0, left: 0 }}
+                  url={post.mediaLink}
+                  playsinline
+                  controls
+                  light={getYouTubeThumbnail(post.mediaLink) || true}
+                  pip
+                  config={{
+                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                    facebook: { appId: '' },
+                  }}
+                />
+              </div>
             ) : (
               // All other platforms (audio + social) - use iframe embed (legacy style)
               (() => {
