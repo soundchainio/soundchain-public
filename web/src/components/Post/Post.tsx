@@ -304,8 +304,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 return (
                   <iframe
                     frameBorder="0"
-                    className="mt-4 w-full bg-neutral-900"
-                    style={{ minHeight: embedHeight }}
+                    className="w-full bg-black"
+                    style={{ height: embedHeight }}
                     src={mediaUrl}
                     title="Media"
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
@@ -319,14 +319,14 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 
           {/* Repost preview */}
           {post.repostId && (
-            <div className="p-3">
+            <div className="px-3 py-2">
               <RepostPreview postId={post.repostId} handleOnPlayClicked={handleOnPlayClicked} />
             </div>
           )}
 
           {/* Track player */}
           {post.track && !post.track.deleted && (
-            <div className="p-3">
+            <div className="px-3 py-2">
               <MiniAudioPlayer
                 song={{
                   src: post.track.playbackUrl,
@@ -345,7 +345,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           )}
           {post.track && post.track.deleted && (
-            <div className="p-3">
+            <div className="px-3 py-2">
               <NotAvailableMessage type="track" />
             </div>
           )}

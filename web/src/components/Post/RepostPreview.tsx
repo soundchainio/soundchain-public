@@ -45,39 +45,41 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
             <pre className="mt-4 whitespace-pre-wrap break-words text-gray-100">
               <EmoteRenderer text={post.body || ''} />
             </pre>
-            {/* Embedded media - Legacy style with all platform support */}
+            {/* Embedded media - Airtight responsive */}
             {post.mediaLink && (
               hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-                // YouTube, Vimeo, Facebook - use ReactPlayer (legacy style)
-                <ReactPlayer
-                  width="100%"
-                  height="400px"
-                  style={{ marginTop: '1rem' }}
-                  url={post.mediaLink}
-                  playsinline
-                  controls
-                  light={true}
-                  pip
-                  config={{
-                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
-                    facebook: { appId: '' },
-                  }}
-                />
+                // YouTube, Vimeo, Facebook - responsive 16:9
+                <div className="relative w-full mt-3" style={{ paddingTop: '56.25%' }}>
+                  <ReactPlayer
+                    width="100%"
+                    height="100%"
+                    style={{ position: 'absolute', top: 0, left: 0 }}
+                    url={post.mediaLink}
+                    playsinline
+                    controls
+                    light={true}
+                    pip
+                    config={{
+                      youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                      vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                      facebook: { appId: '' },
+                    }}
+                  />
+                </div>
               ) : (
-                // All other platforms - iframe embed (legacy style with new platforms)
+                // All other platforms - iframe embed (airtight)
                 (() => {
                   const mediaType = IdentifySource(post.mediaLink).type
                   const mediaUrl = post.mediaLink.replace(/^http:/, 'https:')
 
-                  // Platform-specific heights (legacy + new platforms)
+                  // Platform-specific heights
                   const getEmbedHeight = () => {
                     switch (mediaType) {
                       // Audio platforms
                       case MediaProvider.BANDCAMP: return '470px'
                       case MediaProvider.SPOTIFY: return '352px'
                       case MediaProvider.SOUNDCLOUD: return '166px'
-                      // Social platforms (new)
+                      // Social platforms
                       case MediaProvider.INSTAGRAM: return '540px'
                       case MediaProvider.TIKTOK: return '600px'
                       case MediaProvider.X: return '350px'
@@ -92,8 +94,8 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
                   return (
                     <iframe
                       frameBorder="0"
-                      className="mt-4 w-full bg-neutral-900 rounded-lg"
-                      style={{ minHeight: embedHeight }}
+                      className="mt-3 w-full bg-black rounded-lg"
+                      style={{ height: embedHeight }}
                       src={mediaUrl}
                       title="Media"
                       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
