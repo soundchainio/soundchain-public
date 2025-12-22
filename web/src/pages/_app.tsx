@@ -28,6 +28,8 @@ import 'styles/volume-slider.css'
 
 const WalletProvider = dynamic(() => import('hooks/useWalletContext'), { ssr: false })
 const MagicProvider = dynamic(() => import('hooks/useMagicContext'), { ssr: false })
+const Web3ModalProvider = dynamic(() => import('contexts/Web3ModalContext').then(mod => mod.Web3ModalProvider), { ssr: false })
+const UnifiedWalletProvider = dynamic(() => import('contexts/UnifiedWalletContext').then(mod => mod.UnifiedWalletProvider), { ssr: false })
 
 NProgress.configure({
   showSpinner: false,
@@ -48,28 +50,32 @@ interface CustomAppProps extends Pick<AppProps, 'Component' | 'pageProps'> {
 function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
   return (
     <ApolloProvider pageProps={pageProps}>
-      <ModalProvider>
-        <StateProvider>
-          <PanelProvider>
-            <MagicProvider>
-              <WalletProvider>
-                <AudioPlayerProvider>
-                  <TrackProvider>
-                    <HideBottomNavBarProvider>
-                      <LayoutContextProvider>
-                        <CheckBodyScroll />
-                        <Layout>
-                          <Component {...pageProps} />
-                        </Layout>
-                      </LayoutContextProvider>
-                    </HideBottomNavBarProvider>
-                  </TrackProvider>
-                </AudioPlayerProvider>
-              </WalletProvider>
-            </MagicProvider>
-          </PanelProvider>
-        </StateProvider>
-      </ModalProvider>
+      <Web3ModalProvider>
+        <ModalProvider>
+          <StateProvider>
+            <PanelProvider>
+              <MagicProvider>
+                <WalletProvider>
+                  <UnifiedWalletProvider>
+                    <AudioPlayerProvider>
+                    <TrackProvider>
+                      <HideBottomNavBarProvider>
+                        <LayoutContextProvider>
+                          <CheckBodyScroll />
+                          <Layout>
+                            <Component {...pageProps} />
+                          </Layout>
+                        </LayoutContextProvider>
+                      </HideBottomNavBarProvider>
+                    </TrackProvider>
+                  </AudioPlayerProvider>
+                  </UnifiedWalletProvider>
+                </WalletProvider>
+              </MagicProvider>
+            </PanelProvider>
+          </StateProvider>
+        </ModalProvider>
+      </Web3ModalProvider>
     </ApolloProvider>
   )
 }

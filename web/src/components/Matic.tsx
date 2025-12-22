@@ -12,7 +12,9 @@ interface Props {
 
 export const Matic = ({ value = '', truncate, className, variant }: Props) => {
   const { data: maticUsd } = useMaticUsdQuery()
-  const currencyValue = currency(parseFloat(value.toString()) * parseFloat(maticUsd?.maticUsd || ''))
+  const maticPrice = parseFloat(maticUsd?.maticUsd || '0') || 0
+  const numValue = parseFloat(value.toString()) || 0
+  const currencyValue = currency(numValue * maticPrice)
 
   switch (variant) {
     case 'currency':

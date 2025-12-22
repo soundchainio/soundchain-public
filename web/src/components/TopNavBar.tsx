@@ -7,6 +7,7 @@ import { getJwt } from 'lib/apollo'
 import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 
 import { Button } from './common/Buttons/Button'
 import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
@@ -15,6 +16,36 @@ import { NotificationBadge } from './NotificationBadge'
 import { Notifications } from './Notifications'
 import { Title } from './Title'
 import { TopNavBarButton } from './TopNavBarButton'
+
+// Unified Wallet Button for nav bar
+const UnifiedWalletButton = () => {
+  const { activeAddress, activeWalletType, isConnected, chainName, connectWeb3Modal } = useUnifiedWallet()
+
+  const truncateAddress = (addr: string) => `${addr.slice(0, 4)}...${addr.slice(-3)}`
+
+  if (!isConnected || !activeAddress) {
+    return (
+      <button
+        onClick={connectWeb3Modal}
+        className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors"
+      >
+        <span>🔗</span>
+        <span className="hidden sm:inline">Connect</span>
+      </button>
+    )
+  }
+
+  return (
+    <button
+      onClick={connectWeb3Modal}
+      className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-20 border border-gray-30 hover:border-cyan-500/50 rounded-lg transition-colors"
+    >
+      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+      <span className="text-xs text-cyan-400 font-mono">{truncateAddress(activeAddress)}</span>
+      {chainName && <span className="text-[10px] text-gray-500 hidden md:inline">({chainName})</span>}
+    </button>
+  )
+}
 
 export interface TopNavBarProps {
   setSideMenuOpen?: (open: boolean) => void
@@ -108,6 +139,7 @@ export const TopNavBar = ({
             </div>
             {me && (
               <>
+                <UnifiedWalletButton />
                 <div className="pr-1 pt-2">
                   <SoundChainPopOver icon={Bell} badge={NotificationBadge}>
                     <Notifications />

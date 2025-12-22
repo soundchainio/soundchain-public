@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import { Badge } from 'components/common/Badges/Badge'
 import { Button } from 'components/common/Buttons/Button'
 import { InputField } from 'components/InputField'
@@ -9,12 +8,10 @@ import { Field, Form, Formik, FormikErrors } from 'formik'
 import { useMaxMintGasFee } from 'hooks/useMaxMintGasFee'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { Genre } from 'lib/graphql'
-import { useEffect, useState, ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { GenreLabel, genres } from 'utils/Genres'
 import * as yup from 'yup'
 import { ArtworkUploader } from './ArtworkUploader'
-import { Modal } from 'components/Modal'
-import { useWalletConnect } from 'hooks/useWalletConnect'
 
 // Supported blockchain chains
 const supportedChains = ['Polygon', 'Ethereum', 'Solana', 'Base', 'Tezos'];
@@ -24,16 +21,6 @@ const collaboratorCategories = {
   Music: ['Singer', 'Guitarist', 'Bassist', 'Drummer', 'Keyboardist', 'Pianist', 'Percussionist', 'Background Singer', 'Horns Section', 'Sound Engineer', 'Producer', 'Beatmaker'],
   Film: ['Cinematographer', 'Photographer', 'Director', 'Editor', 'Graphics Designer', 'VFX', 'Grip'],
   Art: ['Painter', 'Graffiti Artist'],
-}
-
-// Locally extended ModalProps to include className (though not used directly here)
-interface ModalProps {
-  show: boolean;
-  children: ReactNode;
-  title: string | JSX.Element;
-  leftButton?: JSX.Element;
-  rightButton?: JSX.Element;
-  onClose: (open: boolean) => void;
 }
 
 
@@ -117,8 +104,6 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
     chain: initialValues?.chain || 'Polygon',
   }
 
-  const { connect, disconnect, provider, account } = useWalletConnect();
-
   return (
     <Formik<FormValues>
       initialValues={defaultValues}
@@ -127,7 +112,7 @@ export const TrackMetadataForm = ({ initialValues, handleSubmit }: Props) => {
       onSubmit={handleSubmit}
     >
       {({ setFieldValue, values, errors }) => {
-        return <InnerForm setFieldValue={setFieldValue} values={values} errors={errors} initialValues={initialValues} connect={connect} disconnect={disconnect} provider={provider} account={account} />
+        return <InnerForm setFieldValue={setFieldValue} values={values} errors={errors} initialValues={initialValues} />
       }}
     </Formik>
   )
@@ -138,14 +123,10 @@ interface InnerFormProps {
   errors: FormikErrors<FormValues>
   values: FormValues
   initialValues?: InitialValues
-  connect: () => Promise<void>
-  disconnect: () => Promise<void>
-  provider?: any
-  account?: string
 }
 
 function InnerForm(props: InnerFormProps) {
-  const { setFieldValue, errors, values, initialValues, connect, disconnect, provider, account } = props
+  const { setFieldValue, errors, values, initialValues } = props
   const maxMintGasFee = useMaxMintGasFee(values.editionQuantity)
   const [enoughFunds, setEnoughFunds] = useState<boolean>()
 
@@ -159,17 +140,8 @@ function InnerForm(props: InnerFormProps) {
     }
   }, [])
   const { balance } = useWalletContext()
-  const [isSideModalOpen, setIsSideModalOpen] = useState(false)
+  const [isCollaboratorExpanded, setIsCollaboratorExpanded] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<keyof typeof collaboratorCategories>('Music')
-  const [touchActive, setTouchActive] = useState(false)
-
-  useEffect(() => {
-    if (provider && account) {
-      setFieldValue('collaborators', (prev: { walletAddress: string; royaltyPercentage: number; role: string }[]) => 
-        prev.length > 0 ? prev.map(c => ({ ...c, walletAddress: account || c.walletAddress })) : [{ walletAddress: account || '', royaltyPercentage: 0, role: '' }]
-      );
-    }
-  }, [account, provider, setFieldValue]);
 
   const handleGenreClick = (
     setFieldValue: (field: string, value: Genre[]) => void,
@@ -194,7 +166,7 @@ function InnerForm(props: InnerFormProps) {
   }, [maxMintGasFee, balance])
 
   const addCollaborator = () => {
-    setFieldValue('collaborators', [...values.collaborators, { walletAddress: account || '', royaltyPercentage: 0, role: '' }])
+    setFieldValue('collaborators', [...values.collaborators, { walletAddress: '', royaltyPercentage: 0, role: '' }])
   }
 
   const updateCollaborator = (index: number, field: string, value: string | number) => {
@@ -208,30 +180,9 @@ function InnerForm(props: InnerFormProps) {
     setFieldValue('collaborators', newCollaborators)
   }
 
-  const openSideModal = () => {
-    if (!touchActive) setIsSideModalOpen(true);
+  const toggleCollaborators = () => {
+    setIsCollaboratorExpanded(!isCollaboratorExpanded)
   }
-  const closeSideModal = () => {
-    if (!touchActive) setIsSideModalOpen(false);
-  }
-
-  const handleTouchStart = () => {
-    setTouchActive(true);
-    setIsSideModalOpen(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    const element = e.currentTarget.getBoundingClientRect();
-    if (touch.clientX < element.left || touch.clientX > element.right || touch.clientY < element.top || touch.clientY > element.bottom) {
-      setIsSideModalOpen(false);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setTouchActive(false);
-    setTimeout(() => setIsSideModalOpen(false), 200);
-  };
 
   const autoCorrectText = (field: string, value: string) => {
     if (!dictionary) return value;
@@ -264,43 +215,30 @@ function InnerForm(props: InnerFormProps) {
 
   return (
     <Form className="flex h-full flex-col gap-4 relative">
+      {/* Chain Selection */}
       <div className="px-4">
-        <button
-          onClick={() => connect()}
-          className="p-2 bg-blue-500 text-white rounded mb-4 flex items-center"
-        >
-          <WalletConnectIcon className="mr-2" /> Connect Wallet
-        </button>
-        {account && <p>Connected: {account}</p>}
-
-        {/* Chain Selection with Info Tooltip */}
-        <div className="relative mb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <label className="text-xs font-bold text-gray-80">MINT ON CHAIN</label>
-            <div className="group relative">
-              <span className="cursor-help text-cyan-400 text-xs border border-cyan-400 rounded-full w-4 h-4 inline-flex items-center justify-center">?</span>
-              <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-900 border border-cyan-500/50 rounded-lg text-xs text-gray-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-lg">
-                <p className="font-bold text-cyan-400 mb-2">Cross-Chain Minting Info</p>
-                <p className="mb-2"><strong>EVM Chains:</strong> Polygon, Ethereum, Base, Avalanche, BSC share the same wallet address format (0x...). Your collaborators can use the same address across all EVM chains.</p>
-                <p className="mb-2"><strong>ZetaChain Integration:</strong> Coming soon! ZetaChain will enable cross-chain royalty distribution - collaborators can receive payments on their preferred chain automatically.</p>
-                <p className="mb-2"><strong>Non-EVM Chains:</strong> Solana, Bitcoin use different address formats. ZetaChain is working on Solana support.</p>
-                <p className="text-yellow-400"><strong>Tip:</strong> Polygon recommended for lowest gas fees!</p>
-              </div>
+        <div className="flex items-center gap-2 mb-1">
+          <label className="text-xs font-bold text-gray-80">MINT ON CHAIN</label>
+          <div className="group relative">
+            <span className="cursor-help text-cyan-400 text-xs border border-cyan-400 rounded-full w-4 h-4 inline-flex items-center justify-center">?</span>
+            <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-900 border border-cyan-500/50 rounded-lg text-xs text-gray-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-lg">
+              <p className="font-bold text-cyan-400 mb-2">Cross-Chain Minting</p>
+              <p className="mb-2">Polygon recommended for lowest gas fees!</p>
             </div>
           </div>
-          <select
-            value={values.chain}
-            onChange={(e) => setFieldValue('chain', e.target.value)}
-            className="p-2 border rounded w-full bg-gray-800 text-white"
-          >
-            {supportedChains.map(chain => (
-              <option key={chain} value={chain}>
-                {chain} {chain === 'Polygon' ? '(Recommended - Low Gas)' : chain === 'Solana' ? '(Coming Soon)' : ''}
-              </option>
-            ))}
-          </select>
         </div>
-        {errors.chain && <p className="text-red-500 text-xs">{errors.chain}</p>}
+        <select
+          value={values.chain}
+          onChange={(e) => setFieldValue('chain', e.target.value)}
+          className="p-2 border border-gray-30 rounded w-full bg-gray-20 text-white text-sm"
+        >
+          {supportedChains.map(chain => (
+            <option key={chain} value={chain}>
+              {chain} {chain === 'Polygon' ? '(Recommended - Low Gas)' : chain === 'Solana' ? '(Coming Soon)' : ''}
+            </option>
+          ))}
+        </select>
+        {errors.chain && <p className="text-red-500 text-xs mt-1">{errors.chain}</p>}
       </div>
       <div className="flex items-center gap-2 px-4">
         <p className="max-w-5/10 text-xxs font-bold leading-tight text-gray-80">
@@ -360,113 +298,120 @@ function InnerForm(props: InnerFormProps) {
           />
         ))}
       </div>
-      <div>
-        <div
-          className="px-4 mt-2 relative hover:bg-gray-30 transition-all duration-300 ease-in-out"
-          onMouseEnter={openSideModal}
-          onMouseLeave={closeSideModal}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+      {/* Collaborators Section - Always Visible */}
+      <div className="px-4">
+        <button
+          type="button"
+          onClick={toggleCollaborators}
+          className="w-full flex items-center justify-between p-3 bg-gray-20 border border-gray-30 rounded"
         >
           <div className="flex items-center gap-2">
-            <h3 className="text-[11px] font-bold uppercase text-gray-80">Collaborators</h3>
-            <div className="group relative">
-              <span className="cursor-help text-cyan-400 text-[9px] border border-cyan-400 rounded-full w-3 h-3 inline-flex items-center justify-center">?</span>
-              <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-gray-900 border border-cyan-500/50 rounded-lg text-[10px] text-gray-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-lg">
-                <p className="font-bold text-cyan-400 mb-1">Multi-Chain Collaborators</p>
-                <p className="mb-1">Add band members, producers, or anyone who should receive royalties from this NFT.</p>
-                <p className="mb-1"><strong>EVM Wallets (0x...):</strong> Work on Polygon, Ethereum, Base, Avalanche, BSC - same address!</p>
-                <p className="text-yellow-400"><strong>Coming Soon:</strong> ZetaChain will auto-distribute royalties to each collaborator's preferred chain.</p>
-              </div>
-            </div>
+            <h3 className="text-xs font-bold uppercase text-white">Collaborators</h3>
+            <span className="text-xs text-gray-60">({values.collaborators.length})</span>
           </div>
-          <p className="text-[9px] text-gray-80">Tap/Hover to add collaborators (total royalty must not exceed 100%).</p>
+          <span className="text-gray-60">{isCollaboratorExpanded ? '▲' : '▼'}</span>
+        </button>
+
+        {/* Always show collaborator summary */}
+        <div className="mt-2 space-y-1">
           {values.collaborators.map((collaborator, index) => (
-            <div key={index} className="flex items-center gap-2 mt-2">
-              <span>{collaborator.role}: {collaborator.walletAddress} ({collaborator.royaltyPercentage}%)</span>
-              <Button variant="outline" onClick={() => removeCollaborator(index)} className="h-10 w-10">-</Button>
+            <div key={index} className="flex items-center justify-between text-xs text-gray-60 py-1">
+              <span className="text-white">
+                {collaborator.role || 'Select role'} - {collaborator.walletAddress ? `${collaborator.walletAddress.slice(0, 8)}...` : 'Add wallet'} ({collaborator.royaltyPercentage}%)
+              </span>
             </div>
           ))}
-          {renderCollaboratorErrors(errors)}
         </div>
-        <WalletSelector />
-      </div>
+        {renderCollaboratorErrors(errors)}
 
-      <div className="mt-4 flex items-center pl-4 pr-4 pb-4">
-        <div className="flex-1">
-          {enoughFunds && (
-            <div className="flex gap-2">
-              <Matic value={maxMintGasFee} variant="currency" className="flex-1" />
-              <Button type="submit" variant="outline" borderColor="bg-purple-gradient" className="w-full flex-1">
-                MINT NFT
-              </Button>
-            </div>
-          )}
-          {!enoughFunds && (
-            <div className="text-right text-sm font-bold text-white">
-              {`It seems like you might have not enough funds `}
-              <span className="whitespace-nowrap">:(</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <Modal
-        show={isSideModalOpen}
-        onClose={closeSideModal}
-        title="Add Collaborators"
-      >
-        <select
-          value={selectedCategory}
-          onChange={e => setSelectedCategory(e.target.value as keyof typeof collaboratorCategories)}
-          className="p-2 border rounded mb-4 w-full"
-        >
-          {Object.keys(collaboratorCategories).map(category => (
-            <option key={category} value={category}>{category}</option>
-          ))}
-        </select>
-        {values.collaborators.map((collaborator, index) => (
-          <div key={index} className="flex items-center gap-2 mb-2">
+        {/* Expanded collaborator editing */}
+        {isCollaboratorExpanded && (
+          <div className="mt-3 p-3 bg-gray-15 border border-gray-30 rounded space-y-3">
             <select
-              value={collaborator.role}
-              onChange={e => updateCollaborator(index, 'role', e.target.value)}
-              className="p-2 border rounded"
+              value={selectedCategory}
+              onChange={e => setSelectedCategory(e.target.value as keyof typeof collaboratorCategories)}
+              className="p-2 border border-gray-30 rounded bg-gray-20 text-white text-sm w-full"
             >
-              <option value="">Select Role</option>
-              {collaboratorCategories[selectedCategory].map(role => (
-                <option key={role} value={role}>{role}</option>
+              {Object.keys(collaboratorCategories).map(category => (
+                <option key={category} value={category}>{category}</option>
               ))}
             </select>
-            <InputField
-              name={`collaborators[${index}].walletAddress`} // Added name prop
-              label="Wallet Address"
-              type="text"
-              value={collaborator.walletAddress}
-              onChange={e => updateCollaborator(index, 'walletAddress', e.target.value)}
-            />
-            <InputField
-              name={`collaborators[${index}].royaltyPercentage`} // Added name prop
-              label="Royalty %"
-              type="number"
-              value={collaborator.royaltyPercentage}
-              onChange={e => updateCollaborator(index, 'royaltyPercentage', Number(e.target.value))}
-              symbol="%"
-              step={1}
-            />
-            <Button variant="outline" onClick={() => removeCollaborator(index)} className="h-10 w-10">-</Button>
+
+            {values.collaborators.map((collaborator, index) => (
+              <div key={index} className="flex flex-col gap-2 p-2 bg-gray-20 rounded">
+                <div className="flex gap-2">
+                  <select
+                    value={collaborator.role}
+                    onChange={e => updateCollaborator(index, 'role', e.target.value)}
+                    className="flex-1 p-2 border border-gray-30 rounded bg-gray-25 text-white text-xs"
+                  >
+                    <option value="">Select Role</option>
+                    {collaboratorCategories[selectedCategory].map(role => (
+                      <option key={role} value={role}>{role}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    value={collaborator.royaltyPercentage}
+                    onChange={e => updateCollaborator(index, 'royaltyPercentage', Number(e.target.value))}
+                    placeholder="%"
+                    className="w-16 p-2 border border-gray-30 rounded bg-gray-25 text-white text-xs text-center"
+                    min={0}
+                    max={100}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeCollaborator(index)}
+                    className="w-8 h-8 flex items-center justify-center text-red-400 hover:bg-red-400/20 rounded"
+                  >
+                    ×
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={collaborator.walletAddress}
+                  onChange={e => updateCollaborator(index, 'walletAddress', e.target.value)}
+                  placeholder="Wallet address (0x...)"
+                  className="w-full p-2 border border-gray-30 rounded bg-gray-25 text-white text-xs"
+                />
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={addCollaborator}
+              className="w-full p-2 border border-dashed border-gray-50 rounded text-gray-60 text-xs hover:border-cyan-400 hover:text-cyan-400"
+            >
+              + Add Collaborator
+            </button>
           </div>
-        ))}
-        <Button variant="outline" onClick={addCollaborator} className="mt-2 h-10 w-full">Add Another Collaborator</Button>
-        <Button variant="outline" onClick={closeSideModal} className="mt-2 h-10 w-full">Save and Close</Button>
-      </Modal>
+        )}
+      </div>
+
+      {/* Wallet Selector */}
+      <WalletSelector />
+
+      {/* Mint Section - Compact */}
+      <div className="px-4 pb-4 mt-2">
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <Matic value={maxMintGasFee || '0'} variant="currency" />
+          </div>
+          <Button
+            type="submit"
+            variant="outline"
+            borderColor="bg-purple-gradient"
+            className="px-6 py-2 text-sm"
+            disabled={!enoughFunds}
+          >
+            MINT NFT
+          </Button>
+        </div>
+        {!enoughFunds && balance !== undefined && (
+          <p className="text-xs text-red-400 mt-2">Insufficient funds for gas</p>
+        )}
+      </div>
+
     </Form>
   )
 }
-
-// WalletConnect Icon Component
-const WalletConnectIcon = ({ className }: { className?: string }) => (
-  <svg className={className} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12 6C8.69 6 6 8.69 6 12C6 15.31 8.69 18 12 18C15.31 18 18 15.31 18 12C18 8.69 15.31 6 12 6ZM11 16H13V14H15V12H13V10H11V12H9V14H11V16Z" fill="currentColor"/>
-  </svg>
-);

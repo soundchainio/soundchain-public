@@ -10,7 +10,7 @@ interface TextareaFieldProps {
   rows?: number
 }
 
-const commonInputClasses = `appearance-none block w-full p-3 rounded-md border border-gray-30 bg-gray-1A text-gray-200 cursor-text`
+const commonInputClasses = `appearance-none block w-full p-3 rounded-md border border-gray-30 bg-gray-20 text-white cursor-text`
 const validInputClasses = `${commonInputClasses} border-gray-30`
 const errorInputClasses = `${commonInputClasses} border-red-500`
 
@@ -26,8 +26,11 @@ export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props
         )}
         <textarea
           maxLength={maxLength}
-          className="placeholder-semibold w-full resize-none border-none bg-gray-1A p-0 text-xs font-bold text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent"
+          className="placeholder-semibold w-full resize-none border-none bg-transparent p-0 text-xs font-bold text-white placeholder-gray-50 focus:outline-none focus:ring-transparent [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:text-white"
           id={props.name}
+          autoComplete="off"
+          data-lpignore="true"
+          data-form-type="other"
           {...field}
           {...props}
           rows={rows}

@@ -36,7 +36,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, SortTrackField, SortOrder } from 'lib/graphql'
 
 // SCid query - inline until codegen generates the hook
 const SCID_BY_TRACK_QUERY = gql`
@@ -63,6 +63,8 @@ import { ENABLED_CHAINS, getChainsByCategory } from 'constants/chains'
 import { SUPPORTED_TOKENS, TOKEN_INFO, Token } from 'constants/tokens'
 import { ToastContainer } from 'react-toastify'
 import dynamic from 'next/dynamic'
+import { useWeb3Modal, useWeb3ModalAccount } from '@web3modal/ethers5/react'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
@@ -661,6 +663,32 @@ function DEXDashboard() {
 
   // Magic Wallet Context - Real balances from blockchain
   const { balance: maticBalance, ogunBalance, account: walletAccount } = useMagicContext()
+
+  // Transaction history query for wallet activity
+  const { data: maticUsdData } = useMaticUsdQuery()
+  const { data: transactionData, loading: transactionsLoading } = usePolygonscanQuery({
+    variables: {
+      wallet: walletAccount || '',
+      page: { first: 10 },
+    },
+    skip: !walletAccount, // Only fetch when wallet is connected
+  })
+
+  // Web3Modal hooks for external wallet connection (modern UI like OpenSea/Blur)
+  const { open: openWeb3Modal } = useWeb3Modal()
+  const { address: web3ModalAddress, isConnected: isWeb3ModalConnected } = useWeb3ModalAccount()
+
+  // Unified Wallet Context - synced across all pages
+  const {
+    activeWalletType,
+    activeAddress,
+    activeBalance,
+    activeOgunBalance,
+    isConnected: isUnifiedWalletConnected,
+    chainName,
+    connectWeb3Modal: unifiedConnectWeb3Modal,
+    disconnectWallet: unifiedDisconnectWallet,
+  } = useUnifiedWallet()
 
   // Create+ Button Handler - Supports both members and guests
   const handleCreateClick = () => {
@@ -2744,19 +2772,68 @@ function DEXDashboard() {
                       <p className="text-gray-400 text-sm">Manage your crypto assets</p>
                     </div>
                   </div>
-                  {userWallet && (
-                    <div className="flex items-center gap-2">
-                      <Badge className="bg-purple-500/20 text-purple-400 px-3 py-1">
-                        <span className="w-2 h-2 bg-purple-400 rounded-full inline-block mr-2 animate-pulse" />
-                        Polygon
-                      </Badge>
-                      <Badge className="bg-green-500/20 text-green-400 px-3 py-1">
-                        <span className="w-2 h-2 bg-green-400 rounded-full inline-block mr-2" />
-                        ZetaChain
-                      </Badge>
-                    </div>
+                  {chainName && (
+                    <Badge className="bg-purple-500/20 text-purple-400 px-3 py-1">
+                      <span className="w-2 h-2 bg-purple-400 rounded-full inline-block mr-2 animate-pulse" />
+                      {chainName}
+                    </Badge>
                   )}
                 </div>
+
+                {/* Active Wallet Display - Synced Globally */}
+                {isUnifiedWalletConnected && activeAddress && (
+                  <Card className="metadata-section p-4 mb-4 border-cyan-500/50 bg-cyan-500/5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center">
+                          <span className="text-white text-xl">
+                            {activeWalletType === 'magic' ? '✨' : activeWalletType === 'metamask' ? '🦊' : '🔗'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-gray-400">Active Wallet</p>
+                            <Badge className="bg-green-500/20 text-green-400 text-xs">
+                              <span className="w-1.5 h-1.5 bg-green-400 rounded-full inline-block mr-1 animate-pulse" />
+                              Connected
+                            </Badge>
+                          </div>
+                          <p className="font-mono text-cyan-400 text-lg">{activeAddress.slice(0, 10)}...{activeAddress.slice(-8)}</p>
+                          <p className="text-xs text-gray-500">
+                            {activeWalletType === 'magic' ? 'SoundChain Wallet' :
+                             activeWalletType === 'metamask' ? 'MetaMask' :
+                             chainName || 'External Wallet'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { navigator.clipboard.writeText(activeAddress); }}
+                          className="hover:bg-cyan-500/20"
+                        >
+                          <Copy className="w-4 h-4 text-cyan-400" />
+                        </Button>
+                        <a href={`https://polygonscan.com/address/${activeAddress}`} target="_blank" rel="noreferrer">
+                          <Button variant="ghost" size="sm" className="hover:bg-purple-500/20">
+                            <ExternalLink className="w-4 h-4 text-purple-400" />
+                          </Button>
+                        </a>
+                        {activeWalletType === 'web3modal' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={unifiedDisconnectWallet}
+                            className="hover:bg-red-500/20 text-red-400"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                )}
 
                 {/* Default Wallet Selection */}
                 <Card className="metadata-section p-4 mb-4 border-yellow-500/30">
@@ -2782,7 +2859,7 @@ function DEXDashboard() {
                     {/* WalletConnect (includes MetaMask, Rainbow, Trust, etc.) */}
                     <button
                       className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10"
-                      onClick={() => setShowWalletModal(true)}
+                      onClick={() => openWeb3Modal()}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">🔗</span>
@@ -2793,7 +2870,7 @@ function DEXDashboard() {
                     {/* Coinbase Wallet */}
                     <button
                       className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10"
-                      onClick={() => setShowWalletModal(true)}
+                      onClick={() => openWeb3Modal()}
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-lg">🔵</span>
@@ -2971,7 +3048,7 @@ function DEXDashboard() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowWalletModal(true)}
+                          onClick={() => openWeb3Modal()}
                           className="border-blue-500/50 hover:bg-blue-500/10 text-blue-400"
                         >
                           Connect
@@ -3002,7 +3079,7 @@ function DEXDashboard() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setShowWalletModal(true)}
+                          onClick={() => openWeb3Modal()}
                           className="border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/10"
                         >
                           Connect
@@ -3014,7 +3091,7 @@ function DEXDashboard() {
                   <div className="text-center py-8 mb-6">
                     <Wallet className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                     <p className="text-gray-400 mb-4">Connect your wallet to view assets</p>
-                    <Button onClick={() => setShowWalletModal(true)} className="retro-button">
+                    <Button onClick={() => openWeb3Modal()} className="retro-button">
                       <Wallet className="w-4 h-4 mr-2" />
                       Connect Wallet
                     </Button>
@@ -3518,15 +3595,15 @@ function DEXDashboard() {
                 </div>
               </Card>
 
-              {/* Transaction History Placeholder */}
+              {/* Transaction History - Real Data */}
               <Card className="retro-card p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <BarChart3 className="w-6 h-6 text-cyan-400" />
                     <h3 className="retro-title text-lg">Recent Activity</h3>
                   </div>
-                  {userWallet && (
-                    <a href={`https://polygonscan.com/address/${userWallet}`} target="_blank" rel="noreferrer">
+                  {walletAccount && (
+                    <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
                       <Button variant="ghost" size="sm" className="text-xs text-cyan-400 hover:bg-cyan-500/10">
                         View All <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
@@ -3534,11 +3611,67 @@ function DEXDashboard() {
                   )}
                 </div>
 
-                <div className="text-center py-8">
-                  <BarChart3 className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">No recent transactions</p>
-                  <p className="text-xs text-gray-600 mt-1">Your transaction history will appear here</p>
-                </div>
+                {transactionsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="animate-pulse flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
+                        <div className="w-10 h-10 bg-gray-700 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-700 rounded w-3/4" />
+                          <div className="h-3 bg-gray-700 rounded w-1/2" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : transactionData?.getTransactionHistory?.result?.length ? (
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {transactionData.getTransactionHistory.result.slice(0, 10).map((tx: any) => {
+                      const isIncoming = tx.to?.toLowerCase() === walletAccount?.toLowerCase()
+                      const valueInMatic = tx.value ? (parseFloat(tx.value) / 1e18).toFixed(4) : '0'
+                      const usdValue = maticUsdData?.maticUsd ? (parseFloat(valueInMatic) * parseFloat(maticUsdData.maticUsd)).toFixed(2) : '0.00'
+                      const date = tx.timeStamp ? new Date(parseInt(tx.timeStamp) * 1000).toLocaleDateString() : ''
+
+                      return (
+                        <a
+                          key={tx.hash}
+                          href={`https://polygonscan.com/tx/${tx.hash}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-3 p-3 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors group"
+                        >
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isIncoming ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                            <span className={`text-lg ${isIncoming ? 'text-green-400' : 'text-red-400'}`}>
+                              {isIncoming ? '↓' : '↑'}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm text-white font-medium">
+                                {isIncoming ? 'Received' : 'Sent'} {valueInMatic} MATIC
+                              </p>
+                              <Badge className={`text-xs ${isIncoming ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                ${usdValue}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-500 truncate">
+                              {isIncoming ? 'From' : 'To'}: {(isIncoming ? tx.from : tx.to)?.slice(0, 10)}...{(isIncoming ? tx.from : tx.to)?.slice(-6)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-gray-500">{date}</p>
+                            <ExternalLink className="w-3 h-3 text-gray-600 group-hover:text-cyan-400 transition-colors" />
+                          </div>
+                        </a>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BarChart3 className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-400 text-sm">No recent transactions</p>
+                    <p className="text-xs text-gray-600 mt-1">Your transaction history will appear here</p>
+                  </div>
+                )}
               </Card>
             </div>
           )}
