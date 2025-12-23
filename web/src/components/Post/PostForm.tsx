@@ -188,6 +188,13 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             // Enhanced URL with autoplay and no restrictions
             let enhancedUrl = props.postLink
 
+            // CSS to prevent iframe reload on mobile orientation change
+            const orientationStableStyle = {
+              contain: 'layout style' as const,
+              willChange: 'contents' as const,
+              transform: 'translateZ(0)',
+            }
+
             // Platform-specific enhancements
             if (mediaType === MediaProvider.YOUTUBE) {
               const url = new URL(enhancedUrl)
@@ -200,7 +207,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
 
               // Return responsive YouTube embed - fixed height on mobile to reduce letterboxing
               return (
-                <div className="w-full bg-black rounded-lg overflow-hidden">
+                <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
                   <iframe
                     className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
                     frameBorder="0"
@@ -221,7 +228,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
 
               // Return responsive Vimeo embed - fixed height on mobile to reduce letterboxing
               return (
-                <div className="w-full bg-black rounded-lg overflow-hidden">
+                <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
                   <iframe
                     className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
                     frameBorder="0"
@@ -237,58 +244,66 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             if (mediaType === MediaProvider.INSTAGRAM) {
               // Instagram embeds - responsive
               return (
-                <iframe
-                  className="w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[700px]"
-                  frameBorder="0"
-                  allowFullScreen
-                  scrolling="no"
-                  src={enhancedUrl}
-                  title="Media preview"
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                />
+                <div style={orientationStableStyle}>
+                  <iframe
+                    className="w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[700px]"
+                    frameBorder="0"
+                    allowFullScreen
+                    scrolling="no"
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  />
+                </div>
               )
             }
 
             if (mediaType === MediaProvider.TIKTOK) {
               // TikTok vertical video - responsive
               return (
-                <iframe
-                  className="w-full bg-gray-20 h-[80vh] max-h-[650px] md:h-[650px]"
-                  frameBorder="0"
-                  allowFullScreen
-                  scrolling="no"
-                  src={enhancedUrl}
-                  title="Media preview"
-                  allow="autoplay; encrypted-media; accelerometer; gyroscope"
-                />
+                <div style={orientationStableStyle}>
+                  <iframe
+                    className="w-full bg-gray-20 h-[80vh] max-h-[650px] md:h-[650px]"
+                    frameBorder="0"
+                    allowFullScreen
+                    scrolling="no"
+                    src={enhancedUrl}
+                    title="Media preview"
+                    allow="autoplay; encrypted-media; accelerometer; gyroscope"
+                  />
+                </div>
               )
             }
 
             if (mediaType === MediaProvider.X) {
               // X (Twitter) embeds - responsive
               return (
-                <iframe
-                  className="w-full bg-gray-20 h-[70vh] max-h-[700px] md:h-[700px]"
-                  frameBorder="0"
-                  allowFullScreen
-                  scrolling="no"
-                  src={enhancedUrl}
-                  title="Media preview"
-                />
+                <div style={orientationStableStyle}>
+                  <iframe
+                    className="w-full bg-gray-20 h-[70vh] max-h-[700px] md:h-[700px]"
+                    frameBorder="0"
+                    allowFullScreen
+                    scrolling="no"
+                    src={enhancedUrl}
+                    title="Media preview"
+                  />
+                </div>
               )
             }
 
             if (mediaType === MediaProvider.BANDCAMP) {
               // Bandcamp with tracklist visible - responsive
               return (
-                <iframe
-                  className="w-full bg-gray-20 h-[500px] md:h-[600px]"
-                  frameBorder="0"
-                  allowFullScreen
-                  seamless
-                  src={enhancedUrl}
-                  title="Media preview"
-                />
+                <div style={orientationStableStyle}>
+                  <iframe
+                    className="w-full bg-gray-20 h-[500px] md:h-[600px]"
+                    frameBorder="0"
+                    allowFullScreen
+                    seamless
+                    src={enhancedUrl}
+                    title="Media preview"
+                  />
+                </div>
               )
             }
 
@@ -299,7 +314,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               enhancedUrl = url.toString()
 
               return (
-                <div className="w-full bg-black rounded-lg overflow-hidden">
+                <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
                   <iframe
                     className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
                     frameBorder="0"
@@ -315,19 +330,21 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             if (mediaType === MediaProvider.DISCORD) {
               // Discord server widget - responsive
               return (
-                <iframe
-                  className="w-full bg-gray-20 h-[500px] md:h-[600px]"
-                  frameBorder="0"
-                  src={enhancedUrl}
-                  title="Media preview"
-                  sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                />
+                <div style={orientationStableStyle}>
+                  <iframe
+                    className="w-full bg-gray-20 h-[500px] md:h-[600px]"
+                    frameBorder="0"
+                    src={enhancedUrl}
+                    title="Media preview"
+                    sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                  />
+                </div>
               )
             }
 
             // Default iframe for SoundCloud, Spotify, and Custom HTML
             return (
-              <div className="w-full bg-black rounded-lg overflow-hidden">
+              <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
                 <iframe
                   className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
                   frameBorder="0"

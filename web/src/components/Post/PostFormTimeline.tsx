@@ -362,18 +362,21 @@ export const PostFormTimeline = () => {
               <Edit className="w-6" stroke="#737373" />
             </button>
           </div>
-          <iframe
-            className="w-full bg-gray-20"
-            style={{
-              minHeight: link?.type === MediaProvider.BANDCAMP ? '600px' : '500px',
-              height: link?.type === MediaProvider.BANDCAMP ? 'auto' : '500px',
-              aspectRatio: link?.type === MediaProvider.BANDCAMP ? 'auto' : '16/9',
-            }}
-            frameBorder="0"
-            allowFullScreen
-            src={link?.value}
-            title="Media preview"
-          />
+          {/* Wrapper with CSS to prevent iframe reload on mobile orientation change */}
+          <div style={{ contain: 'layout style', willChange: 'contents', transform: 'translateZ(0)' }}>
+            <iframe
+              className="w-full bg-gray-20"
+              style={{
+                minHeight: link?.type === MediaProvider.BANDCAMP ? '600px' : '500px',
+                height: link?.type === MediaProvider.BANDCAMP ? 'auto' : '500px',
+                aspectRatio: link?.type === MediaProvider.BANDCAMP ? 'auto' : '16/9',
+              }}
+              frameBorder="0"
+              allowFullScreen
+              src={link?.value}
+              title="Media preview"
+            />
+          </div>
         </PostFormLinkContainer>
       )}
 

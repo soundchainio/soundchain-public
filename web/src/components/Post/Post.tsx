@@ -256,10 +256,20 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 
           {/* Embedded video/link - Responsive with proper aspect ratio */}
           {/* Key is stable to prevent remounting on orientation change */}
+          {/* CSS contain/will-change/transform prevents iframe reload on mobile rotation */}
           {post.mediaLink && (
             hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
               // YouTube, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
-              <div key={`player-${post.id}`} className="relative w-full" style={{ paddingTop: '56.25%' }}>
+              <div
+                key={`player-${post.id}`}
+                className="relative w-full orientation-stable"
+                style={{
+                  paddingTop: '56.25%',
+                  contain: 'layout style',
+                  willChange: 'contents',
+                  transform: 'translateZ(0)',
+                }}
+              >
                 <ReactPlayer
                   width="100%"
                   height="100%"
@@ -270,6 +280,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                   light={getYouTubeThumbnail(post.mediaLink) || true}
                   pip
                   playing={false}
+                  stopOnUnmount={false}
                   config={{
                     youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' } },
                     vimeo: { playerOptions: { responsive: true, playsinline: true } },
@@ -304,17 +315,27 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 const embedHeight = getEmbedHeight()
 
                 return (
-                  <iframe
-                    key={`iframe-${post.id}`}
-                    frameBorder="0"
-                    className="w-full bg-black"
-                    style={{ minHeight: embedHeight }}
-                    src={mediaUrl}
-                    title="Media"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
-                    allowFullScreen
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
+                  <div
+                    key={`iframe-wrapper-${post.id}`}
+                    className="orientation-stable"
+                    style={{
+                      contain: 'layout style',
+                      willChange: 'contents',
+                      transform: 'translateZ(0)',
+                    }}
+                  >
+                    <iframe
+                      key={`iframe-${post.id}`}
+                      frameBorder="0"
+                      className="w-full bg-black"
+                      style={{ minHeight: embedHeight }}
+                      src={mediaUrl}
+                      title="Media"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  </div>
                 )
               })()
             )
