@@ -210,24 +210,22 @@ export default function LoginPage() {
 
   const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
     console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
-    console.log('[OAuth2] Magic Public Key:', MAGIC_KEY?.substring(0, 15) + '...');
 
     try {
       // Check for in-app browser (Google blocks OAuth in these)
-      if (isInAppBrowser()) {
-        if (provider === 'google') {
-          setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
-          return;
-        }
-        // Discord and Twitch may also have issues in in-app browsers
-        console.warn('[OAuth2] In-app browser detected, OAuth may fail');
+      if (isInAppBrowser() && provider === 'google') {
+        setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
+        return;
       }
 
-      // Use shared auth Magic instance
       const magic = authMagic.current;
       if (!magic) {
-        console.error('[OAuth2] Magic instance not initialized');
         setError('Login not ready. Please refresh the page and try again.');
+        return;
+      }
+
+      if (!(magic as any).oauth2) {
+        setError('OAuth not available. Please refresh the page and try again.');
         return;
       }
 
@@ -235,87 +233,23 @@ export default function LoginPage() {
       setError(null);
       localStorage.removeItem('didToken');
 
-      console.log('[OAuth2] Using shared auth Magic instance');
-      console.log('[OAuth2] oauth2 extension available:', !!(magic as any).oauth2);
-      console.log('[OAuth2] Window origin:', window.location.origin);
-
-      if (!(magic as any).oauth2) {
-        console.error('[OAuth2] oauth2 extension not available - SDK may not have loaded correctly');
-        setError('OAuth not available. Please refresh the page and try again.');
-        setLoggingIn(false);
-        return;
-      }
-
-      // Wait for Magic iframe to preload with timeout (prevent infinite hang)
-      console.log('[OAuth2] Waiting for Magic iframe preload...');
-      try {
-        const preloadPromise = (magic as any).preload();
-        const preloadTimeout = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Preload timeout')), 8000)
-        );
-        await Promise.race([preloadPromise, preloadTimeout]);
-        console.log('[OAuth2] Magic preload complete');
-      } catch (preloadErr: any) {
-        console.warn('[OAuth2] Preload warning:', preloadErr?.message || preloadErr);
-        // Continue anyway - preload failures don't always mean OAuth will fail
-        // If preload times out, we'll still try the OAuth redirect
-      }
-
-      // Build redirect URI - MUST match exactly what's in Magic Dashboard
-      // Use window.location.origin to match the actual domain user is on (www vs non-www)
-      // This ensures the redirect works regardless of which domain variant they're on
+      // Simple redirect URI - matches what's in Magic Dashboard
       const redirectURI = `${window.location.origin}/login`;
-      console.log('[OAuth2] Starting OAuth for:', provider);
-      console.log('[OAuth2] Redirect URI:', redirectURI);
-      console.log('[OAuth2] NOTE: This redirect URI must be configured in Magic Dashboard');
+      console.log('[OAuth2] Redirecting to', provider, 'with URI:', redirectURI);
 
-      // Set a timeout - if redirect doesn't happen within 10 seconds, something is wrong
-      const redirectTimeout = setTimeout(() => {
-        console.error('[OAuth2] ⚠️ Redirect timeout!');
-        console.error('[OAuth2] Possible causes:');
-        console.error('  1. Magic iframe failed to load (check CSP headers)');
-        console.error('  2. OAuth provider not configured in Magic Dashboard');
-        console.error('  3. Redirect URI mismatch between code and Magic Dashboard');
-        console.error('  4. Network/firewall blocking Magic SDK');
-        setError(`${provider} login is taking too long. Please check your connection and try again.`);
-        setLoggingIn(false);
-      }, 10000);
+      // Direct call to loginWithRedirect - no preload, no timeout
+      // This matches the legacy (working) approach
+      await (magic as any).oauth2.loginWithRedirect({
+        provider,
+        redirectURI,
+        scope: ['openid', 'email'],
+      });
 
-      // Call loginWithRedirect - this should trigger browser navigation to provider
-      console.log('[OAuth2] Calling loginWithRedirect...');
-      try {
-        await (magic as any).oauth2.loginWithRedirect({
-          provider,
-          redirectURI,
-          scope: ['openid', 'email'],  // Required for proper identity claims and oauthProvider
-        });
-        // If we reach here, redirect didn't happen (unusual - usually throws or redirects)
-        console.log('[OAuth2] loginWithRedirect returned without redirecting - this is unexpected');
-        clearTimeout(redirectTimeout);
-      } catch (redirectErr: any) {
-        clearTimeout(redirectTimeout);
-        console.error('[OAuth2] loginWithRedirect error:', redirectErr);
-        console.error('[OAuth2] Error code:', redirectErr.code);
-        console.error('[OAuth2] Error message:', redirectErr.message);
-
-        const errorMsg = redirectErr.message?.toLowerCase() || '';
-
-        if (errorMsg.includes('user denied') || errorMsg.includes('cancelled') || errorMsg.includes('user rejected')) {
-          setError('Login cancelled. Please try again.');
-        } else if (errorMsg.includes('not configured') || errorMsg.includes('provider')) {
-          setError(`${provider} login is not configured. Please contact support or use Email login.`);
-        } else if (errorMsg.includes('popup') || errorMsg.includes('blocked')) {
-          setError('Popup blocked. Please allow popups for this site and try again.');
-        } else if (errorMsg.includes('network') || errorMsg.includes('failed to fetch')) {
-          setError('Network error. Please check your connection and try again.');
-        } else {
-          setError(redirectErr.message || `${provider} login failed. Please try again.`);
-        }
-        setLoggingIn(false);
-      }
+      // If we get here without redirecting, something is wrong
+      console.warn('[OAuth2] loginWithRedirect returned without navigating');
     } catch (error: any) {
-      console.error('[OAuth2] Unexpected error:', error);
-      setError(error.message || `${provider} login failed. Please try again or use Email login.`);
+      console.error('[OAuth2] Error:', error);
+      setError(error.message || `${provider} login failed. Please try again.`);
       setLoggingIn(false);
     }
   };
