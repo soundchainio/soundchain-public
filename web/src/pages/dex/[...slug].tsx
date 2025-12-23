@@ -4145,6 +4145,26 @@ function DEXDashboard() {
               )}
               {trackDetailData?.track && (
                 <>
+                  {/* Dynamic SEO for track sharing */}
+                  <Head>
+                    <title>{trackDetailData.track.title} by {trackDetailData.track.artist} | SoundChain</title>
+                    <meta name="description" content={`Listen to ${trackDetailData.track.title} by ${trackDetailData.track.artist} on SoundChain - Web3 Music Platform`} />
+                    <meta property="og:title" content={`${trackDetailData.track.title} by ${trackDetailData.track.artist}`} />
+                    <meta property="og:description" content={`Listen to ${trackDetailData.track.title} on SoundChain. ${trackDetailData.track.artist}. Stream now!`} />
+                    <meta property="og:image" content={trackDetailData.track.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`} />
+                    <meta property="og:image:width" content="1200" />
+                    <meta property="og:image:height" content="1200" />
+                    <meta property="og:type" content="music.song" />
+                    <meta property="og:url" content={`${config.domainUrl}/dex/track/${trackDetailData.track.id}`} />
+                    <meta property="og:site_name" content="SoundChain" />
+                    <meta name="twitter:card" content="summary_large_image" />
+                    <meta name="twitter:title" content={`${trackDetailData.track.title} by ${trackDetailData.track.artist}`} />
+                    <meta name="twitter:description" content={`Listen on SoundChain - Web3 Music Platform`} />
+                    <meta name="twitter:image" content={trackDetailData.track.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`} />
+                    <meta name="twitter:site" content="@SoundChainFM" />
+                    <link rel="canonical" href={`${config.domainUrl}/dex/track/${trackDetailData.track.id}`} />
+                  </Head>
+
                   {/* Back Button */}
                   <Button variant="ghost" onClick={() => router.back()} className="mb-4 hover:bg-cyan-500/10">
                     <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
