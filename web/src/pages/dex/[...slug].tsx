@@ -4865,72 +4865,87 @@ DEXDashboard.getLayout = (page: ReactElement) => {
 // Server-side props for OG meta tags (social sharing previews)
 // Fetches track/profile data so crawlers see rich preview cards
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const slug = context.params?.slug as string[] | undefined
-  const routeType = slug?.[0]
-  const routeId = slug?.[1]
-
-  // Default empty OG data
-  let ogData: {
-    type: 'track' | 'profile' | null
-    title?: string
-    description?: string
-    image?: string
-    url?: string
-  } = { type: null }
+  // Default empty OG data - page will still load even if data fetch fails
+  const emptyOgData = { type: null as 'track' | 'profile' | null }
 
   try {
+    const slug = context.params?.slug as string[] | undefined
+    const routeType = slug?.[0]
+    const routeId = slug?.[1]
+
+    // Only fetch OG data for track and profile pages
+    if (!routeType || !routeId || (routeType !== 'track' && routeType !== 'users')) {
+      return { props: { ogData: emptyOgData } }
+    }
+
+    // Dynamic imports to avoid loading heavy modules for non-OG routes
+    const [{ createApolloClient }, graphql] = await Promise.all([
+      import('lib/apollo'),
+      import('lib/graphql'),
+    ])
+
+    const apolloClient = createApolloClient(context)
+
     // Track page: /dex/track/[id]
-    if (routeType === 'track' && routeId) {
-      const { createApolloClient } = await import('lib/apollo')
-      const { TrackDocument } = await import('lib/graphql')
+    if (routeType === 'track') {
+      try {
+        const { data } = await apolloClient.query({
+          query: graphql.TrackDocument,
+          variables: { id: routeId },
+          errorPolicy: 'all', // Don't throw on GraphQL errors
+        })
 
-      const apolloClient = createApolloClient(context)
-      const { data } = await apolloClient.query({
-        query: TrackDocument,
-        variables: { id: routeId },
-      })
-
-      if (data?.track) {
-        ogData = {
-          type: 'track',
-          title: `${data.track.title || 'Track'} by ${data.track.artist || 'Unknown'} | SoundChain`,
-          description: `Listen to "${data.track.title}" by ${data.track.artist} on SoundChain. ${data.track.playbackCountFormatted || '0'} plays.`,
-          image: data.track.artworkUrl || undefined,
-          url: `/dex/track/${routeId}`,
+        if (data?.track) {
+          return {
+            props: {
+              ogData: {
+                type: 'track' as const,
+                title: `${data.track.title || 'Track'} by ${data.track.artist || 'Unknown'} | SoundChain`,
+                description: `Listen to "${data.track.title}" by ${data.track.artist} on SoundChain. ${data.track.playbackCountFormatted || '0'} plays.`,
+                image: data.track.artworkUrl || undefined,
+                url: `/dex/track/${routeId}`,
+              },
+            },
+          }
         }
+      } catch (trackError) {
+        console.error('Track OG fetch error:', trackError)
       }
     }
 
     // Profile page: /dex/users/[handle]
-    if (routeType === 'users' && routeId) {
-      const { createApolloClient } = await import('lib/apollo')
-      const { ProfileByHandleDocument } = await import('lib/graphql')
+    if (routeType === 'users') {
+      try {
+        const { data } = await apolloClient.query({
+          query: graphql.ProfileByHandleDocument,
+          variables: { handle: routeId },
+          errorPolicy: 'all',
+        })
 
-      const apolloClient = createApolloClient(context)
-      const { data } = await apolloClient.query({
-        query: ProfileByHandleDocument,
-        variables: { handle: routeId },
-      })
-
-      if (data?.profileByHandle) {
-        const profile = data.profileByHandle
-        ogData = {
-          type: 'profile',
-          title: `${profile.displayName || profile.userHandle} | SoundChain`,
-          description: profile.bio || `Follow ${profile.displayName || profile.userHandle} on SoundChain - Web3 Music Platform`,
-          image: profile.profilePicture || profile.coverPicture || undefined,
-          url: `/dex/users/${routeId}`,
+        if (data?.profileByHandle) {
+          const profile = data.profileByHandle
+          return {
+            props: {
+              ogData: {
+                type: 'profile' as const,
+                title: `${profile.displayName || profile.userHandle} | SoundChain`,
+                description: profile.bio || `Follow ${profile.displayName || profile.userHandle} on SoundChain - Web3 Music Platform`,
+                image: profile.profilePicture || profile.coverPicture || undefined,
+                url: `/dex/users/${routeId}`,
+              },
+            },
+          }
         }
+      } catch (profileError) {
+        console.error('Profile OG fetch error:', profileError)
       }
     }
   } catch (error) {
-    console.error('SSR OG data fetch error:', error)
-    // Continue with empty ogData - page will still load
+    console.error('SSR getServerSideProps error:', error)
   }
 
-  return {
-    props: { ogData },
-  }
+  // Return empty OG data if anything fails - page still loads
+  return { props: { ogData: emptyOgData } }
 }
 
 export default DEXDashboard
