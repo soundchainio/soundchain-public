@@ -262,8 +262,9 @@ export default function LoginPage() {
       }
 
       // Build redirect URI - MUST match exactly what's in Magic Dashboard
-      // Use config.domainUrl for consistency with legacy code (falls back to origin if not set)
-      const redirectURI = `${config.domainUrl || window.location.origin}/login`;
+      // Use window.location.origin to match the actual domain user is on (www vs non-www)
+      // This ensures the redirect works regardless of which domain variant they're on
+      const redirectURI = `${window.location.origin}/login`;
       console.log('[OAuth2] Starting OAuth for:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
       console.log('[OAuth2] NOTE: This redirect URI must be configured in Magic Dashboard');
