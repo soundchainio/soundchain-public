@@ -1055,10 +1055,10 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network',
   })
 
-  // Playlists Query - for Playlist view
+  // Playlists Query - for Playlist view (uses JWT auth to determine user)
   const { data: playlistsData, loading: playlistsLoading, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
-    variables: { profileId: userData?.me?.profile?.id || '' },
-    skip: selectedView !== 'playlist' || !userData?.me?.profile?.id,
+    variables: {},
+    skip: selectedView !== 'playlist' || !userData?.me,
     fetchPolicy: 'cache-and-network',
   })
 

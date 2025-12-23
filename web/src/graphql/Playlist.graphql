@@ -1,7 +1,7 @@
 # Playlist queries and mutations
 
-query GetUserPlaylists($profileId: String!, $page: Pagination, $sort: SortPlaylistInput) {
-  getUserPlaylists(profileId: $profileId, page: $page, sort: $sort) {
+query GetUserPlaylists($page: Pagination, $sort: SortPlaylistInput) {
+  getUserPlaylists(page: $page, sort: $sort) {
     nodes {
       id
       title

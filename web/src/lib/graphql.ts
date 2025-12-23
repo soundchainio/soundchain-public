@@ -8878,7 +8878,6 @@ export type LikeTrackCommentMutationHookResult = ReturnType<typeof useLikeTrackC
 
 // GetUserPlaylists Query
 export type GetUserPlaylistsQueryVariables = Exact<{
-  profileId: Scalars['String']['input'];
   page?: InputMaybe<Pagination>;
   sort?: InputMaybe<SortPlaylistInput>;
 }>;
@@ -8947,8 +8946,8 @@ export type GetUserPlaylistsQuery = {
 };
 
 export const GetUserPlaylistsDocument = gql`
-  query GetUserPlaylists($profileId: String!, $page: Pagination, $sort: SortPlaylistInput) {
-    getUserPlaylists(profileId: $profileId, page: $page, sort: $sort) {
+  query GetUserPlaylists($page: Pagination, $sort: SortPlaylistInput) {
+    getUserPlaylists(page: $page, sort: $sort) {
       nodes {
         id
         title
