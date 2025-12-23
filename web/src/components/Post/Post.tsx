@@ -255,10 +255,11 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           )}
 
           {/* Embedded video/link - Responsive with proper aspect ratio */}
+          {/* Key is stable to prevent remounting on orientation change */}
           {post.mediaLink && (
             hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
               // YouTube, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
-              <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+              <div key={`player-${post.id}`} className="relative w-full" style={{ paddingTop: '56.25%' }}>
                 <ReactPlayer
                   width="100%"
                   height="100%"
@@ -268,8 +269,9 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                   controls
                   light={getYouTubeThumbnail(post.mediaLink) || true}
                   pip
+                  playing={false}
                   config={{
-                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' } },
                     vimeo: { playerOptions: { responsive: true, playsinline: true } },
                     facebook: { appId: '' },
                   }}
@@ -303,6 +305,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 
                 return (
                   <iframe
+                    key={`iframe-${post.id}`}
                     frameBorder="0"
                     className="w-full bg-black"
                     style={{ minHeight: embedHeight }}
