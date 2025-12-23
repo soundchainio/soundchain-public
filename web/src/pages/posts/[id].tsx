@@ -1,22 +1,67 @@
+import { GetServerSideProps } from 'next'
+import { ParsedUrlQuery } from 'querystring'
+import Head from 'next/head'
+import { config } from 'config'
 import { BottomSheet } from 'components/BottomSheet'
 import { Comments } from 'components/Comment/Comments'
 import { InboxButton } from 'components/common/Buttons/InboxButton'
 import { NewCommentForm } from 'components/NewCommentForm'
 import { NotAvailableMessage } from 'components/NotAvailableMessage'
 import { Post } from 'components/Post/Post'
-import SEO from 'components/SEO'
 import { TopNavBarProps } from 'components/TopNavBar'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { cacheFor, createApolloClient } from 'lib/apollo'
 import { PostDocument, PostQuery, usePostQuery } from 'lib/graphql'
-import { GetServerSideProps } from 'next'
-import { ParsedUrlQuery } from 'querystring'
 import { useEffect, useMemo } from 'react'
 
+// Social media crawler user agents
+const BOT_USER_AGENTS = [
+  'facebookexternalhit',
+  'Facebot',
+  'Twitterbot',
+  'LinkedInBot',
+  'WhatsApp',
+  'Slackbot',
+  'TelegramBot',
+  'Discordbot',
+  'iMessageLinkPreview',
+  'Googlebot',
+  'bingbot',
+  'applebot',
+  'Pinterest',
+  'Snapchat',
+]
+
+function isBot(userAgent: string | undefined): boolean {
+  if (!userAgent) return false
+  return BOT_USER_AGENTS.some(bot => userAgent.toLowerCase().includes(bot.toLowerCase()))
+}
+
+// Extract YouTube video ID and generate thumbnail
+function getYouTubeThumbnail(url: string): string | null {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  if (match && match[1]) {
+    return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`
+  }
+  return null
+}
+
+// Extract Vimeo thumbnail (basic - uses video ID)
+function getVimeoThumbnail(url: string): string | null {
+  const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+  if (match && match[1]) {
+    // Vimeo thumbnails require API call, but we can use a placeholder format
+    return `https://vumbnail.com/${match[1]}.jpg`
+  }
+  return null
+}
+
 export interface PostPageProps {
-  post: PostQuery['post']
+  post: PostQuery['post'] | null
+  postId: string
+  isBot: boolean
 }
 
 interface PostPageParams extends ParsedUrlQuery {
@@ -25,33 +70,67 @@ interface PostPageParams extends ParsedUrlQuery {
 
 export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParams> = async context => {
   const postId = context.params?.id
+  const userAgent = context.req.headers['user-agent']
+  const isBotRequest = isBot(userAgent)
 
   if (!postId) {
     return { notFound: true }
   }
 
-  const apolloClient = createApolloClient(context)
+  try {
+    const apolloClient = createApolloClient(context)
 
-  const { error, data } = await apolloClient.query({
-    query: PostDocument,
-    variables: { id: postId },
-    context,
-  })
+    const { error, data } = await apolloClient.query({
+      query: PostDocument,
+      variables: { id: postId },
+      context,
+    })
 
-  if (error || !data?.post) {
+    if (error || !data?.post) {
+      return { notFound: true }
+    }
+
+    // For bots, return minimal props for fast OG tag rendering
+    if (isBotRequest) {
+      return {
+        props: {
+          post: data.post,
+          postId,
+          isBot: true,
+        },
+      }
+    }
+
+    // For regular users, use full caching
+    return cacheFor(PostPage, { post: data.post, postId, isBot: false }, context, apolloClient)
+  } catch (e) {
+    console.error('Error fetching post:', e)
+
+    // For bots, return minimal page even on error
+    if (isBotRequest) {
+      return {
+        props: {
+          post: null,
+          postId,
+          isBot: true,
+        },
+      }
+    }
+
     return { notFound: true }
   }
-
-  return cacheFor(PostPage, { post: data.post }, context, apolloClient)
 }
 
-export default function PostPage({ post }: PostPageProps) {
-  const { data: repostData } = usePostQuery({ variables: { id: post.repostId || '' }, skip: !post.repostId })
+export default function PostPage({ post, postId, isBot: isBotRequest }: PostPageProps) {
+  const { data: repostData } = usePostQuery({
+    variables: { id: post?.repostId || '' },
+    skip: !post?.repostId || isBotRequest
+  })
   const { setTopNavBarProps } = useLayoutContext()
   const { playlistState } = useAudioPlayerContext()
   const me = useMe()
 
-  const deleted = post.deleted
+  const deleted = post?.deleted
 
   const topNavBarProps: TopNavBarProps = useMemo(
     () => ({
@@ -61,33 +140,57 @@ export default function PostPage({ post }: PostPageProps) {
   )
 
   const repost = repostData?.post
-  const track = post.track || repost?.track
+  const track = post?.track || repost?.track
 
-  const title = track ? `${track.title} - song by ${track.artist} | SoundChain` : `${post.profile?.displayName || 'Post'} | SoundChain`
+  // Build title for sharing
+  const title = track
+    ? `${track.title} - song by ${track.artist} | SoundChain`
+    : post?.profile?.displayName
+      ? `${post.profile.displayName} on SoundChain`
+      : 'Post | SoundChain'
+
+  // Build description for sharing
   const description = track
-    ? `${!post.body ? '' : `${post.body} - `}Listen to ${track.title} on SoundChain. ${track.artist}. ${
+    ? `${!post?.body ? '' : `${post.body} - `}Listen to ${track.title} on SoundChain. ${track.artist}. ${
         track.album || 'Song'
       }. ${!track.releaseYear ? '' : `${track.releaseYear}.`}`
-    : post.body || `Check out this post by ${post.profile?.displayName || 'a user'} on SoundChain`
+    : post?.body
+      ? post.body.substring(0, 200) + (post.body.length > 200 ? '...' : '')
+      : `Check out this post on SoundChain`
 
-  // Get best image for sharing - track artwork, YouTube thumbnail, or profile picture
-  const getShareImage = () => {
+  // Get best image for sharing - prioritize track artwork, then YouTube thumbnail, then profile picture
+  const getShareImage = (): string => {
+    // Priority 1: Track artwork
     if (track?.artworkUrl) return track.artworkUrl
-    // Extract YouTube thumbnail if it's a YouTube embed
-    if (post.mediaLink) {
-      const youtubeMatch = post.mediaLink.match(/(?:youtube\.com\/embed\/|youtu\.be\/|youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/)
-      if (youtubeMatch && youtubeMatch[1]) {
-        return `https://img.youtube.com/vi/${youtubeMatch[1]}/maxresdefault.jpg`
-      }
+
+    // Priority 2: YouTube thumbnail from embed
+    if (post?.mediaLink) {
+      const ytThumb = getYouTubeThumbnail(post.mediaLink)
+      if (ytThumb) return ytThumb
+
+      const vimeoThumb = getVimeoThumbnail(post.mediaLink)
+      if (vimeoThumb) return vimeoThumb
     }
-    // Fallback to profile picture
-    return post.profile?.profilePicture || null
+
+    // Priority 3: Uploaded media (for ephemeral posts)
+    const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null }
+    if (postWithMedia?.uploadedMediaUrl) return postWithMedia.uploadedMediaUrl
+
+    // Priority 4: Profile picture
+    if (post?.profile?.profilePicture) return post.profile.profilePicture
+
+    // Fallback: SoundChain logo
+    return `${config.domainUrl}/soundchain-meta-logo.png`
   }
+
   const shareImage = getShareImage()
+  const url = `${config.domainUrl}/posts/${postId}`
 
   useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps, topNavBarProps])
+    if (!isBotRequest) {
+      setTopNavBarProps(topNavBarProps)
+    }
+  }, [setTopNavBarProps, topNavBarProps, isBotRequest])
 
   const handleOnPlayClicked = () => {
     if (track) {
@@ -107,10 +210,88 @@ export default function PostPage({ post }: PostPageProps) {
     }
   }
 
+  // For bots/crawlers, render minimal page with OG tags
+  if (isBotRequest) {
+    return (
+      <>
+        <Head>
+          <title>{title}</title>
+          <meta name="description" content={description} />
+
+          {/* Open Graph */}
+          <meta property="og:type" content="article" />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={description} />
+          <meta property="og:image" content={shareImage} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:url" content={url} />
+          <meta property="og:site_name" content="SoundChain" />
+
+          {/* Twitter Card */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={title} />
+          <meta name="twitter:description" content={description} />
+          <meta name="twitter:image" content={shareImage} />
+          <meta name="twitter:site" content="@SoundChainFM" />
+
+          {/* Author info */}
+          {post?.profile && (
+            <>
+              <meta property="article:author" content={post.profile.displayName || post.profile.userHandle || ''} />
+            </>
+          )}
+
+          <link rel="canonical" href={url} />
+        </Head>
+
+        {/* Minimal page for crawlers - they just need the head tags */}
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="text-center p-8 max-w-md">
+            {shareImage && (
+              <img
+                src={shareImage}
+                alt={title}
+                className="w-64 h-64 mx-auto rounded-lg shadow-lg mb-6 object-cover"
+              />
+            )}
+            <h1 className="text-2xl font-bold text-white mb-2">{title}</h1>
+            <p className="text-gray-400 mb-4 line-clamp-3">{description}</p>
+            <p className="text-cyan-400">Loading SoundChain...</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Regular page for users
   return (
     <>
-      <SEO title={title} canonicalUrl={`/posts/${post.id}/`} description={description} image={shareImage} />
-      {deleted ? (
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content={description} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={shareImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:url" content={url} />
+        <meta property="og:site_name" content="SoundChain" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={shareImage} />
+        <meta name="twitter:site" content="@SoundChainFM" />
+
+        <link rel="canonical" href={url} />
+      </Head>
+
+      {deleted || !post ? (
         <NotAvailableMessage type="post" />
       ) : (
         <div>
