@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { X, Music, ImagePlus, Loader2, Plus, Trash2, Search } from 'lucide-react'
-import { useCreatePlaylistMutation, useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useCreatePlaylistMutation, useExploreTracksQuery, SortExploreTracksField, SortOrder } from 'lib/graphql'
 import Asset from 'components/Asset/Asset'
 
 interface Track {
@@ -33,10 +33,10 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
   const [createPlaylist] = useCreatePlaylistMutation()
 
   // Search for tracks to add
-  const { data: tracksData, loading: tracksLoading } = useTracksQuery({
+  const { data: tracksData, loading: tracksLoading } = useExploreTracksQuery({
     variables: {
       page: { first: 10 },
-      sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
+      sort: { field: SortExploreTracksField.CreatedAt, order: SortOrder.Desc },
       search: trackSearchQuery || undefined,
     },
     skip: !showTrackSearch,
@@ -186,8 +186,8 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
                     <div className="p-4 text-center text-neutral-500">
                       <Loader2 className="w-5 h-5 animate-spin mx-auto" />
                     </div>
-                  ) : tracksData?.tracks?.nodes?.length ? (
-                    tracksData.tracks.nodes.map((track) => (
+                  ) : tracksData?.exploreTracks?.nodes?.length ? (
+                    tracksData.exploreTracks.nodes.map((track) => (
                       <button
                         key={track.id}
                         type="button"

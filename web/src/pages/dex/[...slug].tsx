@@ -558,7 +558,18 @@ const linkifyText = (text: string) => {
   })
 }
 
-function DEXDashboard() {
+// Props from getServerSideProps for OG meta tags
+interface DEXDashboardProps {
+  ogData?: {
+    type: 'track' | 'profile' | null
+    title?: string
+    description?: string
+    image?: string
+    url?: string
+  }
+}
+
+function DEXDashboard({ ogData }: DEXDashboardProps) {
   const router = useRouter()
 
   // Parse slug for routing: /dex/explore, /dex/library, /dex/profile/[handle], /dex/track/[id]
@@ -1261,6 +1272,32 @@ function DEXDashboard() {
   )
 
   return (
+    <>
+      {/* SSR OG Meta Tags for Social Sharing Previews */}
+      {ogData?.type && (
+        <Head>
+          <title>{ogData.title || 'SoundChain'}</title>
+          <meta name="description" content={ogData.description || 'Web3 Music Platform'} />
+
+          {/* Open Graph */}
+          <meta property="og:type" content={ogData.type === 'track' ? 'music.song' : 'profile'} />
+          <meta property="og:title" content={ogData.title || 'SoundChain'} />
+          <meta property="og:description" content={ogData.description || 'Web3 Music Platform'} />
+          {ogData.image && <meta property="og:image" content={ogData.image} />}
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="1200" />
+          <meta property="og:url" content={`${config.domainUrl}${ogData.url}`} />
+          <meta property="og:site_name" content="SoundChain" />
+
+          {/* Twitter */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={ogData.title || 'SoundChain'} />
+          <meta name="twitter:description" content={ogData.description || 'Web3 Music Platform'} />
+          {ogData.image && <meta name="twitter:image" content={ogData.image} />}
+          <meta name="twitter:site" content="@SoundChainFM" />
+        </Head>
+      )}
+
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Full-screen Cover Photo Background */}
       <div className="fixed inset-0 z-0">
@@ -4777,6 +4814,7 @@ function DEXDashboard() {
         totalListings={listingData?.listingItems?.pageInfo?.totalCount}
       />
     </div>
+    </>
   )
 }
 
@@ -4824,12 +4862,74 @@ DEXDashboard.getLayout = (page: ReactElement) => {
   )
 }
 
-// Required for optional catch-all route to work at /dex (base path)
-// Without this, Next.js only generates static paths and /dex returns 404
-export const getServerSideProps: GetServerSideProps = async () => {
-  // Return empty props - the page handles routing client-side via useRouter
+// Server-side props for OG meta tags (social sharing previews)
+// Fetches track/profile data so crawlers see rich preview cards
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const slug = context.params?.slug as string[] | undefined
+  const routeType = slug?.[0]
+  const routeId = slug?.[1]
+
+  // Default empty OG data
+  let ogData: {
+    type: 'track' | 'profile' | null
+    title?: string
+    description?: string
+    image?: string
+    url?: string
+  } = { type: null }
+
+  try {
+    // Track page: /dex/track/[id]
+    if (routeType === 'track' && routeId) {
+      const { createApolloClient } = await import('lib/apollo')
+      const { TrackDocument } = await import('lib/graphql')
+
+      const apolloClient = createApolloClient(context)
+      const { data } = await apolloClient.query({
+        query: TrackDocument,
+        variables: { id: routeId },
+      })
+
+      if (data?.track) {
+        ogData = {
+          type: 'track',
+          title: `${data.track.title || 'Track'} by ${data.track.artist || 'Unknown'} | SoundChain`,
+          description: `Listen to "${data.track.title}" by ${data.track.artist} on SoundChain. ${data.track.playbackCountFormatted || '0'} plays.`,
+          image: data.track.artworkUrl || undefined,
+          url: `/dex/track/${routeId}`,
+        }
+      }
+    }
+
+    // Profile page: /dex/users/[handle]
+    if (routeType === 'users' && routeId) {
+      const { createApolloClient } = await import('lib/apollo')
+      const { ProfileByHandleDocument } = await import('lib/graphql')
+
+      const apolloClient = createApolloClient(context)
+      const { data } = await apolloClient.query({
+        query: ProfileByHandleDocument,
+        variables: { handle: routeId },
+      })
+
+      if (data?.profileByHandle) {
+        const profile = data.profileByHandle
+        ogData = {
+          type: 'profile',
+          title: `${profile.displayName || profile.userHandle} | SoundChain`,
+          description: profile.bio || `Follow ${profile.displayName || profile.userHandle} on SoundChain - Web3 Music Platform`,
+          image: profile.profilePicture || profile.coverPicture || undefined,
+          url: `/dex/users/${routeId}`,
+        }
+      }
+    }
+  } catch (error) {
+    console.error('SSR OG data fetch error:', error)
+    // Continue with empty ogData - page will still load
+  }
+
   return {
-    props: {},
+    props: { ogData },
   }
 }
 
