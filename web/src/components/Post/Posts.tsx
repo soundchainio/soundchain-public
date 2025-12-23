@@ -18,6 +18,9 @@ import { NewCommentForm } from '../NewCommentForm'
 
 interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   profileId?: string
+  // When true, uses simple scroll-based loading instead of virtualization
+  // Needed when Posts is rendered inside a parent with its own scroll (like profile pages)
+  disableVirtualization?: boolean
 }
 
 const pageSize = 30
@@ -106,7 +109,9 @@ const PostDetailModal = ({ postId, onClose, handleOnPlayClicked }: { postId: str
   )
 }
 
-export const Posts = ({ profileId }: PostsProps) => {
+export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
+  // Auto-disable virtualization for profile pages (they have their own scroll container)
+  const useSimpleMode = disableVirtualization || !!profileId
   const [viewMode, setViewMode] = useState<ViewMode>('list') // Default to list view for better content visibility
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [activePostId, setActivePostId] = useState<string | null>(null) // Track last interacted/playing post
@@ -275,6 +280,76 @@ export const Posts = ({ profileId }: PostsProps) => {
     if (width < 600) return 3      // Small tablet: 3 columns
     if (width < 900) return 4      // Tablet: 4 columns
     return 5                        // Desktop: 5 columns for tight stacking
+  }
+
+  // Simple scroll-based infinite loading for profile pages
+  // This avoids AutoSizer issues when Posts is inside a parent with its own scroll
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!useSimpleMode || !loadMoreRef.current) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && pageInfo.hasNextPage && !loading) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [useSimpleMode, pageInfo.hasNextPage, loading])
+
+  // Simple mode rendering for profile pages
+  if (useSimpleMode) {
+    return (
+      <>
+        {/* Post Form only on own profile or no profileId */}
+        {!profileId && (
+          <div className="flex justify-center px-4 mb-4">
+            <div className="w-full max-w-[614px]">
+              <PostFormTimeline />
+            </div>
+          </div>
+        )}
+
+        {/* Simple mapped posts - no virtualization */}
+        <div className="space-y-4">
+          {(nodes as PostType[]).map((post) => (
+            <div key={post.id} className="flex justify-center px-4">
+              <div className="w-full max-w-[614px]">
+                <Post post={post} handleOnPlayClicked={handleOnPlayClicked} />
+              </div>
+            </div>
+          ))}
+
+          {/* Load more trigger */}
+          {pageInfo.hasNextPage && (
+            <div ref={loadMoreRef} className="flex justify-center py-8">
+              <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
+            </div>
+          )}
+
+          {/* End of feed indicator */}
+          {!pageInfo.hasNextPage && nodes!.length > 0 && (
+            <div className="text-center py-8 text-neutral-500 text-sm">
+              You've reached the end
+            </div>
+          )}
+        </div>
+
+        {/* Post Detail Modal */}
+        {selectedPostId && (
+          <PostDetailModal
+            postId={selectedPostId}
+            onClose={() => setSelectedPostId(null)}
+            handleOnPlayClicked={handleOnPlayClicked}
+          />
+        )}
+      </>
+    )
   }
 
   return (
