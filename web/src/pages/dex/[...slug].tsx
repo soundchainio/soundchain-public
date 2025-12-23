@@ -4145,23 +4145,69 @@ function DEXDashboard() {
               )}
               {trackDetailData?.track && (
                 <>
-                  {/* Dynamic SEO for track sharing */}
+                  {/* Dynamic SEO for track sharing with inline playable cards */}
                   <Head>
                     <title>{trackDetailData.track.title} by {trackDetailData.track.artist} | SoundChain</title>
                     <meta name="description" content={`Listen to ${trackDetailData.track.title} by ${trackDetailData.track.artist} on SoundChain - Web3 Music Platform`} />
+
+                    {/* Open Graph - Basic */}
                     <meta property="og:title" content={`${trackDetailData.track.title} by ${trackDetailData.track.artist}`} />
                     <meta property="og:description" content={`Listen to ${trackDetailData.track.title} on SoundChain. ${trackDetailData.track.artist}. Stream now!`} />
-                    <meta property="og:image" content={trackDetailData.track.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`} />
-                    <meta property="og:image:width" content="1200" />
-                    <meta property="og:image:height" content="1200" />
-                    <meta property="og:type" content="music.song" />
                     <meta property="og:url" content={`${config.domainUrl}/dex/track/${trackDetailData.track.id}`} />
                     <meta property="og:site_name" content="SoundChain" />
-                    <meta name="twitter:card" content="summary_large_image" />
-                    <meta name="twitter:title" content={`${trackDetailData.track.title} by ${trackDetailData.track.artist}`} />
-                    <meta name="twitter:description" content={`Listen on SoundChain - Web3 Music Platform`} />
-                    <meta name="twitter:image" content={trackDetailData.track.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`} />
-                    <meta name="twitter:site" content="@SoundChainFM" />
+
+                    {/* Open Graph - Video/Audio for inline playback */}
+                    {trackDetailData.track.playbackUrl ? (
+                      <>
+                        <meta property="og:type" content="video.other" />
+                        <meta property="og:video" content={`${config.domainUrl}/embed/track/${trackDetailData.track.id}`} />
+                        <meta property="og:video:secure_url" content={`${config.domainUrl}/embed/track/${trackDetailData.track.id}`} />
+                        <meta property="og:video:type" content="text/html" />
+                        <meta property="og:video:width" content="480" />
+                        <meta property="og:video:height" content="360" />
+                        <meta property="og:image" content={trackDetailData.track.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`} />
+                        <meta property="og:image:width" content="1200" />
+                        <meta property="og:image:height" content="1200" />
+                      </>
+                    ) : (
+                      <>
+                        <meta property="og:type" content="music.song" />
+                        <meta property="og:image" content={trackDetailData.track.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`} />
+                        <meta property="og:image:width" content="1200" />
+                        <meta property="og:image:height" content="1200" />
+                      </>
+                    )}
+
+                    {/* Twitter Player Card for inline playback */}
+                    {trackDetailData.track.playbackUrl ? (
+                      <>
+                        <meta name="twitter:card" content="player" />
+                        <meta name="twitter:title" content={`${trackDetailData.track.title} by ${trackDetailData.track.artist}`} />
+                        <meta name="twitter:description" content={`Listen on SoundChain - Web3 Music Platform`} />
+                        <meta name="twitter:image" content={trackDetailData.track.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`} />
+                        <meta name="twitter:site" content="@SoundChainFM" />
+                        <meta name="twitter:player" content={`${config.domainUrl}/embed/track/${trackDetailData.track.id}`} />
+                        <meta name="twitter:player:width" content="480" />
+                        <meta name="twitter:player:height" content="360" />
+                      </>
+                    ) : (
+                      <>
+                        <meta name="twitter:card" content="summary_large_image" />
+                        <meta name="twitter:title" content={`${trackDetailData.track.title} by ${trackDetailData.track.artist}`} />
+                        <meta name="twitter:description" content={`Listen on SoundChain - Web3 Music Platform`} />
+                        <meta name="twitter:image" content={trackDetailData.track.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`} />
+                        <meta name="twitter:site" content="@SoundChainFM" />
+                      </>
+                    )}
+
+                    {/* oEmbed Discovery */}
+                    <link
+                      rel="alternate"
+                      type="application/json+oembed"
+                      href={`${config.domainUrl}/api/oembed?url=${encodeURIComponent(`${config.domainUrl}/dex/track/${trackDetailData.track.id}`)}`}
+                      title={`${trackDetailData.track.title} by ${trackDetailData.track.artist}`}
+                    />
+
                     <link rel="canonical" href={`${config.domainUrl}/dex/track/${trackDetailData.track.id}`} />
                   </Head>
 
