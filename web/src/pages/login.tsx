@@ -262,7 +262,8 @@ export default function LoginPage() {
       }
 
       // Build redirect URI - MUST match exactly what's in Magic Dashboard
-      const redirectURI = `${window.location.origin}/login`;
+      // Use config.domainUrl for consistency with legacy code (falls back to origin if not set)
+      const redirectURI = `${config.domainUrl || window.location.origin}/login`;
       console.log('[OAuth2] Starting OAuth for:', provider);
       console.log('[OAuth2] Redirect URI:', redirectURI);
       console.log('[OAuth2] NOTE: This redirect URI must be configured in Magic Dashboard');
@@ -285,6 +286,7 @@ export default function LoginPage() {
         await (magic as any).oauth2.loginWithRedirect({
           provider,
           redirectURI,
+          scope: ['openid', 'email'],  // Required for proper identity claims and oauthProvider
         });
         // If we reach here, redirect didn't happen (unusual - usually throws or redirects)
         console.log('[OAuth2] loginWithRedirect returned without redirecting - this is unexpected');
@@ -405,6 +407,11 @@ export default function LoginPage() {
 
         if (result && result.magic?.idToken) {
           console.log('[OAuth2] Got OAuth result with idToken!');
+          console.log('[OAuth2] OAuth provider info:', {
+            provider: result.oauth?.provider,
+            email: result.oauth?.userInfo?.email,
+            userInfo: result.oauth?.userInfo,
+          });
 
           try {
             const didToken = result.magic.idToken;
