@@ -151,18 +151,40 @@ export const AudioEngine = () => {
     }
   }, [hasNext, playNext, setPlayingState, setProgressState])
 
-  // Prevent playback interruption on device rotation / visibility changes
+  // Prevent playback interruption on device rotation / visibility changes / app switching
   useEffect(() => {
     let wasPlayingBeforeHidden = false
+    let backgroundResumeInterval: NodeJS.Timeout | null = null
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Page is hidden - remember if we were playing
+        // Page is hidden (user switched apps) - remember if we were playing
         wasPlayingBeforeHidden = isPlaying
+
+        // Start aggressive background resume attempts for mobile
+        if (isPlaying && audioRef.current) {
+          // Try to keep playing in background - some browsers allow this
+          backgroundResumeInterval = setInterval(() => {
+            if (audioRef.current?.paused && wasPlayingBeforeHidden) {
+              audioRef.current.play().catch(() => {})
+            }
+          }, 1000)
+        }
       } else {
-        // Page is visible again - resume if we were playing
+        // Page is visible again - clear interval and resume
+        if (backgroundResumeInterval) {
+          clearInterval(backgroundResumeInterval)
+          backgroundResumeInterval = null
+        }
+
+        // Resume playback if we were playing before
         if (wasPlayingBeforeHidden && audioRef.current) {
-          audioRef.current.play().catch(() => {})
+          // Small delay to let the browser settle
+          setTimeout(() => {
+            if (audioRef.current?.paused && wasPlayingBeforeHidden) {
+              audioRef.current.play().catch(() => {})
+            }
+          }, 100)
         }
       }
     }
@@ -174,15 +196,53 @@ export const AudioEngine = () => {
       }
     }
 
+    // Handle unexpected pauses (browser pausing audio in background)
+    const handleUnexpectedPause = () => {
+      // If we're supposed to be playing but got paused, try to resume
+      if (isPlaying && audioRef.current?.paused) {
+        // Small delay before retrying
+        setTimeout(() => {
+          if (isPlaying && audioRef.current?.paused) {
+            audioRef.current.play().catch(() => {})
+          }
+        }, 100)
+      }
+    }
+
+    // Listen for blur/focus events (more reliable than visibility on some devices)
+    const handleWindowBlur = () => {
+      wasPlayingBeforeHidden = isPlaying
+    }
+
+    const handleWindowFocus = () => {
+      if (wasPlayingBeforeHidden && audioRef.current?.paused) {
+        audioRef.current.play().catch(() => {})
+      }
+    }
+
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('orientationchange', handleOrientationChange)
-    // Also listen for resize which can indicate rotation
     window.addEventListener('resize', handleOrientationChange)
+    window.addEventListener('blur', handleWindowBlur)
+    window.addEventListener('focus', handleWindowFocus)
+
+    // Listen for pause events on the audio element itself
+    if (audioRef.current) {
+      audioRef.current.addEventListener('pause', handleUnexpectedPause)
+    }
 
     return () => {
+      if (backgroundResumeInterval) {
+        clearInterval(backgroundResumeInterval)
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('orientationchange', handleOrientationChange)
       window.removeEventListener('resize', handleOrientationChange)
+      window.removeEventListener('blur', handleWindowBlur)
+      window.removeEventListener('focus', handleWindowFocus)
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('pause', handleUnexpectedPause)
+      }
     }
   }, [isPlaying])
 
@@ -230,6 +290,10 @@ export const AudioEngine = () => {
       className="h-0 w-0 opacity-0"
       playsInline
       preload="auto"
+      // iOS background playback attributes
+      // @ts-ignore - webkit specific attributes
+      webkit-playsinline="true"
+      x-webkit-airplay="allow"
     />
   )
 }
