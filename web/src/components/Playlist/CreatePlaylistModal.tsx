@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { X, ImagePlus, Loader2, Plus, Search, Link2, Music2, Trash2 } from 'lucide-react'
 import { useCreatePlaylistMutation, useExploreTracksQuery, SortExploreTracksField, SortOrder } from 'lib/graphql'
+import { useUpload } from 'hooks/useUpload'
 import Asset from 'components/Asset/Asset'
 
 interface Track {
@@ -59,6 +60,7 @@ const platformColors: Record<string, string> = {
 
 export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlaylistModalProps) => {
   const [title, setTitle] = useState('')
+  const [artworkUrl, setArtworkUrl] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedTracks, setSelectedTracks] = useState<Track[]>([])
@@ -68,7 +70,43 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
   const [trackSearchQuery, setTrackSearchQuery] = useState('')
   const [linkInput, setLinkInput] = useState('')
 
+  // File input ref for artwork upload
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Upload hook for artwork
+  const { preview: artworkPreview, uploading: artworkUploading, upload: uploadArtwork } = useUpload(
+    artworkUrl || undefined,
+    (url) => setArtworkUrl(url)
+  )
+
   const [createPlaylist] = useCreatePlaylistMutation()
+
+  // Handle artwork file selection
+  const handleArtworkClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleArtworkChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file (JPG, PNG)')
+        return
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('Image must be less than 10MB')
+        return
+      }
+      try {
+        await uploadArtwork([file])
+      } catch (err) {
+        console.error('Artwork upload failed:', err)
+        setError('Failed to upload artwork. Please try again.')
+      }
+    }
+  }
 
   // Load more tracks (50 instead of 10) for better discovery
   const { data: tracksData, loading: tracksLoading } = useExploreTracksQuery({
@@ -134,6 +172,7 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
             description: externalLinks.length > 0
               ? `External links: ${externalLinks.map(l => l.url).join(', ')}`
               : null,
+            artworkUrl: artworkUrl || undefined,
           },
         },
         errorPolicy: 'all',
@@ -144,6 +183,7 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
         // TODO: Store external links in playlist metadata
         onSuccess?.(result.data.createPlaylist.playlist.id)
         setTitle('')
+        setArtworkUrl(null)
         setSelectedTracks([])
         setExternalLinks([])
         onClose()
@@ -182,14 +222,49 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleArtworkChange}
+            className="hidden"
+          />
+
           {/* Cover Image */}
           <div className="flex justify-center">
-            <div className="w-full h-32 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center cursor-pointer hover:border-green-500/50 transition-colors group">
-              <div className="flex items-center gap-3 text-neutral-400 group-hover:text-green-400 transition-colors">
-                <ImagePlus className="w-6 h-6" />
-                <span className="text-sm font-medium">Change Artwork</span>
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={handleArtworkClick}
+              disabled={artworkUploading}
+              className="w-full h-32 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center cursor-pointer hover:border-green-500/50 transition-colors group overflow-hidden relative"
+            >
+              {artworkUploading ? (
+                <div className="flex items-center gap-3 text-green-400">
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <span className="text-sm font-medium">Uploading...</span>
+                </div>
+              ) : artworkPreview || artworkUrl ? (
+                <>
+                  <img
+                    src={artworkPreview || artworkUrl || ''}
+                    alt="Playlist artwork"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="flex items-center gap-2 text-white">
+                      <ImagePlus className="w-5 h-5" />
+                      <span className="text-sm font-medium">Change</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center gap-3 text-neutral-400 group-hover:text-green-400 transition-colors">
+                  <ImagePlus className="w-6 h-6" />
+                  <span className="text-sm font-medium">Add Cover Artwork</span>
+                </div>
+              )}
+            </button>
           </div>
 
           {/* Name */}
