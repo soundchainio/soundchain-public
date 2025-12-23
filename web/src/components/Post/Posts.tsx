@@ -282,42 +282,16 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
     return 5                        // Desktop: 5 columns for tight stacking
   }
 
-  // Simple scroll-based infinite loading for profile pages
+  // Simple mode rendering for profile pages (no virtualization)
   // This avoids AutoSizer issues when Posts is inside a parent with its own scroll
-  const loadMoreRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!useSimpleMode || !loadMoreRef.current) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && pageInfo.hasNextPage && !loading) {
-          loadMore()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    observer.observe(loadMoreRef.current)
-    return () => observer.disconnect()
-  }, [useSimpleMode, pageInfo.hasNextPage, loading])
-
-  // Simple mode rendering for profile pages
   if (useSimpleMode) {
+    const simpleNodes = nodes || []
+
     return (
       <>
-        {/* Post Form only on own profile or no profileId */}
-        {!profileId && (
-          <div className="flex justify-center px-4 mb-4">
-            <div className="w-full max-w-[614px]">
-              <PostFormTimeline />
-            </div>
-          </div>
-        )}
-
         {/* Simple mapped posts - no virtualization */}
         <div className="space-y-4">
-          {(nodes as PostType[]).map((post) => (
+          {(simpleNodes as PostType[]).map((post) => (
             <div key={post.id} className="flex justify-center px-4">
               <div className="w-full max-w-[614px]">
                 <Post post={post} handleOnPlayClicked={handleOnPlayClicked} />
@@ -325,17 +299,37 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
             </div>
           ))}
 
-          {/* Load more trigger */}
+          {/* Load more button */}
           {pageInfo.hasNextPage && (
-            <div ref={loadMoreRef} className="flex justify-center py-8">
-              <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
+            <div className="flex justify-center py-8">
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="px-6 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded-lg border border-cyan-500/30 transition-colors disabled:opacity-50"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <div className="animate-spin w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                    Loading...
+                  </span>
+                ) : (
+                  'Load more'
+                )}
+              </button>
             </div>
           )}
 
           {/* End of feed indicator */}
-          {!pageInfo.hasNextPage && nodes!.length > 0 && (
+          {!pageInfo.hasNextPage && simpleNodes.length > 0 && (
             <div className="text-center py-8 text-neutral-500 text-sm">
               You've reached the end
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!loading && simpleNodes.length === 0 && (
+            <div className="text-center py-12 text-neutral-500">
+              <p>No posts yet</p>
             </div>
           )}
         </div>
