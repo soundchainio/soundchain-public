@@ -1005,13 +1005,3 @@ input[type='number'] {
 .view-toggle button:hover:not(.active) {
   background: rgba(255, 255, 255, 0.05);
 }
-
-/* Magic SDK modal - ensure its always on top */
-iframe[src*="magic.link"],
-iframe[src*="auth.magic"],
-div[class*="magic"],
-#magic-iframe-container,
-.magic-iframe-container {
-  z-index: 2147483647 !important;
-  position: fixed !important;
-}
