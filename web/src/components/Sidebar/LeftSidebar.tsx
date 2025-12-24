@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { useMe } from 'hooks/useMe'
-import { useFavoriteTracksQuery, useTracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useFavoriteTracksQuery, useTracksQuery, useGetUserPlaylistsQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { Avatar } from '../Avatar'
-import { Music, Users, Heart, Disc3, Settings, Wallet } from 'lucide-react'
+import { Music, Users, Heart, Disc3, Settings, Wallet, ListMusic } from 'lucide-react'
 
 export const LeftSidebar = () => {
   const me = useMe()
@@ -26,8 +26,15 @@ export const LeftSidebar = () => {
     skip: !me,
   })
 
+  // Get user's playlists
+  const { data: playlistsData } = useGetUserPlaylistsQuery({
+    variables: { page: { first: 6 } },
+    skip: !me,
+  })
+
   const recentTracks = tracksData?.tracks?.nodes || []
   const favoriteTracks = favoritesData?.favoriteTracks?.nodes || []
+  const playlists = playlistsData?.getUserPlaylists?.nodes || []
 
   if (!me || !profile) {
     // Show guest sidebar
@@ -144,6 +151,52 @@ export const LeftSidebar = () => {
                   />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Disc3 className="w-6 h-6 text-white" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Your Playlists */}
+        {playlists.length > 0 && (
+          <div className="bg-neutral-900/80 rounded-2xl p-4 border border-neutral-800">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                <ListMusic className="w-3.5 h-3.5 text-green-400" />
+                Your Playlists
+              </h4>
+              <Link href="/dex/playlist" className="text-cyan-400 text-xs hover:underline">
+                View all
+              </Link>
+            </div>
+            <div className="space-y-2">
+              {playlists.slice(0, 4).map((playlist) => (
+                <Link
+                  key={playlist.id}
+                  href={`/dex/playlist/${playlist.id}`}
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800 transition-colors group"
+                >
+                  <div className="w-10 h-10 rounded-lg overflow-hidden bg-neutral-700 flex-shrink-0">
+                    {playlist.artworkUrl ? (
+                      <img
+                        src={playlist.artworkUrl}
+                        alt={playlist.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
+                        <ListMusic className="w-5 h-5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium truncate group-hover:text-green-400 transition-colors">
+                      {playlist.title}
+                    </p>
+                    <p className="text-gray-500 text-xs">
+                      {playlist.tracks?.nodes?.length || 0} tracks
+                    </p>
                   </div>
                 </Link>
               ))}

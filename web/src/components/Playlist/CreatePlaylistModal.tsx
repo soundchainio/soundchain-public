@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { X, ImagePlus, Loader2, Plus, Search, Link2, Music2, Trash2 } from 'lucide-react'
-import { useCreatePlaylistMutation, useExploreTracksQuery, SortExploreTracksField, SortOrder } from 'lib/graphql'
+import { useCreatePlaylistMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, SortExploreTracksField, SortOrder } from 'lib/graphql'
 import { useUpload } from 'hooks/useUpload'
 import Asset from 'components/Asset/Asset'
 
@@ -80,6 +80,7 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
   )
 
   const [createPlaylist] = useCreatePlaylistMutation()
+  const [createPlaylistTracks] = useCreatePlaylistTracksMutation()
 
   // Handle artwork file selection
   const handleArtworkClick = () => {
@@ -179,9 +180,27 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
       })
 
       if (result.data?.createPlaylist?.playlist?.id) {
-        // TODO: Add selected tracks to playlist via addPlaylistItem mutation
-        // TODO: Store external links in playlist metadata
-        onSuccess?.(result.data.createPlaylist.playlist.id)
+        const playlistId = result.data.createPlaylist.playlist.id
+
+        // Add selected tracks to the playlist
+        if (selectedTracks.length > 0) {
+          try {
+            await createPlaylistTracks({
+              variables: {
+                input: {
+                  playlistId,
+                  trackIds: selectedTracks.map(t => t.id),
+                },
+              },
+            })
+            console.log('Added', selectedTracks.length, 'tracks to playlist')
+          } catch (trackErr) {
+            console.error('Failed to add tracks to playlist:', trackErr)
+            // Don't fail the whole operation - playlist was created
+          }
+        }
+
+        onSuccess?.(playlistId)
         setTitle('')
         setArtworkUrl(null)
         setSelectedTracks([])
