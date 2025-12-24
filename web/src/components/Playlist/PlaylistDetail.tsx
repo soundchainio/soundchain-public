@@ -99,6 +99,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [externalLinkTitle, setExternalLinkTitle] = useState('')
   const [addingTracks, setAddingTracks] = useState(false)
   const [addLinkError, setAddLinkError] = useState('')
+  const [playError, setPlayError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isFavorite, setIsFavorite] = useState(playlist.isFavorite || false)
   const [activeEmbed, setActiveEmbed] = useState<{ url: string; title: string; sourceType: PlaylistTrackSourceType } | null>(null)
@@ -198,11 +199,20 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
   // Build playable songs by fetching track data
   const buildSongsWithPlaybackUrls = async (): Promise<Song[]> => {
+    console.log('[PlaylistDetail] Building songs. Total tracks:', tracks.length)
+    console.log('[PlaylistDetail] Tracks:', tracks.map(t => ({ id: t.id, sourceType: t.sourceType, trackId: t.trackId, title: t.title })))
+
     const nftTracks = tracks.filter(pt => pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId)
+    console.log('[PlaylistDetail] NFT tracks found:', nftTracks.length)
+
+    if (nftTracks.length === 0) {
+      console.warn('[PlaylistDetail] No NFT tracks to play!')
+    }
 
     const songs = await Promise.all(
       nftTracks.map(async (pt) => {
         const trackData = await fetchTrackData(pt.trackId!)
+        console.log('[PlaylistDetail] Fetched track data for', pt.trackId, ':', trackData?.playbackUrl ? 'Has playbackUrl' : 'NO playbackUrl')
         return {
           trackId: pt.trackId!,
           src: trackData?.playbackUrl || '',
@@ -215,7 +225,14 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     )
 
     // Filter out songs without playbackUrl
-    return songs.filter(song => song.src)
+    const playableSongs = songs.filter(song => song.src)
+    console.log('[PlaylistDetail] Playable songs (with src):', playableSongs.length)
+
+    if (playableSongs.length === 0 && songs.length > 0) {
+      console.error('[PlaylistDetail] All songs filtered out - no playbackUrls!')
+    }
+
+    return playableSongs
   }
 
   // Play a specific track in the queue (NFT or external)
@@ -264,13 +281,36 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
   const handlePlayAll = async () => {
     setIsLoading(true)
+    setPlayError('')
+
     try {
-      if (tracks.length > 0) {
-        // Start from first track
+      console.log('[PlaylistDetail] handlePlayAll called. tracks.length:', tracks.length)
+
+      if (tracks.length === 0) {
+        setPlayError('No tracks in this playlist')
+        return
+      }
+
+      // Check if first track is NFT or external
+      const firstTrack = tracks[0]
+      if (firstTrack.sourceType === PlaylistTrackSourceType.Nft && firstTrack.trackId) {
+        // Build songs and check if any are playable
+        const songs = await buildSongsWithPlaybackUrls()
+        if (songs.length === 0) {
+          setPlayError('Unable to play tracks. They may still be processing.')
+          return
+        }
+        // Start playing
+        playlistState(songs, 0)
+      } else if (firstTrack.externalUrl || firstTrack.uploadedFileUrl) {
+        // External track - show embed
         await playTrackAtIndex(0)
+      } else {
+        setPlayError('Track cannot be played')
       }
     } catch (error) {
       console.error('Error loading tracks:', error)
+      setPlayError('Error loading tracks. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -497,6 +537,13 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 </>
               )}
             </div>
+
+            {/* Play Error Message */}
+            {playError && (
+              <div className="mt-3 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                <p className="text-red-400 text-sm">{playError}</p>
+              </div>
+            )}
 
             {/* Add Songs Panel */}
             {isOwner && showAddTracks && (
