@@ -575,7 +575,7 @@ export default function LoginPage() {
   return (
     <>
       <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
-      <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden">
+      <div className="relative flex min-h-screen w-full flex-col items-center justify-center">
         {/* Background GIF with proper scaling - fixed to viewport */}
         <div className="fixed inset-0 z-0">
           <img
