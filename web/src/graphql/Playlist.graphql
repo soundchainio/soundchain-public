@@ -131,3 +131,37 @@ mutation TogglePlaylistFollow($playlistId: String!) {
 mutation DeletePlaylist($playlistId: String!) {
   deletePlaylist(playlistId: $playlistId)
 }
+
+# Add external links or uploads to playlist
+mutation AddPlaylistItem($input: AddPlaylistItemInput!) {
+  addPlaylistItem(input: $input) {
+    playlistTrack {
+      id
+      playlistId
+      trackId
+      sourceType
+      externalUrl
+      uploadedFileUrl
+      title
+      artist
+      artworkUrl
+      duration
+      position
+    }
+    success
+  }
+}
+
+# Delete a single playlist item
+mutation DeletePlaylistItem($playlistItemId: String!) {
+  deletePlaylistItem(playlistItemId: $playlistItemId) {
+    success
+  }
+}
+
+# Reorder playlist items
+mutation ReorderPlaylistItems($playlistId: String!, $itemIds: [String!]!) {
+  reorderPlaylistItems(playlistId: $playlistId, itemIds: $itemIds) {
+    success
+  }
+}
