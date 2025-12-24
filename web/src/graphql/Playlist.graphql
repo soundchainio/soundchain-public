@@ -14,7 +14,7 @@ query Playlist($id: String!) {
   }
 }
 
-query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput, $tracksPage: PageInput) {
+query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput) {
   getUserPlaylists(page: $page, sort: $sort) {
     nodes {
       id
@@ -28,7 +28,7 @@ query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput, $tracksPage: 
       isFollowed
       createdAt
       updatedAt
-      tracks(page: $tracksPage) {
+      tracks {
         nodes {
           id
           trackId

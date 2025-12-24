@@ -8920,7 +8920,6 @@ export function usePlaylistQuery(baseOptions: Apollo.QueryHookOptions<PlaylistQu
 export type GetUserPlaylistsQueryVariables = Exact<{
   page?: InputMaybe<PageInput>;
   sort?: InputMaybe<SortPlaylistInput>;
-  tracksPage?: InputMaybe<PageInput>;
 }>;
 
 export type GetUserPlaylistsQuery = {
@@ -8965,7 +8964,7 @@ export type GetUserPlaylistsQuery = {
 };
 
 export const GetUserPlaylistsDocument = gql`
-  query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput, $tracksPage: PageInput) {
+  query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput) {
     getUserPlaylists(page: $page, sort: $sort) {
       nodes {
         id
@@ -8979,7 +8978,7 @@ export const GetUserPlaylistsDocument = gql`
         isFollowed
         createdAt
         updatedAt
-        tracks(page: $tracksPage) {
+        tracks {
           nodes {
             id
             trackId
