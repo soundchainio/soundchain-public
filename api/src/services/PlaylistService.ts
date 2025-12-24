@@ -58,7 +58,6 @@ export class PlaylistService extends ModelService<typeof Playlist> {
         title: track.title || null,
         artist: track.artist || null,
         artworkUrl: track.artworkUrl || null,
-        duration: track.duration || null,
         position: index,
       });
       return playlistTrack.save();
@@ -151,7 +150,6 @@ export class PlaylistService extends ModelService<typeof Playlist> {
               title: track?.title || null,
               artist: track?.artist || null,
               artworkUrl: track?.artworkUrl || null,
-              duration: track?.duration || null,
               position,
             },
           },
