@@ -1060,7 +1060,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   const isViewingOwnProfile = selectedView === 'profile' && viewingProfile?.id === me?.profile?.id
   const shouldSkipPlaylists = (selectedView !== 'playlist' && !isViewingOwnProfile) || !userData?.me
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
-    variables: {},
+    variables: {
+      tracksPage: { first: 500 }, // No track limit - fetch up to 500 tracks per playlist
+    },
     skip: shouldSkipPlaylists,
     fetchPolicy: 'network-only', // Always fetch fresh, don't use cache
     errorPolicy: 'all', // Return partial data even if there are errors

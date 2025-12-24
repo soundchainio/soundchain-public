@@ -28,7 +28,7 @@ export const LeftSidebar = () => {
 
   // Get user's playlists
   const { data: playlistsData } = useGetUserPlaylistsQuery({
-    variables: { page: { first: 6 } },
+    variables: { page: { first: 6 }, tracksPage: { first: 100 } },
     skip: !me,
   })
 
