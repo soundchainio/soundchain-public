@@ -54,11 +54,11 @@ export const BottomAudioPlayer = () => {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex flex-col bg-neutral-900 py-2 px-3 pb-safe animate-slide-up shadow-[0_-4px_20px_rgba(0,0,0,0.5)]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex flex-col bg-neutral-900 py-2 px-4 pb-safe pl-safe pr-safe animate-slide-up shadow-[0_-4px_20px_rgba(0,0,0,0.5)] box-border">
       {/* Gradient progress bar at top */}
       <GradientProgressBar progress={progress} duration={duration} />
 
-      <div className="flex items-center justify-between gap-2 w-full max-w-full overflow-hidden mt-1">
+      <div className="flex items-center justify-between gap-3 w-full mt-1">
         {/* Close button (X) on the left */}
         <button
           aria-label="Close player"
