@@ -1061,28 +1061,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
     skip: shouldSkipPlaylists,
-    fetchPolicy: 'cache-and-network',
-    onCompleted: (data) => {
-      console.log('[Playlists] Query completed:', data?.getUserPlaylists?.nodes?.length || 0, 'playlists')
-    },
-    onError: (error) => {
-      console.error('[Playlists] Query error:', error.message, error.graphQLErrors)
-    },
+    fetchPolicy: 'network-only', // Always fetch fresh, don't use cache
+    errorPolicy: 'all', // Return partial data even if there are errors
   })
-
-  // Debug logging for playlists
-  useEffect(() => {
-    if (!shouldSkipPlaylists) {
-      console.log('[Playlists] Query state:', {
-        skip: shouldSkipPlaylists,
-        loading: playlistsLoading,
-        error: playlistsError?.message,
-        count: playlistsData?.getUserPlaylists?.nodes?.length,
-        hasUser: !!userData?.me,
-        selectedView,
-      })
-    }
-  }, [shouldSkipPlaylists, playlistsLoading, playlistsError, playlistsData, userData?.me, selectedView])
 
   // Follow/Unfollow mutations
   const [followProfile, { loading: followLoading }] = useFollowProfileMutation()
