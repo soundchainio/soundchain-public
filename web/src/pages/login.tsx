@@ -423,15 +423,15 @@ export default function LoginPage() {
       setLoggingIn(true);
       setError(null);
 
-      // Use Email OTP - user gets a 6-digit code in email, enters it in Magic's UI
-      // This is simpler than magic links - no redirects, works reliably across all browsers
-      console.log('[Email] Sending OTP code to email...');
+      // Use Magic Link - user receives email with clickable link
+      console.log('[Email] Sending Magic Link to email...');
 
-      const didToken = await magic.auth.loginWithEmailOTP({
+      const didToken = await magic.auth.loginWithMagicLink({
         email: values.email,
+        redirectURI: `${window.location.origin}/login`,
       });
 
-      console.log('[Email] OTP authentication completed!');
+      console.log('[Email] Magic Link authentication completed!');
       console.log('[Email] Received didToken');
       localStorage.setItem('didToken', didToken);
 
