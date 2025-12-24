@@ -2,7 +2,25 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { X, ImagePlus, Loader2, Plus, Search, Link2, Music2, Trash2 } from 'lucide-react'
-import { useCreatePlaylistMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, SortExploreTracksField, SortOrder } from 'lib/graphql'
+import { useCreatePlaylistMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, SortExploreTracksField, SortOrder, PlaylistTrackSourceType } from 'lib/graphql'
+import { gql, useMutation } from '@apollo/client'
+
+// Mutation for adding external links to playlist (not yet in codegen)
+const ADD_PLAYLIST_ITEM = gql`
+  mutation AddPlaylistItem($input: AddPlaylistItemInput!) {
+    addPlaylistItem(input: $input) {
+      playlistTrack {
+        id
+        playlistId
+        sourceType
+        externalUrl
+        title
+        position
+      }
+      success
+    }
+  }
+`
 import { useUpload } from 'hooks/useUpload'
 import Asset from 'components/Asset/Asset'
 
@@ -81,6 +99,7 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
 
   const [createPlaylist] = useCreatePlaylistMutation()
   const [createPlaylistTracks] = useCreatePlaylistTracksMutation()
+  const [addPlaylistItem] = useMutation(ADD_PLAYLIST_ITEM)
 
   // Handle artwork file selection
   const handleArtworkClick = () => {
@@ -170,9 +189,7 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
         variables: {
           input: {
             title: title.trim(),
-            description: externalLinks.length > 0
-              ? `External links: ${externalLinks.map(l => l.url).join(', ')}`
-              : null,
+            description: null,
             artworkUrl: artworkUrl || undefined,
           },
         },
@@ -182,7 +199,7 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
       if (result.data?.createPlaylist?.playlist?.id) {
         const playlistId = result.data.createPlaylist.playlist.id
 
-        // Add selected tracks to the playlist
+        // Add selected NFT tracks to the playlist
         if (selectedTracks.length > 0) {
           try {
             await createPlaylistTracks({
@@ -193,10 +210,48 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
                 },
               },
             })
-            console.log('Added', selectedTracks.length, 'tracks to playlist')
+            console.log('Added', selectedTracks.length, 'NFT tracks to playlist')
           } catch (trackErr) {
             console.error('Failed to add tracks to playlist:', trackErr)
-            // Don't fail the whole operation - playlist was created
+          }
+        }
+
+        // Add external links to the playlist as PlaylistTrack records
+        if (externalLinks.length > 0) {
+          console.log('Adding', externalLinks.length, 'external links to playlist')
+          for (const link of externalLinks) {
+            try {
+              // Map platform to sourceType
+              const sourceTypeMap: Record<string, string> = {
+                'YouTube': 'youtube',
+                'Spotify': 'spotify',
+                'Apple Music': 'apple_music',
+                'Amazon Music': 'custom',
+                'Tidal': 'tidal',
+                'Bandcamp': 'bandcamp',
+                'SoundCloud': 'soundcloud',
+                'IG Reels': 'custom',
+                'Instagram': 'custom',
+                'TikTok': 'custom',
+                'Audiomack': 'custom',
+                'Link': 'custom',
+              }
+              const sourceType = sourceTypeMap[link.platform] || 'custom'
+
+              await addPlaylistItem({
+                variables: {
+                  input: {
+                    playlistId,
+                    sourceType,
+                    externalUrl: link.url,
+                    title: link.platform, // Use platform as title for now
+                  },
+                },
+              })
+              console.log('Added external link:', link.platform, link.url)
+            } catch (linkErr) {
+              console.error('Failed to add external link:', link.url, linkErr)
+            }
           }
         }
 
