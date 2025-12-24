@@ -561,7 +561,7 @@ const linkifyText = (text: string) => {
 // Props from getServerSideProps for OG meta tags
 interface DEXDashboardProps {
   ogData?: {
-    type: 'track' | 'profile' | null
+    type: 'track' | 'profile' | 'playlist' | null
     title?: string
     description?: string
     image?: string
@@ -591,6 +591,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
       case 'library': return 'library'
       case 'profile': return 'profile'
       case 'track': return 'track'
+      case 'playlist': return 'playlist'
       case 'marketplace': return 'marketplace'
       case 'feed': return 'feed'
       case 'wallet': return 'wallet'
@@ -649,7 +650,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   useEffect(() => {
     if (!router.isReady) return
     const newView = getInitialView()
-    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
+    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
       console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, isReady: router.isReady })
       setSelectedView(newView as any)
     }
@@ -4886,15 +4887,15 @@ DEXDashboard.getLayout = (page: ReactElement) => {
 // Fetches track/profile data so crawlers see rich preview cards
 export const getServerSideProps: GetServerSideProps = async (context) => {
   // Default empty OG data - page will still load even if data fetch fails
-  const emptyOgData = { type: null as 'track' | 'profile' | null }
+  const emptyOgData = { type: null as 'track' | 'profile' | 'playlist' | null }
 
   try {
     const slug = context.params?.slug as string[] | undefined
     const routeType = slug?.[0]
     const routeId = slug?.[1]
 
-    // Only fetch OG data for track and profile pages
-    if (!routeType || !routeId || (routeType !== 'track' && routeType !== 'users')) {
+    // Only fetch OG data for track, profile, and playlist pages
+    if (!routeType || !routeId || (routeType !== 'track' && routeType !== 'users' && routeType !== 'playlist')) {
       return { props: { ogData: emptyOgData } }
     }
 
@@ -4958,6 +4959,35 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
       } catch (profileError) {
         console.error('Profile OG fetch error:', profileError)
+      }
+    }
+
+    // Playlist page: /dex/playlist/[id]
+    if (routeType === 'playlist') {
+      try {
+        const { data } = await apolloClient.query({
+          query: graphql.PlaylistDocument,
+          variables: { id: routeId },
+          errorPolicy: 'all',
+        })
+
+        if (data?.playlist) {
+          const playlist = data.playlist
+          const trackCount = playlist.tracks?.nodes?.length || 0
+          return {
+            props: {
+              ogData: {
+                type: 'playlist' as const,
+                title: `${playlist.title} | SoundChain Playlist`,
+                description: playlist.description || `A playlist with ${trackCount} tracks. ${playlist.favoriteCount} likes on SoundChain.`,
+                image: playlist.artworkUrl || undefined,
+                url: `/dex/playlist/${routeId}`,
+              },
+            },
+          }
+        }
+      } catch (playlistError) {
+        console.error('Playlist OG fetch error:', playlistError)
       }
     }
   } catch (error) {

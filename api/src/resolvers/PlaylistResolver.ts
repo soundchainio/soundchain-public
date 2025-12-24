@@ -25,6 +25,20 @@ import { AddPlaylistItemPayload, DeletePlaylistItemPayload, ReorderPlaylistItems
 @Resolver(Playlist)
 export class PlaylistResolver {
 
+  // Public query for getting a single playlist by ID (for OG meta tags, share previews)
+  @Query(() => Playlist, { nullable: true })
+  async playlist(
+    @Ctx() { playlistService }: Context,
+    @Arg('id') id: string,
+  ): Promise<Playlist | null> {
+    try {
+      return await playlistService.findById(id);
+    } catch (error) {
+      console.error('[playlist] Error fetching playlist:', error);
+      return null;
+    }
+  }
+
   @Query(() => GetPlaylistPayload)
   @Authorized()
   getUserPlaylists(

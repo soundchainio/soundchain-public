@@ -8876,6 +8876,46 @@ export type LikeTrackCommentMutationHookResult = ReturnType<typeof useLikeTrackC
 // PLAYLIST QUERIES AND MUTATIONS
 // ============================================
 
+// Playlist Query (public, for OG meta tags)
+export type PlaylistQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+export type PlaylistQuery = {
+  __typename?: 'Query';
+  playlist: Maybe<{
+    __typename?: 'Playlist';
+    id: string;
+    title: string;
+    description: Maybe<string>;
+    artworkUrl: Maybe<string>;
+    profileId: string;
+    favoriteCount: number;
+    followCount: number;
+    createdAt: string;
+  }>;
+};
+
+export const PlaylistDocument = gql`
+  query Playlist($id: String!) {
+    playlist(id: $id) {
+      id
+      title
+      description
+      artworkUrl
+      profileId
+      favoriteCount
+      followCount
+      createdAt
+    }
+  }
+`;
+
+export function usePlaylistQuery(baseOptions: Apollo.QueryHookOptions<PlaylistQuery, PlaylistQueryVariables> & ({ variables: PlaylistQueryVariables; skip?: boolean; } | { skip: boolean; })) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<PlaylistQuery, PlaylistQueryVariables>(PlaylistDocument, options);
+}
+
 // GetUserPlaylists Query
 export type GetUserPlaylistsQueryVariables = Exact<{
   page?: InputMaybe<PageInput>;

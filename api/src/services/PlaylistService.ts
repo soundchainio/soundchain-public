@@ -35,6 +35,16 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     super(context, PlaylistModel);
   }
 
+  // Public method to get a playlist by ID (returns null if not found)
+  async findById(id: string): Promise<Playlist | null> {
+    try {
+      return await this.model.findOne({ _id: id, deleted: false });
+    } catch (error) {
+      console.error('[PlaylistService.findById] Error:', error);
+      return null;
+    }
+  }
+
   async createPlaylistTrack(trackIds: string[], profileId: string, playlist: DocumentType<Playlist>): Promise<void> {
     const existingTracks = await TrackModel.find({ _id: { $in: trackIds } }, '_id');
 

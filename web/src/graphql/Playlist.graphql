@@ -1,5 +1,19 @@
 # Playlist queries and mutations
 
+# Public query for getting a single playlist (for share previews, OG tags)
+query Playlist($id: String!) {
+  playlist(id: $id) {
+    id
+    title
+    description
+    artworkUrl
+    profileId
+    favoriteCount
+    followCount
+    createdAt
+  }
+}
+
 query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput) {
   getUserPlaylists(page: $page, sort: $sort) {
     nodes {
