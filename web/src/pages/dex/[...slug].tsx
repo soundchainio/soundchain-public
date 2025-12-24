@@ -4988,13 +4988,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         })
 
         if (data?.track) {
+          const fallbackImage = `${process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'}/soundchain-meta-logo.png`
           return {
             props: {
               ogData: {
                 type: 'track' as const,
                 title: `${data.track.title || 'Track'} by ${data.track.artist || 'Unknown'} | SoundChain`,
                 description: `Listen to "${data.track.title}" by ${data.track.artist} on SoundChain. ${data.track.playbackCountFormatted || '0'} plays.`,
-                image: data.track.artworkUrl || undefined,
+                image: data.track.artworkUrl || fallbackImage,
                 url: `/dex/track/${routeId}`,
               },
             },
@@ -5044,14 +5045,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
         if (data?.playlist) {
           const playlist = data.playlist
-          const trackCount = playlist.tracks?.nodes?.length || 0
+          // Always provide a fallback image - use playlist artwork or SoundChain logo
+          const fallbackImage = `${process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'}/soundchain-meta-logo.png`
           return {
             props: {
               ogData: {
                 type: 'playlist' as const,
                 title: `${playlist.title} | SoundChain Playlist`,
-                description: playlist.description || `A playlist with ${trackCount} tracks. ${playlist.favoriteCount} likes on SoundChain.`,
-                image: playlist.artworkUrl || undefined,
+                description: playlist.description || `Listen to this playlist on SoundChain - Web3 Music Platform. ${playlist.favoriteCount || 0} likes.`,
+                image: playlist.artworkUrl || fallbackImage,
                 url: `/dex/playlist/${routeId}`,
               },
             },
