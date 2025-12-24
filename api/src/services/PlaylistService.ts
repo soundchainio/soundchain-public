@@ -250,7 +250,7 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     });
   }
 
-  getTracksFromPlaylist(
+  async getTracksFromPlaylist(
     playlistId: string,
     sort?: any,
     page?: PageInput,
@@ -259,7 +259,16 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     // Use $ne: true to match both false and undefined/missing
     const filter = { playlistId, deleted: { $ne: true } };
 
-    return paginate(PlaylistTrackModel, { filter: { ...filter }, sort, page });
+    console.log('[getTracksFromPlaylist] Filter:', JSON.stringify(filter));
+
+    // Debug: Check raw count without pagination
+    const rawCount = await PlaylistTrackModel.countDocuments({ playlistId });
+    console.log('[getTracksFromPlaylist] Raw count (no filter):', rawCount);
+
+    const result = await paginate(PlaylistTrackModel, { filter: { ...filter }, sort, page });
+    console.log('[getTracksFromPlaylist] Paginated result nodes:', result.nodes?.length);
+
+    return result;
   }
 
   // Universal playlist support - add any source type

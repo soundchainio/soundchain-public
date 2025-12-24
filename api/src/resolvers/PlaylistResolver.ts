@@ -181,7 +181,9 @@ export class PlaylistResolver {
       order: SortOrder.DESC
     };
 
+    console.log('[PlaylistResolver.tracks] Fetching tracks for playlistId:', _id.toString());
     const tracks = await playlistService.getTracksFromPlaylist(_id.toString(), sort, page);
+    console.log('[PlaylistResolver.tracks] Found tracks:', tracks.nodes?.length || 0, 'total:', tracks.pageInfo?.totalCount || 0);
 
     return tracks;
   }
