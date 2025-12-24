@@ -1055,10 +1055,11 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network',
   })
 
-  // Playlists Query - for Playlist view (uses JWT auth to determine user)
+  // Playlists Query - for Playlist view AND profile playlists tab (uses JWT auth to determine user)
+  const isViewingOwnProfile = selectedView === 'profile' && viewingProfile?.id === me?.profile?.id
   const { data: playlistsData, loading: playlistsLoading, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
-    skip: selectedView !== 'playlist' || !userData?.me,
+    skip: (selectedView !== 'playlist' && !isViewingOwnProfile) || !userData?.me,
     fetchPolicy: 'cache-and-network',
   })
 
@@ -4765,21 +4766,38 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                             </Button>
                           )}
                         </div>
-                        {/* User playlists will be loaded here - for now show placeholder */}
-                        <div className="text-center py-8 text-neutral-500">
-                          <ListMusic className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                          <p>No playlists yet</p>
-                          {me?.profile?.id === viewingProfile.id && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowCreatePlaylistModal(true)}
-                              className="mt-3 text-pink-400 hover:bg-pink-500/10"
-                            >
-                              Create your first playlist
-                            </Button>
-                          )}
-                        </div>
+                        {/* User playlists */}
+                        {playlistsLoading ? (
+                          <div className="flex justify-center py-8">
+                            <RefreshCw className="w-6 h-6 animate-spin text-pink-400" />
+                          </div>
+                        ) : playlistsData?.getUserPlaylists?.nodes && playlistsData.getUserPlaylists.nodes.length > 0 ? (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {playlistsData.getUserPlaylists.nodes.map((playlist) => (
+                              <PlaylistCard
+                                key={playlist.id}
+                                playlist={playlist}
+                                onSelect={(p) => setSelectedPlaylist(p)}
+                                compact
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-neutral-500">
+                            <ListMusic className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                            <p>No playlists yet</p>
+                            {me?.profile?.id === viewingProfile.id && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowCreatePlaylistModal(true)}
+                                className="mt-3 text-pink-400 hover:bg-pink-500/10"
+                              >
+                                Create your first playlist
+                              </Button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
