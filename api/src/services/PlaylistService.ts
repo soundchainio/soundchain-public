@@ -255,7 +255,9 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     sort?: any,
     page?: PageInput,
   ): Promise<PaginateResult<PlaylistTrack>> {
-    const filter = { playlistId, deleted: false };
+    // Note: PlaylistTrack model doesn't have a 'deleted' field
+    // Use $ne: true to match both false and undefined/missing
+    const filter = { playlistId, deleted: { $ne: true } };
 
     return paginate(PlaylistTrackModel, { filter: { ...filter }, sort, page });
   }
