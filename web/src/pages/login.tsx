@@ -423,15 +423,20 @@ export default function LoginPage() {
       setLoggingIn(true);
       setError(null);
 
-      // Use Magic Link - user receives email with clickable link
-      console.log('[Email] Sending Magic Link to email...');
+      // Use Email OTP - shows modal with 6-digit code input
+      console.log('[Email] Sending OTP code to email...');
 
-      const didToken = await magic.auth.loginWithMagicLink({
+      // DON'T show our loading screen - let Magic's OTP modal be visible
+      setLoggingIn(false);
+
+      const didToken = await magic.auth.loginWithEmailOTP({
         email: values.email,
-        redirectURI: `${window.location.origin}/login`,
       });
 
-      console.log('[Email] Magic Link authentication completed!');
+      // OTP complete - now show our loader while processing
+      setLoggingIn(true);
+
+      console.log('[Email] OTP authentication completed!');
       console.log('[Email] Received didToken');
       localStorage.setItem('didToken', didToken);
 
