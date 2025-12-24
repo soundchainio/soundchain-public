@@ -103,6 +103,7 @@ function isInAppBrowser(): boolean {
 export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
+  const [awaitingOTP, setAwaitingOTP] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data, loading: loadingMe } = useMeQuery({ skip: true });
   const me = data?.me;
@@ -420,7 +421,8 @@ export default function LoginPage() {
       const magic = authMagic.current;
       if (!magic) throw new Error('Magic SDK not initialized. Please refresh the page.');
       console.log('[Email] Starting login process for email:', values.email);
-      setLoggingIn(true);
+      // Don't show full-screen loader during OTP entry - Magic needs to show its modal
+      setAwaitingOTP(true);
       setError(null);
 
       // Use Email OTP - user gets a 6-digit code in email, enters it in Magic's UI
@@ -430,6 +432,10 @@ export default function LoginPage() {
       const didToken = await magic.auth.loginWithEmailOTP({
         email: values.email,
       });
+
+      // OTP complete - now show the full loader while we process
+      setAwaitingOTP(false);
+      setLoggingIn(true);
 
       console.log('[Email] OTP authentication completed!');
       console.log('[Email] Received didToken');
@@ -463,6 +469,7 @@ export default function LoginPage() {
       } else {
         handleError(error as Error);
       }
+      setAwaitingOTP(false);
       setLoggingIn(false);
     }
   }
@@ -512,7 +519,7 @@ export default function LoginPage() {
     );
   }
 
-  if (loggingIn) {
+  if (loggingIn && !awaitingOTP) {
     return (
       <>
         <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
@@ -601,6 +608,16 @@ export default function LoginPage() {
               </p>
               <p className="text-xs text-white mt-2">
                 Or use <strong>Email login</strong> below - it works everywhere!
+              </p>
+            </div>
+          )}
+          {awaitingOTP && (
+            <div className="mb-4 rounded-lg bg-green-500/20 border border-green-500 p-4 text-center">
+              <p className="text-sm font-semibold text-green-400">
+                Check your email for a verification code
+              </p>
+              <p className="text-xs text-green-300 mt-1">
+                Enter the 6-digit code in the popup that appeared
               </p>
             </div>
           )}
