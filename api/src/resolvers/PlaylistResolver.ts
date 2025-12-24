@@ -49,7 +49,7 @@ export class PlaylistResolver {
   ): Promise<GetPlaylistPayload> {
     if (!user?.profileId) {
       console.error('[getUserPlaylists] No user or profileId found');
-      return Promise.resolve({ nodes: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } });
+      return Promise.resolve({ nodes: [], pageInfo: { hasNextPage: false, hasPreviousPage: false, totalCount: 0 } });
     }
     console.log('[getUserPlaylists] Fetching playlists for profileId:', user.profileId.toString());
     return playlistService.getPlaylists(user.profileId.toString(), sort, page);
