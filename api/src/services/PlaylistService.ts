@@ -85,6 +85,27 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     return playlist;
   }
 
+  async deletePlaylist(playlistId: string, profileId: string): Promise<boolean> {
+    // Verify ownership and delete
+    const result = await this.model.deleteOne({
+      _id: playlistId,
+      profileId,
+    });
+
+    if (result.deletedCount === 0) {
+      throw new Error('Playlist not found or you do not have permission to delete it');
+    }
+
+    // Also delete all tracks in the playlist
+    await PlaylistTrackModel.deleteMany({ playlistId });
+
+    // Delete favorites and follows
+    await FavoritePlaylistModel.deleteMany({ playlistId });
+    await FollowPlaylistModel.deleteMany({ playlistId });
+
+    return true;
+  }
+
   async createPlaylistTracks(params: CreatePlaylistTracks, profileId: string): Promise<void> {
     const { trackIds, playlistId } = params;
 

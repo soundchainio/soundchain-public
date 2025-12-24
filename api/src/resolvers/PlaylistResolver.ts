@@ -62,6 +62,16 @@ export class PlaylistResolver {
     return { playlist };
   }
 
+  @Mutation(() => Boolean)
+  @Authorized()
+  async deletePlaylist(
+    @Ctx() { playlistService }: Context,
+    @Arg('playlistId') playlistId: string,
+    @CurrentUser() { profileId }: User,
+  ): Promise<boolean> {
+    return await playlistService.deletePlaylist(playlistId, profileId.toString());
+  }
+
   @Mutation(() => CreatePlaylistPayload)
   @Authorized()
   async createPlaylistTracks(

@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import { Play, Heart, Users, Music, MoreHorizontal } from 'lucide-react'
-import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
+import { Play, Heart, Users, Music } from 'lucide-react'
 import { GetUserPlaylistsQuery } from 'lib/graphql'
 
 type PlaylistType = GetUserPlaylistsQuery['getUserPlaylists']['nodes'][0]

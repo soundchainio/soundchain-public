@@ -20,6 +20,14 @@ query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput) {
           trackId
           playlistId
           createdAt
+          sourceType
+          externalUrl
+          uploadedFileUrl
+          title
+          artist
+          artworkUrl
+          duration
+          position
         }
         pageInfo {
           hasNextPage
@@ -104,4 +112,8 @@ mutation TogglePlaylistFollow($playlistId: String!) {
     playlistId
     isFollowed
   }
+}
+
+mutation DeletePlaylist($playlistId: String!) {
+  deletePlaylist(playlistId: $playlistId)
 }

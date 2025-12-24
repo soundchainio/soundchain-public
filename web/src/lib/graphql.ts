@@ -8904,9 +8904,17 @@ export type GetUserPlaylistsQuery = {
         nodes: Maybe<Array<{
           __typename?: 'PlaylistTrack';
           id: string;
-          trackId: string;
+          trackId: Maybe<string>;
           playlistId: string;
           createdAt: string;
+          sourceType: PlaylistTrackSourceType;
+          externalUrl: Maybe<string>;
+          uploadedFileUrl: Maybe<string>;
+          title: Maybe<string>;
+          artist: Maybe<string>;
+          artworkUrl: Maybe<string>;
+          duration: Maybe<number>;
+          position: number;
         }>>;
         pageInfo: { __typename?: 'PageInfo'; hasNextPage: boolean; endCursor: Maybe<string> };
       }>;
@@ -8936,6 +8944,14 @@ export const GetUserPlaylistsDocument = gql`
             trackId
             playlistId
             createdAt
+            sourceType
+            externalUrl
+            uploadedFileUrl
+            title
+            artist
+            artworkUrl
+            duration
+            position
           }
           pageInfo {
             hasNextPage
@@ -9238,4 +9254,25 @@ export const ReorderPlaylistItemsDocument = gql`
 export function useReorderPlaylistItemsMutation(baseOptions?: Apollo.MutationHookOptions<ReorderPlaylistItemsMutation, ReorderPlaylistItemsMutationVariables>) {
   const options = { ...defaultOptions, ...baseOptions };
   return Apollo.useMutation<ReorderPlaylistItemsMutation, ReorderPlaylistItemsMutationVariables>(ReorderPlaylistItemsDocument, options);
+}
+
+// DeletePlaylist Mutation
+export type DeletePlaylistMutationVariables = Exact<{
+  playlistId: Scalars['String']['input'];
+}>;
+
+export type DeletePlaylistMutation = {
+  __typename?: 'Mutation';
+  deletePlaylist: boolean;
+};
+
+export const DeletePlaylistDocument = gql`
+  mutation DeletePlaylist($playlistId: String!) {
+    deletePlaylist(playlistId: $playlistId)
+  }
+`;
+
+export function useDeletePlaylistMutation(baseOptions?: Apollo.MutationHookOptions<DeletePlaylistMutation, DeletePlaylistMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeletePlaylistMutation, DeletePlaylistMutationVariables>(DeletePlaylistDocument, options);
 }
