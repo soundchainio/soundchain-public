@@ -17,11 +17,11 @@ export const PlaylistCard = ({ playlist, onSelect, compact = false }: PlaylistCa
 
   const trackCount = playlist.tracks?.nodes?.length || 0
 
-  // Placeholder for play functionality - would need to fetch full track data
+  // Open the playlist detail modal when play is clicked
   const handlePlayAll = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // TODO: Implement play all - needs to fetch full track data by trackIds
-    console.log('Play all tracks in playlist:', playlist.id)
+    // Open the playlist detail modal which has full play functionality
+    onSelect?.(playlist)
   }
 
   if (compact) {

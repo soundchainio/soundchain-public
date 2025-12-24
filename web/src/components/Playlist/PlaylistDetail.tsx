@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music } from 'lucide-react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2 } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, PlaylistTrackSourceType } from 'lib/graphql'
-import Link from 'next/link'
+import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, PlaylistTrackSourceType, TrackDocument } from 'lib/graphql'
+import { useApolloClient } from '@apollo/client'
 
 type PlaylistType = GetUserPlaylistsQuery['getUserPlaylists']['nodes'][0]
 type PlaylistTrackType = NonNullable<NonNullable<PlaylistType['tracks']>['nodes']>[0]
@@ -18,47 +18,106 @@ interface PlaylistDetailProps {
 }
 
 export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, currentUserWallet }: PlaylistDetailProps) => {
+  const apolloClient = useApolloClient()
   const { playlistState, currentSong, isPlaying, togglePlay, isCurrentSong } = useAudioPlayerContext()
   const [deletePlaylistItem] = useDeletePlaylistItemMutation()
   const [deletePlaylist] = useDeletePlaylistMutation()
+  const [toggleFavorite] = useTogglePlaylistFavoriteMutation()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showShareToast, setShowShareToast] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isFavorite, setIsFavorite] = useState(playlist.isFavorite || false)
 
   const tracks = playlist.tracks?.nodes || []
 
-  // Build playable songs from playlist tracks
-  const buildSongs = (): Song[] => {
-    return tracks
-      .filter(pt => pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId)
-      .map(pt => ({
-        trackId: pt.trackId!,
-        src: '', // Will be fetched by audio player
-        art: pt.artworkUrl || undefined,
-        title: pt.title || 'Unknown',
-        artist: pt.artist || 'Unknown Artist',
-        isFavorite: false,
-      }))
-  }
-
-  const handlePlayAll = () => {
-    const songs = buildSongs()
-    if (songs.length > 0) {
-      playlistState(songs, 0)
+  // Fetch track data to get playbackUrl
+  const fetchTrackData = async (trackId: string) => {
+    try {
+      const { data } = await apolloClient.query({
+        query: TrackDocument,
+        variables: { id: trackId },
+        fetchPolicy: 'cache-first',
+      })
+      return data?.track
+    } catch (error) {
+      console.error('Error fetching track:', error)
+      return null
     }
   }
 
-  const handlePlayTrack = (index: number) => {
-    // Find the index in filtered playable tracks
-    const playableTracks = tracks.filter(pt => pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId)
-    const playableIndex = playableTracks.findIndex(pt => pt.id === tracks[index].id)
-    if (playableIndex >= 0) {
-      const songs = buildSongs()
-      playlistState(songs, playableIndex)
+  // Build playable songs by fetching track data
+  const buildSongsWithPlaybackUrls = async (): Promise<Song[]> => {
+    const nftTracks = tracks.filter(pt => pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId)
+
+    const songs = await Promise.all(
+      nftTracks.map(async (pt) => {
+        const trackData = await fetchTrackData(pt.trackId!)
+        return {
+          trackId: pt.trackId!,
+          src: trackData?.playbackUrl || '',
+          art: trackData?.artworkUrl || pt.artworkUrl || undefined,
+          title: trackData?.title || pt.title || 'Unknown',
+          artist: trackData?.artist || pt.artist || 'Unknown Artist',
+          isFavorite: trackData?.isFavorite || false,
+        }
+      })
+    )
+
+    // Filter out songs without playbackUrl
+    return songs.filter(song => song.src)
+  }
+
+  const handlePlayAll = async () => {
+    setIsLoading(true)
+    try {
+      const songs = await buildSongsWithPlaybackUrls()
+      if (songs.length > 0) {
+        playlistState(songs, 0)
+      } else {
+        console.log('No playable NFT tracks in this playlist')
+      }
+    } catch (error) {
+      console.error('Error loading tracks:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handlePlayTrack = async (index: number) => {
+    const track = tracks[index]
+    if (!track) return
+
+    // For NFT tracks, fetch and play
+    if (track.sourceType === PlaylistTrackSourceType.Nft && track.trackId) {
+      setIsLoading(true)
+      try {
+        const songs = await buildSongsWithPlaybackUrls()
+        // Find the index in the fetched songs list
+        const playableIndex = songs.findIndex(s => s.trackId === track.trackId)
+        if (playableIndex >= 0) {
+          playlistState(songs, playableIndex)
+        }
+      } catch (error) {
+        console.error('Error loading track:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
   const handleOpenExternal = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleToggleFavorite = async () => {
+    try {
+      await toggleFavorite({
+        variables: { playlistId: playlist.id },
+      })
+      setIsFavorite(!isFavorite)
+    } catch (error) {
+      console.error('Error toggling favorite:', error)
+    }
   }
 
   const handleShare = async () => {
@@ -135,6 +194,16 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
       {/* Modal */}
       <div className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl border border-pink-500/20 shadow-2xl">
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 z-20 bg-black/50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-8 h-8 text-pink-400 animate-spin" />
+              <span className="text-white text-sm">Loading tracks...</span>
+            </div>
+          </div>
+        )}
+
         {/* Close button */}
         <button
           onClick={onClose}
@@ -181,13 +250,25 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
             <div className="flex items-center gap-3">
               <button
                 onClick={handlePlayAll}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity"
+                disabled={isLoading}
+                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
               >
-                <Play className="w-5 h-5" fill="white" />
-                Play All
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Play className="w-5 h-5" fill="white" />
+                )}
+                {isLoading ? 'Loading...' : 'Play All'}
               </button>
-              <button className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center hover:bg-neutral-700 transition-colors">
-                <Heart className="w-5 h-5 text-gray-400" />
+              <button
+                onClick={handleToggleFavorite}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                  isFavorite
+                    ? 'bg-pink-500/20 hover:bg-pink-500/30'
+                    : 'bg-neutral-800 hover:bg-neutral-700'
+                }`}
+              >
+                <Heart className={`w-5 h-5 ${isFavorite ? 'text-pink-400 fill-pink-400' : 'text-gray-400'}`} />
               </button>
               <button
                 onClick={handleShare}
