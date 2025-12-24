@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2 } from 'lucide-react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, PlaylistTrackSourceType, TrackDocument } from 'lib/graphql'
+import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder } from 'lib/graphql'
 import { useApolloClient } from '@apollo/client'
+import Asset from 'components/Asset/Asset'
 
 type PlaylistType = GetUserPlaylistsQuery['getUserPlaylists']['nodes'][0]
 type PlaylistTrackType = NonNullable<NonNullable<PlaylistType['tracks']>['nodes']>[0]
@@ -23,12 +24,50 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [deletePlaylistItem] = useDeletePlaylistItemMutation()
   const [deletePlaylist] = useDeletePlaylistMutation()
   const [toggleFavorite] = useTogglePlaylistFavoriteMutation()
+  const [createPlaylistTracks] = useCreatePlaylistTracksMutation()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showShareToast, setShowShareToast] = useState(false)
+  const [showAddTracks, setShowAddTracks] = useState(false)
+  const [trackSearchQuery, setTrackSearchQuery] = useState('')
+  const [addingTracks, setAddingTracks] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isFavorite, setIsFavorite] = useState(playlist.isFavorite || false)
 
   const tracks = playlist.tracks?.nodes || []
+  const existingTrackIds = new Set(tracks.map(t => t.trackId).filter(Boolean))
+
+  // Query for tracks to add
+  const { data: searchTracksData, loading: searchLoading } = useExploreTracksQuery({
+    variables: {
+      page: { first: 50 },
+      sort: { field: SortExploreTracksField.CreatedAt, order: SortOrder.Desc },
+      search: trackSearchQuery || undefined,
+    },
+    skip: !showAddTracks,
+  })
+
+  const availableTracks = searchTracksData?.exploreTracks?.nodes || []
+
+  // Add track to playlist
+  const handleAddTrack = async (trackId: string) => {
+    setAddingTracks(true)
+    try {
+      await createPlaylistTracks({
+        variables: {
+          input: {
+            playlistId: playlist.id,
+            trackIds: [trackId],
+          },
+        },
+      })
+      // Refetch playlist data
+      await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
+    } catch (err) {
+      console.error('Failed to add track:', err)
+    } finally {
+      setAddingTracks(false)
+    }
+  }
 
   // Fetch track data to get playbackUrl
   const fetchTrackData = async (trackId: string) => {
@@ -247,7 +286,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <button
                 onClick={handlePlayAll}
                 disabled={isLoading}
@@ -277,14 +316,90 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 <Share2 className="w-5 h-5 text-gray-400" />
               </button>
               {isOwner && (
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center hover:bg-red-500/30 transition-colors"
-                >
-                  <Trash2 className="w-5 h-5 text-red-400" />
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowAddTracks(!showAddTracks)}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                      showAddTracks
+                        ? 'bg-green-500/30 hover:bg-green-500/40'
+                        : 'bg-green-500/20 hover:bg-green-500/30'
+                    }`}
+                  >
+                    <Plus className="w-5 h-5 text-green-400" />
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center hover:bg-red-500/30 transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5 text-red-400" />
+                  </button>
+                </>
               )}
             </div>
+
+            {/* Add Songs Panel */}
+            {isOwner && showAddTracks && (
+              <div className="mt-4 bg-neutral-800 border border-green-500/30 rounded-xl overflow-hidden">
+                <div className="p-3 border-b border-neutral-700">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                    <input
+                      type="text"
+                      value={trackSearchQuery}
+                      onChange={(e) => setTrackSearchQuery(e.target.value)}
+                      placeholder="Search tracks to add..."
+                      className="w-full pl-10 pr-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-green-500 text-sm"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div className="max-h-64 overflow-y-auto p-2">
+                  {searchLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-green-500" />
+                    </div>
+                  ) : availableTracks.length > 0 ? (
+                    availableTracks.map((track) => {
+                      const isAlreadyInPlaylist = existingTrackIds.has(track.id)
+                      return (
+                        <div
+                          key={track.id}
+                          className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                            isAlreadyInPlaylist
+                              ? 'opacity-50 cursor-not-allowed'
+                              : 'hover:bg-neutral-700 cursor-pointer'
+                          }`}
+                          onClick={() => !isAlreadyInPlaylist && !addingTracks && handleAddTrack(track.id)}
+                        >
+                          <div className="w-10 h-10 rounded bg-neutral-700 overflow-hidden flex-shrink-0">
+                            {track.artworkUrl ? (
+                              <Asset src={track.artworkUrl} sizes="40px" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-green-500 to-cyan-500" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate">{track.title}</p>
+                            <p className="text-neutral-500 text-xs truncate">{track.artist}</p>
+                          </div>
+                          {isAlreadyInPlaylist ? (
+                            <span className="text-neutral-500 text-xs">Added</span>
+                          ) : addingTracks ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-green-400" />
+                          ) : (
+                            <Plus className="w-4 h-4 text-green-400" />
+                          )}
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="py-8 text-center text-neutral-500 text-sm">
+                      {trackSearchQuery ? 'No tracks found' : 'Search for tracks to add'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right - Track List */}
