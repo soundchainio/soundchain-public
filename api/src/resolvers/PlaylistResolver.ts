@@ -26,13 +26,19 @@ import { AddPlaylistItemPayload, DeletePlaylistItemPayload, ReorderPlaylistItems
 export class PlaylistResolver {
 
   @Query(() => GetPlaylistPayload)
+  @Authorized()
   getUserPlaylists(
     @Ctx() { playlistService }: Context,
-    @CurrentUser() { profileId }: User,
+    @CurrentUser() user: User,
     @Arg('sort', { nullable: true }) sort?: SortPlaylistInput,
     @Arg('page', { nullable: true }) page?: PageInput,
   ): Promise<GetPlaylistPayload> {
-    return playlistService.getPlaylists(profileId.toString(), sort, page);
+    if (!user?.profileId) {
+      console.error('[getUserPlaylists] No user or profileId found');
+      return Promise.resolve({ nodes: [], pageInfo: { hasNextPage: false, hasPreviousPage: false } });
+    }
+    console.log('[getUserPlaylists] Fetching playlists for profileId:', user.profileId.toString());
+    return playlistService.getPlaylists(user.profileId.toString(), sort, page);
   }
 
   @Mutation(() => CreatePlaylistPayload)
