@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search } from 'lucide-react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder } from 'lib/graphql'
 import { useApolloClient } from '@apollo/client'
@@ -18,6 +18,37 @@ interface PlaylistDetailProps {
   currentUserWallet?: string
 }
 
+// Helper to get embed URL for external sources
+const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string | null => {
+  try {
+    if (sourceType === PlaylistTrackSourceType.Youtube) {
+      // Extract YouTube video ID
+      const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+      if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1`
+    }
+    if (sourceType === PlaylistTrackSourceType.Spotify) {
+      // Convert Spotify URLs to embed format
+      const match = url.match(/spotify\.com\/(track|album|playlist)\/([a-zA-Z0-9]+)/)
+      if (match) return `https://open.spotify.com/embed/${match[1]}/${match[2]}`
+    }
+    if (sourceType === PlaylistTrackSourceType.Soundcloud) {
+      // SoundCloud requires their widget API
+      return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true`
+    }
+    if (sourceType === PlaylistTrackSourceType.Vimeo) {
+      const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+      if (match) return `https://player.vimeo.com/video/${match[1]}?autoplay=1`
+    }
+    if (sourceType === PlaylistTrackSourceType.AppleMusic) {
+      // Apple Music embed
+      return url.replace('music.apple.com', 'embed.music.apple.com')
+    }
+  } catch (e) {
+    console.error('Error parsing embed URL:', e)
+  }
+  return null
+}
+
 export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, currentUserWallet }: PlaylistDetailProps) => {
   const apolloClient = useApolloClient()
   const { playlistState, currentSong, isPlaying, togglePlay, isCurrentSong } = useAudioPlayerContext()
@@ -32,6 +63,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [addingTracks, setAddingTracks] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isFavorite, setIsFavorite] = useState(playlist.isFavorite || false)
+  const [activeEmbed, setActiveEmbed] = useState<{ url: string; title: string; sourceType: PlaylistTrackSourceType } | null>(null)
+  const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1)
+  const [isPlayingAll, setIsPlayingAll] = useState(false)
 
   const tracks = playlist.tracks?.nodes || []
   const existingTrackIds = new Set(tracks.map(t => t.trackId).filter(Boolean))
@@ -106,14 +140,56 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     return songs.filter(song => song.src)
   }
 
+  // Play a specific track in the queue (NFT or external)
+  const playTrackAtIndex = async (index: number) => {
+    if (index < 0 || index >= tracks.length) return
+
+    const track = tracks[index]
+    setCurrentQueueIndex(index)
+    setIsPlayingAll(true)
+
+    if (track.sourceType === PlaylistTrackSourceType.Nft && track.trackId) {
+      // Close any active embed
+      setActiveEmbed(null)
+      // Play NFT track
+      const songs = await buildSongsWithPlaybackUrls()
+      const nftIndex = songs.findIndex(s => s.trackId === track.trackId)
+      if (nftIndex >= 0) {
+        playlistState(songs, nftIndex)
+      }
+    } else if (track.externalUrl || track.uploadedFileUrl) {
+      // Show embed for external tracks
+      const url = track.externalUrl || track.uploadedFileUrl!
+      const embedUrl = getEmbedUrl(url, track.sourceType)
+      if (embedUrl) {
+        setActiveEmbed({ url: embedUrl, title: track.title || 'External Track', sourceType: track.sourceType })
+      } else {
+        // Fallback - open in new tab
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }
+    }
+  }
+
+  // Play next track in queue
+  const playNextInQueue = () => {
+    if (currentQueueIndex < tracks.length - 1) {
+      playTrackAtIndex(currentQueueIndex + 1)
+    }
+  }
+
+  // Play previous track in queue
+  const playPreviousInQueue = () => {
+    if (currentQueueIndex > 0) {
+      playTrackAtIndex(currentQueueIndex - 1)
+    }
+  }
+
   const handlePlayAll = async () => {
     setIsLoading(true)
     try {
-      const songs = await buildSongsWithPlaybackUrls()
-      if (songs.length > 0) {
-        playlistState(songs, 0)
-      } else {
-        console.log('No playable NFT tracks in this playlist')
+      if (tracks.length > 0) {
+        // Start from first track
+        await playTrackAtIndex(0)
       }
     } catch (error) {
       console.error('Error loading tracks:', error)
@@ -144,8 +220,15 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
-  const handleOpenExternal = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer')
+  const handleOpenExternal = (url: string, title: string | null, sourceType: PlaylistTrackSourceType) => {
+    const embedUrl = getEmbedUrl(url, sourceType)
+    if (embedUrl) {
+      // Show embedded player
+      setActiveEmbed({ url: embedUrl, title: title || 'External Track', sourceType })
+    } else {
+      // Fallback to opening in new tab for unsupported platforms
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
   }
 
   const handleToggleFavorite = async () => {
@@ -404,8 +487,54 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
           {/* Right - Track List */}
           <div className="flex-1 overflow-y-auto">
+            {/* Embedded Player for External Sources */}
+            {activeEmbed && (
+              <div className="sticky top-0 z-10 bg-neutral-800 border-b border-neutral-700">
+                <div className="flex items-center justify-between px-4 py-2 bg-neutral-900">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="text-cyan-400 text-xs font-medium">{currentQueueIndex + 1}/{tracks.length}</span>
+                    <span className="text-white font-medium text-sm truncate">{activeEmbed.title}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={playPreviousInQueue}
+                      disabled={currentQueueIndex <= 0}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30"
+                      aria-label="Previous track"
+                    >
+                      <SkipBack className="w-4 h-4 text-white" />
+                    </button>
+                    <button
+                      onClick={playNextInQueue}
+                      disabled={currentQueueIndex >= tracks.length - 1}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30"
+                      aria-label="Next track"
+                    >
+                      <SkipForward className="w-4 h-4 text-white" />
+                    </button>
+                    <button
+                      onClick={() => { setActiveEmbed(null); setIsPlayingAll(false); setCurrentQueueIndex(-1); }}
+                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                      aria-label="Close player"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  </div>
+                </div>
+                <div className="relative w-full" style={{ paddingBottom: activeEmbed.sourceType === PlaylistTrackSourceType.Spotify ? '152px' : '56.25%' }}>
+                  <iframe
+                    src={activeEmbed.url}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    frameBorder="0"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Header */}
-            <div className="sticky top-0 bg-neutral-900/90 backdrop-blur px-6 py-4 border-b border-neutral-800">
+            <div className="sticky top-0 bg-neutral-900/90 backdrop-blur px-6 py-4 border-b border-neutral-800" style={{ top: activeEmbed ? 'auto' : 0 }}>
               <div className="flex items-center text-xs text-gray-500 uppercase tracking-wider">
                 <span className="w-8 text-center">#</span>
                 <span className="flex-1 ml-4">Title</span>
@@ -439,7 +568,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                         handlePlayTrack(index)
                       }
                     } else if (hasExternalUrl) {
-                      handleOpenExternal(pt.externalUrl || pt.uploadedFileUrl!)
+                      handleOpenExternal(pt.externalUrl || pt.uploadedFileUrl!, pt.title, pt.sourceType)
                     }
                   }
 
