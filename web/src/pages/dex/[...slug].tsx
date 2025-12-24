@@ -1057,11 +1057,32 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
 
   // Playlists Query - for Playlist view AND profile playlists tab (uses JWT auth to determine user)
   const isViewingOwnProfile = selectedView === 'profile' && viewingProfile?.id === me?.profile?.id
-  const { data: playlistsData, loading: playlistsLoading, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
+  const shouldSkipPlaylists = (selectedView !== 'playlist' && !isViewingOwnProfile) || !userData?.me
+  const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
-    skip: (selectedView !== 'playlist' && !isViewingOwnProfile) || !userData?.me,
+    skip: shouldSkipPlaylists,
     fetchPolicy: 'cache-and-network',
+    onCompleted: (data) => {
+      console.log('[Playlists] Query completed:', data?.getUserPlaylists?.nodes?.length || 0, 'playlists')
+    },
+    onError: (error) => {
+      console.error('[Playlists] Query error:', error.message, error.graphQLErrors)
+    },
   })
+
+  // Debug logging for playlists
+  useEffect(() => {
+    if (!shouldSkipPlaylists) {
+      console.log('[Playlists] Query state:', {
+        skip: shouldSkipPlaylists,
+        loading: playlistsLoading,
+        error: playlistsError?.message,
+        count: playlistsData?.getUserPlaylists?.nodes?.length,
+        hasUser: !!userData?.me,
+        selectedView,
+      })
+    }
+  }, [shouldSkipPlaylists, playlistsLoading, playlistsError, playlistsData, userData?.me, selectedView])
 
   // Follow/Unfollow mutations
   const [followProfile, { loading: followLoading }] = useFollowProfileMutation()
