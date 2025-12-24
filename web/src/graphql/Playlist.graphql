@@ -1,6 +1,6 @@
 # Playlist queries and mutations
 
-query GetUserPlaylists($page: Pagination, $sort: SortPlaylistInput) {
+query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput) {
   getUserPlaylists(page: $page, sort: $sort) {
     nodes {
       id
@@ -20,16 +20,6 @@ query GetUserPlaylists($page: Pagination, $sort: SortPlaylistInput) {
           trackId
           playlistId
           createdAt
-          track {
-            id
-            title
-            artist
-            artworkUrl
-            playbackUrl
-            playbackCountFormatted
-            isFavorite
-            duration
-          }
         }
         pageInfo {
           hasNextPage
@@ -80,12 +70,6 @@ mutation CreatePlaylistTracks($input: CreatePlaylistTracks!) {
           id
           trackId
           playlistId
-          track {
-            id
-            title
-            artist
-            artworkUrl
-          }
         }
       }
     }

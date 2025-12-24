@@ -15,25 +15,15 @@ interface PlaylistCardProps {
 }
 
 export const PlaylistCard = ({ playlist, onSelect, compact = false }: PlaylistCardProps) => {
-  const { playlistState } = useAudioPlayerContext()
   const [isHovered, setIsHovered] = useState(false)
 
   const trackCount = playlist.tracks?.nodes?.length || 0
-  const firstFourArtworks = playlist.tracks?.nodes?.slice(0, 4).map(t => t.track.artworkUrl) || []
 
+  // Placeholder for play functionality - would need to fetch full track data
   const handlePlayAll = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (playlist.tracks?.nodes && playlist.tracks.nodes.length > 0) {
-      const songs: Song[] = playlist.tracks.nodes.map(pt => ({
-        trackId: pt.track.id,
-        src: pt.track.playbackUrl,
-        art: pt.track.artworkUrl || undefined,
-        title: pt.track.title,
-        artist: pt.track.artist,
-        isFavorite: pt.track.isFavorite,
-      }))
-      playlistState(songs, 0)
-    }
+    // TODO: Implement play all - needs to fetch full track data by trackIds
+    console.log('Play all tracks in playlist:', playlist.id)
   }
 
   if (compact) {
@@ -42,20 +32,12 @@ export const PlaylistCard = ({ playlist, onSelect, compact = false }: PlaylistCa
         className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800/50 transition-colors cursor-pointer"
         onClick={() => onSelect?.(playlist)}
       >
-        {/* Mini artwork grid or single image */}
+        {/* Artwork */}
         <div className="w-12 h-12 rounded-lg overflow-hidden bg-neutral-800 flex-shrink-0">
           {playlist.artworkUrl ? (
             <img src={playlist.artworkUrl} alt={playlist.title} className="w-full h-full object-cover" />
-          ) : firstFourArtworks.length > 0 ? (
-            <div className="grid grid-cols-2 gap-0.5 w-full h-full">
-              {firstFourArtworks.slice(0, 4).map((url, i) => (
-                <div key={i} className="bg-neutral-700">
-                  {url && <img src={url} alt="" className="w-full h-full object-cover" />}
-                </div>
-              ))}
-            </div>
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-cyan-500/20">
               <Music className="w-5 h-5 text-neutral-500" />
             </div>
           )}
@@ -91,20 +73,10 @@ export const PlaylistCard = ({ playlist, onSelect, compact = false }: PlaylistCa
 
       {/* Main content */}
       <div className="relative bg-neutral-900 rounded-2xl overflow-hidden">
-        {/* Artwork - 2x2 grid or single image */}
+        {/* Artwork */}
         <div className="aspect-square relative">
           {playlist.artworkUrl ? (
             <img src={playlist.artworkUrl} alt={playlist.title} className="w-full h-full object-cover" />
-          ) : firstFourArtworks.length >= 4 ? (
-            <div className="grid grid-cols-2 gap-0.5 w-full h-full">
-              {firstFourArtworks.map((url, i) => (
-                <div key={i} className="bg-neutral-800">
-                  {url && <img src={url} alt="" className="w-full h-full object-cover" />}
-                </div>
-              ))}
-            </div>
-          ) : firstFourArtworks.length > 0 ? (
-            <img src={firstFourArtworks[0] || ''} alt={playlist.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-cyan-500/20 flex items-center justify-center">
               <Music className="w-16 h-16 text-neutral-600" />

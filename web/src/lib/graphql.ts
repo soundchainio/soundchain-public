@@ -8878,7 +8878,7 @@ export type LikeTrackCommentMutationHookResult = ReturnType<typeof useLikeTrackC
 
 // GetUserPlaylists Query
 export type GetUserPlaylistsQueryVariables = Exact<{
-  page?: InputMaybe<Pagination>;
+  page?: InputMaybe<PageInput>;
   sort?: InputMaybe<SortPlaylistInput>;
 }>;
 
@@ -8907,36 +8907,6 @@ export type GetUserPlaylistsQuery = {
           trackId: string;
           playlistId: string;
           createdAt: string;
-          track: {
-            __typename?: 'Track';
-            id: string;
-            title: string;
-            artist: string;
-            artworkUrl: Maybe<string>;
-            playbackUrl: string;
-            playbackCountFormatted: Maybe<string>;
-            isFavorite: boolean;
-            duration: Maybe<number>;
-            favoriteCount: number;
-            saleType: string;
-            editionSize: number;
-            listingCount: number;
-            price: { __typename?: 'TrackPrice'; value: number; currency: CurrencyType };
-            listingItem: Maybe<{
-              __typename?: 'ListingItem';
-              id: string;
-              pricePerItemToShow: Maybe<number>;
-              OGUNPricePerItemToShow: Maybe<number>;
-              acceptsMATIC: Maybe<boolean>;
-              acceptsOGUN: Maybe<boolean>;
-            }>;
-            nftData: Maybe<{
-              __typename?: 'NftDataType';
-              tokenId: number;
-              contract: string;
-              owner: string;
-            }>;
-          };
         }>>;
         pageInfo: { __typename?: 'PageInfo'; hasNextPage: boolean; endCursor: Maybe<string> };
       }>;
@@ -8946,7 +8916,7 @@ export type GetUserPlaylistsQuery = {
 };
 
 export const GetUserPlaylistsDocument = gql`
-  query GetUserPlaylists($page: Pagination, $sort: SortPlaylistInput) {
+  query GetUserPlaylists($page: PageInput, $sort: SortPlaylistInput) {
     getUserPlaylists(page: $page, sort: $sort) {
       nodes {
         id
@@ -8966,36 +8936,6 @@ export const GetUserPlaylistsDocument = gql`
             trackId
             playlistId
             createdAt
-            track {
-              id
-              title
-              artist
-              artworkUrl
-              playbackUrl
-              playbackCountFormatted
-              isFavorite
-              duration
-              favoriteCount
-              saleType
-              editionSize
-              listingCount
-              price {
-                value
-                currency
-              }
-              listingItem {
-                id
-                pricePerItemToShow
-                OGUNPricePerItemToShow
-                acceptsMATIC
-                acceptsOGUN
-              }
-              nftData {
-                tokenId
-                contract
-                owner
-              }
-            }
           }
           pageInfo {
             hasNextPage
@@ -9084,13 +9024,6 @@ export type CreatePlaylistTracksMutation = {
           id: string;
           trackId: string;
           playlistId: string;
-          track: {
-            __typename?: 'Track';
-            id: string;
-            title: string;
-            artist: string;
-            artworkUrl: Maybe<string>;
-          };
         }>>;
       }>;
     };
@@ -9108,12 +9041,6 @@ export const CreatePlaylistTracksDocument = gql`
             id
             trackId
             playlistId
-            track {
-              id
-              title
-              artist
-              artworkUrl
-            }
           }
         }
       }
