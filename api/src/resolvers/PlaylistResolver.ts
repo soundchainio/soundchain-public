@@ -173,7 +173,7 @@ export class PlaylistResolver {
     if (!_id) return null;
 
     const page = {
-      first: 10
+      first: 500  // No practical track limit - fetch up to 500 tracks per playlist
     };
 
     const sort = {
