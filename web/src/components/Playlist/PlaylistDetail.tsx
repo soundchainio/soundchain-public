@@ -22,6 +22,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [deletePlaylistItem] = useDeletePlaylistItemMutation()
   const [deletePlaylist] = useDeletePlaylistMutation()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showShareToast, setShowShareToast] = useState(false)
 
   const tracks = playlist.tracks?.nodes || []
 
@@ -58,6 +59,25 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
   const handleOpenExternal = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/dex/playlist/${playlist.id}`
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: playlist.title,
+          text: `Check out this playlist: ${playlist.title}`,
+          url: shareUrl,
+        })
+      } else {
+        await navigator.clipboard.writeText(shareUrl)
+        setShowShareToast(true)
+        setTimeout(() => setShowShareToast(false), 2000)
+      }
+    } catch (error) {
+      console.error('Error sharing:', error)
+    }
   }
 
   const handleRemoveTrack = async (playlistItemId: string) => {
@@ -169,7 +189,10 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
               <button className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center hover:bg-neutral-700 transition-colors">
                 <Heart className="w-5 h-5 text-gray-400" />
               </button>
-              <button className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center hover:bg-neutral-700 transition-colors">
+              <button
+                onClick={handleShare}
+                className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center hover:bg-neutral-700 transition-colors"
+              >
                 <Share2 className="w-5 h-5 text-gray-400" />
               </button>
               {isOwner && (
@@ -306,6 +329,13 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 })
               )}
             </div>
+
+            {/* Share Toast */}
+            {showShareToast && (
+              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-60 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg animate-fade-in">
+                Link copied to clipboard!
+              </div>
+            )}
 
             {/* Delete Playlist Confirmation */}
             {showDeleteConfirm && (
