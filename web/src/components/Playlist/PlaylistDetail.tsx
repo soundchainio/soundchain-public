@@ -1,11 +1,44 @@
 'use client'
 
 import { useState } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward } from 'lucide-react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2 } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder } from 'lib/graphql'
+import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder, useAddPlaylistItemMutation } from 'lib/graphql'
 import { useApolloClient } from '@apollo/client'
 import Asset from 'components/Asset/Asset'
+
+// Platform detection from URL
+const detectPlatformFromUrl = (url: string): { platform: string; sourceType: PlaylistTrackSourceType } | null => {
+  try {
+    const urlObj = new URL(url)
+    const hostname = urlObj.hostname.toLowerCase()
+
+    if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
+      return { platform: 'YouTube', sourceType: PlaylistTrackSourceType.Youtube }
+    }
+    if (hostname.includes('spotify.com')) {
+      return { platform: 'Spotify', sourceType: PlaylistTrackSourceType.Spotify }
+    }
+    if (hostname.includes('soundcloud.com')) {
+      return { platform: 'SoundCloud', sourceType: PlaylistTrackSourceType.Soundcloud }
+    }
+    if (hostname.includes('bandcamp.com')) {
+      return { platform: 'Bandcamp', sourceType: PlaylistTrackSourceType.Bandcamp }
+    }
+    if (hostname.includes('music.apple.com')) {
+      return { platform: 'Apple Music', sourceType: PlaylistTrackSourceType.AppleMusic }
+    }
+    if (hostname.includes('tidal.com')) {
+      return { platform: 'Tidal', sourceType: PlaylistTrackSourceType.Tidal }
+    }
+    if (hostname.includes('vimeo.com')) {
+      return { platform: 'Vimeo', sourceType: PlaylistTrackSourceType.Vimeo }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
 
 type PlaylistType = GetUserPlaylistsQuery['getUserPlaylists']['nodes'][0]
 type PlaylistTrackType = NonNullable<NonNullable<PlaylistType['tracks']>['nodes']>[0]
@@ -56,11 +89,16 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [deletePlaylist] = useDeletePlaylistMutation()
   const [toggleFavorite] = useTogglePlaylistFavoriteMutation()
   const [createPlaylistTracks] = useCreatePlaylistTracksMutation()
+  const [addPlaylistItem] = useAddPlaylistItemMutation()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showShareToast, setShowShareToast] = useState(false)
   const [showAddTracks, setShowAddTracks] = useState(false)
+  const [addMode, setAddMode] = useState<'nft' | 'external'>('nft') // Toggle between NFT search and external link
   const [trackSearchQuery, setTrackSearchQuery] = useState('')
+  const [externalLinkUrl, setExternalLinkUrl] = useState('')
+  const [externalLinkTitle, setExternalLinkTitle] = useState('')
   const [addingTracks, setAddingTracks] = useState(false)
+  const [addLinkError, setAddLinkError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isFavorite, setIsFavorite] = useState(playlist.isFavorite || false)
   const [activeEmbed, setActiveEmbed] = useState<{ url: string; title: string; sourceType: PlaylistTrackSourceType } | null>(null)
@@ -98,6 +136,46 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
     } catch (err) {
       console.error('Failed to add track:', err)
+    } finally {
+      setAddingTracks(false)
+    }
+  }
+
+  // Add external link to playlist
+  const handleAddExternalLink = async () => {
+    if (!externalLinkUrl.trim()) {
+      setAddLinkError('Please enter a URL')
+      return
+    }
+
+    // Detect platform from URL
+    const detected = detectPlatformFromUrl(externalLinkUrl.trim())
+    if (!detected) {
+      setAddLinkError('Unsupported platform. Supported: YouTube, Spotify, SoundCloud, Bandcamp, Apple Music, Tidal, Vimeo')
+      return
+    }
+
+    setAddingTracks(true)
+    setAddLinkError('')
+
+    try {
+      await addPlaylistItem({
+        variables: {
+          input: {
+            playlistId: playlist.id,
+            sourceType: detected.sourceType,
+            externalUrl: externalLinkUrl.trim(),
+            title: externalLinkTitle.trim() || detected.platform,
+          },
+        },
+      })
+      // Clear form and refetch
+      setExternalLinkUrl('')
+      setExternalLinkTitle('')
+      await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
+    } catch (err) {
+      console.error('Failed to add external link:', err)
+      setAddLinkError('Failed to add link. Please try again.')
     } finally {
       setAddingTracks(false)
     }
@@ -423,64 +501,169 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
             {/* Add Songs Panel */}
             {isOwner && showAddTracks && (
               <div className="mt-4 bg-neutral-800 border border-green-500/30 rounded-xl overflow-hidden">
-                <div className="p-3 border-b border-neutral-700">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                {/* Tab Switcher */}
+                <div className="flex border-b border-neutral-700">
+                  <button
+                    onClick={() => setAddMode('nft')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+                      addMode === 'nft'
+                        ? 'text-green-400 border-b-2 border-green-400 bg-green-500/10'
+                        : 'text-gray-400 hover:text-white hover:bg-neutral-700/50'
+                    }`}
+                  >
+                    <Music className="w-4 h-4" />
+                    <span className="hidden sm:inline">NFT Tracks</span>
+                    <span className="sm:hidden">NFTs</span>
+                  </button>
+                  <button
+                    onClick={() => setAddMode('external')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+                      addMode === 'external'
+                        ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/10'
+                        : 'text-gray-400 hover:text-white hover:bg-neutral-700/50'
+                    }`}
+                  >
+                    <Link2 className="w-4 h-4" />
+                    <span className="hidden sm:inline">External Link</span>
+                    <span className="sm:hidden">Links</span>
+                  </button>
+                </div>
+
+                {/* NFT Track Search */}
+                {addMode === 'nft' && (
+                  <>
+                    <div className="p-3 border-b border-neutral-700">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                        <input
+                          type="text"
+                          value={trackSearchQuery}
+                          onChange={(e) => setTrackSearchQuery(e.target.value)}
+                          placeholder="Search tracks to add..."
+                          className="w-full pl-10 pr-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-green-500 text-sm"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto p-2">
+                      {searchLoading ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="w-6 h-6 animate-spin text-green-500" />
+                        </div>
+                      ) : availableTracks.length > 0 ? (
+                        availableTracks.map((track) => {
+                          const isAlreadyInPlaylist = existingTrackIds.has(track.id)
+                          return (
+                            <div
+                              key={track.id}
+                              className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                                isAlreadyInPlaylist
+                                  ? 'opacity-50 cursor-not-allowed'
+                                  : 'hover:bg-neutral-700 cursor-pointer'
+                              }`}
+                              onClick={() => !isAlreadyInPlaylist && !addingTracks && handleAddTrack(track.id)}
+                            >
+                              <div className="w-10 h-10 rounded bg-neutral-700 overflow-hidden flex-shrink-0">
+                                {track.artworkUrl ? (
+                                  <Asset src={track.artworkUrl} sizes="40px" />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-green-500 to-cyan-500" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-sm font-medium truncate">{track.title}</p>
+                                <p className="text-neutral-500 text-xs truncate">{track.artist}</p>
+                              </div>
+                              {isAlreadyInPlaylist ? (
+                                <span className="text-neutral-500 text-xs">Added</span>
+                              ) : addingTracks ? (
+                                <Loader2 className="w-4 h-4 animate-spin text-green-400" />
+                              ) : (
+                                <Plus className="w-4 h-4 text-green-400" />
+                              )}
+                            </div>
+                          )
+                        })
+                      ) : (
+                        <div className="py-8 text-center text-neutral-500 text-sm">
+                          {trackSearchQuery ? 'No tracks found' : 'Search for tracks to add'}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* External Link Input */}
+                {addMode === 'external' && (
+                  <div className="p-4 space-y-3">
+                    <p className="text-gray-400 text-xs">
+                      Add music from YouTube, Spotify, SoundCloud, Bandcamp, Apple Music, Tidal, or Vimeo
+                    </p>
+
+                    {/* URL Input */}
+                    <div className="relative">
+                      <Link2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                      <input
+                        type="url"
+                        value={externalLinkUrl}
+                        onChange={(e) => { setExternalLinkUrl(e.target.value); setAddLinkError(''); }}
+                        placeholder="Paste URL here (e.g., youtube.com/watch?v=...)"
+                        className="w-full pl-10 pr-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500 text-sm"
+                        autoFocus
+                      />
+                    </div>
+
+                    {/* Title Input (optional) */}
                     <input
                       type="text"
-                      value={trackSearchQuery}
-                      onChange={(e) => setTrackSearchQuery(e.target.value)}
-                      placeholder="Search tracks to add..."
-                      className="w-full pl-10 pr-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-green-500 text-sm"
-                      autoFocus
+                      value={externalLinkTitle}
+                      onChange={(e) => setExternalLinkTitle(e.target.value)}
+                      placeholder="Title (optional - auto-detected from platform)"
+                      className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500 text-sm"
                     />
+
+                    {/* Error Message */}
+                    {addLinkError && (
+                      <p className="text-red-400 text-xs">{addLinkError}</p>
+                    )}
+
+                    {/* Platform Preview */}
+                    {externalLinkUrl && detectPlatformFromUrl(externalLinkUrl) && (
+                      <div className="flex items-center gap-2 text-xs text-cyan-400">
+                        <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                        Detected: {detectPlatformFromUrl(externalLinkUrl)?.platform}
+                      </div>
+                    )}
+
+                    {/* Add Button */}
+                    <button
+                      onClick={handleAddExternalLink}
+                      disabled={addingTracks || !externalLinkUrl.trim()}
+                      className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {addingTracks ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          Add to Playlist
+                        </>
+                      )}
+                    </button>
+
+                    {/* Supported Platforms */}
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {['YouTube', 'Spotify', 'SoundCloud', 'Bandcamp', 'Apple Music', 'Tidal', 'Vimeo'].map(p => (
+                        <span key={p} className="px-2 py-0.5 bg-neutral-700 text-neutral-400 text-xs rounded-full">
+                          {p}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="max-h-64 overflow-y-auto p-2">
-                  {searchLoading ? (
-                    <div className="flex justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-green-500" />
-                    </div>
-                  ) : availableTracks.length > 0 ? (
-                    availableTracks.map((track) => {
-                      const isAlreadyInPlaylist = existingTrackIds.has(track.id)
-                      return (
-                        <div
-                          key={track.id}
-                          className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-                            isAlreadyInPlaylist
-                              ? 'opacity-50 cursor-not-allowed'
-                              : 'hover:bg-neutral-700 cursor-pointer'
-                          }`}
-                          onClick={() => !isAlreadyInPlaylist && !addingTracks && handleAddTrack(track.id)}
-                        >
-                          <div className="w-10 h-10 rounded bg-neutral-700 overflow-hidden flex-shrink-0">
-                            {track.artworkUrl ? (
-                              <Asset src={track.artworkUrl} sizes="40px" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-green-500 to-cyan-500" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white text-sm font-medium truncate">{track.title}</p>
-                            <p className="text-neutral-500 text-xs truncate">{track.artist}</p>
-                          </div>
-                          {isAlreadyInPlaylist ? (
-                            <span className="text-neutral-500 text-xs">Added</span>
-                          ) : addingTracks ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-green-400" />
-                          ) : (
-                            <Plus className="w-4 h-4 text-green-400" />
-                          )}
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <div className="py-8 text-center text-neutral-500 text-sm">
-                      {trackSearchQuery ? 'No tracks found' : 'Search for tracks to add'}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             )}
           </div>
