@@ -480,11 +480,20 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
               <p className="text-gray-400 text-sm mb-4">{playlist.description}</p>
             )}
 
-            <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
+            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
               <span>{tracks.length} tracks</span>
               <span>•</span>
               <span>{playlist.favoriteCount} likes</span>
             </div>
+
+            {/* Debug info - shows track types */}
+            {tracks.length > 0 && (
+              <div className="text-xs text-gray-600 mb-4 p-2 bg-black/30 rounded">
+                {tracks.map((t, i) => (
+                  <div key={t.id}>#{i+1}: {t.title || 'Untitled'} ({t.sourceType}){t.trackId ? ' NFT' : ''}{t.externalUrl ? ' EXT' : ''}</div>
+                ))}
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex items-center gap-3 flex-wrap">
