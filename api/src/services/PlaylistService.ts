@@ -46,13 +46,20 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async createPlaylistTrack(trackIds: string[], profileId: string, playlist: DocumentType<Playlist>): Promise<void> {
-    const existingTracks = await TrackModel.find({ _id: { $in: trackIds } }, '_id');
+    // Fetch full track data for metadata
+    const existingTracks = await TrackModel.find({ _id: { $in: trackIds } });
 
-    const playlistTracks = existingTracks.map(track => {
+    const playlistTracks = existingTracks.map((track, index) => {
       const playlistTrack = new PlaylistTrackModel({
         trackId: track._id,
         profileId,
         playlistId: playlist.id,
+        sourceType: PlaylistTrackSourceType.NFT,
+        title: track.title || null,
+        artist: track.artist || null,
+        artworkUrl: track.artworkUrl || null,
+        duration: track.duration || null,
+        position: index,
       });
       return playlistTrack.save();
     });
@@ -119,19 +126,39 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   async createPlaylistTracks(params: CreatePlaylistTracks, profileId: string): Promise<void> {
     const { trackIds, playlistId } = params;
 
-    const playlistTracks = trackIds.map(trackId => ({
-      updateOne: {
-        filter: { playlistId, trackId },
-        update: {
-          $set: {
-            trackId,
-            playlistId,
-            profileId,
+    // Fetch track metadata for all tracks
+    const tracks = await TrackModel.find({ _id: { $in: trackIds } });
+    const trackMap = new Map(tracks.map(t => [t._id.toString(), t]));
+
+    // Get the current max position in the playlist
+    const lastTrack = await PlaylistTrackModel.findOne({ playlistId })
+      .sort({ position: -1 })
+      .select('position');
+    let nextPosition = lastTrack ? lastTrack.position + 1 : 0;
+
+    const playlistTracks = trackIds.map(trackId => {
+      const track = trackMap.get(trackId);
+      const position = nextPosition++;
+      return {
+        updateOne: {
+          filter: { playlistId, trackId },
+          update: {
+            $set: {
+              trackId,
+              playlistId,
+              profileId,
+              sourceType: PlaylistTrackSourceType.NFT,
+              title: track?.title || null,
+              artist: track?.artist || null,
+              artworkUrl: track?.artworkUrl || null,
+              duration: track?.duration || null,
+              position,
+            },
           },
+          upsert: true,
         },
-        upsert: true,
-      },
-    }));
+      };
+    });
 
     await PlaylistTrackModel.bulkWrite(playlistTracks);
   }
