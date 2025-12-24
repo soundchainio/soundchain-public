@@ -818,16 +818,16 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     notifyOnNetworkStatusChange: true, // Get updates on refetch
   })
 
-  // Fetch USER-OWNED NFTs for wallet page - filter by wallet address
+  // Fetch USER-OWNED NFTs for wallet page AND library - filter by wallet address
   // Note: Use userData?.me?.defaultWallet directly since userWallet is defined later
   const walletAddress = userData?.me?.defaultWallet
   const { data: ownedTracksData, loading: ownedTracksLoading, error: ownedTracksError } = useGroupedTracksQuery({
     variables: {
       filter: walletAddress ? { nftData: { owner: walletAddress } } : {},
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
-      page: { first: 50 }, // Load more for wallet view
+      page: { first: 50 }, // Load more for wallet/library view
     },
-    skip: selectedView !== 'wallet' || !walletAddress, // Only fetch on wallet page when user has wallet
+    skip: (selectedView !== 'wallet' && selectedView !== 'library') || !walletAddress, // Fetch on wallet and library pages
     fetchPolicy: 'cache-and-network', // Fresher data for owned NFTs
   })
 
@@ -1056,9 +1056,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network',
   })
 
-  // Playlists Query - for Playlist view AND profile playlists tab (uses JWT auth to determine user)
+  // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
   const isViewingOwnProfile = selectedView === 'profile' && viewingProfile?.id === me?.profile?.id
-  const shouldSkipPlaylists = (selectedView !== 'playlist' && !isViewingOwnProfile) || !userData?.me
+  const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
     skip: shouldSkipPlaylists,
@@ -2670,19 +2670,19 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
             <div className="space-y-6">
               {/* Library Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="metadata-section p-4 text-center">
+                <Card className="metadata-section p-4 text-center cursor-pointer hover:bg-white/5 transition-colors">
                   <Heart className="w-8 h-8 text-red-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-white">{favoriteTracksData?.favoriteTracks?.nodes?.length || 0}</p>
                   <p className="text-xs text-gray-400">Liked Tracks</p>
                 </Card>
-                <Card className="metadata-section p-4 text-center">
+                <Card className="metadata-section p-4 text-center cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedView('wallet')}>
                   <ImageIcon className="w-8 h-8 text-purple-400 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-white">{userTracks.length}</p>
+                  <p className="text-2xl font-bold text-white">{ownedTracksData?.groupedTracks?.nodes?.length || 0}</p>
                   <p className="text-xs text-gray-400">Owned NFTs</p>
                 </Card>
-                <Card className="metadata-section p-4 text-center">
+                <Card className="metadata-section p-4 text-center cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedView('playlist')}>
                   <ListMusic className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-white">0</p>
+                  <p className="text-2xl font-bold text-white">{playlistsData?.getUserPlaylists?.nodes?.length || 0}</p>
                   <p className="text-xs text-gray-400">Playlists</p>
                 </Card>
                 <Card className="metadata-section p-4 text-center">
@@ -2738,11 +2738,17 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 <div className="flex items-center gap-3 mb-4">
                   <ImageIcon className="w-6 h-6 text-purple-400" />
                   <h2 className="retro-title text-xl">Owned NFTs</h2>
-                  <Badge className="bg-purple-500/20 text-purple-400 text-xs">{userTracks.length}</Badge>
+                  <Badge className="bg-purple-500/20 text-purple-400 text-xs">{ownedTracksData?.groupedTracks?.nodes?.length || 0}</Badge>
+                  {ownedTracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Loading...</Badge>}
                 </div>
-                {userTracks.length > 0 ? (
+                {ownedTracksLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
+                    <span className="ml-3 text-gray-400">Loading owned NFTs...</span>
+                  </div>
+                ) : (ownedTracksData?.groupedTracks?.nodes?.length ?? 0) > 0 ? (
                   <div className="space-y-1">
-                    {userTracks.slice(0, 12).map((track: any, index: number) => (
+                    {ownedTracksData?.groupedTracks?.nodes?.slice(0, 12).map((track: any, index: number) => (
                       <CoinbaseNFTCard
                         key={track.id}
                         track={{
@@ -2764,7 +2770,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                             acceptsOGUN: track.listingItem.acceptsOGUN,
                           } : undefined,
                         }}
-                        onPlay={() => handlePlayTrack(track, index, userTracks)}
+                        onPlay={() => handlePlayTrack(track, index, ownedTracksData?.groupedTracks?.nodes || [])}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
                         onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
@@ -2781,9 +2787,74 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     </Button>
                   </div>
                 )}
-                {userTracks.length > 12 && (
-                  <Button variant="ghost" className="w-full mt-4 hover:bg-purple-500/10 text-purple-400">
-                    View All {userTracks.length} NFTs
+                {(ownedTracksData?.groupedTracks?.nodes?.length ?? 0) > 12 && (
+                  <Button variant="ghost" className="w-full mt-4 hover:bg-purple-500/10 text-purple-400" onClick={() => setSelectedView('wallet')}>
+                    View All {ownedTracksData?.groupedTracks?.nodes?.length} NFTs
+                  </Button>
+                )}
+              </Card>
+
+              {/* Playlists Section */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <ListMusic className="w-6 h-6 text-green-400" />
+                    <h2 className="retro-title text-xl">My Playlists</h2>
+                    <Badge className="bg-green-500/20 text-green-400 text-xs">{playlistsData?.getUserPlaylists?.nodes?.length || 0}</Badge>
+                    {playlistsLoading && <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Loading...</Badge>}
+                  </div>
+                  <Button
+                    onClick={() => setShowCreatePlaylistModal(true)}
+                    className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:opacity-90 text-sm"
+                    size="sm"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    New
+                  </Button>
+                </div>
+                {playlistsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full" />
+                    <span className="ml-3 text-gray-400">Loading playlists...</span>
+                  </div>
+                ) : (playlistsData?.getUserPlaylists?.nodes?.length ?? 0) > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {playlistsData?.getUserPlaylists?.nodes?.slice(0, 8).map((playlist: any) => (
+                      <div
+                        key={playlist.id}
+                        className="group relative bg-neutral-800/50 rounded-lg p-3 cursor-pointer hover:bg-neutral-700/50 transition-all"
+                        onClick={() => {
+                          setSelectedPlaylist(playlist)
+                          setShowPlaylistDetail(true)
+                        }}
+                      >
+                        <div className="aspect-square rounded-md overflow-hidden mb-2 bg-gradient-to-br from-green-500/20 to-cyan-500/20">
+                          {playlist.artworkUrl ? (
+                            <img src={playlist.artworkUrl} alt={playlist.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ListMusic className="w-8 h-8 text-green-400/50" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-white text-sm font-medium truncate">{playlist.title}</p>
+                        <p className="text-gray-500 text-xs">{playlist.tracks?.nodes?.length || 0} tracks</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <ListMusic className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-400">No playlists yet</p>
+                    <Button onClick={() => setShowCreatePlaylistModal(true)} className="mt-4 retro-button">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create First Playlist
+                    </Button>
+                  </div>
+                )}
+                {(playlistsData?.getUserPlaylists?.nodes?.length ?? 0) > 8 && (
+                  <Button variant="ghost" className="w-full mt-4 hover:bg-green-500/10 text-green-400" onClick={() => setSelectedView('playlist')}>
+                    View All {playlistsData?.getUserPlaylists?.nodes?.length} Playlists
                   </Button>
                 )}
               </Card>
