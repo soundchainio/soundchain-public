@@ -128,6 +128,90 @@ const CommentMarker = ({
   </div>
 )
 
+// Active comment popup that animates when playhead crosses a comment
+const ActiveCommentPopup = ({
+  comment,
+  position,
+  index,
+  onDismiss,
+}: {
+  comment: TrackComment
+  position: number
+  index: number
+  onDismiss: () => void
+}) => {
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    // Trigger animation on mount
+    requestAnimationFrame(() => setIsVisible(true))
+  }, [])
+
+  return (
+    <div
+      className={`absolute z-20 transition-all duration-500 ease-out pointer-events-auto ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}
+      style={{
+        left: `${Math.min(85, Math.max(15, position))}%`,
+        top: `${-80 - index * 90}px`,
+        transform: 'translateX(-50%)',
+      }}
+      onClick={onDismiss}
+    >
+      <div className="relative bg-neutral-900/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl p-3 shadow-2xl shadow-cyan-500/20 min-w-[200px] max-w-[280px] cursor-pointer hover:border-cyan-400/50 transition-colors">
+        {/* Glow effect */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 blur-xl -z-10" />
+
+        {/* Neon border pulse */}
+        <div className="absolute inset-0 rounded-2xl border border-cyan-400/50 animate-pulse" />
+
+        {/* Connection line to waveform */}
+        <div
+          className="absolute left-1/2 -bottom-6 w-[2px] h-6 -translate-x-1/2"
+          style={{
+            background: 'linear-gradient(180deg, #00FFD1, transparent)',
+          }}
+        />
+        <div className="absolute left-1/2 -bottom-2 w-2 h-2 -translate-x-1/2 rounded-full bg-cyan-400 animate-ping" />
+
+        {/* Header with avatar */}
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-cyan-400/50 flex-shrink-0">
+            {comment.profile.profilePicture ? (
+              <img src={comment.profile.profilePicture} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                {comment.profile.displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-semibold truncate">{comment.profile.displayName}</p>
+            <p className="text-cyan-400 text-[10px]">@{comment.profile.userHandle}</p>
+          </div>
+          <div className="text-[10px] text-neutral-500 bg-neutral-800 px-2 py-0.5 rounded-full">
+            {formatTime(comment.timestamp)}
+          </div>
+        </div>
+
+        {/* Comment text with emote rendering */}
+        <div className="text-white text-sm leading-relaxed">
+          <EmoteRenderer text={comment.text} linkify />
+        </div>
+
+        {/* Footer with like count */}
+        {comment.likeCount > 0 && (
+          <div className="flex items-center gap-1 mt-2 text-pink-400 text-xs">
+            <Heart className="w-3 h-3 fill-current" />
+            <span>{comment.likeCount}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // Format time helper
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60)
@@ -155,6 +239,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [isReady, setIsReady] = useState(false)
   const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null)
   const [showCommentInput, setShowCommentInput] = useState(false)
+  const [activePopups, setActivePopups] = useState<TrackComment[]>([])
+  const lastTriggeredRef = useRef<Set<string>>(new Set())
   const [commentTimestamp, setCommentTimestamp] = useState(0)
   const [commentText, setCommentText] = useState('')
   const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
@@ -201,6 +287,43 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   useEffect(() => {
     setIsReady(true)
   }, [])
+
+  // Trigger comment popups when playhead crosses their timestamps
+  useEffect(() => {
+    if (!isPlaying || comments.length === 0) return
+
+    // Find comments within 0.5 second window of current time that haven't been triggered
+    const triggerWindow = 0.5
+    const newlyTriggered = comments.filter(comment => {
+      const isInWindow = Math.abs(comment.timestamp - currentTime) < triggerWindow
+      const notTriggered = !lastTriggeredRef.current.has(comment.id)
+      const isAhead = comment.timestamp <= currentTime + 0.1 // Just passed or at
+      return isInWindow && notTriggered && isAhead
+    })
+
+    if (newlyTriggered.length > 0) {
+      // Mark as triggered
+      newlyTriggered.forEach(c => lastTriggeredRef.current.add(c.id))
+
+      // Add to active popups
+      setActivePopups(prev => [...prev, ...newlyTriggered])
+
+      // Auto-remove after 4 seconds
+      setTimeout(() => {
+        setActivePopups(prev =>
+          prev.filter(p => !newlyTriggered.some(n => n.id === p.id))
+        )
+      }, 4000)
+    }
+  }, [currentTime, isPlaying, comments])
+
+  // Reset triggered comments when seeking or pausing
+  useEffect(() => {
+    if (!isPlaying) {
+      lastTriggeredRef.current.clear()
+      setActivePopups([])
+    }
+  }, [isPlaying])
 
   // Calculate progress percentage
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
@@ -381,6 +504,21 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             />
           </div>
         </div>
+
+        {/* Active comment popups - animate when playhead crosses */}
+        {activePopups.length > 0 && (
+          <div className="absolute left-4 right-4 bottom-16 h-0 overflow-visible pointer-events-none z-30">
+            {activePopups.map((comment, idx) => (
+              <ActiveCommentPopup
+                key={comment.id}
+                comment={comment}
+                position={(comment.timestamp / duration) * 100}
+                index={idx}
+                onDismiss={() => setActivePopups(prev => prev.filter(p => p.id !== comment.id))}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Comment markers */}
         <div className="absolute left-4 right-4 bottom-4 h-8 pointer-events-auto">
