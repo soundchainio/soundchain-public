@@ -47,9 +47,9 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
     timestamp: number;
     replyToId?: string;
   }): Promise<TrackComment> {
-    // Validate text length
-    if (params.text.length > 140) {
-      throw new UserInputError('Comment must be 140 characters or less');
+    // Validate text length (increased limit to support sticker markdown URLs)
+    if (params.text.length > 2000) {
+      throw new UserInputError('Comment must be 2000 characters or less');
     }
 
     if (params.timestamp < 0) {
