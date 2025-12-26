@@ -300,18 +300,27 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             }
           }}
         >
-          {/* Glow backdrop for played section */}
+          {/* Glow backdrop for played section - GPU accelerated */}
           <div
             className="absolute inset-y-0 left-0 pointer-events-none opacity-30"
             style={{
               width: `${progressPercent}%`,
               background: 'linear-gradient(90deg, #26D1A8 0%, #62AAFF 30%, #AC4EFD 60%, #F1419E 100%)',
               filter: 'blur(20px)',
+              willChange: 'width',
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden',
             }}
           />
 
-          {/* Waveform bars */}
-          <div className="absolute inset-0 flex items-center gap-[1px]">
+          {/* Waveform bars - GPU layer for smooth rendering */}
+          <div
+            className="absolute inset-0 flex items-center gap-[1px]"
+            style={{
+              contain: 'layout style paint',
+              transform: 'translateZ(0)',
+            }}
+          >
             {waveformBars.map((amplitude, idx) => {
               const barProgress = (idx / waveformBars.length) * 100
               const isPlayed = barProgress <= progressPercent
@@ -347,7 +356,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             })}
           </div>
 
-          {/* Animated Playhead - CSS animation for smooth movement */}
+          {/* Animated Playhead - GPU accelerated for smooth movement */}
           <div
             className="absolute top-0 bottom-0 w-[3px] pointer-events-none"
             style={{
@@ -355,14 +364,19 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               background: 'linear-gradient(180deg, #00FFD1 0%, #fff 50%, #FF00FF 100%)',
               boxShadow: '0 0 10px #fff, 0 0 20px #00FFD1, 0 0 30px #FF00FF, 0 0 40px #fff',
               transition: isPlaying ? 'left 1s linear' : 'left 0.1s ease-out',
+              willChange: 'left',
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden',
             }}
           >
-            {/* Playhead glow pulse */}
+            {/* Playhead glow pulse - GPU accelerated */}
             <div
               className="absolute inset-0 animate-pulse"
               style={{
                 background: 'linear-gradient(180deg, #00FFD1 0%, #fff 50%, #FF00FF 100%)',
                 filter: 'blur(4px)',
+                willChange: 'opacity',
+                transform: 'translateZ(0)',
               }}
             />
           </div>

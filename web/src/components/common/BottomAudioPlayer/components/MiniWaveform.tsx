@@ -60,35 +60,46 @@ export const MiniWaveform = ({
       aria-valuemax={100}
       aria-valuenow={Math.round(progressPercentage)}
     >
-      {/* Neon glow backdrop */}
+      {/* Neon glow backdrop - GPU accelerated */}
       <div
         className="absolute inset-y-0 left-0 pointer-events-none opacity-20 blur-md"
         style={{
           width: `${progressPercentage}%`,
           background: 'linear-gradient(90deg, #00FFD1 0%, #00D4FF 30%, #A855F7 60%, #FF00FF 100%)',
+          willChange: 'width',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
         }}
       />
 
-      {/* Bars - centered vertically */}
-      {barHeights.map((height, i) => {
-        const barPosition = (i / barCount) * 100
-        const isPlayed = barPosition <= progressPercentage
-        const neonColor = getNeonColor(barPosition)
+      {/* Bars - GPU layer for smooth rendering */}
+      <div
+        style={{
+          display: 'contents',
+          contain: 'layout style',
+        }}
+      >
+        {barHeights.map((height, i) => {
+          const barPosition = (i / barCount) * 100
+          const isPlayed = barPosition <= progressPercentage
+          const neonColor = getNeonColor(barPosition)
 
-        return (
-          <div
-            key={i}
-            className="flex-1 min-w-[3px] rounded-full"
-            style={{
-              height: `${height}%`,
-              background: isPlayed ? neonColor : 'rgba(255, 255, 255, 0.15)',
-              boxShadow: isPlayed ? `0 0 6px ${neonColor}, 0 0 12px ${neonColor}50` : 'none',
-            }}
-          />
-        )
-      })}
+          return (
+            <div
+              key={i}
+              className="flex-1 min-w-[3px] rounded-full"
+              style={{
+                height: `${height}%`,
+                background: isPlayed ? neonColor : 'rgba(255, 255, 255, 0.15)',
+                boxShadow: isPlayed ? `0 0 6px ${neonColor}, 0 0 12px ${neonColor}50` : 'none',
+                transform: 'translateZ(0)',
+              }}
+            />
+          )
+        })}
+      </div>
 
-      {/* Smooth playhead cursor */}
+      {/* Smooth playhead cursor - GPU accelerated */}
       <div
         className="absolute top-0 bottom-0 w-[2px] pointer-events-none"
         style={{
@@ -96,6 +107,9 @@ export const MiniWaveform = ({
           background: 'linear-gradient(180deg, #00FFD1 0%, #fff 50%, #FF00FF 100%)',
           boxShadow: '0 0 8px #fff, 0 0 16px #00FFD1, 0 0 24px #FF00FF',
           transition: 'left 1s linear',
+          willChange: 'left',
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
         }}
       />
     </div>
