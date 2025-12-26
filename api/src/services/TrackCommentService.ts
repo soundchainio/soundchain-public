@@ -47,9 +47,14 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
     timestamp: number;
     replyToId?: string;
   }): Promise<TrackComment> {
-    // Validate text length (increased limit to support sticker markdown URLs)
-    if (params.text.length > 2000) {
-      throw new UserInputError('Comment must be 2000 characters or less');
+    // Count actual content length: each sticker counts as 1 char, text counts normally
+    const stickerPattern = /!\[emote:[^\]]+\]\([^)]+\)/g;
+    const stickers = params.text.match(stickerPattern) || [];
+    const textWithoutStickers = params.text.replace(stickerPattern, '').trim();
+    const contentLength = textWithoutStickers.length + stickers.length;
+
+    if (contentLength > 280) {
+      throw new UserInputError('Comment must be 280 characters or less (stickers count as 1 each)');
     }
 
     if (params.timestamp < 0) {

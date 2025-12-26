@@ -461,7 +461,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             <div className="relative">
               <textarea
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value.slice(0, 200))}
+                onChange={(e) => setCommentText(e.target.value.slice(0, 280 - selectedStickers.length))}
                 placeholder="Add a message (optional)..."
                 className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 pr-12 text-white placeholder:text-neutral-500 resize-none focus:outline-none focus:border-cyan-500 transition-colors"
                 rows={2}
@@ -502,8 +502,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                 <span className="text-sm font-medium">Add Stickers</span>
               </button>
 
-              <span className={`text-xs ${commentText.length > 160 ? 'text-amber-400' : 'text-neutral-500'}`}>
-                {commentText.length}/200
+              <span className={`text-xs ${(commentText.length + selectedStickers.length) > 240 ? 'text-amber-400' : 'text-neutral-500'}`}>
+                {commentText.length + selectedStickers.length}/280
               </span>
             </div>
 
