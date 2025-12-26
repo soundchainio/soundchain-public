@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, memo } from 'react'
 
 interface MiniWaveformProps {
   progress: number // 0-1 percentage
@@ -10,14 +10,32 @@ interface MiniWaveformProps {
   onClick?: (progress: number) => void
 }
 
+// Pre-computed neon colors for performance
+const NEON_COLORS = ['#00FFD1', '#00D4FF', '#A855F7', '#FF00FF', '#FF006E']
+const getColor = (pos: number): string => {
+  if (pos < 20) return NEON_COLORS[0]
+  if (pos < 40) return NEON_COLORS[1]
+  if (pos < 60) return NEON_COLORS[2]
+  if (pos < 80) return NEON_COLORS[3]
+  return NEON_COLORS[4]
+}
+
+// Memoized bar component for performance
+const MiniBar = memo(({ height, isPlayed, color }: { height: number; isPlayed: boolean; color: string }) => (
+  <div
+    className="flex-1 min-w-[3px] rounded-full will-change-[background-color]"
+    style={{
+      height: `${height}%`,
+      background: isPlayed ? color : 'rgba(255, 255, 255, 0.15)',
+      boxShadow: isPlayed ? `0 0 4px ${color}` : 'none',
+    }}
+  />
+))
+MiniBar.displayName = 'MiniBar'
+
 /**
- * MiniWaveform - A lightweight animated waveform visualization for the bottom player
- *
- * Features:
- * - CSS-only animated bars (no audio analysis)
- * - Rainbow gradient progress indicator
- * - Click-to-seek support
- * - Smooth animations
+ * MiniWaveform - Performance-optimized waveform for bottom player
+ * Reduced effects for TV/slow device compatibility
  */
 export const MiniWaveform = ({
   progress = 0,
@@ -26,11 +44,10 @@ export const MiniWaveform = ({
   barCount = 50,
   onClick,
 }: MiniWaveformProps) => {
-  // Generate deterministic bar heights based on track duration for consistency
+  // Generate deterministic bar heights - memoized
   const barHeights = useMemo(() => {
     const heights: number[] = []
     for (let i = 0; i < barCount; i++) {
-      // Create a pseudo-random but deterministic pattern
       const seed = (duration * 1000 + i * 7919) % 100
       const noise = Math.sin(i * 0.5) * 30 + Math.cos(i * 0.3) * 20
       const height = 20 + (seed / 100) * 60 + noise
@@ -41,18 +58,16 @@ export const MiniWaveform = ({
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!onClick || duration <= 0) return
-
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
-    const clickProgress = x / rect.width
-    onClick(Math.max(0, Math.min(1, clickProgress)))
+    onClick(Math.max(0, Math.min(1, x / rect.width)))
   }
 
   const progressPercentage = Math.max(0, Math.min(100, progress * 100))
 
   return (
     <div
-      className={`relative h-14 flex items-center gap-[1px] cursor-pointer group ${className}`}
+      className={`relative h-14 flex items-center gap-[1px] cursor-pointer ${className}`}
       onClick={handleClick}
       role="slider"
       aria-label="Playback progress"
@@ -60,41 +75,35 @@ export const MiniWaveform = ({
       aria-valuemax={100}
       aria-valuenow={Math.round(progressPercentage)}
     >
-      {/* Neon glow backdrop */}
+      {/* Simplified backdrop - no blur for performance */}
       <div
-        className="absolute inset-y-0 left-0 pointer-events-none opacity-20 blur-md"
+        className="absolute inset-y-0 left-0 pointer-events-none opacity-15"
         style={{
           width: `${progressPercentage}%`,
           background: 'linear-gradient(90deg, #00FFD1 0%, #00D4FF 30%, #A855F7 60%, #FF00FF 100%)',
         }}
       />
 
-      {/* Bars - centered vertically */}
+      {/* Bars - memoized for performance */}
       {barHeights.map((height, i) => {
         const barPosition = (i / barCount) * 100
-        const isPlayed = barPosition <= progressPercentage
-        const neonColor = getNeonColor(barPosition)
-
         return (
-          <div
+          <MiniBar
             key={i}
-            className="flex-1 min-w-[3px] rounded-full"
-            style={{
-              height: `${height}%`,
-              background: isPlayed ? neonColor : 'rgba(255, 255, 255, 0.15)',
-              boxShadow: isPlayed ? `0 0 6px ${neonColor}, 0 0 12px ${neonColor}50` : 'none',
-            }}
+            height={height}
+            isPlayed={barPosition <= progressPercentage}
+            color={getColor(barPosition)}
           />
         )
       })}
 
-      {/* Smooth playhead cursor */}
+      {/* Playhead - simplified shadow */}
       <div
-        className="absolute top-0 bottom-0 w-[2px] pointer-events-none"
+        className="absolute top-0 bottom-0 w-[2px] pointer-events-none will-change-transform"
         style={{
           left: `${progressPercentage}%`,
           background: 'linear-gradient(180deg, #00FFD1 0%, #fff 50%, #FF00FF 100%)',
-          boxShadow: '0 0 8px #fff, 0 0 16px #00FFD1, 0 0 24px #FF00FF',
+          boxShadow: '0 0 6px #fff',
           transition: 'left 1s linear',
         }}
       />

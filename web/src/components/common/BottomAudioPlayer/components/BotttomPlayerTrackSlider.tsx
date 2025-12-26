@@ -80,7 +80,7 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
               progress={duration > 0 ? progress / duration : 0}
               duration={duration}
               className="mx-4 w-[500px] xl:w-[700px] 2xl:w-[900px]"
-              barCount={120}
+              barCount={80}
               onClick={(p) => onSliderChange(p * duration)}
             />
           ) : (
