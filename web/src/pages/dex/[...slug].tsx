@@ -4991,14 +4991,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         })
 
         if (data?.track) {
-          const fallbackImage = `${process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'}/soundchain-meta-logo.png`
+          const domainUrl = process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'
+          const fallbackImage = `${domainUrl}/soundchain-meta-logo.png`
+          // Ensure artwork URL is absolute for social media crawlers
+          let ogImage = data.track.artworkUrl || fallbackImage
+          if (ogImage && !ogImage.startsWith('http')) {
+            ogImage = `${domainUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`
+          }
           return {
             props: {
               ogData: {
                 type: 'track' as const,
                 title: `${data.track.title || 'Track'} by ${data.track.artist || 'Unknown'} | SoundChain`,
                 description: `Listen to "${data.track.title}" by ${data.track.artist} on SoundChain. ${data.track.playbackCountFormatted || '0'} plays.`,
-                image: data.track.artworkUrl || fallbackImage,
+                image: ogImage,
                 url: `/dex/track/${routeId}`,
               },
             },
@@ -5020,13 +5026,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
         if (data?.profileByHandle) {
           const profile = data.profileByHandle
+          const domainUrl = process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'
+          const fallbackImage = `${domainUrl}/soundchain-meta-logo.png`
+          // Ensure profile image URL is absolute for social media crawlers
+          let ogImage = profile.profilePicture || profile.coverPicture || fallbackImage
+          if (ogImage && !ogImage.startsWith('http')) {
+            ogImage = `${domainUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`
+          }
           return {
             props: {
               ogData: {
                 type: 'profile' as const,
                 title: `${profile.displayName || profile.userHandle} | SoundChain`,
                 description: profile.bio || `Follow ${profile.displayName || profile.userHandle} on SoundChain - Web3 Music Platform`,
-                image: profile.profilePicture || profile.coverPicture || undefined,
+                image: ogImage,
                 url: `/dex/users/${routeId}`,
               },
             },
@@ -5048,15 +5061,20 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
         if (data?.playlist) {
           const playlist = data.playlist
-          // Always provide a fallback image - use playlist artwork or SoundChain logo
-          const fallbackImage = `${process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'}/soundchain-meta-logo.png`
+          const domainUrl = process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'
+          const fallbackImage = `${domainUrl}/soundchain-meta-logo.png`
+          // Ensure playlist artwork URL is absolute for social media crawlers
+          let ogImage = playlist.artworkUrl || fallbackImage
+          if (ogImage && !ogImage.startsWith('http')) {
+            ogImage = `${domainUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`
+          }
           return {
             props: {
               ogData: {
                 type: 'playlist' as const,
                 title: `${playlist.title} | SoundChain Playlist`,
                 description: playlist.description || `Listen to this playlist on SoundChain - Web3 Music Platform. ${playlist.favoriteCount || 0} likes.`,
-                image: playlist.artworkUrl || fallbackImage,
+                image: ogImage,
                 url: `/dex/playlist/${routeId}`,
               },
             },
