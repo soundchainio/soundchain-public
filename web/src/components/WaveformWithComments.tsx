@@ -181,9 +181,28 @@ const ConfettiComment = ({
     }
   }, [trajectory.delay])
 
-  // Neon colors for variety
-  const neonColors = ['#00FFD1', '#00D4FF', '#A855F7', '#FF00FF', '#FF006E']
-  const borderColor = neonColors[index % neonColors.length]
+  // Seasonal color themes
+  const getSeasonalColors = () => {
+    const now = new Date()
+    const newYearsEnd = new Date('2026-01-05')
+
+    // 🎆 New Year's theme until Jan 5, 2026
+    if (now < newYearsEnd) {
+      return {
+        colors: ['#FFD700', '#FFF8DC', '#C0C0C0', '#FFFACD', '#F0E68C'], // Gold, Cornsilk, Silver, Lemon Chiffon, Khaki
+        sparkle: true,
+      }
+    }
+
+    // Default neon colors
+    return {
+      colors: ['#00FFD1', '#00D4FF', '#A855F7', '#FF00FF', '#FF006E'],
+      sparkle: false,
+    }
+  }
+
+  const seasonal = getSeasonalColors()
+  const borderColor = seasonal.colors[index % seasonal.colors.length]
 
   return (
     <div
@@ -206,7 +225,9 @@ const ConfettiComment = ({
         className="relative bg-neutral-900/95 backdrop-blur-xl rounded-2xl p-2.5 shadow-2xl min-w-[180px] max-w-[220px]"
         style={{
           border: `2px solid ${borderColor}`,
-          boxShadow: `0 0 20px ${borderColor}40, 0 0 40px ${borderColor}20`,
+          boxShadow: seasonal.sparkle
+            ? `0 0 25px ${borderColor}, 0 0 50px ${borderColor}60, 0 0 75px ${borderColor}30`
+            : `0 0 20px ${borderColor}40, 0 0 40px ${borderColor}20`,
         }}
       >
         {/* Glow effect */}
@@ -214,6 +235,19 @@ const ConfettiComment = ({
           className="absolute inset-0 rounded-2xl blur-xl -z-10 opacity-30"
           style={{ background: borderColor }}
         />
+
+        {/* ✨ New Year's Sparkles */}
+        {seasonal.sparkle && (
+          <>
+            <div className="absolute -top-1 -left-1 w-2 h-2 bg-yellow-300 rounded-full animate-ping" style={{ animationDuration: '1s' }} />
+            <div className="absolute -top-2 right-4 w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+            <div className="absolute top-3 -right-1 w-2 h-2 bg-yellow-200 rounded-full animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.5s' }} />
+            <div className="absolute -bottom-1 left-6 w-1.5 h-1.5 bg-amber-300 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+            <div className="absolute bottom-4 -left-1 w-1 h-1 bg-white rounded-full animate-ping" style={{ animationDuration: '0.8s', animationDelay: '0.7s' }} />
+            {/* Star burst effect */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-yellow-400 animate-bounce text-sm" style={{ animationDuration: '2s' }}>✨</div>
+          </>
+        )}
 
         {/* User info row */}
         <div className="flex items-center gap-2 mb-1">
@@ -258,6 +292,12 @@ const ConfettiComment = ({
   )
 }
 
+// Check if we're in New Year's season
+const isNewYearsSeason = () => {
+  const now = new Date()
+  return now < new Date('2026-01-05')
+}
+
 // Container for confetti comments that erupt from a position
 const ActiveCommentPopup = ({
   comments,
@@ -270,6 +310,8 @@ const ActiveCommentPopup = ({
   timestamp: number
   onDismiss: () => void
 }) => {
+  const isNewYears = isNewYearsSeason()
+
   return (
     <div
       className="absolute z-20 pointer-events-none"
@@ -279,11 +321,49 @@ const ActiveCommentPopup = ({
         transform: 'translateX(-50%)',
       }}
     >
-      {/* Explosion origin burst effect */}
-      <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
-        <div className="w-4 h-4 rounded-full bg-cyan-400 animate-ping" />
-        <div className="absolute inset-0 w-4 h-4 rounded-full bg-white animate-pulse" />
-      </div>
+      {/* 🎆 New Year's Firework Burst */}
+      {isNewYears ? (
+        <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
+          {/* Central gold burst */}
+          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-ping" style={{ animationDuration: '0.8s' }} />
+          <div className="absolute inset-0 w-6 h-6 rounded-full bg-white animate-pulse shadow-lg shadow-yellow-400/50" />
+
+          {/* Firework rays shooting outward */}
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute left-1/2 top-1/2 w-1 h-8 origin-bottom"
+              style={{
+                transform: `translate(-50%, -100%) rotate(${i * 45}deg)`,
+                background: `linear-gradient(to top, #FFD700, transparent)`,
+                animation: 'pulse 1s ease-out infinite',
+                animationDelay: `${i * 0.1}s`,
+              }}
+            />
+          ))}
+
+          {/* Sparkle particles */}
+          <div className="absolute -top-4 -left-4 text-2xl animate-bounce" style={{ animationDuration: '0.5s' }}>🎆</div>
+          <div className="absolute -top-6 left-2 text-xl animate-ping" style={{ animationDuration: '1s' }}>✨</div>
+          <div className="absolute -top-3 left-6 text-lg animate-bounce" style={{ animationDuration: '0.7s', animationDelay: '0.2s' }}>🎇</div>
+
+          {/* Ball drop effect */}
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 animate-bounce" style={{ animationDuration: '1.5s' }}>
+            <div className="w-4 h-4 rounded-full bg-gradient-to-br from-yellow-300 via-white to-yellow-400 shadow-lg shadow-yellow-500/50" />
+          </div>
+
+          {/* 2026 text */}
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-yellow-400 font-bold text-xs animate-pulse whitespace-nowrap">
+            🎊 2026 🎊
+          </div>
+        </div>
+      ) : (
+        /* Default neon burst */
+        <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
+          <div className="w-4 h-4 rounded-full bg-cyan-400 animate-ping" />
+          <div className="absolute inset-0 w-4 h-4 rounded-full bg-white animate-pulse" />
+        </div>
+      )}
 
       {/* Confetti comments */}
       {comments.map((comment, idx) => (
