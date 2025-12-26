@@ -10,11 +10,12 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { MessageCircle, Send, X, Heart, Sparkles, Link2 } from 'lucide-react'
+import { MessageCircle, Send, X, Heart, Sparkles } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useMe } from 'hooks/useMe'
 import { formatDistanceToNow } from 'date-fns'
 import { StickerPicker } from './StickerPicker'
+import { EmoteRenderer } from './EmoteRenderer'
 
 // Types
 interface TrackComment {
@@ -37,7 +38,7 @@ interface WaveformWithCommentsProps {
   audioUrl: string
   duration: number
   comments?: TrackComment[]
-  onAddComment?: (text: string, timestamp: number, embedUrl?: string) => Promise<void>
+  onAddComment?: (text: string, timestamp: number) => Promise<void>
   onLikeComment?: (commentId: string) => Promise<void>
   isPlaying?: boolean
   currentTime?: number
@@ -108,8 +109,10 @@ const CommentMarker = ({
             </div>
           </div>
 
-          {/* Comment text */}
-          <p className="text-white text-sm leading-relaxed mb-2">{comment.text}</p>
+          {/* Comment text with emote rendering */}
+          <div className="text-white text-sm leading-relaxed mb-2">
+            <EmoteRenderer text={comment.text} linkify />
+          </div>
 
           {/* Footer */}
           <div className="flex items-center justify-between text-neutral-500 text-xs">
@@ -154,7 +157,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [commentTimestamp, setCommentTimestamp] = useState(0)
   const [commentText, setCommentText] = useState('')
-  const [embedUrl, setEmbedUrl] = useState('')
   const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
@@ -216,7 +218,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
 
   // Submit comment
   const handleSubmitComment = async () => {
-    const hasContent = commentText.trim() || selectedStickers.length > 0 || embedUrl.trim()
+    const hasContent = commentText.trim() || selectedStickers.length > 0
     if (!hasContent || !onAddComment || isSubmitting) return
 
     setIsSubmitting(true)
@@ -227,9 +229,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
         .join(' ')
       const finalComment = [commentText.trim(), stickerMarkdown].filter(Boolean).join(' ')
 
-      await onAddComment(finalComment, commentTimestamp, embedUrl.trim() || undefined)
+      await onAddComment(finalComment, commentTimestamp)
       setCommentText('')
-      setEmbedUrl('')
       setSelectedStickers([])
       setShowCommentInput(false)
       setShowStickerPicker(false)
@@ -395,7 +396,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             setShowStickerPicker(false)
             setSelectedStickers([])
             setCommentText('')
-            setEmbedUrl('')
           }} />
           <div className="relative bg-neutral-900 border border-neutral-700 rounded-2xl p-3 sm:p-4 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[95vh] overflow-y-auto my-auto">
             {/* Header */}
@@ -410,7 +410,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                   setShowStickerPicker(false)
                   setSelectedStickers([])
                   setCommentText('')
-                  setEmbedUrl('')
                 }}
                 className="p-1 hover:bg-neutral-800 rounded-full transition-colors"
               >
@@ -479,7 +478,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               />
               <button
                 onClick={handleSubmitComment}
-                disabled={(!commentText.trim() && selectedStickers.length === 0 && !embedUrl.trim()) || isSubmitting}
+                disabled={(!commentText.trim() && selectedStickers.length === 0) || isSubmitting}
                 className="absolute right-3 bottom-3 p-2 bg-cyan-500 hover:bg-cyan-600 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg transition-colors"
               >
                 {isSubmitting ? (
@@ -488,21 +487,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                   <Send className="w-4 h-4 text-white" />
                 )}
               </button>
-            </div>
-
-            {/* Embed URL Input */}
-            <div className="mt-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Link2 className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-neutral-400">Embed Link (YouTube, Spotify, SoundCloud, etc.)</span>
-              </div>
-              <input
-                type="url"
-                value={embedUrl}
-                onChange={(e) => setEmbedUrl(e.target.value)}
-                placeholder="https://youtube.com/watch?v=... or spotify.com/track/..."
-                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white text-sm placeholder:text-neutral-500 focus:outline-none focus:border-purple-500 transition-colors"
-              />
             </div>
 
             {/* Sticker bar and character count */}

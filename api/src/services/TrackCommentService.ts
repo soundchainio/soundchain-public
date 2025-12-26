@@ -62,13 +62,22 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
       throw new UserInputError('Timestamp must be positive');
     }
 
+    // Validate embed URL if provided
+    if (params.embedUrl) {
+      try {
+        new URL(params.embedUrl);
+      } catch {
+        throw new UserInputError('Invalid embed URL');
+      }
+    }
+
     const comment = new this.model({
       trackId: new mongoose.Types.ObjectId(params.trackId),
       profileId: params.profileId,
       text: params.text.trim(),
       timestamp: params.timestamp,
       replyToId: params.replyToId ? new mongoose.Types.ObjectId(params.replyToId) : undefined,
-      embedUrl: params.embedUrl?.trim() || undefined,
+      embedUrl: params.embedUrl?.trim(),
       likeCount: 0,
       isPinned: false,
       deleted: false,

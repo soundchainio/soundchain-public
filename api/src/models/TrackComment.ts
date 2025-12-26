@@ -40,18 +40,18 @@ export class TrackComment extends Model {
   profileId: mongoose.Types.ObjectId;
 
   /**
-   * The comment text (supports sticker markdown, URLs, etc.)
-   * Content limit is 280 chars where each sticker counts as 1
+   * The comment text (supports sticker markdown which can be long)
+   * Content limit is 280 chars (text + stickers count as 1 each) - enforced in service
    */
   @Field(() => String)
-  @prop({ required: true, maxlength: 10000 })
+  @prop({ required: true, maxlength: 5000 })
   text: string;
 
   /**
    * Optional embed URL (YouTube, Spotify, SoundCloud, etc.)
    */
   @Field(() => String, { nullable: true })
-  @prop({ maxlength: 2048 })
+  @prop({ maxlength: 2000 })
   embedUrl?: string;
 
   /**
