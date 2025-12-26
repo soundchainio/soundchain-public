@@ -202,7 +202,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
 
   return (
     <div
-      className={classNames('w-96 rounded-xl shadow-2xl border', {
+      className={classNames('w-full max-w-[384px] rounded-xl shadow-2xl border', {
         'bg-neutral-900 text-white border-neutral-700': theme === 'dark',
         'bg-white text-gray-900 border-gray-200': theme === 'light',
       })}
