@@ -52,7 +52,7 @@ export const MiniWaveform = ({
 
   return (
     <div
-      className={`relative h-10 flex items-center gap-[1px] cursor-pointer group ${className}`}
+      className={`relative h-14 flex items-center gap-[1px] cursor-pointer group ${className}`}
       onClick={handleClick}
       role="slider"
       aria-label="Playback progress"
@@ -78,7 +78,7 @@ export const MiniWaveform = ({
         return (
           <div
             key={i}
-            className="flex-1 min-w-[2px] rounded-full"
+            className="flex-1 min-w-[3px] rounded-full"
             style={{
               height: `${height}%`,
               background: isPlayed ? neonColor : 'rgba(255, 255, 255, 0.15)',

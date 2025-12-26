@@ -10,10 +10,22 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { MessageCircle, Send, X, Heart } from 'lucide-react'
+import { MessageCircle, Send, X, Heart, Smile, Sparkles } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useMe } from 'hooks/useMe'
 import { formatDistanceToNow } from 'date-fns'
+import Picker from '@emoji-mart/react'
+import { StickerPicker } from './StickerPicker'
+
+// Extended Emoji type from emoji-mart
+interface Emoji {
+  id: string
+  name: string
+  native: string
+  unified: string
+  keywords: string[]
+  shortcodes: string
+}
 
 // Types
 interface TrackComment {
@@ -155,6 +167,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [commentText, setCommentText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showStickerPicker, setShowStickerPicker] = useState(false)
 
 
   // Generate vertical bar waveform data (amplitude for each bar)
@@ -264,7 +278,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
         {/* Futuristic Web3 Waveform */}
         <div
           ref={waveformRef}
-          className="relative h-24 cursor-pointer"
+          className="relative h-36 cursor-pointer"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect()
             const relativeX = (e.clientX - rect.left) / rect.width
@@ -311,11 +325,11 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                   className="flex-1 flex items-center justify-center h-full"
                 >
                   <div
-                    className="w-[3px] rounded-full"
+                    className="w-[4px] rounded-full"
                     style={{
                       height: `${heightPercent}%`,
                       backgroundColor: barColor,
-                      boxShadow: isPlayed ? `0 0 8px ${barColor}, 0 0 16px ${barColor}40` : 'none',
+                      boxShadow: isPlayed ? `0 0 10px ${barColor}, 0 0 20px ${barColor}40` : 'none',
                     }}
                   />
                 </div>
@@ -371,7 +385,11 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
       {/* Comment input popup */}
       {showCommentInput && me && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCommentInput(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => {
+            setShowCommentInput(false)
+            setShowEmojiPicker(false)
+            setShowStickerPicker(false)
+          }} />
           <div className="relative bg-neutral-900 border border-neutral-700 rounded-2xl p-4 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
@@ -380,7 +398,11 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                 <span className="text-white font-semibold">Add comment at {formatTime(commentTimestamp)}</span>
               </div>
               <button
-                onClick={() => setShowCommentInput(false)}
+                onClick={() => {
+                  setShowCommentInput(false)
+                  setShowEmojiPicker(false)
+                  setShowStickerPicker(false)
+                }}
                 className="p-1 hover:bg-neutral-800 rounded-full transition-colors"
               >
                 <X className="w-5 h-5 text-neutral-400" />
@@ -399,12 +421,12 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               />
             </div>
 
-            {/* Input */}
+            {/* Input with emoji/sticker bar */}
             <div className="relative">
               <textarea
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value.slice(0, 140))}
-                placeholder="Write your comment..."
+                onChange={(e) => setCommentText(e.target.value.slice(0, 280))}
+                placeholder="Write your comment... add emojis and stickers!"
                 className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 pr-12 text-white placeholder:text-neutral-500 resize-none focus:outline-none focus:border-cyan-500 transition-colors"
                 rows={3}
                 autoFocus
@@ -428,12 +450,80 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               </button>
             </div>
 
-            {/* Character count */}
-            <div className="flex justify-end mt-2">
-              <span className={`text-xs ${commentText.length > 120 ? 'text-amber-400' : 'text-neutral-500'}`}>
-                {commentText.length}/140
+            {/* Emoji/Sticker bar and character count */}
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-2">
+                {/* Emoji button */}
+                <button
+                  onClick={() => {
+                    setShowEmojiPicker(!showEmojiPicker)
+                    setShowStickerPicker(false)
+                  }}
+                  className={`p-2 rounded-lg transition-all ${
+                    showEmojiPicker
+                      ? 'bg-cyan-500/20 text-cyan-400 ring-2 ring-cyan-400'
+                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                  }`}
+                  title="Add emoji"
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
+
+                {/* Sticker button */}
+                <button
+                  onClick={() => {
+                    setShowStickerPicker(!showStickerPicker)
+                    setShowEmojiPicker(false)
+                  }}
+                  className={`p-2 rounded-lg transition-all flex items-center gap-1 ${
+                    showStickerPicker
+                      ? 'bg-purple-500/20 text-purple-400 ring-2 ring-purple-400'
+                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                  }`}
+                  title="Add stickers (7TV, BTTV, FFZ)"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  <span className="text-xs font-medium">Stickers</span>
+                </button>
+              </div>
+
+              <span className={`text-xs ${commentText.length > 240 ? 'text-amber-400' : 'text-neutral-500'}`}>
+                {commentText.length}/280
               </span>
             </div>
+
+            {/* Emoji Picker - stays open for flurry blasts */}
+            {showEmojiPicker && (
+              <div className="mt-3 animate-in fade-in slide-in-from-bottom-2 duration-200" onClick={(e) => e.stopPropagation()}>
+                <div className="bg-neutral-800 rounded-xl p-2 border border-neutral-700">
+                  <Picker
+                    theme="dark"
+                    perLine={8}
+                    emojiSize={24}
+                    emojiButtonSize={32}
+                    maxFrequentRows={2}
+                    onEmojiSelect={(emoji: Emoji) => {
+                      // Keep picker open for rapid selection ("flurry blasts")
+                      setCommentText(prev => prev + emoji.native)
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Sticker Picker - 7TV, BTTV, FFZ emotes */}
+            {showStickerPicker && (
+              <div className="mt-3 animate-in fade-in slide-in-from-bottom-2 duration-200" onClick={(e) => e.stopPropagation()}>
+                <StickerPicker
+                  theme="dark"
+                  onSelect={(stickerUrl, stickerName) => {
+                    // Keep picker open for rapid selection
+                    const emoteMarkdown = `![emote:${stickerName}](${stickerUrl})`
+                    setCommentText(prev => prev + emoteMarkdown)
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
