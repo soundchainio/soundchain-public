@@ -22,6 +22,10 @@ import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { checkIsMobile } from 'utils/IsMobile'
 import { Flame, Share2, ChevronDown, BadgeCheck, ListMusic, SkipBack, SkipForward } from 'lucide-react'
 import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
+import dynamic from 'next/dynamic'
+
+// Dynamic import for WaveformWithComments (uses wavesurfer.js which needs client-side)
+const WaveformWithComments = dynamic(() => import('components/WaveformWithComments'), { ssr: false })
 
 // Gradient Progress Bar Component
 const GradientProgressBar = ({
@@ -205,22 +209,21 @@ export const AudioPlayerModal = () => {
               </button>
             </div>
 
-            {/* Progress Bar */}
-            <div className="w-full max-w-[400px] mx-auto mb-4">
-              <GradientProgressBar
-                progress={progress}
-                duration={duration}
-                onChange={onSliderChange}
-              />
-              <div className="flex justify-between mt-2 text-sm text-white/60">
-                <span className="drop-shadow-lg">{timeFromSecs(progress || 0)}</span>
-                <span
-                  onClick={() => setShowTotalPlaybackDuration(!showTotalPlaybackDuration)}
-                  className="cursor-pointer hover:text-white transition-colors drop-shadow-lg"
-                >
-                  {showTotalPlaybackDuration ? timeFromSecs(duration || 0) : remainingTime(progress, duration || 0)}
-                </span>
-              </div>
+            {/* SoundCloud-style Waveform with Comments */}
+            <div className="w-full max-w-[500px] mx-auto mb-4">
+              {currentSong.src && (
+                <WaveformWithComments
+                  trackId={currentSong.trackId}
+                  audioUrl={currentSong.src}
+                  duration={duration || 180}
+                  comments={[]}
+                  isPlaying={isPlaying}
+                  currentTime={progress}
+                  onSeek={onSliderChange}
+                  onPlayPause={togglePlay}
+                  variant="glass"
+                />
+              )}
             </div>
 
             {/* Main Controls */}

@@ -44,6 +44,7 @@ interface WaveformWithCommentsProps {
   onSeek?: (time: number) => void
   onPlayPause?: () => void
   className?: string
+  variant?: 'default' | 'glass' // glass variant for Now Playing modal
 }
 
 // Comment marker component
@@ -143,6 +144,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   onSeek,
   onPlayPause,
   className = '',
+  variant = 'default',
 }) => {
   const waveformRef = useRef<HTMLDivElement>(null)
   const wavesurfer = useRef<WaveSurferType | null>(null)
@@ -274,10 +276,16 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
     return groups
   }, [comments, duration])
 
+  const isGlass = variant === 'glass'
+
   return (
     <div className={`relative ${className}`}>
       {/* Waveform container */}
-      <div className="relative bg-neutral-900 rounded-xl p-4 border border-neutral-800">
+      <div className={`relative rounded-xl p-4 ${
+        isGlass
+          ? 'bg-black/30 backdrop-blur-xl border border-white/10'
+          : 'bg-neutral-900 border border-neutral-800'
+      }`}>
         {/* Comment count badge */}
         <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-neutral-800/80 rounded-full text-xs text-neutral-400">
           <MessageCircle className="w-3 h-3" />
