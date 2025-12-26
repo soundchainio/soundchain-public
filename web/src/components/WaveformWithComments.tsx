@@ -128,7 +128,137 @@ const CommentMarker = ({
   </div>
 )
 
-// Active comment popup that shows ALL comments at the same timestamp
+// Single confetti comment that erupts outward
+const ConfettiComment = ({
+  comment,
+  index,
+  total,
+  onDismiss,
+}: {
+  comment: TrackComment
+  index: number
+  total: number
+  onDismiss: () => void
+}) => {
+  const [isVisible, setIsVisible] = useState(false)
+  const [isFading, setIsFading] = useState(false)
+
+  // Generate random trajectory for this comment
+  const trajectory = useMemo(() => {
+    // Spread comments in a fan pattern upward
+    const baseAngle = -90 // Start pointing up
+    const spreadAngle = Math.min(120, total * 30) // Wider spread for more comments
+    const angleStep = total > 1 ? spreadAngle / (total - 1) : 0
+    const angle = baseAngle - spreadAngle / 2 + angleStep * index
+
+    // Random variations
+    const distance = 150 + Math.random() * 100 // 150-250px
+    const rotation = (Math.random() - 0.5) * 30 // -15 to 15 degrees
+    const delay = index * 50 // Stagger the eruption
+
+    // Convert angle to x,y
+    const radians = (angle * Math.PI) / 180
+    const x = Math.cos(radians) * distance
+    const y = Math.sin(radians) * distance
+
+    return { x, y, rotation, delay }
+  }, [index, total])
+
+  useEffect(() => {
+    // Stagger the animation start
+    const showTimer = setTimeout(() => {
+      setIsVisible(true)
+    }, trajectory.delay)
+
+    // Start fading after 4 seconds
+    const fadeTimer = setTimeout(() => {
+      setIsFading(true)
+    }, 4000 + trajectory.delay)
+
+    return () => {
+      clearTimeout(showTimer)
+      clearTimeout(fadeTimer)
+    }
+  }, [trajectory.delay])
+
+  // Neon colors for variety
+  const neonColors = ['#00FFD1', '#00D4FF', '#A855F7', '#FF00FF', '#FF006E']
+  const borderColor = neonColors[index % neonColors.length]
+
+  return (
+    <div
+      className={`absolute pointer-events-auto cursor-pointer transition-all duration-700 ease-out ${
+        isFading ? 'opacity-0 scale-75' : isVisible ? 'opacity-100' : 'opacity-0 scale-50'
+      }`}
+      style={{
+        transform: isVisible
+          ? `translate(${trajectory.x}px, ${trajectory.y}px) rotate(${trajectory.rotation}deg)`
+          : 'translate(0, 0) scale(0.5)',
+        transitionDelay: `${trajectory.delay}ms`,
+        zIndex: 30 + index,
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+        onDismiss()
+      }}
+    >
+      <div
+        className="relative bg-neutral-900/95 backdrop-blur-xl rounded-2xl p-2.5 shadow-2xl min-w-[180px] max-w-[220px]"
+        style={{
+          border: `2px solid ${borderColor}`,
+          boxShadow: `0 0 20px ${borderColor}40, 0 0 40px ${borderColor}20`,
+        }}
+      >
+        {/* Glow effect */}
+        <div
+          className="absolute inset-0 rounded-2xl blur-xl -z-10 opacity-30"
+          style={{ background: borderColor }}
+        />
+
+        {/* User info row */}
+        <div className="flex items-center gap-2 mb-1">
+          <div
+            className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
+            style={{ boxShadow: `0 0 10px ${borderColor}` }}
+          >
+            {comment.profile.profilePicture ? (
+              <img src={comment.profile.profilePicture} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                {comment.profile.displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-semibold truncate">{comment.profile.displayName}</p>
+            <p className="text-[10px] truncate" style={{ color: borderColor }}>@{comment.profile.userHandle}</p>
+          </div>
+          {comment.likeCount > 0 && (
+            <div className="flex items-center gap-0.5 text-pink-400 text-[10px]">
+              <Heart className="w-3 h-3 fill-current" />
+              <span>{comment.likeCount}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Comment text with emote rendering */}
+        <div className="text-white text-sm leading-snug">
+          <EmoteRenderer text={comment.text} linkify />
+        </div>
+
+        {/* Timestamp badge */}
+        <div
+          className="absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-black"
+          style={{ background: borderColor }}
+        >
+          {formatTime(comment.timestamp)}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Container for confetti comments that erupt from a position
 const ActiveCommentPopup = ({
   comments,
   position,
@@ -140,98 +270,31 @@ const ActiveCommentPopup = ({
   timestamp: number
   onDismiss: () => void
 }) => {
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    // Trigger animation on mount
-    requestAnimationFrame(() => setIsVisible(true))
-  }, [])
-
-  const isSingleComment = comments.length === 1
-
   return (
     <div
-      className={`absolute z-20 transition-all duration-500 ease-out pointer-events-auto ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}
+      className="absolute z-20 pointer-events-none"
       style={{
-        left: `${Math.min(85, Math.max(15, position))}%`,
+        left: `${Math.min(90, Math.max(10, position))}%`,
         bottom: '100%',
-        marginBottom: '16px',
         transform: 'translateX(-50%)',
       }}
-      onClick={onDismiss}
     >
-      <div className="relative bg-neutral-900/95 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-2xl shadow-cyan-500/20 min-w-[240px] max-w-[320px] cursor-pointer hover:border-cyan-400/50 transition-colors overflow-hidden">
-        {/* Glow effect */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 blur-xl -z-10" />
-
-        {/* Neon border pulse */}
-        <div className="absolute inset-0 rounded-2xl border border-cyan-400/50 animate-pulse pointer-events-none" />
-
-        {/* Header showing timestamp and comment count */}
-        <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-700/50 bg-neutral-800/50">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-cyan-400 text-xs font-medium">{formatTime(timestamp)}</span>
-          </div>
-          {!isSingleComment && (
-            <span className="text-neutral-400 text-[10px] bg-neutral-700/50 px-2 py-0.5 rounded-full">
-              {comments.length} comments
-            </span>
-          )}
-        </div>
-
-        {/* Comments list - scrollable if many */}
-        <div className={`${comments.length > 3 ? 'max-h-[280px] overflow-y-auto' : ''} divide-y divide-neutral-700/30`}>
-          {comments.map((comment, idx) => (
-            <div
-              key={comment.id}
-              className={`p-3 ${idx === 0 ? '' : ''} hover:bg-neutral-800/30 transition-colors`}
-              style={{
-                animationDelay: `${idx * 100}ms`,
-              }}
-            >
-              {/* User info row */}
-              <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-7 h-7 rounded-full overflow-hidden ring-2 ring-cyan-400/30 flex-shrink-0">
-                  {comment.profile.profilePicture ? (
-                    <img src={comment.profile.profilePicture} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white text-[10px] font-bold">
-                      {comment.profile.displayName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-xs font-semibold truncate">{comment.profile.displayName}</p>
-                  <p className="text-neutral-500 text-[10px]">@{comment.profile.userHandle}</p>
-                </div>
-                {comment.likeCount > 0 && (
-                  <div className="flex items-center gap-0.5 text-pink-400 text-[10px]">
-                    <Heart className="w-2.5 h-2.5 fill-current" />
-                    <span>{comment.likeCount}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Comment text with emote rendering */}
-              <div className="text-white text-sm leading-relaxed pl-9">
-                <EmoteRenderer text={comment.text} linkify />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Connection line to waveform */}
-        <div
-          className="absolute left-1/2 -bottom-6 w-[2px] h-6 -translate-x-1/2"
-          style={{
-            background: 'linear-gradient(180deg, #00FFD1, transparent)',
-          }}
-        />
-        <div className="absolute left-1/2 -bottom-2 w-2 h-2 -translate-x-1/2 rounded-full bg-cyan-400 animate-ping" />
+      {/* Explosion origin burst effect */}
+      <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
+        <div className="w-4 h-4 rounded-full bg-cyan-400 animate-ping" />
+        <div className="absolute inset-0 w-4 h-4 rounded-full bg-white animate-pulse" />
       </div>
+
+      {/* Confetti comments */}
+      {comments.map((comment, idx) => (
+        <ConfettiComment
+          key={comment.id}
+          comment={comment}
+          index={idx}
+          total={comments.length}
+          onDismiss={() => onDismiss()}
+        />
+      ))}
     </div>
   )
 }
