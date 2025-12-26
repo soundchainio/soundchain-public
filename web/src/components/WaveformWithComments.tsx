@@ -261,51 +261,61 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
           <span>{comments.length}</span>
         </div>
 
-        {/* DAW-Style Waveform - Vertical bars from center like audio editors */}
+        {/* Futuristic Web3 Waveform */}
         <div
           ref={waveformRef}
-          className="relative h-20 cursor-pointer"
+          className="relative h-24 cursor-pointer"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect()
             const relativeX = (e.clientX - rect.left) / rect.width
             const clickTime = relativeX * duration
             if (onSeek) onSeek(clickTime)
-            // Also trigger comment input if logged in
             if (me) {
               setCommentTimestamp(clickTime)
               setShowCommentInput(true)
             }
           }}
         >
-          {/* Waveform bars - vertical lines from center going up AND down */}
-          <div className="absolute inset-0 flex items-center">
+          {/* Glow backdrop for played section */}
+          <div
+            className="absolute inset-y-0 left-0 pointer-events-none opacity-30"
+            style={{
+              width: `${progressPercent}%`,
+              background: 'linear-gradient(90deg, #26D1A8 0%, #62AAFF 30%, #AC4EFD 60%, #F1419E 100%)',
+              filter: 'blur(20px)',
+            }}
+          />
+
+          {/* Waveform bars */}
+          <div className="absolute inset-0 flex items-center gap-[1px]">
             {waveformBars.map((amplitude, idx) => {
               const barProgress = (idx / waveformBars.length) * 100
               const isPlayed = barProgress <= progressPercent
-              const heightPercent = amplitude * 100
+              const heightPercent = Math.max(8, amplitude * 100)
 
-              // Calculate color position in gradient for this bar
+              // Neon gradient colors
               const gradientPos = idx / waveformBars.length
-              const getGradientColor = (pos: number) => {
-                if (pos < 0.25) return '#26D1A8'
-                if (pos < 0.5) return '#62AAFF'
-                if (pos < 0.75) return '#AC4EFD'
-                return '#F1419E'
+              const getNeonColor = (pos: number) => {
+                if (pos < 0.2) return '#00FFD1'
+                if (pos < 0.4) return '#00D4FF'
+                if (pos < 0.6) return '#A855F7'
+                if (pos < 0.8) return '#FF00FF'
+                return '#FF006E'
               }
+
+              const barColor = isPlayed ? getNeonColor(gradientPos) : (isGlass ? 'rgba(255,255,255,0.15)' : '#2a2a2a')
 
               return (
                 <div
                   key={idx}
-                  className="flex-1 flex flex-col items-center justify-center h-full"
+                  className="flex-1 flex items-center justify-center h-full"
                 >
-                  {/* Single bar extending both up and down from center */}
                   <div
-                    className="w-[2px] rounded-full"
+                    className="w-[3px] rounded-full"
                     style={{
                       height: `${heightPercent}%`,
-                      backgroundColor: isPlayed
-                        ? getGradientColor(gradientPos)
-                        : isGlass ? 'rgba(255,255,255,0.3)' : '#555',
+                      backgroundColor: barColor,
+                      boxShadow: isPlayed ? `0 0 8px ${barColor}, 0 0 16px ${barColor}40` : 'none',
                     }}
                   />
                 </div>
@@ -313,15 +323,25 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             })}
           </div>
 
-          {/* Playhead cursor - smooth transition */}
+          {/* Animated Playhead - CSS animation for smooth movement */}
           <div
-            className="absolute top-0 bottom-0 w-[2px] bg-white pointer-events-none"
+            className="absolute top-0 bottom-0 w-[3px] pointer-events-none"
             style={{
               left: `${progressPercent}%`,
-              transition: 'left 0.15s linear',
-              boxShadow: '0 0 6px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.5)',
+              background: 'linear-gradient(180deg, #00FFD1 0%, #fff 50%, #FF00FF 100%)',
+              boxShadow: '0 0 10px #fff, 0 0 20px #00FFD1, 0 0 30px #FF00FF, 0 0 40px #fff',
+              transition: isPlaying ? 'left 1s linear' : 'left 0.1s ease-out',
             }}
-          />
+          >
+            {/* Playhead glow pulse */}
+            <div
+              className="absolute inset-0 animate-pulse"
+              style={{
+                background: 'linear-gradient(180deg, #00FFD1 0%, #fff 50%, #FF00FF 100%)',
+                filter: 'blur(4px)',
+              }}
+            />
+          </div>
         </div>
 
         {/* Comment markers */}
