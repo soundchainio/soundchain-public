@@ -261,10 +261,10 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
           <span>{comments.length}</span>
         </div>
 
-        {/* DAW-Style Waveform Visualization with Mirror Reflection */}
+        {/* Mono Waveform Visualization - Single Wave */}
         <div
           ref={waveformRef}
-          className="relative h-24 cursor-pointer"
+          className="relative h-20 cursor-pointer"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect()
             const relativeX = (e.clientX - rect.left) / rect.width
@@ -277,45 +277,24 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             }
           }}
         >
-          {/* Center line */}
-          <div className={`absolute left-0 right-0 top-1/2 h-[1px] ${isGlass ? 'bg-white/20' : 'bg-neutral-700'}`} />
-
-          {/* Waveform bars container */}
-          <div className="absolute inset-0 flex items-center gap-[1px]">
+          {/* Waveform bars - mono style from bottom */}
+          <div className="absolute inset-0 flex items-end gap-[1px]">
             {waveformBars.map((height, idx) => {
               const barProgress = (idx / waveformBars.length) * 100
               const isPlayed = barProgress <= progressPercent
-              const barHeight = height * 100
 
               return (
                 <div
                   key={idx}
-                  className="flex-1 flex flex-col items-center justify-center"
-                  style={{ height: '100%' }}
-                >
-                  {/* Top half (mirror) */}
-                  <div
-                    className="w-full rounded-t-[1px] transition-all duration-75"
-                    style={{
-                      height: `${barHeight / 2}%`,
-                      background: isPlayed
-                        ? 'linear-gradient(0deg, #26D1A8 0%, #62AAFF 40%, #AC4EFD 70%, #F1419E 100%)'
-                        : isGlass ? 'rgba(255,255,255,0.25)' : '#444',
-                      boxShadow: isPlayed ? '0 0 4px rgba(98, 170, 255, 0.3)' : 'none',
-                    }}
-                  />
-                  {/* Bottom half (reflection) */}
-                  <div
-                    className="w-full rounded-b-[1px] transition-all duration-75"
-                    style={{
-                      height: `${barHeight / 2}%`,
-                      background: isPlayed
-                        ? 'linear-gradient(180deg, #26D1A8 0%, #62AAFF 40%, #AC4EFD 70%, #F1419E 100%)'
-                        : isGlass ? 'rgba(255,255,255,0.15)' : '#333',
-                      opacity: 0.7,
-                    }}
-                  />
-                </div>
+                  className="flex-1 rounded-t-sm transition-all duration-75"
+                  style={{
+                    height: `${height * 100}%`,
+                    background: isPlayed
+                      ? 'linear-gradient(0deg, #26D1A8 0%, #62AAFF 30%, #AC4EFD 60%, #F1419E 85%, #FED503 100%)'
+                      : isGlass ? 'rgba(255,255,255,0.2)' : '#444',
+                    boxShadow: isPlayed ? '0 0 6px rgba(98, 170, 255, 0.4)' : 'none',
+                  }}
+                />
               )
             })}
           </div>
@@ -328,13 +307,12 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               boxShadow: '0 0 8px rgba(255,255,255,0.8), 0 0 16px rgba(98,170,255,0.5)',
             }}
           >
-            {/* Playhead handle */}
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg" />
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg" />
+            {/* Playhead handle at top */}
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-lg" />
           </div>
 
           {/* Hover effect overlay */}
-          <div className="absolute inset-0 bg-white/0 hover:bg-white/5 transition-colors duration-200 rounded" />
+          <div className="absolute inset-0 bg-white/0 hover:bg-white/5 transition-colors duration-200 rounded pointer-events-none" />
         </div>
 
         {/* Comment markers */}
