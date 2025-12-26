@@ -10,7 +10,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { MessageCircle, Send, X, Heart, Sparkles } from 'lucide-react'
+import { MessageCircle, Send, X, Heart, Sparkles, Link2 } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useMe } from 'hooks/useMe'
 import { formatDistanceToNow } from 'date-fns'
@@ -38,7 +38,7 @@ interface WaveformWithCommentsProps {
   audioUrl: string
   duration: number
   comments?: TrackComment[]
-  onAddComment?: (text: string, timestamp: number) => Promise<void>
+  onAddComment?: (text: string, timestamp: number, embedUrl?: string) => Promise<void>
   onLikeComment?: (commentId: string) => Promise<void>
   isPlaying?: boolean
   currentTime?: number
@@ -158,9 +158,11 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [commentTimestamp, setCommentTimestamp] = useState(0)
   const [commentText, setCommentText] = useState('')
   const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
+  const [embedUrl, setEmbedUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
   const [showStickerPicker, setShowStickerPicker] = useState(false)
+  const [showEmbedInput, setShowEmbedInput] = useState(false)
 
 
   // Generate vertical bar waveform data (amplitude for each bar)
@@ -218,7 +220,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
 
   // Submit comment
   const handleSubmitComment = async () => {
-    const hasContent = commentText.trim() || selectedStickers.length > 0
+    const hasContent = commentText.trim() || selectedStickers.length > 0 || embedUrl.trim()
     if (!hasContent || !onAddComment || isSubmitting) return
 
     setIsSubmitting(true)
@@ -229,11 +231,13 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
         .join(' ')
       const finalComment = [commentText.trim(), stickerMarkdown].filter(Boolean).join(' ')
 
-      await onAddComment(finalComment, commentTimestamp)
+      await onAddComment(finalComment, commentTimestamp, embedUrl.trim() || undefined)
       setCommentText('')
       setSelectedStickers([])
+      setEmbedUrl('')
       setShowCommentInput(false)
       setShowStickerPicker(false)
+      setShowEmbedInput(false)
     } catch (error) {
       console.error('Failed to add comment:', error)
     } finally {
@@ -394,8 +398,10 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => {
             setShowCommentInput(false)
             setShowStickerPicker(false)
+            setShowEmbedInput(false)
             setSelectedStickers([])
             setCommentText('')
+            setEmbedUrl('')
           }} />
           <div className="relative bg-neutral-900 border border-neutral-700 rounded-2xl p-3 sm:p-4 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[95vh] overflow-y-auto my-auto">
             {/* Header */}
@@ -408,8 +414,10 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                 onClick={() => {
                   setShowCommentInput(false)
                   setShowStickerPicker(false)
+                  setShowEmbedInput(false)
                   setSelectedStickers([])
                   setCommentText('')
+                  setEmbedUrl('')
                 }}
                 className="p-1 hover:bg-neutral-800 rounded-full transition-colors"
               >
@@ -489,26 +497,78 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               </button>
             </div>
 
-            {/* Sticker bar and character count */}
-            <div className="flex items-center justify-between mt-3">
-              {/* Sticker button */}
-              <button
-                onClick={() => setShowStickerPicker(!showStickerPicker)}
-                className={`p-2 rounded-lg transition-all flex items-center gap-2 ${
-                  showStickerPicker
-                    ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 ring-2 ring-cyan-400'
-                    : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
-                }`}
-                title="Add stickers (7TV, BTTV, FFZ)"
-              >
-                <Sparkles className="w-5 h-5" />
-                <span className="text-sm font-medium">Add Stickers</span>
-              </button>
+            {/* Action bar: Stickers, Embed, and character count */}
+            <div className="flex items-center justify-between mt-3 gap-2">
+              <div className="flex items-center gap-2">
+                {/* Sticker button */}
+                <button
+                  onClick={() => {
+                    setShowStickerPicker(!showStickerPicker)
+                    setShowEmbedInput(false)
+                  }}
+                  className={`p-2 rounded-lg transition-all flex items-center gap-1 ${
+                    showStickerPicker
+                      ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 ring-2 ring-cyan-400'
+                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                  }`}
+                  title="Add stickers (7TV, BTTV, FFZ)"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Stickers</span>
+                </button>
+
+                {/* Embed URL button */}
+                <button
+                  onClick={() => {
+                    setShowEmbedInput(!showEmbedInput)
+                    setShowStickerPicker(false)
+                  }}
+                  className={`p-2 rounded-lg transition-all flex items-center gap-1 ${
+                    showEmbedInput || embedUrl
+                      ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 ring-2 ring-purple-400'
+                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                  }`}
+                  title="Add embed URL (YouTube, Spotify, SoundCloud)"
+                >
+                  <Link2 className="w-4 h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Embed</span>
+                </button>
+              </div>
 
               <span className={`text-xs ${(commentText.length + selectedStickers.length) > 240 ? 'text-amber-400' : 'text-neutral-500'}`}>
                 {commentText.length + selectedStickers.length}/280
               </span>
             </div>
+
+            {/* Embed URL Input */}
+            {showEmbedInput && (
+              <div className="mt-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="bg-neutral-800 rounded-xl p-3 border border-neutral-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Link2 className="w-4 h-4 text-purple-400" />
+                    <span className="text-xs text-neutral-400">Embed URL (YouTube, Spotify, SoundCloud, etc.)</span>
+                  </div>
+                  <input
+                    type="url"
+                    value={embedUrl}
+                    onChange={(e) => setEmbedUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-neutral-900 border border-neutral-600 rounded-lg px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-purple-500 transition-colors"
+                  />
+                  {embedUrl && (
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-xs text-green-400">URL attached</span>
+                      <button
+                        onClick={() => setEmbedUrl('')}
+                        className="text-xs text-red-400 hover:text-red-300"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Sticker Picker - 7TV, BTTV, FFZ emotes - stays open for flurry blasts */}
             {showStickerPicker && (
