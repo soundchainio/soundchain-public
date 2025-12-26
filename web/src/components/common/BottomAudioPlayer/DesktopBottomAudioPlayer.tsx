@@ -130,7 +130,8 @@ const Container = tw.div`
   left-0
   right-0
   z-50
-  flex
+  hidden
+  md:flex
   justify-between
   items-center
   bg-neutral-900

@@ -8,14 +8,43 @@ interface ModalProps {
   leftButton?: JSX.Element
   rightButton?: JSX.Element
   onClose: (open: boolean) => void
+  fullScreen?: boolean
 }
 
-export const Modal = ({ show, children, title, leftButton, rightButton, onClose }: ModalProps) => {
+export const Modal = ({ show, children, title, leftButton, rightButton, onClose, fullScreen }: ModalProps) => {
   const ref = useRef(null)
   
   // Safety check - don't render if show is undefined or false
   if (!show) return null
   
+  // Fullscreen mode - no header, no rounded corners, just the content
+  if (fullScreen) {
+    return (
+      <Transition appear show={show} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-[100]"
+          onClose={onClose}
+          initialFocus={ref}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="transition ease-in-out duration-300 transform"
+            enterFrom="translate-y-full opacity-0"
+            enterTo="translate-y-0 opacity-100"
+            leave="transition ease-in-out duration-300 transform"
+            leaveFrom="translate-y-0 opacity-100"
+            leaveTo="translate-y-full opacity-0"
+          >
+            <div className="fixed inset-0" ref={ref}>
+              {children}
+            </div>
+          </Transition.Child>
+        </Dialog>
+      </Transition>
+    )
+  }
+
   return (
     <Transition appear show={show} as={Fragment}>
       <Dialog

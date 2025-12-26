@@ -81,6 +81,7 @@ const CreateModal = dynamic(() => import('components/modals/CreateModal'), { ssr
 const PostModal = dynamic(() => import('components/Post/PostModal').then(mod => ({ default: mod.PostModal })), { ssr: false })
 const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActionsModal').then(mod => ({ default: mod.AuthorActionsModal })), { ssr: false })
 const CommentModal = dynamic(() => import('components/Comment/CommentModal'), { ssr: false })
+const AudioPlayerModal = dynamic(() => import('components/modals/AudioPlayerModal'), { ssr: false })
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
 const Tracks = dynamic(() => import('components/profile/Tracks').then(mod => ({ default: mod.Tracks })), { ssr: false })
 const GuestPostModal = dynamic(() => import('components/Post/GuestPostModal').then(mod => ({ default: mod.GuestPostModal })), { ssr: false })
@@ -4944,6 +4945,8 @@ DEXDashboard.getLayout = (page: ReactElement) => {
                   <AuthorActionsModal />
                   {/* Comment Modal */}
                   <CommentModal />
+                  {/* Audio Player Fullscreen Modal */}
+                  <AudioPlayerModal />
                 </div>
               </TrackProvider>
             </AudioPlayerProvider>
