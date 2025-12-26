@@ -16,6 +16,7 @@ import { Playlists } from 'icons/Playlists'
 import { Rewind } from 'icons/RewindButton'
 import { Shuffle } from 'icons/Shuffle'
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql'
+import { useTrackComments } from 'hooks/useTrackComments'
 import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
@@ -98,6 +99,11 @@ export const AudioPlayerModal = () => {
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true)
   const [isMobile, setIsMobile] = useState(true)
   const me = useMe()
+
+  // Track comments for waveform
+  const { comments, addComment, likeComment } = useTrackComments({
+    trackId: currentSong.trackId,
+  })
 
   const isOpen = modalState.showAudioPlayer
   const shouldStartFullscreen = modalState.audioPlayerFullscreen
@@ -216,7 +222,9 @@ export const AudioPlayerModal = () => {
                   trackId={currentSong.trackId}
                   audioUrl={currentSong.src}
                   duration={duration || 180}
-                  comments={[]}
+                  comments={comments}
+                  onAddComment={addComment}
+                  onLikeComment={likeComment}
                   isPlaying={isPlaying}
                   currentTime={progress}
                   onSeek={onSliderChange}
