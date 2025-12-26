@@ -157,16 +157,33 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
 
 
-  // Generate static waveform bars (pseudo-random based on trackId for consistency)
+  // Generate DAW-style waveform bars (realistic audio waveform shape)
   const waveformBars = useMemo(() => {
     const bars: number[] = []
-    const numBars = 100
+    const numBars = 150 // More bars for smoother look
     // Use trackId as seed for consistent waveform per track
     let seed = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+
+    // Create more realistic audio waveform with peaks, valleys, and natural variation
     for (let i = 0; i < numBars; i++) {
-      // Pseudo-random height between 0.2 and 1.0
       seed = (seed * 9301 + 49297) % 233280
-      const height = 0.2 + (seed / 233280) * 0.8
+      const random = seed / 233280
+
+      // Create natural audio envelope with multiple frequency components
+      const position = i / numBars
+      const lowFreq = Math.sin(position * Math.PI * 2 * 3) * 0.3
+      const midFreq = Math.sin(position * Math.PI * 2 * 7 + seed) * 0.25
+      const highFreq = Math.sin(position * Math.PI * 2 * 13 + seed * 2) * 0.15
+
+      // Combine frequencies with random variation for realistic look
+      const base = 0.15 + Math.abs(lowFreq + midFreq + highFreq)
+      const variation = random * 0.4
+
+      // Add occasional peaks (like transients in audio)
+      const isPeak = random > 0.85
+      const peakBoost = isPeak ? 0.3 : 0
+
+      const height = Math.min(1, Math.max(0.08, base + variation + peakBoost))
       bars.push(height)
     }
     return bars
@@ -244,38 +261,80 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
           <span>{comments.length}</span>
         </div>
 
-        {/* Waveform Visualization */}
+        {/* DAW-Style Waveform Visualization with Mirror Reflection */}
         <div
           ref={waveformRef}
-          className="relative h-20 cursor-pointer flex items-end gap-[2px]"
+          className="relative h-24 cursor-pointer"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect()
             const relativeX = (e.clientX - rect.left) / rect.width
             const clickTime = relativeX * duration
             if (onSeek) onSeek(clickTime)
+            // Also trigger comment input if logged in
+            if (me) {
+              setCommentTimestamp(clickTime)
+              setShowCommentInput(true)
+            }
           }}
         >
-          {waveformBars.map((height, idx) => {
-            const barProgress = (idx / waveformBars.length) * 100
-            const isPlayed = barProgress <= progressPercent
-            return (
-              <div
-                key={idx}
-                className="flex-1 rounded-sm transition-colors duration-150"
-                style={{
-                  height: `${height * 100}%`,
-                  background: isPlayed
-                    ? `linear-gradient(180deg, #26D1A8 0%, #62AAFF 25%, #AC4EFD 50%, #F1419E 75%, #FED503 100%)`
-                    : isGlass ? 'rgba(255,255,255,0.2)' : '#333',
-                }}
-              />
-            )
-          })}
-          {/* Progress cursor line */}
+          {/* Center line */}
+          <div className={`absolute left-0 right-0 top-1/2 h-[1px] ${isGlass ? 'bg-white/20' : 'bg-neutral-700'}`} />
+
+          {/* Waveform bars container */}
+          <div className="absolute inset-0 flex items-center gap-[1px]">
+            {waveformBars.map((height, idx) => {
+              const barProgress = (idx / waveformBars.length) * 100
+              const isPlayed = barProgress <= progressPercent
+              const barHeight = height * 100
+
+              return (
+                <div
+                  key={idx}
+                  className="flex-1 flex flex-col items-center justify-center"
+                  style={{ height: '100%' }}
+                >
+                  {/* Top half (mirror) */}
+                  <div
+                    className="w-full rounded-t-[1px] transition-all duration-75"
+                    style={{
+                      height: `${barHeight / 2}%`,
+                      background: isPlayed
+                        ? 'linear-gradient(0deg, #26D1A8 0%, #62AAFF 40%, #AC4EFD 70%, #F1419E 100%)'
+                        : isGlass ? 'rgba(255,255,255,0.25)' : '#444',
+                      boxShadow: isPlayed ? '0 0 4px rgba(98, 170, 255, 0.3)' : 'none',
+                    }}
+                  />
+                  {/* Bottom half (reflection) */}
+                  <div
+                    className="w-full rounded-b-[1px] transition-all duration-75"
+                    style={{
+                      height: `${barHeight / 2}%`,
+                      background: isPlayed
+                        ? 'linear-gradient(180deg, #26D1A8 0%, #62AAFF 40%, #AC4EFD 70%, #F1419E 100%)'
+                        : isGlass ? 'rgba(255,255,255,0.15)' : '#333',
+                      opacity: 0.7,
+                    }}
+                  />
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Playhead cursor */}
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg shadow-white/50 transition-all duration-100"
-            style={{ left: `${progressPercent}%` }}
-          />
+            className="absolute top-0 bottom-0 w-[2px] bg-white rounded-full transition-all duration-75 pointer-events-none"
+            style={{
+              left: `${progressPercent}%`,
+              boxShadow: '0 0 8px rgba(255,255,255,0.8), 0 0 16px rgba(98,170,255,0.5)',
+            }}
+          >
+            {/* Playhead handle */}
+            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg" />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg" />
+          </div>
+
+          {/* Hover effect overlay */}
+          <div className="absolute inset-0 bg-white/0 hover:bg-white/5 transition-colors duration-200 rounded" />
         </div>
 
         {/* Comment markers */}
