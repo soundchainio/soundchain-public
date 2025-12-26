@@ -157,36 +157,36 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
 
 
-  // Generate DAW-style waveform bars (realistic audio waveform shape)
-  const waveformBars = useMemo(() => {
-    const bars: number[] = []
-    const numBars = 150 // More bars for smoother look
-    // Use trackId as seed for consistent waveform per track
+  // Generate DAW-style waveform data (realistic audio oscillation)
+  const waveformData = useMemo(() => {
+    const points: number[] = []
+    const numPoints = 200
     let seed = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
 
-    // Create more realistic audio waveform with peaks, valleys, and natural variation
-    for (let i = 0; i < numBars; i++) {
+    for (let i = 0; i < numPoints; i++) {
       seed = (seed * 9301 + 49297) % 233280
       const random = seed / 233280
+      const position = i / numPoints
 
-      // Create natural audio envelope with multiple frequency components
-      const position = i / numBars
-      const lowFreq = Math.sin(position * Math.PI * 2 * 3) * 0.3
-      const midFreq = Math.sin(position * Math.PI * 2 * 7 + seed) * 0.25
-      const highFreq = Math.sin(position * Math.PI * 2 * 13 + seed * 2) * 0.15
+      // Multiple frequency components for realistic audio look
+      const wave1 = Math.sin(position * Math.PI * 8 + seed * 0.01) * 0.4
+      const wave2 = Math.sin(position * Math.PI * 17 + seed * 0.02) * 0.25
+      const wave3 = Math.sin(position * Math.PI * 31 + seed * 0.03) * 0.15
+      const wave4 = Math.sin(position * Math.PI * 47 + seed * 0.04) * 0.1
 
-      // Combine frequencies with random variation for realistic look
-      const base = 0.15 + Math.abs(lowFreq + midFreq + highFreq)
-      const variation = random * 0.4
+      // Envelope shaping (louder in middle sections)
+      const envelope = 0.5 + Math.sin(position * Math.PI * 3) * 0.3 + random * 0.2
 
-      // Add occasional peaks (like transients in audio)
-      const isPeak = random > 0.85
-      const peakBoost = isPeak ? 0.3 : 0
+      // Combine waves with envelope
+      const amplitude = (wave1 + wave2 + wave3 + wave4) * envelope
 
-      const height = Math.min(1, Math.max(0.08, base + variation + peakBoost))
-      bars.push(height)
+      // Add transient spikes
+      const isTransient = random > 0.92
+      const transientBoost = isTransient ? (random - 0.92) * 5 : 0
+
+      points.push(Math.max(-1, Math.min(1, amplitude + (random > 0.5 ? transientBoost : -transientBoost))))
     }
-    return bars
+    return points
   }, [trackId])
 
   // Mark as ready immediately since we're using static waveform
@@ -261,10 +261,10 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
           <span>{comments.length}</span>
         </div>
 
-        {/* Mono Waveform Visualization - Single Wave */}
+        {/* DAW-Style Waveform - Continuous filled shape like audio editors */}
         <div
           ref={waveformRef}
-          className="relative h-20 cursor-pointer"
+          className="relative h-24 cursor-pointer"
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect()
             const relativeX = (e.clientX - rect.left) / rect.width
@@ -277,39 +277,72 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             }
           }}
         >
-          {/* Waveform bars - mono style from bottom */}
-          <div className="absolute inset-0 flex items-end gap-[1px]">
-            {waveformBars.map((height, idx) => {
-              const barProgress = (idx / waveformBars.length) * 100
-              const isPlayed = barProgress <= progressPercent
+          {/* SVG Waveform */}
+          <svg
+            className="absolute inset-0 w-full h-full"
+            viewBox="0 0 1000 100"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              {/* Gradient for played portion */}
+              <linearGradient id="playedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#26D1A8" />
+                <stop offset="25%" stopColor="#62AAFF" />
+                <stop offset="50%" stopColor="#AC4EFD" />
+                <stop offset="75%" stopColor="#F1419E" />
+                <stop offset="100%" stopColor="#FED503" />
+              </linearGradient>
+              {/* Clip path for played portion */}
+              <clipPath id="playedClip">
+                <rect x="0" y="0" width={progressPercent * 10} height="100" />
+              </clipPath>
+            </defs>
 
-              return (
-                <div
-                  key={idx}
-                  className="flex-1 rounded-t-sm transition-all duration-75"
-                  style={{
-                    height: `${height * 100}%`,
-                    background: isPlayed
-                      ? 'linear-gradient(0deg, #26D1A8 0%, #62AAFF 30%, #AC4EFD 60%, #F1419E 85%, #FED503 100%)'
-                      : isGlass ? 'rgba(255,255,255,0.2)' : '#444',
-                    boxShadow: isPlayed ? '0 0 6px rgba(98, 170, 255, 0.4)' : 'none',
-                  }}
-                />
-              )
-            })}
-          </div>
+            {/* Center line */}
+            <line
+              x1="0" y1="50" x2="1000" y2="50"
+              stroke={isGlass ? 'rgba(255,255,255,0.1)' : '#333'}
+              strokeWidth="1"
+            />
+
+            {/* Unplayed waveform (background) */}
+            <path
+              d={`M 0 50 ${waveformData.map((amp, i) => {
+                const x = (i / waveformData.length) * 1000
+                const y = 50 - amp * 45
+                return `L ${x} ${y}`
+              }).join(' ')} L 1000 50 L 1000 50 ${waveformData.slice().reverse().map((amp, i) => {
+                const x = 1000 - (i / waveformData.length) * 1000
+                const y = 50 + Math.abs(amp) * 45
+                return `L ${x} ${y}`
+              }).join(' ')} Z`}
+              fill={isGlass ? 'rgba(255,255,255,0.15)' : '#3a3a3a'}
+            />
+
+            {/* Played waveform (with gradient) */}
+            <path
+              d={`M 0 50 ${waveformData.map((amp, i) => {
+                const x = (i / waveformData.length) * 1000
+                const y = 50 - amp * 45
+                return `L ${x} ${y}`
+              }).join(' ')} L 1000 50 L 1000 50 ${waveformData.slice().reverse().map((amp, i) => {
+                const x = 1000 - (i / waveformData.length) * 1000
+                const y = 50 + Math.abs(amp) * 45
+                return `L ${x} ${y}`
+              }).join(' ')} Z`}
+              fill="url(#playedGradient)"
+              clipPath="url(#playedClip)"
+            />
+          </svg>
 
           {/* Playhead cursor */}
           <div
-            className="absolute top-0 bottom-0 w-[2px] bg-white rounded-full transition-all duration-75 pointer-events-none"
+            className="absolute top-0 bottom-0 w-[2px] bg-white rounded-full transition-all duration-100 pointer-events-none"
             style={{
               left: `${progressPercent}%`,
-              boxShadow: '0 0 8px rgba(255,255,255,0.8), 0 0 16px rgba(98,170,255,0.5)',
+              boxShadow: '0 0 8px rgba(255,255,255,0.9), 0 0 20px rgba(98,170,255,0.6)',
             }}
-          >
-            {/* Playhead handle at top */}
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-lg" />
-          </div>
+          />
 
           {/* Hover effect overlay */}
           <div className="absolute inset-0 bg-white/0 hover:bg-white/5 transition-colors duration-200 rounded pointer-events-none" />
