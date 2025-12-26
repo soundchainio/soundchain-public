@@ -21,7 +21,7 @@ interface AudioPlayerContextData {
   playlist: Song[]
   volume: number
   isFavorite: boolean
-  play: (song: Song) => void
+  play: (song: Song, fromPlaylist?: boolean) => void
   isCurrentSong: (trackId: string) => boolean
   isCurrentlyPlaying: (trackId: string) => boolean
   togglePlay: () => void
@@ -118,17 +118,23 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   }, [])
 
   const play = useCallback(
-    (song: Song) => {
+    (song: Song, fromPlaylist: boolean = false) => {
       if (currentSong.trackId !== song.trackId) {
         setProgressStateFromSlider(0)
         setIsPlaying(true)
         setCurrentSong(song)
         setIsFavorite(song.isFavorite as boolean)
+
+        // Enable shuffle by default when playing a single track (not from playlist)
+        // This ensures variety when playing standalone NFTs/tracks
+        if (!fromPlaylist && !playlist.some(p => p.trackId === song.trackId)) {
+          setIsShuffleOn(true)
+        }
       } else {
         togglePlay()
       }
     },
-    [currentSong, togglePlay, setProgressStateFromSlider],
+    [currentSong, togglePlay, setProgressStateFromSlider, playlist],
   )
 
   const isCurrentSong = useCallback(
@@ -150,7 +156,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       setIsShuffleOn(false)
       setPlaylist(list)
       setCurrentPlaylistIndex(index)
-      play(list[index])
+      play(list[index], true) // fromPlaylist = true, don't auto-enable shuffle
     },
     [play],
   )
