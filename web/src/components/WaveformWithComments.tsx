@@ -154,6 +154,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [commentTimestamp, setCommentTimestamp] = useState(0)
   const [commentText, setCommentText] = useState('')
+  const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
   const [showStickerPicker, setShowStickerPicker] = useState(false)
@@ -214,18 +215,32 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
 
   // Submit comment
   const handleSubmitComment = async () => {
-    if (!commentText.trim() || !onAddComment || isSubmitting) return
+    const hasContent = commentText.trim() || selectedStickers.length > 0
+    if (!hasContent || !onAddComment || isSubmitting) return
 
     setIsSubmitting(true)
     try {
-      await onAddComment(commentText.trim(), commentTimestamp)
+      // Combine text and sticker markdown
+      const stickerMarkdown = selectedStickers
+        .map(s => `![emote:${s.name}](${s.url})`)
+        .join(' ')
+      const finalComment = [commentText.trim(), stickerMarkdown].filter(Boolean).join(' ')
+
+      await onAddComment(finalComment, commentTimestamp)
       setCommentText('')
+      setSelectedStickers([])
       setShowCommentInput(false)
+      setShowStickerPicker(false)
     } catch (error) {
       console.error('Failed to add comment:', error)
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  // Remove a sticker from selection
+  const removeSticker = (index: number) => {
+    setSelectedStickers(prev => prev.filter((_, i) => i !== index))
   }
 
   // Group comments by similar timestamps for stacking
@@ -376,6 +391,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => {
             setShowCommentInput(false)
             setShowStickerPicker(false)
+            setSelectedStickers([])
+            setCommentText('')
           }} />
           <div className="relative bg-neutral-900 border border-neutral-700 rounded-2xl p-4 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
@@ -388,6 +405,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                 onClick={() => {
                   setShowCommentInput(false)
                   setShowStickerPicker(false)
+                  setSelectedStickers([])
+                  setCommentText('')
                 }}
                 className="p-1 hover:bg-neutral-800 rounded-full transition-colors"
               >
@@ -407,14 +426,45 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               />
             </div>
 
-            {/* Input with emoji/sticker bar */}
+            {/* Selected Stickers Preview - shows actual images */}
+            {selectedStickers.length > 0 && (
+              <div className="mb-3 p-3 bg-neutral-800/50 rounded-xl border border-neutral-700">
+                <div className="flex items-center gap-1 mb-2">
+                  <Sparkles className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs text-neutral-400">Selected Stickers ({selectedStickers.length})</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedStickers.map((sticker, idx) => (
+                    <div
+                      key={idx}
+                      className="relative group"
+                    >
+                      <img
+                        src={sticker.url}
+                        alt={sticker.name}
+                        className="w-12 h-12 object-contain rounded-lg bg-neutral-900/50 p-1"
+                        title={sticker.name}
+                      />
+                      <button
+                        onClick={() => removeSticker(idx)}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Text Input */}
             <div className="relative">
               <textarea
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value.slice(0, 280))}
-                placeholder="Write your comment... add emojis and stickers!"
+                onChange={(e) => setCommentText(e.target.value.slice(0, 200))}
+                placeholder="Add a message (optional)..."
                 className="w-full bg-neutral-800 border border-neutral-700 rounded-xl p-3 pr-12 text-white placeholder:text-neutral-500 resize-none focus:outline-none focus:border-cyan-500 transition-colors"
-                rows={3}
+                rows={2}
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -425,7 +475,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               />
               <button
                 onClick={handleSubmitComment}
-                disabled={!commentText.trim() || isSubmitting}
+                disabled={(!commentText.trim() && selectedStickers.length === 0) || isSubmitting}
                 className="absolute right-3 bottom-3 p-2 bg-cyan-500 hover:bg-cyan-600 disabled:bg-neutral-700 disabled:cursor-not-allowed rounded-lg transition-colors"
               >
                 {isSubmitting ? (
@@ -452,8 +502,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                 <span className="text-sm font-medium">Add Stickers</span>
               </button>
 
-              <span className={`text-xs ${commentText.length > 240 ? 'text-amber-400' : 'text-neutral-500'}`}>
-                {commentText.length}/280
+              <span className={`text-xs ${commentText.length > 160 ? 'text-amber-400' : 'text-neutral-500'}`}>
+                {commentText.length}/200
               </span>
             </div>
 
@@ -463,9 +513,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                 <StickerPicker
                   theme="dark"
                   onSelect={(stickerUrl, stickerName) => {
-                    // Keep picker open for rapid selection ("flurry blasts")
-                    const emoteMarkdown = `![emote:${stickerName}](${stickerUrl})`
-                    setCommentText(prev => prev + emoteMarkdown)
+                    // Add sticker to array - keeps picker open for rapid selection
+                    setSelectedStickers(prev => [...prev, { url: stickerUrl, name: stickerName }])
                   }}
                 />
               </div>
