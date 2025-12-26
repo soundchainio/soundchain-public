@@ -273,9 +273,9 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
                   className="w-8 h-8 object-contain"
                   loading="lazy"
                 />
-                {/* Animated indicator - static dot for performance */}
+                {/* Animated indicator */}
                 {emote.animated && (
-                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-cyan-400 rounded-full" />
+                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
                 )}
                 {/* Tooltip on hover */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/90 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">

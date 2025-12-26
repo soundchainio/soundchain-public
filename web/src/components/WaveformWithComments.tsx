@@ -9,55 +9,13 @@
  * - Real-time comment display while playing
  */
 
-import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { MessageCircle, Send, X, Heart, Sparkles, Link2 } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useMe } from 'hooks/useMe'
 import { formatDistanceToNow } from 'date-fns'
 import { StickerPicker } from './StickerPicker'
 import { EmoteRenderer } from './EmoteRenderer'
-
-// Memoized waveform bar for performance - prevents re-renders when other bars change
-const WaveformBar = memo(({
-  amplitude,
-  isPlayed,
-  color,
-  isGlass
-}: {
-  amplitude: number
-  isPlayed: boolean
-  color: string
-  isGlass: boolean
-}) => {
-  const heightPercent = Math.max(8, amplitude * 100)
-  const barColor = isPlayed ? color : (isGlass ? 'rgba(255,255,255,0.15)' : '#2a2a2a')
-
-  return (
-    <div className="flex-1 flex items-center justify-center h-full">
-      <div
-        className="w-[4px] rounded-full will-change-[background-color]"
-        style={{
-          height: `${heightPercent}%`,
-          backgroundColor: barColor,
-          // Simplified shadow for performance - only on played bars
-          boxShadow: isPlayed ? `0 0 6px ${barColor}` : 'none',
-        }}
-      />
-    </div>
-  )
-})
-WaveformBar.displayName = 'WaveformBar'
-
-// Pre-computed neon colors for each position segment
-const NEON_COLORS = ['#00FFD1', '#00D4FF', '#A855F7', '#FF00FF', '#FF006E']
-const getNeonColorForIndex = (idx: number, total: number): string => {
-  const pos = idx / total
-  if (pos < 0.2) return NEON_COLORS[0]
-  if (pos < 0.4) return NEON_COLORS[1]
-  if (pos < 0.6) return NEON_COLORS[2]
-  if (pos < 0.8) return NEON_COLORS[3]
-  return NEON_COLORS[4]
-}
 
 // Types
 interface TrackComment {
@@ -208,10 +166,9 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
 
 
   // Generate vertical bar waveform data (amplitude for each bar)
-  // Reduced from 250 to 150 for better performance on TV/slow devices
   const waveformBars = useMemo(() => {
     const bars: number[] = []
-    const numBars = 150 // Optimized for performance
+    const numBars = 250 // Dense bars like real DAW
     let seed = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
 
     for (let i = 0; i < numBars; i++) {
@@ -343,45 +300,72 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             }
           }}
         >
-          {/* Glow backdrop - simplified, no blur for performance */}
+          {/* Glow backdrop for played section */}
           <div
-            className="absolute inset-y-0 left-0 pointer-events-none opacity-20"
+            className="absolute inset-y-0 left-0 pointer-events-none opacity-30"
             style={{
               width: `${progressPercent}%`,
               background: 'linear-gradient(90deg, #26D1A8 0%, #62AAFF 30%, #AC4EFD 60%, #F1419E 100%)',
+              filter: 'blur(20px)',
             }}
           />
 
-          {/* Waveform bars - using memoized component for performance */}
+          {/* Waveform bars */}
           <div className="absolute inset-0 flex items-center gap-[1px]">
             {waveformBars.map((amplitude, idx) => {
               const barProgress = (idx / waveformBars.length) * 100
               const isPlayed = barProgress <= progressPercent
-              const color = getNeonColorForIndex(idx, waveformBars.length)
+              const heightPercent = Math.max(8, amplitude * 100)
+
+              // Neon gradient colors
+              const gradientPos = idx / waveformBars.length
+              const getNeonColor = (pos: number) => {
+                if (pos < 0.2) return '#00FFD1'
+                if (pos < 0.4) return '#00D4FF'
+                if (pos < 0.6) return '#A855F7'
+                if (pos < 0.8) return '#FF00FF'
+                return '#FF006E'
+              }
+
+              const barColor = isPlayed ? getNeonColor(gradientPos) : (isGlass ? 'rgba(255,255,255,0.15)' : '#2a2a2a')
 
               return (
-                <WaveformBar
+                <div
                   key={idx}
-                  amplitude={amplitude}
-                  isPlayed={isPlayed}
-                  color={color}
-                  isGlass={isGlass}
-                />
+                  className="flex-1 flex items-center justify-center h-full"
+                >
+                  <div
+                    className="w-[4px] rounded-full"
+                    style={{
+                      height: `${heightPercent}%`,
+                      backgroundColor: barColor,
+                      boxShadow: isPlayed ? `0 0 10px ${barColor}, 0 0 20px ${barColor}40` : 'none',
+                    }}
+                  />
+                </div>
               )
             })}
           </div>
 
-          {/* Playhead - optimized with GPU acceleration */}
+          {/* Animated Playhead - CSS animation for smooth movement */}
           <div
-            className="absolute top-0 bottom-0 w-[3px] pointer-events-none will-change-transform"
+            className="absolute top-0 bottom-0 w-[3px] pointer-events-none"
             style={{
               left: `${progressPercent}%`,
               background: 'linear-gradient(180deg, #00FFD1 0%, #fff 50%, #FF00FF 100%)',
-              boxShadow: '0 0 8px #fff, 0 0 12px #00FFD1',
+              boxShadow: '0 0 10px #fff, 0 0 20px #00FFD1, 0 0 30px #FF00FF, 0 0 40px #fff',
               transition: isPlaying ? 'left 1s linear' : 'left 0.1s ease-out',
             }}
           >
-            </div>
+            {/* Playhead glow pulse */}
+            <div
+              className="absolute inset-0 animate-pulse"
+              style={{
+                background: 'linear-gradient(180deg, #00FFD1 0%, #fff 50%, #FF00FF 100%)',
+                filter: 'blur(4px)',
+              }}
+            />
+          </div>
         </div>
 
         {/* Comment markers */}
