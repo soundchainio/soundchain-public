@@ -209,8 +209,8 @@ export const AudioPlayerModal = () => {
               </button>
             </div>
 
-            {/* SoundCloud-style Waveform with Comments */}
-            <div className="w-full max-w-[500px] mx-auto mb-4">
+            {/* SoundCloud-style Waveform with Comments - Full Width */}
+            <div className="w-full px-4 mb-4">
               {currentSong.src && (
                 <WaveformWithComments
                   trackId={currentSong.trackId}

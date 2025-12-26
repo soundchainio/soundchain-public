@@ -10,8 +10,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import type WaveSurferType from 'wavesurfer.js'
-import { MessageCircle, Send, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MessageCircle, Send, X, Heart } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useMe } from 'hooks/useMe'
 import { formatDistanceToNow } from 'date-fns'
@@ -147,7 +146,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   variant = 'default',
 }) => {
   const waveformRef = useRef<HTMLDivElement>(null)
-  const wavesurfer = useRef<WaveSurferType | null>(null)
   const me = useMe()
 
   const [isReady, setIsReady] = useState(false)
@@ -158,75 +156,29 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
 
-  // Build gradient for waveform
-  const buildWaveformGradient = useCallback(() => {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return '#62AAFF'
 
-    const gradient = ctx.createLinearGradient(0, 0, 500, 0)
-    gradient.addColorStop(0, '#26D1A8')    // Teal
-    gradient.addColorStop(0.25, '#62AAFF')  // Blue
-    gradient.addColorStop(0.5, '#AC4EFD')   // Purple
-    gradient.addColorStop(0.75, '#F1419E')  // Pink
-    gradient.addColorStop(1, '#FED503')     // Yellow
-    return gradient
+  // Generate static waveform bars (pseudo-random based on trackId for consistency)
+  const waveformBars = useMemo(() => {
+    const bars: number[] = []
+    const numBars = 100
+    // Use trackId as seed for consistent waveform per track
+    let seed = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    for (let i = 0; i < numBars; i++) {
+      // Pseudo-random height between 0.2 and 1.0
+      seed = (seed * 9301 + 49297) % 233280
+      const height = 0.2 + (seed / 233280) * 0.8
+      bars.push(height)
+    }
+    return bars
+  }, [trackId])
+
+  // Mark as ready immediately since we're using static waveform
+  useEffect(() => {
+    setIsReady(true)
   }, [])
 
-  // Initialize WaveSurfer (dynamic import for SSR compatibility)
-  useEffect(() => {
-    if (!waveformRef.current) return
-
-    let mounted = true
-
-    const initWaveSurfer = async () => {
-      // Dynamic import to avoid SSR issues
-      const WaveSurfer = (await import('wavesurfer.js')).default
-
-      if (!mounted || !waveformRef.current) return
-
-      wavesurfer.current = WaveSurfer.create({
-        container: waveformRef.current,
-        waveColor: '#333',
-        progressColor: buildWaveformGradient(),
-        cursorColor: '#62AAFF',
-        cursorWidth: 2,
-        barWidth: 2,
-        barGap: 1,
-        barRadius: 2,
-        height: 80,
-        normalize: true,
-        hideScrollbar: true,
-        interact: true,
-      })
-
-      wavesurfer.current.load(audioUrl)
-
-      wavesurfer.current.on('ready', () => {
-        if (mounted) setIsReady(true)
-      })
-
-      wavesurfer.current.on('click', (relativeX: number) => {
-        const clickTime = relativeX * duration
-        if (onSeek) onSeek(clickTime)
-      })
-    }
-
-    initWaveSurfer()
-
-    return () => {
-      mounted = false
-      wavesurfer.current?.destroy()
-    }
-  }, [audioUrl, duration, buildWaveformGradient, onSeek])
-
-  // Sync progress with external currentTime
-  useEffect(() => {
-    if (wavesurfer.current && isReady && duration > 0) {
-      const progress = currentTime / duration
-      wavesurfer.current.seekTo(Math.min(progress, 1))
-    }
-  }, [currentTime, duration, isReady])
+  // Calculate progress percentage
+  const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
 
   // Handle waveform click to add comment
   const handleWaveformClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -292,12 +244,39 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
           <span>{comments.length}</span>
         </div>
 
-        {/* Waveform */}
+        {/* Waveform Visualization */}
         <div
           ref={waveformRef}
-          className="relative cursor-pointer"
-          onClick={handleWaveformClick}
-        />
+          className="relative h-20 cursor-pointer flex items-end gap-[2px]"
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            const relativeX = (e.clientX - rect.left) / rect.width
+            const clickTime = relativeX * duration
+            if (onSeek) onSeek(clickTime)
+          }}
+        >
+          {waveformBars.map((height, idx) => {
+            const barProgress = (idx / waveformBars.length) * 100
+            const isPlayed = barProgress <= progressPercent
+            return (
+              <div
+                key={idx}
+                className="flex-1 rounded-sm transition-colors duration-150"
+                style={{
+                  height: `${height * 100}%`,
+                  background: isPlayed
+                    ? `linear-gradient(180deg, #26D1A8 0%, #62AAFF 25%, #AC4EFD 50%, #F1419E 75%, #FED503 100%)`
+                    : isGlass ? 'rgba(255,255,255,0.2)' : '#333',
+                }}
+              />
+            )
+          })}
+          {/* Progress cursor line */}
+          <div
+            className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg shadow-white/50 transition-all duration-100"
+            style={{ left: `${progressPercent}%` }}
+          />
+        </div>
 
         {/* Comment markers */}
         <div className="absolute left-4 right-4 bottom-4 h-8 pointer-events-auto">
@@ -321,12 +300,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
           <span>{formatTime(duration)}</span>
         </div>
 
-        {/* Loading overlay */}
-        {!isReady && (
-          <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/80 rounded-xl">
-            <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
-          </div>
-        )}
       </div>
 
       {/* Comment input popup */}
