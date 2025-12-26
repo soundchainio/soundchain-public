@@ -78,6 +78,7 @@ export class TrackCommentResolver {
     @Arg('text') text: string,
     @Arg('timestamp', () => Float) timestamp: number,
     @Arg('replyToId', { nullable: true }) replyToId?: string,
+    @Arg('embedUrl', { nullable: true }) embedUrl?: string,
   ): Promise<TrackComment> {
     return trackCommentService.createComment({
       trackId,
@@ -85,6 +86,7 @@ export class TrackCommentResolver {
       text,
       timestamp,
       replyToId,
+      embedUrl,
     });
   }
 

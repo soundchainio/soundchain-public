@@ -40,11 +40,19 @@ export class TrackComment extends Model {
   profileId: mongoose.Types.ObjectId;
 
   /**
-   * The comment text (max 140 chars like SoundCloud)
+   * The comment text (supports sticker markdown, URLs, etc.)
+   * Content limit is 280 chars where each sticker counts as 1
    */
   @Field(() => String)
-  @prop({ required: true, maxlength: 140 })
+  @prop({ required: true, maxlength: 10000 })
   text: string;
+
+  /**
+   * Optional embed URL (YouTube, Spotify, SoundCloud, etc.)
+   */
+  @Field(() => String, { nullable: true })
+  @prop({ maxlength: 2048 })
+  embedUrl?: string;
 
   /**
    * Timestamp in seconds where the comment is placed on the waveform

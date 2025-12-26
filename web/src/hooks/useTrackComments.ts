@@ -39,7 +39,7 @@ export function useTrackComments({ trackId, pageSize = 100 }: UseTrackCommentsOp
   const [deleteComment, { loading: deleting }] = useDeleteTrackCommentMutation()
 
   // Add a new comment
-  const addComment = useCallback(async (text: string, timestamp: number) => {
+  const addComment = useCallback(async (text: string, timestamp: number, embedUrl?: string) => {
     if (!me) {
       toast.error('Please login to comment')
       return
@@ -47,7 +47,7 @@ export function useTrackComments({ trackId, pageSize = 100 }: UseTrackCommentsOp
 
     try {
       await createComment({
-        variables: { trackId, text, timestamp },
+        variables: { trackId, text, timestamp, embedUrl: embedUrl || undefined },
         update: (cache, { data }) => {
           // Refetch to get updated list
           refetch()

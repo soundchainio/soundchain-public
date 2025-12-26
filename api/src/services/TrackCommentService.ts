@@ -46,6 +46,7 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
     text: string;
     timestamp: number;
     replyToId?: string;
+    embedUrl?: string;
   }): Promise<TrackComment> {
     // Count actual content length: each sticker counts as 1 char, text counts normally
     const stickerPattern = /!\[emote:[^\]]+\]\([^)]+\)/g;
@@ -67,6 +68,7 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
       text: params.text.trim(),
       timestamp: params.timestamp,
       replyToId: params.replyToId ? new mongoose.Types.ObjectId(params.replyToId) : undefined,
+      embedUrl: params.embedUrl?.trim() || undefined,
       likeCount: 0,
       isPinned: false,
       deleted: false,
