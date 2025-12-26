@@ -10,22 +10,11 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { MessageCircle, Send, X, Heart, Smile, Sparkles } from 'lucide-react'
+import { MessageCircle, Send, X, Heart, Sparkles } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useMe } from 'hooks/useMe'
 import { formatDistanceToNow } from 'date-fns'
-import Picker from '@emoji-mart/react'
 import { StickerPicker } from './StickerPicker'
-
-// Extended Emoji type from emoji-mart
-interface Emoji {
-  id: string
-  name: string
-  native: string
-  unified: string
-  keywords: string[]
-  shortcodes: string
-}
 
 // Types
 interface TrackComment {
@@ -167,7 +156,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [commentText, setCommentText] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showStickerPicker, setShowStickerPicker] = useState(false)
 
 
@@ -387,7 +375,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => {
             setShowCommentInput(false)
-            setShowEmojiPicker(false)
             setShowStickerPicker(false)
           }} />
           <div className="relative bg-neutral-900 border border-neutral-700 rounded-2xl p-4 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -400,7 +387,6 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               <button
                 onClick={() => {
                   setShowCommentInput(false)
-                  setShowEmojiPicker(false)
                   setShowStickerPicker(false)
                 }}
                 className="p-1 hover:bg-neutral-800 rounded-full transition-colors"
@@ -450,74 +436,34 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               </button>
             </div>
 
-            {/* Emoji/Sticker bar and character count */}
+            {/* Sticker bar and character count */}
             <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-2">
-                {/* Emoji button */}
-                <button
-                  onClick={() => {
-                    setShowEmojiPicker(!showEmojiPicker)
-                    setShowStickerPicker(false)
-                  }}
-                  className={`p-2 rounded-lg transition-all ${
-                    showEmojiPicker
-                      ? 'bg-cyan-500/20 text-cyan-400 ring-2 ring-cyan-400'
-                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
-                  }`}
-                  title="Add emoji"
-                >
-                  <Smile className="w-5 h-5" />
-                </button>
-
-                {/* Sticker button */}
-                <button
-                  onClick={() => {
-                    setShowStickerPicker(!showStickerPicker)
-                    setShowEmojiPicker(false)
-                  }}
-                  className={`p-2 rounded-lg transition-all flex items-center gap-1 ${
-                    showStickerPicker
-                      ? 'bg-purple-500/20 text-purple-400 ring-2 ring-purple-400'
-                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
-                  }`}
-                  title="Add stickers (7TV, BTTV, FFZ)"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  <span className="text-xs font-medium">Stickers</span>
-                </button>
-              </div>
+              {/* Sticker button */}
+              <button
+                onClick={() => setShowStickerPicker(!showStickerPicker)}
+                className={`p-2 rounded-lg transition-all flex items-center gap-2 ${
+                  showStickerPicker
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 ring-2 ring-cyan-400'
+                    : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                }`}
+                title="Add stickers (7TV, BTTV, FFZ)"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span className="text-sm font-medium">Add Stickers</span>
+              </button>
 
               <span className={`text-xs ${commentText.length > 240 ? 'text-amber-400' : 'text-neutral-500'}`}>
                 {commentText.length}/280
               </span>
             </div>
 
-            {/* Emoji Picker - stays open for flurry blasts */}
-            {showEmojiPicker && (
-              <div className="mt-3 animate-in fade-in slide-in-from-bottom-2 duration-200" onClick={(e) => e.stopPropagation()}>
-                <div className="bg-neutral-800 rounded-xl p-2 border border-neutral-700">
-                  <Picker
-                    theme="dark"
-                    perLine={8}
-                    emojiSize={24}
-                    emojiButtonSize={32}
-                    maxFrequentRows={2}
-                    onEmojiSelect={(emoji: Emoji) => {
-                      // Keep picker open for rapid selection ("flurry blasts")
-                      setCommentText(prev => prev + emoji.native)
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Sticker Picker - 7TV, BTTV, FFZ emotes */}
+            {/* Sticker Picker - 7TV, BTTV, FFZ emotes - stays open for flurry blasts */}
             {showStickerPicker && (
               <div className="mt-3 animate-in fade-in slide-in-from-bottom-2 duration-200" onClick={(e) => e.stopPropagation()}>
                 <StickerPicker
                   theme="dark"
                   onSelect={(stickerUrl, stickerName) => {
-                    // Keep picker open for rapid selection
+                    // Keep picker open for rapid selection ("flurry blasts")
                     const emoteMarkdown = `![emote:${stickerName}](${stickerUrl})`
                     setCommentText(prev => prev + emoteMarkdown)
                   }}
