@@ -136,16 +136,14 @@ export const AudioPlayerModal = () => {
     >
       <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden">
         {/* Full-bleed Background Artwork */}
-        <div className="absolute inset-0">
-          <Asset
-            src={currentSong.art}
-            sizes="100vw"
-            objectFit="cover"
-            disableImageWave
-          />
-          {/* Dark gradient overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/90" />
-        </div>
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${currentSong.art || '/default-pictures/album-artwork.png'})`,
+          }}
+        />
+        {/* Dark gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/80" />
 
         {/* Content Layer */}
         <div className="relative z-10 flex flex-col h-full">
