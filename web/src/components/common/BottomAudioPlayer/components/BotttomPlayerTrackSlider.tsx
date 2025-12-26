@@ -79,8 +79,8 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
             <MiniWaveform
               progress={duration > 0 ? progress / duration : 0}
               duration={duration}
-              className="mx-4 w-[300px]"
-              barCount={60}
+              className="mx-4 w-[500px] xl:w-[700px] 2xl:w-[900px]"
+              barCount={120}
               onClick={(p) => onSliderChange(p * duration)}
             />
           ) : (
