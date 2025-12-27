@@ -1,4 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useApolloClient } from '@apollo/client'
+import { TracksDocument, TracksQuery, SortTrackField, SortOrder } from 'lib/graphql'
 
 export type Song = {
   src: string
@@ -50,6 +52,7 @@ interface AudioPlayerProviderProps {
 }
 
 export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
+  const apolloClient = useApolloClient()
   const [progress, setProgress] = useState<number>(0)
   const [progressFromSlider, setProgressFromSlider] = useState<number | null>(null)
   const [duration, setDuration] = useState<number>(0)
@@ -117,6 +120,49 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     setDuration(value)
   }, [])
 
+  // Fetch all tracks and create a shuffled playlist
+  const loadAllTracksForShuffle = useCallback(async (currentTrack: Song) => {
+    try {
+      const { data } = await apolloClient.query<TracksQuery>({
+        query: TracksDocument,
+        variables: {
+          sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
+          page: { first: 200 }, // Load up to 200 tracks for shuffle
+        },
+        fetchPolicy: 'cache-first',
+      })
+
+      if (data?.tracks?.nodes) {
+        const allSongs: Song[] = data.tracks.nodes.map(node => ({
+          trackId: node.id,
+          src: node.playbackUrl,
+          art: node.artworkUrl,
+          title: node.title,
+          artist: node.artist,
+          isFavorite: node.isFavorite,
+        }))
+
+        // Remove current song from list (we'll add it at the start)
+        const otherSongs = allSongs.filter(s => s.trackId !== currentTrack.trackId)
+
+        // Shuffle the other songs using Durstenfeld algorithm
+        for (let i = otherSongs.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[otherSongs[i], otherSongs[j]] = [otherSongs[j], otherSongs[i]]
+        }
+
+        // Current song first, then shuffled remaining tracks
+        const shuffledPlaylist = [currentTrack, ...otherSongs]
+
+        setPlaylist(shuffledPlaylist)
+        setOriginalPlaylist(shuffledPlaylist)
+        setCurrentPlaylistIndex(0)
+      }
+    } catch (error) {
+      console.error('Failed to load tracks for shuffle:', error)
+    }
+  }, [apolloClient])
+
   const play = useCallback(
     (song: Song, fromPlaylist: boolean = false) => {
       if (currentSong.trackId !== song.trackId) {
@@ -126,15 +172,16 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         setIsFavorite(song.isFavorite as boolean)
 
         // Enable shuffle by default when playing a single track (not from playlist)
-        // This ensures variety when playing standalone NFTs/tracks
+        // This loads ALL tracks from the database and shuffles them
         if (!fromPlaylist && !playlist.some(p => p.trackId === song.trackId)) {
           setIsShuffleOn(true)
+          loadAllTracksForShuffle(song)
         }
       } else {
         togglePlay()
       }
     },
-    [currentSong, togglePlay, setProgressStateFromSlider, playlist],
+    [currentSong, togglePlay, setProgressStateFromSlider, playlist, loadAllTracksForShuffle],
   )
 
   const isCurrentSong = useCallback(
