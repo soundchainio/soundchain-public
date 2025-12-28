@@ -1,192 +1,158 @@
-# SoundChain Development Handoff - December 26, 2025
+# SoundChain Development Handoff - December 28, 2025
 
 ## Session Summary
 
-Major feature additions to the SoundChain music/NFT platform focusing on waveform comments, performance optimization, and audio player enhancements.
+Major infrastructure migration: Replacing Mux streaming with Pinata/IPFS for decentralized P2P audio streaming. This lays the foundation for the non-Web3 upload feature with tiered pricing.
 
 ---
 
-## Commits (Chronological)
+## Commits
 
-### 1. GPU Performance Optimization
-**Commit:** `ebf99052b`
+### 1. Pinata/IPFS Streaming Integration
+**Commit:** `554738be7`
 ```
-perf: Add GPU acceleration hints for TV browser performance
+feat: Add Pinata/IPFS streaming integration to replace Mux
 ```
-- Added `willChange`, `transform: translateZ(0)`, `backfaceVisibility` hints
-- CSS containment for waveform bar containers
-- GPU-accelerated playhead, glow backdrops, and bar rendering
-- **Files:** `WaveformWithComments.tsx`, `MiniWaveform.tsx`
 
-### 2. Mini Modal Popup Comments
-**Commit:** `67eb9451e`
-```
-feat: Add mini modal popup comments on waveform playback
-```
-- Comments animate as popup bubbles when playhead crosses timestamps
-- Neon-styled popups with glow effects
-- Auto-dismiss after 4 seconds
-- Profile avatar, username, timestamp, emote rendering
-- **File:** `WaveformWithComments.tsx`
-
-### 3. Grouped Stacked Comments
-**Commit:** `8ea3a6563`
-```
-feat: Group stacked comments into single popup at same timestamp
-```
-- Multiple comments at same timestamp appear in ONE popup
-- Timestamp header with comment count badge
-- Scrollable if more than 3 comments
-- **File:** `WaveformWithComments.tsx`
-
-### 4. Default Shuffle for Single Tracks
-**Commit:** `33268aba9`
-```
-feat: Enable shuffle by default for single track/NFT plays
-```
-- Playing standalone track enables shuffle automatically
-- Playlist plays keep shuffle OFF by default
-- **File:** `useAudioPlayer.tsx`
-
-### 5. Confetti Comment Eruptions
-**Commit:** `a90ed9c13`
-```
-feat: Comments erupt outward like confetti on waveform playback
-```
-- Comments EXPLODE outward in fan pattern
-- Unique trajectory, rotation, staggered timing per comment
-- Neon color variety on borders
-- Burst effect at origin point
-- **File:** `WaveformWithComments.tsx`
-
-### 6. New Year's 2026 Theme
-**Commit:** `677a066ab`
-```
-feat: New Year's 2026 themed comment eruptions until Jan 5
-```
-- **Active until:** January 5, 2026
-- Gold, silver, champagne color palette
-- Sparkle particles around comment cards
-- Firework burst with 8 golden rays
-- Ball drop effect + "2026" text
-- Auto-reverts to neon colors after Jan 5
-- **File:** `WaveformWithComments.tsx`
-
-### 7. Shuffle All NFTs from Database
-**Commit:** `d25192654`
-```
-feat: Load all SoundChain NFTs for shuffle when playing single track
-```
-- Loads up to 200 tracks from database
-- Durstenfeld shuffle algorithm
-- Current song first, then shuffled rest
-- Uses Apollo cache-first for performance
-- **File:** `useAudioPlayer.tsx`
+**Changes:**
+- Added `ipfsCid` and `ipfsGatewayUrl` fields to Track model
+- Updated `playbackUrl` resolver to prioritize IPFS over Mux
+- Enhanced PinningService with audio streaming methods
+- Auto-pin new tracks to IPFS on creation
+- Added `createTrackIPFSOnly` method for non-Web3 uploads
+- Created migration scripts for existing tracks
 
 ---
 
-## Key Files Modified
+## Files Modified
 
 | File | Purpose |
 |------|---------|
-| `web/src/components/WaveformWithComments.tsx` | Main waveform with timestamped comments, confetti eruptions, seasonal themes |
-| `web/src/components/common/BottomAudioPlayer/components/MiniWaveform.tsx` | Footer player waveform with GPU acceleration |
-| `web/src/hooks/useAudioPlayer.tsx` | Audio player context - shuffle mode, playlist management, all tracks loading |
+| `api/src/models/Track.ts` | Added ipfsCid, ipfsGatewayUrl fields |
+| `api/src/resolvers/TrackResolver.ts` | playbackUrl prioritizes IPFS over Mux |
+| `api/src/services/PinningService.ts` | Audio streaming methods, gateway URL helper |
+| `api/src/services/TrackService.ts` | Auto-pin to IPFS, createTrackIPFSOnly method |
+| `api/.env.sample` | PINATA_GATEWAY_URL, PINATA_DEDICATED_GATEWAY |
+
+## New Migration Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `download-mux-streams.ts` | Download HLS streams → local MP4 via ffmpeg |
+| `pin-to-ipfs.ts` | Pin local MP4s to Pinata (no DB required) |
+| `apply-ipfs-cids.ts` | Update MongoDB with IPFS CIDs |
+| `migrate-to-ipfs.ts` | All-in-one migration (requires DB) |
 
 ---
 
-## Seasonal Theme System
+## Migration Progress (In Progress)
 
-Located in `WaveformWithComments.tsx`:
-
-```typescript
-const getSeasonalColors = () => {
-  const now = new Date()
-  const newYearsEnd = new Date('2026-01-05')
-
-  if (now < newYearsEnd) {
-    return {
-      colors: ['#FFD700', '#FFF8DC', '#C0C0C0', '#FFFACD', '#F0E68C'],
-      sparkle: true,
-    }
-  }
-  // Default neon colors
-  return {
-    colors: ['#00FFD1', '#00D4FF', '#A855F7', '#FF00FF', '#FF006E'],
-    sparkle: false,
-  }
-}
+### Step 1: Download from Mux ✅ COMPLETE
+```
+Total: 5,424
+Downloaded: 5,411
+Failed: 8
+Size: 16.2 GB
+Duration: 75 minutes
 ```
 
-### Future Seasonal Themes to Add:
-| Season | Date Range | Colors |
-|--------|------------|--------|
-| Valentine's | Feb 1-15 | Pink, Red, Rose |
-| Easter | Variable | Pastels |
-| July 4th | Jul 1-5 | Red, White, Blue |
-| Halloween | Oct 15-31 | Orange, Purple, Green |
-| Christmas | Dec 15-26 | Red, Green, Gold |
+### Step 2: Pin to IPFS 🔄 IN PROGRESS
+```
+Progress: ~1,500 / 5,416 (~28%)
+Estimated completion: ~2 hours remaining
+Results saved to: mux_exported/ipfs_pins.json
+```
 
----
-
-## Audio Player Shuffle Behavior
-
-```typescript
-// When playing single track:
-if (!fromPlaylist && !playlist.some(p => p.trackId === song.trackId)) {
-  setIsShuffleOn(true)
-  loadAllTracksForShuffle(song) // Loads 200 tracks, shuffles them
-}
-
-// When playing from playlist:
-play(list[index], true) // fromPlaylist = true, no auto-shuffle
+### Step 3: Apply CIDs to MongoDB ⏳ PENDING
+```bash
+npx ts-node src/scripts/apply-ipfs-cids.ts
 ```
 
 ---
 
-## Components Architecture
+## Architecture Changes
 
-### ConfettiComment
-- Individual erupting comment card
-- Random trajectory calculation (angle, distance, rotation)
-- Staggered animation delays
-- Seasonal color application
-- Sparkle effects for New Year's
+### Playback URL Priority
+```typescript
+// TrackResolver.ts - playbackUrl field resolver
+@FieldResolver(() => String)
+playbackUrl(@Root() { ipfsCid, ipfsGatewayUrl, muxAsset }: Track): string {
+  // Priority 1: IPFS (decentralized)
+  if (ipfsCid) {
+    return ipfsGatewayUrl || `https://gateway.pinata.cloud/ipfs/${ipfsCid}`;
+  }
+  // Priority 2: Mux (legacy fallback)
+  return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
+}
+```
 
-### ActiveCommentPopup
-- Container for all comments at a timestamp
-- Explosion origin burst effect
-- Seasonal firework burst for New Year's
-- Maps comments to ConfettiComment components
+### New Track Creation with IPFS
+```typescript
+// TrackService.ts
+async createTrack(...) {
+  // ... create track
+  // Pin to IPFS in background (non-blocking)
+  this.pinTrackToIPFS(track._id, data.assetUrl, data.title);
+}
 
----
-
-## Previous Session Work (Referenced)
-
-- Sticker/Emote rendering with 7TV, BTTV, FFZ integration
-- StickerPicker component with search and categories
-- EmoteRenderer for markdown `![emote:name](url)` parsing
-- TrackComment model with embedUrl support
-- Character counting (stickers = 1 char each)
-- Mobile responsive comment modal
-
----
-
-## Environment
-
-- **Branch:** production
-- **Platform:** Next.js + Apollo Client + MongoDB
-- **Styling:** Tailwind CSS + tailwind-styled-components
+// For non-Web3 uploads (IPFS only, no Mux)
+async createTrackIPFSOnly(profileId, data, s3Key) {
+  // Pin first (blocking), then save
+}
+```
 
 ---
 
-## Testing Notes
+## Environment Variables
 
-- Test confetti eruptions with multiple comments at same timestamp
-- Verify New Year's theme displays until Jan 5, 2026
-- Test shuffle mode loads all tracks when playing single NFT
-- Check GPU acceleration on TV/slow browsers
+```bash
+# Pinata Configuration
+PINATA_API_KEY=your_key
+PINATA_API_SECRET=your_secret
+PINATA_GATEWAY_URL=https://gateway.pinata.cloud/ipfs
+PINATA_DEDICATED_GATEWAY=https://soundchain.mypinata.cloud/ipfs
+```
 
 ---
 
-*Generated: December 26, 2025*
+## Cost Comparison
+
+| Service | Cost |
+|---------|------|
+| **Mux** | ~$0.03/min encoded + streaming |
+| **Pinata** | ~$0.15/GB stored (one-time) + gateway |
+
+**Savings:** Significant for a music platform with 5,400+ tracks
+
+---
+
+## Next Steps
+
+1. **Complete IPFS pinning** (~2 hours remaining)
+2. **Apply CIDs to MongoDB** when SSH tunnel active
+3. **Stripe Integration** for non-Web3 uploads with tiered pricing:
+   - 2% fee for non-Web3 (SCID-only)
+   - 0.05% fee for Web3 (NFT mints)
+4. **Test playback** on web/mobile apps
+
+---
+
+## Local Files
+
+- **Downloaded MP4s:** `mux_exported/{trackId}/audio.mp4`
+- **IPFS Pins JSON:** `mux_exported/ipfs_pins.json`
+- **Migration Reports:** `mux_exported/download_report_*.json`
+
+---
+
+## Previous Session Work (Dec 26)
+
+- Waveform comments with confetti eruptions
+- New Year's 2026 seasonal theme
+- GPU acceleration for TV browsers
+- Shuffle all NFTs feature
+- Sticker/Emote rendering
+
+---
+
+*Generated: December 28, 2025*
