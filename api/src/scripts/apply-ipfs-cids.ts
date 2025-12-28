@@ -89,10 +89,16 @@ async function main() {
     process.exit(1);
   }
 
-  // Connect to MongoDB
+  // Connect to MongoDB/DocumentDB
   console.log('🗄️  Connecting to MongoDB...');
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      tls: true,
+      tlsAllowInvalidCertificates: true,
+      directConnection: true,
+    } as any);
     console.log('✅ Connected\n');
   } catch (err: any) {
     console.error('❌ Connection failed:', err.message);
