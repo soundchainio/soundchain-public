@@ -5,18 +5,25 @@
  * with their IPFS CIDs for decentralized streaming.
  */
 
-const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+const https = require('https');
 const { ObjectId } = require('mongodb');
 
-const BUCKET = 'soundchain-api-production-uploads';
-const KEY = 'migrations/ipfs_pins.json';
+const S3_URL = 'https://soundchain-api-production-uploads.s3.amazonaws.com/migrations/ipfs_pins.json';
 
-async function streamToString(stream) {
-  const chunks = [];
-  for await (const chunk of stream) {
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks).toString('utf-8');
+function fetchJson(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }).on('error', reject);
+  });
 }
 
 module.exports = {
@@ -24,11 +31,7 @@ module.exports = {
     console.log('Starting IPFS CID migration...');
 
     // Fetch pins from S3
-    const s3 = new S3Client({ region: 'us-east-1' });
-    const command = new GetObjectCommand({ Bucket: BUCKET, Key: KEY });
-    const response = await s3.send(command);
-    const data = await streamToString(response.Body);
-    const { pins } = JSON.parse(data);
+    const { pins } = await fetchJson(S3_URL);
 
     console.log(`Loaded ${pins.length} pins from S3`);
 
