@@ -45,7 +45,17 @@ export class TrackResolver {
   }
 
   @FieldResolver(() => String)
-  playbackUrl(@Root() { muxAsset }: Track): string {
+  playbackUrl(@Root() { ipfsCid, ipfsGatewayUrl, muxAsset }: Track): string {
+    // Priority 1: IPFS/Pinata (decentralized, P2P)
+    if (ipfsCid) {
+      // Use custom gateway if set, otherwise use Pinata public gateway
+      if (ipfsGatewayUrl) {
+        return ipfsGatewayUrl;
+      }
+      // Default to Pinata gateway - can also use ipfs.io or other gateways
+      return `https://gateway.pinata.cloud/ipfs/${ipfsCid}`;
+    }
+    // Priority 2: Mux (legacy/fallback)
     return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
   }
 

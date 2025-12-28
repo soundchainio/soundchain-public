@@ -71,6 +71,14 @@ export class Track extends Model {
   @prop()
   muxAsset: MuxAsset;
 
+  @Field(() => String, { nullable: true })
+  @prop()
+  ipfsCid?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop()
+  ipfsGatewayUrl?: string;
+
   @prop({ default: 0 })
   playbackCount: number;
 

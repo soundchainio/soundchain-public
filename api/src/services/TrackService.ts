@@ -4,6 +4,7 @@ import { DocumentType } from '@typegoose/typegoose';
 import dot from 'dot-object';
 import { PaginateResult } from '../db/pagination/paginate';
 import { NotFoundError } from '../errors/NotFoundError';
+import { AudioPinResult } from './PinningService';
 import { FavoriteProfileTrack, FavoriteProfileTrackModel } from '../models/FavoriteProfileTrack';
 import { FeedItemModel } from '../models/FeedItem';
 import { NotificationModel } from '../models/Notification';
@@ -306,6 +307,9 @@ export class TrackService extends ModelService<typeof Track> {
 
     await track.save();
 
+    // Pin to IPFS for decentralized streaming (non-blocking)
+    this.pinTrackToIPFS(track._id.toString(), data.assetUrl, data.title || 'Untitled');
+
     // Auto-generate SCid for the new track
     try {
       const walletAddress = data.nftData?.minter || data.nftData?.owner;
@@ -318,6 +322,78 @@ export class TrackService extends ModelService<typeof Track> {
       console.log(`[SCid] Auto-registered SCid for track ${track._id}`);
     } catch (scidError) {
       // Log but don't fail track creation if SCid registration fails
+      console.error(`[SCid] Failed to auto-register SCid for track ${track._id}:`, scidError);
+    }
+
+    return track;
+  }
+
+  /**
+   * Pin track audio to IPFS in the background (non-blocking)
+   * This runs asynchronously to not slow down track creation
+   */
+  private async pinTrackToIPFS(trackId: string, assetUrl: string, title: string): Promise<void> {
+    try {
+      // Extract S3 key from the asset URL
+      const url = new URL(assetUrl);
+      const key = url.pathname.replace(/^\//, ''); // Remove leading slash
+
+      console.log(`[IPFS] Pinning track ${trackId} to IPFS...`);
+      const pinResult = await this.context.pinningService.pinAudioToIPFS(key, trackId, title);
+
+      // Update track with IPFS CID
+      await this.model.updateOne(
+        { _id: new mongoose.Types.ObjectId(trackId) },
+        {
+          $set: {
+            ipfsCid: pinResult.ipfsCid,
+            ipfsGatewayUrl: pinResult.ipfsGatewayUrl,
+          },
+        }
+      );
+
+      console.log(`[IPFS] Track ${trackId} pinned successfully: ${pinResult.ipfsCid}`);
+    } catch (error) {
+      // Log but don't fail - IPFS pinning is supplementary
+      console.error(`[IPFS] Failed to pin track ${trackId}:`, error);
+    }
+  }
+
+  /**
+   * Create a track using ONLY IPFS (no Mux)
+   * Used for non-Web3/SCID-only uploads to save costs
+   */
+  async createTrackIPFSOnly(profileId: string, data: Partial<Track>, s3Key: string): Promise<Track> {
+    const track = new this.model({ profileId, ...data });
+
+    // Pin to IPFS first (blocking for IPFS-only tracks)
+    try {
+      const pinResult = await this.context.pinningService.pinAudioToIPFS(
+        s3Key,
+        track._id.toString(),
+        data.title || 'Untitled'
+      );
+      track.ipfsCid = pinResult.ipfsCid;
+      track.ipfsGatewayUrl = pinResult.ipfsGatewayUrl;
+      console.log(`[IPFS] Track ${track._id} pinned: ${pinResult.ipfsCid}`);
+    } catch (error) {
+      console.error(`[IPFS] Failed to pin track ${track._id}:`, error);
+      throw new Error('Failed to upload audio to IPFS');
+    }
+
+    await track.save();
+
+    // Auto-generate SCid for the new track
+    try {
+      const walletAddress = data.nftData?.minter || data.nftData?.owner;
+      await this.context.scidService.register({
+        trackId: track._id.toString(),
+        profileId,
+        walletAddress,
+        chainId: 137, // Polygon by default
+      });
+      console.log(`[SCid] Auto-registered SCid for track ${track._id}`);
+    } catch (scidError) {
       console.error(`[SCid] Failed to auto-register SCid for track ${track._id}:`, scidError);
     }
 
