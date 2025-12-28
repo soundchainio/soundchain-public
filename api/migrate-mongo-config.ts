@@ -1,17 +1,28 @@
 import * as dotenv from 'dotenv'
-dotenv.config()
+try {
+  dotenv.config()
+} catch (e) {
+  // Lambda environment - env vars already set
+}
 
 // @ts-ignore - legacy types are stubborn
 import type { config } from 'migrate-mongo'
 
+const url = process.env.MONGODB_URI || process.env.DATABASE_URL || 'mongodb://localhost:27017/soundchain'
+
 const config: config.Config = {
   mongodb: {
-    url: process.env.MONGODB_URI || 'mongodb://localhost:27017/soundchain',
+    url: url,
     databaseName: 'soundchain',
+    options: {
+      tls: url.includes('docdb.amazonaws.com'),
+      tlsAllowInvalidCertificates: true,
+      retryWrites: false,
+    } as any,
   },
   migrationsDir: './migrations',
   changelogCollectionName: 'changelog',
-  migrationFileExtension: '.ts',
+  migrationFileExtension: '.js',
   useFileHash: false,
 }
 
