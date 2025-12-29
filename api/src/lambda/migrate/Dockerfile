@@ -31,4 +31,4 @@ COPY global-bundle.pem ./.build/
 
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/migrate/handler.handler" ]
-# Trigger rebuild v3
+# Trigger rebuild final
