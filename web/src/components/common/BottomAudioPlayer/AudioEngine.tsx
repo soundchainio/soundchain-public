@@ -59,15 +59,23 @@ export const AudioEngine = () => {
     }
 
     const audio = audioRef.current
+    const isHlsStream = currentSong.src.includes('.m3u8')
 
-    if (audio.canPlayType('application/vnd.apple.mpegurl')) {
-      // Native HLS support (Safari, iOS)
+    if (isHlsStream) {
+      // HLS stream (Mux legacy URLs)
+      if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+        // Native HLS support (Safari, iOS)
+        audio.src = currentSong.src
+      } else if (Hls.isSupported()) {
+        // Use hls.js for other browsers
+        hlsRef.current = new Hls()
+        hlsRef.current.loadSource(currentSong.src)
+        hlsRef.current.attachMedia(audio)
+      }
+    } else {
+      // Direct audio file (IPFS/Pinata URLs - MP3, WAV, etc.)
+      // These don't need HLS processing, just set the src directly
       audio.src = currentSong.src
-    } else if (Hls.isSupported()) {
-      // Use hls.js for other browsers
-      hlsRef.current = new Hls()
-      hlsRef.current.loadSource(currentSong.src)
-      hlsRef.current.attachMedia(audio)
     }
 
     // MUX analytics
