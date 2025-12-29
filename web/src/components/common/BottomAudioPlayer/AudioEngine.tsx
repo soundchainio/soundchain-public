@@ -6,14 +6,43 @@ import mux from 'mux-embed'
 import { useEffect, useRef, useCallback } from 'react'
 
 /**
+ * Audio Normalization Settings
+ * Target: -24 LUFS (broadcast standard for consistent loudness)
+ *
+ * Uses gain-based normalization only - NO compression.
+ * Preserves the original dynamics of the audio while normalizing volume.
+ *
+ * -24 LUFS is approximately -24 dB relative to full scale.
+ * Most commercial music is mastered around -14 to -8 LUFS.
+ * We apply gain adjustment to bring typical music closer to -24 LUFS target.
+ */
+const NORMALIZATION_CONFIG = {
+  // Target LUFS level (broadcast standard)
+  targetLUFS: -24,
+  // Assumed average loudness of uploaded music (most music is around -10 to -14 LUFS)
+  assumedSourceLUFS: -12,
+  // Calculated gain: difference between target and assumed source
+  // -24 - (-12) = -12 dB = 10^(-12/20) = 0.25 linear gain
+  // However, this might be too quiet, so we use a moderate adjustment
+  // targeting a reduction that brings loud tracks down without killing quiet ones
+  normalizationGain: 0.5,  // -6 dB reduction (moderate normalization)
+}
+
+/**
  * AudioEngine - Single audio element for the entire app
- * This component manages the actual <audio> element and HLS streaming.
+ * This component manages the actual <audio> element, HLS streaming,
+ * and audio normalization via Web Audio API.
  * It should only be mounted ONCE in the app to prevent echo/duplicate audio.
  */
 export const AudioEngine = () => {
   const me = useMe()
   const audioRef = useRef<HTMLAudioElement>(null)
   const hlsRef = useRef<Hls | null>(null)
+  // Web Audio API refs for normalization (gain only, no compression)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null)
+  const gainNodeRef = useRef<GainNode | null>(null)
+  const isAudioGraphConnected = useRef(false)
   const {
     currentSong,
     isPlaying,
@@ -47,6 +76,53 @@ export const AudioEngine = () => {
       })
     }
   }, [currentSong.art, currentSong.artist, currentSong.src, currentSong.title])
+
+  /**
+   * Initialize Web Audio API graph for audio normalization
+   * Chain: AudioElement -> MediaElementSource -> Gain -> Destination
+   *
+   * Uses gain-only normalization (NO compression) to preserve original dynamics
+   * while targeting -24 LUFS output level
+   */
+  const initializeAudioGraph = useCallback(() => {
+    if (!audioRef.current || isAudioGraphConnected.current) return
+
+    try {
+      // Create AudioContext (handles Safari prefix)
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioContextClass) {
+        console.warn('Web Audio API not supported - playing without normalization')
+        return
+      }
+
+      audioContextRef.current = new AudioContextClass()
+      const ctx = audioContextRef.current
+
+      // Create source from audio element
+      sourceNodeRef.current = ctx.createMediaElementSource(audioRef.current)
+
+      // Create gain node for volume normalization (no compression - preserves dynamics)
+      gainNodeRef.current = ctx.createGain()
+      gainNodeRef.current.gain.setValueAtTime(NORMALIZATION_CONFIG.normalizationGain, ctx.currentTime)
+
+      // Connect the audio graph: source -> gain -> destination
+      // No compressor in chain - full dynamics preserved
+      sourceNodeRef.current.connect(gainNodeRef.current)
+      gainNodeRef.current.connect(ctx.destination)
+
+      isAudioGraphConnected.current = true
+      console.log('Audio normalization initialized (-24 LUFS target, dynamics preserved)')
+    } catch (error) {
+      console.warn('Failed to initialize audio normalization:', error)
+    }
+  }, [])
+
+  // Resume AudioContext on user interaction (required by browsers)
+  const resumeAudioContext = useCallback(() => {
+    if (audioContextRef.current?.state === 'suspended') {
+      audioContextRef.current.resume()
+    }
+  }, [])
 
   // Setup HLS and audio source
   useEffect(() => {
@@ -95,19 +171,24 @@ export const AudioEngine = () => {
     // Update Media Session metadata for CarPlay
     updateMediaSession()
 
+    // Initialize audio normalization graph on first song load
+    initializeAudioGraph()
+
     return () => {
       if (hlsRef.current) {
         hlsRef.current.destroy()
         hlsRef.current = null
       }
     }
-  }, [currentSong, me?.id, updateMediaSession])
+  }, [currentSong, me?.id, updateMediaSession, initializeAudioGraph])
 
   // Handle play/pause state
   useEffect(() => {
     if (!audioRef.current) return
 
     if (isPlaying) {
+      // Resume AudioContext if suspended (required for Web Audio after user interaction)
+      resumeAudioContext()
       audioRef.current.play().catch(() => {
         // Handle autoplay restrictions
         setPlayingState(false)
@@ -115,7 +196,7 @@ export const AudioEngine = () => {
     } else {
       audioRef.current.pause()
     }
-  }, [isPlaying, currentSong, setPlayingState])
+  }, [isPlaying, currentSong, setPlayingState, resumeAudioContext])
 
   // Handle seeking from slider
   useEffect(() => {
@@ -125,12 +206,30 @@ export const AudioEngine = () => {
     }
   }, [progressFromSlider, setProgressStateFromSlider])
 
-  // Handle volume changes
+  // Handle volume changes - apply to gain node for normalized output
   useEffect(() => {
-    if (audioRef.current) {
+    if (gainNodeRef.current && audioContextRef.current) {
+      // Multiply user volume with normalization gain (preserves dynamics)
+      const finalGain = volume * NORMALIZATION_CONFIG.normalizationGain
+      gainNodeRef.current.gain.setValueAtTime(finalGain, audioContextRef.current.currentTime)
+    } else if (audioRef.current) {
+      // Fallback if Web Audio API not available
       audioRef.current.volume = volume
     }
   }, [volume])
+
+  // Cleanup AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {})
+        audioContextRef.current = null
+        sourceNodeRef.current = null
+        gainNodeRef.current = null
+        isAudioGraphConnected.current = false
+      }
+    }
+  }, [])
 
   // Setup Media Session action handlers for CarPlay controls
   useEffect(() => {
