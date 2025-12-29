@@ -2,120 +2,115 @@
 
 ## Session Summary
 
-Continued from previous session. Fixed AudioPlayerModal artwork display issue and investigated IPFS migration status.
+Fixed two critical issues:
+1. **AudioPlayerModal artwork not loading** - CORS pre-validation was failing
+2. **Mobile audio playback broken** - IPFS URLs weren't being handled correctly (not HLS)
 
 ---
 
 ## Issues Fixed This Session
 
 ### 1. AudioPlayerModal Artwork Not Loading (FIXED)
-**Issue:** Cover art showing SoundChain logo instead of actual artwork in the full-screen music player modal. Footer player was showing artwork correctly.
+**Commit:** `d9226dcd8`
 
-**Root Cause:** The `AudioPlayerModal` used a `useValidatedImageUrl` hook that pre-validated images with `new Image()`. This was failing due to CORS restrictions on S3-hosted artwork.
+**Issue:** Cover art showing SoundChain logo instead of actual artwork in full-screen music player modal.
 
-**Fix Applied:** Removed the pre-validation hook and used simple fallback approach like the footer player.
+**Root Cause:** `useValidatedImageUrl` hook pre-validated images with `new Image()`, failing due to CORS on S3.
 
-**Commit:** `d9226dcd8` - fix: Remove artwork pre-validation that was failing due to CORS
+**Fix:** Removed pre-validation, use simple fallback like footer player.
 
-**File Modified:** `web/src/components/modals/AudioPlayerModal.tsx`
+### 2. Mobile Audio Playback Not Working (FIXED)
+**Commit:** `cd4e4ffcb`
 
----
+**Issue:** Mobile Safari couldn't play audio - stuck at 0:00. Desktop worked fine.
 
-## IPFS Migration Status
+**Root Cause:** IPFS migration changed playback URLs from Mux HLS (`.m3u8`) to direct MP3 files. AudioEngine treated ALL sources as HLS streams. Desktop browsers handle this gracefully, mobile Safari fails silently.
 
-### Step 1: Download from Mux - COMPLETE
-```
-Total: 5,424 | Downloaded: 5,411 | Failed: 8 | Size: 16.2 GB
-```
-
-### Step 2: Pin to IPFS - COMPLETE
-```
-Total Pinned: 5,416 tracks
-S3 Location: s3://soundchain-api-production-uploads/migrations/ipfs_pins.json
-```
-
-### Step 3: Apply CIDs to MongoDB - COMPLETE
-Migration successfully applied 5,416 IPFS CIDs to tracks in the `test` database.
+**Fix:** AudioEngine now detects source type:
+- `.m3u8` → Use HLS (native or hls.js)
+- Direct audio (IPFS) → Set `audio.src` directly
 
 ---
 
-## Infrastructure Notes
+## Current Audio/Video Architecture
 
-### Bastion Host (i-0fd425cefe208d593)
-- **Status:** STOPPED (to save costs ~$8.50/month)
-- **VPC Issue:** Bastion is in `vpc-0742bbd5d548c14f0` but DocumentDB is in different network
-- SSH tunnel from bastion CANNOT reach DocumentDB directly
+```
+NEW MINTS:     Upload → Mux → HLS stream (.m3u8)
+MIGRATED:      IPFS/Pinata → Direct MP3/WAV files
+PLAYBACK:      TrackResolver.playbackUrl checks ipfsCid first, falls back to Mux
+```
 
-### Database Access
-- **Production Lambda:** Works correctly (in correct VPC with DocumentDB access)
-- **Local Development:** Requires SSH tunnel through bastion (currently broken due to VPC mismatch)
-- **Database Name:** `test` (not `soundchain`) - this is where production data lives
-
-### DocumentDB Cluster
-- **Endpoint:** `soundchain-cluster.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com`
-- **Credentials:** `soundchainadmin:SoundChainProd2025`
-- **Password Rotation:** DISABLED (was causing issues, see SESSION_HANDOFF_DEC17.md)
+**5,416 tracks** have IPFS CIDs (migrated)
+**Remaining tracks** still use Mux HLS
 
 ---
 
-## Known Issues
+## Pending Issues
 
-### Artwork URLs Are S3 (Not IPFS)
-All 8,212 track `artworkUrl` fields point to S3:
-```
-https://soundchain-api-production-uploads.s3.us-east-1.amazonaws.com/...
-```
+### NFT Minting Not Working
+User reports minting hasn't worked since going live. This needs investigation:
+- Check minting flow in `web/src/components/forms/track/`
+- Check API mint resolvers
+- Check smart contract interactions
 
-The IPFS migration only migrated AUDIO files, not artwork. Artwork remains on S3.
+### Future: Upload New Tracks to IPFS
+Currently new tracks still go to Mux. To fully transition:
+1. Update upload flow to pin to Pinata first
+2. Store `ipfsCid` on track creation
+3. Remove Mux dependency for new uploads
 
 ---
 
 ## Quick Commands
 
 ```bash
-# Check bastion status
-aws ec2 describe-instances --filters "Name=tag:Name,Values=*bastion*" --query 'Reservations[*].Instances[*].[PublicIpAddress,InstanceId,State.Name]' --output text
+# Continue this session
+claude -c
 
-# Start bastion (if needed)
-aws ec2 start-instances --instance-ids i-0fd425cefe208d593
-
-# Stop bastion (ALWAYS do this when done)
-aws ec2 stop-instances --instance-ids i-0fd425cefe208d593
+# Check deployment status
+git log --oneline -5
 
 # Check Lambda logs
 aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
 
-# Check migration Lambda logs
-aws logs tail /aws/lambda/soundchain-api-production-migrate --since 10m
+# Check bastion status (CURRENTLY STOPPED)
+aws ec2 describe-instances --filters "Name=tag:Name,Values=*bastion*" --query 'Reservations[*].Instances[*].[InstanceId,State.Name]' --output text
 ```
 
 ---
 
-## Files Modified This Session
+## Commits Pushed Today
+
+| Commit | Description |
+|--------|-------------|
+| `cd4e4ffcb` | fix: Support both HLS streams and direct IPFS audio files |
+| `947770840` | docs: Update HANDOFF with artwork fix and infrastructure notes |
+| `d9226dcd8` | fix: Remove artwork pre-validation that was failing due to CORS |
+
+---
+
+## Files Modified Today
 
 | File | Change |
 |------|--------|
 | `web/src/components/modals/AudioPlayerModal.tsx` | Removed CORS-failing image pre-validation |
+| `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` | Handle both HLS and direct IPFS audio |
 
 ---
 
-## Pending Tasks
+## Infrastructure Notes
 
-1. Verify artwork fix works on production after deployment
-2. Consider migrating artwork to IPFS (currently S3-only)
-3. Fix bastion VPC configuration if direct DB access needed
-4. Integrate Stripe payments (future)
-
----
-
-## Best Practices Reminder
-
-**Always scan HANDOFF files before starting a task** - They contain:
-- Working bash commands
-- Database connection details
-- VPC/networking configurations
-- Previous solutions to similar problems
+- **Bastion:** STOPPED (save ~$8.50/mo)
+- **VPC Issue:** Bastion can't reach DocumentDB (different VPCs)
+- **Database:** `test` database (not `soundchain`)
+- **Credentials:** `soundchainadmin:SoundChainProd2025`
 
 ---
 
-*Updated: December 29, 2025 @ 2:00 PM MST*
+## Best Practice Reminder
+
+**Always scan HANDOFF files before starting tasks** - they contain working commands, credentials, and previous solutions.
+
+---
+
+*Updated: December 29, 2025 @ 2:30 PM MST*
