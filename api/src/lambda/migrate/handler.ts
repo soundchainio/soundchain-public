@@ -27,6 +27,18 @@ export const handler: Handler = async () => {
   console.log('MONGODB_URI set:', !!process.env.MONGODB_URI);
   console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
 
+  // Debug: List available migration files
+  const fs = await import('fs');
+  const path = await import('path');
+  const migrationsDir = path.join(process.cwd(), 'migrations');
+  console.log('Migrations directory:', migrationsDir);
+  try {
+    const files = fs.readdirSync(migrationsDir);
+    console.log('Available migration files:', files.filter(f => f.endsWith('.js')));
+  } catch (e: unknown) {
+    console.log('Error listing migrations:', (e as Error).message);
+  }
+
   const migrationConfig = getRuntimeConfig();
   console.log('Using MongoDB URL prefix:', migrationConfig.mongodb.url.substring(0, 50) + '...');
 
