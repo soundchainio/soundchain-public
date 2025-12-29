@@ -28,26 +28,6 @@ import dynamic from 'next/dynamic'
 // Default fallback artwork
 const DEFAULT_ARTWORK = '/default-pictures/album-artwork.png'
 
-// Hook to validate image URL and return fallback if broken
-const useValidatedImageUrl = (url: string | undefined) => {
-  const [validUrl, setValidUrl] = useState(url || DEFAULT_ARTWORK)
-
-  useEffect(() => {
-    if (!url) {
-      setValidUrl(DEFAULT_ARTWORK)
-      return
-    }
-
-    // Test if the image loads successfully
-    const img = new Image()
-    img.onload = () => setValidUrl(url)
-    img.onerror = () => setValidUrl(DEFAULT_ARTWORK)
-    img.src = url
-  }, [url])
-
-  return validUrl
-}
-
 // Dynamic import for WaveformWithComments (uses wavesurfer.js which needs client-side)
 const WaveformWithComments = dynamic(() => import('components/WaveformWithComments'), { ssr: false })
 
@@ -123,8 +103,8 @@ export const AudioPlayerModal = () => {
   const [isMobile, setIsMobile] = useState(true)
   const me = useMe()
 
-  // Validate artwork URL - fallback to default if image fails to load
-  const validatedArtwork = useValidatedImageUrl(currentSong.art)
+  // Use artwork URL with simple fallback (avoid pre-validation which can fail due to CORS)
+  const artworkUrl = currentSong.art || DEFAULT_ARTWORK
 
   // Track comments for waveform
   const { comments, addComment, likeComment } = useTrackComments({
@@ -171,11 +151,11 @@ export const AudioPlayerModal = () => {
       fullScreen
     >
       <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden">
-        {/* Full-bleed Background Artwork - uses validated URL with fallback */}
+        {/* Full-bleed Background Artwork */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(${validatedArtwork})`,
+            backgroundImage: `url(${artworkUrl})`,
           }}
         />
         {/* Dark gradient overlay for readability */}
