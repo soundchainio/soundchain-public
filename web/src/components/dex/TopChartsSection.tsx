@@ -154,22 +154,33 @@ export function TopChartsSection({ tracks, onPlayTrack, isPlaying, currentTrackI
         </div>
       </div>
 
-      {/* Horizontal Scroll Container */}
-      <div
-        ref={scrollContainerRef}
-        onScroll={checkScroll}
-        className="flex gap-4 overflow-x-auto scrollbar-hide pb-4"
-        style={{
-          scrollSnapType: 'x mandatory',
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
-        {topTracks.map((track, index) => (
-          <div
-            key={track.id}
-            className="flex-shrink-0 w-[180px] sm:w-[200px] relative group"
-            style={{ scrollSnapAlign: 'start' }}
-          >
+      {/* Horizontal Scroll Container with edge fade indicators */}
+      <div className="relative">
+        {/* Left fade - shows when can scroll left */}
+        {canScrollLeft && (
+          <div className="absolute left-0 top-0 bottom-4 w-8 bg-gradient-to-r from-black/80 to-transparent z-10 pointer-events-none" />
+        )}
+
+        {/* Right fade - shows when can scroll right */}
+        {canScrollRight && (
+          <div className="absolute right-0 top-0 bottom-4 w-8 bg-gradient-to-l from-black/80 to-transparent z-10 pointer-events-none" />
+        )}
+
+        <div
+          ref={scrollContainerRef}
+          onScroll={checkScroll}
+          className="flex gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-4 px-1"
+          style={{
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          {topTracks.map((track, index) => (
+            <div
+              key={track.id}
+              className="flex-shrink-0 w-[140px] sm:w-[180px] md:w-[200px] relative group"
+              style={{ scrollSnapAlign: 'start' }}
+            >
             {/* Rank Badge */}
             {getRankBadge(index + 1)}
 
@@ -202,6 +213,7 @@ export function TopChartsSection({ tracks, onPlayTrack, isPlaying, currentTrackI
             </div>
           </div>
         ))}
+        </div>
       </div>
     </div>
   )
