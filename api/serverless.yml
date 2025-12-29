@@ -28,6 +28,8 @@ functions:
           cors: true
   migrate:
     image: ${env:MIGRATE_IMAGE_URI}
+    timeout: 300  # 5 minutes for large migrations like IPFS CID update
+    memorySize: 1024  # More memory for batch processing
   blockchainwatcher:
     image: ${env:BLOCKCHAINWATCHER_IMAGE_URI}
     timeout: 30
