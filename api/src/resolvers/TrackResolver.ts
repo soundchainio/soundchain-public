@@ -34,6 +34,10 @@ import { TrackPrice } from '../types/TrackPrice';
 import { CurrencyType } from '../types/CurrencyType';
 import { GenreTracks } from '../types/GenreTracks';
 
+// Default fallback artwork URL
+const DEFAULT_ARTWORK_URL = 'https://soundchain.io/default-artwork.png';
+const IPFS_GATEWAY = 'https://gateway.pinata.cloud/ipfs/';
+
 @Resolver(Track)
 export class TrackResolver {
   /**
@@ -42,6 +46,28 @@ export class TrackResolver {
   @FieldResolver(() => SCid, { nullable: true })
   async scid(@Ctx() { scidService }: Context, @Root() { _id }: Track): Promise<SCid | null> {
     return scidService.getByTrackId(_id.toString());
+  }
+
+  /**
+   * Artwork URL with IPFS fallback support
+   * Priority: 1) Direct artworkUrl, 2) NFT metadata IPFS, 3) Default fallback
+   */
+  @FieldResolver(() => String, { nullable: true })
+  artworkWithFallback(@Root() { artworkUrl, nftData }: Track): string {
+    // Priority 1: Direct artwork URL if it exists
+    if (artworkUrl) {
+      return artworkUrl;
+    }
+
+    // Priority 2: Try to construct IPFS URL from NFT metadata CID
+    // Note: This gives the metadata JSON, not the artwork directly
+    // But frontends can parse it to get the image field
+    if (nftData?.ipfsCid) {
+      return `${IPFS_GATEWAY}${nftData.ipfsCid}`;
+    }
+
+    // Priority 3: Default fallback
+    return DEFAULT_ARTWORK_URL;
   }
 
   @FieldResolver(() => String)
