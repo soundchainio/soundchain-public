@@ -50,7 +50,7 @@ export class ProfileService extends ModelService<typeof Profile> {
     ]);
 
     if (!profile[0]) {
-      throw new NotFoundError(`Profile with handle "${handle}" not found`);
+      throw new NotFoundError('Profile', handle);
     }
 
     return profile[0];
