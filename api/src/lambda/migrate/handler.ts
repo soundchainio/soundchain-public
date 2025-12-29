@@ -19,6 +19,7 @@ const getRuntimeConfig = () => {
     changelogCollectionName: 'changelog',
     migrationFileExtension: '.js',
     useFileHash: false,
+    moduleSystem: 'commonjs',
   };
 };
 
@@ -46,6 +47,26 @@ export const handler: Handler = async () => {
   // casting because the migrate-mongo type is wrong
   config.set(migrationConfig as unknown as config.Config);
   const { db, client } = await database.connect();
+
+  // Debug: List databases and collections
+  try {
+    const adminDb = client.db().admin();
+    const dbs = await adminDb.listDatabases();
+    console.log('Available databases:', dbs.databases.map((d: {name: string}) => d.name));
+
+    const collections = await db.listCollections().toArray();
+    console.log('Collections in soundchain:', collections.map(c => c.name));
+
+    // Try different database names
+    const testDb = client.db('test');
+    const testColls = await testDb.listCollections().toArray();
+    console.log('Collections in test:', testColls.map(c => c.name));
+
+    const testTracks = await testDb.collection('tracks').countDocuments();
+    console.log('Tracks in test db:', testTracks);
+  } catch (dbErr: unknown) {
+    console.log('DB debug error:', (dbErr as Error).message);
+  }
   const migrated = await up(db, client);
   if (migrated.length) {
     migrated.forEach(fileName => console.log('Migrated:', fileName));
