@@ -50,12 +50,23 @@ export class TrackResolver {
 
   /**
    * Artwork URL with IPFS fallback support
-   * Priority: 1) Direct artworkUrl, 2) NFT metadata IPFS, 3) Default fallback
+   * Priority: 1) Direct artworkUrl (rewritten to fast gateway), 2) NFT metadata IPFS, 3) Default fallback
    */
   @FieldResolver(() => String, { nullable: true })
   artworkWithFallback(@Root() { artworkUrl, nftData }: Track): string {
     // Priority 1: Direct artwork URL if it exists
     if (artworkUrl) {
+      // Rewrite slow IPFS gateways to Pinata for faster loading
+      // Handles: ipfs.io, dweb.link, cloudflare-ipfs.com, ipfs.infura.io
+      const ipfsMatch = artworkUrl.match(/(?:ipfs\.io|dweb\.link|cloudflare-ipfs\.com|ipfs\.infura\.io)\/ipfs\/([a-zA-Z0-9]+)/);
+      if (ipfsMatch) {
+        return `${IPFS_GATEWAY}${ipfsMatch[1]}`;
+      }
+      // Handle ipfs:// protocol URLs
+      if (artworkUrl.startsWith('ipfs://')) {
+        const cid = artworkUrl.replace('ipfs://', '');
+        return `${IPFS_GATEWAY}${cid}`;
+      }
       return artworkUrl;
     }
 
