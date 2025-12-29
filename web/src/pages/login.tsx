@@ -426,12 +426,35 @@ export default function LoginPage() {
       // Use Email OTP - shows modal with 6-digit code input
       console.log('[Email] Sending OTP code to email...');
 
-      // DON'T show our loading screen - let Magic's OTP modal be visible
-      setLoggingIn(false);
+      // Keep loading spinner visible while Magic loads
+      // Magic's OTP modal will appear on top
 
-      const didToken = await magic.auth.loginWithEmailOTP({
-        email: values.email,
-      });
+      let didToken: string;
+
+      // Create a timeout promise for OTP (30 seconds - user needs time to enter code)
+      const otpTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('OTP_TIMEOUT')), 30000)
+      );
+
+      try {
+        // Try OTP first (better UX when it works)
+        didToken = await Promise.race([
+          magic.auth.loginWithEmailOTP({ email: values.email }),
+          otpTimeout,
+        ]);
+      } catch (otpError: any) {
+        if (otpError.message === 'OTP_TIMEOUT') {
+          // OTP modal likely blocked - fall back to magic link
+          console.log('[Email] OTP timed out, trying magic link fallback');
+          setError('OTP modal blocked. Sending login link to your email instead...');
+          didToken = await magic.auth.loginWithMagicLink({
+            email: values.email,
+            showUI: true,
+          });
+        } else {
+          throw otpError;
+        }
+      }
 
       // OTP complete - now show our loader while processing
       setLoggingIn(true);
