@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Asset from 'components/Asset/Asset'
 import { Modal } from 'components/Modal'
 import { TrackListItem } from 'components/TrackListItem'
@@ -24,6 +24,29 @@ import { checkIsMobile } from 'utils/IsMobile'
 import { Flame, Share2, ChevronDown, BadgeCheck, ListMusic, SkipBack, SkipForward } from 'lucide-react'
 import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
 import dynamic from 'next/dynamic'
+
+// Default fallback artwork
+const DEFAULT_ARTWORK = '/default-pictures/album-artwork.png'
+
+// Hook to validate image URL and return fallback if broken
+const useValidatedImageUrl = (url: string | undefined) => {
+  const [validUrl, setValidUrl] = useState(url || DEFAULT_ARTWORK)
+
+  useEffect(() => {
+    if (!url) {
+      setValidUrl(DEFAULT_ARTWORK)
+      return
+    }
+
+    // Test if the image loads successfully
+    const img = new Image()
+    img.onload = () => setValidUrl(url)
+    img.onerror = () => setValidUrl(DEFAULT_ARTWORK)
+    img.src = url
+  }, [url])
+
+  return validUrl
+}
 
 // Dynamic import for WaveformWithComments (uses wavesurfer.js which needs client-side)
 const WaveformWithComments = dynamic(() => import('components/WaveformWithComments'), { ssr: false })
@@ -100,6 +123,9 @@ export const AudioPlayerModal = () => {
   const [isMobile, setIsMobile] = useState(true)
   const me = useMe()
 
+  // Validate artwork URL - fallback to default if image fails to load
+  const validatedArtwork = useValidatedImageUrl(currentSong.art)
+
   // Track comments for waveform
   const { comments, addComment, likeComment } = useTrackComments({
     trackId: currentSong.trackId,
@@ -145,11 +171,11 @@ export const AudioPlayerModal = () => {
       fullScreen
     >
       <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden">
-        {/* Full-bleed Background Artwork */}
+        {/* Full-bleed Background Artwork - uses validated URL with fallback */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url(${currentSong.art || '/default-pictures/album-artwork.png'})`,
+            backgroundImage: `url(${validatedArtwork})`,
           }}
         />
         {/* Dark gradient overlay for readability */}
