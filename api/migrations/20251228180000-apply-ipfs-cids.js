@@ -5,33 +5,32 @@
  * with their IPFS CIDs for decentralized streaming.
  */
 
-const https = require('https');
+const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { ObjectId } = require('mongodb');
 
-const S3_URL = 'https://soundchain-api-production-uploads.s3.amazonaws.com/migrations/ipfs_pins.json';
+const BUCKET = 'soundchain-api-production-uploads';
+const KEY = 'migrations/ipfs_pins.json';
 
-function fetchJson(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(data));
-        } catch (e) {
-          reject(e);
-        }
-      });
-    }).on('error', reject);
-  });
+async function fetchFromS3() {
+  const client = new S3Client({ region: 'us-east-1' });
+  const command = new GetObjectCommand({ Bucket: BUCKET, Key: KEY });
+  const response = await client.send(command);
+
+  // Read stream to string
+  const chunks = [];
+  for await (const chunk of response.Body) {
+    chunks.push(chunk);
+  }
+  const data = Buffer.concat(chunks).toString('utf-8');
+  return JSON.parse(data);
 }
 
 module.exports = {
   async up(db) {
     console.log('Starting IPFS CID migration...');
 
-    // Fetch pins from S3
-    const { pins } = await fetchJson(S3_URL);
+    // Fetch pins from S3 using AWS SDK (works in VPC)
+    const { pins } = await fetchFromS3();
 
     console.log(`Loaded ${pins.length} pins from S3`);
 
