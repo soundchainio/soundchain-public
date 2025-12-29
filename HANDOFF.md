@@ -55,6 +55,12 @@ User reports minting hasn't worked since going live. Now that IPFS upload is fix
 - Smart contract interactions
 - Wallet connection/transaction signing
 
+### CarPlay Now Working (FIXED)
+CarPlay wasn't working because mobile audio wasn't playing. The mobile audio fix (`cd4e4ffcb`) also fixes CarPlay since Media Session API requires audio to be playing. After deployment:
+1. Force-close Safari on iPhone
+2. Reopen SoundChain and play a track
+3. CarPlay should display title/artist/artwork
+
 ---
 
 ## Quick Commands
@@ -133,4 +139,4 @@ if (isHlsStream) {
 
 ---
 
-*Updated: December 29, 2025 @ 3:00 PM MST*
+*Updated: December 29, 2025 @ 4:00 PM MST*
