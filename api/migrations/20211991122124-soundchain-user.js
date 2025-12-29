@@ -1,5 +1,9 @@
 const ObjectId = require('mongodb').ObjectId;
-const { Role } = require('../src/types/Role');
+
+// Role enum values inlined to avoid build path issues in Lambda
+const ROLE_SOUNDCHAIN_ACCOUNT = 'SOUNDCHAIN_ACCOUNT';
+const ROLE_ADMIN = 'ADMIN';
+const ROLE_TEAM_MEMBER = 'TEAM_MEMBER';
 
 module.exports = {
   async up(db) {
@@ -22,7 +26,7 @@ module.exports = {
 
     await db.collection('users').insertOne({
       _id: undefined,
-      roles: [Role.SOUNDCHAIN_ACCOUNT, Role.ADMIN, Role.TEAM_MEMBER],
+      roles: [ROLE_SOUNDCHAIN_ACCOUNT, ROLE_ADMIN, ROLE_TEAM_MEMBER],
       email: 'admin@soundchain.io',
       handle: 'soundchain',
       profileId: new ObjectId(profile.insertedId.toString()),
