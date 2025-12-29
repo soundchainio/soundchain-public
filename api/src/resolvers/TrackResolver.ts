@@ -424,4 +424,67 @@ export class TrackResolver {
       }
     }, { first: MAX_EDITION_SIZE });
   }
+
+  /**
+   * Admin mutation to apply IPFS CIDs to tracks from S3 JSON
+   * This is used for the IPFS migration to apply pinned CIDs to tracks
+   */
+  @Mutation(() => Number)
+  @Authorized(Role.ADMIN)
+  async applyIpfsCids(
+    @Ctx() { trackService }: Context,
+  ): Promise<number> {
+    const https = await import('https');
+    const S3_URL = 'https://soundchain-api-production-uploads.s3.amazonaws.com/migrations/ipfs_pins.json';
+
+    // Fetch the IPFS pins JSON from S3
+    const fetchJson = (url: string): Promise<{ pins: Array<{ trackId: string; cid: string; gatewayUrl: string }> }> => {
+      return new Promise((resolve, reject) => {
+        https.get(url, (res) => {
+          let data = '';
+          res.on('data', (chunk: string) => data += chunk);
+          res.on('end', () => {
+            try {
+              resolve(JSON.parse(data));
+            } catch (e) {
+              reject(new Error('Failed to parse JSON'));
+            }
+          });
+        }).on('error', reject);
+      });
+    };
+
+    const { pins } = await fetchJson(S3_URL);
+    console.log(`[applyIpfsCids] Found ${pins.length} pins to apply`);
+
+    let appliedCount = 0;
+    const batchSize = 100;
+
+    for (let i = 0; i < pins.length; i += batchSize) {
+      const batch = pins.slice(i, i + batchSize);
+      const updates = batch.map(pin => ({
+        trackId: pin.trackId,
+        ipfsCid: pin.cid,
+        ipfsGatewayUrl: pin.gatewayUrl,
+      }));
+
+      // Apply updates in parallel within batch
+      await Promise.all(updates.map(async (update) => {
+        try {
+          await trackService.updateTrack(
+            new mongoose.Types.ObjectId(update.trackId),
+            { ipfsCid: update.ipfsCid, ipfsGatewayUrl: update.ipfsGatewayUrl }
+          );
+          appliedCount++;
+        } catch (e) {
+          console.error(`[applyIpfsCids] Failed to update track ${update.trackId}:`, e);
+        }
+      }));
+
+      console.log(`[applyIpfsCids] Applied ${i + batch.length}/${pins.length} CIDs`);
+    }
+
+    console.log(`[applyIpfsCids] Migration complete. Applied ${appliedCount} CIDs`);
+    return appliedCount;
+  }
 }
