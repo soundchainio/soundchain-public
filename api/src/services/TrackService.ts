@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { Asset } from '@mux/mux-node';
 import { DocumentType } from '@typegoose/typegoose';
 import dot from 'dot-object';
 import { PaginateResult } from '../db/pagination/paginate';
@@ -301,14 +300,22 @@ export class TrackService extends ModelService<typeof Track> {
     return entity;
   }
 
-  async createTrack(profileId: string, data: Partial<Track>, asset: Asset): Promise<Track> {
+  /**
+   * @deprecated Use createTrackIPFSOnly instead - Mux is no longer used for new tracks
+   * Legacy method kept for backwards compatibility with any existing code
+   */
+  async createTrackLegacy(profileId: string, data: Partial<Track>, muxAssetId?: string, muxPlaybackId?: string): Promise<Track> {
     const track = new this.model({ profileId, ...data });
-    track.muxAsset = { id: asset.id, playbackId: asset.playback_ids[0].id };
+    if (muxAssetId && muxPlaybackId) {
+      track.muxAsset = { id: muxAssetId, playbackId: muxPlaybackId };
+    }
 
     await track.save();
 
     // Pin to IPFS for decentralized streaming (non-blocking)
-    this.pinTrackToIPFS(track._id.toString(), data.assetUrl, data.title || 'Untitled');
+    if (data.assetUrl) {
+      this.pinTrackToIPFS(track._id.toString(), data.assetUrl, data.title || 'Untitled');
+    }
 
     // Auto-generate SCid for the new track
     try {
@@ -401,11 +408,20 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   async createMultipleTracks(profileId: string, data: { track: Partial<Track>; batchSize: number }): Promise<Track[]> {
-    const asset = await this.context.muxService.create(data.track.assetUrl, data.track._id?.toString());
+    // Extract S3 key from asset URL for IPFS pinning
+    const assetUrl = data.track.assetUrl;
+    if (!assetUrl) {
+      throw new Error('assetUrl is required for track creation');
+    }
+
+    const url = new URL(assetUrl);
+    const s3Key = url.pathname.replace(/^\//, ''); // Remove leading slash
+
+    // Create all tracks using IPFS-only flow (no Mux)
     return await Promise.all(
       Array(data.batchSize)
         .fill(null)
-        .map(() => this.createTrack(profileId, data.track, asset)),
+        .map(() => this.createTrackIPFSOnly(profileId, data.track, s3Key)),
     );
   }
 
