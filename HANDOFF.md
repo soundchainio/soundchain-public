@@ -61,6 +61,16 @@ CarPlay wasn't working because mobile audio wasn't playing. The mobile audio fix
 2. Reopen SoundChain and play a track
 3. CarPlay should display title/artist/artwork
 
+### Audio Normalization Added (FIXED)
+**Commit:** `a1cfa3977`
+
+Added -24 LUFS audio normalization using Web Audio API. All playback now goes through a gain node that normalizes volume for consistent loudness across tracks.
+
+- **No compression** - preserves original dynamics
+- Uses gain-only normalization (-6dB reduction)
+- Targets -24 LUFS broadcast standard
+- Fallback to native volume if Web Audio API not available
+
 ---
 
 ## Quick Commands
@@ -82,9 +92,10 @@ aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
 
 | Commit | Description |
 |--------|-------------|
+| `a1cfa3977` | feat: Add -24 LUFS audio normalization (dynamics preserved) |
+| `785648458` | docs: Add CarPlay fix note to HANDOFF |
 | `8c07b2553` | feat: Switch minting to IPFS-only (no more Mux) |
 | `cd4e4ffcb` | fix: Support both HLS streams and direct IPFS audio |
-| `947770840` | docs: Update HANDOFF |
 | `d9226dcd8` | fix: Remove artwork pre-validation (CORS issue) |
 
 ---
@@ -94,7 +105,7 @@ aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
 | File | Change |
 |------|--------|
 | `api/src/services/TrackService.ts` | Switched minting to IPFS-only |
-| `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` | Handle HLS + direct audio |
+| `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` | Handle HLS + direct audio + -24 LUFS normalization |
 | `web/src/components/modals/AudioPlayerModal.tsx` | Removed CORS pre-validation |
 
 ---
@@ -139,4 +150,4 @@ if (isHlsStream) {
 
 ---
 
-*Updated: December 29, 2025 @ 4:00 PM MST*
+*Updated: December 29, 2025 @ 4:30 PM MST*
