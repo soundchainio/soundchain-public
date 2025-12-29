@@ -2,9 +2,10 @@
 
 ## Session Summary
 
-Fixed two critical issues:
+Fixed three critical issues:
 1. **AudioPlayerModal artwork not loading** - CORS pre-validation was failing
-2. **Mobile audio playback broken** - IPFS URLs weren't being handled correctly (not HLS)
+2. **Mobile audio playback broken** - IPFS URLs weren't being handled correctly
+3. **Switched minting to IPFS-only** - No more Mux for new tracks
 
 ---
 
@@ -13,51 +14,46 @@ Fixed two critical issues:
 ### 1. AudioPlayerModal Artwork Not Loading (FIXED)
 **Commit:** `d9226dcd8`
 
-**Issue:** Cover art showing SoundChain logo instead of actual artwork in full-screen music player modal.
-
-**Root Cause:** `useValidatedImageUrl` hook pre-validated images with `new Image()`, failing due to CORS on S3.
-
-**Fix:** Removed pre-validation, use simple fallback like footer player.
+Removed CORS-failing `useValidatedImageUrl` hook.
 
 ### 2. Mobile Audio Playback Not Working (FIXED)
 **Commit:** `cd4e4ffcb`
 
-**Issue:** Mobile Safari couldn't play audio - stuck at 0:00. Desktop worked fine.
+AudioEngine now detects HLS vs direct audio files.
 
-**Root Cause:** IPFS migration changed playback URLs from Mux HLS (`.m3u8`) to direct MP3 files. AudioEngine treated ALL sources as HLS streams. Desktop browsers handle this gracefully, mobile Safari fails silently.
+### 3. Minting Now Uses IPFS Only (FIXED)
+**Commit:** `8c07b2553`
 
-**Fix:** AudioEngine now detects source type:
-- `.m3u8` → Use HLS (native or hls.js)
-- Direct audio (IPFS) → Set `audio.src` directly
+- `createMultipleTracks` now uses `createTrackIPFSOnly` instead of Mux
+- New tracks are pinned directly to Pinata/IPFS from S3
+- Old Mux-based `createTrack` renamed to `createTrackLegacy` (deprecated)
 
 ---
 
-## Current Audio/Video Architecture
+## Current Audio Architecture (After Changes)
 
 ```
-NEW MINTS:     Upload → Mux → HLS stream (.m3u8)
-MIGRATED:      IPFS/Pinata → Direct MP3/WAV files
-PLAYBACK:      TrackResolver.playbackUrl checks ipfsCid first, falls back to Mux
+NEW MINTS:     Upload → S3 → Pinata/IPFS → Direct MP3/WAV playback
+EXISTING:      Already migrated to IPFS (5,416 tracks)
+LEGACY:        Old tracks without ipfsCid → Mux HLS fallback (.m3u8)
 ```
 
-**5,416 tracks** have IPFS CIDs (migrated)
-**Remaining tracks** still use Mux HLS
+**Flow:**
+1. User uploads audio → S3
+2. `createMultipleTracks` calls `createTrackIPFSOnly`
+3. `createTrackIPFSOnly` pins S3 file to Pinata
+4. Track saved with `ipfsCid` and `ipfsGatewayUrl`
+5. `playbackUrl` resolver returns Pinata gateway URL
 
 ---
 
 ## Pending Issues
 
-### NFT Minting Not Working
-User reports minting hasn't worked since going live. This needs investigation:
-- Check minting flow in `web/src/components/forms/track/`
-- Check API mint resolvers
-- Check smart contract interactions
-
-### Future: Upload New Tracks to IPFS
-Currently new tracks still go to Mux. To fully transition:
-1. Update upload flow to pin to Pinata first
-2. Store `ipfsCid` on track creation
-3. Remove Mux dependency for new uploads
+### NFT Minting Not Working (NEEDS INVESTIGATION)
+User reports minting hasn't worked since going live. Now that IPFS upload is fixed, test minting again. If still failing, check:
+- Frontend mint form in `web/src/components/forms/track/`
+- Smart contract interactions
+- Wallet connection/transaction signing
 
 ---
 
@@ -65,16 +61,13 @@ Currently new tracks still go to Mux. To fully transition:
 
 ```bash
 # Continue this session
-claude -c
+cd ~/soundchain && claude -c
 
 # Check deployment status
 git log --oneline -5
 
 # Check Lambda logs
 aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
-
-# Check bastion status (CURRENTLY STOPPED)
-aws ec2 describe-instances --filters "Name=tag:Name,Values=*bastion*" --query 'Reservations[*].Instances[*].[InstanceId,State.Name]' --output text
 ```
 
 ---
@@ -83,9 +76,10 @@ aws ec2 describe-instances --filters "Name=tag:Name,Values=*bastion*" --query 'R
 
 | Commit | Description |
 |--------|-------------|
-| `cd4e4ffcb` | fix: Support both HLS streams and direct IPFS audio files |
-| `947770840` | docs: Update HANDOFF with artwork fix and infrastructure notes |
-| `d9226dcd8` | fix: Remove artwork pre-validation that was failing due to CORS |
+| `8c07b2553` | feat: Switch minting to IPFS-only (no more Mux) |
+| `cd4e4ffcb` | fix: Support both HLS streams and direct IPFS audio |
+| `947770840` | docs: Update HANDOFF |
+| `d9226dcd8` | fix: Remove artwork pre-validation (CORS issue) |
 
 ---
 
@@ -93,24 +87,50 @@ aws ec2 describe-instances --filters "Name=tag:Name,Values=*bastion*" --query 'R
 
 | File | Change |
 |------|--------|
-| `web/src/components/modals/AudioPlayerModal.tsx` | Removed CORS-failing image pre-validation |
-| `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` | Handle both HLS and direct IPFS audio |
+| `api/src/services/TrackService.ts` | Switched minting to IPFS-only |
+| `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` | Handle HLS + direct audio |
+| `web/src/components/modals/AudioPlayerModal.tsx` | Removed CORS pre-validation |
+
+---
+
+## Key Code Changes
+
+### TrackService.ts - New Minting Flow
+```typescript
+async createMultipleTracks(profileId: string, data: { track: Partial<Track>; batchSize: number }): Promise<Track[]> {
+  const url = new URL(data.track.assetUrl);
+  const s3Key = url.pathname.replace(/^\//, '');
+
+  // IPFS-only (no Mux)
+  return await Promise.all(
+    Array(data.batchSize)
+      .fill(null)
+      .map(() => this.createTrackIPFSOnly(profileId, data.track, s3Key)),
+  );
+}
+```
+
+### AudioEngine.tsx - HLS Detection
+```typescript
+const isHlsStream = currentSong.src.includes('.m3u8')
+
+if (isHlsStream) {
+  // Use HLS (native or hls.js)
+} else {
+  // Direct audio file (IPFS)
+  audio.src = currentSong.src
+}
+```
 
 ---
 
 ## Infrastructure Notes
 
-- **Bastion:** STOPPED (save ~$8.50/mo)
-- **VPC Issue:** Bastion can't reach DocumentDB (different VPCs)
-- **Database:** `test` database (not `soundchain`)
-- **Credentials:** `soundchainadmin:SoundChainProd2025`
+- **Bastion:** STOPPED
+- **Database:** `test` database
+- **Mux:** No longer used for new tracks (legacy fallback only)
+- **IPFS:** All new + migrated tracks use Pinata gateway
 
 ---
 
-## Best Practice Reminder
-
-**Always scan HANDOFF files before starting tasks** - they contain working commands, credentials, and previous solutions.
-
----
-
-*Updated: December 29, 2025 @ 2:30 PM MST*
+*Updated: December 29, 2025 @ 3:00 PM MST*
