@@ -68,8 +68,8 @@ export class ProfileResolver {
     return profileService.getProfile(id);
   }
 
-  @Query(() => Profile)
-  profileByHandle(@Ctx() { profileService }: Context, @Arg('handle') handle: string): Promise<Profile> {
+  @Query(() => Profile, { nullable: true })
+  profileByHandle(@Ctx() { profileService }: Context, @Arg('handle') handle: string): Promise<Profile | null> {
     return profileService.getProfileByHandle(handle);
   }
 

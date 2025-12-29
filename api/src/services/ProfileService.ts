@@ -24,7 +24,7 @@ export class ProfileService extends ModelService<typeof Profile> {
     const profile = await UserModel.aggregate([
       {
         $match: {
-          handle,
+          handle: { $regex: new RegExp(`^${handle}$`, 'i') }, // Case-insensitive match
         },
       },
       {
@@ -43,11 +43,16 @@ export class ProfileService extends ModelService<typeof Profile> {
       {
         $replaceRoot: {
           newRoot: {
-            $mergeObjects: ['$profile', { magicWalletAddress: '$$ROOT.magicWalletAddress' }],
+            $mergeObjects: ['$profile', { magicWalletAddress: '$$ROOT.magicWalletAddress', userHandle: '$$ROOT.handle' }],
           },
         },
       },
     ]);
+
+    if (!profile[0]) {
+      throw new NotFoundError(`Profile with handle "${handle}" not found`);
+    }
+
     return profile[0];
   }
 
