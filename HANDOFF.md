@@ -1,32 +1,23 @@
-# SoundChain Development Handoff - December 28, 2025 (Night Update)
+# SoundChain Development Handoff - December 29, 2025
 
 ## Session Summary
 
-Major infrastructure migration plus bug fixes. User left for a movie while I continued working autonomously.
+Continued from previous session. Fixed AudioPlayerModal artwork display issue and investigated IPFS migration status.
 
 ---
 
-## Bug Fixes Completed While User Away
+## Issues Fixed This Session
 
-### 1. Profile Page Error (sp202nfts) - FIXED
-**Problem:** "Application error: a client-side exception" when viewing certain profiles
-**Root Cause:** `getProfileByHandle` returned `undefined` for non-existent users without throwing an error
-**Fix:**
-- Added `NotFoundError` when profile not found
-- Made handle matching case-insensitive
-- Added `userHandle` to returned profile data
-- Made `profileByHandle` nullable in GraphQL schema
+### 1. AudioPlayerModal Artwork Not Loading (FIXED)
+**Issue:** Cover art showing SoundChain logo instead of actual artwork in the full-screen music player modal. Footer player was showing artwork correctly.
 
-### 2. Top 10 Mobile Display - FIXED
-**Problem:** Top Charts showed only 2-3 visible tracks on mobile, no indication more exist
-**Fix:**
-- Reduced card width on mobile (140px vs 200px desktop)
-- Added edge fade indicators showing scrollable content
-- Smaller gaps on mobile for better density
+**Root Cause:** The `AudioPlayerModal` used a `useValidatedImageUrl` hook that pre-validated images with `new Image()`. This was failing due to CORS restrictions on S3-hosted artwork.
 
-### 3. Lambda Migration Timeout - FIXED
-**Problem:** Migration Lambda timed out after 6 seconds (default)
-**Fix:** Added `timeout: 300` (5 minutes) and `memorySize: 1024` in serverless.yml
+**Fix Applied:** Removed the pre-validation hook and used simple fallback approach like the footer player.
+
+**Commit:** `d9226dcd8` - fix: Remove artwork pre-validation that was failing due to CORS
+
+**File Modified:** `web/src/components/modals/AudioPlayerModal.tsx`
 
 ---
 
@@ -43,87 +34,88 @@ Total Pinned: 5,416 tracks
 S3 Location: s3://soundchain-api-production-uploads/migrations/ipfs_pins.json
 ```
 
-### Step 3: Apply CIDs to MongoDB - AWAITING DEPLOYMENT
+### Step 3: Apply CIDs to MongoDB - COMPLETE
+Migration successfully applied 5,416 IPFS CIDs to tracks in the `test` database.
+
+---
+
+## Infrastructure Notes
+
+### Bastion Host (i-0fd425cefe208d593)
+- **Status:** STOPPED (to save costs ~$8.50/month)
+- **VPC Issue:** Bastion is in `vpc-0742bbd5d548c14f0` but DocumentDB is in different network
+- SSH tunnel from bastion CANNOT reach DocumentDB directly
+
+### Database Access
+- **Production Lambda:** Works correctly (in correct VPC with DocumentDB access)
+- **Local Development:** Requires SSH tunnel through bastion (currently broken due to VPC mismatch)
+- **Database Name:** `test` (not `soundchain`) - this is where production data lives
+
+### DocumentDB Cluster
+- **Endpoint:** `soundchain-cluster.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com`
+- **Credentials:** `soundchainadmin:SoundChainProd2025`
+- **Password Rotation:** DISABLED (was causing issues, see SESSION_HANDOFF_DEC17.md)
+
+---
+
+## Known Issues
+
+### Artwork URLs Are S3 (Not IPFS)
+All 8,212 track `artworkUrl` fields point to S3:
 ```
-Status: Lambda timeout fixed, waiting for deploy
-Migration File: api/migrations/20251228180000-apply-ipfs-cids.js
-```
-
-The migration will auto-run when the deployment completes. Lambda timeout was increased from 6s to 300s.
-
----
-
-## Commits This Session
-
-| Commit | Description |
-|--------|-------------|
-| `adbc63895` | fix: Increase migrate Lambda timeout to 300s |
-| `1ffc42510` | fix: Top Charts mobile - smaller cards, scroll indicators |
-| `a90a21cb8` | fix: Profile by handle returns proper error for non-existent users |
-| `5c8136c59` | fix: Inline Role enum values in migrations |
-| `46b3037e1` | feat: Add applyIpfsCids admin mutation |
-| `3ed5475bc` | fix: Add image error handling to prevent blank artwork |
-| `75da829d3` | feat: Add artworkWithFallback field resolver |
-| `e368133dc` | fix: Build migration config at runtime |
-
----
-
-## Files Modified
-
-| File | Purpose |
-|------|---------|
-| `api/serverless.yml` | Lambda timeout 300s for migrate function |
-| `api/src/services/ProfileService.ts` | Case-insensitive handle, NotFoundError |
-| `api/src/resolvers/ProfileResolver.ts` | Nullable profileByHandle |
-| `api/src/resolvers/TrackResolver.ts` | artworkWithFallback, applyIpfsCids mutation |
-| `api/src/lambda/migrate/handler.ts` | Runtime config from env vars |
-| `api/migrations/*.js` | Fixed Role import issues |
-| `web/src/components/dex/TopChartsSection.tsx` | Mobile cards, scroll indicators |
-| `web/src/components/Asset/Asset.tsx` | Image onError fallback |
-| `web/src/components/modals/AudioPlayerModal.tsx` | Validated artwork URL hook |
-
----
-
-## Next Steps
-
-1. **Wait for deployment** - Lambda will auto-run migration after deploy (~10 min)
-2. **Verify IPFS playback** - Test tracks play from Pinata gateway
-3. **Stop bastion instance** - User requested after migration
-4. **Discord Bot** - Future: inline NFT playback (discussed with user)
-5. **Stripe Integration** - Non-Web3 uploads with tiered pricing
-
----
-
-## Running Migration Manually
-
-If auto-migration doesn't run after deploy:
-
-**Option 1: Invoke Lambda**
-```bash
-aws lambda invoke --function-name soundchain-api-production-migrate --payload '{}' response.json
-cat response.json
+https://soundchain-api-production-uploads.s3.us-east-1.amazonaws.com/...
 ```
 
-**Option 2: GraphQL Mutation** (requires ADMIN role)
-```graphql
-mutation {
-  applyIpfsCids
-}
-```
+The IPFS migration only migrated AUDIO files, not artwork. Artwork remains on S3.
 
 ---
 
-## Discord Webhooks (Saved)
+## Quick Commands
 
 ```bash
-# Main Channel
-DISCORD_WEBHOOK_1="https://discord.com/api/webhooks/937786539688226846/-QzzIVq_Qvt86iehYSDIduLSk1JikU9VL0Z4DqapYira0xGAHw-jKXnRlOHoAXWwGAFj"
+# Check bastion status
+aws ec2 describe-instances --filters "Name=tag:Name,Values=*bastion*" --query 'Reservations[*].Instances[*].[PublicIpAddress,InstanceId,State.Name]' --output text
 
-# Secondary Channel
-DISCORD_WEBHOOK_2="https://discord.com/api/webhooks/1395109302989230190/FN_XuI7vaaJM40ABzQda_Sx-4JQTarLhY9cLBOLvOsUeDqq15YpzUdUTJrIOZNIcX8nS"
+# Start bastion (if needed)
+aws ec2 start-instances --instance-ids i-0fd425cefe208d593
+
+# Stop bastion (ALWAYS do this when done)
+aws ec2 stop-instances --instance-ids i-0fd425cefe208d593
+
+# Check Lambda logs
+aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
+
+# Check migration Lambda logs
+aws logs tail /aws/lambda/soundchain-api-production-migrate --since 10m
 ```
 
 ---
 
-*Generated: December 28, 2025 @ 5:45 PM MST*
-*User Status: Away (at movie)*
+## Files Modified This Session
+
+| File | Change |
+|------|--------|
+| `web/src/components/modals/AudioPlayerModal.tsx` | Removed CORS-failing image pre-validation |
+
+---
+
+## Pending Tasks
+
+1. Verify artwork fix works on production after deployment
+2. Consider migrating artwork to IPFS (currently S3-only)
+3. Fix bastion VPC configuration if direct DB access needed
+4. Integrate Stripe payments (future)
+
+---
+
+## Best Practices Reminder
+
+**Always scan HANDOFF files before starting a task** - They contain:
+- Working bash commands
+- Database connection details
+- VPC/networking configurations
+- Previous solutions to similar problems
+
+---
+
+*Updated: December 29, 2025 @ 2:00 PM MST*
