@@ -23,6 +23,7 @@ const getRuntimeConfig = () => {
 };
 
 export const handler: Handler = async () => {
+  console.log('=== MIGRATE HANDLER v2.0 ===');
   console.log('Starting migrations');
   console.log('MONGODB_URI set:', !!process.env.MONGODB_URI);
   console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);

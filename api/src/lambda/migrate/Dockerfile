@@ -31,4 +31,5 @@ COPY global-bundle.pem ./.build/
 
 # Command to run your Lambda function
 CMD [ "./.build/src/lambda/migrate/handler.handler" ]
-# Trigger rebuild final
+# Force rebuild: 2025-12-29-v2
+# Invalidate cache by changing this comment
