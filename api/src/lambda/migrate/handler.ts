@@ -7,7 +7,7 @@ const getRuntimeConfig = () => {
   return {
     mongodb: {
       url: url,
-      databaseName: 'soundchain',
+      databaseName: 'test', // DocumentDB uses 'test' as default database
       options: {
         tls: url.includes('docdb.amazonaws.com'),
         tlsAllowInvalidCertificates: true,
