@@ -72,27 +72,62 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   // Cache for preloaded audio URLs to avoid duplicate preloads
   const preloadedUrls = useRef<Set<string>>(new Set())
 
-  // Preload audio for faster playback - call when track becomes visible
+  /**
+   * Aggressive audio preloading for IPFS tracks
+   * IPFS gateways have 5-10 second initial latency - this warms the cache
+   *
+   * Strategy:
+   * 1. Use fetch() to start downloading the first 1MB (range request)
+   * 2. Add <link rel="preload"> for browser-level caching
+   * 3. Use Audio element preload for full buffering
+   *
+   * Call this when tracks become visible on screen (hover, scroll into view)
+   */
   const preloadTrack = useCallback((src: string) => {
     if (!src || preloadedUrls.current.has(src)) return
+    if (typeof window === 'undefined') return
 
     preloadedUrls.current.add(src)
 
-    // Use link preload for best browser optimization
-    if (typeof document !== 'undefined') {
-      const link = document.createElement('link')
-      link.rel = 'preload'
-      link.as = 'audio'
-      link.href = src
-      link.crossOrigin = 'anonymous'
-      document.head.appendChild(link)
+    // Strategy 1: Aggressive fetch to warm IPFS gateway cache
+    // Only fetch first 1MB to reduce bandwidth but trigger gateway caching
+    fetch(src, {
+      method: 'GET',
+      headers: {
+        'Range': 'bytes=0-1048576', // First 1MB
+      },
+      mode: 'cors',
+      credentials: 'omit',
+    }).then(response => {
+      if (response.ok || response.status === 206) {
+        console.log('[Preload] Gateway warmed for:', src.substring(0, 50) + '...')
+      }
+    }).catch(() => {
+      // Silent fail - preloading is best-effort
+    })
 
-      // Clean up after 60 seconds to avoid memory bloat
-      setTimeout(() => {
-        link.remove()
-        preloadedUrls.current.delete(src)
-      }, 60000)
-    }
+    // Strategy 2: Link preload for browser-level optimization
+    const link = document.createElement('link')
+    link.rel = 'preload'
+    link.as = 'audio'
+    link.href = src
+    link.crossOrigin = 'anonymous'
+    document.head.appendChild(link)
+
+    // Strategy 3: Hidden audio element for full buffering (most aggressive)
+    const audio = new Audio()
+    audio.preload = 'auto'
+    audio.crossOrigin = 'anonymous'
+    audio.src = src
+    // Don't play, just let it buffer
+    audio.load()
+
+    // Clean up after 2 minutes to avoid memory bloat
+    setTimeout(() => {
+      link.remove()
+      audio.src = ''
+      preloadedUrls.current.delete(src)
+    }, 120000)
   }, [])
 
   useEffect(() => {
@@ -255,6 +290,19 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       play(playlist[nextIndex])
     }
   }, [currentPlaylistIndex, hasNext, play, playlist])
+
+  // Auto-preload next tracks in queue for instant playback
+  useEffect(() => {
+    if (!playlist.length || currentPlaylistIndex < 0) return
+
+    // Preload next 2 tracks in the queue
+    const nextTracks = playlist.slice(currentPlaylistIndex + 1, currentPlaylistIndex + 3)
+    nextTracks.forEach(track => {
+      if (track?.src) {
+        preloadTrack(track.src)
+      }
+    })
+  }, [currentPlaylistIndex, playlist, preloadTrack])
 
   const jumpTo = useCallback(
     (index: number) => {
