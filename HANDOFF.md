@@ -95,12 +95,13 @@ export SOUNDCHAIN_ANNOUNCEMENT_KEY=sc_live_xxxxx
 
 | Commit | Description |
 |--------|-------------|
+| `90b8576a5` | fix: Make PlaylistTrack.sourceType nullable for backwards compat |
+| `89a7c9d2b` | feat: Add Developer Portal with API key management |
+| `68dcfe089` | feat: Add migration to regenerate SoundChain API key |
+| `ffe6de79c` | feat: Enable Developer API REST endpoints in Lambda |
 | `b889d2fa0` | feat: Add SCid certificate upload to Create Modal |
 | `05324b7e9` | perf: Lightning-fast IPFS audio with Cloudflare gateway + preloading |
 | `e878b468a` | fix: Critical GraphQL errors causing client-side exceptions |
-| `2dccfd7b6` | fix: TypeScript errors in Developer Platform files |
-| `e103bcbf5` | perf: Use fast dweb.link gateway for IPFS audio streaming |
-| `b679a7cc6` | feat: Add SoundChain official API key migration and script |
 
 ---
 
