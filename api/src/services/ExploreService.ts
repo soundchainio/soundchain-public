@@ -28,13 +28,13 @@ export class ExploreService extends Service {
     return { profiles: profiles.list, totalProfiles: profiles.total, tracks: tracks.nodes, totalTracks: tracks.pageInfo.totalCount };
   }
 
-  async getExploreTracks(sort: PaginateSortParams<typeof Track>, search: string, page?: PageInput): Promise<PaginateResult<Track>> {
+  async getExploreTracks(sort: PaginateSortParams<typeof Track> | undefined, search: string, page?: PageInput): Promise<PaginateResult<Track>> {
     const aggregationParams = this.getTrackAggregationParams(search)
     const result = await this.context.trackService.paginatePipelineAggregated({
       ...aggregationParams,
       sort: {
-        field: sort.field,
-        order: sort.order
+        field: sort?.field || 'createdAt',
+        order: sort?.order || SortOrder.DESC
       },
       page,
     });

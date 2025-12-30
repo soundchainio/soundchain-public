@@ -38,10 +38,14 @@ export interface PolygonscanResultInterface {
 
 export class PolygonscanService extends Service {
   async getMaticUsd(): Promise<string> {
-    const url = `?apikey=${config.minting.polygonScan}&module=stats&action=maticprice`;
-
-    const { data } = await polygonScanApi.get<PolygonscanMaticUsdResponse>(url);
-    return data.result.maticusd;
+    try {
+      const url = `?apikey=${config.minting.polygonScan}&module=stats&action=maticprice`;
+      const { data } = await polygonScanApi.get<PolygonscanMaticUsdResponse>(url);
+      return data?.result?.maticusd || '0.50'; // Fallback to reasonable value if API fails
+    } catch (error) {
+      console.error('Failed to fetch MATIC price:', error);
+      return '0.50'; // Fallback price
+    }
   }
 
   async getTransactionHistory(
