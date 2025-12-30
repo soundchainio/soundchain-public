@@ -73,6 +73,50 @@ export const handler: Handler = async () => {
   } else {
     console.log('No pending migrations');
   }
+
+  // DIRECT INSERT: Ensure SoundChain API key exists (bypasses migration tracking)
+  // This runs every time but only creates if not exists
+  try {
+    const testDb = client.db('test');
+    const apiKeys = testDb.collection('developerapikeys');
+
+    // Pre-generated SoundChain official API key
+    const apiKeyHash = '58f7c4a5878c96c41ffaa4f90f3a8e6ca6044a3a00c4453a5be798985aeca293';
+
+    // Check if key exists
+    const existing = await apiKeys.findOne({ apiKeyHash });
+
+    if (!existing) {
+      console.log('=== INSERTING SOUNDCHAIN API KEY ===');
+
+      const apiKey = {
+        apiKeyHash: apiKeyHash,
+        keyPrefix: 'sc_live_7ee55da...ef2b',
+        profileId: 'SOUNDCHAIN_OFFICIAL',
+        companyName: 'SoundChain',
+        contactEmail: 'announcements@soundchain.io',
+        website: 'https://soundchain.io',
+        description: 'Official SoundChain platform announcements',
+        logoUrl: 'https://soundchain.io/soundchain-meta-logo.png',
+        status: 'ACTIVE',
+        tier: 'ENTERPRISE',
+        verified: true,
+        dailyRequestCount: 0,
+        totalRequests: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await apiKeys.insertOne(apiKey);
+      console.log('SoundChain API key created! ID:', result.insertedId);
+      console.log('Use key: sc_live_7ee55da396790c3142cf150f30fd4f9003c175a62610ffbac8afae71241bef2b');
+    } else {
+      console.log('SoundChain API key already exists');
+    }
+  } catch (keyErr: unknown) {
+    console.log('API key check/insert error:', (keyErr as Error).message);
+  }
+
   await client.close();
   console.log('Migrations finish');
 };
