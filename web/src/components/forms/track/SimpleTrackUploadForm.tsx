@@ -91,7 +91,6 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<UploadResult | null>(null)
   const [certificate, setCertificate] = useState<SCidCertificateData | null>(null)
-  const [skipDatabase, setSkipDatabase] = useState(false)
 
   // Audio dropzone
   const onDropAudio = useCallback(async (acceptedFiles: File[]) => {
@@ -169,7 +168,7 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
         genres: values.genres.length > 0 ? values.genres : undefined,
         assetUrl,
         artworkUrl: artworkUrl || undefined,
-        saveToDatabase: !skipDatabase,
+        saveToDatabase: false, // Non-web3 uploads are certificate-only
       })
 
       // Generate certificate for artist to download
@@ -333,7 +332,7 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
           <div className="text-center pb-4 border-b border-gray-700">
             <h2 className="text-xl font-bold text-white">Upload Your Music</h2>
             <p className="text-sm text-gray-400 mt-1">
-              No wallet needed. Get your SCid instantly.
+              No wallet needed. Your music goes to IPFS, you get a certificate.
             </p>
           </div>
 
@@ -448,26 +447,6 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
             </div>
           </div>
 
-          {/* Storage Options */}
-          <div className="bg-gray-800/30 rounded-lg p-4">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={skipDatabase}
-                onChange={(e) => setSkipDatabase(e.target.checked)}
-                className="mt-1 w-4 h-4 rounded border-gray-600 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
-              />
-              <div>
-                <span className="text-sm font-medium text-white">Certificate Only (No Database)</span>
-                <p className="text-xs text-gray-400 mt-1">
-                  Your track will be stored on IPFS but not in SoundChain's database.
-                  You'll download a certificate as proof of registration.
-                  Perfect for full artist control.
-                </p>
-              </div>
-            </label>
-          </div>
-
           {/* Submit */}
           <div className="pt-4 border-t border-gray-700">
             <Button
@@ -485,12 +464,12 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <Upload className="w-5 h-5" />
-                  {skipDatabase ? 'Upload & Get Certificate' : 'Upload & Get SCid'}
+                  Upload & Get Certificate
                 </span>
               )}
             </Button>
             <p className="text-xs text-gray-500 text-center mt-2">
-              No wallet or gas fees required. Your music will be stored on IPFS.
+              No wallet or gas fees. Your music goes to IPFS. You download the certificate.
             </p>
           </div>
         </Form>
