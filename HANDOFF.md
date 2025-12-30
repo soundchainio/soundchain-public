@@ -40,25 +40,24 @@ async getMaticUsd(): Promise<string> {
 }
 ```
 
-### 2. Audio Playback Speed (IMPROVED)
-**Commits:** `e103bcbf5`, `05324b7e9`
+### 2. Audio Playback CORS Fix (FIXED)
+**Commits:** `e103bcbf5`, `05324b7e9`, `ff740dd7e`
 
-Changed IPFS gateway from Pinata → dweb.link → **Cloudflare** (fastest):
+**Root Cause:** Cloudflare IPFS gateway doesn't send CORS headers, causing silent audio playback failure.
+
+**Fix:** Changed back to dweb.link which has proper CORS headers:
 ```typescript
 // api/src/resolvers/TrackResolver.ts
-const FAST_AUDIO_GATEWAY = 'https://cloudflare-ipfs.com/ipfs/';
+const FAST_AUDIO_GATEWAY = 'https://dweb.link/ipfs/';
 ```
 
-Added audio preloading in web app:
+Also added `crossOrigin="anonymous"` to audio element and error logging:
 ```typescript
-// web/src/hooks/useAudioPlayer.tsx
-const preloadTrack = useCallback((src: string) => {
-  const link = document.createElement('link')
-  link.rel = 'preload'
-  link.as = 'audio'
-  link.href = src
-  document.head.appendChild(link)
-}, [])
+// web/src/components/common/BottomAudioPlayer/AudioEngine.tsx
+<audio crossOrigin="anonymous" ... />
+audioRef.current.play().catch((err) => {
+  console.error('Audio playback failed:', err.message, '- Source:', currentSong.src)
+})
 ```
 
 ### 3. SCid Certificate Upload in Create Modal (ADDED)
@@ -95,6 +94,7 @@ export SOUNDCHAIN_ANNOUNCEMENT_KEY=sc_live_xxxxx
 
 | Commit | Description |
 |--------|-------------|
+| `ff740dd7e` | fix: Audio playback broken due to missing CORS headers |
 | `90b8576a5` | fix: Make PlaylistTrack.sourceType nullable for backwards compat |
 | `89a7c9d2b` | feat: Add Developer Portal with API key management |
 | `68dcfe089` | feat: Add migration to regenerate SoundChain API key |

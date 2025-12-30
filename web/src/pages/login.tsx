@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -6,6 +6,7 @@ import SEO from 'components/SEO';
 import { TopNavBarButton } from 'components/TopNavBarButton';
 import { config } from 'config';
 import { useLayoutContext } from 'hooks/useLayoutContext';
+import { useMagicContext } from 'hooks/useMagicContext';
 import { Google } from 'icons/Google';
 import { Discord } from 'icons/Discord';
 import { Twitch } from 'icons/Twitch';
@@ -18,24 +19,6 @@ import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { isApolloError } from '@apollo/client';
 import styled from 'styled-components';
-import { Magic } from 'magic-sdk';
-import { OAuthExtension } from '@magic-ext/oauth2';
-
-// Auth-only Magic instance (no network config - just for authentication)
-const MAGIC_KEY = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
-
-// Create a single auth Magic instance - reuse across all login methods
-let authMagicInstance: any = null;
-const getAuthMagic = () => {
-  if (typeof window === 'undefined') return null;
-  if (!authMagicInstance) {
-    authMagicInstance = new Magic(MAGIC_KEY, {
-      extensions: [new OAuthExtension()],
-    });
-    console.log('[Auth] Created shared Magic auth instance');
-  }
-  return authMagicInstance;
-};
 
 const Overlay = styled.div`
   position: fixed;
@@ -110,14 +93,12 @@ export default function LoginPage() {
   const magicParam = router.query.magic_credential?.toString();
   const [authMethod, setAuthMethod] = useState<AuthMethod[]>();
   const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
+  const { magic } = useMagicContext();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
-  const authMagic = useRef<any>(null);
 
   useEffect(() => {
     setIsClient(true);
-    // Initialize auth Magic instance on client
-    authMagic.current = getAuthMagic();
     // Detect in-app browser and warn user
     if (isInAppBrowser()) {
       setInAppBrowserWarning(true);
@@ -168,7 +149,7 @@ export default function LoginPage() {
   useEffect(() => {
     const validateToken = async () => {
       // Skip validation if user is already in login process or not client-side
-      if (loggingIn || !isClient || !authMagic.current) {
+      if (loggingIn || !isClient || !magic) {
         console.log('[validateToken] Skipping - login in progress or not ready');
         return;
       }
@@ -177,7 +158,7 @@ export default function LoginPage() {
       if (storedToken) {
         try {
           // Use timeout to prevent hanging on isLoggedIn check
-          const isLoggedInPromise = authMagic.current.user.isLoggedIn();
+          const isLoggedInPromise = magic.user.isLoggedIn();
           const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('isLoggedIn timeout')), 5000)
           );
@@ -206,7 +187,7 @@ export default function LoginPage() {
       }
     };
     validateToken();
-  }, [isClient, login, router, loggingIn]);
+  }, [isClient, login, router, loggingIn, magic]);
 
   const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
     console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
@@ -218,12 +199,12 @@ export default function LoginPage() {
         return;
       }
 
-      const magic = authMagic.current;
       if (!magic) {
         setError('Login not ready. Please refresh the page and try again.');
         return;
       }
 
+      // Check for oauth2 extension (from @magic-ext/oauth2)
       if (!(magic as any).oauth2) {
         setError('OAuth not available. Please refresh the page and try again.');
         return;
@@ -233,12 +214,11 @@ export default function LoginPage() {
       setError(null);
       localStorage.removeItem('didToken');
 
-      // Simple redirect URI - matches what's in Magic Dashboard
-      const redirectURI = `${window.location.origin}/login`;
+      // Use config.domainUrl like the legacy working code
+      const redirectURI = `${config.domainUrl}/login`;
       console.log('[OAuth2] Redirecting to', provider, 'with URI:', redirectURI);
 
-      // Direct call to loginWithRedirect - no preload, no timeout
-      // This matches the legacy (working) approach
+      // Direct call to loginWithRedirect using oauth2 extension
       await (magic as any).oauth2.loginWithRedirect({
         provider,
         redirectURI,
@@ -260,7 +240,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     async function handleMagicLink() {
-      const magic = authMagic.current;
       if (magic && magicParam && !loggingIn) {
         try {
           setLoggingIn(true);
@@ -287,7 +266,7 @@ export default function LoginPage() {
       }
     }
     handleMagicLink();
-  }, [isClient, magicParam, login, handleError, router]);
+  }, [magic, magicParam, login, handleError, router, loggingIn]);
 
   // Handle OAuth2 redirect callback
   // Check for OAuth-related URL params that indicate a callback
@@ -295,8 +274,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     async function handleOAuthRedirect() {
-      // Skip if not client-side or already logging in
-      if (!isClient || !authMagic.current) return;
+      // Skip if not client-side or magic not ready
+      if (!isClient || !magic) return;
 
       // Check if this looks like an OAuth callback by checking URL params
       const urlParams = new URLSearchParams(window.location.search);
@@ -323,8 +302,6 @@ export default function LoginPage() {
       // Show loading state immediately when processing OAuth callback
       setIsProcessingOAuth(true);
       setLoggingIn(true);
-
-      const magic = authMagic.current;
 
       try {
         console.log('[OAuth2] OAuth params detected, calling getRedirectResult...');
@@ -413,11 +390,10 @@ export default function LoginPage() {
       const timeoutId = setTimeout(handleOAuthRedirect, 150);
       return () => clearTimeout(timeoutId);
     }
-  }, [isClient, login, router]);
+  }, [isClient, magic, login, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
-      const magic = authMagic.current;
       if (!magic) throw new Error('Magic SDK not initialized. Please refresh the page.');
       console.log('[Email] Starting login process for email:', values.email);
       setLoggingIn(true);
