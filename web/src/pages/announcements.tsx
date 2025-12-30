@@ -3,56 +3,36 @@
  *
  * Public feed of announcements from startups/developers
  * building on the SoundChain platform.
+ *
+ * Fetches from /v1/feed REST API endpoint
  */
 
 import { Button } from 'components/common/Buttons/Button'
 import SEO from 'components/SEO'
-import { ExternalLink, Eye, Clock, Tag } from 'lucide-react'
+import { ExternalLink, Eye, Clock, Tag, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-// Mock data - will be replaced with GraphQL query
-const mockAnnouncements = [
-  {
-    id: '1',
-    title: '🚀 SCid Certificate Uploads Are LIVE!',
-    content: 'Upload your music to IPFS and get your SCid certificate. No wallet needed, no gas fees. Your music, your certificate, your control.',
-    link: 'https://soundchain.io/upload',
-    companyName: 'SoundChain',
-    companyLogo: 'https://soundchain.io/soundchain-meta-logo.png',
-    type: 'PRODUCT_LAUNCH',
-    tags: ['web3', 'music', 'ipfs'],
-    featured: true,
-    viewCount: 1234,
-    publishedAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: '🤝 New Partnership with IPFS',
-    content: 'We\'re excited to announce our integration with Pinata for decentralized music storage. All tracks are now permanently stored on IPFS.',
-    link: 'https://pinata.cloud',
-    companyName: 'SoundChain',
-    companyLogo: 'https://soundchain.io/soundchain-meta-logo.png',
-    type: 'PARTNERSHIP',
-    tags: ['partnership', 'ipfs', 'pinata'],
-    featured: false,
-    viewCount: 567,
-    publishedAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: '3',
-    title: '✨ Developer Platform Launch',
-    content: 'Startups can now post announcements to SoundChain via our new REST API. Get your API key and start reaching the Web3 music community!',
-    link: 'https://soundchain.io/developers',
-    companyName: 'SoundChain',
-    companyLogo: 'https://soundchain.io/soundchain-meta-logo.png',
-    type: 'FEATURE_UPDATE',
-    tags: ['api', 'developers', 'startups'],
-    featured: false,
-    viewCount: 890,
-    publishedAt: new Date(Date.now() - 172800000).toISOString(),
-  },
-]
+interface Announcement {
+  id: string
+  title: string
+  content: string
+  link?: string
+  imageUrl?: string
+  videoUrl?: string
+  mediaType?: string
+  companyName: string
+  companyLogo?: string
+  type: string
+  tags: string[]
+  featured: boolean
+  viewCount: number
+  publishedAt: string
+}
+
+// API endpoint - use relative URL in production
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io'
 
 const typeColors: Record<string, string> = {
   PRODUCT_LAUNCH: 'bg-purple-500/20 text-purple-400',
@@ -86,6 +66,28 @@ function formatDate(dateString: string): string {
 }
 
 export default function AnnouncementsPage() {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchAnnouncements() {
+      try {
+        // Use direct API Gateway URL for reliability
+        const response = await fetch('https://19ne212py4.execute-api.us-east-1.amazonaws.com/production/v1/feed')
+        if (!response.ok) throw new Error('Failed to fetch announcements')
+        const data = await response.json()
+        setAnnouncements(data.announcements || [])
+      } catch (err) {
+        console.error('Error fetching announcements:', err)
+        setError('Failed to load announcements')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAnnouncements()
+  }, [])
+
   return (
     <>
       <SEO
@@ -117,9 +119,30 @@ export default function AnnouncementsPage() {
             </Link>
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="text-center py-12 text-red-400">
+              {error}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && announcements.length === 0 && (
+            <div className="text-center py-12 text-gray-400">
+              No announcements yet. Be the first to post!
+            </div>
+          )}
+
           {/* Announcements Feed */}
           <div className="space-y-6">
-            {mockAnnouncements.map((announcement) => (
+            {announcements.map((announcement) => (
               <article
                 key={announcement.id}
                 className={`bg-gray-800/50 rounded-xl p-6 border ${
@@ -175,9 +198,21 @@ export default function AnnouncementsPage() {
                 <h2 className="text-xl font-bold text-white mb-2">
                   {announcement.title}
                 </h2>
-                <p className="text-gray-300 mb-4">
+                <p className="text-gray-300 mb-4 whitespace-pre-wrap">
                   {announcement.content}
                 </p>
+
+                {/* Image/Media */}
+                {announcement.imageUrl && (
+                  <div className="relative w-full h-48 md:h-64 rounded-lg overflow-hidden mb-4 bg-gray-700">
+                    <Image
+                      src={announcement.imageUrl}
+                      alt={announcement.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
 
                 {/* Tags */}
                 {announcement.tags && announcement.tags.length > 0 && (
