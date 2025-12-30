@@ -3,6 +3,7 @@ import classNames from 'classnames'
 import { Button } from 'components/common/Buttons/Button'
 import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/track/TrackMetadataForm'
 import { TrackUploader } from 'components/forms/track/TrackUploader'
+import { SimpleTrackUploadForm } from 'components/forms/track/SimpleTrackUploadForm'
 import { Modal } from 'components/Modal'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
@@ -14,6 +15,7 @@ import {
   CreateMultipleTracksMutation,
   ExploreTracksDocument,
   FeedDocument,
+  Genre,
   PendingRequest,
   PostsDocument,
   Track,
@@ -22,6 +24,7 @@ import {
   TracksQuery,
   useCreateMultipleTracksMutation,
   useCreateTrackEditionMutation,
+  useCreateTrackWithScidMutation,
   usePinJsonToIpfsMutation,
   usePinToIpfsMutation,
 } from 'lib/graphql'
@@ -38,6 +41,7 @@ export const BATCH_SIZE = 120
 
 enum Tabs {
   NFT = 'NFT',
+  SCID = 'SCid',
   POST = 'Post',
 }
 
@@ -58,6 +62,7 @@ export const CreateModal = () => {
   const { upload } = useUpload()
   const [createMultipleTracks] = useCreateMultipleTracksMutation()
   const [createTrackEdition] = useCreateTrackEditionMutation()
+  const [createTrackWithSCid] = useCreateTrackWithScidMutation()
 
   const { web3, account } = useWalletContext()
   const [pinToIPFS] = usePinToIpfsMutation()
@@ -69,6 +74,12 @@ export const CreateModal = () => {
   const [mintError, setMintError] = useState<boolean>(false)
 
   const [initialValues, setInitialValues] = useState<InitialValues>()
+  const [scidResult, setScidResult] = useState<{
+    trackId: string
+    scid: string
+    ipfsCid: string
+    chainCode?: string
+  } | null>(null)
 
   useEffect(() => {
     handleClose()
@@ -164,6 +175,66 @@ export const CreateModal = () => {
         reject(error)
       }
     })
+  }
+
+  // SCid upload handlers (no wallet required)
+  const handleScidUploadAudio = async (file: File): Promise<string> => {
+    return await upload([file])
+  }
+
+  const handleScidUploadArtwork = async (file: File): Promise<string> => {
+    return await upload([file])
+  }
+
+  const handleScidSubmit = async (data: {
+    title: string
+    artist?: string
+    album?: string
+    description?: string
+    releaseYear?: number
+    copyright?: string
+    genres?: string[]
+    assetUrl: string
+    artworkUrl?: string
+  }) => {
+    const result = await createTrackWithSCid({
+      variables: {
+        input: {
+          title: data.title,
+          description: data.description,
+          assetUrl: data.assetUrl,
+          artworkUrl: data.artworkUrl,
+          artist: data.artist,
+          album: data.album,
+          releaseYear: data.releaseYear,
+          copyright: data.copyright,
+          genres: data.genres as Genre[] | undefined,
+          createPost: false,
+        },
+      },
+      refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
+    })
+
+    const trackData = result.data?.createTrackWithSCid
+    if (!trackData) {
+      throw new Error('Failed to create track')
+    }
+
+    setScidResult({
+      trackId: trackData.track.id,
+      scid: trackData.scid?.scid || '',
+      ipfsCid: trackData.track.ipfsCid || '',
+      chainCode: trackData.scid?.chainCode,
+    })
+
+    return {
+      trackId: trackData.track.id,
+      scid: trackData.scid?.scid || '',
+      message: trackData.message,
+      ipfsCid: trackData.track.ipfsCid || '',
+      ipfsGatewayUrl: trackData.track.ipfsGatewayUrl || '',
+      chainCode: trackData.scid?.chainCode,
+    }
   }
 
   const handleSubmit = async (values: FormValues) => {
@@ -431,6 +502,7 @@ export const CreateModal = () => {
     if (!mintingState) {
       setTransactionHash(undefined)
       setFile(undefined)
+      setScidResult(null)
     }
   }
 
@@ -448,6 +520,15 @@ export const CreateModal = () => {
         )}
       >
         Mint NFT
+      </button>
+      <button
+        onClick={() => setTab(Tabs.SCID)}
+        className={classNames(
+          'flex-1 rounded-lg py-1.5 text-sm font-bold',
+          tab === Tabs.SCID ? 'bg-gray-30 text-white' : 'text-gray-80',
+        )}
+      >
+        SCid
       </button>
       <button
         onClick={handlePostTabClick}
@@ -472,7 +553,42 @@ export const CreateModal = () => {
         </button>
       }
     >
-      {transactionHash && newTrack ? (
+      {tab === Tabs.SCID ? (
+        /* SCid Certificate Upload - No wallet required */
+        scidResult ? (
+          <div className="p-6 text-center">
+            <div className="mb-4 text-4xl">🎉</div>
+            <h3 className="mb-2 text-xl font-bold text-white">Track Uploaded!</h3>
+            <p className="mb-4 text-gray-400">Your SCid certificate has been generated.</p>
+            <div className="mb-4 rounded-lg bg-gray-800 p-4 text-left">
+              <p className="text-sm text-gray-400">SCid:</p>
+              <p className="font-mono text-cyan-400 break-all">{scidResult.scid}</p>
+              {scidResult.chainCode && (
+                <>
+                  <p className="mt-2 text-sm text-gray-400">Chain Code:</p>
+                  <p className="font-mono text-cyan-400">{scidResult.chainCode}</p>
+                </>
+              )}
+              <p className="mt-2 text-sm text-gray-400">IPFS CID:</p>
+              <p className="font-mono text-cyan-400 break-all">{scidResult.ipfsCid}</p>
+            </div>
+            <Button variant="rainbow-xs" onClick={() => setScidResult(null)}>
+              Upload Another
+            </Button>
+          </div>
+        ) : (
+          <div className="p-4">
+            <p className="mb-4 text-center text-sm text-gray-400">
+              Upload music without a wallet. Get an SCid certificate as proof of ownership.
+            </p>
+            <SimpleTrackUploadForm
+              onUploadAudio={handleScidUploadAudio}
+              onUploadArtwork={handleScidUploadArtwork}
+              onSubmit={handleScidSubmit}
+            />
+          </div>
+        )
+      ) : transactionHash && newTrack ? (
         <MintingDone transactionHash={transactionHash} track={newTrack} />
       ) : (
         <>
