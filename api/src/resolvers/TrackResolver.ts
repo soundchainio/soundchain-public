@@ -40,10 +40,10 @@ import { GenreTracks } from '../types/GenreTracks';
 const DEFAULT_ARTWORK_URL = 'https://soundchain.io/default-artwork.png';
 const IPFS_GATEWAY = 'https://gateway.pinata.cloud/ipfs/';
 
-// Lightning-fast IPFS gateway for audio streaming
-// Cloudflare's IPFS gateway is the fastest option globally
-// Has edge caching worldwide - typical load time: 1-2 seconds
-const FAST_AUDIO_GATEWAY = 'https://cloudflare-ipfs.com/ipfs/';
+// IPFS gateway for audio streaming with CORS support
+// dweb.link sends proper Access-Control-Allow-Origin: * headers
+// cloudflare-ipfs.com is faster but lacks CORS headers, breaking browser playback
+const FAST_AUDIO_GATEWAY = 'https://dweb.link/ipfs/';
 
 @Resolver(Track)
 export class TrackResolver {

@@ -221,8 +221,9 @@ export const AudioEngine = () => {
     if (isPlaying) {
       // Resume AudioContext if suspended (required for Web Audio after user interaction)
       resumeAudioContext()
-      audioRef.current.play().catch(() => {
-        // Handle autoplay restrictions
+      audioRef.current.play().catch((err) => {
+        // Log errors for debugging (CORS, network, autoplay restrictions)
+        console.error('Audio playback failed:', err.message, '- Source:', currentSong.src)
         setPlayingState(false)
       })
     } else {
@@ -435,6 +436,7 @@ export const AudioEngine = () => {
       className="h-0 w-0 opacity-0"
       playsInline
       preload="auto"
+      crossOrigin="anonymous"
       // iOS background playback attributes
       // @ts-ignore - webkit specific attributes
       webkit-playsinline="true"
