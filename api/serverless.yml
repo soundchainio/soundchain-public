@@ -19,6 +19,11 @@ functions:
           path: /
           method: get
           cors: true
+      # Developer Platform REST API (v1)
+      - http:
+          path: /v1/{proxy+}
+          method: any
+          cors: true
   hello:
     image: ${env:HELLO_IMAGE_URI}
     events:
