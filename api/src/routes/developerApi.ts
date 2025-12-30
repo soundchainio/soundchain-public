@@ -13,7 +13,19 @@
 
 import { Router, Request, Response } from 'express';
 import { DeveloperApiKey, DeveloperApiKeyModel } from '../models/DeveloperApiKey';
-import { AnnouncementModel, AnnouncementStatus, AnnouncementType } from '../models/Announcement';
+import { AnnouncementModel, AnnouncementStatus, AnnouncementType, MediaType } from '../models/Announcement';
+
+/**
+ * Auto-detect media type from URL extension
+ */
+function detectMediaType(url: string): MediaType | undefined {
+  if (!url) return undefined;
+  const lower = url.toLowerCase();
+  if (lower.match(/\.(mp4|webm|mov|avi)(\?|$)/)) return MediaType.VIDEO;
+  if (lower.match(/\.gif(\?|$)/)) return MediaType.GIF;
+  if (lower.match(/\.(jpg|jpeg|png|webp|avif|bmp)(\?|$)/)) return MediaType.IMAGE;
+  return MediaType.IMAGE; // Default to image
+}
 
 const router = Router();
 
@@ -99,17 +111,24 @@ async function validateApiKey(req: Request, res: Response, next: Function) {
  *   "title": "Our New Feature",
  *   "content": "We just launched...",
  *   "link": "https://yourapp.com",
- *   "imageUrl": "https://...",
+ *   "imageUrl": "https://... (supports 8K images)",
+ *   "videoUrl": "https://... (for video content)",
+ *   "mediaType": "IMAGE|GIF|VIDEO (auto-detected if not provided)",
  *   "type": "PRODUCT_LAUNCH",
  *   "tags": ["web3", "music"]
  * }
+ *
+ * Content limits:
+ * - ENTERPRISE tier: UNLIMITED characters
+ * - PRO tier: 10,000 characters
+ * - BASIC tier: 2,000 characters
  */
 router.post('/announcements', validateApiKey, async (req: Request, res: Response) => {
   try {
     const apiKey = (req as any).apiKey;
     const rateLimit = (req as any).rateLimit;
 
-    const { title, content, link, imageUrl, type, tags } = req.body;
+    const { title, content, link, imageUrl, videoUrl, mediaType, type, tags } = req.body;
 
     // Validation
     if (!title || typeof title !== 'string' || title.length > 200) {
@@ -119,16 +138,43 @@ router.post('/announcements', validateApiKey, async (req: Request, res: Response
       });
     }
 
-    if (!content || typeof content !== 'string' || content.length > 2000) {
+    // Content length limits by tier (ENTERPRISE = unlimited!)
+    const contentLimits: Record<string, number> = {
+      'ENTERPRISE': Infinity,  // UNLIMITED for SoundChain official!
+      'PRO': 10000,
+      'BASIC': 2000,
+    };
+    const maxContentLength = contentLimits[apiKey.tier] || 2000;
+
+    if (!content || typeof content !== 'string') {
       return res.status(400).json({
         error: 'Invalid content',
-        hint: 'Content is required and must be max 2000 characters',
+        hint: 'Content is required',
+      });
+    }
+
+    if (content.length > maxContentLength && maxContentLength !== Infinity) {
+      return res.status(400).json({
+        error: 'Content too long',
+        hint: `Your tier (${apiKey.tier}) allows max ${maxContentLength} characters. You sent ${content.length}.`,
+        upgrade: 'Upgrade to ENTERPRISE for unlimited content!',
       });
     }
 
     // Validate type if provided
     const validTypes = Object.values(AnnouncementType);
     const announcementType = type && validTypes.includes(type) ? type : AnnouncementType.OTHER;
+
+    // Auto-detect media type from URLs if not explicitly provided
+    const validMediaTypes = Object.values(MediaType);
+    let detectedMediaType: MediaType | undefined;
+    if (mediaType && validMediaTypes.includes(mediaType)) {
+      detectedMediaType = mediaType;
+    } else if (videoUrl) {
+      detectedMediaType = MediaType.VIDEO;
+    } else if (imageUrl) {
+      detectedMediaType = detectMediaType(imageUrl);
+    }
 
     // Create announcement
     const announcement = await AnnouncementModel.create({
@@ -139,6 +185,8 @@ router.post('/announcements', validateApiKey, async (req: Request, res: Response
       content: content.trim(),
       link: link || undefined,
       imageUrl: imageUrl || undefined,
+      videoUrl: videoUrl || undefined,
+      mediaType: detectedMediaType,
       type: announcementType,
       tags: Array.isArray(tags) ? tags.slice(0, 10) : [],
       status: AnnouncementStatus.APPROVED,
@@ -161,7 +209,11 @@ router.post('/announcements', validateApiKey, async (req: Request, res: Response
         id: announcement._id,
         title: announcement.title,
         content: announcement.content,
+        contentLength: announcement.content.length,
         link: announcement.link,
+        imageUrl: announcement.imageUrl,
+        videoUrl: announcement.videoUrl,
+        mediaType: announcement.mediaType,
         type: announcement.type,
         companyName: announcement.companyName,
         publishedAt: announcement.publishedAt,
@@ -322,6 +374,8 @@ router.get('/feed', async (req: Request, res: Response) => {
         content: a.content,
         link: a.link,
         imageUrl: a.imageUrl,
+        videoUrl: (a as any).videoUrl,
+        mediaType: (a as any).mediaType,
         type: a.type,
         tags: a.tags,
         companyName: a.companyName,

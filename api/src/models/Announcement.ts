@@ -33,6 +33,17 @@ export enum AnnouncementType {
   OTHER = 'OTHER',
 }
 
+export enum MediaType {
+  IMAGE = 'IMAGE',       // Static images (PNG, JPG, WEBP)
+  GIF = 'GIF',           // Animated GIFs
+  VIDEO = 'VIDEO',       // Videos (MP4, WEBM)
+}
+
+registerEnumType(MediaType, {
+  name: 'MediaType',
+  description: 'Type of media attached to announcement',
+});
+
 registerEnumType(AnnouncementType, {
   name: 'AnnouncementType',
   description: 'Type of announcement',
@@ -85,9 +96,11 @@ export class Announcement extends Model {
 
   /**
    * Announcement content/body
+   * ENTERPRISE tier: unlimited length
+   * Other tiers: 2000 chars (enforced in API)
    */
   @Field(() => String)
-  @prop({ required: true, maxlength: 2000 })
+  @prop({ required: true })
   content: string;
 
   /**
@@ -98,11 +111,25 @@ export class Announcement extends Model {
   link?: string;
 
   /**
-   * Image/banner URL
+   * Image/banner URL (supports 8K resolution)
    */
   @Field(() => String, { nullable: true })
   @prop()
   imageUrl?: string;
+
+  /**
+   * Video URL (MP4, WEBM for rich media announcements)
+   */
+  @Field(() => String, { nullable: true })
+  @prop()
+  videoUrl?: string;
+
+  /**
+   * Media type indicator (IMAGE, GIF, VIDEO)
+   */
+  @Field(() => MediaType, { nullable: true })
+  @prop({ enum: MediaType })
+  mediaType?: MediaType;
 
   /**
    * Announcement type
