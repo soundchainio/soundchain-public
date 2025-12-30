@@ -1,151 +1,103 @@
-# SoundChain Development Handoff - December 29, 2025
+# SoundChain Development Handoff - December 30, 2025
 
 ## Session Summary
 
-Fixed critical issues and added new features:
-1. **AudioPlayerModal artwork not loading** - CORS pre-validation was failing
-2. **Mobile audio playback broken** - IPFS URLs weren't being handled correctly
-3. **Switched minting to IPFS-only** - No more Mux for new tracks
-4. **Audio normalization** - Added -24 LUFS normalization (no compression)
-5. **User avatars duplicating** - Fixed deduplication on /dex/users and /dex/explore
-6. **Profile navigation broken** - Fixed routeId dependency in useEffect
-7. **Non-web3 SCid minting** - Bandcamp/DistroKid style uploads with auto SCid
+Critical fixes and Developer Platform completion:
+1. **Audio Playback Lag (30-40s)** - Switched to fast dweb.link IPFS gateway
+2. **Developer Platform Build Errors** - Fixed TypeScript errors preventing deployment
+3. **SoundChain API Key & Announcements** - Created migration and scripts (pending deployment)
+4. **CarPlay Compatibility** - Already committed last session
 
 ---
 
 ## Issues Fixed This Session
 
-### 1. AudioPlayerModal Artwork Not Loading (FIXED)
-**Commit:** `d9226dcd8`
+### 1. Audio Playback Lag - 30-40 Seconds (FIXED)
+**Commit:** `e103bcbf5`
 
-Removed CORS-failing `useValidatedImageUrl` hook.
+The Pinata public gateway (`gateway.pinata.cloud`) was extremely slow. Changed to `dweb.link` (Protocol Labs' official gateway) which is much faster.
 
-### 2. Mobile Audio Playback Not Working (FIXED)
-**Commit:** `cd4e4ffcb`
+```typescript
+// api/src/resolvers/TrackResolver.ts
+const FAST_AUDIO_GATEWAY = 'https://dweb.link/ipfs/';
 
-AudioEngine now detects HLS vs direct audio files.
+playbackUrl(@Root() { ipfsCid, muxAsset }: Track): string {
+  if (ipfsCid) {
+    // Always use fast gateway (dweb.link is much faster than Pinata public)
+    return `${FAST_AUDIO_GATEWAY}${ipfsCid}`;
+  }
+  return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
+}
+```
 
-### 3. Minting Now Uses IPFS Only (FIXED)
-**Commit:** `8c07b2553`
+### 2. Developer Platform TypeScript Errors (FIXED)
+**Commit:** `2dccfd7b6`
 
-- `createMultipleTracks` now uses `createTrackIPFSOnly` instead of Mux
-- New tracks are pinned directly to Pinata/IPFS from S3
-- Old Mux-based `createTrack` renamed to `createTrackLegacy` (deprecated)
+Previous builds (#287, #288) failed due to TypeScript errors:
+- Fixed import path for `CurrentUser` decorator
+- Made `createdAt`/`updatedAt` optional in models (mongoose auto-generates)
+- Added type casting for typegoose model create calls
+
+Files fixed:
+- `api/src/resolvers/DeveloperResolver.ts`
+- `api/src/models/DeveloperApiKey.ts`
+- `api/src/models/Announcement.ts`
+- `api/src/services/DeveloperApiKeyService.ts`
+- `api/src/services/AnnouncementService.ts`
+- `api/src/routes/developerApi.ts`
+
+### 3. SoundChain API Key Migration (PENDING DEPLOYMENT)
+**Commit:** `b679a7cc6`
+
+Created migration to generate SoundChain's official ENTERPRISE-tier API key:
+- File: `api/migrations/20251229300000-create-soundchain-api-key.js`
+- Outputs raw key to logs - **SAVE IT IMMEDIATELY**
+- Key format: `sc_live_xxxxxxxx...`
+
+### 4. Announcement Script (READY)
+**File:** `scripts/post-announcements.sh`
+
+Script to blast announcements about recent SoundChain updates:
+1. Developer Platform Launch
+2. IPFS Migration (5,416 tracks)
+3. IPFS-Only Minting
+4. SCid Certificates
+5. CarPlay Support
+6. Audio Normalization
+7. Mobile Audio Fix
+
+**Usage (after deployment):**
+```bash
+# After migration runs, save the key
+export SOUNDCHAIN_ANNOUNCEMENT_KEY=sc_live_xxxxx
+
+# Run the announcement blast
+chmod +x scripts/post-announcements.sh
+./scripts/post-announcements.sh
+```
 
 ---
 
-## Current Audio Architecture (After Changes)
+## Commits Pushed This Session
 
-```
-NEW MINTS:     Upload → S3 → Pinata/IPFS → Direct MP3/WAV playback
-EXISTING:      Already migrated to IPFS (5,416 tracks)
-LEGACY:        Old tracks without ipfsCid → Mux HLS fallback (.m3u8)
-```
-
-**Flow:**
-1. User uploads audio → S3
-2. `createMultipleTracks` calls `createTrackIPFSOnly`
-3. `createTrackIPFSOnly` pins S3 file to Pinata
-4. Track saved with `ipfsCid` and `ipfsGatewayUrl`
-5. `playbackUrl` resolver returns Pinata gateway URL
+| Commit | Description |
+|--------|-------------|
+| `2dccfd7b6` | fix: TypeScript errors in Developer Platform files |
+| `e103bcbf5` | perf: Use fast dweb.link gateway for IPFS audio streaming |
+| `b679a7cc6` | feat: Add SoundChain official API key migration and script |
+| `e4679b0e5` | feat: CarPlay compatibility - skip Web Audio on iOS/Safari |
+| `cb183851b` | feat: Add Developer Platform for startup announcements |
 
 ---
 
-## Pending Issues
+## Previous Session Summary (Dec 29)
 
-### NFT Minting Not Working (NEEDS INVESTIGATION)
-User reports minting hasn't worked since going live. Now that IPFS upload is fixed, test minting again. If still failing, check:
-- Frontend mint form in `web/src/components/forms/track/`
-- Smart contract interactions
-- Wallet connection/transaction signing
-
-### CarPlay Now Working (FIXED)
-CarPlay wasn't working because mobile audio wasn't playing. The mobile audio fix (`cd4e4ffcb`) also fixes CarPlay since Media Session API requires audio to be playing. After deployment:
-1. Force-close Safari on iPhone
-2. Reopen SoundChain and play a track
-3. CarPlay should display title/artist/artwork
-
-### Audio Normalization Added (FIXED)
-**Commit:** `a1cfa3977`
-
-Added -24 LUFS audio normalization using Web Audio API. All playback now goes through a gain node that normalizes volume for consistent loudness across tracks.
-
-- **No compression** - preserves original dynamics
-- Uses gain-only normalization (-6dB reduction)
-- Targets -24 LUFS broadcast standard
-- Fallback to native volume if Web Audio API not available
-
-### User Avatar & Profile Navigation Fixed (FIXED)
-**Commit:** `8783b4bc6`
-
-Fixed two bugs on /dex/users and /dex/explore:
-1. **Duplicate avatars** - Added deduplication filter to user grid and leaderboard
-2. **Profile page not loading** - Added `routeId` to useEffect dependencies so clicking user avatar properly triggers profile view
-
-Profile pages now load with:
-- Cover art background (ProfileHeader component)
-- User's feed (Posts component)
-- User's tracks (Tracks component)
-- Profile tabs for navigation
-
-### Non-Web3 SCid Minting Added (NEW FEATURE)
-**Commits:** `26a3ec6ce`, `3014c8c4e`, `553ab5c53`
-
-Bandcamp/DistroKid style music uploads - no wallet required:
-
-**Backend:**
-- New `createTrackWithSCid` mutation
-- New `CreateTrackWithSCidInput` type (simplified, no NFT fields)
-- Made `trackEditionId` optional
-
-**Flow:**
-1. Upload audio → S3
-2. Audio pinned to **Pinata IPFS** (decentralized storage)
-3. Fill metadata (title, artist, album, genre, artwork)
-4. SCid auto-generated (format: `SC-POL-XXXX-YYZZZZZ`)
-5. Track ready for streaming immediately
-
-**Frontend:**
-- New `SimpleTrackUploadForm` component
-- Drag & drop audio/artwork
-- No wallet connection needed
-- No gas fees
-- Success screen shows SCid
-
-**SCid Format:** `SC-[CHAIN]-[ARTIST_HASH]-[YEAR][SEQUENCE]`
-- Example: `SC-POL-7B3A-2400001`
-- Web3 replacement for ISRC codes
-- Tracks stream counts and OGUN rewards
-
-### SCid Certificate Download (NEW FEATURE)
-**Commits:** `553ab5c53`, `433b2b24d`
-
-Non-web3 uploads are **always certificate-only** - no database storage:
-
-**Flow:**
-1. Artist uploads audio → IPFS
-2. Fills metadata (title, artist, etc.)
-3. Gets SCid + certificate
-4. Downloads certificate to their device
-5. **No data stored in SoundChain's database**
-
-**Certificate Download Options:**
-- **JSON certificate** - programmatic use, full metadata
-- **Text certificate** - human-readable format with ASCII art
-- **Copy to clipboard** - quick sharing
-
-**Certificate includes:**
-- SCid and chain code
-- Track metadata (title, artist, album, year, genres)
-- IPFS CID and gateway URL
-- Registration timestamp
-- Verification URL
-
-**Files:**
-- `web/src/utils/SCidCertificate.ts` - Certificate generation utilities
-- `web/src/components/forms/track/SimpleTrackUploadForm.tsx` - Updated with download UI
-
-This gives artists **full control** - their proof of registration lives on their own devices, not on SoundChain's servers.
+- **AudioPlayerModal artwork** - Fixed CORS pre-validation issue
+- **Mobile audio playback** - Fixed HLS vs IPFS detection
+- **Minting** - Now IPFS-only (no Mux)
+- **Audio normalization** - -24 LUFS broadcast standard
+- **SCid certificates** - Non-web3 uploads with certificates
+- **CarPlay** - Full metadata support via Media Session API
 
 ---
 
@@ -160,68 +112,12 @@ git log --oneline -5
 
 # Check Lambda logs
 aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
-```
 
----
+# Check if Lambda was updated (look for recent timestamp)
+aws lambda get-function-configuration --function-name soundchain-api-production-migrate --query 'LastModified' --output text
 
-## Commits Pushed Today
-
-| Commit | Description |
-|--------|-------------|
-| `3014c8c4e` | feat: Add SimpleTrackUploadForm for non-web3 music uploads |
-| `26a3ec6ce` | feat: Add non-web3 SCid minting (Bandcamp/DistroKid style) |
-| `8783b4bc6` | fix: Deduplicate user avatars and fix profile navigation |
-| `a1cfa3977` | feat: Add -24 LUFS audio normalization (dynamics preserved) |
-| `785648458` | docs: Add CarPlay fix note to HANDOFF |
-| `8c07b2553` | feat: Switch minting to IPFS-only (no more Mux) |
-| `cd4e4ffcb` | fix: Support both HLS streams and direct IPFS audio |
-| `d9226dcd8` | fix: Remove artwork pre-validation (CORS issue) |
-
----
-
-## Files Modified Today
-
-| File | Change |
-|------|--------|
-| `api/src/services/TrackService.ts` | Switched minting to IPFS-only |
-| `api/src/resolvers/TrackResolver.ts` | New `createTrackWithSCid` mutation |
-| `api/src/types/CreateTrackInput.ts` | Made trackEditionId optional, added CreateTrackWithSCidInput |
-| `api/src/types/CreateTrackWithSCidPayload.ts` | New payload type with track + SCid |
-| `web/src/components/forms/track/SimpleTrackUploadForm.tsx` | Non-web3 upload form |
-| `web/src/graphql/CreateTrackWithSCid.graphql` | GraphQL mutation for SCid uploads |
-| `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` | Handle HLS + direct audio + -24 LUFS normalization |
-| `web/src/components/modals/AudioPlayerModal.tsx` | Removed CORS pre-validation |
-| `web/src/pages/dex/[...slug].tsx` | Deduplicate users, fix profile navigation with routeId |
-
----
-
-## Key Code Changes
-
-### TrackService.ts - New Minting Flow
-```typescript
-async createMultipleTracks(profileId: string, data: { track: Partial<Track>; batchSize: number }): Promise<Track[]> {
-  const url = new URL(data.track.assetUrl);
-  const s3Key = url.pathname.replace(/^\//, '');
-
-  // IPFS-only (no Mux)
-  return await Promise.all(
-    Array(data.batchSize)
-      .fill(null)
-      .map(() => this.createTrackIPFSOnly(profileId, data.track, s3Key)),
-  );
-}
-```
-
-### AudioEngine.tsx - HLS Detection
-```typescript
-const isHlsStream = currentSong.src.includes('.m3u8')
-
-if (isHlsStream) {
-  // Use HLS (native or hls.js)
-} else {
-  // Direct audio file (IPFS)
-  audio.src = currentSong.src
-}
+# Run migration manually (after deployment)
+aws lambda invoke --function-name soundchain-api-production-migrate /tmp/migrate-output.json && cat /tmp/migrate-output.json
 ```
 
 ---
@@ -229,10 +125,18 @@ if (isHlsStream) {
 ## Infrastructure Notes
 
 - **Bastion:** STOPPED
-- **Database:** `test` database
-- **Mux:** No longer used for new tracks (legacy fallback only)
-- **IPFS:** All new + migrated tracks use Pinata gateway
+- **Database:** `test` database (has the tracks)
+- **IPFS Gateway:** Now using `dweb.link` (fast) instead of `gateway.pinata.cloud` (slow)
+- **Mux:** Legacy fallback only
 
 ---
 
-*Updated: December 29, 2025 @ 4:30 PM MST*
+## Pending Tasks
+
+1. **Wait for build deployment** - TypeScript fixes need to deploy
+2. **Run migration** - Get the SoundChain API key
+3. **Post announcements** - Use `./scripts/post-announcements.sh`
+
+---
+
+*Updated: December 30, 2025 @ 12:45 AM MST*
