@@ -78,7 +78,8 @@ export const handler: Handler = async () => {
   // This runs every time but only creates if not exists
   try {
     const testDb = client.db('test');
-    const apiKeys = testDb.collection('developerapikeys');
+    // IMPORTANT: Collection name must match Mongoose model: 'developer_api_keys' (with underscore!)
+    const apiKeys = testDb.collection('developer_api_keys');
 
     // Pre-generated SoundChain official API key
     const apiKeyHash = '58f7c4a5878c96c41ffaa4f90f3a8e6ca6044a3a00c4453a5be798985aeca293';
