@@ -78,6 +78,7 @@ const chainNames: { [key: number]: string } = {
 const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
   ({ track, handleOnPlayClicked, walletProvider, getContractAddress }, ref) => {
     const [isFlipped, setIsFlipped] = useState(false);
+    const { preloadTrack } = useAudioPlayerContext();
     const song = {
       src: track.playbackUrl,
       trackId: track.id,
@@ -106,6 +107,13 @@ const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
         track.__typename === 'TrackWithListingItem' && track.listingItem
           ? (track.listingItem as ExtendedListingItem).privateAsset
           : undefined,
+    };
+
+    // Preload audio + artwork on hover for instant playback
+    const handleMouseEnter = () => {
+      if (track.playbackUrl) {
+        preloadTrack(track.playbackUrl, track.artworkUrl);
+      }
     };
     let listingItem: Maybe<ExtendedListingItem> = null;
     if (track.__typename === 'TrackWithListingItem' && track.listingItem) {
@@ -174,7 +182,7 @@ const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
     };
 
     return (
-      <div ref={ref} className="nft-flip-card-container" onClick={handleFlip}>
+      <div ref={ref} className="nft-flip-card-container" onClick={handleFlip} onMouseEnter={handleMouseEnter}>
         <div className={`nft-flip-card ${isFlipped ? 'flipped' : ''}`}>
           {/* FRONT SIDE - Track Card */}
           <div className="nft-flip-card-front">

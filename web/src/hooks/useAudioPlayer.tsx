@@ -24,7 +24,7 @@ interface AudioPlayerContextData {
   volume: number
   isFavorite: boolean
   play: (song: Song, fromPlaylist?: boolean) => void
-  preloadTrack: (src: string) => void
+  preloadTrack: (src: string, artworkUrl?: string | null) => void
   isCurrentSong: (trackId: string) => boolean
   isCurrentlyPlaying: (trackId: string) => boolean
   togglePlay: () => void
@@ -73,61 +73,96 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const preloadedUrls = useRef<Set<string>>(new Set())
 
   /**
-   * Aggressive audio preloading for IPFS tracks
+   * Aggressive IPFS preloading for both audio AND artwork
    * IPFS gateways have 5-10 second initial latency - this warms the cache
    *
-   * Strategy:
+   * Strategy for Audio:
    * 1. Use fetch() to start downloading the first 1MB (range request)
    * 2. Add <link rel="preload"> for browser-level caching
    * 3. Use Audio element preload for full buffering
    *
+   * Strategy for Artwork:
+   * 1. Use fetch() to warm IPFS gateway cache
+   * 2. Use Image element to preload into browser cache
+   *
    * Call this when tracks become visible on screen (hover, scroll into view)
    */
-  const preloadTrack = useCallback((src: string) => {
-    if (!src || preloadedUrls.current.has(src)) return
+  const preloadTrack = useCallback((src: string, artworkUrl?: string | null) => {
     if (typeof window === 'undefined') return
 
-    preloadedUrls.current.add(src)
+    // Preload audio
+    if (src && !preloadedUrls.current.has(src)) {
+      preloadedUrls.current.add(src)
 
-    // Strategy 1: Aggressive fetch to warm IPFS gateway cache
-    // Only fetch first 1MB to reduce bandwidth but trigger gateway caching
-    fetch(src, {
-      method: 'GET',
-      headers: {
-        'Range': 'bytes=0-1048576', // First 1MB
-      },
-      mode: 'cors',
-      credentials: 'omit',
-    }).then(response => {
-      if (response.ok || response.status === 206) {
-        console.log('[Preload] Gateway warmed for:', src.substring(0, 50) + '...')
-      }
-    }).catch(() => {
-      // Silent fail - preloading is best-effort
-    })
+      // Strategy 1: Aggressive fetch to warm IPFS gateway cache
+      fetch(src, {
+        method: 'GET',
+        headers: { 'Range': 'bytes=0-1048576' }, // First 1MB
+        mode: 'cors',
+        credentials: 'omit',
+      }).then(response => {
+        if (response.ok || response.status === 206) {
+          console.log('[Preload] Audio gateway warmed:', src.substring(0, 50) + '...')
+        }
+      }).catch(() => {})
 
-    // Strategy 2: Link preload for browser-level optimization
-    const link = document.createElement('link')
-    link.rel = 'preload'
-    link.as = 'audio'
-    link.href = src
-    link.crossOrigin = 'anonymous'
-    document.head.appendChild(link)
+      // Strategy 2: Link preload for browser optimization
+      const link = document.createElement('link')
+      link.rel = 'preload'
+      link.as = 'audio'
+      link.href = src
+      link.crossOrigin = 'anonymous'
+      document.head.appendChild(link)
 
-    // Strategy 3: Hidden audio element for full buffering (most aggressive)
-    const audio = new Audio()
-    audio.preload = 'auto'
-    audio.crossOrigin = 'anonymous'
-    audio.src = src
-    // Don't play, just let it buffer
-    audio.load()
+      // Strategy 3: Hidden audio element for full buffering
+      const audio = new Audio()
+      audio.preload = 'auto'
+      audio.crossOrigin = 'anonymous'
+      audio.src = src
+      audio.load()
 
-    // Clean up after 2 minutes to avoid memory bloat
-    setTimeout(() => {
-      link.remove()
-      audio.src = ''
-      preloadedUrls.current.delete(src)
-    }, 120000)
+      // Cleanup after 2 minutes
+      setTimeout(() => {
+        link.remove()
+        audio.src = ''
+        preloadedUrls.current.delete(src)
+      }, 120000)
+    }
+
+    // Preload artwork (8K images from IPFS)
+    if (artworkUrl && !preloadedUrls.current.has(artworkUrl)) {
+      preloadedUrls.current.add(artworkUrl)
+
+      // Fetch to warm IPFS gateway for artwork
+      fetch(artworkUrl, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
+      }).then(response => {
+        if (response.ok) {
+          console.log('[Preload] Artwork gateway warmed:', artworkUrl.substring(0, 50) + '...')
+        }
+      }).catch(() => {})
+
+      // Image preload for browser cache
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.src = artworkUrl
+
+      // Link preload for images
+      const imgLink = document.createElement('link')
+      imgLink.rel = 'preload'
+      imgLink.as = 'image'
+      imgLink.href = artworkUrl
+      imgLink.crossOrigin = 'anonymous'
+      document.head.appendChild(imgLink)
+
+      // Cleanup after 2 minutes
+      setTimeout(() => {
+        imgLink.remove()
+        preloadedUrls.current.delete(artworkUrl)
+      }, 120000)
+    }
   }, [])
 
   useEffect(() => {
@@ -291,15 +326,15 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     }
   }, [currentPlaylistIndex, hasNext, play, playlist])
 
-  // Auto-preload next tracks in queue for instant playback
+  // Auto-preload next tracks in queue for instant playback (audio + artwork)
   useEffect(() => {
     if (!playlist.length || currentPlaylistIndex < 0) return
 
-    // Preload next 2 tracks in the queue
+    // Preload next 2 tracks in the queue (both audio and artwork)
     const nextTracks = playlist.slice(currentPlaylistIndex + 1, currentPlaylistIndex + 3)
     nextTracks.forEach(track => {
       if (track?.src) {
-        preloadTrack(track.src)
+        preloadTrack(track.src, track.art)
       }
     })
   }, [currentPlaylistIndex, playlist, preloadTrack])
