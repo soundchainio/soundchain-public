@@ -78,14 +78,46 @@ export const AudioEngine = () => {
   }, [currentSong.art, currentSong.artist, currentSong.src, currentSong.title])
 
   /**
+   * Check if user is likely using external audio (CarPlay, Bluetooth, AirPlay)
+   * In these cases, we skip Web Audio API to ensure audio routes correctly
+   */
+  const isExternalAudioOutput = useCallback(() => {
+    // Check for iOS/Safari which commonly use CarPlay
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+
+    // If on mobile Safari (likely CarPlay capable), skip Web Audio API
+    // This ensures audio routes through system audio path for CarPlay
+    if (isIOS || isSafari) {
+      return true
+    }
+
+    return false
+  }, [])
+
+  /**
    * Initialize Web Audio API graph for audio normalization
    * Chain: AudioElement -> MediaElementSource -> Gain -> Destination
    *
    * Uses gain-only normalization (NO compression) to preserve original dynamics
    * while targeting -24 LUFS output level
+   *
+   * IMPORTANT: Disabled for iOS/Safari to ensure CarPlay compatibility
+   * Web Audio API can interfere with external audio routing (CarPlay, AirPlay, Bluetooth)
    */
   const initializeAudioGraph = useCallback(() => {
     if (!audioRef.current || isAudioGraphConnected.current) return
+
+    // Skip Web Audio API for external audio devices (CarPlay, AirPlay, Bluetooth)
+    // This ensures audio routes through the standard system path
+    if (isExternalAudioOutput()) {
+      console.log('External audio detected (iOS/Safari) - using native volume for CarPlay/AirPlay compatibility')
+      // Just set the audio element volume directly for normalization effect
+      if (audioRef.current) {
+        audioRef.current.volume = NORMALIZATION_CONFIG.normalizationGain
+      }
+      return
+    }
 
     try {
       // Create AudioContext (handles Safari prefix)
@@ -115,7 +147,7 @@ export const AudioEngine = () => {
     } catch (error) {
       console.warn('Failed to initialize audio normalization:', error)
     }
-  }, [])
+  }, [isExternalAudioOutput])
 
   // Resume AudioContext on user interaction (required by browsers)
   const resumeAudioContext = useCallback(() => {
@@ -208,15 +240,21 @@ export const AudioEngine = () => {
 
   // Handle volume changes - apply to gain node for normalized output
   useEffect(() => {
-    if (gainNodeRef.current && audioContextRef.current) {
-      // Multiply user volume with normalization gain (preserves dynamics)
+    // For iOS/Safari (CarPlay, AirPlay, wearables) - use native volume
+    if (isExternalAudioOutput()) {
+      if (audioRef.current) {
+        // Apply normalization gain + user volume directly to audio element
+        audioRef.current.volume = volume * NORMALIZATION_CONFIG.normalizationGain
+      }
+    } else if (gainNodeRef.current && audioContextRef.current) {
+      // Web Audio API path (desktop browsers)
       const finalGain = volume * NORMALIZATION_CONFIG.normalizationGain
       gainNodeRef.current.gain.setValueAtTime(finalGain, audioContextRef.current.currentTime)
     } else if (audioRef.current) {
       // Fallback if Web Audio API not available
       audioRef.current.volume = volume
     }
-  }, [volume])
+  }, [volume, isExternalAudioOutput])
 
   // Cleanup AudioContext on unmount
   useEffect(() => {
