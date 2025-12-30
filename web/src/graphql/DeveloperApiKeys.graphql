@@ -1,0 +1,85 @@
+# Get user's API keys
+query MyApiKeys {
+  myApiKeys {
+    id
+    keyPrefix
+    companyName
+    contactEmail
+    website
+    description
+    logoUrl
+    status
+    tier
+    verified
+    dailyRequestCount
+    totalRequests
+    lastUsedAt
+    createdAt
+  }
+}
+
+# Get API key stats
+query ApiKeyStats($apiKeyId: String!) {
+  apiKeyStats(apiKeyId: $apiKeyId) {
+    totalAnnouncements
+    totalViews
+    totalClicks
+    dailyRequestsUsed
+    dailyRequestsLimit
+    totalApiCalls
+  }
+}
+
+# Create API key
+mutation CreateApiKey($input: CreateApiKeyInput!) {
+  createApiKey(input: $input) {
+    apiKey {
+      id
+      keyPrefix
+      companyName
+      status
+      tier
+    }
+    rawKey
+    message
+  }
+}
+
+# Regenerate API key
+mutation RegenerateApiKey($id: String!) {
+  regenerateApiKey(id: $id) {
+    apiKey {
+      id
+      keyPrefix
+    }
+    rawKey
+    message
+  }
+}
+
+# Revoke API key
+mutation RevokeApiKey($id: String!) {
+  revokeApiKey(id: $id)
+}
+
+# Public announcements feed
+query AnnouncementsFeed($limit: Float, $offset: Float) {
+  announcementsFeed(limit: $limit, offset: $offset) {
+    announcements {
+      id
+      title
+      content
+      link
+      imageUrl
+      type
+      tags
+      companyName
+      companyLogo
+      featured
+      viewCount
+      publishedAt
+    }
+    total
+    hasMore
+  }
+}

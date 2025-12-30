@@ -5,6 +5,7 @@
  * manage their announcements on SoundChain.
  */
 
+import { gql, useMutation, useQuery } from '@apollo/client'
 import { Button } from 'components/common/Buttons/Button'
 import SEO from 'components/SEO'
 import { useMe } from 'hooks/useMe'
@@ -12,35 +13,163 @@ import { protectPage } from 'lib/protectPage'
 import { cacheFor } from 'lib/apollo'
 import { useState } from 'react'
 import { Copy, Key, Plus, RefreshCw, Trash2, ExternalLink, Eye, MousePointer } from 'lucide-react'
+import { toast } from 'react-toastify'
+
+// GraphQL Operations
+const MY_API_KEYS = gql`
+  query MyApiKeys {
+    myApiKeys {
+      id
+      keyPrefix
+      companyName
+      contactEmail
+      website
+      description
+      status
+      tier
+      dailyRequestCount
+      totalRequests
+      lastUsedAt
+      createdAt
+    }
+  }
+`
+
+const CREATE_API_KEY = gql`
+  mutation CreateApiKey($input: CreateApiKeyInput!) {
+    createApiKey(input: $input) {
+      apiKey {
+        id
+        keyPrefix
+        companyName
+        status
+        tier
+      }
+      rawKey
+      message
+    }
+  }
+`
+
+const REGENERATE_API_KEY = gql`
+  mutation RegenerateApiKey($id: String!) {
+    regenerateApiKey(id: $id) {
+      apiKey {
+        id
+        keyPrefix
+      }
+      rawKey
+      message
+    }
+  }
+`
+
+const REVOKE_API_KEY = gql`
+  mutation RevokeApiKey($id: String!) {
+    revokeApiKey(id: $id)
+  }
+`
+
+interface ApiKey {
+  id: string
+  keyPrefix: string
+  companyName: string
+  contactEmail?: string
+  website?: string
+  description?: string
+  status: string
+  tier: string
+  dailyRequestCount: number
+  totalRequests: number
+  lastUsedAt?: string
+  createdAt: string
+}
 
 export const getServerSideProps = protectPage((context, apolloClient) => {
   return cacheFor(DevelopersPage, {}, context, apolloClient)
 })
-
-// Mock data for now - will be replaced with GraphQL queries
-const mockApiKeys = [
-  {
-    id: '1',
-    keyPrefix: 'sc_live_abc1...xyz9',
-    companyName: 'My Startup',
-    tier: 'FREE',
-    status: 'ACTIVE',
-    totalRequests: 42,
-    dailyRequestCount: 5,
-    createdAt: new Date().toISOString(),
-  },
-]
 
 export default function DevelopersPage() {
   const me = useMe()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newKey, setNewKey] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [formData, setFormData] = useState({
+    companyName: '',
+    contactEmail: '',
+    website: '',
+    description: '',
+  })
+
+  // GraphQL hooks
+  const { data, loading, refetch } = useQuery(MY_API_KEYS)
+  const [createApiKey, { loading: creating }] = useMutation(CREATE_API_KEY)
+  const [regenerateApiKey] = useMutation(REGENERATE_API_KEY)
+  const [revokeApiKey] = useMutation(REVOKE_API_KEY)
+
+  const apiKeys: ApiKey[] = data?.myApiKeys || []
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     setCopied(true)
+    toast.success('Copied to clipboard!')
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleCreate = async () => {
+    if (!formData.companyName || !formData.contactEmail) {
+      toast.error('Company name and email are required')
+      return
+    }
+    try {
+      const result = await createApiKey({
+        variables: {
+          input: {
+            companyName: formData.companyName,
+            contactEmail: formData.contactEmail,
+            website: formData.website || undefined,
+            description: formData.description || undefined,
+          },
+        },
+      })
+      setNewKey(result.data.createApiKey.rawKey)
+      toast.success(result.data.createApiKey.message)
+      setShowCreateForm(false)
+      setFormData({ companyName: '', contactEmail: '', website: '', description: '' })
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create API key')
+    }
+  }
+
+  const handleRegenerate = async (id: string) => {
+    if (!confirm('Regenerate this API key? The old key will stop working immediately.')) return
+    try {
+      const result = await regenerateApiKey({ variables: { id } })
+      setNewKey(result.data.regenerateApiKey.rawKey)
+      toast.success(result.data.regenerateApiKey.message)
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to regenerate key')
+    }
+  }
+
+  const handleRevoke = async (id: string) => {
+    if (!confirm('Revoke this API key? This cannot be undone.')) return
+    try {
+      await revokeApiKey({ variables: { id } })
+      toast.success('API key revoked')
+      refetch()
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to revoke key')
+    }
+  }
+
+  const tierLimits: Record<string, number> = {
+    FREE: 10,
+    BASIC: 100,
+    PRO: 1000,
+    ENTERPRISE: -1,
   }
 
   return (
@@ -127,13 +256,15 @@ export default function DevelopersPage() {
             {showCreateForm && (
               <div className="bg-gray-900/50 rounded-lg p-6 mb-6 border border-gray-700">
                 <h3 className="text-lg font-bold text-white mb-4">Create API Key</h3>
-                <form className="space-y-4">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-1">
                       Company / Startup Name *
                     </label>
                     <input
                       type="text"
+                      value={formData.companyName}
+                      onChange={e => setFormData({ ...formData, companyName: e.target.value })}
                       placeholder="Your Company Name"
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500"
                     />
@@ -144,6 +275,8 @@ export default function DevelopersPage() {
                     </label>
                     <input
                       type="email"
+                      value={formData.contactEmail}
+                      onChange={e => setFormData({ ...formData, contactEmail: e.target.value })}
                       placeholder="dev@yourcompany.com"
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500"
                     />
@@ -154,6 +287,8 @@ export default function DevelopersPage() {
                     </label>
                     <input
                       type="url"
+                      value={formData.website}
+                      onChange={e => setFormData({ ...formData, website: e.target.value })}
                       placeholder="https://yourcompany.com"
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500"
                     />
@@ -163,6 +298,8 @@ export default function DevelopersPage() {
                       Description
                     </label>
                     <textarea
+                      value={formData.description}
+                      onChange={e => setFormData({ ...formData, description: e.target.value })}
                       placeholder="What are you building?"
                       rows={3}
                       className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500"
@@ -173,12 +310,10 @@ export default function DevelopersPage() {
                       type="button"
                       variant="outline"
                       borderColor="bg-cyan-gradient"
-                      onClick={() => {
-                        setNewKey('sc_live_' + Math.random().toString(36).slice(2))
-                        setShowCreateForm(false)
-                      }}
+                      onClick={handleCreate}
+                      disabled={creating}
                     >
-                      Create API Key
+                      {creating ? 'Creating...' : 'Create API Key'}
                     </Button>
                     <Button
                       type="button"
@@ -188,45 +323,73 @@ export default function DevelopersPage() {
                       Cancel
                     </Button>
                   </div>
-                </form>
+                </div>
               </div>
             )}
 
             {/* Keys List */}
             <div className="space-y-4">
-              {mockApiKeys.map((key) => (
-                <div
-                  key={key.id}
-                  className="bg-gray-900/50 rounded-lg p-4 border border-gray-700"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-bold text-white">{key.companyName}</p>
-                      <p className="text-sm font-mono text-gray-400">{key.keyPrefix}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        key.status === 'ACTIVE'
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-red-500/20 text-red-400'
-                      }`}>
-                        {key.status}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {key.tier} • {key.dailyRequestCount}/10 daily
-                      </span>
-                      <div className="flex gap-2">
-                        <button className="p-2 hover:bg-gray-700 rounded">
-                          <RefreshCw className="w-4 h-4 text-gray-400" />
-                        </button>
-                        <button className="p-2 hover:bg-gray-700 rounded">
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </button>
+              {loading ? (
+                <div className="text-center text-gray-400 py-8">Loading...</div>
+              ) : apiKeys.length === 0 ? (
+                <div className="text-center text-gray-400 py-8 bg-gray-900/30 rounded-lg border border-gray-700">
+                  No API keys yet. Create one to start posting announcements!
+                </div>
+              ) : (
+                apiKeys.map((key) => (
+                  <div
+                    key={key.id}
+                    className={`bg-gray-900/50 rounded-lg p-4 border ${
+                      key.status === 'ACTIVE' ? 'border-gray-700' : 'border-gray-800 opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-white">{key.companyName}</p>
+                        <p className="text-sm font-mono text-gray-400">{key.keyPrefix}</p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          key.status === 'ACTIVE'
+                            ? 'bg-green-500/20 text-green-400'
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {key.status}
+                        </span>
+                        <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs">
+                          {key.tier}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {key.dailyRequestCount}/{tierLimits[key.tier] === -1 ? '∞' : tierLimits[key.tier]} daily
+                        </span>
+                        {key.status === 'ACTIVE' && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleRegenerate(key.id)}
+                              className="p-2 hover:bg-gray-700 rounded"
+                              title="Regenerate key"
+                            >
+                              <RefreshCw className="w-4 h-4 text-yellow-400" />
+                            </button>
+                            <button
+                              onClick={() => handleRevoke(key.id)}
+                              className="p-2 hover:bg-gray-700 rounded"
+                              title="Revoke key"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
+                    <div className="mt-3 flex gap-6 text-xs text-gray-500">
+                      <span>Total: {key.totalRequests.toLocaleString()} requests</span>
+                      <span>Last used: {key.lastUsedAt ? new Date(key.lastUsedAt).toLocaleDateString() : 'Never'}</span>
+                      <span>Created: {new Date(key.createdAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 

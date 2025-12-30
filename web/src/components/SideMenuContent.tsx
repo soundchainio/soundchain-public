@@ -7,6 +7,7 @@ import { config } from 'config'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
+import { Code } from 'icons/Code'
 import { Document } from 'icons/Document'
 import { Feedback } from 'icons/Feedback'
 import { Logout } from 'icons/Logout'
@@ -138,6 +139,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
             href="https://soundchain.gitbook.io/soundchain/"
           />
           <MenuLink icon={Feedback} label="Leave Feedback" href="/feedback" />
+          <MenuLink icon={Code} label="Developers" href="/developers" />
           {me.roles.includes(Role.Admin) ? (
             <MenuLink
               icon={Verified}
