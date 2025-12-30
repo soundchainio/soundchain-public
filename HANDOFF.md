@@ -89,7 +89,7 @@ Profile pages now load with:
 - Profile tabs for navigation
 
 ### Non-Web3 SCid Minting Added (NEW FEATURE)
-**Commits:** `26a3ec6ce`, `3014c8c4e`
+**Commits:** `26a3ec6ce`, `3014c8c4e`, `553ab5c53`
 
 Bandcamp/DistroKid style music uploads - no wallet required:
 
@@ -116,6 +116,36 @@ Bandcamp/DistroKid style music uploads - no wallet required:
 - Example: `SC-POL-7B3A-2400001`
 - Web3 replacement for ISRC codes
 - Tracks stream counts and OGUN rewards
+
+### SCid Certificate Download (NEW FEATURE)
+**Commits:** `553ab5c53`, `433b2b24d`
+
+Non-web3 uploads are **always certificate-only** - no database storage:
+
+**Flow:**
+1. Artist uploads audio → IPFS
+2. Fills metadata (title, artist, etc.)
+3. Gets SCid + certificate
+4. Downloads certificate to their device
+5. **No data stored in SoundChain's database**
+
+**Certificate Download Options:**
+- **JSON certificate** - programmatic use, full metadata
+- **Text certificate** - human-readable format with ASCII art
+- **Copy to clipboard** - quick sharing
+
+**Certificate includes:**
+- SCid and chain code
+- Track metadata (title, artist, album, year, genres)
+- IPFS CID and gateway URL
+- Registration timestamp
+- Verification URL
+
+**Files:**
+- `web/src/utils/SCidCertificate.ts` - Certificate generation utilities
+- `web/src/components/forms/track/SimpleTrackUploadForm.tsx` - Updated with download UI
+
+This gives artists **full control** - their proof of registration lives on their own devices, not on SoundChain's servers.
 
 ---
 
