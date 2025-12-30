@@ -7,8 +7,16 @@ module.exports = {
       'soundchain.mypinata.cloud',
       'soundchain-api-production-uploads.s3.us-east-1.amazonaws.com',
       'soundchain-api-develop-uploads.s3.us-east-1.amazonaws.com',
+      'images.unsplash.com',
+      'soundchain.io',
       process.env.UPLOADS_DOMAIN || '',
     ].filter(Boolean),
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
   eslint: {
     ignoreDuringBuilds: true,

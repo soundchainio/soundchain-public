@@ -25,7 +25,7 @@ const NORMALIZATION_CONFIG = {
   // -24 - (-12) = -12 dB = 10^(-12/20) = 0.25 linear gain
   // However, this might be too quiet, so we use a moderate adjustment
   // targeting a reduction that brings loud tracks down without killing quiet ones
-  normalizationGain: 0.5,  // -6 dB reduction (moderate normalization)
+  normalizationGain: 1.0,  // Full volume (no reduction)
 }
 
 /**

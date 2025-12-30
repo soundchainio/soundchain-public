@@ -639,6 +639,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // Announcements state (from /v1/feed API)
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [announcementsLoading, setAnnouncementsLoading] = useState(true)
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<any>(null)
 
   // NFT Transfer state
   const [transferRecipient, setTransferRecipient] = useState('')
@@ -2492,33 +2493,40 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
               <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
                 {/* Announcements from /v1/feed API */}
                 {announcements.length > 0 && (
-                  <div className="mb-4 space-y-3">
+                  <div className="mb-4 space-y-4">
                     {announcements.map((announcement: any) => (
-                      <Card key={announcement.id} className="retro-card p-4 border-cyan-500/30 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
-                        <div className="flex items-start gap-3">
-                          {announcement.companyLogo && (
-                            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-700 flex-shrink-0">
-                              <Image src={announcement.companyLogo} alt={announcement.companyName} fill className="object-cover" />
+                      <Card key={announcement.id} className="retro-card overflow-hidden border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 via-purple-500/5 to-pink-500/10 hover:border-cyan-400 transition-all duration-300 cursor-pointer group" onClick={() => setSelectedAnnouncement(announcement)}>
+                        {/* Hero Image - Full width, eye-catching */}
+                        {announcement.imageUrl && (
+                          <div className="relative w-full h-48 sm:h-56 overflow-hidden">
+                            <img
+                              src={announcement.imageUrl}
+                              alt={announcement.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              onError={(e) => { e.currentTarget.style.display = 'none' }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            <div className="absolute bottom-3 left-4 right-4">
+                              <Badge className="bg-cyan-500/90 text-black text-xs font-bold mb-2">{announcement.type?.replace('_', ' ') || 'UPDATE'}</Badge>
+                              <h3 className="text-white font-bold text-lg sm:text-xl drop-shadow-lg">{announcement.title}</h3>
                             </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-bold text-white text-sm">{announcement.companyName}</span>
-                              <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">{announcement.type?.replace('_', ' ')}</Badge>
-                            </div>
-                            <h3 className="text-white font-semibold mb-1">{announcement.title}</h3>
-                            <p className="text-gray-400 text-sm whitespace-pre-wrap line-clamp-3">{announcement.content}</p>
-                            {announcement.imageUrl && (
-                              <div className="relative w-full h-32 mt-2 rounded-lg overflow-hidden bg-gray-700">
-                                <Image src={announcement.imageUrl} alt={announcement.title} fill className="object-cover" />
-                              </div>
-                            )}
-                            {announcement.link && (
-                              <a href={announcement.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-cyan-400 text-sm mt-2 hover:underline">
-                                Learn more <ExternalLink className="w-3 h-3" />
-                              </a>
-                            )}
                           </div>
+                        )}
+                        <div className="p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center">
+                              <Rocket className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="font-bold text-cyan-400 text-sm">{announcement.companyName || 'SoundChain'}</span>
+                            <span className="text-gray-500 text-xs">{new Date(announcement.publishedAt || announcement.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          {!announcement.imageUrl && (
+                            <h3 className="text-white font-bold text-lg mb-2">{announcement.title}</h3>
+                          )}
+                          <p className="text-gray-300 text-sm whitespace-pre-wrap line-clamp-3 mb-3">{announcement.content}</p>
+                          <button className="inline-flex items-center gap-2 text-cyan-400 text-sm font-semibold hover:text-cyan-300 transition-colors">
+                            Read full announcement <ExternalLink className="w-4 h-4" />
+                          </button>
                         </div>
                       </Card>
                     ))}
@@ -4972,6 +4980,91 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
         totalTracks={tracksData?.groupedTracks?.pageInfo?.totalCount}
         totalListings={listingData?.listingItems?.pageInfo?.totalCount}
       />
+
+      {/* Announcement Detail Modal */}
+      {selectedAnnouncement && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedAnnouncement(null)}>
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-900 border border-cyan-500/50 rounded-xl shadow-2xl shadow-cyan-500/20" onClick={(e) => e.stopPropagation()}>
+            {/* Close button */}
+            <button onClick={() => setSelectedAnnouncement(null)} className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/50 hover:bg-black/80 transition-colors">
+              <X className="w-5 h-5 text-white" />
+            </button>
+
+            {/* Hero Image */}
+            {selectedAnnouncement.imageUrl && (
+              <div className="relative w-full h-64 sm:h-80">
+                <img
+                  src={selectedAnnouncement.imageUrl}
+                  alt={selectedAnnouncement.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
+              </div>
+            )}
+
+            {/* Content */}
+            <div className={`p-6 ${selectedAnnouncement.imageUrl ? '-mt-16 relative' : ''}`}>
+              <Badge className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-bold mb-3">
+                {selectedAnnouncement.type?.replace('_', ' ') || 'ANNOUNCEMENT'}
+              </Badge>
+
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">{selectedAnnouncement.title}</h2>
+
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-700">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center">
+                  <Rocket className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <span className="font-bold text-cyan-400">{selectedAnnouncement.companyName || 'SoundChain'}</span>
+                  <p className="text-gray-500 text-sm">{new Date(selectedAnnouncement.publishedAt || selectedAnnouncement.createdAt).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+              </div>
+
+              <div className="prose prose-invert max-w-none">
+                <p className="text-gray-200 text-base leading-relaxed whitespace-pre-wrap">{selectedAnnouncement.content}</p>
+              </div>
+
+              {/* Tags */}
+              {selectedAnnouncement.tags && selectedAnnouncement.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-6 pt-4 border-t border-gray-700">
+                  {selectedAnnouncement.tags.map((tag: string) => (
+                    <Badge key={tag} variant="outline" className="border-cyan-500/50 text-cyan-400 text-xs">
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className="flex gap-3 mt-6">
+                {selectedAnnouncement.link && (
+                  <a
+                    href={selectedAnnouncement.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg text-white font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    <Globe className="w-5 h-5" />
+                    Visit Link
+                  </a>
+                )}
+                <button
+                  onClick={() => {
+                    navigator.share?.({
+                      title: selectedAnnouncement.title,
+                      text: selectedAnnouncement.content?.substring(0, 100) + '...',
+                      url: window.location.href,
+                    }).catch(() => {})
+                  }}
+                  className="px-4 py-3 bg-gray-800 rounded-lg text-white font-semibold hover:bg-gray-700 transition-colors"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </>
   )
