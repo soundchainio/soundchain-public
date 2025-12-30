@@ -1,9 +1,10 @@
 /**
  * Migration: Fresh SoundChain API Key
  * Generated: Dec 30, 2025 @ 9:30 AM
+ *
+ * PRE-GENERATED KEY (so we know it in advance):
+ * sc_live_7ee55da396790c3142cf150f30fd4f9003c175a62610ffbac8afae71241bef2b
  */
-
-const crypto = require('crypto');
 
 module.exports = {
   async up(db) {
@@ -15,11 +16,10 @@ module.exports = {
     const deleted = await apiKeys.deleteMany({ companyName: 'SoundChain' });
     console.log('Deleted existing keys:', deleted.deletedCount);
 
-    // Generate new API key
-    const randomBytes = crypto.randomBytes(32).toString('hex');
-    const rawKey = 'sc_live_' + randomBytes;
-    const hash = crypto.createHash('sha256').update(rawKey).digest('hex');
-    const keyPrefix = rawKey.substring(0, 15) + '...' + rawKey.substring(rawKey.length - 4);
+    // Pre-generated key (generated locally, hash verified)
+    const rawKey = 'sc_live_7ee55da396790c3142cf150f30fd4f9003c175a62610ffbac8afae71241bef2b';
+    const hash = '58f7c4a5878c96c41ffaa4f90f3a8e6ca6044a3a00c4453a5be798985aeca293';
+    const keyPrefix = 'sc_live_7ee55da...ef2b';
 
     const apiKey = {
       apiKeyHash: hash,
