@@ -648,14 +648,15 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
 
   // Sync selectedView with URL changes (for back/forward navigation)
   // Also sync when router becomes ready (router.query is empty until ready)
+  // IMPORTANT: Must include routeId so /dex/users → /dex/users/handle triggers view change
   useEffect(() => {
     if (!router.isReady) return
     const newView = getInitialView()
     if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
-      console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, isReady: router.isReady })
+      console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, routeId, isReady: router.isReady })
       setSelectedView(newView as any)
     }
-  }, [routeType, router.isReady])
+  }, [routeType, routeId, router.isReady])
 
   // Restore wallet connection from localStorage on mount
   useEffect(() => {
@@ -2319,7 +2320,12 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                   ) : (exploreUsersData?.exploreUsers?.nodes?.length ?? 0) > 0 ? (
                     <>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2">
-                      {exploreUsersData?.exploreUsers?.nodes?.map((profile: any) => {
+                      {/* Deduplicate users by ID to prevent duplicate avatars */}
+                      {exploreUsersData?.exploreUsers?.nodes
+                        ?.filter((profile: any, index: number, self: any[]) =>
+                          self.findIndex((p: any) => p.id === profile.id) === index
+                        )
+                        ?.map((profile: any) => {
                         // Check if profile picture is a video/gif
                         const isVideo = profile.profilePicture && /\.(mp4|mov|webm)$/i.test(profile.profilePicture)
                         const isGif = profile.profilePicture && /\.gif$/i.test(profile.profilePicture)
@@ -2401,7 +2407,11 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                         </h3>
                       </div>
                       <div className="divide-y divide-cyan-500/20">
+                        {/* Deduplicate users by ID before sorting */}
                         {[...(exploreUsersData?.exploreUsers?.nodes || [])]
+                          .filter((profile: any, index: number, self: any[]) =>
+                            self.findIndex((p: any) => p.id === profile.id) === index
+                          )
                           .sort((a: any, b: any) => (b.followerCount || 0) - (a.followerCount || 0))
                           .slice(0, 20)
                           .map((profile: any, index: number) => (
