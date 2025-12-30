@@ -41,9 +41,10 @@ export class PlaylistTrack extends Model {
   trackId?: mongoose.Types.ObjectId;
 
   // Source type for universal playlist support
-  @Field(() => PlaylistTrackSourceType)
-  @prop({ required: true, enum: PlaylistTrackSourceType, default: PlaylistTrackSourceType.NFT })
-  sourceType: PlaylistTrackSourceType;
+  // Made nullable for backwards compatibility with old playlist tracks
+  @Field(() => PlaylistTrackSourceType, { nullable: true, defaultValue: PlaylistTrackSourceType.NFT })
+  @prop({ enum: PlaylistTrackSourceType, default: PlaylistTrackSourceType.NFT })
+  sourceType?: PlaylistTrackSourceType;
 
   // External URL (YouTube, SoundCloud, Bandcamp, Spotify, etc.)
   @Field(() => String, { nullable: true })
