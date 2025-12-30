@@ -40,6 +40,11 @@ import { GenreTracks } from '../types/GenreTracks';
 const DEFAULT_ARTWORK_URL = 'https://soundchain.io/default-artwork.png';
 const IPFS_GATEWAY = 'https://gateway.pinata.cloud/ipfs/';
 
+// Fast IPFS gateway for audio streaming
+// dweb.link is Protocol Labs' official gateway - much faster than Pinata public
+// Alternative: w3s.link (Web3.Storage), cf-ipfs.com (Cloudflare)
+const FAST_AUDIO_GATEWAY = 'https://dweb.link/ipfs/';
+
 @Resolver(Track)
 export class TrackResolver {
   /**
@@ -85,14 +90,11 @@ export class TrackResolver {
 
   @FieldResolver(() => String)
   playbackUrl(@Root() { ipfsCid, ipfsGatewayUrl, muxAsset }: Track): string {
-    // Priority 1: IPFS/Pinata (decentralized, P2P)
+    // Priority 1: IPFS (decentralized, P2P)
     if (ipfsCid) {
-      // Use custom gateway if set, otherwise use Pinata public gateway
-      if (ipfsGatewayUrl) {
-        return ipfsGatewayUrl;
-      }
-      // Default to Pinata gateway - can also use ipfs.io or other gateways
-      return `https://gateway.pinata.cloud/ipfs/${ipfsCid}`;
+      // Always use fast gateway for audio streaming regardless of stored URL
+      // dweb.link is much faster than Pinata public gateway (30-40s vs 2-3s)
+      return `${FAST_AUDIO_GATEWAY}${ipfsCid}`;
     }
     // Priority 2: Mux (legacy/fallback)
     return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
