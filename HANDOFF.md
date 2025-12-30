@@ -71,6 +71,19 @@ Added -24 LUFS audio normalization using Web Audio API. All playback now goes th
 - Targets -24 LUFS broadcast standard
 - Fallback to native volume if Web Audio API not available
 
+### User Avatar & Profile Navigation Fixed (FIXED)
+**Commit:** `8783b4bc6`
+
+Fixed two bugs on /dex/users and /dex/explore:
+1. **Duplicate avatars** - Added deduplication filter to user grid and leaderboard
+2. **Profile page not loading** - Added `routeId` to useEffect dependencies so clicking user avatar properly triggers profile view
+
+Profile pages now load with:
+- Cover art background (ProfileHeader component)
+- User's feed (Posts component)
+- User's tracks (Tracks component)
+- Profile tabs for navigation
+
 ---
 
 ## Quick Commands
@@ -92,6 +105,7 @@ aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
 
 | Commit | Description |
 |--------|-------------|
+| `8783b4bc6` | fix: Deduplicate user avatars and fix profile navigation |
 | `a1cfa3977` | feat: Add -24 LUFS audio normalization (dynamics preserved) |
 | `785648458` | docs: Add CarPlay fix note to HANDOFF |
 | `8c07b2553` | feat: Switch minting to IPFS-only (no more Mux) |
@@ -107,6 +121,7 @@ aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
 | `api/src/services/TrackService.ts` | Switched minting to IPFS-only |
 | `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` | Handle HLS + direct audio + -24 LUFS normalization |
 | `web/src/components/modals/AudioPlayerModal.tsx` | Removed CORS pre-validation |
+| `web/src/pages/dex/[...slug].tsx` | Deduplicate users, fix profile navigation with routeId |
 
 ---
 
