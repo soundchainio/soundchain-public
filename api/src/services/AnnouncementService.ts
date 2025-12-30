@@ -53,7 +53,7 @@ export class AnnouncementService extends Service {
       viewCount: 0,
       clickCount: 0,
       featured: false,
-    });
+    } as any);
 
     return announcement;
   }

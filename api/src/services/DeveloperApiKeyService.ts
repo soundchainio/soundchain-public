@@ -41,7 +41,7 @@ export class DeveloperApiKeyService extends Service {
       tier: ApiKeyTier.FREE,
       dailyRequestCount: 0,
       totalRequests: 0,
-    });
+    } as any);
 
     // Return the raw key only once - it won't be retrievable again
     return { apiKey, rawKey: key };

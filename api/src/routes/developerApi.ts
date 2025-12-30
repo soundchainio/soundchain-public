@@ -146,7 +146,7 @@ router.post('/announcements', validateApiKey, async (req: Request, res: Response
       viewCount: 0,
       clickCount: 0,
       featured: false,
-    });
+    } as any);
 
     // Set rate limit headers
     res.set({

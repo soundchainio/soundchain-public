@@ -7,7 +7,8 @@
 
 import { Arg, Authorized, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } from 'type-graphql';
 import { Context } from '../types/Context';
-import { CurrentUser, User } from '../types/CurrentUser';
+import { CurrentUser } from '../decorators/current-user';
+import { User } from '../models/User';
 import {
   DeveloperApiKey,
   DeveloperApiKeyModel,
@@ -281,7 +282,7 @@ export class DeveloperResolver {
       tier: ApiKeyTier.FREE,
       dailyRequestCount: 0,
       totalRequests: 0,
-    });
+    } as any);
 
     return {
       apiKey,
