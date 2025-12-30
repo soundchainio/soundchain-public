@@ -60,7 +60,19 @@ audioRef.current.play().catch((err) => {
 })
 ```
 
-### 3. SCid Certificate Upload in Create Modal (ADDED)
+### 3. Google Login Fix (FIXED)
+**Commit:** `aa797aef2`
+
+Google login was showing a spinning wheel and not redirecting to Google. The issue was:
+- Production code created a separate Magic instance on the login page
+- Legacy (working) code used the shared Magic context from `useMagicContext`
+
+**Fix:**
+- Removed duplicate Magic instance creation from login page
+- Now uses shared Magic context like legacy working code
+- Uses `config.domainUrl` for redirect URI (consistent with legacy)
+
+### 4. SCid Certificate Upload in Create Modal (ADDED)
 **Commit:** `b889d2fa0`
 
 Added a new "SCid" tab to the Create Modal (between "Mint NFT" and "Post"):
@@ -94,6 +106,7 @@ export SOUNDCHAIN_ANNOUNCEMENT_KEY=sc_live_xxxxx
 
 | Commit | Description |
 |--------|-------------|
+| `aa797aef2` | fix: Google login using shared Magic context from useMagicContext |
 | `ff740dd7e` | fix: Audio playback broken due to missing CORS headers |
 | `90b8576a5` | fix: Make PlaylistTrack.sourceType nullable for backwards compat |
 | `89a7c9d2b` | feat: Add Developer Portal with API key management |
@@ -154,4 +167,4 @@ aws lambda invoke --function-name soundchain-api-production-migrate /tmp/migrate
 
 ---
 
-*Updated: December 30, 2025 @ 12:45 AM MST*
+*Updated: December 30, 2025 @ 9:30 AM MST*

@@ -204,8 +204,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Check for oauth2 extension (from @magic-ext/oauth2)
-      if (!(magic as any).oauth2) {
+      // Check for oauth extension (from @magic-ext/oauth)
+      if (!(magic as any).oauth) {
         setError('OAuth not available. Please refresh the page and try again.');
         return;
       }
@@ -216,13 +216,13 @@ export default function LoginPage() {
 
       // Use config.domainUrl like the legacy working code
       const redirectURI = `${config.domainUrl}/login`;
-      console.log('[OAuth2] Redirecting to', provider, 'with URI:', redirectURI);
+      console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
 
-      // Direct call to loginWithRedirect using oauth2 extension
-      await (magic as any).oauth2.loginWithRedirect({
+      // Direct call to loginWithRedirect using oauth extension (NOT oauth2)
+      await (magic as any).oauth.loginWithRedirect({
         provider,
         redirectURI,
-        scope: ['openid', 'email'],
+        scope: ['openid'],
       });
 
       // If we get here without redirecting, something is wrong
@@ -312,7 +312,7 @@ export default function LoginPage() {
         );
 
         const result = await Promise.race([
-          (magic as any).oauth2.getRedirectResult(),
+          (magic as any).oauth.getRedirectResult(),
           timeoutPromise
         ]);
         console.log('[OAuth2] getRedirectResult returned:', result);
