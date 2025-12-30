@@ -6,7 +6,10 @@
  * - Gas fees
  * - NFT minting
  *
- * Just upload → metadata → get SCid → stream!
+ * Artists get a downloadable certificate they can save to their devices,
+ * giving them full control and proof of their music registration.
+ *
+ * Flow: Upload → Metadata → IPFS → Get SCid → Download Certificate!
  */
 
 import { useState, useCallback } from 'react'
@@ -19,7 +22,15 @@ import { InputField } from 'components/InputField'
 import { TextareaField } from 'components/TextareaField'
 import { Genre } from 'lib/graphql'
 import { genres, GenreLabel } from 'utils/Genres'
-import { Music, Upload, Image as ImageIcon, CheckCircle, Loader2 } from 'lucide-react'
+import { Music, Upload, Image as ImageIcon, CheckCircle, Loader2, Download, Copy, Share2 } from 'lucide-react'
+import {
+  generateCertificate,
+  downloadCertificates,
+  downloadCertificateJSON,
+  downloadCertificateText,
+  copyCertificateToClipboard,
+  SCidCertificateData,
+} from 'utils/SCidCertificate'
 
 interface SimpleTrackFormValues {
   title: string
@@ -41,8 +52,18 @@ const validationSchema = yup.object().shape({
   genres: yup.array().of(yup.string()),
 })
 
+interface UploadResult {
+  trackId: string
+  scid: string
+  message: string
+  ipfsCid: string
+  ipfsGatewayUrl: string
+  chainCode?: string
+  checksum?: string
+}
+
 interface Props {
-  onUploadComplete?: (result: { trackId: string; scid: string; message: string }) => void
+  onUploadComplete?: (result: UploadResult) => void
   onUploadAudio: (file: File) => Promise<string> // Returns assetUrl
   onUploadArtwork: (file: File) => Promise<string> // Returns artworkUrl
   onSubmit: (data: {
@@ -55,7 +76,8 @@ interface Props {
     genres?: Genre[]
     assetUrl: string
     artworkUrl?: string
-  }) => Promise<{ trackId: string; scid: string; message: string }>
+    saveToDatabase?: boolean // Optional: skip DB storage
+  }) => Promise<UploadResult>
 }
 
 export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploadArtwork, onSubmit }: Props) {
@@ -67,7 +89,9 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
   const [assetUrl, setAssetUrl] = useState<string | null>(null)
   const [artworkUrl, setArtworkUrl] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [result, setResult] = useState<{ trackId: string; scid: string; message: string } | null>(null)
+  const [result, setResult] = useState<UploadResult | null>(null)
+  const [certificate, setCertificate] = useState<SCidCertificateData | null>(null)
+  const [skipDatabase, setSkipDatabase] = useState(false)
 
   // Audio dropzone
   const onDropAudio = useCallback(async (acceptedFiles: File[]) => {
@@ -145,7 +169,26 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
         genres: values.genres.length > 0 ? values.genres : undefined,
         assetUrl,
         artworkUrl: artworkUrl || undefined,
+        saveToDatabase: !skipDatabase,
       })
+
+      // Generate certificate for artist to download
+      const cert = generateCertificate({
+        scid: uploadResult.scid,
+        chainCode: uploadResult.chainCode,
+        trackId: uploadResult.trackId,
+        title: values.title,
+        artist: values.artist,
+        album: values.album,
+        description: values.description,
+        releaseYear: values.releaseYear,
+        copyright: values.copyright,
+        genres: values.genres,
+        ipfsCid: uploadResult.ipfsCid,
+        ipfsGatewayUrl: uploadResult.ipfsGatewayUrl,
+        checksum: uploadResult.checksum,
+      })
+      setCertificate(cert)
 
       setResult(uploadResult)
       onUploadComplete?.(uploadResult)
@@ -170,24 +213,93 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
   }
 
   // Success state
-  if (result) {
+  if (result && certificate) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+      <div className="flex flex-col items-center justify-center p-8 text-center space-y-6">
         <CheckCircle className="w-16 h-16 text-green-400" />
         <h2 className="text-2xl font-bold text-white">Upload Complete!</h2>
         <p className="text-gray-400">{result.message}</p>
-        <div className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/50 rounded-lg p-4">
+
+        {/* SCid Display */}
+        <div className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-500/50 rounded-lg p-4 w-full max-w-md">
           <p className="text-sm text-gray-400">Your SCid</p>
           <p className="text-xl font-mono text-cyan-400">{result.scid}</p>
         </div>
+
+        {/* IPFS Info */}
+        <div className="bg-gray-800/50 rounded-lg p-4 w-full max-w-md text-left">
+          <p className="text-sm font-bold text-gray-300 mb-2">IPFS Storage (Decentralized)</p>
+          <p className="text-xs text-gray-400 break-all">
+            <span className="text-gray-500">CID:</span> {result.ipfsCid}
+          </p>
+        </div>
+
+        {/* Download Certificate Section */}
+        <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/30 rounded-lg p-6 w-full max-w-md">
+          <p className="text-sm font-bold text-white mb-2">Download Your Certificate</p>
+          <p className="text-xs text-gray-400 mb-4">
+            Save this certificate to your device. It's your proof of registration - keep it safe!
+          </p>
+
+          {/* Primary Download Button */}
+          <Button
+            type="button"
+            variant="outline"
+            borderColor="bg-cyan-gradient"
+            className="w-full mb-3"
+            onClick={() => downloadCertificates(certificate)}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Certificate (JSON + TXT)
+          </Button>
+
+          {/* Secondary Actions */}
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 text-sm"
+              onClick={() => downloadCertificateJSON(certificate)}
+            >
+              <Download className="w-3 h-3 mr-1" />
+              JSON
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 text-sm"
+              onClick={() => downloadCertificateText(certificate)}
+            >
+              <Download className="w-3 h-3 mr-1" />
+              TXT
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 text-sm"
+              onClick={async () => {
+                const copied = await copyCertificateToClipboard(certificate)
+                if (copied) {
+                  alert('Certificate copied to clipboard!')
+                }
+              }}
+            >
+              <Copy className="w-3 h-3 mr-1" />
+              Copy
+            </Button>
+          </div>
+        </div>
+
         <p className="text-sm text-gray-500">
           Your track is now on IPFS and ready for streaming worldwide.
         </p>
+
         <Button
           type="button"
           variant="outline"
           onClick={() => {
             setResult(null)
+            setCertificate(null)
             setAudioFile(null)
             setArtworkFile(null)
             setArtworkPreview(null)
@@ -336,6 +448,26 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
             </div>
           </div>
 
+          {/* Storage Options */}
+          <div className="bg-gray-800/30 rounded-lg p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={skipDatabase}
+                onChange={(e) => setSkipDatabase(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-gray-600 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
+              />
+              <div>
+                <span className="text-sm font-medium text-white">Certificate Only (No Database)</span>
+                <p className="text-xs text-gray-400 mt-1">
+                  Your track will be stored on IPFS but not in SoundChain's database.
+                  You'll download a certificate as proof of registration.
+                  Perfect for full artist control.
+                </p>
+              </div>
+            </label>
+          </div>
+
           {/* Submit */}
           <div className="pt-4 border-t border-gray-700">
             <Button
@@ -353,7 +485,7 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <Upload className="w-5 h-5" />
-                  Upload & Get SCid
+                  {skipDatabase ? 'Upload & Get Certificate' : 'Upload & Get SCid'}
                 </span>
               )}
             </Button>
