@@ -11,6 +11,8 @@ import { FavoriteCount } from '../services/TrackService';
 import { Context } from '../types/Context';
 import { CreateMultipleTracksInput } from '../types/CreateMultipleTracksInput';
 import { CreateMultipleTracksPayload } from '../types/CreateMultipleTracksPayload';
+import { CreateTrackWithSCidInput } from '../types/CreateTrackInput';
+import { CreateTrackWithSCidPayload } from '../types/CreateTrackWithSCidPayload';
 import { MAX_EDITION_SIZE } from '../types/CreateTrackEditionInput';
 import { DeleteTrackInput } from '../types/DeleteTrackInput';
 import { DeleteTrackPayload } from '../types/DeleteTrackPayload';
@@ -300,6 +302,56 @@ export class TrackResolver {
     return {
       firstTrack: track,
       trackIds: [track._id.toString(), ...otherTracks.map(track => track._id.toString())],
+    };
+  }
+
+  /**
+   * Create a track with SCid only - no NFT/wallet required
+   * This is the simplified upload flow for non-web3 music assets
+   * Returns the track and auto-generated SCid
+   */
+  @Mutation(() => CreateTrackWithSCidPayload)
+  @Authorized()
+  async createTrackWithSCid(
+    @Ctx() { trackService, postService, scidService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('input') input: CreateTrackWithSCidInput,
+  ): Promise<CreateTrackWithSCidPayload> {
+    // Extract S3 key from asset URL for IPFS pinning
+    const assetUrl = input.assetUrl;
+    const url = new URL(assetUrl);
+    const s3Key = url.pathname.replace(/^\//, '');
+
+    // Create track using IPFS-only flow (auto-registers SCid)
+    const track = await trackService.createTrackIPFSOnly(profileId.toString(), {
+      title: input.title,
+      description: input.description,
+      assetUrl: input.assetUrl,
+      artworkUrl: input.artworkUrl,
+      artist: input.artist,
+      album: input.album,
+      releaseYear: input.releaseYear,
+      copyright: input.copyright,
+      genres: input.genres,
+    }, s3Key);
+
+    // Optionally create a feed post for the new track
+    if (input.createPost !== false) {
+      await postService.createPost({
+        profileId: profileId.toString(),
+        trackId: track._id.toString(),
+      });
+    }
+
+    // Get the auto-generated SCid
+    const scid = await scidService.getByTrackId(track._id.toString());
+
+    return {
+      track,
+      scid: scid || undefined,
+      message: scid
+        ? `Track uploaded successfully! Your SCid is: ${scid.scid}`
+        : 'Track uploaded successfully! SCid will be generated shortly.',
     };
   }
 

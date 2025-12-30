@@ -1,0 +1,26 @@
+mutation CreateTrackWithSCid($input: CreateTrackWithSCidInput!) {
+  createTrackWithSCid(input: $input) {
+    track {
+      id
+      title
+      description
+      assetUrl
+      artworkUrl
+      artist
+      album
+      genres
+      ipfsCid
+      ipfsGatewayUrl
+      createdAt
+    }
+    scid {
+      scid
+      chainCode
+      status
+      streamCount
+      ogunRewardsEarned
+      createdAt
+    }
+    message
+  }
+}
