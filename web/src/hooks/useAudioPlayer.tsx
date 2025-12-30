@@ -24,6 +24,7 @@ interface AudioPlayerContextData {
   volume: number
   isFavorite: boolean
   play: (song: Song, fromPlaylist?: boolean) => void
+  preloadTrack: (src: string) => void
   isCurrentSong: (trackId: string) => boolean
   isCurrentlyPlaying: (trackId: string) => boolean
   togglePlay: () => void
@@ -67,6 +68,32 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [isFavorite, setIsFavorite] = useState<boolean>(false)
 
   const RESTART_TOLERANCE_TIME = 2 //2 seconds
+
+  // Cache for preloaded audio URLs to avoid duplicate preloads
+  const preloadedUrls = useRef<Set<string>>(new Set())
+
+  // Preload audio for faster playback - call when track becomes visible
+  const preloadTrack = useCallback((src: string) => {
+    if (!src || preloadedUrls.current.has(src)) return
+
+    preloadedUrls.current.add(src)
+
+    // Use link preload for best browser optimization
+    if (typeof document !== 'undefined') {
+      const link = document.createElement('link')
+      link.rel = 'preload'
+      link.as = 'audio'
+      link.href = src
+      link.crossOrigin = 'anonymous'
+      document.head.appendChild(link)
+
+      // Clean up after 60 seconds to avoid memory bloat
+      setTimeout(() => {
+        link.remove()
+        preloadedUrls.current.delete(src)
+      }, 60000)
+    }
+  }, [])
 
   useEffect(() => {
     const storedVolume = localStorage.getItem(localStorageVolumeKey)
@@ -308,6 +335,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         volume,
         isFavorite,
         play,
+        preloadTrack,
         isCurrentSong,
         isCurrentlyPlaying,
         togglePlay,
