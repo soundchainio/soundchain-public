@@ -636,6 +636,10 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // Profile tab state (Feed | Music | Playlists)
   const [profileTab, setProfileTab] = useState<'feed' | 'music' | 'playlists'>('feed')
 
+  // Announcements state (from /v1/feed API)
+  const [announcements, setAnnouncements] = useState<any[]>([])
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true)
+
   // NFT Transfer state
   const [transferRecipient, setTransferRecipient] = useState('')
   const [selectedNftId, setSelectedNftId] = useState('')
@@ -657,6 +661,24 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
       setSelectedView(newView as any)
     }
   }, [routeType, routeId, router.isReady])
+
+  // Fetch announcements from /v1/feed API
+  useEffect(() => {
+    async function fetchAnnouncements() {
+      try {
+        const response = await fetch('https://19ne212py4.execute-api.us-east-1.amazonaws.com/production/v1/feed?limit=5')
+        if (response.ok) {
+          const data = await response.json()
+          setAnnouncements(data.announcements || [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch announcements:', err)
+      } finally {
+        setAnnouncementsLoading(false)
+      }
+    }
+    fetchAnnouncements()
+  }, [])
 
   // Restore wallet connection from localStorage on mount
   useEffect(() => {
@@ -2468,6 +2490,40 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
 
               {/* Main Feed */}
               <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+                {/* Announcements from /v1/feed API */}
+                {announcements.length > 0 && (
+                  <div className="mb-4 space-y-3">
+                    {announcements.map((announcement: any) => (
+                      <Card key={announcement.id} className="retro-card p-4 border-cyan-500/30 bg-gradient-to-r from-cyan-500/5 to-purple-500/5">
+                        <div className="flex items-start gap-3">
+                          {announcement.companyLogo && (
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-700 flex-shrink-0">
+                              <Image src={announcement.companyLogo} alt={announcement.companyName} fill className="object-cover" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-white text-sm">{announcement.companyName}</span>
+                              <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">{announcement.type?.replace('_', ' ')}</Badge>
+                            </div>
+                            <h3 className="text-white font-semibold mb-1">{announcement.title}</h3>
+                            <p className="text-gray-400 text-sm whitespace-pre-wrap line-clamp-3">{announcement.content}</p>
+                            {announcement.imageUrl && (
+                              <div className="relative w-full h-32 mt-2 rounded-lg overflow-hidden bg-gray-700">
+                                <Image src={announcement.imageUrl} alt={announcement.title} fill className="object-cover" />
+                              </div>
+                            )}
+                            {announcement.link && (
+                              <a href={announcement.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-cyan-400 text-sm mt-2 hover:underline">
+                                Learn more <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
                 <Posts />
               </div>
 
