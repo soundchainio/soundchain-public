@@ -2,51 +2,77 @@
 
 ## Session Summary
 
-Critical fixes and Developer Platform completion:
-1. **Audio Playback Lag (30-40s)** - Switched to fast dweb.link IPFS gateway
-2. **Developer Platform Build Errors** - Fixed TypeScript errors preventing deployment
-3. **SoundChain API Key & Announcements** - Created migration and scripts (pending deployment)
-4. **CarPlay Compatibility** - Already committed last session
+Critical fixes this session:
+1. **Client-side Application Error (FIXED)** - User profile pages crashing on mobile & desktop
+2. **Audio Playback Speed (IMPROVED)** - Cloudflare IPFS gateway + preloading
+3. **SCid Upload in Create Modal (ADDED)** - Non-web3 upload now accessible from main mint modal
+4. **Developer Platform Build Errors** - Fixed TypeScript errors preventing deployment
+5. **SoundChain API Key & Announcements** - Created migration and scripts (pending deployment)
 
 ---
 
 ## Issues Fixed This Session
 
-### 1. Audio Playback Lag - 30-40 Seconds (FIXED)
-**Commit:** `e103bcbf5`
+### 1. Client-side Application Error on User Profiles (FIXED)
+**Commit:** `e878b468a`
 
-The Pinata public gateway (`gateway.pinata.cloud`) was extremely slow. Changed to `dweb.link` (Protocol Labs' official gateway) which is much faster.
+Mobile and desktop users were seeing "Application error: a client-side exception has occurred" when viewing profiles. Found two GraphQL errors in CloudWatch logs:
 
+**Error 1:** `exploreTracks` - "Cannot read properties of undefined (reading 'field')"
 ```typescript
-// api/src/resolvers/TrackResolver.ts
-const FAST_AUDIO_GATEWAY = 'https://dweb.link/ipfs/';
-
-playbackUrl(@Root() { ipfsCid, muxAsset }: Track): string {
-  if (ipfsCid) {
-    // Always use fast gateway (dweb.link is much faster than Pinata public)
-    return `${FAST_AUDIO_GATEWAY}${ipfsCid}`;
-  }
-  return muxAsset ? `https://stream.mux.com/${muxAsset.playbackId}.m3u8` : '';
+// api/src/services/ExploreService.ts - Added null-safe defaults
+sort: {
+  field: sort?.field || 'createdAt',
+  order: sort?.order || SortOrder.DESC
 }
 ```
 
-### 2. Developer Platform TypeScript Errors (FIXED)
-**Commit:** `2dccfd7b6`
+**Error 2:** `maticUsd` - "Cannot return null for non-nullable field"
+```typescript
+// api/src/services/PolygonService.ts - Added try-catch with fallback
+async getMaticUsd(): Promise<string> {
+  try {
+    const { data } = await polygonScanApi.get<PolygonscanMaticUsdResponse>(url);
+    return data?.result?.maticusd || '0.50';
+  } catch (error) {
+    return '0.50'; // Fallback price
+  }
+}
+```
 
-Previous builds (#287, #288) failed due to TypeScript errors:
-- Fixed import path for `CurrentUser` decorator
-- Made `createdAt`/`updatedAt` optional in models (mongoose auto-generates)
-- Added type casting for typegoose model create calls
+### 2. Audio Playback Speed (IMPROVED)
+**Commits:** `e103bcbf5`, `05324b7e9`
 
-Files fixed:
-- `api/src/resolvers/DeveloperResolver.ts`
-- `api/src/models/DeveloperApiKey.ts`
-- `api/src/models/Announcement.ts`
-- `api/src/services/DeveloperApiKeyService.ts`
-- `api/src/services/AnnouncementService.ts`
-- `api/src/routes/developerApi.ts`
+Changed IPFS gateway from Pinata → dweb.link → **Cloudflare** (fastest):
+```typescript
+// api/src/resolvers/TrackResolver.ts
+const FAST_AUDIO_GATEWAY = 'https://cloudflare-ipfs.com/ipfs/';
+```
 
-### 3. SoundChain API Key Migration (PENDING DEPLOYMENT)
+Added audio preloading in web app:
+```typescript
+// web/src/hooks/useAudioPlayer.tsx
+const preloadTrack = useCallback((src: string) => {
+  const link = document.createElement('link')
+  link.rel = 'preload'
+  link.as = 'audio'
+  link.href = src
+  document.head.appendChild(link)
+}, [])
+```
+
+### 3. SCid Certificate Upload in Create Modal (ADDED)
+**Commit:** `b889d2fa0`
+
+Added a new "SCid" tab to the Create Modal (between "Mint NFT" and "Post"):
+- Users can upload music without a wallet
+- No gas fees required
+- Generates SCid certificate on success
+- Shows SCid, Chain Code, and IPFS CID
+
+File: `web/src/components/modals/CreateModal.tsx`
+
+### 5. SoundChain API Key Migration (PENDING DEPLOYMENT)
 **Commit:** `b679a7cc6`
 
 Created migration to generate SoundChain's official ENTERPRISE-tier API key:
@@ -54,25 +80,12 @@ Created migration to generate SoundChain's official ENTERPRISE-tier API key:
 - Outputs raw key to logs - **SAVE IT IMMEDIATELY**
 - Key format: `sc_live_xxxxxxxx...`
 
-### 4. Announcement Script (READY)
+### 6. Announcement Script (READY)
 **File:** `scripts/post-announcements.sh`
-
-Script to blast announcements about recent SoundChain updates:
-1. Developer Platform Launch
-2. IPFS Migration (5,416 tracks)
-3. IPFS-Only Minting
-4. SCid Certificates
-5. CarPlay Support
-6. Audio Normalization
-7. Mobile Audio Fix
 
 **Usage (after deployment):**
 ```bash
-# After migration runs, save the key
 export SOUNDCHAIN_ANNOUNCEMENT_KEY=sc_live_xxxxx
-
-# Run the announcement blast
-chmod +x scripts/post-announcements.sh
 ./scripts/post-announcements.sh
 ```
 
@@ -82,11 +95,12 @@ chmod +x scripts/post-announcements.sh
 
 | Commit | Description |
 |--------|-------------|
+| `b889d2fa0` | feat: Add SCid certificate upload to Create Modal |
+| `05324b7e9` | perf: Lightning-fast IPFS audio with Cloudflare gateway + preloading |
+| `e878b468a` | fix: Critical GraphQL errors causing client-side exceptions |
 | `2dccfd7b6` | fix: TypeScript errors in Developer Platform files |
 | `e103bcbf5` | perf: Use fast dweb.link gateway for IPFS audio streaming |
 | `b679a7cc6` | feat: Add SoundChain official API key migration and script |
-| `e4679b0e5` | feat: CarPlay compatibility - skip Web Audio on iOS/Safari |
-| `cb183851b` | feat: Add Developer Platform for startup announcements |
 
 ---
 
