@@ -26,7 +26,7 @@ export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props
         )}
         <textarea
           maxLength={maxLength}
-          className="placeholder-semibold w-full resize-none border-none bg-transparent p-0 text-xs font-bold text-white placeholder-gray-50 focus:outline-none focus:ring-transparent [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:text-white"
+          className="placeholder-semibold w-full resize-none border-none bg-transparent p-0 text-xs font-bold text-white placeholder-gray-50 focus:outline-none focus:ring-transparent focus:bg-transparent focus:text-white caret-white [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:text-white [-webkit-text-fill-color:white]"
           id={props.name}
           autoComplete="off"
           data-lpignore="true"

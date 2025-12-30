@@ -31,10 +31,13 @@ export const InputField = ({ label, icon: Icon, alignTextCenter, ...props }: Inp
           </Label>
         )}
         <input
-          className={`placeholder-semibold w-full border-none bg-transparent p-0 text-xs font-bold leading-3 text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent ${
+          className={`placeholder-semibold w-full border-none bg-transparent p-0 text-xs font-bold leading-3 text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent focus:bg-transparent focus:text-gray-200 caret-white [-webkit-text-fill-color:rgb(229,231,235)] ${
             alignTextCenter && 'text-center'
           }`}
           id={props.name}
+          autoComplete="off"
+          data-lpignore="true"
+          data-form-type="other"
           {...field}
           {...props}
           ref={inputRef}
