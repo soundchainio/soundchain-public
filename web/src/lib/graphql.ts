@@ -9316,3 +9316,86 @@ export function useDeletePlaylistMutation(baseOptions?: Apollo.MutationHookOptio
   const options = { ...defaultOptions, ...baseOptions };
   return Apollo.useMutation<DeletePlaylistMutation, DeletePlaylistMutationVariables>(DeletePlaylistDocument, options);
 }
+
+// CreateTrackWithSCid Mutation - Non-web3 uploads (certificate only)
+export type CreateTrackWithScidInput = {
+  title: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  assetUrl: Scalars['String']['input'];
+  artworkUrl?: InputMaybe<Scalars['String']['input']>;
+  artist?: InputMaybe<Scalars['String']['input']>;
+  album?: InputMaybe<Scalars['String']['input']>;
+  releaseYear?: InputMaybe<Scalars['Int']['input']>;
+  copyright?: InputMaybe<Scalars['String']['input']>;
+  genres?: InputMaybe<Array<Genre> | Genre>;
+  createPost?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type CreateTrackWithScidMutationVariables = Exact<{
+  input: CreateTrackWithScidInput;
+}>;
+
+export type CreateTrackWithScidMutation = {
+  __typename?: 'Mutation';
+  createTrackWithSCid: {
+    __typename?: 'CreateTrackWithSCidPayload';
+    track: {
+      __typename?: 'Track';
+      id: string;
+      title: string;
+      description: Maybe<string>;
+      assetUrl: string;
+      artworkUrl: Maybe<string>;
+      artist: Maybe<string>;
+      album: Maybe<string>;
+      genres: Maybe<Array<Genre>>;
+      ipfsCid: Maybe<string>;
+      ipfsGatewayUrl: Maybe<string>;
+      createdAt: string;
+    };
+    scid: Maybe<{
+      __typename?: 'SCid';
+      scid: string;
+      chainCode: string;
+      status: string;
+      streamCount: number;
+      ogunRewardsEarned: number;
+      createdAt: string;
+    }>;
+    message: string;
+  };
+};
+
+export const CreateTrackWithScidDocument = gql`
+  mutation CreateTrackWithSCid($input: CreateTrackWithSCidInput!) {
+    createTrackWithSCid(input: $input) {
+      track {
+        id
+        title
+        description
+        assetUrl
+        artworkUrl
+        artist
+        album
+        genres
+        ipfsCid
+        ipfsGatewayUrl
+        createdAt
+      }
+      scid {
+        scid
+        chainCode
+        status
+        streamCount
+        ogunRewardsEarned
+        createdAt
+      }
+      message
+    }
+  }
+`;
+
+export function useCreateTrackWithScidMutation(baseOptions?: Apollo.MutationHookOptions<CreateTrackWithScidMutation, CreateTrackWithScidMutationVariables>) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateTrackWithScidMutation, CreateTrackWithScidMutationVariables>(CreateTrackWithScidDocument, options);
+}
