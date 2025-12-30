@@ -39,6 +39,7 @@ import { WonAuctionNotificationResolver } from './WonAuctionNotificationResolver
 import { SCidResolver } from './SCidResolver';
 import { BookmarkResolver } from './BookmarkResolver';
 import { TrackCommentResolver } from './TrackCommentResolver';
+import { DeveloperResolver } from './DeveloperResolver';
 
 export const resolvers = [
   AuctionEndedNotificationResolver,
@@ -82,4 +83,5 @@ export const resolvers = [
   SCidResolver,
   BookmarkResolver,
   TrackCommentResolver,
+  DeveloperResolver,
 ] as const;

@@ -1,0 +1,193 @@
+/**
+ * Announcement Model
+ *
+ * Stores announcements from developers/startups using SoundChain's
+ * open platform API. Displayed on the announcements feed.
+ */
+
+import { getModelForClass, modelOptions, prop, Severity, index, Ref } from '@typegoose/typegoose';
+import mongoose from 'mongoose';
+import { Field, ID, ObjectType, registerEnumType } from 'type-graphql';
+import { Model } from './Model';
+import { DeveloperApiKey } from './DeveloperApiKey';
+
+export enum AnnouncementStatus {
+  PENDING = 'PENDING',       // Awaiting moderation
+  APPROVED = 'APPROVED',     // Visible on feed
+  REJECTED = 'REJECTED',     // Rejected by moderator
+  FLAGGED = 'FLAGGED',       // Flagged for review
+  ARCHIVED = 'ARCHIVED',     // Old/archived
+}
+
+registerEnumType(AnnouncementStatus, {
+  name: 'AnnouncementStatus',
+  description: 'Status of announcement',
+});
+
+export enum AnnouncementType {
+  PRODUCT_LAUNCH = 'PRODUCT_LAUNCH',
+  FEATURE_UPDATE = 'FEATURE_UPDATE',
+  PARTNERSHIP = 'PARTNERSHIP',
+  EVENT = 'EVENT',
+  COMMUNITY = 'COMMUNITY',
+  OTHER = 'OTHER',
+}
+
+registerEnumType(AnnouncementType, {
+  name: 'AnnouncementType',
+  description: 'Type of announcement',
+});
+
+@modelOptions({
+  options: { allowMixed: Severity.ALLOW },
+  schemaOptions: {
+    timestamps: true,
+    collection: 'announcements',
+  },
+})
+@ObjectType()
+@index({ apiKeyId: 1 })
+@index({ status: 1 })
+@index({ type: 1 })
+@index({ createdAt: -1 })
+@index({ scheduledFor: 1 })
+export class Announcement extends Model {
+  @Field(() => ID, { name: 'id' })
+  public override _id!: mongoose.Types.ObjectId;
+
+  /**
+   * Reference to the API key used to create this announcement
+   */
+  @Field(() => String)
+  @prop({ required: true })
+  apiKeyId: string;
+
+  /**
+   * Company name (denormalized for fast queries)
+   */
+  @Field(() => String)
+  @prop({ required: true })
+  companyName: string;
+
+  /**
+   * Company logo URL (denormalized)
+   */
+  @Field(() => String, { nullable: true })
+  @prop()
+  companyLogo?: string;
+
+  /**
+   * Announcement title
+   */
+  @Field(() => String)
+  @prop({ required: true, maxlength: 200 })
+  title: string;
+
+  /**
+   * Announcement content/body
+   */
+  @Field(() => String)
+  @prop({ required: true, maxlength: 2000 })
+  content: string;
+
+  /**
+   * External link (CTA)
+   */
+  @Field(() => String, { nullable: true })
+  @prop()
+  link?: string;
+
+  /**
+   * Image/banner URL
+   */
+  @Field(() => String, { nullable: true })
+  @prop()
+  imageUrl?: string;
+
+  /**
+   * Announcement type
+   */
+  @Field(() => AnnouncementType)
+  @prop({ required: true, enum: AnnouncementType, default: AnnouncementType.OTHER })
+  type: AnnouncementType;
+
+  /**
+   * Tags for categorization
+   */
+  @Field(() => [String], { nullable: true })
+  @prop({ type: () => [String], default: [] })
+  tags?: string[];
+
+  /**
+   * Announcement status
+   */
+  @Field(() => AnnouncementStatus)
+  @prop({ required: true, enum: AnnouncementStatus, default: AnnouncementStatus.APPROVED })
+  status: AnnouncementStatus;
+
+  /**
+   * Scheduled publish time (optional)
+   */
+  @Field(() => Date, { nullable: true })
+  @prop()
+  scheduledFor?: Date;
+
+  /**
+   * Actual publish time
+   */
+  @Field(() => Date, { nullable: true })
+  @prop()
+  publishedAt?: Date;
+
+  /**
+   * View count
+   */
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  viewCount: number;
+
+  /**
+   * Click count (on link)
+   */
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  clickCount: number;
+
+  /**
+   * Is this a featured/pinned announcement?
+   */
+  @Field(() => Boolean)
+  @prop({ required: true, default: false })
+  featured: boolean;
+
+  /**
+   * Moderation notes (internal)
+   */
+  @prop()
+  moderationNotes?: string;
+
+  /**
+   * Moderator ID (if reviewed)
+   */
+  @prop()
+  moderatedBy?: string;
+
+  /**
+   * Moderation timestamp
+   */
+  @prop()
+  moderatedAt?: Date;
+
+  /**
+   * Timestamps
+   */
+  @Field(() => Date)
+  createdAt: Date;
+
+  @Field(() => Date)
+  updatedAt: Date;
+}
+
+export const AnnouncementModel = getModelForClass(Announcement);
+
+export default Announcement;

@@ -9,6 +9,7 @@ import { processAuctions } from './lambda/processauctions/handler';
 import { processPending } from './lambda/processpending/handler';
 import { Context } from './types/Context';
 import cors from 'cors';
+import developerApiRoutes from './routes/developerApi';
 
 async function bootstrap() {
   // Connect to MongoDB using environment variable
@@ -38,6 +39,9 @@ async function bootstrap() {
 
   app.use(config.express.middlewares);
   app.use(cors({ origin: "https://www.soundchain.io" }));
+
+  // Developer Platform REST API (v1)
+  app.use('/v1', developerApiRoutes);
 
   const server = new ApolloServer({
     ...config.apollo,
