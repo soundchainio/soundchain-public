@@ -2,10 +2,14 @@
 
 ## Session Summary
 
-Fixed three critical issues:
+Fixed critical issues and added new features:
 1. **AudioPlayerModal artwork not loading** - CORS pre-validation was failing
 2. **Mobile audio playback broken** - IPFS URLs weren't being handled correctly
 3. **Switched minting to IPFS-only** - No more Mux for new tracks
+4. **Audio normalization** - Added -24 LUFS normalization (no compression)
+5. **User avatars duplicating** - Fixed deduplication on /dex/users and /dex/explore
+6. **Profile navigation broken** - Fixed routeId dependency in useEffect
+7. **Non-web3 SCid minting** - Bandcamp/DistroKid style uploads with auto SCid
 
 ---
 
@@ -84,6 +88,35 @@ Profile pages now load with:
 - User's tracks (Tracks component)
 - Profile tabs for navigation
 
+### Non-Web3 SCid Minting Added (NEW FEATURE)
+**Commits:** `26a3ec6ce`, `3014c8c4e`
+
+Bandcamp/DistroKid style music uploads - no wallet required:
+
+**Backend:**
+- New `createTrackWithSCid` mutation
+- New `CreateTrackWithSCidInput` type (simplified, no NFT fields)
+- Made `trackEditionId` optional
+
+**Flow:**
+1. Upload audio → S3
+2. Audio pinned to **Pinata IPFS** (decentralized storage)
+3. Fill metadata (title, artist, album, genre, artwork)
+4. SCid auto-generated (format: `SC-POL-XXXX-YYZZZZZ`)
+5. Track ready for streaming immediately
+
+**Frontend:**
+- New `SimpleTrackUploadForm` component
+- Drag & drop audio/artwork
+- No wallet connection needed
+- No gas fees
+- Success screen shows SCid
+
+**SCid Format:** `SC-[CHAIN]-[ARTIST_HASH]-[YEAR][SEQUENCE]`
+- Example: `SC-POL-7B3A-2400001`
+- Web3 replacement for ISRC codes
+- Tracks stream counts and OGUN rewards
+
 ---
 
 ## Quick Commands
@@ -105,6 +138,8 @@ aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
 
 | Commit | Description |
 |--------|-------------|
+| `3014c8c4e` | feat: Add SimpleTrackUploadForm for non-web3 music uploads |
+| `26a3ec6ce` | feat: Add non-web3 SCid minting (Bandcamp/DistroKid style) |
 | `8783b4bc6` | fix: Deduplicate user avatars and fix profile navigation |
 | `a1cfa3977` | feat: Add -24 LUFS audio normalization (dynamics preserved) |
 | `785648458` | docs: Add CarPlay fix note to HANDOFF |
@@ -119,6 +154,11 @@ aws logs tail /aws/lambda/soundchain-api-production-graphql --since 5m
 | File | Change |
 |------|--------|
 | `api/src/services/TrackService.ts` | Switched minting to IPFS-only |
+| `api/src/resolvers/TrackResolver.ts` | New `createTrackWithSCid` mutation |
+| `api/src/types/CreateTrackInput.ts` | Made trackEditionId optional, added CreateTrackWithSCidInput |
+| `api/src/types/CreateTrackWithSCidPayload.ts` | New payload type with track + SCid |
+| `web/src/components/forms/track/SimpleTrackUploadForm.tsx` | Non-web3 upload form |
+| `web/src/graphql/CreateTrackWithSCid.graphql` | GraphQL mutation for SCid uploads |
 | `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` | Handle HLS + direct audio + -24 LUFS normalization |
 | `web/src/components/modals/AudioPlayerModal.tsx` | Removed CORS pre-validation |
 | `web/src/pages/dex/[...slug].tsx` | Deduplicate users, fix profile navigation with routeId |
