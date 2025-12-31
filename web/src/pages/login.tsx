@@ -215,8 +215,8 @@ export default function LoginPage() {
       setError(null);
       localStorage.removeItem('didToken');
 
-      // Use config.domainUrl like the legacy working code
-      const redirectURI = `${config.domainUrl}/login`;
+      // Use window.location.origin to match the actual domain (www vs non-www)
+      const redirectURI = `${typeof window !== 'undefined' ? window.location.origin : config.domainUrl}/login`;
       console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
 
       // Direct call to loginWithRedirect using oauth extension (NOT oauth2)
