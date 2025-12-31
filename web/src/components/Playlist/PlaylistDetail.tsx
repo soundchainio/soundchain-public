@@ -53,8 +53,9 @@ interface PlaylistDetailProps {
   currentUserWallet?: string
 }
 
-// Helper to get embed URL for external sources - supports ANY URL
-const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string | null => {
+// Helper to get embed URL for external sources - ALWAYS returns an embed URL (never null)
+// Users must NEVER leave SoundChain - everything plays inline!
+const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string => {
   try {
     if (sourceType === PlaylistTrackSourceType.Youtube) {
       // Extract YouTube video ID
@@ -78,21 +79,23 @@ const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string |
       // Apple Music embed
       return url.replace('music.apple.com', 'embed.music.apple.com')
     }
-
-    // For generic URLs (Upload type or unknown):
-    // Check if it's a direct audio/video file - can be embedded
-    const lowerUrl = url.toLowerCase()
-    if (lowerUrl.match(/\.(mp3|wav|ogg|flac|aac|m4a|mp4|webm|mov)(\?|$)/)) {
-      // Direct media file - return as-is for HTML5 player
-      return url
+    if (sourceType === PlaylistTrackSourceType.Tidal) {
+      // Tidal embed
+      const match = url.match(/tidal\.com\/(?:browse\/)?(track|album|playlist)\/(\d+)/)
+      if (match) return `https://embed.tidal.com/${match[1]}s/${match[2]}`
+    }
+    if (sourceType === PlaylistTrackSourceType.Bandcamp) {
+      // Bandcamp - use their embed player
+      return `https://bandcamp.com/EmbeddedPlayer/size=large/bgcol=333333/linkcol=e99708/tracklist=false/artwork=small/transparent=true/url=${encodeURIComponent(url)}/`
     }
 
-    // For other URLs, return null - will open in new tab
-    return null
+    // For ALL other URLs - embed directly in iframe
+    // This keeps users on SoundChain - no redirects!
+    return url
   } catch (e) {
     console.error('Error parsing embed URL:', e)
+    return url // Always return the URL for iframe embedding
   }
-  return null
 }
 
 // Check if URL is a direct audio file that can be played natively
@@ -138,13 +141,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       const sourceTypeEnum = sourceType as PlaylistTrackSourceType
       const embedUrl = getEmbedUrl(externalUrl, sourceTypeEnum)
 
-      if (embedUrl) {
-        setActiveEmbed({ url: embedUrl, title: title || 'External Track', sourceType: sourceTypeEnum })
-        setIsPlayingAll(true)
-      } else {
-        // Fallback - open in new tab if no embed available
-        window.open(externalUrl, '_blank', 'noopener,noreferrer')
-      }
+      // Always show inline embed - NEVER redirect users away from SoundChain!
+      setActiveEmbed({ url: embedUrl, title: title || 'External Track', sourceType: sourceTypeEnum })
+      setIsPlayingAll(true)
     }
 
     window.addEventListener('externalTrackPlay', handleExternalTrack as EventListener)
@@ -316,15 +315,10 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
         playlistState(songs, nftIndex)
       }
     } else if (track.externalUrl || track.uploadedFileUrl) {
-      // Show embed for external tracks
+      // Show embed for external tracks - ALWAYS inline, never redirect!
       const url = track.externalUrl || track.uploadedFileUrl!
       const embedUrl = getEmbedUrl(url, track.sourceType)
-      if (embedUrl) {
-        setActiveEmbed({ url: embedUrl, title: track.title || 'External Track', sourceType: track.sourceType })
-      } else {
-        // Fallback - open in new tab
-        window.open(url, '_blank', 'noopener,noreferrer')
-      }
+      setActiveEmbed({ url: embedUrl, title: track.title || 'External Track', sourceType: track.sourceType })
     }
   }
 
@@ -417,14 +411,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   }
 
   const handleOpenExternal = (url: string, title: string | null, sourceType: PlaylistTrackSourceType) => {
+    // Always show inline embed - NEVER redirect users away from SoundChain!
     const embedUrl = getEmbedUrl(url, sourceType)
-    if (embedUrl) {
-      // Show embedded player
-      setActiveEmbed({ url: embedUrl, title: title || 'External Track', sourceType })
-    } else {
-      // Fallback to opening in new tab for unsupported platforms
-      window.open(url, '_blank', 'noopener,noreferrer')
-    }
+    setActiveEmbed({ url: embedUrl, title: title || 'External Track', sourceType })
   }
 
   const handleToggleFavorite = async () => {
