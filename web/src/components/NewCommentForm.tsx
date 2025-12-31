@@ -59,12 +59,15 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
   }, [me])
 
   const [addComment] = useAddCommentMutation({
+    refetchQueries: ['Comments'], // Always refetch comments after adding
+    awaitRefetchQueries: true,
     update: (cache, result) => {
       if (router.pathname === '/posts/[id]' && !router.query.cursor) {
         updateCache(cache, result)
-      } else {
-        cache.evict({ fieldName: 'comments', args: { postId } })
       }
+      // Evict the comments cache to force refresh
+      cache.evict({ fieldName: 'comments' })
+      cache.gc()
     },
   })
 

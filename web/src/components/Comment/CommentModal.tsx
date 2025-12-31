@@ -16,10 +16,14 @@ export const CommentModal = () => {
 
   const firstPage: PageInput = { first: pageSize }
 
-  const { data, loading, fetchMore } = useCommentsQuery({
+  const { data, loading, error, refetch, fetchMore } = useCommentsQuery({
     variables: { postId: commentModalPostId || '', page: firstPage },
     skip: !commentModalPostId,
+    fetchPolicy: 'network-only', // Always fetch fresh data
   })
+
+  // Debug logging
+  console.log('[CommentModal] postId:', commentModalPostId, 'loading:', loading, 'error:', error, 'data:', data?.comments?.nodes?.length)
 
   const handleClose = () => {
     dispatchShowCommentModal({ show: false, postId: undefined })
@@ -81,7 +85,18 @@ export const CommentModal = () => {
 
           {/* Comments List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {loading && !data ? (
+            {error ? (
+              <div className="text-center py-8">
+                <p className="text-red-400">Error loading comments</p>
+                <p className="text-neutral-600 text-sm mt-1">{error.message}</p>
+                <button
+                  onClick={() => refetch()}
+                  className="mt-2 px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : loading && !data ? (
               <>
                 <CommentSkeleton />
                 <CommentSkeleton />
