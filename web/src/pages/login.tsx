@@ -258,6 +258,7 @@ export default function LoginPage() {
 
         // Try OAuth with timeout to prevent infinite hanging
         let oauthResult = null;
+        let oauthError: any = null;
         try {
           const oauthPromise = (magic as any).oauth.getRedirectResult();
           const timeoutPromise = new Promise((_, reject) =>
@@ -265,9 +266,9 @@ export default function LoginPage() {
           );
           oauthResult = await Promise.race([oauthPromise, timeoutPromise]);
           console.log('[OAuth] getRedirectResult returned:', oauthResult);
-        } catch (oauthError: any) {
-          console.log('[OAuth] getRedirectResult error:', oauthError?.message);
-          // If timeout or error, try magic link fallback
+        } catch (err: any) {
+          oauthError = err;
+          console.log('[OAuth] getRedirectResult error:', err?.message);
         }
 
         if (oauthResult?.magic?.idToken) {
@@ -284,7 +285,12 @@ export default function LoginPage() {
           }
         }
 
-        // If OAuth didn't return a result, try email magic link
+        // If OAuth timed out or had a specific error, don't try magic link - show error
+        if (oauthError) {
+          throw new Error(`Google login failed: ${oauthError.message}. Please try again.`);
+        }
+
+        // Only try magic link if OAuth returned null (meaning this is actually a magic link callback)
         console.log('[Auth] No OAuth result, trying email magic link');
         await magic.auth.loginWithCredential();
         const didToken = await magic.user.getIdToken();
