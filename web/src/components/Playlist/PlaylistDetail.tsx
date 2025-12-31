@@ -183,6 +183,30 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
+  // Extract URL from iframe embed code if present
+  const extractUrlFromEmbed = (input: string): string => {
+    // Check if input contains an iframe
+    const iframeMatch = input.match(/src=["']([^"']+)["']/)
+    if (iframeMatch) {
+      console.log('[PlaylistDetail] Extracted URL from iframe:', iframeMatch[1])
+      return iframeMatch[1]
+    }
+    // Check if input contains a SoundCloud widget URL with encoded URL parameter
+    const soundcloudUrlMatch = input.match(/soundcloud\.com\/player\/\?url=([^&"']+)/)
+    if (soundcloudUrlMatch) {
+      const decoded = decodeURIComponent(soundcloudUrlMatch[1])
+      console.log('[PlaylistDetail] Extracted SoundCloud track URL:', decoded)
+      // Extract the actual track URL from the API URL
+      const trackMatch = decoded.match(/api\.soundcloud\.com\/tracks\/([^&]+)/)
+      if (trackMatch) {
+        // Can't easily convert API URL to web URL without API call, use the widget URL instead
+        return `https://soundcloud.com/track/${trackMatch[1]}`
+      }
+      return decoded
+    }
+    return input.trim()
+  }
+
   // Add external link to playlist - accepts ANY URL
   const handleAddExternalLink = async () => {
     if (!externalLinkUrl.trim()) {
@@ -190,38 +214,45 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       return
     }
 
+    // Extract URL from embed code if needed
+    const cleanUrl = extractUrlFromEmbed(externalLinkUrl)
+    console.log('[PlaylistDetail] Clean URL:', cleanUrl)
+
     // Basic URL validation
     try {
-      new URL(externalLinkUrl.trim())
+      new URL(cleanUrl)
     } catch {
-      setAddLinkError('Please enter a valid URL (e.g., https://example.com/audio)')
+      setAddLinkError('Please enter a valid URL (e.g., https://example.com/audio) or paste embed code')
       return
     }
 
     // Detect platform from URL - now accepts ANY URL
-    const detected = detectPlatformFromUrl(externalLinkUrl.trim())
+    const detected = detectPlatformFromUrl(cleanUrl)
 
     setAddingTracks(true)
     setAddLinkError('')
 
     try {
+      console.log('[PlaylistDetail] Adding external link:', { playlistId: playlist.id, sourceType: detected.sourceType, externalUrl: cleanUrl, title: externalLinkTitle.trim() || detected.platform })
+
       await addPlaylistItem({
         variables: {
           input: {
             playlistId: playlist.id,
             sourceType: detected.sourceType,
-            externalUrl: externalLinkUrl.trim(),
+            externalUrl: cleanUrl,
             title: externalLinkTitle.trim() || detected.platform,
           },
         },
       })
+      console.log('[PlaylistDetail] External link added successfully!')
       // Clear form and refetch
       setExternalLinkUrl('')
       setExternalLinkTitle('')
       await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to add external link:', err)
-      setAddLinkError('Failed to add link. Please try again.')
+      setAddLinkError(`Failed to add link: ${err?.message || 'Please try again.'}`)
     } finally {
       setAddingTracks(false)
     }
@@ -253,6 +284,8 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       if (pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId) {
         // NFT track - fetch playback URL
         const trackData = await fetchTrackData(pt.trackId)
+        console.log('[PlaylistDetail] NFT track data:', { trackId: pt.trackId, playbackUrl: trackData?.playbackUrl, title: trackData?.title })
+
         if (trackData?.playbackUrl) {
           songs.push({
             trackId: pt.trackId,
@@ -262,6 +295,11 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
             artist: trackData?.artist || pt.artist || 'Unknown Artist',
             isFavorite: trackData?.isFavorite || false,
           })
+        } else {
+          // Track exists but has no playbackUrl - might still be processing or IPFS issue
+          console.warn('[PlaylistDetail] NFT track missing playbackUrl:', pt.trackId, pt.title)
+          // Still add it to the queue but mark as unavailable
+          setPlayError(`Track "${pt.title || 'Unknown'}" is still processing. Try again in a moment.`)
         }
       } else if (pt.externalUrl || pt.uploadedFileUrl) {
         // External link - check if it's a direct audio file or needs embed
@@ -451,8 +489,11 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       await deletePlaylistItem({
         variables: { playlistItemId },
       })
+      // Refetch playlist data to update the UI
+      await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
     } catch (error) {
       console.error('Failed to remove track:', error)
+      alert('Failed to remove track. Please try again.')
     }
   }
 
