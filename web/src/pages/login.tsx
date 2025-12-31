@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -96,6 +96,7 @@ export default function LoginPage() {
   const { magic } = useMagicContext();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
+  const isProcessingCredential = useRef(false); // Prevent multiple OAuth processing
 
   useEffect(() => {
     setIsClient(true);
@@ -239,28 +240,37 @@ export default function LoginPage() {
   const handleTwitchLogin = () => handleSocialLogin('twitch');
 
   // Unified handler for magic_credential callbacks (OAuth and Email Magic Links)
-  // Try OAuth first, fall back to email magic link if OAuth returns nothing
+  // Uses ref to prevent multiple concurrent runs (state is async, ref is sync)
   useEffect(() => {
     async function handleMagicCredential() {
-      if (!magic || !magicParam || loggingIn) return;
+      // Use ref for instant check - state updates are async and cause race conditions
+      if (!magic || !magicParam || isProcessingCredential.current) {
+        return;
+      }
 
+      // Mark as processing IMMEDIATELY (sync) before any async work
+      isProcessingCredential.current = true;
       setLoggingIn(true);
       setError(null);
 
       try {
-        // First, try OAuth (Google/Discord/Twitch) - this handles social logins
         console.log('[Auth] Processing magic_credential callback - trying OAuth first');
 
+        // Try OAuth with timeout to prevent infinite hanging
         let oauthResult = null;
         try {
-          oauthResult = await (magic as any).oauth.getRedirectResult();
+          const oauthPromise = (magic as any).oauth.getRedirectResult();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('OAuth timeout after 10s')), 10000)
+          );
+          oauthResult = await Promise.race([oauthPromise, timeoutPromise]);
           console.log('[OAuth] getRedirectResult returned:', oauthResult);
         } catch (oauthError: any) {
-          console.log('[OAuth] getRedirectResult error (will try magic link):', oauthError?.message);
+          console.log('[OAuth] getRedirectResult error:', oauthError?.message);
+          // If timeout or error, try magic link fallback
         }
 
         if (oauthResult?.magic?.idToken) {
-          // OAuth login successful
           console.log('[OAuth] Got OAuth result with idToken');
           const loginResult = await login({ variables: { input: { token: oauthResult.magic.idToken } } });
           if (loginResult.data?.login.jwt) {
@@ -300,10 +310,11 @@ export default function LoginPage() {
           setError(error.message || 'Login failed. Please try again.');
         }
         setLoggingIn(false);
+        isProcessingCredential.current = false;
       }
     }
     handleMagicCredential();
-  }, [magic, magicParam, login, handleError, router]); // Removed loggingIn to prevent re-runs
+  }, [magic, magicParam, login, handleError, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
