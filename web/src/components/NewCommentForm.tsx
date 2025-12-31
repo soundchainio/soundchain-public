@@ -73,35 +73,47 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
   })
 
   const handleSubmit = async ({ body }: FormValues, { resetForm }: FormikHelpers<FormValues>) => {
-    if (me) {
-      await addComment({ variables: { input: { postId, body } } })
-    } else if (guestWallet) {
-      await guestAddComment({ variables: { input: { postId, body }, walletAddress: guestWallet } })
-    } else {
-      // Anonymous comment - generate a random wallet address like public posts
-      const hexChars = '0123456789abcdef'
-      let addressBody = ''
-      for (let i = 0; i < 40; i++) {
-        addressBody += hexChars[Math.floor(Math.random() * 16)]
+    console.log('[Comment] Submitting comment:', { postId, body, me: !!me, guestWallet })
+    try {
+      if (me) {
+        console.log('[Comment] Adding comment as logged-in user')
+        const result = await addComment({ variables: { input: { postId, body } } })
+        console.log('[Comment] Result:', result)
+      } else if (guestWallet) {
+        console.log('[Comment] Adding comment as guest')
+        await guestAddComment({ variables: { input: { postId, body }, walletAddress: guestWallet } })
+      } else {
+        // Anonymous comment - generate a random wallet address like public posts
+        console.log('[Comment] Adding comment as anonymous')
+        const hexChars = '0123456789abcdef'
+        let addressBody = ''
+        for (let i = 0; i < 40; i++) {
+          addressBody += hexChars[Math.floor(Math.random() * 16)]
+        }
+        const anonymousAddress = `0x${addressBody}`
+        await guestAddComment({ variables: { input: { postId, body }, walletAddress: anonymousAddress } })
       }
-      const anonymousAddress = `0x${addressBody}`
-      await guestAddComment({ variables: { input: { postId, body }, walletAddress: anonymousAddress } })
-    }
 
-    if (router.query.commentId) {
-      router.replace({ pathname: '/posts/[id]', query: { id: postId } }, `/posts/${postId}`, {
-        shallow: true,
-      })
-    } else {
-      resetForm()
-      setLinkPreview(undefined)
-    }
+      console.log('[Comment] Success!')
 
-    // Call onSuccess callback if provided (for modal usage)
-    if (onSuccess) {
-      onSuccess()
-    } else {
-      document.querySelector('#main')?.scrollTo(0, 0)
+      if (router.query.commentId) {
+        router.replace({ pathname: '/posts/[id]', query: { id: postId } }, `/posts/${postId}`, {
+          shallow: true,
+        })
+      } else {
+        resetForm()
+        setLinkPreview(undefined)
+      }
+
+      // Call onSuccess callback if provided (for modal usage)
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        document.querySelector('#main')?.scrollTo(0, 0)
+      }
+    } catch (error: any) {
+      console.error('[Comment] Error:', error)
+      alert(`Comment failed: ${error.message || 'Unknown error'}`)
     }
   }
 
