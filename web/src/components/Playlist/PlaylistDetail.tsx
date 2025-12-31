@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2 } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder, useAddPlaylistItemMutation } from 'lib/graphql'
@@ -109,6 +109,29 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const tracks = playlist.tracks?.nodes || []
   const existingTrackIds = new Set(tracks.map(t => t.trackId).filter(Boolean))
 
+  // Listen for external track events from AudioEngine
+  useEffect(() => {
+    const handleExternalTrack = (event: CustomEvent) => {
+      const { sourceType, externalUrl, title } = event.detail
+      console.log('[PlaylistDetail] External track event received:', { sourceType, externalUrl, title })
+
+      // Map sourceType string back to enum
+      const sourceTypeEnum = sourceType as PlaylistTrackSourceType
+      const embedUrl = getEmbedUrl(externalUrl, sourceTypeEnum)
+
+      if (embedUrl) {
+        setActiveEmbed({ url: embedUrl, title: title || 'External Track', sourceType: sourceTypeEnum })
+        setIsPlayingAll(true)
+      } else {
+        // Fallback - open in new tab if no embed available
+        window.open(externalUrl, '_blank', 'noopener,noreferrer')
+      }
+    }
+
+    window.addEventListener('externalTrackPlay', handleExternalTrack as EventListener)
+    return () => window.removeEventListener('externalTrackPlay', handleExternalTrack as EventListener)
+  }, [])
+
   // Query for tracks to add
   const { data: searchTracksData, loading: searchLoading } = useExploreTracksQuery({
     variables: {
@@ -197,42 +220,44 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
-  // Build playable songs by fetching track data
+  // Build playable songs by fetching track data - NOW INCLUDES EXTERNAL LINKS
   const buildSongsWithPlaybackUrls = async (): Promise<Song[]> => {
     console.log('[PlaylistDetail] Building songs. Total tracks:', tracks.length)
-    console.log('[PlaylistDetail] Tracks:', tracks.map(t => ({ id: t.id, sourceType: t.sourceType, trackId: t.trackId, title: t.title })))
+    console.log('[PlaylistDetail] Tracks:', tracks.map(t => ({ id: t.id, sourceType: t.sourceType, trackId: t.trackId, title: t.title, externalUrl: t.externalUrl })))
 
-    const nftTracks = tracks.filter(pt => pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId)
-    console.log('[PlaylistDetail] NFT tracks found:', nftTracks.length)
+    const songs: Song[] = []
 
-    if (nftTracks.length === 0) {
-      console.warn('[PlaylistDetail] No NFT tracks to play!')
-    }
-
-    const songs = await Promise.all(
-      nftTracks.map(async (pt) => {
-        const trackData = await fetchTrackData(pt.trackId!)
-        console.log('[PlaylistDetail] Fetched track data for', pt.trackId, ':', trackData?.playbackUrl ? 'Has playbackUrl' : 'NO playbackUrl')
-        return {
-          trackId: pt.trackId!,
-          src: trackData?.playbackUrl || '',
-          art: trackData?.artworkUrl || pt.artworkUrl || undefined,
-          title: trackData?.title || pt.title || 'Unknown',
-          artist: trackData?.artist || pt.artist || 'Unknown Artist',
-          isFavorite: trackData?.isFavorite || false,
+    for (const pt of tracks) {
+      if (pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId) {
+        // NFT track - fetch playback URL
+        const trackData = await fetchTrackData(pt.trackId)
+        if (trackData?.playbackUrl) {
+          songs.push({
+            trackId: pt.trackId,
+            src: trackData.playbackUrl,
+            art: trackData?.artworkUrl || pt.artworkUrl || undefined,
+            title: trackData?.title || pt.title || 'Unknown',
+            artist: trackData?.artist || pt.artist || 'Unknown Artist',
+            isFavorite: trackData?.isFavorite || false,
+          })
         }
-      })
-    )
-
-    // Filter out songs without playbackUrl
-    const playableSongs = songs.filter(song => song.src)
-    console.log('[PlaylistDetail] Playable songs (with src):', playableSongs.length)
-
-    if (playableSongs.length === 0 && songs.length > 0) {
-      console.error('[PlaylistDetail] All songs filtered out - no playbackUrls!')
+      } else if (pt.externalUrl || pt.uploadedFileUrl) {
+        // External link - use a special marker in src to identify it
+        const url = pt.externalUrl || pt.uploadedFileUrl!
+        songs.push({
+          trackId: `external_${pt.id}`, // Use playlist item ID as identifier
+          src: `EXTERNAL:${pt.sourceType}:${url}`, // Special format to identify external tracks
+          art: pt.artworkUrl || undefined,
+          title: pt.title || 'External Track',
+          artist: pt.artist || getSourceLabel(pt.sourceType),
+          isFavorite: false,
+        })
+        console.log('[PlaylistDetail] Added external track:', pt.title, url)
+      }
     }
 
-    return playableSongs
+    console.log('[PlaylistDetail] Total playable songs (NFT + External):', songs.length)
+    return songs
   }
 
   // Play a specific track in the queue (NFT or external)
@@ -282,6 +307,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const handlePlayAll = async () => {
     setIsLoading(true)
     setPlayError('')
+    setActiveEmbed(null) // Close any open embed
 
     try {
       console.log('[PlaylistDetail] handlePlayAll called. tracks.length:', tracks.length)
@@ -291,23 +317,21 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
         return
       }
 
-      // Check if first track is NFT or external
-      const firstTrack = tracks[0]
-      if (firstTrack.sourceType === PlaylistTrackSourceType.Nft && firstTrack.trackId) {
-        // Build songs and check if any are playable
-        const songs = await buildSongsWithPlaybackUrls()
-        if (songs.length === 0) {
-          setPlayError('Unable to play tracks. They may still be processing.')
-          return
-        }
-        // Start playing
-        playlistState(songs, 0)
-      } else if (firstTrack.externalUrl || firstTrack.uploadedFileUrl) {
-        // External track - show embed
-        await playTrackAtIndex(0)
-      } else {
-        setPlayError('Track cannot be played')
+      // Build unified song list (NFT + External tracks)
+      const songs = await buildSongsWithPlaybackUrls()
+      console.log('[PlaylistDetail] Built unified queue with', songs.length, 'songs')
+
+      if (songs.length === 0) {
+        setPlayError('Unable to play tracks. They may still be processing.')
+        return
       }
+
+      // Start playing from the first track
+      // The audio player will handle NFT tracks directly
+      // External tracks will trigger the 'externalTrackPlay' event via AudioEngine
+      setCurrentQueueIndex(0)
+      setIsPlayingAll(true)
+      playlistState(songs, 0)
     } catch (error) {
       console.error('Error loading tracks:', error)
       setPlayError('Error loading tracks. Please try again.')
@@ -320,21 +344,37 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     const track = tracks[index]
     if (!track) return
 
-    // For NFT tracks, fetch and play
-    if (track.sourceType === PlaylistTrackSourceType.Nft && track.trackId) {
-      setIsLoading(true)
-      try {
-        const songs = await buildSongsWithPlaybackUrls()
-        // Find the index in the fetched songs list
-        const playableIndex = songs.findIndex(s => s.trackId === track.trackId)
-        if (playableIndex >= 0) {
-          playlistState(songs, playableIndex)
-        }
-      } catch (error) {
-        console.error('Error loading track:', error)
-      } finally {
-        setIsLoading(false)
+    setIsLoading(true)
+    setActiveEmbed(null) // Close any open embed
+
+    try {
+      // Build unified queue with all tracks
+      const songs = await buildSongsWithPlaybackUrls()
+
+      // Find the song in our unified queue
+      // For NFT tracks, match by trackId
+      // For external tracks, match by the special external_ID format
+      let playableIndex = -1
+
+      if (track.sourceType === PlaylistTrackSourceType.Nft && track.trackId) {
+        playableIndex = songs.findIndex(s => s.trackId === track.trackId)
+      } else if (track.externalUrl || track.uploadedFileUrl) {
+        playableIndex = songs.findIndex(s => s.trackId === `external_${track.id}`)
       }
+
+      console.log('[PlaylistDetail] handlePlayTrack index:', index, 'playableIndex:', playableIndex)
+
+      if (playableIndex >= 0) {
+        setCurrentQueueIndex(playableIndex)
+        setIsPlayingAll(true)
+        playlistState(songs, playableIndex)
+      } else {
+        console.warn('[PlaylistDetail] Track not found in unified queue')
+      }
+    } catch (error) {
+      console.error('Error loading track:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 

@@ -160,6 +160,31 @@ export const AudioEngine = () => {
   useEffect(() => {
     if (!audioRef.current || !currentSong.src) return
 
+    // EXTERNAL TRACK DETECTION: If src starts with EXTERNAL:, dispatch event and skip audio loading
+    // External tracks (YouTube, Spotify, etc.) need iframe embeds, not audio element
+    if (currentSong.src.startsWith('EXTERNAL:')) {
+      console.log('[AudioEngine] External track detected, dispatching event:', currentSong.src)
+      // Parse the external URL: format is "EXTERNAL:sourceType:url"
+      const parts = currentSong.src.split(':')
+      const sourceType = parts[1]
+      const externalUrl = parts.slice(2).join(':') // Rejoin in case URL has colons
+
+      // Dispatch custom event for playlist components to handle
+      window.dispatchEvent(new CustomEvent('externalTrackPlay', {
+        detail: {
+          trackId: currentSong.trackId,
+          sourceType,
+          externalUrl,
+          title: currentSong.title,
+          artist: currentSong.artist,
+          art: currentSong.art,
+        }
+      }))
+
+      // Don't try to load external URL as audio
+      return
+    }
+
     // Cleanup previous HLS instance
     if (hlsRef.current) {
       hlsRef.current.destroy()
