@@ -1002,16 +1002,58 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // Manual "Load More" buttons are used instead
 
   // Explore Users Query - search for users/profiles
-  // Load ALL users at once (no pagination) to avoid duplicate rendering issues
-  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers } = useExploreUsersQuery({
+  // Load users with pagination - API max is 200 per page
+  const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers, fetchMore: fetchMoreUsers } = useExploreUsersQuery({
     variables: {
       search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view = get ALL users
-      page: { first: 100 } // Load 100 users at once (max allowed by API)
+      page: { first: 200 } // Load 200 users at once (max allowed by API)
     },
     skip: selectedView !== 'explore' && selectedView !== 'users',
     fetchPolicy: 'cache-and-network', // Use cache but also fetch fresh
     notifyOnNetworkStatusChange: true,
   })
+
+  // State for loading more users
+  const [loadingMoreUsers, setLoadingMoreUsers] = useState(false)
+
+  // Function to load more users
+  const handleLoadMoreUsers = async () => {
+    if (!exploreUsersData?.exploreUsers?.pageInfo?.hasNextPage || loadingMoreUsers) return
+
+    setLoadingMoreUsers(true)
+    try {
+      await fetchMoreUsers({
+        variables: {
+          page: {
+            first: 200,
+            after: exploreUsersData.exploreUsers.pageInfo.endCursor
+          }
+        },
+        updateQuery: (prev, { fetchMoreResult }) => {
+          if (!fetchMoreResult) return prev
+
+          // Deduplicate nodes by ID when merging
+          const existingIds = new Set(prev.exploreUsers?.nodes?.map((n: any) => n.id) || [])
+          const newNodes = fetchMoreResult.exploreUsers?.nodes?.filter((n: any) => !existingIds.has(n.id)) || []
+
+          return {
+            ...fetchMoreResult,
+            exploreUsers: {
+              ...fetchMoreResult.exploreUsers,
+              nodes: [
+                ...(prev.exploreUsers?.nodes || []),
+                ...newNodes
+              ]
+            }
+          }
+        }
+      })
+    } catch (err) {
+      console.error('Error loading more users:', err)
+    } finally {
+      setLoadingMoreUsers(false)
+    }
+  }
 
   // Debug: Log users query state
   useEffect(() => {
@@ -2310,7 +2352,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                   )}
                   {exploreUsersData?.exploreUsers?.nodes && (
                     <Badge className="bg-green-500/20 text-green-400">
-                      {exploreUsersData.exploreUsers.nodes.length} users
+                      {exploreUsersData.exploreUsers.nodes.length} users{exploreUsersData.exploreUsers.pageInfo?.hasNextPage ? '+' : ''}
                     </Badge>
                   )}
                   {!exploreUsersLoading && !exploreUsersData?.exploreUsers?.nodes && !exploreUsersError && (
@@ -2400,7 +2442,36 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                         )
                       })}
                     </div>
-                    {/* All users loaded at once - no pagination needed */}
+                    {/* Load More Users Button */}
+                    {exploreUsersData?.exploreUsers?.pageInfo?.hasNextPage && (
+                      <div className="flex justify-center pt-6">
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          onClick={handleLoadMoreUsers}
+                          disabled={loadingMoreUsers}
+                          className="border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10 px-8"
+                        >
+                          {loadingMoreUsers ? (
+                            <>
+                              <div className="animate-spin h-4 w-4 border-2 border-indigo-400 border-t-transparent rounded-full mr-2" />
+                              Loading more users...
+                            </>
+                          ) : (
+                            <>
+                              <Users className="w-4 h-4 mr-2" />
+                              Load More Users
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                    {/* All users loaded indicator */}
+                    {!exploreUsersData?.exploreUsers?.pageInfo?.hasNextPage && exploreUsersData?.exploreUsers?.nodes?.length && exploreUsersData.exploreUsers.nodes.length > 100 && (
+                      <div className="text-center pt-4 text-gray-500 text-sm">
+                        All {exploreUsersData.exploreUsers.nodes.length} users loaded
+                      </div>
+                    )}
                     </>
                   ) : (
                     <Card className="retro-card p-8 text-center">

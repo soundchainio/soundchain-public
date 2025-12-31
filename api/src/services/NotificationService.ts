@@ -48,10 +48,30 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyNewCommentOnPost({ comment, post, authorProfileId }: CommentNotificationParams): Promise<void> {
+    // Validate all required data before proceeding
+    if (!comment || !post || !authorProfileId) {
+      console.warn('[NotificationService] Skipping comment notification - missing required data');
+      return;
+    }
+
+    // Get post's profile ID - skip if post has no profile (guest post)
+    const postProfileId = post.profileId;
+    if (!postProfileId) {
+      console.warn('[NotificationService] Skipping comment notification - post has no profile');
+      return;
+    }
+
     const authorProfile = await this.context.profileService.getProfile(authorProfileId);
-    const { body: commentBody, _id: commentId } = comment;
-    const { _id: postId, profileId } = post;
-    const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
+    if (!authorProfile) {
+      console.warn('[NotificationService] Skipping comment notification - author profile not found');
+      return;
+    }
+
+    const commentBody = comment.body;
+    const commentId = comment._id;
+    const postId = post._id;
+    const authorName = authorProfile.displayName || 'Unknown';
+    const authorPicture = authorProfile.profilePicture;
 
     const metadata: CommentNotificationMetadata = {
       authorName,
@@ -63,11 +83,11 @@ export class NotificationService extends ModelService<typeof Notification> {
 
     const notification = new NotificationModel({
       type: NotificationType.Comment,
-      profileId: profileId.toString(),
+      profileId: postProfileId.toString(),
       metadata,
     });
     await notification.save();
-    await this.incrementNotificationCount(profileId.toString());
+    await this.incrementNotificationCount(postProfileId.toString());
   }
 
   async notifyNewReaction({ postId, profileId, type: reactionType }: Reaction): Promise<void> {

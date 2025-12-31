@@ -49,12 +49,17 @@ export class CommentService extends ModelService<typeof Comment> {
     await newComment.save();
 
     // Only notify if commenter is not the post author
+    // Wrap in try-catch to prevent notification errors from breaking comment creation
     if (newComment.profileId && post.profileId && newComment.profileId.toString() !== post.profileId.toString()) {
-      this.context.notificationService.notifyNewCommentOnPost({
-        comment: newComment,
-        post,
-        authorProfileId: params.profileId.toString(),
-      });
+      try {
+        await this.context.notificationService.notifyNewCommentOnPost({
+          comment: newComment,
+          post,
+          authorProfileId: params.profileId.toString(),
+        });
+      } catch (notifyError) {
+        console.error('[CommentService] Failed to send notification, but comment was created:', notifyError);
+      }
     }
     return newComment;
   }

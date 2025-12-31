@@ -1,6 +1,6 @@
 # SoundChain Development Handoff - December 31, 2025
 
-## Session Summary (Late Night Session)
+## Session Summary (Continued Session)
 
 Major accomplishments tonight:
 1. **Google OAuth (FIXED!)** - Downgraded Magic SDK to v22.4.0/v28.4.0 - Safari/Mobile working!
@@ -10,6 +10,9 @@ Major accomplishments tonight:
 5. **Default Profile Pictures (FIXED)** - Updated paths to match actual files
 6. **Comment Backend (FIXED)** - Added null checks to prevent mongoose errors
 7. **Emote Rendering (FIXED)** - Handles typo format `[!emote:]`
+8. **MATIC Icon (FIXED)** - Was showing "!" exclamation mark, now shows Polygon logo
+9. **User Loading (FIXED)** - Now loads up to 200 users per page with "Load More" button
+10. **Notification Service (FIXED)** - Added defensive null checks to prevent crashes
 
 ---
 
@@ -79,25 +82,32 @@ Major accomplishments tonight:
 - Added `fetchPolicy: 'network-only'` to always fetch fresh data
 - Added debug logging: `[CommentModal] postId: xxx loading: false error: undefined data: X`
 - Backend now validates post exists before creating comment
+- NotificationService now has defensive null checks to prevent crashes
 
-### 2. NFT Price "!" Icon
-- The "Workie" NFT shows "!" instead of MATIC icon
-- Issue is in the `MaticIcon` component or currency loading
-- Need to check `icons/Matic.tsx` for the icon source
+### 2. NFT Price "!" Icon (FIXED!)
+- **Root Cause:** The `icons/Matic.tsx` was using a generic exclamation mark SVG
+- **Fix:** Replaced with official Polygon logo SVG (purple polygon shape)
 
-### 3. iMessage Link Previews
+### 3. User Loading (FIXED!)
+- **Root Cause:** Query limited to `first: 100` users
+- **Fix:**
+  - Increased to `first: 200` (max allowed by API)
+  - Added "Load More Users" button with pagination
+  - Uses `fetchMore` with cursor-based pagination
+  - Deduplicates users when merging pages
+
+### 4. iMessage Link Previews
 - Basic preview shows but no artwork image
 - May need deployment to propagate or caching issue
 - OG tags are being served correctly for bots
 
-### 4. Chrome Google Login
+### 5. Chrome Google Login
 - Safari works, Chrome still times out
 - Likely third-party cookie blocking in Chrome
 - User can try: Settings → Privacy → Allow third-party cookies
 
-### 5. Other Pending Tasks
-- Build Android app with Android Studio
-- Load all 700+ users (currently only 105)
+### 6. Other Pending Tasks
+- Build Android app with Android Studio (PAUSED)
 
 ---
 
@@ -142,4 +152,4 @@ https://discord.com/api/webhooks/1396533780931674183/eSL9IBhqrd88ukhw9jndkyTTsmf
 
 ---
 
-*Updated: December 31, 2025 @ 4:30 AM MST*
+*Updated: December 31, 2025 (Continued session - MATIC icon, user loading, notification fixes)*
