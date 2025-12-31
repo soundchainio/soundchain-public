@@ -3,91 +3,104 @@
 ## Session Summary
 
 Critical fixes this session:
-1. **Track Grid Cards (NEW)** - Music tab now shows beautiful card grid with playback, favorites, NFT info
-2. **Artwork Fallback (FIXED)** - Grid cards and expanded player now properly fallback when images fail
-3. **TracksGrid Mutation Error (FIXED)** - Music tab was crashing due to missing mutation
-4. **Google OAuth (IN PROGRESS)** - Added timeout handling, investigating www vs non-www domain mismatch
-5. **homie_yay_yay Account (FIXED)** - Account linking issue resolved
+1. **Google OAuth (FIXED)** - Downgraded Magic SDK to working versions (v22.4.0/v28.4.0)
+2. **OG Image Previews (FIXED)** - SSR support for social media crawlers
+3. **Sticker Picker (ENHANCED)** - Added 100+ emotes, new categories
+4. **Settings Page (FIXED)** - Now shows actual user data
+5. **Emote Rendering (FIXED)** - Handles both `![emote:]` and `[!emote:]` formats
+6. **Comment Modal (IN PROGRESS)** - Fixed loading and submission issues
 
 ---
 
 ## Issues Fixed This Session
 
-### 1. Track Grid Cards in Music Tab (NEW)
-**Commits:** `9216025e8`, `32d58b8ec`, `e166914ac`
+### 1. Google OAuth Login (FIXED)
+**Commits:** `a6977e07b` and earlier
 
-Added beautiful track grid cards to user profile Music tabs:
-- Responsive grid layout (2-5 columns based on screen size)
-- Click-to-flip animation showing track details on back
-- Inline playback with play/pause overlay
-- Fullscreen mode with complete track info
-- NFT data display with Polygonscan links
-- Rarity badges based on play count
-- Favorite toggle integration
+**Root Cause:** Magic SDK version mismatch - newer versions (v24/v31) returned `placeholder-credential` instead of actual OAuth token.
+
+**Fix:** Downgraded to working versions:
+```json
+"@magic-ext/oauth": "^22.4.0",  // was ^24.0.0
+"magic-sdk": "^28.4.0"           // was ^31.2.0
+```
+
+Also upgraded to `@magic-ext/oauth2` package for better OAuth session handling.
+
+**Status:** Safari desktop and mobile working. Chrome still has issues (likely third-party cookie blocking).
+
+### 2. OG Image Previews for Shared Links (FIXED)
+**Commits:** Multiple
+
+**Problem:** When sharing SoundChain links on iMessage/WhatsApp, no preview showed (but Discord worked).
+
+**Root Causes:**
+1. IPFS URLs (`ipfs://...`) couldn't be fetched by social media crawlers
+2. SSR was blocked by `ssr: false` on providers in `_app.tsx`
+
+**Fixes:**
+1. Added `getHttpImageUrl()` to convert IPFS URLs to `https://dweb.link/ipfs/` gateway
+2. Added `ssrOnly` flag and `isBot` check to bypass client-only providers
+3. Bot detection returns minimal SSR page with proper OG tags
 
 **Files:**
-- `web/src/components/dex/TracksGrid.tsx` - New grid component
-- `web/src/pages/dex/users/[handle].tsx` - Updated to use TracksGrid
-- `web/src/pages/dex/[...slug].tsx` - Updated to use TracksGrid
+- `web/src/pages/_app.tsx` - Added SSR layout for bots
+- `web/src/pages/tracks/[id].tsx` - IPFS conversion, ssrOnly flag
+- `web/src/pages/posts/[id].tsx` - IPFS conversion, isBot handling
 
-### 2. Artwork Fallback Handling (FIXED)
-**Commit:** `e166914ac`
+### 3. Sticker Picker Enhancements (NEW)
+**Commit:** `b6b61de2b`
 
-Track artwork was not showing in grid cards but worked in footer player:
-- **Root cause:** `TrackNFTCard` used plain `<img>` with external Unsplash default, no error handling
-- **Root cause:** `AudioPlayerModal` background image had no error detection
+Added massive emote expansion:
+- **New categories:** "React" (30 reaction emotes), "Music" (20 vibe emotes)
+- **7TV Trending:** Popular emotes from xQc, NymN channels
+- **100+ emotes** in trending tab
+- **Grid expanded** to 8 columns
+- **Comment limit** increased from 160 to 500 chars for sticker combos
 
-**Fix:**
-```typescript
-// TrackNFTCard - Added error state and local fallback
-const [imageError, setImageError] = useState(false)
-const defaultImage = '/default-pictures/album-artwork.png'
-const displayImage = (!track.artworkUrl || imageError) ? defaultImage : track.artworkUrl
+### 4. Settings Page User Data (FIXED)
+**Commit:** `df71f5e47`
 
-// All img tags now have onError handler
-<img src={displayImage} onError={() => setImageError(true)} />
-```
+Settings page was showing placeholder text instead of actual user data.
 
-```typescript
-// AudioPlayerModal - Hidden img to detect background image failures
-{currentSong.art && !artworkError && (
-  <img src={currentSong.art} className="hidden" onError={() => setArtworkError(true)} />
-)}
-```
+**Fix:** Added profile preview section with:
+- Avatar, display name, handle, email
+- Actual bio text
+- 2FA enabled/disabled status
 
-### 3. TracksGrid Mutation Error (FIXED)
-**Commit:** `32d58b8ec`
+### 5. Emote Rendering (FIXED)
+**Commit:** `a92828d1b`
 
-Music tab was crashing with: `useFavoriteTrackMutation is not a function`
-- **Root cause:** Used non-existent `useFavoriteTrackMutation` and `useUnfavoriteTrackMutation`
-- **Fix:** Changed to existing `useToggleFavoriteMutation`
+**Problems:**
+1. Broken emote images showed as broken image icons
+2. Typo format `[!emote:]` (! inside brackets) wasn't rendered
 
-### 4. Google OAuth Callback (IN PROGRESS)
-**Commits:** `864a00c3c`, `90ed6a3ce`, `c63bc8543`
+**Fixes:**
+1. Regex now handles both `![emote:]` and `[!emote:]` formats
+2. Added `onError` handler to show `:emoteName:` fallback for broken images
 
-Google login shows spinning wheel then "Google login failed: OAuth timeout after 10s"
+### 6. DEX User Profile Routing (FIXED)
+**Commit:** `a92828d1b`
 
-**Fixes applied:**
-1. Used `useRef` instead of `useState` to prevent multiple OAuth runs (state is async, ref is sync)
-2. Added 10s timeout on `getRedirectResult()` using `Promise.race()`
-3. Show error message instead of silently falling back to magic link
-4. Changed `redirectURI` to use `window.location.origin` instead of `config.domainUrl`
+Clicking "View all" on tracks showed mixed legacy/DEX UI.
 
-**Likely remaining issue:** Domain mismatch between `soundchain.io` and `www.soundchain.io`
+**Fix:** Deleted standalone `/dex/users/[handle].tsx` so catch-all `[...slug].tsx` handles it with proper DEX layout (sidebars, nav, etc.)
 
-**Magic Dashboard needs:**
-```
-Allowed Origins:
-- https://soundchain.io
-- https://www.soundchain.io
+### 7. Comment Modal Issues (IN PROGRESS)
+**Commit:** `8bae331c2`
 
-Redirect URIs:
-- https://soundchain.io/login
-- https://www.soundchain.io/login
-```
+**Problems:**
+- Modal showed "No comments yet" even when post had 17 comments
+- Comment submission spun then failed silently
 
-### 5. homie_yay_yay Account Fix (FIXED)
-Lambda logs confirmed: `homieyay.eth@gmail.com already linked to homie_yay_yay profile`
+**Fixes Applied:**
+1. Added `fetchPolicy: 'network-only'` to always fetch fresh comments
+2. Added `refetchQueries: ['Comments']` to mutation
+3. Added error handling UI with "Try again" button
+4. Added debug logging for diagnosis
+5. Cache eviction after submission
+
+**Status:** Needs testing - may need further debugging.
 
 ---
 
@@ -95,23 +108,19 @@ Lambda logs confirmed: `homieyay.eth@gmail.com already linked to homie_yay_yay p
 
 | Commit | Description |
 |--------|-------------|
-| `e166914ac` | fix: Add proper artwork fallback handling in TrackNFTCard and AudioPlayerModal |
-| `c63bc8543` | fix: Use window.location.origin for OAuth redirect to handle www vs non-www |
-| `32d58b8ec` | fix: Use correct toggleFavorite mutation in TracksGrid |
-| `90ed6a3ce` | fix: Show error message when OAuth times out instead of trying magic link fallback |
-| `864a00c3c` | fix: Use ref to prevent multiple OAuth runs + add 10s timeout |
-| `9216025e8` | feat: Add track grid cards to profile Music tab |
-| `a243b9bbc` | fix: Add OAuth error handling and prevent double-processing |
+| `8bae331c2` | fix: Comment modal loading and submission issues |
+| `a92828d1b` | fix: Improve emote rendering and routing |
+| `b6b61de2b` | feat: Expand StickerPicker with more emotes and increase comment limit |
+| `df71f5e47` | feat: Show actual user data in DEX settings page |
+| `a6977e07b` | fix: Upgrade to @magic-ext/oauth2 for better OAuth session handling |
 
 ---
 
 ## Previous Session Summary (Dec 30)
 
-- **Client-side Application Error** - Fixed GraphQL errors causing profile crashes
-- **Audio Playback CORS** - Switched to dweb.link gateway with CORS headers
-- **Google Login** - Fixed to use shared Magic context
-- **SCid Upload** - Added to Create Modal
-- **Developer Platform** - API key management added
+- **Track Grid Cards** - Music tab now shows beautiful card grid
+- **Artwork Fallback** - Grid cards and expanded player now properly fallback
+- **TracksGrid Mutation Error** - Fixed missing mutation
 
 ---
 
@@ -135,9 +144,10 @@ git push origin production
 
 ## Pending Tasks
 
-1. **Google OAuth** - Check Magic Dashboard for www.soundchain.io URLs
-2. **Load all 700+ users** - Currently only loading 105/200 users
-3. **Build Android app** - Not started yet
+1. **Comment Modal** - Test if comments now load and submit properly
+2. **Chrome Google Login** - Still not working (third-party cookie issue?)
+3. **Load all 700+ users** - Currently only loading 105/200 users
+4. **Build Android app** - Not started yet
 
 ---
 
@@ -147,6 +157,7 @@ git push origin production
 - **Database:** `test` database (has the tracks)
 - **IPFS Gateway:** `dweb.link` (has CORS headers)
 - **Default Artwork:** `/default-pictures/album-artwork.png`
+- **Magic SDK:** v22.4.0 (oauth), v28.4.0 (sdk) - WORKING versions
 
 ---
 
@@ -161,13 +172,6 @@ https://discord.com/api/webhooks/937786539688226846/-QzzIVq_Qvt86iehYSDIduLSk1Ji
 https://discord.com/api/webhooks/1396533780931674183/eSL9IBhqrd88ukhw9jndkyTTsmf85RX3KjIQ_qPndXsYGxvf3M-308Kr2_OID3IYRako
 ```
 
-**Usage:**
-```bash
-curl -X POST "WEBHOOK_URL" \
-  -H "Content-Type: application/json" \
-  -d '{"content": "Your message here"}'
-```
-
 ---
 
-*Updated: December 31, 2025 @ 1:50 AM MST*
+*Updated: December 31, 2025 @ 4:10 AM MST*
