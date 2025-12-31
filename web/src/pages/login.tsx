@@ -250,7 +250,14 @@ export default function LoginPage() {
       try {
         // First, try OAuth (Google/Discord/Twitch) - this handles social logins
         console.log('[Auth] Processing magic_credential callback - trying OAuth first');
-        const oauthResult = await (magic as any).oauth.getRedirectResult();
+
+        let oauthResult = null;
+        try {
+          oauthResult = await (magic as any).oauth.getRedirectResult();
+          console.log('[OAuth] getRedirectResult returned:', oauthResult);
+        } catch (oauthError: any) {
+          console.log('[OAuth] getRedirectResult error (will try magic link):', oauthError?.message);
+        }
 
         if (oauthResult?.magic?.idToken) {
           // OAuth login successful
@@ -262,6 +269,8 @@ export default function LoginPage() {
             const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
             router.push(redirectUrl);
             return;
+          } else {
+            throw new Error('OAuth login failed: No JWT returned from server');
           }
         }
 
@@ -294,7 +303,7 @@ export default function LoginPage() {
       }
     }
     handleMagicCredential();
-  }, [magic, magicParam, login, handleError, router, loggingIn]);
+  }, [magic, magicParam, login, handleError, router]); // Removed loggingIn to prevent re-runs
 
   async function handleSubmit(values: FormValues) {
     try {
