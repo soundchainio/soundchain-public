@@ -27,10 +27,14 @@ const validationSchema: yup.Schema<FormValues> = yup.object().shape({
 })
 
 const defaultProfilePictures = [
-  '/default-pictures/profile/avatar1.jpeg',
-  '/default-pictures/profile/avatar2.jpeg',
-  '/default-pictures/profile/avatar3.jpeg',
-  '/default-pictures/profile/avatar4.jpeg',
+  '/default-pictures/profile/blue.png',
+  '/default-pictures/profile/green.png',
+  '/default-pictures/profile/orange.png',
+  '/default-pictures/profile/pink.png',
+  '/default-pictures/profile/purple.png',
+  '/default-pictures/profile/red.png',
+  '/default-pictures/profile/teal.png',
+  '/default-pictures/profile/yellow.png',
 ]
 
 export const ProfilePictureForm = ({ afterSubmit, submitText, submitProps }: ProfilePictureFormProps) => {
