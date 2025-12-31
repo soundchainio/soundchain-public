@@ -268,129 +268,43 @@ export default function LoginPage() {
     handleMagicLink();
   }, [magic, magicParam, login, handleError, router, loggingIn]);
 
-  // Handle OAuth2 redirect callback
-  // Check for OAuth-related URL params that indicate a callback
-  const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
-
+  // Handle OAuth redirect callback - SIMPLIFIED to match working develop branch
+  // Only checks for magic_credential param, uses simple promise chain
   useEffect(() => {
-    async function handleOAuthRedirect() {
-      // Skip if not client-side or magic not ready
-      if (!isClient || !magic) return;
+    async function handleGoogleCallback() {
+      // Only process if we have magic_credential in the URL (Google OAuth callback)
+      if (!magic || !router.query.magic_credential) return;
 
-      // Check if this looks like an OAuth callback by checking URL params
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.slice(1));
-
-      // Magic OAuth uses these params: magic_oauth_request_id, magic_credential, provider, state
-      const hasOAuthParams = urlParams.has('magic_oauth_request_id') ||
-                             urlParams.has('magic_credential') ||
-                             urlParams.has('provider') ||
-                             urlParams.has('state') ||
-                             hashParams.has('access_token') ||
-                             hashParams.has('state');
-
-      console.log('[OAuth2] Checking for OAuth redirect...');
-      console.log('[OAuth2] Current URL:', window.location.href);
-      console.log('[OAuth2] Has OAuth params:', hasOAuthParams);
-
-      // Only process if we have OAuth params - don't waste time on fresh page loads
-      if (!hasOAuthParams) {
-        console.log('[OAuth2] No OAuth params found, skipping getRedirectResult');
-        return;
-      }
-
-      // Show loading state immediately when processing OAuth callback
-      setIsProcessingOAuth(true);
+      console.log('[OAuth] Processing Google callback with magic_credential');
       setLoggingIn(true);
 
       try {
-        console.log('[OAuth2] OAuth params detected, calling getRedirectResult...');
+        // Simple call - no timeout racing, let Magic handle it
+        const result = await (magic as any).oauth.getRedirectResult();
+        console.log('[OAuth] getRedirectResult returned:', result);
 
-        // Add longer timeout for getRedirectResult (15 seconds)
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('OAuth processing timed out. Please try again.')), 15000)
-        );
-
-        const result = await Promise.race([
-          (magic as any).oauth.getRedirectResult(),
-          timeoutPromise
-        ]);
-        console.log('[OAuth2] getRedirectResult returned:', result);
-
-        if (result && result.magic?.idToken) {
-          console.log('[OAuth2] Got OAuth result with idToken!');
-          console.log('[OAuth2] OAuth provider info:', {
-            provider: result.oauth?.provider,
-            email: result.oauth?.userInfo?.email,
-            userInfo: result.oauth?.userInfo,
-          });
-
-          try {
-            const didToken = result.magic.idToken;
-            localStorage.setItem('didToken', didToken);
-
-            const loginResult = await login({ variables: { input: { token: didToken } } });
-            if (loginResult.data?.login.jwt) {
-              await setJwt(loginResult.data.login.jwt);
-              await new Promise(resolve => setTimeout(resolve, 200));
-              const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-              router.push(redirectUrl);
-              return; // Success - exit early
-            } else {
-              throw new Error('Login failed: No JWT returned from server');
-            }
-          } catch (loginErr: any) {
-            console.error('[OAuth2] Login mutation failed:', loginErr);
-            // Check for "already exists" which means user needs to login with different method
-            if (loginErr.message?.includes('already exists')) {
-              const authMethodFromError = loginErr.graphQLErrors?.find((err: any) => err.extensions?.with)?.extensions?.with;
-              if (authMethodFromError) {
-                setAuthMethod([authMethodFromError]);
-              }
-            } else if (loginErr.message?.includes('invalid credentials') || loginErr.message?.includes('Invalid credentials')) {
-              // User doesn't exist, redirect to create account
-              router.push('/create-account');
-              return;
-            }
-            setError(loginErr.message || 'Login failed after Google authentication');
+        if (result?.magic?.idToken) {
+          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            router.push(router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin);
           }
-        } else {
-          console.log('[OAuth2] getRedirectResult returned empty result');
-          setError('Google login did not complete. Please try again.');
         }
       } catch (error: any) {
-        console.error('[OAuth2] OAuth callback error:', error);
-        const errorMsg = error?.message || '';
-
-        if (errorMsg.includes('timed out')) {
-          setError('Login timed out. Please check your connection and try again.');
-        } else if (errorMsg.includes('user denied') || errorMsg.includes('cancelled') || errorMsg.includes('User denied')) {
-          setError('Login was cancelled. Please try again.');
-        } else if (errorMsg.includes('popup') || errorMsg.includes('blocked')) {
-          setError('Popup was blocked. Please allow popups and try again.');
+        console.error('[OAuth] Callback error:', error);
+        if (error.message?.includes('already exists')) {
+          const authMethodFromError = error.graphQLErrors?.find((err: any) => err.extensions?.with)?.extensions?.with;
+          if (authMethodFromError) setAuthMethod([authMethodFromError]);
+        } else if (error.message?.toLowerCase().includes('invalid credentials')) {
+          router.push('/create-account');
         } else {
-          setError(errorMsg || 'Google login failed. Please try again.');
+          setError(error.message || 'Google login failed. Please try again.');
         }
-      } finally {
-        setIsProcessingOAuth(false);
         setLoggingIn(false);
-        // Clean up URL params after processing
-        if (hasOAuthParams) {
-          window.history.replaceState({}, '', '/login');
-        }
       }
     }
-
-    // Run after a short delay to ensure Magic SDK is ready
-    // Use requestIdleCallback if available for better performance
-    if (typeof requestIdleCallback !== 'undefined') {
-      const idleId = requestIdleCallback(() => handleOAuthRedirect(), { timeout: 500 });
-      return () => cancelIdleCallback(idleId);
-    } else {
-      const timeoutId = setTimeout(handleOAuthRedirect, 150);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [isClient, magic, login, router]);
+    handleGoogleCallback();
+  }, [magic, router.query.magic_credential, login, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
@@ -522,14 +436,7 @@ export default function LoginPage() {
         <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
         <div className="flex h-full w-full flex-col items-center justify-center py-3 text-center font-bold sm:px-4">
           <LoaderAnimation ring />
-          <span className="text-white ml-2 mt-4">
-            {isProcessingOAuth ? 'Processing Google login...' : 'Logging in...'}
-          </span>
-          {isProcessingOAuth && (
-            <span className="text-gray-400 text-sm mt-2">
-              Please wait, this may take a few seconds
-            </span>
-          )}
+          <span className="text-white ml-2 mt-4">Logging in...</span>
         </div>
       </>
     );

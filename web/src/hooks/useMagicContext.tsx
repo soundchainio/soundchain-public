@@ -34,8 +34,8 @@ interface MagicProviderProps {
   children: ReactNode
 }
 
-// Create client-side Magic instance with OAuth2 extension (uses popup flow)
-// Note: @magic-ext/oauth2 package exports "OAuthExtension" class
+// Create client-side Magic instance with OAuth extension
+// Note: Using network config WITH OAuth works fine with loginWithRedirect
 const createMagic = (magicPublicKey: string): MagicInstance => {
   try {
     if (typeof window === 'undefined') return null;
