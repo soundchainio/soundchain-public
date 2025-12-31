@@ -101,10 +101,16 @@ export const AudioPlayerModal = () => {
 
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true)
   const [isMobile, setIsMobile] = useState(true)
+  const [artworkError, setArtworkError] = useState(false)
   const me = useMe()
 
-  // Use artwork URL with simple fallback (avoid pre-validation which can fail due to CORS)
-  const artworkUrl = currentSong.art || DEFAULT_ARTWORK
+  // Use artwork URL with fallback - track errors for background image
+  const artworkUrl = (!currentSong.art || artworkError) ? DEFAULT_ARTWORK : currentSong.art
+
+  // Reset error state when track changes
+  useEffect(() => {
+    setArtworkError(false)
+  }, [currentSong.trackId])
 
   // Track comments for waveform
   const { comments, addComment, likeComment } = useTrackComments({
@@ -151,6 +157,15 @@ export const AudioPlayerModal = () => {
       fullScreen
     >
       <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden">
+        {/* Hidden img to detect load errors for background image */}
+        {currentSong.art && !artworkError && (
+          <img
+            src={currentSong.art}
+            alt=""
+            className="hidden"
+            onError={() => setArtworkError(true)}
+          />
+        )}
         {/* Full-bleed Background Artwork */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"

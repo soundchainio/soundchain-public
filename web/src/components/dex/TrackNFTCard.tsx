@@ -61,6 +61,7 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   const [isFlipped, setIsFlipped] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   const formatNumber = (num: number) => {
     if (num < 1000) return num.toString()
@@ -86,7 +87,10 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   const hasListing = track.listingItem?.price || track.listingItem?.pricePerItem || track.listingItem?.pricePerItemToShow
   const price = track.listingItem?.pricePerItemToShow || track.listingItem?.pricePerItem || track.listingItem?.price || 0
   const currency = track.listingItem?.acceptsOGUN ? 'OGUN' : 'MATIC'
-  const defaultImage = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'
+  const defaultImage = '/default-pictures/album-artwork.png'
+
+  // Use fallback if no artwork or if image failed to load
+  const displayImage = (!track.artworkUrl || imageError) ? defaultImage : track.artworkUrl
 
   // List view - simple row
   if (listView) {
@@ -96,7 +100,7 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
           <div className="flex items-center justify-between space-x-4">
             <div className="flex items-center space-x-4 flex-1">
               <div className="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0 relative group">
-                <img src={track.artworkUrl || defaultImage} alt={track.title} className="w-full h-full object-cover" />
+                <img src={displayImage} alt={track.title} className="w-full h-full object-cover" onError={() => setImageError(true)} />
                 <Button
                   onClick={(e) => { e.stopPropagation(); onPlay() }}
                   className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -178,13 +182,10 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                   <Music2 className="w-16 h-16 text-cyan-500/30" />
                 </div>
                 <img
-                  src={track.artworkUrl || defaultImage}
+                  src={displayImage}
                   alt={track.title}
                   className="absolute inset-0 w-full h-full object-cover"
-                  onError={(e) => {
-                    // Hide broken image, show placeholder
-                    (e.target as HTMLImageElement).style.display = 'none'
-                  }}
+                  onError={() => setImageError(true)}
                 />
                 {/* Play overlay */}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 active:opacity-100 transition-opacity">
@@ -372,11 +373,12 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                 <div className="absolute inset-0 bg-gray-700 animate-pulse" />
               )}
               <img
-                src={track.artworkUrl || defaultImage}
+                src={displayImage}
                 alt={track.title}
                 className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                 loading="lazy"
                 onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
               />
 
               {/* Play overlay */}
@@ -505,6 +507,7 @@ export const TrackNFTCard = memo(TrackNFTCardComponent, (prevProps, nextProps) =
   // Only re-render if these specific props change
   return (
     prevProps.track.id === nextProps.track.id &&
+    prevProps.track.artworkUrl === nextProps.track.artworkUrl &&
     prevProps.isPlaying === nextProps.isPlaying &&
     prevProps.isCurrentTrack === nextProps.isCurrentTrack &&
     prevProps.listView === nextProps.listView &&
