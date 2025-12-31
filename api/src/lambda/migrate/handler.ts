@@ -192,6 +192,36 @@ export const handler: Handler = async () => {
     console.log('Diagnosis error:', (diagErr as Error).message);
   }
 
+  // FIX: Link homieyay.eth@gmail.com to homie_yay_yay profile (not Rick Deckard)
+  try {
+    const testDb = client.db('test');
+    const users = testDb.collection('users');
+    const { ObjectId } = await import('mongodb');
+
+    const homieProfileId = new ObjectId('61f09cbb6dce7c00096faa5e');
+    const homieyayUserId = new ObjectId('66b5bd84553eec0008c5dbec');
+
+    // Check current state
+    const user = await users.findOne({ _id: homieyayUserId });
+    if (user && user.profileId?.toString() !== homieProfileId.toString()) {
+      console.log('🔧 FIXING: Updating homieyay.eth@gmail.com to link to homie_yay_yay profile');
+      console.log('  Current profileId:', user.profileId?.toString());
+      console.log('  Target profileId:', homieProfileId.toString());
+
+      const result = await users.updateOne(
+        { _id: homieyayUserId },
+        { $set: { profileId: homieProfileId, updatedAt: new Date() } }
+      );
+
+      console.log('  Update result: matched=' + result.matchedCount + ', modified=' + result.modifiedCount);
+      console.log('✅ Account fix complete!');
+    } else if (user) {
+      console.log('✓ homieyay.eth@gmail.com already linked to homie_yay_yay profile');
+    }
+  } catch (fixErr: unknown) {
+    console.log('Account fix error:', (fixErr as Error).message);
+  }
+
   // CLEANUP: Delete announcements with wrong images (one-time cleanup)
   try {
     const testDb = client.db('test');
