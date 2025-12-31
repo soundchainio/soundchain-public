@@ -2750,19 +2750,12 @@
   dependencies:
     lottie-web "^5.12.2"
 
-"@magic-ext/oauth2@^14.0.0":
-  version "14.0.0"
-  resolved "https://registry.yarnpkg.com/@magic-ext/oauth2/-/oauth2-14.0.0.tgz#95baa39c38d5ffb3cbedf98ebd89f8216a46299c"
-  integrity sha512-48eWpSQ9crxhjpdOhxUREaPikjL9P6cpg58qabg5GRxgJ6tg4r0O6ANfHKz7T4JjnBcfcd8YQbOC7B21LDBcwg==
+"@magic-ext/oauth@^24.0.0":
+  version "24.0.0"
+  resolved "https://registry.yarnpkg.com/@magic-ext/oauth/-/oauth-24.0.0.tgz#667d1f8f8ef3254021f48f4a47302bd2f3dcee57"
+  integrity sha512-EjVaVFFyfPYUSxVD2h7rYP2DpxJBvKCiI6t92DFMoOkeysGrGocMaUb/bYi562oYZz/BFcFzDZARmzgWhpiHmQ==
   dependencies:
     crypto-js "^4.2.0"
-
-"@magic-ext/oauth@^22.4.0":
-  version "22.20.0"
-  resolved "https://registry.npmjs.org/@magic-ext/oauth/-/oauth-22.20.0.tgz"
-  integrity sha512-XW9IBS+YR6S0U6gFpQSgithsltYLzYJv6N5TY22WglzbCXqWmnGRAF1wAjL3woM6P8yyzKS5d9VewM/A9BhDPw==
-  dependencies:
-    crypto-js "^3.3.0"
 
 "@magic-sdk/commons@^26.0.0":
   version "26.0.0"
@@ -7603,14 +7596,9 @@ crossws@^0.3.5:
   dependencies:
     uncrypto "^0.1.3"
 
-crypto-js@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.npmjs.org/crypto-js/-/crypto-js-3.3.0.tgz"
-  integrity sha512-DIT51nX0dCfKltpRiXV+/TVZq+Qq2NgF4644+K7Ttnla7zEzqc+kjJyiB96BHNyUTBxyjzRcZYpUdZa+QAqi6Q==
-
 crypto-js@^4.2.0:
   version "4.2.0"
-  resolved "https://registry.npmjs.org/crypto-js/-/crypto-js-4.2.0.tgz"
+  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-4.2.0.tgz#4d931639ecdfd12ff80e8186dba6af2c2e856631"
   integrity sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==
 
 crypto-random-string@^2.0.0:

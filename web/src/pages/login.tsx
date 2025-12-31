@@ -205,8 +205,8 @@ export default function LoginPage() {
         return;
       }
 
-      // Check for oauth2 extension (from @magic-ext/oauth2)
-      if (!(magic as any).oauth2) {
+      // Check for oauth extension (from @magic-ext/oauth)
+      if (!(magic as any).oauth) {
         setError('OAuth not available. Please refresh the page and try again.');
         return;
       }
@@ -219,8 +219,8 @@ export default function LoginPage() {
       const redirectURI = `${typeof window !== 'undefined' ? window.location.origin : config.domainUrl}/login`;
       console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
 
-      // Direct call to loginWithRedirect using oauth2 extension
-      await (magic as any).oauth2.loginWithRedirect({
+      // Direct call to loginWithRedirect using oauth extension
+      await (magic as any).oauth.loginWithRedirect({
         provider,
         redirectURI,
         scope: ['openid'],
@@ -260,7 +260,7 @@ export default function LoginPage() {
         let oauthResult = null;
         let oauthError: any = null;
         try {
-          const oauthPromise = (magic as any).oauth2.getRedirectResult();
+          const oauthPromise = (magic as any).oauth.getRedirectResult();
           const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('OAuth timeout after 10s')), 10000)
           );
