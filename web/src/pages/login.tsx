@@ -255,6 +255,9 @@ export default function LoginPage() {
 
       try {
         console.log('[Auth] Processing magic_credential callback - trying OAuth first');
+        console.log('[Debug] Magic instance:', magic);
+        console.log('[Debug] Magic oauth extension:', (magic as any).oauth);
+        console.log('[Debug] URL:', window.location.href);
 
         // Try OAuth with timeout to prevent infinite hanging
         let oauthResult = null;
@@ -262,7 +265,7 @@ export default function LoginPage() {
         try {
           const oauthPromise = (magic as any).oauth.getRedirectResult();
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OAuth timeout after 10s')), 10000)
+            setTimeout(() => reject(new Error('OAuth timeout after 60s')), 60000)
           );
           oauthResult = await Promise.race([oauthPromise, timeoutPromise]);
           console.log('[OAuth] getRedirectResult returned:', oauthResult);
