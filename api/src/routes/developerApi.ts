@@ -299,6 +299,33 @@ router.delete('/announcements/:id', validateApiKey, async (req: Request, res: Re
 });
 
 /**
+ * DELETE /v1/admin/announcements/:id
+ * Admin-only: Delete any announcement (requires ENTERPRISE tier + verified)
+ */
+router.delete('/admin/announcements/:id', validateApiKey, async (req: Request, res: Response) => {
+  try {
+    const apiKey = (req as any).apiKey;
+    const { id } = req.params;
+
+    // Only ENTERPRISE tier verified accounts can use admin delete
+    if (apiKey.tier !== 'ENTERPRISE' || !apiKey.verified) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const result = await AnnouncementModel.deleteOne({ _id: id });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Announcement not found' });
+    }
+
+    return res.json({ success: true, message: 'Announcement deleted by admin' });
+  } catch (error) {
+    console.error('Error in admin delete:', error);
+    return res.status(500).json({ error: 'Failed to delete announcement' });
+  }
+});
+
+/**
  * GET /v1/stats
  * Get your API usage stats
  */

@@ -118,6 +118,30 @@ export const handler: Handler = async () => {
     console.log('API key check/insert error:', (keyErr as Error).message);
   }
 
+  // CLEANUP: Delete announcements with wrong images (one-time cleanup)
+  try {
+    const testDb = client.db('test');
+    const announcements = testDb.collection('announcements');
+
+    // Delete the old playlist announcement with Spotify-looking image
+    const deleteResult = await announcements.deleteMany({
+      imageUrl: 'https://images.unsplash.com/photo-1611339555312-e607c8352fd7?w=1200&q=80'
+    });
+    if (deleteResult.deletedCount > 0) {
+      console.log('Deleted', deleteResult.deletedCount, 'announcement(s) with Spotify image');
+    }
+
+    // Also delete the old 2024-2025 announcement (wrong year)
+    const deleteOldYear = await announcements.deleteMany({
+      title: { $regex: '2024.*2025', $options: 'i' }
+    });
+    if (deleteOldYear.deletedCount > 0) {
+      console.log('Deleted', deleteOldYear.deletedCount, 'announcement(s) with wrong year');
+    }
+  } catch (cleanupErr: unknown) {
+    console.log('Announcement cleanup error:', (cleanupErr as Error).message);
+  }
+
   await client.close();
   console.log('Migrations finish');
 };
