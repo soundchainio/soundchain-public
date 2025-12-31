@@ -81,6 +81,33 @@ export const getServerSideProps: GetServerSideProps<TrackPageProps, TrackPagePar
   }
 }
 
+// Convert IPFS URLs to HTTP gateway URLs for social media crawlers
+function getHttpImageUrl(url: string | null | undefined): string {
+  if (!url) return `${config.domainUrl}/soundchain-meta-logo.png`
+
+  // Handle ipfs:// protocol
+  if (url.startsWith('ipfs://')) {
+    const cid = url.replace('ipfs://', '')
+    return `https://dweb.link/ipfs/${cid}`
+  }
+
+  // Handle /ipfs/ paths
+  if (url.startsWith('/ipfs/')) {
+    return `https://dweb.link${url}`
+  }
+
+  // Handle gateway.pinata.cloud (might have CORS issues for crawlers)
+  if (url.includes('gateway.pinata.cloud')) {
+    const match = url.match(/\/ipfs\/([^/?]+)/)
+    if (match) {
+      return `https://dweb.link/ipfs/${match[1]}`
+    }
+  }
+
+  // Already an HTTP URL
+  return url
+}
+
 // This page renders OG tags for social media crawlers
 export default function TrackPage({ track, trackId }: TrackPageProps) {
   const title = track
@@ -91,7 +118,7 @@ export default function TrackPage({ track, trackId }: TrackPageProps) {
     ? `Listen to ${track.title} by ${track.artist} on SoundChain - Web3 Music Platform`
     : 'Listen on SoundChain - Web3 Music Platform'
 
-  const image = track?.artworkUrl || `${config.domainUrl}/soundchain-meta-logo.png`
+  const image = getHttpImageUrl(track?.artworkUrl)
   const url = `${config.domainUrl}/tracks/${trackId}`
   const embedUrl = `${config.domainUrl}/embed/track/${trackId}`
   const oEmbedUrl = `${config.domainUrl}/api/oembed?url=${encodeURIComponent(url)}`

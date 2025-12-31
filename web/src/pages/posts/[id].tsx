@@ -58,6 +58,33 @@ function getVimeoThumbnail(url: string): string | null {
   return null
 }
 
+// Convert IPFS URLs to HTTP gateway URLs for social media crawlers
+function getHttpImageUrl(url: string | null | undefined): string {
+  if (!url) return `${config.domainUrl}/soundchain-meta-logo.png`
+
+  // Handle ipfs:// protocol
+  if (url.startsWith('ipfs://')) {
+    const cid = url.replace('ipfs://', '')
+    return `https://dweb.link/ipfs/${cid}`
+  }
+
+  // Handle /ipfs/ paths
+  if (url.startsWith('/ipfs/')) {
+    return `https://dweb.link${url}`
+  }
+
+  // Handle gateway.pinata.cloud (might have CORS issues for crawlers)
+  if (url.includes('gateway.pinata.cloud')) {
+    const match = url.match(/\/ipfs\/([^/?]+)/)
+    if (match) {
+      return `https://dweb.link/ipfs/${match[1]}`
+    }
+  }
+
+  // Already an HTTP URL
+  return url
+}
+
 export interface PostPageProps {
   post: PostQuery['post'] | null
   postId: string
@@ -159,9 +186,10 @@ export default function PostPage({ post, postId, isBot: isBotRequest }: PostPage
       : `Check out this post on SoundChain`
 
   // Get best image for sharing - prioritize track artwork, then YouTube thumbnail, then profile picture
+  // All URLs are converted to HTTP gateway URLs for social media crawlers
   const getShareImage = (): string => {
     // Priority 1: Track artwork
-    if (track?.artworkUrl) return track.artworkUrl
+    if (track?.artworkUrl) return getHttpImageUrl(track.artworkUrl)
 
     // Priority 2: YouTube thumbnail from embed
     if (post?.mediaLink) {
@@ -174,10 +202,10 @@ export default function PostPage({ post, postId, isBot: isBotRequest }: PostPage
 
     // Priority 3: Uploaded media (for ephemeral posts)
     const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null }
-    if (postWithMedia?.uploadedMediaUrl) return postWithMedia.uploadedMediaUrl
+    if (postWithMedia?.uploadedMediaUrl) return getHttpImageUrl(postWithMedia.uploadedMediaUrl)
 
     // Priority 4: Profile picture
-    if (post?.profile?.profilePicture) return post.profile.profilePicture
+    if (post?.profile?.profilePicture) return getHttpImageUrl(post.profile.profilePicture)
 
     // Fallback: SoundChain logo
     return `${config.domainUrl}/soundchain-meta-logo.png`
