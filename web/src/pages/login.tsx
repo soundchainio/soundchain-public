@@ -259,13 +259,24 @@ export default function LoginPage() {
         console.log('[Debug] Magic oauth extension:', (magic as any).oauth);
         console.log('[Debug] URL:', window.location.href);
 
+        // Check for placeholder credentials (indicates Magic config issue)
+        const urlParams = new URLSearchParams(window.location.search);
+        const magicCredential = urlParams.get('magic_credential');
+        if (magicCredential) {
+          const decoded = atob(decodeURIComponent(magicCredential));
+          console.log('[Debug] magic_credential decoded:', decoded);
+          if (decoded === 'placeholder-credential' || decoded.includes('placeholder')) {
+            throw new Error('OAuth configuration error: Please check Magic Dashboard settings match Google Cloud Console (Client ID and Secret).');
+          }
+        }
+
         // Try OAuth with timeout to prevent infinite hanging
         let oauthResult = null;
         let oauthError: any = null;
         try {
           const oauthPromise = (magic as any).oauth.getRedirectResult();
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OAuth timeout after 60s')), 60000)
+            setTimeout(() => reject(new Error('OAuth timeout after 30s - check Magic Dashboard config')), 30000)
           );
           oauthResult = await Promise.race([oauthPromise, timeoutPromise]);
           console.log('[OAuth] getRedirectResult returned:', oauthResult);
