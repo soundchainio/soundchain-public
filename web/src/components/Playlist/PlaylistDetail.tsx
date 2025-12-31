@@ -185,26 +185,54 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
   // Extract URL from iframe embed code if present
   const extractUrlFromEmbed = (input: string): string => {
+    const trimmed = input.trim()
+
+    // If it's already a clean URL (starts with http), return it
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      // But check if it's a SoundCloud widget URL that needs the actual track URL extracted
+      const soundcloudWidgetMatch = trimmed.match(/w\.soundcloud\.com\/player\/\?url=([^&]+)/)
+      if (soundcloudWidgetMatch) {
+        const decoded = decodeURIComponent(soundcloudWidgetMatch[1])
+        console.log('[PlaylistDetail] Extracted track URL from SoundCloud widget:', decoded)
+        return decoded
+      }
+      return trimmed
+    }
+
+    // Check for Bandcamp iframe - extract the album/track URL from the anchor tag
+    // Bandcamp iframes have: <a href="https://artist.bandcamp.com/album/...">Title</a>
+    const bandcampAnchorMatch = input.match(/href=["'](https?:\/\/[^"']*bandcamp\.com\/(?:album|track)\/[^"']+)["']/)
+    if (bandcampAnchorMatch) {
+      console.log('[PlaylistDetail] Extracted Bandcamp URL from anchor:', bandcampAnchorMatch[1])
+      return bandcampAnchorMatch[1]
+    }
+
     // Check if input contains an iframe
     const iframeMatch = input.match(/src=["']([^"']+)["']/)
     if (iframeMatch) {
-      console.log('[PlaylistDetail] Extracted URL from iframe:', iframeMatch[1])
-      return iframeMatch[1]
+      const iframeSrc = iframeMatch[1]
+      console.log('[PlaylistDetail] Extracted URL from iframe:', iframeSrc)
+
+      // If iframe src is a SoundCloud widget, extract the actual track URL
+      const scWidgetMatch = iframeSrc.match(/soundcloud\.com\/player\/?\?url=([^&"']+)/)
+      if (scWidgetMatch) {
+        const decoded = decodeURIComponent(scWidgetMatch[1])
+        console.log('[PlaylistDetail] Extracted track URL from SoundCloud widget:', decoded)
+        return decoded
+      }
+
+      return iframeSrc
     }
+
     // Check if input contains a SoundCloud widget URL with encoded URL parameter
-    const soundcloudUrlMatch = input.match(/soundcloud\.com\/player\/\?url=([^&"']+)/)
+    const soundcloudUrlMatch = input.match(/soundcloud\.com\/player\/?\?url=([^&"'\s]+)/)
     if (soundcloudUrlMatch) {
       const decoded = decodeURIComponent(soundcloudUrlMatch[1])
       console.log('[PlaylistDetail] Extracted SoundCloud track URL:', decoded)
-      // Extract the actual track URL from the API URL
-      const trackMatch = decoded.match(/api\.soundcloud\.com\/tracks\/([^&]+)/)
-      if (trackMatch) {
-        // Can't easily convert API URL to web URL without API call, use the widget URL instead
-        return `https://soundcloud.com/track/${trackMatch[1]}`
-      }
       return decoded
     }
-    return input.trim()
+
+    return trimmed
   }
 
   // Add external link to playlist - accepts ANY URL
@@ -229,30 +257,64 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     // Detect platform from URL - now accepts ANY URL
     const detected = detectPlatformFromUrl(cleanUrl)
 
+    // Try to extract artist from URL for Bandcamp (e.g., baycedchemist.bandcamp.com -> baycedchemist)
+    let artistFromUrl = ''
+    if (detected.sourceType === PlaylistTrackSourceType.Bandcamp) {
+      const bandcampMatch = cleanUrl.match(/https?:\/\/([^.]+)\.bandcamp\.com/)
+      if (bandcampMatch) {
+        artistFromUrl = bandcampMatch[1].replace(/-/g, ' ')
+      }
+    }
+
+    // Generate a better title from the URL if none provided
+    let autoTitle = externalLinkTitle.trim()
+    if (!autoTitle) {
+      // Try to extract title from URL path
+      const urlPath = cleanUrl.split('/').pop()?.split('?')[0] || ''
+      autoTitle = urlPath.replace(/-/g, ' ').replace(/\d+$/, '').trim() || detected.platform
+    }
+
     setAddingTracks(true)
     setAddLinkError('')
 
     try {
-      console.log('[PlaylistDetail] Adding external link:', { playlistId: playlist.id, sourceType: detected.sourceType, externalUrl: cleanUrl, title: externalLinkTitle.trim() || detected.platform })
+      const input = {
+        playlistId: playlist.id,
+        sourceType: detected.sourceType,
+        externalUrl: cleanUrl,
+        title: autoTitle,
+        artist: artistFromUrl || undefined,
+      }
+      console.log('[PlaylistDetail] Adding external link:', input)
 
-      await addPlaylistItem({
-        variables: {
-          input: {
-            playlistId: playlist.id,
-            sourceType: detected.sourceType,
-            externalUrl: cleanUrl,
-            title: externalLinkTitle.trim() || detected.platform,
-          },
-        },
+      const result = await addPlaylistItem({
+        variables: { input },
       })
+      console.log('[PlaylistDetail] AddPlaylistItem result:', result)
+
+      // Check if the mutation was successful
+      if (!result.data?.addPlaylistItem?.success) {
+        const errorMsg = result.data?.addPlaylistItem?.error || 'Unknown error'
+        console.error('[PlaylistDetail] Mutation returned error:', errorMsg)
+        setAddLinkError(`Failed: ${errorMsg}`)
+        return
+      }
+
       console.log('[PlaylistDetail] External link added successfully!')
-      // Clear form and refetch
+      // Clear form and refetch - force full refresh
       setExternalLinkUrl('')
       setExternalLinkTitle('')
+      // Evict cache and refetch to ensure we get fresh data
+      apolloClient.cache.evict({ fieldName: 'getUserPlaylists' })
+      apolloClient.cache.gc()
       await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
     } catch (err: any) {
       console.error('Failed to add external link:', err)
-      setAddLinkError(`Failed to add link: ${err?.message || 'Please try again.'}`)
+      // Extract more detailed error info
+      const graphqlErrors = err?.graphQLErrors?.map((e: any) => e.message).join(', ')
+      const networkError = err?.networkError?.result?.errors?.map((e: any) => e.message).join(', ')
+      const errorDetail = graphqlErrors || networkError || err?.message || 'Please try again.'
+      setAddLinkError(`Failed to add link: ${errorDetail}`)
     } finally {
       setAddingTracks(false)
     }
@@ -281,9 +343,11 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     const songs: Song[] = []
 
     for (const pt of tracks) {
-      if (pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId) {
+      // Consider it NFT if sourceType is Nft OR if trackId exists with no sourceType (backwards compat)
+      const isNftTrack = (pt.sourceType === PlaylistTrackSourceType.Nft || !pt.sourceType) && pt.trackId
+      if (isNftTrack) {
         // NFT track - fetch playback URL
-        const trackData = await fetchTrackData(pt.trackId)
+        const trackData = await fetchTrackData(pt.trackId!)
         console.log('[PlaylistDetail] NFT track data:', { trackId: pt.trackId, playbackUrl: trackData?.playbackUrl, title: trackData?.title })
 
         if (trackData?.playbackUrl) {
@@ -343,7 +407,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     setCurrentQueueIndex(index)
     setIsPlayingAll(true)
 
-    if (track.sourceType === PlaylistTrackSourceType.Nft && track.trackId) {
+    // Consider it NFT if sourceType is Nft OR if trackId exists with no sourceType (backwards compat)
+    const isNftTrack = (track.sourceType === PlaylistTrackSourceType.Nft || !track.sourceType) && track.trackId
+    if (isNftTrack) {
       // Close any active embed
       setActiveEmbed(null)
       // Play NFT track
@@ -426,7 +492,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       // For external tracks, match by the special external_ID format
       let playableIndex = -1
 
-      if (track.sourceType === PlaylistTrackSourceType.Nft && track.trackId) {
+      // Consider it NFT if sourceType is Nft OR if trackId exists with no sourceType (backwards compat)
+      const isNftTrack = (track.sourceType === PlaylistTrackSourceType.Nft || !track.sourceType) && track.trackId
+      if (isNftTrack) {
         playableIndex = songs.findIndex(s => s.trackId === track.trackId)
       } else if (track.externalUrl || track.uploadedFileUrl) {
         playableIndex = songs.findIndex(s => s.trackId === `external_${track.id}`)
@@ -516,8 +584,12 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // Get source type label
-  const getSourceLabel = (sourceType: PlaylistTrackSourceType) => {
+  // Get source type label - handle null/undefined for backwards compatibility
+  const getSourceLabel = (sourceType: PlaylistTrackSourceType | null | undefined) => {
+    // If sourceType is null/undefined, check if track has trackId (NFT) or externalUrl
+    if (!sourceType) {
+      return 'NFT' // Default for old tracks without sourceType
+    }
     switch (sourceType) {
       case PlaylistTrackSourceType.Nft: return 'NFT'
       case PlaylistTrackSourceType.Youtube: return 'YouTube'
@@ -761,17 +833,17 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 {addMode === 'external' && (
                   <div className="p-4 space-y-3">
                     <p className="text-gray-400 text-xs">
-                      Add ANY link - audio files, YouTube, Spotify, SoundCloud, or any URL!
+                      Paste a URL or embed code - we'll extract the link automatically!
                     </p>
 
                     {/* URL Input */}
                     <div className="relative">
                       <Link2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
                       <input
-                        type="url"
+                        type="text"
                         value={externalLinkUrl}
                         onChange={(e) => { setExternalLinkUrl(e.target.value); setAddLinkError(''); }}
-                        placeholder="Paste URL here (e.g., youtube.com/watch?v=...)"
+                        placeholder="Paste URL or embed code (iframe)"
                         className="w-full pl-10 pr-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-cyan-500 text-sm"
                         autoFocus
                       />
@@ -791,13 +863,24 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                       <p className="text-red-400 text-xs">{addLinkError}</p>
                     )}
 
-                    {/* Platform Preview */}
-                    {externalLinkUrl && detectPlatformFromUrl(externalLinkUrl) && (
-                      <div className="flex items-center gap-2 text-xs text-cyan-400">
-                        <span className="w-2 h-2 rounded-full bg-cyan-400" />
-                        Detected: {detectPlatformFromUrl(externalLinkUrl)?.platform}
-                      </div>
-                    )}
+                    {/* Platform Preview - extract URL from embed code first */}
+                    {externalLinkUrl && (() => {
+                      const extractedUrl = extractUrlFromEmbed(externalLinkUrl)
+                      const detected = detectPlatformFromUrl(extractedUrl)
+                      return detected ? (
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2 text-xs text-cyan-400">
+                            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                            Detected: {detected.platform}
+                          </div>
+                          {extractedUrl !== externalLinkUrl.trim() && (
+                            <div className="text-[10px] text-neutral-500 truncate">
+                              Extracted: {extractedUrl.substring(0, 60)}...
+                            </div>
+                          )}
+                        </div>
+                      ) : null
+                    })()}
 
                     {/* Add Button */}
                     <button
@@ -820,7 +903,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
                     {/* Supported Formats */}
                     <div className="flex flex-wrap gap-1.5 pt-2">
-                      {['MP3', 'WAV', 'YouTube', 'Spotify', 'SoundCloud', 'Any URL'].map(p => (
+                      {['MP3', 'WAV', 'YouTube', 'Spotify', 'SoundCloud', 'Bandcamp', 'Any URL'].map(p => (
                         <span key={p} className="px-2 py-0.5 bg-neutral-700 text-neutral-400 text-xs rounded-full">
                           {p}
                         </span>
@@ -902,7 +985,8 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 </div>
               ) : (
                 tracks.map((pt, index) => {
-                  const isNft = pt.sourceType === PlaylistTrackSourceType.Nft
+                  // Consider it NFT if sourceType is Nft OR if trackId exists (backwards compatibility)
+                  const isNft = pt.sourceType === PlaylistTrackSourceType.Nft || (!pt.sourceType && pt.trackId)
                   const isCurrentTrack = isNft && pt.trackId ? isCurrentSong(pt.trackId) : false
                   const isTrackPlaying = isCurrentTrack && isPlaying
                   const hasExternalUrl = pt.externalUrl || pt.uploadedFileUrl

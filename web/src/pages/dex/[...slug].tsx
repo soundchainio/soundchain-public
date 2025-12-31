@@ -636,6 +636,21 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // Profile tab state (Feed | Music | Playlists)
   const [profileTab, setProfileTab] = useState<'feed' | 'music' | 'playlists'>('feed')
 
+  // Sync profile tab with URL query param (for ?tab=music links)
+  // Reset to default (feed) when profile changes, then apply URL param if present
+  useEffect(() => {
+    if (!router.isReady) return
+    // Reset to feed first when viewing a new profile
+    if (selectedView === 'profile') {
+      const tabParam = router.query.tab as string
+      if (tabParam && ['feed', 'music', 'playlists'].includes(tabParam)) {
+        setProfileTab(tabParam as 'feed' | 'music' | 'playlists')
+      } else {
+        setProfileTab('feed')
+      }
+    }
+  }, [router.isReady, router.query.tab, routeId, selectedView])
+
   // Announcements state (from /v1/feed API)
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [announcementsLoading, setAnnouncementsLoading] = useState(true)
@@ -1413,7 +1428,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 </span>
               </Link>
 
-              {/* Mobile Post+ and Mint+ buttons - visible on small screens */}
+              {/* Mobile Post+, Mint+, and My Music buttons - visible on small screens */}
               <div className="flex lg:hidden items-center space-x-1">
                 <Button
                   variant="ghost"
@@ -1433,6 +1448,18 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 >
                   <Music className="w-5 h-5 text-purple-400" />
                 </Button>
+                {me?.profile?.userHandle && (
+                  <Link href={`/dex/users/${me.profile.userHandle}?tab=music`}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-indigo-500/10 px-2"
+                      title="My Music"
+                    >
+                      <ImageIcon className="w-5 h-5 text-indigo-400" />
+                    </Button>
+                  </Link>
+                )}
               </div>
 
               {/* Desktop navigation with full labels - visible on large screens */}
@@ -3848,33 +3875,15 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <span className="ml-3 text-gray-400">Loading your NFTs...</span>
                   </div>
                 ) : ownedTracks.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                     {ownedTracks.slice(0, 12).map((track: any, index: number) => (
-                      <CoinbaseNFTCard
+                      <TrackNFTCard
                         key={track.id}
-                        track={{
-                          id: track.id,
-                          title: track.title,
-                          artist: track.artist || track.profile?.displayName || 'Unknown Artist',
-                          artistProfileId: track.profile?.id,
-                          artworkUrl: track.artworkMedia?.url || track.coverMedia?.url,
-                          playbackCount: track.playbackCount,
-                          playbackCountFormatted: track.playbackCount?.toLocaleString(),
-                          nftData: {
-                            tokenId: track.tokenId,
-                            owner: track.owner,
-                          },
-                          listingItem: track.listingItem ? {
-                            price: track.listingItem.price,
-                            pricePerItem: track.listingItem.pricePerItem,
-                            pricePerItemToShow: track.listingItem.pricePerItemToShow,
-                            acceptsOGUN: track.listingItem.acceptsOGUN,
-                          } : undefined,
-                        }}
+                        track={track}
                         onPlay={() => handlePlayTrack(track, index, ownedTracks)}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
-                        onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
+                        listView={false}
                       />
                     ))}
                   </div>
@@ -4907,6 +4916,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       avatar: viewingProfile.profilePicture || undefined,
                       isVerified: viewingProfile.verified || viewingProfile.teamMember || false,
                       coverPicture: viewingProfile.coverPicture || undefined,
+                      userHandle: viewingProfile.userHandle || undefined,
                     }}
                     isOwnProfile={me?.profile?.id === viewingProfile.id}
                   />

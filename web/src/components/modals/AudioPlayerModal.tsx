@@ -15,6 +15,7 @@ import { Play } from 'icons/PlayBottomAudioPlayer'
 import { Playlists } from 'icons/Playlists'
 import { Rewind } from 'icons/RewindButton'
 import { Shuffle } from 'icons/Shuffle'
+import { Repeat } from 'icons/Repeat'
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql'
 import { useTrackComments } from 'hooks/useTrackComments'
 import NextLink from 'next/link'
@@ -81,6 +82,7 @@ export const AudioPlayerModal = () => {
     currentSong,
     isPlaying,
     isShuffleOn,
+    isLoopOn,
     duration,
     progress,
     hasNext,
@@ -94,6 +96,7 @@ export const AudioPlayerModal = () => {
     playNext,
     jumpTo,
     toggleShuffle,
+    toggleLoop,
     setPlayerFavorite,
     isPlaylistOpen,
     setIsPlaylistOpen,
@@ -265,6 +268,17 @@ export const AudioPlayerModal = () => {
               >
                 <Shuffle
                   className={`w-6 h-6 ${isShuffleOn ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-white/60'}`}
+                />
+              </button>
+
+              {/* Loop */}
+              <button
+                onClick={toggleLoop}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                aria-label={isLoopOn ? 'Loop off' : 'Loop on'}
+              >
+                <Repeat
+                  className={`w-6 h-6 ${isLoopOn ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-white/60'}`}
                 />
               </button>
 

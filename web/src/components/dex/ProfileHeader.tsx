@@ -32,6 +32,7 @@ interface ProfileHeaderProps {
     avatar?: string
     isVerified?: boolean
     coverPicture?: string
+    userHandle?: string // For generating share URLs
   }
   isOwnProfile?: boolean // Only show portfolio/sensitive data if viewing own profile
 }
@@ -181,6 +182,7 @@ function BlurAggregatorPanel() {
 }
 
 export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps) {
+  const [shareSuccess, setShareSuccess] = useState(false)
   const defaultUser = {
     name: "Xamã",
     username: "@xama",
@@ -192,6 +194,7 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
     avatar: profileAvatar,
     isVerified: true,
     coverPicture: undefined as string | undefined,
+    userHandle: 'xama',
   }
 
   const userData = user || defaultUser
@@ -199,6 +202,35 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
   const copyAddress = () => {
     navigator.clipboard.writeText(userData.walletAddress)
     alert('Address copied!')
+  }
+
+  const shareProfile = async () => {
+    const handle = userData.userHandle || userData.username?.replace('@', '')
+    const shareUrl = `${window.location.origin}/dex/users/${handle}`
+    const shareText = `Check out ${userData.name} on SoundChain!`
+
+    // Try native share first (mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${userData.name} on SoundChain`,
+          text: shareText,
+          url: shareUrl,
+        })
+        return
+      } catch (err) {
+        // User cancelled or share failed, fall back to clipboard
+      }
+    }
+
+    // Fallback to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setShareSuccess(true)
+      setTimeout(() => setShareSuccess(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
   }
 
   return (
@@ -282,8 +314,13 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Message
                 </Button>
-                <Button variant="outline" className="border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300">
-                  <Share2 className="w-4 h-4" />
+                <Button
+                  variant="outline"
+                  className={`border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 transition-all ${shareSuccess ? 'bg-green-500/20 border-green-500/50 text-green-300' : ''}`}
+                  onClick={shareProfile}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  {shareSuccess ? 'Copied!' : 'Share'}
                 </Button>
               </div>
 

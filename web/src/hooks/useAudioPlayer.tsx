@@ -14,6 +14,7 @@ export type Song = {
 interface AudioPlayerContextData {
   isPlaying: boolean
   isShuffleOn: boolean
+  isLoopOn: boolean
   currentSong: Song
   duration: number
   progress: number
@@ -38,6 +39,7 @@ interface AudioPlayerContextData {
   playNext: () => void
   jumpTo: (index: number) => void
   toggleShuffle: () => void
+  toggleLoop: () => void
   setPlayerFavorite: (isFavorite: boolean) => void
   setIsPlaylistOpen: (isPlaylistOpen: boolean) => void
   isPlaylistOpen: boolean
@@ -60,6 +62,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [volume, setVolume] = useState(0.5) // goes from 0 to 1
   const [isPlaying, setIsPlaying] = useState(false)
   const [isShuffleOn, setIsShuffleOn] = useState(false)
+  const [isLoopOn, setIsLoopOn] = useState(false)
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [currentSong, setCurrentSong] = useState<Song>({} as Song)
   const [originalPlaylist, setOriginalPlaylist] = useState<Song[]>([])
@@ -323,8 +326,12 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       const nextIndex = currentPlaylistIndex + 1
       setCurrentPlaylistIndex(nextIndex)
       play(playlist[nextIndex])
+    } else if (isLoopOn && playlist.length > 0) {
+      // Loop: restart from the beginning of the playlist
+      setCurrentPlaylistIndex(0)
+      play(playlist[0])
     }
-  }, [currentPlaylistIndex, hasNext, play, playlist])
+  }, [currentPlaylistIndex, hasNext, isLoopOn, play, playlist])
 
   // Auto-preload next tracks in queue for instant playback (audio + artwork)
   useEffect(() => {
@@ -351,6 +358,10 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const toggleShuffle = useCallback(() => {
     setIsShuffleOn(prev => !prev)
+  }, [])
+
+  const toggleLoop = useCallback(() => {
+    setIsLoopOn(prev => !prev)
   }, [])
 
   const shuffle = useCallback(() => {
@@ -408,6 +419,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       value={{
         isPlaying,
         isShuffleOn,
+        isLoopOn,
         currentSong,
         progress,
         progressFromSlider,
@@ -432,6 +444,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         playNext,
         jumpTo,
         toggleShuffle,
+        toggleLoop,
         setPlayerFavorite,
         setIsPlaylistOpen,
         isPlaylistOpen,

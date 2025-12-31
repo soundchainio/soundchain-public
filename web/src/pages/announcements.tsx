@@ -229,19 +229,7 @@ export default function AnnouncementsPage() {
                   </div>
                 )}
 
-                {/* Link */}
-                {announcement.link && (
-                  <a
-                    href={announcement.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm"
-                  >
-                    Learn more
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
-              </article>
+                              </article>
             ))}
           </div>
 

@@ -154,11 +154,11 @@ export const LeftSidebar = () => {
         </div>
 
         {/* Recent Tracks */}
-        {recentTracks.length > 0 && (
+        {recentTracks.length > 0 && profile?.userHandle && (
           <div className="bg-neutral-900/80 rounded-2xl p-4 border border-neutral-800">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Your Tracks</h4>
-              <Link href={`/dex/users/${profile.userHandle}`} className="text-cyan-400 text-xs hover:underline">
+              <Link href={`/dex/users/${encodeURIComponent(profile.userHandle)}?tab=music`} className="text-cyan-400 text-xs hover:underline">
                 View all
               </Link>
             </div>
