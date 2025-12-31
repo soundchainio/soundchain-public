@@ -8,7 +8,8 @@ interface EmoteRendererProps {
 }
 
 // Regex to match our custom emote format: ![emote:name](url)
-const EMOTE_REGEX = /!\[emote:([^\]]+)\]\(([^)]+)\)/g
+// Also handles the common typo [!emote:name](url) where ! is inside brackets
+const EMOTE_REGEX = /!?\[!?emote:([^\]]+)\]\(([^)]+)\)/g
 
 /**
  * Renders text with inline animated emotes
@@ -17,8 +18,8 @@ const EMOTE_REGEX = /!\[emote:([^\]]+)\]\(([^)]+)\)/g
 export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRendererProps) => {
   if (!text) return null
 
-  // Check if text contains any emotes
-  if (!text.includes('![emote:')) {
+  // Check if text contains any emotes (both correct and typo formats)
+  if (!text.includes('![emote:') && !text.includes('[!emote:') && !text.includes('[emote:')) {
     // No emotes - just linkify if needed
     if (linkify) {
       return (
@@ -56,7 +57,7 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
     const emoteName = match[1]
     const emoteUrl = match[2]
 
-    // Add the emote image
+    // Add the emote image with error handling
     parts.push(
       <img
         key={`emote-${match.index}`}
@@ -65,6 +66,15 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
         title={emoteName}
         className="inline-block w-7 h-7 align-middle mx-0.5"
         loading="lazy"
+        onError={(e) => {
+          // On error, replace with emote name as fallback
+          const target = e.target as HTMLImageElement
+          target.style.display = 'none'
+          const fallback = document.createElement('span')
+          fallback.className = 'inline-block px-1 py-0.5 text-xs bg-neutral-700 rounded text-cyan-400'
+          fallback.textContent = `:${emoteName}:`
+          target.parentNode?.insertBefore(fallback, target.nextSibling)
+        }}
       />
     )
 
