@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { OAuthExtension } from '@magic-ext/oauth'
+import { OAuthExtension } from '@magic-ext/oauth2'
 import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider'
 import { setJwt } from 'lib/apollo'
 import { Magic, RPCErrorCode } from 'magic-sdk'

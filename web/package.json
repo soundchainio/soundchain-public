@@ -49,6 +49,7 @@
     "@heroicons/react": "^2.1.5",
     "@lottiefiles/react-lottie-player": "^3.4.10",
     "@magic-ext/oauth": "^22.4.0",
+    "@magic-ext/oauth2": "^14.0.0",
     "@magic-sdk/commons": "^26.0.0",
     "@metamask/jazzicon": "^2.0.0",
     "@metamask/onboarding": "^1.0.1",
