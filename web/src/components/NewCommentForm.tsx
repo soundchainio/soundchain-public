@@ -34,7 +34,7 @@ interface FormValues {
 }
 
 const validationSchema: yup.Schema<FormValues> = yup.object().shape({
-  body: yup.string().required().max(160),
+  body: yup.string().required().max(500),
 })
 
 const initialValues: FormValues = { body: '' }
@@ -142,7 +142,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
 
         const handleEmojiSelect = (emoji: Emoji) => {
           const currentBody = values.body || ''
-          if (currentBody.length < 160) {
+          if (currentBody.length < 500) {
             const newBody = currentBody + emoji.native
             // Use Formik's setFieldValue to properly update form state
             setFieldValue('body', newBody)
@@ -154,7 +154,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
           const currentBody = values.body || ''
           // Insert animated emote as markdown image
           const emoteMarkdown = `![emote:${stickerName}](${stickerUrl})`
-          if (currentBody.length + emoteMarkdown.length <= 160) {
+          if (currentBody.length + emoteMarkdown.length <= 500) {
             // Use Formik's setFieldValue to properly update form state
             setFieldValue('body', currentBody + emoteMarkdown)
           }
@@ -186,7 +186,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
                   </div>
                 )}
                 <div className="flex-1 relative">
-                  <FlexareaField id="commentField" name="body" maxLength={160} placeholder="Write a comment..." />
+                  <FlexareaField id="commentField" name="body" maxLength={500} placeholder="Write a comment..." />
                   {/* Emoji/Sticker toolbar */}
                   <div className="flex items-center gap-2 mt-1">
                     <button
@@ -205,7 +205,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
                     >
                       {showStickerPicker ? '❌' : '🎵'}
                     </button>
-                    <span className="text-xs text-gray-500 ml-auto">{values.body?.length || 0}/160</span>
+                    <span className="text-xs text-gray-500 ml-auto">{values.body?.length || 0}/500</span>
                   </div>
                   {/* Emoji Picker Dropdown */}
                   {showEmojiPicker && (

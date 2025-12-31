@@ -33,10 +33,10 @@ interface NormalizedEmote {
   name: string
   url: string
   animated: boolean
-  source: 'twitch' | '7tv' | 'bttv' | 'ffz' | 'kick'
+  source: 'twitch' | '7tv' | 'bttv' | 'ffz' | 'kick' | 'tenor' | 'soundchain'
 }
 
-type StickerCategory = '7tv' | 'bttv' | 'ffz' | 'trending'
+type StickerCategory = '7tv' | 'bttv' | 'ffz' | 'trending' | 'reactions' | 'music'
 
 interface StickerPickerProps {
   onSelect: (stickerUrl: string, stickerName: string) => void
@@ -53,7 +53,9 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
   const [searchQuery, setSearchQuery] = useState('')
 
   const categories = [
-    { id: 'trending' as const, label: 'Trending', icon: '🔥' },
+    { id: 'trending' as const, label: 'Hot', icon: '🔥' },
+    { id: 'reactions' as const, label: 'React', icon: '😂' },
+    { id: 'music' as const, label: 'Music', icon: '🎵' },
     { id: '7tv' as const, label: '7TV', icon: '7️⃣' },
     { id: 'bttv' as const, label: 'BTTV', icon: '🅱️' },
     { id: 'ffz' as const, label: 'FFZ', icon: '😎' },
@@ -139,6 +141,129 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     }
   }
 
+  // Fetch 7TV Trending/Popular emotes from multiple emote sets
+  const fetch7TVTrending = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['7tv-trending']) return emoteCache['7tv-trending']
+
+    try {
+      // Fetch from multiple popular 7TV emote sets
+      const setIds = [
+        '01GG9NZS6G000CXPT2B0TZFZ3J', // NymN's set
+        '01FDMJPSF8000E7SY3FBPS1V6K', // xQc's set
+        '01H9E8G4MR0004NYG5BCPE3M2Y', // Popular set
+      ]
+
+      const allEmotes: NormalizedEmote[] = []
+
+      for (const setId of setIds) {
+        try {
+          const response = await fetch(`https://7tv.io/v3/emote-sets/${setId}`)
+          const data = await response.json()
+
+          if (data.emotes) {
+            for (const emote of data.emotes.slice(0, 30)) {
+              allEmotes.push({
+                id: `trend-${emote.id}`,
+                name: emote.name,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
+                animated: emote.data?.animated || false,
+                source: '7tv' as const,
+              })
+            }
+          }
+        } catch (e) {
+          // Skip failed set
+        }
+      }
+
+      emoteCache['7tv-trending'] = allEmotes
+      return allEmotes
+    } catch (error) {
+      console.error('Failed to fetch 7TV trending:', error)
+      return []
+    }
+  }
+
+  // Popular reaction emotes (curated from 7TV)
+  const getReactionEmotes = (): NormalizedEmote[] => {
+    // Popular reaction emote IDs from 7TV
+    const reactions = [
+      { id: '60ae958e229664e8667aea38', name: 'KEKW' },
+      { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
+      { id: '60aefc43ff8a9a15a6de5847', name: 'PepeLaugh' },
+      { id: '60ae3fd1229664e8667ab074', name: 'Sadge' },
+      { id: '60af9fdde5e3c23f8a6dea93', name: 'Copium' },
+      { id: '60af1b9eaa0d72dc39f1ea0f', name: 'Aware' },
+      { id: '60b0d3ec8ed8b373e421e7a7', name: 'OMEGALUL' },
+      { id: '60b0d3c3daa8fb57cd62c5db', name: 'monkaS' },
+      { id: '60b0d3d4a5de6cf21b5ea84e', name: 'PogU' },
+      { id: '60b0d3a7a5de6cf21b5ea83b', name: 'FeelsGoodMan' },
+      { id: '60b0d3b5a5de6cf21b5ea842', name: 'FeelsBadMan' },
+      { id: '60afe3c580df1e6b58fd7f3f', name: 'NODDERS' },
+      { id: '60aec9186d0b8c60ac0be7c0', name: 'catJAM' },
+      { id: '60af3bfc77ccd81f2b76a2c3', name: 'PauseChamp' },
+      { id: '60b0d53e77ccd81f2b78c1c0', name: 'peepoHappy' },
+      { id: '60b0d577f0e6f5574632aad8', name: 'peepoSad' },
+      { id: '60af2c40aa0d72dc39f1c3e4', name: 'Clap' },
+      { id: '60b04bc4daa8fb57cd61b38c', name: 'WAYTOODANK' },
+      { id: '60af69b37e08e07de9d40f04', name: 'Pepega' },
+      { id: '60ae4aa5229664e8667ab8ef', name: 'HYPERS' },
+      { id: '60ae4dc1229664e8667ab9d9', name: 'PepeHands' },
+      { id: '60af14f4e5e3c23f8a6dd802', name: 'WideHard' },
+      { id: '60af3c7e229664e8667ac2eb', name: 'Prayge' },
+      { id: '60b0d3f1daa8fb57cd62c5e6', name: 'EZ' },
+      { id: '60b0d43b77ccd81f2b78ba37', name: 'forsenCD' },
+      { id: '60af2d01aa0d72dc39f1c470', name: 'CoolCat' },
+      { id: '60b0d42e77ccd81f2b78ba2d', name: 'monkaW' },
+      { id: '60af3d5ee5e3c23f8a6ddc9e', name: 'HACKERMANS' },
+      { id: '60b0d3df77ccd81f2b78b963', name: 'TriHard' },
+      { id: '60ae8cac229664e8667ae5a8', name: 'pepeD' },
+    ]
+
+    return reactions.map(r => ({
+      id: `react-${r.id}`,
+      name: r.name,
+      url: `https://cdn.7tv.app/emote/${r.id}/2x.webp`,
+      animated: true,
+      source: '7tv' as const,
+    }))
+  }
+
+  // Music-themed emotes
+  const getMusicEmotes = (): NormalizedEmote[] => {
+    // Popular music/vibe emote IDs from 7TV
+    const musicEmotes = [
+      { id: '60aec9186d0b8c60ac0be7c0', name: 'catJAM' },
+      { id: '60ae8cac229664e8667ae5a8', name: 'pepeD' },
+      { id: '60afe3c580df1e6b58fd7f3f', name: 'NODDERS' },
+      { id: '60af2c40aa0d72dc39f1c3e4', name: 'Clap' },
+      { id: '60b076aea64e9d892a82d9f1', name: 'BOOBA' },
+      { id: '60b0d53e77ccd81f2b78c1c0', name: 'peepoHappy' },
+      { id: '60af8dace5e3c23f8a6de1ec', name: 'FeelsOkayMan' },
+      { id: '60b0d3ec8ed8b373e421e7a7', name: 'OMEGALUL' },
+      { id: '60b11aab6a76e2db2da56f59', name: 'peepoClap' },
+      { id: '60ae4aa5229664e8667ab8ef', name: 'HYPERS' },
+      { id: '60b0d3a7a5de6cf21b5ea83b', name: 'FeelsGoodMan' },
+      { id: '60af3c7e229664e8667ac2eb', name: 'Prayge' },
+      { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
+      { id: '60af14f4e5e3c23f8a6dd802', name: 'WideHard' },
+      { id: '60ae958e229664e8667aea38', name: 'KEKW' },
+      { id: '60b0d3f1daa8fb57cd62c5e6', name: 'EZ' },
+      { id: '60aefc43ff8a9a15a6de5847', name: 'PepeLaugh' },
+      { id: '60b0d43b77ccd81f2b78ba37', name: 'forsenCD' },
+      { id: '60af3bfc77ccd81f2b76a2c3', name: 'PauseChamp' },
+      { id: '60b0d3d4a5de6cf21b5ea84e', name: 'PogU' },
+    ]
+
+    return musicEmotes.map(e => ({
+      id: `music-${e.id}`,
+      name: e.name,
+      url: `https://cdn.7tv.app/emote/${e.id}/2x.webp`,
+      animated: true,
+      source: '7tv' as const,
+    }))
+  }
+
   // Load emotes when category changes
   useEffect(() => {
     const loadEmotes = async () => {
@@ -157,24 +282,32 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
           case 'ffz':
             loadedEmotes = await fetchFFZEmotes()
             break
+          case 'reactions':
+            loadedEmotes = getReactionEmotes()
+            break
+          case 'music':
+            loadedEmotes = getMusicEmotes()
+            break
           case 'trending':
-            // Load a mix of popular animated emotes from all sources
-            const [sevenTV, bttv, ffz] = await Promise.all([
+            // Load a massive mix of popular animated emotes from all sources
+            const [sevenTV, bttv, ffz, trending] = await Promise.all([
               fetch7TVEmotes(),
               fetchBTTVEmotes(),
               fetchFFZEmotes(),
+              fetch7TVTrending(),
             ])
 
             // Prioritize animated emotes and mix from all sources
-            const animated7tv = sevenTV.filter(e => e.animated).slice(0, 15)
-            const animatedBttv = bttv.filter(e => e.animated).slice(0, 15)
-            const animatedFfz = ffz.filter(e => e.animated).slice(0, 10)
+            const animated7tv = sevenTV.filter(e => e.animated).slice(0, 25)
+            const animatedBttv = bttv.filter(e => e.animated).slice(0, 25)
+            const animatedFfz = ffz.filter(e => e.animated).slice(0, 15)
+            const trendingEmotes = trending.filter(e => e.animated).slice(0, 25)
 
             // Also get some popular static ones
-            const static7tv = sevenTV.filter(e => !e.animated).slice(0, 5)
-            const staticBttv = bttv.filter(e => !e.animated).slice(0, 5)
+            const static7tv = sevenTV.filter(e => !e.animated).slice(0, 10)
+            const staticBttv = bttv.filter(e => !e.animated).slice(0, 10)
 
-            loadedEmotes = [...animated7tv, ...animatedBttv, ...animatedFfz, ...static7tv, ...staticBttv]
+            loadedEmotes = [...trendingEmotes, ...animated7tv, ...animatedBttv, ...animatedFfz, ...static7tv, ...staticBttv]
             break
         }
 
@@ -240,7 +373,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
       </div>
 
       {/* Emotes Grid */}
-      <div className="h-72 overflow-y-auto p-2">
+      <div className="h-80 overflow-y-auto p-2">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-2">
@@ -253,13 +386,13 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
             {searchQuery ? 'No emotes found' : 'No emotes available'}
           </div>
         ) : (
-          <div className="grid grid-cols-6 gap-1">
+          <div className="grid grid-cols-8 gap-0.5">
             {filteredEmotes.map((emote) => (
               <button
                 key={`${emote.source}-${emote.id}`}
                 onClick={() => handleEmoteClick(emote)}
                 className={classNames(
-                  'relative flex items-center justify-center p-1.5 rounded-lg transition-all hover:scale-110 group',
+                  'relative flex items-center justify-center p-1 rounded-lg transition-all hover:scale-110 group',
                   {
                     'hover:bg-neutral-800': theme === 'dark',
                     'hover:bg-gray-100': theme === 'light',
@@ -270,12 +403,12 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
                 <img
                   src={emote.url}
                   alt={emote.name}
-                  className="w-8 h-8 object-contain"
+                  className="w-7 h-7 object-contain"
                   loading="lazy"
                 />
                 {/* Animated indicator */}
                 {emote.animated && (
-                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
+                  <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
                 )}
                 {/* Tooltip on hover */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/90 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
