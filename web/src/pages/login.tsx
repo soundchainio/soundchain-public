@@ -254,30 +254,52 @@ export default function LoginPage() {
 
   // Legacy-style OAuth callback handler (matching working develop/staging branches)
   useEffect(() => {
-    function handleOAuthCallback() {
+    async function handleOAuthCallback() {
       if (magic && router.query.magic_credential) {
+        console.log('[OAuth] Detected magic_credential, processing callback...');
+        console.log('[OAuth] Full URL:', window.location.href);
         setLoggingIn(true);
-        (magic as any).oauth
-          .getRedirectResult()
-          .then((result: any) => {
-            console.log('[OAuth] Got result:', result);
-            return login({ variables: { input: { token: result.magic.idToken } } });
-          })
-          .then((result: any) => {
-            if (result.data?.login.jwt) {
-              setJwt(result.data.login.jwt);
+        setError(null);
+
+        try {
+          console.log('[OAuth] Calling getRedirectResult()...');
+
+          // Add 30s timeout to prevent infinite hanging
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('OAuth timeout - getRedirectResult took too long')), 30000)
+          );
+
+          const result = await Promise.race([
+            (magic as any).oauth.getRedirectResult(),
+            timeoutPromise
+          ]) as any;
+
+          console.log('[OAuth] Got result:', result);
+
+          if (result?.magic?.idToken) {
+            console.log('[OAuth] Got idToken, logging in...');
+            const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+
+            if (loginResult.data?.login.jwt) {
+              await setJwt(loginResult.data.login.jwt);
               const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+              console.log('[OAuth] Success! Redirecting to:', redirectUrl);
               router.push(redirectUrl);
+            } else {
+              throw new Error('No JWT returned from server');
             }
-          })
-          .catch((err: any) => {
-            console.error('[OAuth] Callback error:', err);
-            handleError(err);
-          });
+          } else {
+            throw new Error('No idToken in OAuth result');
+          }
+        } catch (err: any) {
+          console.error('[OAuth] Callback error:', err);
+          setError(err.message || 'Google login failed. Please try again.');
+          setLoggingIn(false);
+        }
       }
     }
     handleOAuthCallback();
-  }, [magic, router.query.magic_credential, login, handleError, router]);
+  }, [magic, router.query.magic_credential, login, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
