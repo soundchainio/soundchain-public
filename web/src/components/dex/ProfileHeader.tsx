@@ -224,12 +224,19 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
           <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* Profile image */}
             <div className="relative">
-              <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow">
-                <img
-                  src={userData.avatar}
-                  alt="User Profile"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-600 to-cyan-600">
+                {userData.avatar ? (
+                  <img
+                    src={userData.avatar}
+                    alt="User Profile"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.style.display = 'none' }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white">
+                    {userData.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </div>
+                )}
               </div>
               <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-4 border-black/50 flex items-center justify-center shadow-lg">
                 <div className="w-3 h-3 bg-white rounded-full animate-pulse" />

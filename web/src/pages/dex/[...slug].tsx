@@ -2560,12 +2560,12 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
-              {/* Main Feed */}
-              <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-                {/* Announcements from /v1/feed API */}
-                {announcements.length > 0 && (
+              {/* Main Feed - overflow-y-auto for mobile scroll */}
+              <div className="flex-1 max-w-[614px] overflow-y-auto pb-32" style={{ minHeight: '600px', WebkitOverflowScrolling: 'touch' }}>
+                {/* Announcements from /v1/feed API - filter out Spotify/Playlist announcements */}
+                {announcements.filter((a: any) => !a.title?.toLowerCase().includes('playlist') && !a.imageUrl?.toLowerCase().includes('spotify')).length > 0 && (
                   <div className="mb-4 space-y-4">
-                    {announcements.map((announcement: any) => (
+                    {announcements.filter((a: any) => !a.title?.toLowerCase().includes('playlist') && !a.imageUrl?.toLowerCase().includes('spotify')).map((announcement: any) => (
                       <Card key={announcement.id} className="retro-card overflow-hidden border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 via-purple-500/5 to-pink-500/10 hover:border-cyan-400 transition-all duration-300 cursor-pointer group" onClick={() => setSelectedAnnouncement(announcement)}>
                         {/* Hero Image - Full width, eye-catching */}
                         {announcement.imageUrl && (
