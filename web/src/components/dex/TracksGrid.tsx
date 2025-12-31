@@ -6,7 +6,7 @@ import { InfiniteLoader } from 'components/InfiniteLoader'
 import { NoResultFound } from 'components/NoResultFound'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { SortOrder, SortTrackField, useGroupedTracksQuery, useFavoriteTrackMutation, useUnfavoriteTrackMutation } from 'lib/graphql'
+import { SortOrder, SortTrackField, useGroupedTracksQuery, useToggleFavoriteMutation } from 'lib/graphql'
 import React, { useCallback } from 'react'
 import { Card } from 'components/ui/card'
 import { Music } from 'lucide-react'
@@ -26,8 +26,7 @@ interface TracksGridProps {
 
 export const TracksGrid = ({ profileId, pageSize = 20 }: TracksGridProps) => {
   const { playlistState, currentSong, isPlaying } = useAudioPlayerContext()
-  const [favoriteTrack] = useFavoriteTrackMutation()
-  const [unfavoriteTrack] = useUnfavoriteTrackMutation()
+  const [toggleFavorite] = useToggleFavoriteMutation()
 
   const { data, loading, fetchMore, refetch } = useGroupedTracksQuery({
     variables: {
@@ -52,18 +51,14 @@ export const TracksGrid = ({ profileId, pageSize = 20 }: TracksGridProps) => {
     playlistState(list, index)
   }, [data, playlistState])
 
-  const handleFavorite = useCallback(async (trackId: string, isFavorite: boolean) => {
+  const handleFavorite = useCallback(async (trackId: string) => {
     try {
-      if (isFavorite) {
-        await unfavoriteTrack({ variables: { trackId } })
-      } else {
-        await favoriteTrack({ variables: { trackId } })
-      }
+      await toggleFavorite({ variables: { trackId } })
       refetch()
     } catch (error) {
       console.error('Error toggling favorite:', error)
     }
-  }, [favoriteTrack, unfavoriteTrack, refetch])
+  }, [toggleFavorite, refetch])
 
   if (loading) {
     return (
@@ -143,7 +138,7 @@ export const TracksGrid = ({ profileId, pageSize = 20 }: TracksGridProps) => {
             onPlay={() => handlePlay(index)}
             isPlaying={isPlaying}
             isCurrentTrack={currentSong?.trackId === track.id}
-            onFavorite={() => handleFavorite(track.id, track.isFavorite || false)}
+            onFavorite={() => handleFavorite(track.id)}
           />
         ))}
       </div>
