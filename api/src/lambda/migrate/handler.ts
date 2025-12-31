@@ -118,6 +118,80 @@ export const handler: Handler = async () => {
     console.log('API key check/insert error:', (keyErr as Error).message);
   }
 
+  // DIAGNOSE: homie_yay_yay account issue
+  // User can't access homie_yay_yay profile - logging in with email shows Rick Deckard instead
+  try {
+    const testDb = client.db('test');
+    console.log('\n🔍 === DIAGNOSING ACCOUNT: homie_yay_yay ===');
+
+    // 1. Find all users with email containing 'homieyay'
+    const usersWithEmail = await testDb.collection('users').find({
+      email: { $regex: /homieyay/i }
+    }).toArray();
+
+    console.log(`📧 Found ${usersWithEmail.length} user(s) with homieyay email:`);
+    for (const user of usersWithEmail) {
+      console.log('  USER:', user._id.toString());
+      console.log('    Email:', user.email);
+      console.log('    Handle:', user.handle);
+      console.log('    Profile ID:', user.profileId?.toString());
+      console.log('    Auth Method:', user.authMethod);
+      console.log('    Created:', user.createdAt);
+    }
+
+    // 2. Find profile with handle homie_yay_yay or similar
+    const homieProfiles = await testDb.collection('profiles').find({
+      $or: [
+        { userHandle: 'homie_yay_yay' },
+        { userHandle: { $regex: /homie/i } },
+        { displayName: { $regex: /homie/i } }
+      ]
+    }).toArray();
+
+    console.log(`👤 Found ${homieProfiles.length} profile(s) matching 'homie':`);
+    for (const profile of homieProfiles) {
+      console.log('  PROFILE:', profile._id.toString());
+      console.log('    Display Name:', profile.displayName);
+      console.log('    User Handle:', profile.userHandle);
+      console.log('    Bio:', profile.bio?.substring(0, 50) || 'none');
+      console.log('    Followers:', profile.followerCount);
+
+      // Find user linked to this profile
+      const linkedUser = await testDb.collection('users').findOne({ profileId: profile._id });
+      if (linkedUser) {
+        console.log('    LINKED USER EMAIL:', linkedUser.email);
+        console.log('    LINKED USER AUTH:', linkedUser.authMethod);
+      } else {
+        console.log('    ⚠️ NO USER LINKED TO THIS PROFILE!');
+      }
+    }
+
+    // 3. Find Rick Deckard profile
+    const rickProfiles = await testDb.collection('profiles').find({
+      $or: [
+        { displayName: { $regex: /rick/i } },
+        { displayName: { $regex: /deckard/i } }
+      ]
+    }).toArray();
+
+    console.log(`👤 Found ${rickProfiles.length} profile(s) matching 'Rick/Deckard':`);
+    for (const profile of rickProfiles) {
+      console.log('  PROFILE:', profile._id.toString());
+      console.log('    Display Name:', profile.displayName);
+      console.log('    User Handle:', profile.userHandle);
+
+      const linkedUser = await testDb.collection('users').findOne({ profileId: profile._id });
+      if (linkedUser) {
+        console.log('    LINKED USER EMAIL:', linkedUser.email);
+        console.log('    LINKED USER AUTH:', linkedUser.authMethod);
+      }
+    }
+
+    console.log('=== END DIAGNOSIS ===\n');
+  } catch (diagErr: unknown) {
+    console.log('Diagnosis error:', (diagErr as Error).message);
+  }
+
   // CLEANUP: Delete announcements with wrong images (one-time cleanup)
   try {
     const testDb = client.db('test');
