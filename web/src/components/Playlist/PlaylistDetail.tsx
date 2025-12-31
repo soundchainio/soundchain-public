@@ -7,8 +7,8 @@ import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylist
 import { useApolloClient } from '@apollo/client'
 import Asset from 'components/Asset/Asset'
 
-// Platform detection from URL
-const detectPlatformFromUrl = (url: string): { platform: string; sourceType: PlaylistTrackSourceType } | null => {
+// Platform detection from URL - returns platform info OR generic "External" for any URL
+const detectPlatformFromUrl = (url: string): { platform: string; sourceType: PlaylistTrackSourceType } => {
   try {
     const urlObj = new URL(url)
     const hostname = urlObj.hostname.toLowerCase()
@@ -34,9 +34,11 @@ const detectPlatformFromUrl = (url: string): { platform: string; sourceType: Pla
     if (hostname.includes('vimeo.com')) {
       return { platform: 'Vimeo', sourceType: PlaylistTrackSourceType.Vimeo }
     }
-    return null
+    // Accept ANY external URL - use hostname as platform name
+    return { platform: hostname.replace('www.', ''), sourceType: PlaylistTrackSourceType.Upload }
   } catch {
-    return null
+    // Even invalid URLs get accepted with generic type
+    return { platform: 'External', sourceType: PlaylistTrackSourceType.Upload }
   }
 }
 
@@ -51,7 +53,7 @@ interface PlaylistDetailProps {
   currentUserWallet?: string
 }
 
-// Helper to get embed URL for external sources
+// Helper to get embed URL for external sources - supports ANY URL
 const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string | null => {
   try {
     if (sourceType === PlaylistTrackSourceType.Youtube) {
@@ -76,10 +78,27 @@ const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string |
       // Apple Music embed
       return url.replace('music.apple.com', 'embed.music.apple.com')
     }
+
+    // For generic URLs (Upload type or unknown):
+    // Check if it's a direct audio/video file - can be embedded
+    const lowerUrl = url.toLowerCase()
+    if (lowerUrl.match(/\.(mp3|wav|ogg|flac|aac|m4a|mp4|webm|mov)(\?|$)/)) {
+      // Direct media file - return as-is for HTML5 player
+      return url
+    }
+
+    // For other URLs, return null - will open in new tab
+    return null
   } catch (e) {
     console.error('Error parsing embed URL:', e)
   }
   return null
+}
+
+// Check if URL is a direct audio file that can be played natively
+const isDirectAudioUrl = (url: string): boolean => {
+  const lowerUrl = url.toLowerCase()
+  return !!lowerUrl.match(/\.(mp3|wav|ogg|flac|aac|m4a)(\?|$)/)
 }
 
 export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, currentUserWallet }: PlaylistDetailProps) => {
@@ -165,19 +184,23 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
-  // Add external link to playlist
+  // Add external link to playlist - accepts ANY URL
   const handleAddExternalLink = async () => {
     if (!externalLinkUrl.trim()) {
       setAddLinkError('Please enter a URL')
       return
     }
 
-    // Detect platform from URL
-    const detected = detectPlatformFromUrl(externalLinkUrl.trim())
-    if (!detected) {
-      setAddLinkError('Unsupported platform. Supported: YouTube, Spotify, SoundCloud, Bandcamp, Apple Music, Tidal, Vimeo')
+    // Basic URL validation
+    try {
+      new URL(externalLinkUrl.trim())
+    } catch {
+      setAddLinkError('Please enter a valid URL (e.g., https://example.com/audio)')
       return
     }
+
+    // Detect platform from URL - now accepts ANY URL
+    const detected = detectPlatformFromUrl(externalLinkUrl.trim())
 
     setAddingTracks(true)
     setAddLinkError('')
@@ -242,17 +265,32 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           })
         }
       } else if (pt.externalUrl || pt.uploadedFileUrl) {
-        // External link - use a special marker in src to identify it
+        // External link - check if it's a direct audio file or needs embed
         const url = pt.externalUrl || pt.uploadedFileUrl!
-        songs.push({
-          trackId: `external_${pt.id}`, // Use playlist item ID as identifier
-          src: `EXTERNAL:${pt.sourceType}:${url}`, // Special format to identify external tracks
-          art: pt.artworkUrl || undefined,
-          title: pt.title || 'External Track',
-          artist: pt.artist || getSourceLabel(pt.sourceType),
-          isFavorite: false,
-        })
-        console.log('[PlaylistDetail] Added external track:', pt.title, url)
+
+        if (isDirectAudioUrl(url)) {
+          // Direct audio file (MP3, WAV, etc.) - can play directly in audio player!
+          songs.push({
+            trackId: `external_${pt.id}`,
+            src: url, // Direct URL, no EXTERNAL prefix needed
+            art: pt.artworkUrl || undefined,
+            title: pt.title || 'External Track',
+            artist: pt.artist || getSourceLabel(pt.sourceType),
+            isFavorite: false,
+          })
+          console.log('[PlaylistDetail] Added direct audio URL:', pt.title, url)
+        } else {
+          // Platform URL (YouTube, Spotify, etc.) - needs embed player
+          songs.push({
+            trackId: `external_${pt.id}`,
+            src: `EXTERNAL:${pt.sourceType}:${url}`, // Special format for embed handling
+            art: pt.artworkUrl || undefined,
+            title: pt.title || 'External Track',
+            artist: pt.artist || getSourceLabel(pt.sourceType),
+            isFavorite: false,
+          })
+          console.log('[PlaylistDetail] Added external platform track:', pt.title, url)
+        }
       }
     }
 
@@ -693,7 +731,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 {addMode === 'external' && (
                   <div className="p-4 space-y-3">
                     <p className="text-gray-400 text-xs">
-                      Add music from YouTube, Spotify, SoundCloud, Bandcamp, Apple Music, Tidal, or Vimeo
+                      Add ANY link - audio files, YouTube, Spotify, SoundCloud, or any URL!
                     </p>
 
                     {/* URL Input */}
@@ -750,9 +788,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                       )}
                     </button>
 
-                    {/* Supported Platforms */}
+                    {/* Supported Formats */}
                     <div className="flex flex-wrap gap-1.5 pt-2">
-                      {['YouTube', 'Spotify', 'SoundCloud', 'Bandcamp', 'Apple Music', 'Tidal', 'Vimeo'].map(p => (
+                      {['MP3', 'WAV', 'YouTube', 'Spotify', 'SoundCloud', 'Any URL'].map(p => (
                         <span key={p} className="px-2 py-0.5 bg-neutral-700 text-neutral-400 text-xs rounded-full">
                           {p}
                         </span>
