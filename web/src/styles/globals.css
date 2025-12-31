@@ -122,6 +122,33 @@ html {
   overscroll-behavior-y: contain;
 }
 
+/* iOS Capacitor WebView scroll fix */
+html, body, #__next {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Ensure main content areas are scrollable on iOS */
+.ios-scroll-fix {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+}
+
+/* Fix for iOS touch scrolling in Capacitor */
+@supports (-webkit-touch-callout: none) {
+  body {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+  }
+
+  #__next {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+    height: 100%;
+  }
+}
+
 /* Vendor prefix for other browsers */
 ::-webkit-scrollbar {
   background-color: #292929;
