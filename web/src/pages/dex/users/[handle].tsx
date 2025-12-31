@@ -7,7 +7,7 @@
 
 import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { Posts } from 'components/Post/Posts'
-import { Tracks } from 'components/profile/Tracks'
+import { TracksGrid } from 'components/dex/TracksGrid'
 import SEO from 'components/SEO'
 import { Button } from 'components/ui/button'
 import { Card, CardContent } from 'components/ui/card'
@@ -258,7 +258,7 @@ export default function UserProfilePage({ profile }: UserProfilePageProps) {
               <Posts profileId={viewingProfile.id} />
             )}
             {profileTab === 'music' && (
-              <Tracks profileId={viewingProfile.id} />
+              <TracksGrid profileId={viewingProfile.id} />
             )}
             {profileTab === 'playlists' && (
               <Card className="retro-card p-8 text-center">

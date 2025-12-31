@@ -83,7 +83,7 @@ const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActions
 const CommentModal = dynamic(() => import('components/Comment/CommentModal'), { ssr: false })
 const AudioPlayerModal = dynamic(() => import('components/modals/AudioPlayerModal'), { ssr: false })
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
-const Tracks = dynamic(() => import('components/profile/Tracks').then(mod => ({ default: mod.Tracks })), { ssr: false })
+const TracksGrid = dynamic(() => import('components/dex/TracksGrid').then(mod => ({ default: mod.TracksGrid })), { ssr: false })
 const GuestPostModal = dynamic(() => import('components/Post/GuestPostModal').then(mod => ({ default: mod.GuestPostModal })), { ssr: false })
 const Notifications = dynamic(() => import('components/Notifications').then(mod => ({ default: mod.Notifications })), { ssr: false })
 const BioForm = dynamic(() => import('components/forms/profile/BioForm').then(mod => ({ default: mod.BioForm })), { ssr: false })
@@ -4896,7 +4896,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       <Posts profileId={viewingProfile.id} />
                     )}
                     {profileTab === 'music' && (
-                      <Tracks profileId={viewingProfile.id} />
+                      <TracksGrid profileId={viewingProfile.id} />
                     )}
                     {profileTab === 'playlists' && (
                       <div className="space-y-4">
