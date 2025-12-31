@@ -37,6 +37,10 @@
   },
   "dependencies": {
     "@apollo/client": "^3.10.11",
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@giphy/js-fetch-api": "^5.7.0",
