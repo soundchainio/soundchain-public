@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -96,7 +96,6 @@ export default function LoginPage() {
   const { magic } = useMagicContext();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
-  const isProcessingCredential = useRef(false); // Prevent multiple OAuth processing
 
   useEffect(() => {
     setIsClient(true);
@@ -190,151 +189,95 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
-  const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
-    console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
-
+  // Legacy-style OAuth handlers (matching working develop/staging branches)
+  const handleGoogleLogin = async () => {
+    if (!magic) {
+      setError('Login not ready. Please refresh the page.');
+      return;
+    }
+    // Check for in-app browser (Google blocks OAuth in these)
+    if (isInAppBrowser()) {
+      setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
+      return;
+    }
     try {
-      // Check for in-app browser (Google blocks OAuth in these)
-      if (isInAppBrowser() && provider === 'google') {
-        setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
-        return;
-      }
-
-      if (!magic) {
-        setError('Login not ready. Please refresh the page and try again.');
-        return;
-      }
-
-      // Check for oauth extension (from @magic-ext/oauth)
-      if (!(magic as any).oauth) {
-        setError('OAuth not available. Please refresh the page and try again.');
-        return;
-      }
-
       setLoggingIn(true);
-      setError(null);
-      localStorage.removeItem('didToken');
-
-      // Use window.location.origin to match the actual domain (www vs non-www)
-      const redirectURI = `${typeof window !== 'undefined' ? window.location.origin : config.domainUrl}/login`;
-      console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
-
-      // Direct call to loginWithRedirect using oauth extension
       await (magic as any).oauth.loginWithRedirect({
-        provider,
-        redirectURI,
+        provider: 'google',
+        redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
       });
-
-      // If we get here without redirecting, something is wrong
-      console.warn('[OAuth2] loginWithRedirect returned without navigating');
-    } catch (error: any) {
-      console.error('[OAuth2] Error:', error);
-      setError(error.message || `${provider} login failed. Please try again.`);
+    } catch (err: any) {
+      console.error('[OAuth] Google redirect error:', err);
+      setError(err.message || 'Google login failed');
       setLoggingIn(false);
     }
   };
 
-  const handleGoogleLogin = () => handleSocialLogin('google');
-  const handleDiscordLogin = () => handleSocialLogin('discord');
-  const handleTwitchLogin = () => handleSocialLogin('twitch');
-
-  // Unified handler for magic_credential callbacks (OAuth and Email Magic Links)
-  // Uses ref to prevent multiple concurrent runs (state is async, ref is sync)
-  useEffect(() => {
-    async function handleMagicCredential() {
-      // Use ref for instant check - state updates are async and cause race conditions
-      if (!magic || !magicParam || isProcessingCredential.current) {
-        return;
-      }
-
-      // Mark as processing IMMEDIATELY (sync) before any async work
-      isProcessingCredential.current = true;
+  const handleDiscordLogin = async () => {
+    if (!magic) {
+      setError('Login not ready. Please refresh the page.');
+      return;
+    }
+    try {
       setLoggingIn(true);
-      setError(null);
+      await (magic as any).oauth.loginWithRedirect({
+        provider: 'discord',
+        redirectURI: `${config.domainUrl}/login`,
+        scope: ['openid'],
+      });
+    } catch (err: any) {
+      console.error('[OAuth] Discord redirect error:', err);
+      setError(err.message || 'Discord login failed');
+      setLoggingIn(false);
+    }
+  };
 
-      try {
-        console.log('[Auth] Processing magic_credential callback - trying OAuth first');
-        console.log('[Debug] Magic instance:', magic);
-        console.log('[Debug] Magic oauth extension:', (magic as any).oauth);
-        console.log('[Debug] URL:', window.location.href);
+  const handleTwitchLogin = async () => {
+    if (!magic) {
+      setError('Login not ready. Please refresh the page.');
+      return;
+    }
+    try {
+      setLoggingIn(true);
+      await (magic as any).oauth.loginWithRedirect({
+        provider: 'twitch',
+        redirectURI: `${config.domainUrl}/login`,
+        scope: ['openid'],
+      });
+    } catch (err: any) {
+      console.error('[OAuth] Twitch redirect error:', err);
+      setError(err.message || 'Twitch login failed');
+      setLoggingIn(false);
+    }
+  };
 
-        // Check for placeholder credentials (indicates Magic config issue)
-        const urlParams = new URLSearchParams(window.location.search);
-        const magicCredential = urlParams.get('magic_credential');
-        if (magicCredential) {
-          const decoded = atob(decodeURIComponent(magicCredential));
-          console.log('[Debug] magic_credential decoded:', decoded);
-          if (decoded === 'placeholder-credential' || decoded.includes('placeholder')) {
-            throw new Error('OAuth configuration error: Please check Magic Dashboard settings match Google Cloud Console (Client ID and Secret).');
-          }
-        }
-
-        // Try OAuth with timeout to prevent infinite hanging
-        let oauthResult = null;
-        let oauthError: any = null;
-        try {
-          const oauthPromise = (magic as any).oauth.getRedirectResult();
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OAuth timeout after 30s - check Magic Dashboard config')), 30000)
-          );
-          oauthResult = await Promise.race([oauthPromise, timeoutPromise]);
-          console.log('[OAuth] getRedirectResult returned:', oauthResult);
-        } catch (err: any) {
-          oauthError = err;
-          console.log('[OAuth] getRedirectResult error:', err?.message);
-        }
-
-        if (oauthResult?.magic?.idToken) {
-          console.log('[OAuth] Got OAuth result with idToken');
-          const loginResult = await login({ variables: { input: { token: oauthResult.magic.idToken } } });
-          if (loginResult.data?.login.jwt) {
-            await setJwt(loginResult.data.login.jwt);
-            localStorage.setItem('didToken', oauthResult.magic.idToken);
-            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            router.push(redirectUrl);
-            return;
-          } else {
-            throw new Error('OAuth login failed: No JWT returned from server');
-          }
-        }
-
-        // If OAuth timed out or had a specific error, don't try magic link - show error
-        if (oauthError) {
-          throw new Error(`Google login failed: ${oauthError.message}. Please try again.`);
-        }
-
-        // Only try magic link if OAuth returned null (meaning this is actually a magic link callback)
-        console.log('[Auth] No OAuth result, trying email magic link');
-        await magic.auth.loginWithCredential();
-        const didToken = await magic.user.getIdToken();
-        console.log('[MagicLink] Received didToken from credential');
-        localStorage.setItem('didToken', didToken);
-        const loginResult = await login({ variables: { input: { token: didToken } } });
-        if (loginResult.data?.login.jwt) {
-          await setJwt(loginResult.data.login.jwt);
-          await new Promise(resolve => setTimeout(resolve, 200));
-          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-          router.push(redirectUrl);
-        } else {
-          throw new Error('Login failed: No JWT returned');
-        }
-      } catch (error: any) {
-        console.error('[Auth] Callback error:', error);
-        if (error.message?.includes('already exists')) {
-          const authMethodFromError = error.graphQLErrors?.find((err: any) => err.extensions?.with)?.extensions?.with;
-          if (authMethodFromError) setAuthMethod([authMethodFromError]);
-        } else if (error.message?.toLowerCase().includes('invalid credentials')) {
-          router.push('/create-account');
-        } else {
-          setError(error.message || 'Login failed. Please try again.');
-        }
-        setLoggingIn(false);
-        isProcessingCredential.current = false;
+  // Legacy-style OAuth callback handler (matching working develop/staging branches)
+  useEffect(() => {
+    function handleOAuthCallback() {
+      if (magic && router.query.magic_credential) {
+        setLoggingIn(true);
+        (magic as any).oauth
+          .getRedirectResult()
+          .then((result: any) => {
+            console.log('[OAuth] Got result:', result);
+            return login({ variables: { input: { token: result.magic.idToken } } });
+          })
+          .then((result: any) => {
+            if (result.data?.login.jwt) {
+              setJwt(result.data.login.jwt);
+              const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+              router.push(redirectUrl);
+            }
+          })
+          .catch((err: any) => {
+            console.error('[OAuth] Callback error:', err);
+            handleError(err);
+          });
       }
     }
-    handleMagicCredential();
-  }, [magic, magicParam, login, handleError, router]);
+    handleOAuthCallback();
+  }, [magic, router.query.magic_credential, login, handleError, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
