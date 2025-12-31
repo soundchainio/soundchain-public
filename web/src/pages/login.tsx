@@ -238,73 +238,63 @@ export default function LoginPage() {
   const handleDiscordLogin = () => handleSocialLogin('discord');
   const handleTwitchLogin = () => handleSocialLogin('twitch');
 
+  // Unified handler for magic_credential callbacks (OAuth and Email Magic Links)
+  // Try OAuth first, fall back to email magic link if OAuth returns nothing
   useEffect(() => {
-    async function handleMagicLink() {
-      if (magic && magicParam && !loggingIn) {
-        try {
-          setLoggingIn(true);
-          setError(null);
-          console.log('[MagicLink] Processing magic_credential callback');
-          await magic.auth.loginWithCredential();
-          const didToken = await magic.user.getIdToken();
-          console.log('[MagicLink] Received didToken from credential');
-          localStorage.setItem('didToken', didToken);
-          const loginResult = await login({ variables: { input: { token: didToken } } });
-          if (loginResult.data?.login.jwt) {
-            await setJwt(loginResult.data.login.jwt);
-            await new Promise(resolve => setTimeout(resolve, 200));
-            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            router.push(redirectUrl);
-          } else {
-            throw new Error('Login failed: No JWT returned');
-          }
-        } catch (error) {
-          handleError(error as Error);
-        } finally {
-          setLoggingIn(false);
-        }
-      }
-    }
-    handleMagicLink();
-  }, [magic, magicParam, login, handleError, router, loggingIn]);
+    async function handleMagicCredential() {
+      if (!magic || !magicParam || loggingIn) return;
 
-  // Handle OAuth redirect callback - SIMPLIFIED to match working develop branch
-  // Only checks for magic_credential param, uses simple promise chain
-  useEffect(() => {
-    async function handleGoogleCallback() {
-      // Only process if we have magic_credential in the URL (Google OAuth callback)
-      if (!magic || !router.query.magic_credential) return;
-
-      console.log('[OAuth] Processing Google callback with magic_credential');
       setLoggingIn(true);
+      setError(null);
 
       try {
-        // Simple call - no timeout racing, let Magic handle it
-        const result = await (magic as any).oauth.getRedirectResult();
-        console.log('[OAuth] getRedirectResult returned:', result);
+        // First, try OAuth (Google/Discord/Twitch) - this handles social logins
+        console.log('[Auth] Processing magic_credential callback - trying OAuth first');
+        const oauthResult = await (magic as any).oauth.getRedirectResult();
 
-        if (result?.magic?.idToken) {
-          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+        if (oauthResult?.magic?.idToken) {
+          // OAuth login successful
+          console.log('[OAuth] Got OAuth result with idToken');
+          const loginResult = await login({ variables: { input: { token: oauthResult.magic.idToken } } });
           if (loginResult.data?.login.jwt) {
             await setJwt(loginResult.data.login.jwt);
-            router.push(router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin);
+            localStorage.setItem('didToken', oauthResult.magic.idToken);
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            router.push(redirectUrl);
+            return;
           }
         }
+
+        // If OAuth didn't return a result, try email magic link
+        console.log('[Auth] No OAuth result, trying email magic link');
+        await magic.auth.loginWithCredential();
+        const didToken = await magic.user.getIdToken();
+        console.log('[MagicLink] Received didToken from credential');
+        localStorage.setItem('didToken', didToken);
+        const loginResult = await login({ variables: { input: { token: didToken } } });
+        if (loginResult.data?.login.jwt) {
+          await setJwt(loginResult.data.login.jwt);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          router.push(redirectUrl);
+        } else {
+          throw new Error('Login failed: No JWT returned');
+        }
       } catch (error: any) {
-        console.error('[OAuth] Callback error:', error);
+        console.error('[Auth] Callback error:', error);
         if (error.message?.includes('already exists')) {
           const authMethodFromError = error.graphQLErrors?.find((err: any) => err.extensions?.with)?.extensions?.with;
           if (authMethodFromError) setAuthMethod([authMethodFromError]);
         } else if (error.message?.toLowerCase().includes('invalid credentials')) {
           router.push('/create-account');
         } else {
-          setError(error.message || 'Google login failed. Please try again.');
+          setError(error.message || 'Login failed. Please try again.');
         }
         setLoggingIn(false);
       }
     }
-    handleGoogleCallback();
-  }, [magic, router.query.magic_credential, login, router]);
+    handleMagicCredential();
+  }, [magic, magicParam, login, handleError, router, loggingIn]);
 
   async function handleSubmit(values: FormValues) {
     try {
