@@ -4010,35 +4010,81 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <h2 className="retro-title text-xl">Settings</h2>
                   </div>
                   <p className="text-gray-400 mb-6">Manage your account, profile, and preferences.</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  {/* Profile Preview */}
+                  <div className="flex items-center gap-4 mb-6 p-4 bg-black/30 rounded-xl border border-cyan-500/20">
+                    <div className="relative">
+                      <img
+                        src={userData?.me?.profile?.profilePicture || '/default-pictures/profile/default.png'}
+                        alt="Profile"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-cyan-500/50"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-white truncate">{userData?.me?.profile?.displayName || 'Your Name'}</h3>
+                      <p className="text-cyan-400 text-sm">@{userData?.me?.handle || 'username'}</p>
+                      <p className="text-gray-500 text-xs truncate">{userData?.me?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
                     <Link href="/dex/settings/bio">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                        <h3 className="font-bold text-white">Bio</h3>
-                        <p className="text-xs text-gray-400">Tell your story</p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-white text-sm">Bio</h3>
+                            <p className="text-xs text-gray-400 truncate mt-1">
+                              {userData?.me?.profile?.bio || 'Add a bio...'}
+                            </p>
+                          </div>
+                          <span className="text-cyan-400 ml-2">→</span>
+                        </div>
                       </Card>
                     </Link>
                     <Link href="/dex/settings/profile-picture">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                        <h3 className="font-bold text-white">Profile Picture</h3>
-                        <p className="text-xs text-gray-400">Update your avatar</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-bold text-white text-sm">Profile Picture</h3>
+                            <p className="text-xs text-gray-400 mt-1">Update your avatar</p>
+                          </div>
+                          <span className="text-cyan-400">→</span>
+                        </div>
                       </Card>
                     </Link>
                     <Link href="/dex/settings/cover-picture">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                        <h3 className="font-bold text-white">Cover Picture</h3>
-                        <p className="text-xs text-gray-400">Update your banner</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-bold text-white text-sm">Cover Picture</h3>
+                            <p className="text-xs text-gray-400 mt-1">Update your banner</p>
+                          </div>
+                          <span className="text-cyan-400">→</span>
+                        </div>
                       </Card>
                     </Link>
                     <Link href="/dex/settings/social-links">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                        <h3 className="font-bold text-white">Social Links</h3>
-                        <p className="text-xs text-gray-400">Connect your socials</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-bold text-white text-sm">Social Links</h3>
+                            <p className="text-xs text-gray-400 mt-1">Connect your socials</p>
+                          </div>
+                          <span className="text-cyan-400">→</span>
+                        </div>
                       </Card>
                     </Link>
                     <Link href="/dex/settings/security">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                        <h3 className="font-bold text-white">Security</h3>
-                        <p className="text-xs text-gray-400">2FA and security options</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-bold text-white text-sm">Security</h3>
+                            <p className="text-xs text-gray-400 mt-1">
+                              2FA: {userData?.me?.otpSecret ? <span className="text-green-400">Enabled</span> : <span className="text-red-400">Disabled</span>}
+                            </p>
+                          </div>
+                          <span className="text-cyan-400">→</span>
+                        </div>
                       </Card>
                     </Link>
                   </div>
