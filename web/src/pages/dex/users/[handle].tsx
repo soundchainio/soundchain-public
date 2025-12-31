@@ -5,7 +5,7 @@
  * Fetches profile by userHandle for SEO and instant loading.
  */
 
-import { ProfileHeader } from 'components/ProfileHeader'
+import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { Posts } from 'components/Post/Posts'
 import { Tracks } from 'components/profile/Tracks'
 import SEO from 'components/SEO'
@@ -15,7 +15,7 @@ import { Badge } from 'components/ui/badge'
 import { useMe } from 'hooks/useMe'
 import { cacheFor, createApolloClient } from 'lib/apollo'
 import { ProfileByHandleDocument, ProfileByHandleQuery, useFollowProfileMutation, useUnfollowProfileMutation } from 'lib/graphql'
-import config from 'lib/config'
+import { config } from 'config'
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 import Link from 'next/link'
