@@ -14,8 +14,10 @@ const config: CapacitorConfig = {
     contentInset: 'automatic',
     allowsLinkPreview: true,
     backgroundColor: '#000000',
+    scrollEnabled: true,
     // Background audio capability
     appendUserAgent: 'SoundChain-iOS',
+    preferredContentMode: 'mobile',
   },
   // Android specific settings
   android: {
