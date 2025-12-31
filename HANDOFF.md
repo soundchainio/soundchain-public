@@ -150,4 +150,24 @@ git push origin production
 
 ---
 
+## Discord Webhooks
+
+**Announcement Channels:**
+```
+# Main announcements
+https://discord.com/api/webhooks/937786539688226846/-QzzIVq_Qvt86iehYSDIduLSk1JikU9VL0Z4DqapYira0xGAHw-jKXnRlOHoAXWwGAFj
+
+# Secondary channel
+https://discord.com/api/webhooks/1396533780931674183/eSL9IBhqrd88ukhw9jndkyTTsmf85RX3KjIQ_qPndXsYGxvf3M-308Kr2_OID3IYRako
+```
+
+**Usage:**
+```bash
+curl -X POST "WEBHOOK_URL" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Your message here"}'
+```
+
+---
+
 *Updated: December 31, 2025 @ 1:50 AM MST*
