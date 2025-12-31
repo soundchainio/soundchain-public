@@ -218,3 +218,6 @@ export default function TrackPage({ track, trackId }: TrackPageProps) {
     </>
   )
 }
+
+// Enable full SSR for this page (bypasses client-only providers for OG tags)
+TrackPage.ssrOnly = true

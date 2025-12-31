@@ -44,6 +44,7 @@ export type CustomLayout = (page: ReactElement) => ReactElement
 interface CustomAppProps extends Pick<AppProps, 'Component' | 'pageProps'> {
   Component: AppProps['Component'] & {
     getLayout?: CustomLayout
+    ssrOnly?: boolean // Pages with this flag bypass client-only providers
   }
 }
 
@@ -93,7 +94,18 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   )
 }
 
+// SSR-only layout for pages that need full server-side rendering (e.g., for OG tags)
+function SoundchainSSRLayout({ Component, pageProps }: CustomAppProps) {
+  return <Component {...pageProps} />
+}
+
 function SoundchainApp({ Component, pageProps }: CustomAppProps) {
+  // SSR-only pages bypass all client-only providers for full server rendering
+  // This includes pages with ssrOnly flag OR pages with isBot in pageProps
+  if (Component.ssrOnly || pageProps?.isBot) {
+    return <SoundchainSSRLayout Component={Component} pageProps={pageProps} />
+  }
+
   return (
     <>
       <Head>
