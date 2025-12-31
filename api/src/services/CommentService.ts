@@ -39,9 +39,17 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   async createComment(params: NewCommentParams): Promise<Comment> {
+    // First verify the post exists
+    const post = await this.context.postService.getPost(params.postId.toString());
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
     const newComment = new CommentModel(params);
-    const [post] = await Promise.all([this.context.postService.getPost(params.postId.toString()), newComment.save()]);
-    if (newComment.profileId.toString() !== post.profileId.toString()) {
+    await newComment.save();
+
+    // Only notify if commenter is not the post author
+    if (newComment.profileId && post.profileId && newComment.profileId.toString() !== post.profileId.toString()) {
       this.context.notificationService.notifyNewCommentOnPost({
         comment: newComment,
         post,
@@ -81,13 +89,20 @@ export class CommentService extends ModelService<typeof Comment> {
       { new: true },
     );
 
+    if (!deletedComment) {
+      throw new Error('Comment not found');
+    }
+
     const post = await PostModel.findById(deletedComment.postId);
 
-    this.context.notificationService.notifyCommentDeletedByAdmin({
-      comment: deletedComment,
-      post: post,
-      authorProfileId: deletedComment.profileId.toString(),
-    });
+    // Only notify if we have valid data
+    if (post && deletedComment.profileId) {
+      this.context.notificationService.notifyCommentDeletedByAdmin({
+        comment: deletedComment,
+        post: post,
+        authorProfileId: deletedComment.profileId.toString(),
+      });
+    }
 
     return deletedComment;
   }
