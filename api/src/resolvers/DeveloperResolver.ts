@@ -225,7 +225,7 @@ export class DeveloperResolver {
   async announcementsFeed(
     @Arg('limit', { defaultValue: 20 }) limit: number,
     @Arg('offset', { defaultValue: 0 }) offset: number,
-    @Arg('type', { nullable: true }) type?: AnnouncementType,
+    @Arg('type', () => AnnouncementType, { nullable: true }) type?: AnnouncementType,
   ): Promise<AnnouncementsFeedPayload> {
     const query: any = {
       status: AnnouncementStatus.APPROVED,

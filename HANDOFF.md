@@ -22,6 +22,69 @@ ce03329   feat: Add StreamingRewardsDistributor contract (contracts repo)
 | Morning | OGUN Streaming Rewards System | COMPLETE |
 | Afternoon | StreamingRewardsDistributor Contract + Claim System | COMPLETE |
 | Bug Fix | Comment System Mongoose Errors | FIXED |
+| Evening | Profile UI + Loop Fix + Streaming Aggregator | COMPLETE |
+
+---
+
+## 🌙 EVENING SESSION - Profile UI Improvements
+
+### Changes Made
+
+1. **Loop Playback Fix** (AudioEngine.tsx)
+   - Fixed loop mode 'one' not restarting track
+   - Added native `loop` attribute for reliability
+   - OGUN rewards continue logging on each loop iteration
+
+2. **Profile Header Buttons Fix**
+   - Removed Follow/Message buttons from OWN profile view (they don't make sense there!)
+   - Added "Edit Profile" button instead
+   - Fixed Share button to actually copy profile URL with toast notification
+
+3. **OGUN Streaming Aggregator** (blur.io inspired)
+   - Added compact, narrow aggregator bar under profile bio
+   - Shows: Total Streams | OGUN Earned | LIVE indicator
+   - Orange glow styling, hover effects
+   - Wired to real data via `scidsByProfile` query
+
+4. **SCid Library Documentation**
+   - Created `docs/SCID_LIBRARY.md`
+   - Documented SCid format, supported chains, reward flow
+   - Ready for CSV export once mutation runs
+
+### OGUN Reward Flow (IMPORTANT!)
+```
+Stream Event (30+ seconds)
+    ↓
+Listener earns 0.05 OGUN  ←── YOU (the streamer)
+    ↓
+Creator earns 0.05 OGUN   ←── Track owner (NFT creator)
+    ↓
+Both hit StreamingRewardsDistributor simultaneously
+```
+
+### PENDING: Run grandfatherExistingTracks Mutation
+
+To assign SCids to all existing NFTs, run:
+```bash
+curl -X POST https://api.soundchain.io/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"mutation { grandfatherExistingTracks }"}'
+```
+
+**Note:** API was timing out. May need to run via AWS Lambda console or increase timeout.
+
+After running, export SCids to CSV:
+```graphql
+query {
+  scidsByProfile(profileId: "ALL") {
+    scid
+    trackId
+    chainCode
+    streamCount
+    ogunRewardsEarned
+  }
+}
+```
 
 ---
 
