@@ -1462,6 +1462,18 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     </Button>
                   </Link>
                 )}
+                {/* Staking Button - Mobile */}
+                <Link href="/dex/staking">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hover:bg-yellow-500/10 px-2 relative"
+                    title="OGUN Staking"
+                  >
+                    <Coins className="w-5 h-5 text-yellow-400" />
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                  </Button>
+                </Link>
               </div>
 
               {/* Desktop navigation with full labels - visible on large screens */}
@@ -1508,6 +1520,20 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <span className="text-purple-400">Mint+</span>
                   </Button>
                 )}
+
+                {/* Staking Button - Desktop with glow effect */}
+                <Link href="/dex/staking">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hover:bg-yellow-500/10 relative group"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Coins className="w-4 h-4 mr-2 text-yellow-400" />
+                    <span className="text-yellow-400">Stake</span>
+                    <span className="ml-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                  </Button>
+                </Link>
               </div>
             </div>
 
