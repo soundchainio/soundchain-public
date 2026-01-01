@@ -255,12 +255,29 @@ function InnerForm(props: InnerFormProps) {
           onChange={(e) => setFieldValue('chain', e.target.value)}
           className="p-2 border border-gray-30 rounded w-full bg-gray-20 text-white text-sm"
         >
-          {supportedChains.map(chain => (
-            <option key={chain} value={chain}>
-              {chain} {chain === 'Polygon' ? '(Recommended - Low Gas)' : chain === 'Solana' ? '(Coming Soon)' : ''}
-            </option>
-          ))}
+          {supportedChains.map(chain => {
+            const info = SUPPORTED_CHAINS[chain];
+            const label = info.recommended ? ' (Recommended - Low Gas)' : info.status === 'coming_soon' ? ' (Coming Soon)' : '';
+            return (
+              <option key={chain} value={chain}>
+                {info.name} - {info.symbol}{label}
+              </option>
+            );
+          })}
         </select>
+        {values.chain && SUPPORTED_CHAINS[values.chain] && (
+          <div className="mt-2 text-xs text-gray-400 flex items-center gap-2">
+            <span>Explorer:</span>
+            <a
+              href={SUPPORTED_CHAINS[values.chain].explorer}
+              target="_blank"
+              rel="noreferrer"
+              className="text-cyan-400 hover:underline"
+            >
+              {SUPPORTED_CHAINS[values.chain].explorer.replace('https://', '')}
+            </a>
+          </div>
+        )}
         {errors.chain && <p className="text-red-500 text-xs mt-1">{errors.chain}</p>}
       </div>
       <div className="flex items-center gap-2 px-4">
