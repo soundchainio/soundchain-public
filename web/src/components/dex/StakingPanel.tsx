@@ -435,15 +435,48 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               </div>
             )}
 
-            {/* Claim Button (Coming Soon) */}
-            <button
-              disabled
-              className="w-full mt-4 py-3 bg-gradient-to-r from-purple-600/50 to-pink-600/50 text-purple-300 font-bold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed border border-purple-500/30"
-            >
-              <Gift className="w-5 h-5" />
-              Claim Streaming Rewards
-              <span className="text-xs bg-purple-500/30 px-2 py-0.5 rounded-full">Coming Soon</span>
-            </button>
+            {/* Action Buttons - Claim or Stake */}
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              {/* Claim to Wallet */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl blur opacity-0 group-hover:opacity-30 transition-opacity" />
+                <button
+                  disabled={streamingStats.totalOgunEarned <= 0}
+                  className="relative w-full py-3 bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-500 hover:to-emerald-500 disabled:from-gray-600/50 disabled:to-gray-600/50 text-white disabled:text-gray-400 font-bold rounded-xl flex items-center justify-center gap-2 border border-green-500/30 disabled:border-gray-500/30 transition-all disabled:cursor-not-allowed"
+                  onClick={() => {
+                    toast.info('Claim feature coming soon! Your rewards are being tracked.', { autoClose: 3000 })
+                  }}
+                >
+                  <Wallet className="w-4 h-4" />
+                  <span className="text-sm">Claim to Wallet</span>
+                </button>
+              </div>
+
+              {/* Stake Rewards - THE NEW FEATURE */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity animate-pulse" />
+                <button
+                  disabled={streamingStats.totalOgunEarned <= 0}
+                  className="relative w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-600/50 disabled:to-gray-600/50 text-white disabled:text-gray-400 font-bold rounded-xl flex items-center justify-center gap-2 border border-purple-500/50 disabled:border-gray-500/30 transition-all disabled:cursor-not-allowed shadow-[0_0_20px_rgba(168,85,247,0.3)]"
+                  onClick={() => {
+                    toast.info('Stake Rewards feature coming soon! Compound your streaming earnings.', { autoClose: 3000 })
+                  }}
+                >
+                  <Lock className="w-4 h-4" />
+                  <span className="text-sm">Stake Rewards</span>
+                  <Sparkles className="w-3 h-3 text-yellow-300" />
+                </button>
+              </div>
+            </div>
+
+            {/* Rewards Summary */}
+            {streamingStats.totalOgunEarned > 0 && (
+              <div className="mt-3 text-center">
+                <p className="text-xs text-gray-400">
+                  You have <span className="text-yellow-400 font-bold">{streamingStats.totalOgunEarned.toFixed(2)} OGUN</span> available from streaming
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
