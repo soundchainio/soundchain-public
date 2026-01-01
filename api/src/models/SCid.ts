@@ -175,6 +175,20 @@ export class SCid extends Model {
   lastStreamAt?: Date;
 
   /**
+   * Daily OGUN earned (resets each day, anti-bot farming)
+   */
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  dailyOgunEarned: number;
+
+  /**
+   * Last daily reset date
+   */
+  @Field(() => Date, { nullable: true })
+  @prop()
+  lastDailyReset?: Date;
+
+  /**
    * Previous owner (for transfers)
    */
   @Field(() => String, { nullable: true })

@@ -1,0 +1,7 @@
+mutation LogStream($input: LogStreamInput!) {
+  logStream(input: $input) {
+    success
+    ogunReward
+    totalStreams
+  }
+}

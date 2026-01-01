@@ -89,6 +89,33 @@ export class LogStreamPayload {
 
   @Field(() => Int)
   totalStreams: number;
+
+  @Field({ nullable: true })
+  dailyLimitReached?: boolean;
+}
+
+@ObjectType()
+export class GrandfatherPayload {
+  @Field(() => Int)
+  totalTracksFound: number;
+
+  @Field(() => Int)
+  tracksWithoutScid: number;
+
+  @Field(() => Int)
+  registered: number;
+
+  @Field(() => Int)
+  skipped: number;
+
+  @Field(() => Int)
+  nftTracks: number;
+
+  @Field(() => Int)
+  nonNftTracks: number;
+
+  @Field(() => [String])
+  errors: string[];
 }
 
 @ObjectType()
@@ -386,6 +413,27 @@ export class SCidResolver {
       user.profileId.toString(),
       chainCode
     );
+  }
+
+  /**
+   * Grandfather existing tracks with SCid codes
+   *
+   * Admin-only mutation to register SCids for all existing tracks.
+   * This migrates existing NFTs/tracks to the SCid system for OGUN rewards.
+   */
+  @Mutation(() => GrandfatherPayload)
+  @Authorized(['ADMIN'])
+  async grandfatherExistingTracks(
+    @Ctx() { scidService }: Context,
+    @Arg('limit', () => Int, { nullable: true, defaultValue: 100 }) limit: number,
+    @Arg('dryRun', { nullable: true, defaultValue: false }) dryRun: boolean,
+    @Arg('chainCode', () => ChainCode, { nullable: true }) chainCode?: ChainCode
+  ): Promise<GrandfatherPayload> {
+    return scidService.grandfatherExistingTracks({
+      limit,
+      dryRun,
+      chainCode,
+    });
   }
 }
 

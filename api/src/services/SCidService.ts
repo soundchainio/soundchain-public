@@ -11,12 +11,15 @@ import { SCidContract, OnChainRegistrationResult } from '../utils/SCidContract';
 import { Context } from '../types/Context';
 import { Service } from './Service';
 
-// OGUN rewards configuration
+// OGUN rewards configuration - Tiered by mint type
 const OGUN_REWARDS_CONFIG = {
-  baseRewardPerStream: 0.001,       // Base OGUN per stream
+  // NFT mints (on-chain with tokenId) get premium rate
+  nftRewardPerStream: 0.5,          // 0.5 OGUN per stream for NFT mints
+  // Non-NFT mints (off-chain, no tokenId) get base rate
+  baseRewardPerStream: 0.05,        // 0.05 OGUN per stream for non-NFT mints
   bonusMultiplier: 1.5,             // Bonus for verified artists
-  maxDailyRewards: 1000,            // Max OGUN per track per day
-  minStreamDuration: 30,            // Minimum seconds to count as stream
+  maxDailyRewards: 100,             // Max 100 OGUN per track per day (anti-bot farming)
+  minStreamDuration: 30,            // Minimum 30 seconds to count as valid stream
 };
 
 export interface RegisterSCidInput {
@@ -266,15 +269,21 @@ export class SCidService extends Service {
 
   /**
    * Log a stream and calculate OGUN rewards
+   *
+   * Tiered rewards:
+   * - NFT mints (with tokenId): 0.5 OGUN per stream
+   * - Non-NFT mints: 0.05 OGUN per stream
+   * - Max 100 OGUN per track per day (anti-bot farming)
    */
   async logStream(input: LogStreamInput): Promise<{
     success: boolean;
     ogunReward: number;
     totalStreams: number;
+    dailyLimitReached?: boolean;
   }> {
     const { scid, duration, timestamp = new Date() } = input;
 
-    // Validate minimum stream duration
+    // Validate minimum stream duration (30 seconds)
     if (duration < OGUN_REWARDS_CONFIG.minStreamDuration) {
       return { success: false, ogunReward: 0, totalStreams: 0 };
     }
@@ -285,23 +294,59 @@ export class SCidService extends Service {
       throw new Error(`SCid not found: ${scid}`);
     }
 
-    // Calculate OGUN reward
-    let ogunReward = OGUN_REWARDS_CONFIG.baseRewardPerStream;
+    // Check daily limit - get rewards earned today for this track
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
-    // Check if artist is verified (bonus multiplier)
+    // Reset daily counter if it's a new day
+    if (!scidRecord.lastDailyReset || scidRecord.lastDailyReset < todayStart) {
+      scidRecord.dailyOgunEarned = 0;
+      scidRecord.lastDailyReset = todayStart;
+    }
+
+    const todayRewards = scidRecord.dailyOgunEarned || 0;
+
+    if (todayRewards >= OGUN_REWARDS_CONFIG.maxDailyRewards) {
+      // Still count the stream but no reward (anti-bot)
+      scidRecord.streamCount += 1;
+      scidRecord.lastStreamAt = timestamp;
+      await scidRecord.save();
+      return {
+        success: true,
+        ogunReward: 0,
+        totalStreams: scidRecord.streamCount,
+        dailyLimitReached: true
+      };
+    }
+
+    // Get the track to check if it's an NFT mint
+    const track = await this.context.trackService.findById(scidRecord.trackId);
+    const isNFTMint = track?.nftData?.tokenId != null;
+
+    // Calculate OGUN reward based on mint type
+    let ogunReward = isNFTMint
+      ? OGUN_REWARDS_CONFIG.nftRewardPerStream    // 0.5 OGUN for NFT mints
+      : OGUN_REWARDS_CONFIG.baseRewardPerStream;  // 0.05 OGUN for non-NFT mints
+
+    // Check if artist is verified (bonus multiplier - 1.5x)
     const profile = await this.context.profileService.getProfile(scidRecord.profileId);
     if (profile?.verified) {
       ogunReward *= OGUN_REWARDS_CONFIG.bonusMultiplier;
     }
 
-    // Apply duration bonus (longer streams = more rewards)
-    const durationBonus = Math.min(duration / 180, 2); // Max 2x for 3+ min
+    // Apply duration bonus (longer streams = more rewards, max 2x for 3+ min)
+    const durationBonus = Math.min(duration / 180, 2);
     ogunReward *= durationBonus;
+
+    // Cap to not exceed daily limit
+    const remainingDaily = OGUN_REWARDS_CONFIG.maxDailyRewards - todayRewards;
+    ogunReward = Math.min(ogunReward, remainingDaily);
 
     // Update SCid record
     scidRecord.streamCount += 1;
     scidRecord.ogunRewardsEarned += ogunReward;
     scidRecord.lastStreamAt = timestamp;
+    scidRecord.dailyOgunEarned = todayRewards + ogunReward;
     await scidRecord.save();
 
     return {
@@ -471,6 +516,116 @@ export class SCidService extends Service {
     }
 
     return { registered, skipped, errors };
+  }
+
+  /**
+   * Grandfather existing tracks with SCid codes
+   *
+   * Finds all tracks in the database that don't have SCids and registers them.
+   * This is for migrating existing NFTs/tracks to the SCid system.
+   *
+   * @param options.limit - Max tracks to process per batch (default 100)
+   * @param options.dryRun - If true, just counts without registering
+   * @param options.chainCode - Default chain for non-NFT tracks
+   */
+  async grandfatherExistingTracks(options: {
+    limit?: number;
+    dryRun?: boolean;
+    chainCode?: ChainCode;
+  } = {}): Promise<{
+    totalTracksFound: number;
+    tracksWithoutScid: number;
+    registered: number;
+    skipped: number;
+    nftTracks: number;
+    nonNftTracks: number;
+    errors: string[];
+  }> {
+    const { limit = 100, dryRun = false, chainCode = ChainCode.POLYGON } = options;
+
+    // Get all existing SCid trackIds
+    const existingScids = await SCidModel.find().select('trackId').lean();
+    const existingTrackIds = new Set(existingScids.map(s => s.trackId));
+
+    // Find all tracks
+    const allTracks = await this.context.trackService.findAll({
+      limit: 10000, // Get all tracks
+    });
+
+    const totalTracksFound = allTracks.length;
+    const tracksWithoutScid = allTracks.filter(t => !existingTrackIds.has(t._id.toString()));
+
+    let registered = 0;
+    let skipped = 0;
+    let nftTracks = 0;
+    let nonNftTracks = 0;
+    const errors: string[] = [];
+
+    if (dryRun) {
+      // Just count, don't register
+      for (const track of tracksWithoutScid) {
+        if (track.nftData?.tokenId != null) {
+          nftTracks++;
+        } else {
+          nonNftTracks++;
+        }
+      }
+      return {
+        totalTracksFound,
+        tracksWithoutScid: tracksWithoutScid.length,
+        registered: 0,
+        skipped: existingScids.length,
+        nftTracks,
+        nonNftTracks,
+        errors: [],
+      };
+    }
+
+    // Register SCids for tracks without them
+    const tracksToProcess = tracksWithoutScid.slice(0, limit);
+
+    for (const track of tracksToProcess) {
+      try {
+        const trackId = track._id.toString();
+        const profileId = track.profileId?.toString() || track.profile?._id?.toString();
+
+        if (!profileId) {
+          errors.push(`Track ${trackId}: No profile ID found`);
+          continue;
+        }
+
+        // Determine chain based on NFT data
+        let trackChainCode = chainCode;
+        if (track.nftData?.tokenId != null) {
+          nftTracks++;
+          // If NFT has contract, try to determine chain from contract
+          // For now, default to Polygon since most NFTs are there
+          trackChainCode = ChainCode.POLYGON;
+        } else {
+          nonNftTracks++;
+        }
+
+        await this.register({
+          trackId,
+          profileId,
+          chainCode: trackChainCode,
+          walletAddress: track.nftData?.minter || track.nftData?.owner,
+        });
+        registered++;
+      } catch (err: any) {
+        errors.push(`Track ${track._id}: ${err.message}`);
+      }
+    }
+
+    return {
+      totalTracksFound,
+      tracksWithoutScid: tracksWithoutScid.length,
+      registered,
+      skipped: existingScids.length,
+      nftTracks,
+      nonNftTracks,
+      errors,
+    };
   }
 }
 
