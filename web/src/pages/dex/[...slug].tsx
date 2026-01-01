@@ -78,6 +78,7 @@ const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAu
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
 const CreateModal = dynamic(() => import('components/modals/CreateModal'), { ssr: false })
+const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr: false })
 const PostModal = dynamic(() => import('components/Post/PostModal').then(mod => ({ default: mod.PostModal })), { ssr: false })
 const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActionsModal').then(mod => ({ default: mod.AuthorActionsModal })), { ssr: false })
 const CommentModal = dynamic(() => import('components/Comment/CommentModal'), { ssr: false })
@@ -596,6 +597,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
       case 'marketplace': return 'marketplace'
       case 'feed': return 'feed'
       case 'wallet': return 'wallet'
+      case 'staking': return 'staking'
       case 'settings': return 'settings'
       case 'messages': return 'messages'
       case 'notifications': return 'notifications'
@@ -607,7 +609,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'staking' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -672,7 +674,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   useEffect(() => {
     if (!router.isReady) return
     const newView = getInitialView()
-    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
+    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'marketplace', 'feed', 'dashboard', 'wallet', 'staking', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
       console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, routeId, isReady: router.isReady })
       setSelectedView(newView as any)
     }
@@ -1649,6 +1651,13 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                               <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('wallet')}}>
                                 <WalletIcon className="w-4 h-4 mr-3" />
                                 Wallet
+                              </Button>
+                            </Link>
+                            <Link href="/dex/staking">
+                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-purple-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('staking')}}>
+                                <Coins className="w-4 h-4 mr-3 text-purple-400" />
+                                Staking
+                                <Badge className="ml-auto bg-purple-500/20 text-purple-400 text-xs">OGUN</Badge>
                               </Button>
                             </Link>
                             <Link href="https://soundchain.gitbook.io/soundchain/" target="_blank" rel="noreferrer">
@@ -4031,6 +4040,13 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 )}
               </Card>
             </div>
+          )}
+
+          {/* Staking View */}
+          {selectedView === 'staking' && (
+            <Card className="retro-card">
+              <StakingPanel />
+            </Card>
           )}
 
           {/* Settings View */}

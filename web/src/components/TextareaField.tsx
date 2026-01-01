@@ -26,14 +26,16 @@ export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props
         )}
         <textarea
           maxLength={maxLength}
-          className="placeholder-semibold w-full resize-none border-none bg-transparent p-0 text-xs font-bold text-white placeholder-gray-50 focus:outline-none focus:ring-transparent focus:bg-transparent focus:text-white caret-white [&:-webkit-autofill]:bg-transparent [&:-webkit-autofill]:text-white [-webkit-text-fill-color:white]"
+          className="placeholder-semibold w-full resize-none border-none bg-transparent p-0 text-xs font-bold !text-white placeholder-gray-50 focus:outline-none focus:ring-transparent focus:!bg-transparent focus:!text-white caret-white [&:-webkit-autofill]:!bg-gray-20 [&:-webkit-autofill]:!text-white [-webkit-text-fill-color:white] [&:-webkit-autofill:focus]:!bg-gray-20 [&:-webkit-autofill:hover]:!bg-gray-20 autofill:!bg-gray-20 autofill:!text-white"
           id={props.name}
           autoComplete="off"
           data-lpignore="true"
           data-form-type="other"
+          spellCheck="false"
           {...field}
           {...props}
           rows={rows}
+          style={{ backgroundColor: 'transparent', color: 'white', WebkitTextFillColor: 'white' }}
         ></textarea>
         {Icon && (
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
