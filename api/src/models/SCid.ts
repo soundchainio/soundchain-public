@@ -189,6 +189,20 @@ export class SCid extends Model {
   lastDailyReset?: Date;
 
   /**
+   * Total OGUN rewards claimed/withdrawn
+   */
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  ogunRewardsClaimed: number;
+
+  /**
+   * Last claim timestamp
+   */
+  @Field(() => Date, { nullable: true })
+  @prop()
+  lastClaimedAt?: Date;
+
+  /**
    * Previous owner (for transfers)
    */
   @Field(() => String, { nullable: true })

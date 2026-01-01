@@ -39,6 +39,12 @@ export interface LogStreamInput {
   timestamp?: Date;
 }
 
+export interface ClaimStreamingRewardsInput {
+  profileId: string;
+  walletAddress: string;
+  stakeDirectly?: boolean; // If true, stake instead of claim to wallet
+}
+
 export interface SCidStats {
   totalScids: number;
   totalStreams: number;
@@ -516,6 +522,133 @@ export class SCidService extends Service {
     }
 
     return { registered, skipped, errors };
+  }
+
+  /**
+   * Claim streaming rewards for a user
+   *
+   * Marks all unclaimed OGUN as claimed and returns the total.
+   * When StreamingRewardsDistributor contract is deployed, this will
+   * also trigger on-chain distribution.
+   *
+   * @param input.profileId - User's profile ID
+   * @param input.walletAddress - Wallet address to claim to
+   * @param input.stakeDirectly - If true, stake rewards instead of claim
+   */
+  async claimStreamingRewards(input: ClaimStreamingRewardsInput): Promise<{
+    success: boolean;
+    totalClaimed: number;
+    tracksCount: number;
+    staked: boolean;
+    transactionHash?: string;
+    error?: string;
+  }> {
+    const { profileId, walletAddress, stakeDirectly = false } = input;
+
+    try {
+      // Get all SCids for this user with unclaimed rewards
+      const scids = await SCidModel.find({
+        profileId,
+        ogunRewardsEarned: { $gt: 0 },
+      });
+
+      if (scids.length === 0) {
+        return {
+          success: false,
+          totalClaimed: 0,
+          tracksCount: 0,
+          staked: false,
+          error: 'No streaming rewards to claim',
+        };
+      }
+
+      // Calculate total unclaimed rewards
+      let totalRewards = 0;
+      const tracksClaimed: string[] = [];
+
+      for (const scid of scids) {
+        // Get unclaimed amount (total earned minus any already claimed)
+        const unclaimedAmount = scid.ogunRewardsEarned - (scid.ogunRewardsClaimed || 0);
+        if (unclaimedAmount > 0) {
+          totalRewards += unclaimedAmount;
+          tracksClaimed.push(scid.trackId);
+
+          // Mark as claimed
+          scid.ogunRewardsClaimed = scid.ogunRewardsEarned;
+          scid.lastClaimedAt = new Date();
+          await scid.save();
+        }
+      }
+
+      if (totalRewards === 0) {
+        return {
+          success: false,
+          totalClaimed: 0,
+          tracksCount: 0,
+          staked: false,
+          error: 'All rewards already claimed',
+        };
+      }
+
+      // TODO: When StreamingRewardsDistributor is deployed, call:
+      // - submitReward(walletAddress, scid, amount, isNft) for claim
+      // - submitRewardAndStake(walletAddress, scid, amount, isNft) for stake
+      // For now, we just track in database
+
+      console.log(`[SCidService] Claimed ${totalRewards} OGUN for ${profileId} (${tracksClaimed.length} tracks, staked: ${stakeDirectly})`);
+
+      return {
+        success: true,
+        totalClaimed: totalRewards,
+        tracksCount: tracksClaimed.length,
+        staked: stakeDirectly,
+        // transactionHash will be populated when contract is deployed
+      };
+    } catch (err: any) {
+      console.error('[SCidService] Claim error:', err);
+      return {
+        success: false,
+        totalClaimed: 0,
+        tracksCount: 0,
+        staked: false,
+        error: err.message || 'Claim failed',
+      };
+    }
+  }
+
+  /**
+   * Get total unclaimed streaming rewards for a user
+   */
+  async getUnclaimedRewards(profileId: string): Promise<{
+    totalUnclaimed: number;
+    tracksWithRewards: number;
+    breakdown: Array<{ scid: string; trackId: string; unclaimed: number }>;
+  }> {
+    const scids = await SCidModel.find({
+      profileId,
+      ogunRewardsEarned: { $gt: 0 },
+    }).lean();
+
+    let totalUnclaimed = 0;
+    const breakdown: Array<{ scid: string; trackId: string; unclaimed: number }> = [];
+
+    for (const scid of scids) {
+      const unclaimed = scid.ogunRewardsEarned - (scid.ogunRewardsClaimed || 0);
+      if (unclaimed > 0) {
+        totalUnclaimed += unclaimed;
+        breakdown.push({
+          scid: scid.scid,
+          trackId: scid.trackId,
+          unclaimed,
+        });
+      }
+    }
+
+    return {
+      totalUnclaimed,
+      tracksWithRewards: breakdown.length,
+      breakdown,
+    };
   }
 
   /**

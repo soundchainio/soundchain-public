@@ -1,10 +1,155 @@
 # SoundChain Development Handoff - January 1, 2026
 
-## NEW YEAR SESSION - Full Diagnostic Audit
+## 🚀 AFTERNOON SESSION - StreamingRewardsDistributor Contract Ready!
+
+### MAJOR PROGRESS THIS SESSION
+
+#### 1. StreamingRewardsDistributor Smart Contract (NEW!)
+**Location:** `soundchain-contracts/contracts/StreamingRewardsDistributor.sol`
+
+A complete on-chain OGUN distribution contract for streaming rewards:
+- **Tiered Rewards:** 0.5 OGUN for NFT mints, 0.05 OGUN for non-NFT
+- **Daily Limits:** 100 OGUN max per track per day (anti-bot farming)
+- **Authorized Distributors:** Backend service can submit reward claims
+- **Claim Options:** Claim to wallet OR stake directly
+- **Batch Support:** Process up to 100 rewards in single transaction
+- **Emergency Controls:** Pause/unpause + emergency withdraw
+
+**Deployment Script:** `soundchain-contracts/scripts/deployStreamingRewards.ts`
+
+#### 2. Backend Claim System (NEW!)
+**Files Modified:**
+- `api/src/services/SCidService.ts` - Added `claimStreamingRewards()` and `getUnclaimedRewards()`
+- `api/src/models/SCid.ts` - Added `ogunRewardsClaimed` and `lastClaimedAt` fields
+- `api/src/resolvers/SCidResolver.ts` - Added `claimStreamingRewards` mutation and `myUnclaimedStreamingRewards` query
+
+**GraphQL API:**
+```graphql
+mutation ClaimStreamingRewards($input: ClaimStreamingRewardsInput!) {
+  claimStreamingRewards(input: $input) {
+    success
+    totalClaimed
+    tracksCount
+    staked
+    transactionHash
+    error
+  }
+}
+```
+
+#### 3. Frontend Claim Buttons (WIRED UP!)
+**File:** `web/src/components/dex/StakingPanel.tsx`
+
+- "Claim to Wallet" button now calls `claimStreamingRewards` mutation
+- "Stake Rewards" button stakes directly (stakeDirectly: true)
+- Shows unclaimed vs claimed rewards
+- Loading states and error handling
+
+### Files Modified This Session
+```
+soundchain-contracts/contracts/StreamingRewardsDistributor.sol  - NEW: On-chain rewards contract
+soundchain-contracts/scripts/deployStreamingRewards.ts          - NEW: Deployment script
+api/src/services/SCidService.ts                                 - Claim rewards functions
+api/src/models/SCid.ts                                          - Added claimed fields
+api/src/resolvers/SCidResolver.ts                               - Claim mutation + query
+web/src/components/dex/StakingPanel.tsx                         - Wired up claim buttons
+web/src/graphql/ClaimStreamingRewards.graphql                   - NEW: Claim mutation
+```
+
+### NEXT STEPS (To Complete OGUN Distribution)
+1. **Deploy StreamingRewardsDistributor** - Run deployment script on Polygon mainnet
+2. **Fund the contract** - Transfer OGUN tokens to contract for distribution
+3. **Authorize backend** - Call `authorizeDistributor()` with API server wallet
+4. **Connect contract to backend** - Update SCidService to call contract on claim
+5. **Run `grandfatherExistingTracks`** - Migrate existing tracks to SCid system
+6. **Test end-to-end** - Play tracks → earn OGUN → claim/stake
+
+---
+
+## 🎆 MORNING SESSION - OGUN Streaming Rewards System Built! 🎆
+
+### MAJOR FEATURES DEPLOYED TODAY
+
+#### 1. OGUN Streaming Rewards System (COMPLETE!)
+**Backend (`api/src/services/SCidService.ts`):**
+- Tiered rewards: **0.5 OGUN** (NFT mints) / **0.05 OGUN** (non-NFT)
+- **100 OGUN daily limit** per track (anti-bot farming)
+- 30 second minimum stream duration
+- Daily reset tracking with `dailyOgunEarned` field
+- `grandfatherExistingTracks` mutation for legacy NFT migration
+
+**Frontend (`web/src/hooks/useLogStream.tsx`):**
+- Stream logging hook with SCid lookup
+- Integrated into AudioEngine - logs on song change/end
+- Toast notifications when OGUN is earned
+
+**GraphQL Mutations:**
+- `logStream(scid, duration, listenerWallet)` - Log a stream
+- `grandfatherExistingTracks(limit, dryRun)` - Admin: migrate existing tracks
+
+#### 2. OGUN Staking Panel (`web/src/components/dex/StakingPanel.tsx`)
+- Full DEX-styled staking interface
+- Stake/Unstake/Swap tabs
+- Chain selector (Polygon, ZetaChain, Ethereum, Base)
+- Staking phases display with rewards info
+- View at `/dex/staking`
+
+#### 3. Streaming Rewards Aggregator (GLOWING UI!)
+- Animated gradient background with purple/pink/cyan theme
+- Three glowing stat cards: Earned OGUN, Total Streams, Active Tracks
+- Expandable top earning tracks leaderboard
+- Reward tier display showing rates
+- **"Claim to Wallet"** button (coming soon)
+- **"Stake Rewards"** button with pulse animation (coming soon)
+
+#### 4. Navigation Updates
+- **Stake icon in header nav** - Yellow coin icon with pulse dot
+- Desktop: "Stake" button with hover glow
+- Mobile: Coin icon with pulse indicator
+- Links to `/dex/staking`
+
+#### 5. Mint Page Fixes
+- Fixed TextareaField white-on-white text bug
+- Chain explorer links for 23+ chains
+- Loop mode cycling (off → all → one) with "1" indicator
+
+### Files Modified Today
+```
+api/src/models/SCid.ts              - Added dailyOgunEarned, lastDailyReset fields
+api/src/services/SCidService.ts     - Tiered rewards, daily limits, grandfather function
+api/src/resolvers/SCidResolver.ts   - GrandfatherPayload, updated LogStreamPayload
+web/src/hooks/useLogStream.tsx      - NEW: Stream logging hook
+web/src/graphql/LogStream.graphql   - NEW: LogStream mutation
+web/src/graphql/GetScidByTrack.graphql - NEW: SCid lookup query
+web/src/components/dex/StakingPanel.tsx - Streaming aggregator UI
+web/src/components/common/BottomAudioPlayer/AudioEngine.tsx - Stream logging integration
+web/src/components/TextareaField.tsx - White text fix
+web/src/pages/dex/[...slug].tsx     - Staking nav button, staking view
+```
+
+### NEXT STEPS (When You Return)
+1. **StreamingRewardsDistributor Contract** - Deploy proxy for on-chain OGUN distribution
+2. **Wire up Claim/Stake buttons** - Connect to proxy contract
+3. **Run `grandfatherExistingTracks`** - Migrate all existing tracks to SCid system
+4. **Test streaming rewards** - Play tracks, verify OGUN logging
+5. **Post announcement** - Epic feed post ready (see previous message)
+
+### Git Commits Today
+```
+017cdb093 feat: Add Stake icon to header navigation bar
+cadb53733 feat: Add 'Stake OGUN Rewards' button to streaming aggregator
+a53c7f9ee feat: Add glowing Streaming Rewards Aggregator to staking page
+979b02fbd feat: OGUN Streaming Rewards System
+f27696761 feat: Add OGUN Staking panel to DEX
+```
+
+---
+
+## Previous Session Summary
 
 **See: `DIAGNOSTIC_CHECKLIST.md` for complete component audit (26 modals, all features)**
 
-### New Year Fixes Deployed
+### Earlier Fixes Deployed
 1. **Loop Button** - Added to audio player (both bottom bar and fullscreen modal)
 2. **Share Profile** - Button with native share API + clipboard fallback
 3. **Emote/Sticker Fix** - Comments now render images (normalized split markdown)

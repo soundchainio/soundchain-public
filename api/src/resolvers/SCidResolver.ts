@@ -94,6 +94,60 @@ export class LogStreamPayload {
   dailyLimitReached?: boolean;
 }
 
+@InputType()
+export class ClaimStreamingRewardsInput {
+  @Field()
+  walletAddress: string;
+
+  @Field({ nullable: true, defaultValue: false })
+  stakeDirectly?: boolean;
+}
+
+@ObjectType()
+export class ClaimStreamingRewardsPayload {
+  @Field()
+  success: boolean;
+
+  @Field()
+  totalClaimed: number;
+
+  @Field(() => Int)
+  tracksCount: number;
+
+  @Field()
+  staked: boolean;
+
+  @Field({ nullable: true })
+  transactionHash?: string;
+
+  @Field({ nullable: true })
+  error?: string;
+}
+
+@ObjectType()
+export class UnclaimedRewardsPayload {
+  @Field()
+  totalUnclaimed: number;
+
+  @Field(() => Int)
+  tracksWithRewards: number;
+
+  @Field(() => [UnclaimedRewardBreakdown])
+  breakdown: UnclaimedRewardBreakdown[];
+}
+
+@ObjectType()
+export class UnclaimedRewardBreakdown {
+  @Field()
+  scid: string;
+
+  @Field()
+  trackId: string;
+
+  @Field()
+  unclaimed: number;
+}
+
 @ObjectType()
 export class GrandfatherPayload {
   @Field(() => Int)
@@ -413,6 +467,38 @@ export class SCidResolver {
       user.profileId.toString(),
       chainCode
     );
+  }
+
+  /**
+   * Get unclaimed streaming rewards for current user
+   */
+  @Query(() => UnclaimedRewardsPayload)
+  @Authorized()
+  async myUnclaimedStreamingRewards(
+    @Ctx() { scidService }: Context,
+    @CurrentUser() { profileId }: User
+  ): Promise<UnclaimedRewardsPayload> {
+    return scidService.getUnclaimedRewards(profileId.toString());
+  }
+
+  /**
+   * Claim streaming rewards
+   *
+   * Claims all unclaimed OGUN rewards from streaming.
+   * When contract is deployed, this will also trigger on-chain distribution.
+   */
+  @Mutation(() => ClaimStreamingRewardsPayload)
+  @Authorized()
+  async claimStreamingRewards(
+    @Ctx() { scidService }: Context,
+    @Arg('input') input: ClaimStreamingRewardsInput,
+    @CurrentUser() user: User
+  ): Promise<ClaimStreamingRewardsPayload> {
+    return scidService.claimStreamingRewards({
+      profileId: user.profileId.toString(),
+      walletAddress: input.walletAddress,
+      stakeDirectly: input.stakeDirectly,
+    });
   }
 
   /**

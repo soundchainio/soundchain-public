@@ -12,7 +12,7 @@ import { useWalletConnect } from 'hooks/useWalletConnect'
 import useMetaMask from 'hooks/useMetaMask'
 import useBlockchain from 'hooks/useBlockchain'
 import { useMe } from 'hooks/useMe'
-import { gql, useQuery } from '@apollo/client'
+import { gql, useQuery, useMutation } from '@apollo/client'
 import { toast } from 'react-toastify'
 import { formatToCompactNumber } from 'utils/format'
 import Web3 from 'web3'
@@ -31,7 +31,22 @@ const GET_USER_STREAMING_REWARDS = gql`
       trackId
       streamCount
       ogunRewardsEarned
+      ogunRewardsClaimed
       lastStreamAt
+    }
+  }
+`
+
+// Mutation to claim streaming rewards
+const CLAIM_STREAMING_REWARDS = gql`
+  mutation ClaimStreamingRewards($input: ClaimStreamingRewardsInput!) {
+    claimStreamingRewards(input: $input) {
+      success
+      totalClaimed
+      tracksCount
+      staked
+      transactionHash
+      error
     }
   }
 `
@@ -92,15 +107,84 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
   )
 
+  // Claim streaming rewards mutation
+  const [claimStreamingRewardsMutation, { loading: claimLoading }] = useMutation(CLAIM_STREAMING_REWARDS)
+
   // Calculate streaming totals
   const scids = streamingData?.scidsByProfile || []
   const streamingStats = {
     totalStreams: scids.reduce((acc: number, s: any) => acc + (s.streamCount || 0), 0),
     totalOgunEarned: scids.reduce((acc: number, s: any) => acc + (s.ogunRewardsEarned || 0), 0),
+    // Calculate unclaimed as earned minus claimed
+    totalUnclaimed: scids.reduce((acc: number, s: any) => {
+      const earned = s.ogunRewardsEarned || 0
+      const claimed = s.ogunRewardsClaimed || 0
+      return acc + Math.max(0, earned - claimed)
+    }, 0),
     tracksWithStreams: scids.filter((s: any) => s.streamCount > 0).length,
     topTracks: [...scids]
       .sort((a: any, b: any) => (b.ogunRewardsEarned || 0) - (a.ogunRewardsEarned || 0))
       .slice(0, 5),
+  }
+
+  // Handle claim to wallet
+  const handleClaimToWallet = async () => {
+    if (!account) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    try {
+      const { data } = await claimStreamingRewardsMutation({
+        variables: {
+          input: {
+            walletAddress: account,
+            stakeDirectly: false,
+          },
+        },
+      })
+
+      if (data?.claimStreamingRewards?.success) {
+        toast.success(`Successfully claimed ${data.claimStreamingRewards.totalClaimed.toFixed(2)} OGUN!`)
+        refetchStreaming()
+        fetchBalances()
+      } else {
+        toast.error(data?.claimStreamingRewards?.error || 'Claim failed')
+      }
+    } catch (err: any) {
+      console.error('Claim error:', err)
+      toast.error(err.message || 'Failed to claim rewards')
+    }
+  }
+
+  // Handle stake rewards directly
+  const handleStakeRewards = async () => {
+    if (!account) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    try {
+      const { data } = await claimStreamingRewardsMutation({
+        variables: {
+          input: {
+            walletAddress: account,
+            stakeDirectly: true,
+          },
+        },
+      })
+
+      if (data?.claimStreamingRewards?.success) {
+        toast.success(`Successfully staked ${data.claimStreamingRewards.totalClaimed.toFixed(2)} OGUN from streaming!`)
+        refetchStreaming()
+        fetchBalances()
+      } else {
+        toast.error(data?.claimStreamingRewards?.error || 'Stake failed')
+      }
+    } catch (err: any) {
+      console.error('Stake error:', err)
+      toast.error(err.message || 'Failed to stake rewards')
+    }
   }
 
   // Staking phases info
@@ -441,13 +525,15 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl blur opacity-0 group-hover:opacity-30 transition-opacity" />
                 <button
-                  disabled={streamingStats.totalOgunEarned <= 0}
+                  disabled={streamingStats.totalUnclaimed <= 0 || claimLoading}
                   className="relative w-full py-3 bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-500 hover:to-emerald-500 disabled:from-gray-600/50 disabled:to-gray-600/50 text-white disabled:text-gray-400 font-bold rounded-xl flex items-center justify-center gap-2 border border-green-500/30 disabled:border-gray-500/30 transition-all disabled:cursor-not-allowed"
-                  onClick={() => {
-                    toast.info('Claim feature coming soon! Your rewards are being tracked.', { autoClose: 3000 })
-                  }}
+                  onClick={handleClaimToWallet}
                 >
-                  <Wallet className="w-4 h-4" />
+                  {claimLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Wallet className="w-4 h-4" />
+                  )}
                   <span className="text-sm">Claim to Wallet</span>
                 </button>
               </div>
@@ -456,13 +542,15 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity animate-pulse" />
                 <button
-                  disabled={streamingStats.totalOgunEarned <= 0}
+                  disabled={streamingStats.totalUnclaimed <= 0 || claimLoading}
                   className="relative w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-600/50 disabled:to-gray-600/50 text-white disabled:text-gray-400 font-bold rounded-xl flex items-center justify-center gap-2 border border-purple-500/50 disabled:border-gray-500/30 transition-all disabled:cursor-not-allowed shadow-[0_0_20px_rgba(168,85,247,0.3)]"
-                  onClick={() => {
-                    toast.info('Stake Rewards feature coming soon! Compound your streaming earnings.', { autoClose: 3000 })
-                  }}
+                  onClick={handleStakeRewards}
                 >
-                  <Lock className="w-4 h-4" />
+                  {claimLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Lock className="w-4 h-4" />
+                  )}
                   <span className="text-sm">Stake Rewards</span>
                   <Sparkles className="w-3 h-3 text-yellow-300" />
                 </button>
@@ -470,10 +558,17 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
             </div>
 
             {/* Rewards Summary */}
-            {streamingStats.totalOgunEarned > 0 && (
+            {streamingStats.totalUnclaimed > 0 && (
               <div className="mt-3 text-center">
                 <p className="text-xs text-gray-400">
-                  You have <span className="text-yellow-400 font-bold">{streamingStats.totalOgunEarned.toFixed(2)} OGUN</span> available from streaming
+                  You have <span className="text-yellow-400 font-bold">{streamingStats.totalUnclaimed.toFixed(2)} OGUN</span> unclaimed from streaming
+                </p>
+              </div>
+            )}
+            {streamingStats.totalOgunEarned > 0 && streamingStats.totalUnclaimed === 0 && (
+              <div className="mt-3 text-center">
+                <p className="text-xs text-green-400">
+                  All {streamingStats.totalOgunEarned.toFixed(2)} OGUN rewards have been claimed!
                 </p>
               </div>
             )}
