@@ -13,8 +13,31 @@ import { GenreLabel, genres } from 'utils/Genres'
 import * as yup from 'yup'
 import { ArtworkUploader } from './ArtworkUploader'
 
-// Supported blockchain chains
-const supportedChains = ['Polygon', 'Ethereum', 'Solana', 'Base', 'Tezos'];
+// Supported blockchain chains with explorer info
+interface ChainInfo {
+  name: string;
+  explorer: string;
+  symbol: string;
+  status: 'live' | 'coming_soon';
+  recommended?: boolean;
+}
+
+const SUPPORTED_CHAINS: Record<string, ChainInfo> = {
+  'Polygon': { name: 'Polygon', explorer: 'https://polygonscan.com', symbol: 'POL', status: 'live', recommended: true },
+  'ZetaChain': { name: 'ZetaChain', explorer: 'https://explorer.zetachain.com', symbol: 'ZETA', status: 'live' },
+  'Base': { name: 'Base', explorer: 'https://basescan.org', symbol: 'ETH', status: 'live' },
+  'Ethereum': { name: 'Ethereum', explorer: 'https://etherscan.io', symbol: 'ETH', status: 'live' },
+  'Arbitrum': { name: 'Arbitrum', explorer: 'https://arbiscan.io', symbol: 'ETH', status: 'live' },
+  'Optimism': { name: 'Optimism', explorer: 'https://optimistic.etherscan.io', symbol: 'ETH', status: 'live' },
+  'Avalanche': { name: 'Avalanche', explorer: 'https://snowtrace.io', symbol: 'AVAX', status: 'live' },
+  'BSC': { name: 'BNB Chain', explorer: 'https://bscscan.com', symbol: 'BNB', status: 'live' },
+  'Blast': { name: 'Blast', explorer: 'https://blastscan.io', symbol: 'ETH', status: 'live' },
+  'Zora': { name: 'Zora', explorer: 'https://explorer.zora.energy', symbol: 'ETH', status: 'live' },
+  'Solana': { name: 'Solana', explorer: 'https://explorer.solana.com', symbol: 'SOL', status: 'coming_soon' },
+  'Tezos': { name: 'Tezos', explorer: 'https://tzstats.com', symbol: 'XTZ', status: 'coming_soon' },
+};
+
+const supportedChains = Object.keys(SUPPORTED_CHAINS);
 
 // Role categories and sub-roles
 const collaboratorCategories = {

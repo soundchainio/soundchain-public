@@ -83,6 +83,7 @@ export const AudioPlayerModal = () => {
     isPlaying,
     isShuffleOn,
     isLoopOn,
+    loopMode,
     duration,
     progress,
     hasNext,
@@ -275,10 +276,11 @@ export const AudioPlayerModal = () => {
               <button
                 onClick={toggleLoop}
                 className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                aria-label={isLoopOn ? 'Loop off' : 'Loop on'}
+                aria-label={loopMode === 'off' ? 'Loop off' : loopMode === 'all' ? 'Loop all' : 'Loop one'}
               >
                 <Repeat
-                  className={`w-6 h-6 ${isLoopOn ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-white/60'}`}
+                  showOne={loopMode === 'one'}
+                  className={`w-6 h-6 ${loopMode !== 'off' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-white/60'}`}
                 />
               </button>
 

@@ -11,10 +11,14 @@ export type Song = {
   isFavorite?: boolean | null
 }
 
+// Loop modes: 'off' = no loop, 'all' = loop playlist, 'one' = repeat single track
+export type LoopMode = 'off' | 'all' | 'one'
+
 interface AudioPlayerContextData {
   isPlaying: boolean
   isShuffleOn: boolean
   isLoopOn: boolean
+  loopMode: LoopMode
   currentSong: Song
   duration: number
   progress: number
@@ -63,6 +67,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isShuffleOn, setIsShuffleOn] = useState(false)
   const [isLoopOn, setIsLoopOn] = useState(false)
+  const [loopMode, setLoopMode] = useState<LoopMode>('off')
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [currentSong, setCurrentSong] = useState<Song>({} as Song)
   const [originalPlaylist, setOriginalPlaylist] = useState<Song[]>([])
@@ -322,16 +327,23 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   }, [currentPlaylistIndex, hasPrevious, play, playlist, progress, setProgressStateFromSlider])
 
   const playNext = useCallback(() => {
+    // Loop ONE: replay current track
+    if (loopMode === 'one' && currentSong.src) {
+      setProgressStateFromSlider(0)
+      play(currentSong)
+      return
+    }
+
     if (hasNext) {
       const nextIndex = currentPlaylistIndex + 1
       setCurrentPlaylistIndex(nextIndex)
       play(playlist[nextIndex])
-    } else if (isLoopOn && playlist.length > 0) {
-      // Loop: restart from the beginning of the playlist
+    } else if (loopMode === 'all' && playlist.length > 0) {
+      // Loop ALL: restart from the beginning of the playlist
       setCurrentPlaylistIndex(0)
       play(playlist[0])
     }
-  }, [currentPlaylistIndex, hasNext, isLoopOn, play, playlist])
+  }, [currentPlaylistIndex, currentSong, hasNext, loopMode, play, playlist, setProgressStateFromSlider])
 
   // Auto-preload next tracks in queue for instant playback (audio + artwork)
   useEffect(() => {
@@ -360,8 +372,19 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     setIsShuffleOn(prev => !prev)
   }, [])
 
+  // Toggle loop cycles through: off -> all -> one -> off
   const toggleLoop = useCallback(() => {
-    setIsLoopOn(prev => !prev)
+    setLoopMode(prev => {
+      if (prev === 'off') {
+        setIsLoopOn(true)
+        return 'all'
+      } else if (prev === 'all') {
+        return 'one'
+      } else {
+        setIsLoopOn(false)
+        return 'off'
+      }
+    })
   }, [])
 
   const shuffle = useCallback(() => {
@@ -420,6 +443,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         isPlaying,
         isShuffleOn,
         isLoopOn,
+        loopMode,
         currentSong,
         progress,
         progressFromSlider,

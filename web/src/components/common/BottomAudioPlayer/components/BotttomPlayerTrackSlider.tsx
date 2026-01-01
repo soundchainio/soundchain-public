@@ -34,6 +34,7 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
     isShuffleOn,
     toggleShuffle,
     isLoopOn,
+    loopMode,
     toggleLoop,
   } = useAudioPlayerContext()
 
@@ -61,11 +62,16 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
         )}
         {!hideLoop && (
           <button
-            aria-label={isLoopOn ? 'Loop off' : 'Loop on'}
+            aria-label={loopMode === 'off' ? 'Loop off' : loopMode === 'all' ? 'Loop all' : 'Loop one'}
             className="flex h-10 w-10 items-center justify-center"
             onClick={toggleLoop}
           >
-            <Repeat width={18} stroke={isLoopOn ? 'white' : '#808080'} className="hover:stroke-white" />
+            <Repeat
+              width={18}
+              stroke={loopMode !== 'off' ? 'white' : '#808080'}
+              showOne={loopMode === 'one'}
+              className="hover:stroke-white"
+            />
           </button>
         )}
         <RewindButton aria-label="Previous track" onClick={playPrevious} disabled={!hasPrevious}>
