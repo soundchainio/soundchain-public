@@ -65,11 +65,13 @@ export class PostResolver {
 
   @FieldResolver(() => Number)
   totalReactions(@Root() { reactionStats }: Post): number {
-    return Object.values(reactionStats).reduce((acc, value) => acc + value, 0);
+    if (!reactionStats) return 0;
+    return Object.values(reactionStats).reduce((acc, value) => acc + (value || 0), 0);
   }
 
   @FieldResolver(() => [ReactionType])
   topReactions(@Root() { reactionStats }: Post, @Arg('top') top: number): ReactionType[] {
+    if (!reactionStats) return [];
     return toPairs(reactionStats)
       .filter(pair => pair[1] !== 0)
       .sort((a, b) => b[1] - a[1])

@@ -130,22 +130,34 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyNewFollower({ followerId, followedId }: Follow): Promise<void> {
-    const { displayName: followerName, profilePicture: followerPicture } = await this.context.profileService.getProfile(
-      followerId.toString(),
-    );
-    const followerHandle = await this.context.profileService.getUserHandle(followerId.toString());
-    const notification = new NotificationModel({
-      type: NotificationType.Follower,
-      profileId: followedId.toString(),
-      metadata: {
-        followerId,
-        followerName,
-        followerPicture,
-        followerHandle,
-      },
-    });
-    await notification.save();
-    await this.incrementNotificationCount(followedId.toString());
+    if (!followerId || !followedId) {
+      console.warn('[NotificationService] Skipping follower notification - missing followerId or followedId');
+      return;
+    }
+
+    try {
+      const followerProfile = await this.context.profileService.getProfile(followerId.toString());
+      if (!followerProfile) {
+        console.warn('[NotificationService] Skipping follower notification - follower profile not found');
+        return;
+      }
+
+      const followerHandle = await this.context.profileService.getUserHandle(followerId.toString());
+      const notification = new NotificationModel({
+        type: NotificationType.Follower,
+        profileId: followedId.toString(),
+        metadata: {
+          followerId,
+          followerName: followerProfile.displayName || 'Unknown',
+          followerPicture: followerProfile.profilePicture,
+          followerHandle,
+        },
+      });
+      await notification.save();
+      await this.incrementNotificationCount(followedId.toString());
+    } catch (err) {
+      console.error('[NotificationService] Error in notifyNewFollower:', err);
+    }
   }
 
   async notifyNFTSold({
@@ -159,47 +171,61 @@ export class NotificationService extends ModelService<typeof Notification> {
     sellType,
     isPaymentOgun,
   }: Omit<FinishBuyNowItemInput, 'tokenId'>): Promise<void> {
-    const buyer = await this.context.profileService.getProfile(buyerProfileId.toString());
-    const seller = await this.context.profileService.getProfile(sellerProfileId.toString());
+    if (!sellerProfileId || !buyerProfileId) {
+      console.warn('[NotificationService] Skipping NFT sold notification - missing profile IDs');
+      return;
+    }
 
-    const notification = new NotificationModel({
-      type: NotificationType.NFTSold,
-      profileId: sellerProfileId.toString(),
-      metadata: {
-        buyerProfileId,
-        trackId,
-        price,
-        buyerName: buyer.displayName,
-        buyerPicture: buyer.profilePicture,
-        artist,
-        artworkUrl,
-        trackName,
-        sellType,
-        isPaymentOgun,
-      },
-    });
+    try {
+      const buyer = await this.context.profileService.getProfile(buyerProfileId.toString());
+      const seller = await this.context.profileService.getProfile(sellerProfileId.toString());
 
-    const trackUrl = `https://www.soundchain.io/tracks/${trackId}`;
-    const buyerProfileUrl = `https://www.soundchain.io/profiles/${buyer.displayName}`;
-    const sendTo = ['admin@soundchain.io'];
+      if (!buyer || !seller) {
+        console.warn('[NotificationService] Skipping NFT sold notification - buyer or seller profile not found');
+        return;
+      }
 
-    await Promise.all(
-      sendTo.map(email =>
-        this.context.mailchimpService.sendTemplateEmail(email, 'nft-minted', {
-          subject: 'NFT Minted',
-          buyer_name: buyer.displayName,
-          buyer_profile_link: buyerProfileUrl,
-          email_receiver_name: 'Frank',
-          track_name: trackName,
-          track_details_link: trackUrl,
-          track_src: artworkUrl,
-          nft_owner_name: seller.displayName,
-        }),
-      ),
-    );
+      const notification = new NotificationModel({
+        type: NotificationType.NFTSold,
+        profileId: sellerProfileId.toString(),
+        metadata: {
+          buyerProfileId,
+          trackId,
+          price,
+          buyerName: buyer.displayName || 'Unknown',
+          buyerPicture: buyer.profilePicture,
+          artist,
+          artworkUrl,
+          trackName,
+          sellType,
+          isPaymentOgun,
+        },
+      });
 
-    await notification.save();
-    await this.incrementNotificationCount(sellerProfileId.toString());
+      const trackUrl = `https://www.soundchain.io/tracks/${trackId}`;
+      const buyerProfileUrl = `https://www.soundchain.io/profiles/${buyer.displayName}`;
+      const sendTo = ['admin@soundchain.io'];
+
+      await Promise.all(
+        sendTo.map(email =>
+          this.context.mailchimpService.sendTemplateEmail(email, 'nft-minted', {
+            subject: 'NFT Minted',
+            buyer_name: buyer.displayName || 'Unknown',
+            buyer_profile_link: buyerProfileUrl,
+            email_receiver_name: 'Frank',
+            track_name: trackName,
+            track_details_link: trackUrl,
+            track_src: artworkUrl,
+            nft_owner_name: seller.displayName || 'Unknown',
+          }),
+        ),
+      );
+
+      await notification.save();
+      await this.incrementNotificationCount(sellerProfileId.toString());
+    } catch (err) {
+      console.error('[NotificationService] Error in notifyNFTSold:', err);
+    }
   }
 
   async getNotifications(
@@ -304,41 +330,70 @@ export class NotificationService extends ModelService<typeof Notification> {
   }
 
   async notifyPostDeletedByAdmin(post: Post): Promise<void> {
-    const { profileId } = post;
-    const authorProfile = await this.context.profileService.getProfile(profileId.toString());
-    const metadata: DeletedPostNotificationMetadata = {
-      authorName: authorProfile.displayName,
-      authorPicture: authorProfile.profilePicture,
-      postBody: post.body,
-      postId: post._id,
-      postLink: post.mediaLink,
-      trackId: post.trackId,
-    };
-    const notification = new NotificationModel({ type: NotificationType.DeletedPost, profileId, metadata });
-    await notification.save();
-    await this.incrementNotificationCount(profileId.toString());
+    if (!post || !post.profileId) {
+      console.warn('[NotificationService] Skipping post deleted notification - missing post or profileId');
+      return;
+    }
+
+    try {
+      const { profileId } = post;
+      const authorProfile = await this.context.profileService.getProfile(profileId.toString());
+
+      if (!authorProfile) {
+        console.warn('[NotificationService] Skipping post deleted notification - author profile not found');
+        return;
+      }
+
+      const metadata: DeletedPostNotificationMetadata = {
+        authorName: authorProfile.displayName || 'Unknown',
+        authorPicture: authorProfile.profilePicture,
+        postBody: post.body,
+        postId: post._id,
+        postLink: post.mediaLink,
+        trackId: post.trackId,
+      };
+      const notification = new NotificationModel({ type: NotificationType.DeletedPost, profileId, metadata });
+      await notification.save();
+      await this.incrementNotificationCount(profileId.toString());
+    } catch (err) {
+      console.error('[NotificationService] Error in notifyPostDeletedByAdmin:', err);
+    }
   }
 
   async notifyCommentDeletedByAdmin({ comment, post, authorProfileId }: CommentNotificationParams): Promise<void> {
-    const authorProfile = await this.context.profileService.getProfile(authorProfileId);
-    const { body: commentBody, _id: commentId } = comment;
-    const { _id: postId } = post;
+    if (!comment || !post || !authorProfileId) {
+      console.warn('[NotificationService] Skipping comment deleted notification - missing required data');
+      return;
+    }
 
-    const { displayName: authorName, profilePicture: authorPicture } = authorProfile;
-    const metadata: CommentNotificationMetadata = {
-      authorName,
-      commentBody,
-      postId,
-      commentId,
-      authorPicture,
-    };
-    const notification = new NotificationModel({
-      type: NotificationType.DeletedComment,
-      profileId: authorProfileId,
-      metadata,
-    });
-    await notification.save();
-    await this.incrementNotificationCount(authorProfileId);
+    try {
+      const authorProfile = await this.context.profileService.getProfile(authorProfileId);
+
+      if (!authorProfile) {
+        console.warn('[NotificationService] Skipping comment deleted notification - author profile not found');
+        return;
+      }
+
+      const { body: commentBody, _id: commentId } = comment;
+      const { _id: postId } = post;
+
+      const metadata: CommentNotificationMetadata = {
+        authorName: authorProfile.displayName || 'Unknown',
+        commentBody,
+        postId,
+        commentId,
+        authorPicture: authorProfile.profilePicture,
+      };
+      const notification = new NotificationModel({
+        type: NotificationType.DeletedComment,
+        profileId: authorProfileId,
+        metadata,
+      });
+      await notification.save();
+      await this.incrementNotificationCount(authorProfileId);
+    } catch (err) {
+      console.error('[NotificationService] Error in notifyCommentDeletedByAdmin:', err);
+    }
   }
 
   async notifyWonAuction({ track, price, profileId, auctionId }: AuctionParams): Promise<void> {

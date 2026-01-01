@@ -13,9 +13,18 @@ export class TrackCommentResolver {
   /**
    * Resolve the profile (author) of the comment
    */
-  @FieldResolver(() => Profile)
-  async profile(@Ctx() { profileService }: Context, @Root() comment: TrackComment): Promise<Profile> {
-    return profileService.getProfile(comment.profileId.toString());
+  @FieldResolver(() => Profile, { nullable: true })
+  async profile(@Ctx() { profileService }: Context, @Root() comment: TrackComment): Promise<Profile | null> {
+    // Defensive null check to prevent mongoose scope errors
+    if (!comment || !comment.profileId) {
+      return null;
+    }
+    try {
+      return profileService.getProfile(comment.profileId.toString());
+    } catch (err) {
+      console.error('[TrackCommentResolver] Error fetching profile:', err);
+      return null;
+    }
   }
 
   /**

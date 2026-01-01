@@ -76,15 +76,31 @@ export class CommentService extends ModelService<typeof Comment> {
   }
 
   async updateComment({ commentId, body }: UpdateCommentParams): Promise<Comment> {
-    return await CommentModel.findOneAndUpdate({ _id: commentId }, { body }, { new: true });
+    const updatedComment = await CommentModel.findOneAndUpdate(
+      { _id: commentId },
+      { body },
+      { new: true }
+    );
+
+    if (!updatedComment) {
+      throw new Error('Comment not found');
+    }
+
+    return updatedComment;
   }
 
   async deleteComment(params: DeleteCommentParams): Promise<Comment> {
-    return await CommentModel.findOneAndUpdate(
+    const deletedComment = await CommentModel.findOneAndUpdate(
       { _id: params.commentId, profileId: params.profileId },
       { deleted: true },
       { new: true },
     );
+
+    if (!deletedComment) {
+      throw new Error('Comment not found or you do not have permission to delete it');
+    }
+
+    return deletedComment;
   }
 
   async deleteCommentByAdmin(params: DeleteCommentParams): Promise<Comment> {

@@ -18,18 +18,32 @@ import { UpdateCommentPayload } from '../types/UpdateCommentPayload';
 
 @Resolver(Comment)
 export class CommentResolver {
-  @FieldResolver(() => Post)
-  post(@Ctx() { postService }: Context, @Root() comment: Comment): Promise<Post> {
-    return postService.getPost(comment.postId.toString());
+  @FieldResolver(() => Post, { nullable: true })
+  post(@Ctx() { postService }: Context, @Root() comment: Comment): Promise<Post | null> {
+    // Defensive null check to prevent mongoose scope errors
+    if (!comment || !comment.postId) {
+      return Promise.resolve(null);
+    }
+    try {
+      return postService.getPost(comment.postId.toString());
+    } catch (err) {
+      console.error('[CommentResolver] Error fetching post:', err);
+      return Promise.resolve(null);
+    }
   }
 
   @FieldResolver(() => Profile, { nullable: true })
   profile(@Ctx() { profileService }: Context, @Root() comment: Comment): Promise<Profile | null> {
-    // Guest comments don't have a profile
-    if (comment.isGuest || !comment.profileId) {
+    // Defensive null check + guest comments don't have a profile
+    if (!comment || comment.isGuest || !comment.profileId) {
       return Promise.resolve(null);
     }
-    return profileService.getProfile(comment.profileId.toString());
+    try {
+      return profileService.getProfile(comment.profileId.toString());
+    } catch (err) {
+      console.error('[CommentResolver] Error fetching profile:', err);
+      return Promise.resolve(null);
+    }
   }
 
   @Query(() => Comment)
