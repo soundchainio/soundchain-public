@@ -1,5 +1,26 @@
 # SoundChain Development Handoff - January 1, 2026
 
+## 🔧 BUG FIX SESSION - Comment System Mongoose Errors Fixed!
+
+### CRITICAL BUG FIXED: Symbol(mongoose#Document#scope) Error
+
+**Problem:** Users clicking "Comment" on any post received a mongoose scope error, breaking the entire feed comment experience.
+
+**Root Cause:** Multiple services returned null from `findOneAndUpdate()` without checking, causing Mongoose to fail when serializing the response.
+
+**Files Fixed:**
+```
+api/src/services/CommentService.ts        - Added null checks to updateComment/deleteComment
+api/src/resolvers/CommentResolver.ts      - Made post field nullable, added defensive checks
+api/src/resolvers/TrackCommentResolver.ts - Made profile field nullable, added defensive checks
+api/src/resolvers/PostResolver.ts         - Added null checks for reactionStats
+api/src/services/NotificationService.ts   - Added null checks to ALL notification methods
+```
+
+**Commit:** `e295754ab fix: Critical null checks to prevent mongoose document scope errors`
+
+---
+
 ## 🚀 AFTERNOON SESSION - StreamingRewardsDistributor Contract Ready!
 
 ### MAJOR PROGRESS THIS SESSION
