@@ -1,6 +1,7 @@
 /**
  * OGUN Staking Panel - DEX Style
  * Stake OGUN tokens to earn rewards across multiple chains
+ * + Streaming Rewards Aggregator for OGUN earnings from music plays
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -10,6 +11,8 @@ import { useMagicContext } from 'hooks/useMagicContext'
 import { useWalletConnect } from 'hooks/useWalletConnect'
 import useMetaMask from 'hooks/useMetaMask'
 import useBlockchain from 'hooks/useBlockchain'
+import { useMe } from 'hooks/useMe'
+import { gql, useQuery } from '@apollo/client'
 import { toast } from 'react-toastify'
 import { formatToCompactNumber } from 'utils/format'
 import Web3 from 'web3'
@@ -17,7 +20,21 @@ import { Contract } from 'web3-eth-contract'
 import { AbiItem } from 'web3-utils'
 import SoundchainOGUN20 from 'contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import StakingRewards from 'contract/StakingRewards.sol/StakingRewards.json'
-import { Coins, TrendingUp, Wallet, ArrowDownUp, Zap, Lock, Unlock, Gift, ExternalLink } from 'lucide-react'
+import { Coins, TrendingUp, Wallet, ArrowDownUp, Zap, Lock, Unlock, Gift, ExternalLink, Music, Headphones, Sparkles, Play, Award } from 'lucide-react'
+
+// Query for user's streaming rewards
+const GET_USER_STREAMING_REWARDS = gql`
+  query GetUserStreamingRewards($profileId: String!) {
+    scidsByProfile(profileId: $profileId) {
+      id
+      scid
+      trackId
+      streamCount
+      ogunRewardsEarned
+      lastStreamAt
+    }
+  }
+`
 
 // Contract addresses
 const OGUNAddress = config.ogunTokenAddress as string
@@ -44,6 +61,7 @@ interface StakingPanelProps {
 }
 
 export const StakingPanel = ({ onClose }: StakingPanelProps) => {
+  const me = useMe()
   const { web3: magicLinkWeb3, account: magicLinkAccount } = useMagicContext()
   const { web3: metamaskWeb3, account: metamaskAccount } = useMetaMask()
   const { web3: wcWeb3, account: walletconnectAccount } = useWalletConnect()
@@ -56,6 +74,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   const [amount, setAmount] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [transactionState, setTransactionState] = useState('')
+  const [showStreamingDetails, setShowStreamingDetails] = useState(false)
 
   // Balances
   const [ogunBalance, setOgunBalance] = useState('0')
@@ -63,6 +82,26 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   const [rewardBalance, setRewardBalance] = useState('0')
   const [totalStaked, setTotalStaked] = useState('0')
   const [apr, setApr] = useState('0')
+
+  // Fetch user's streaming rewards
+  const { data: streamingData, loading: streamingLoading, refetch: refetchStreaming } = useQuery(
+    GET_USER_STREAMING_REWARDS,
+    {
+      variables: { profileId: me?.profileId || '' },
+      skip: !me?.profileId,
+    }
+  )
+
+  // Calculate streaming totals
+  const scids = streamingData?.scidsByProfile || []
+  const streamingStats = {
+    totalStreams: scids.reduce((acc: number, s: any) => acc + (s.streamCount || 0), 0),
+    totalOgunEarned: scids.reduce((acc: number, s: any) => acc + (s.ogunRewardsEarned || 0), 0),
+    tracksWithStreams: scids.filter((s: any) => s.streamCount > 0).length,
+    topTracks: [...scids]
+      .sort((a: any, b: any) => (b.ogunRewardsEarned || 0) - (a.ogunRewardsEarned || 0))
+      .slice(0, 5),
+  }
 
   // Staking phases info
   const phases = [
@@ -253,6 +292,161 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
           </button>
         )}
       </div>
+
+      {/* ========== STREAMING REWARDS AGGREGATOR ========== */}
+      {me?.profileId && (
+        <div className="relative overflow-hidden rounded-2xl">
+          {/* Animated gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-500/20 to-cyan-500/20 animate-pulse" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-cyan-500/10" />
+
+          {/* Glowing border effect */}
+          <div className="absolute inset-0 rounded-2xl border border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.3),inset_0_0_30px_rgba(168,85,247,0.1)]" />
+
+          <div className="relative p-5">
+            {/* Header with sparkles */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur-lg opacity-50 animate-pulse" />
+                  <div className="relative p-3 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-xl">
+                    <Headphones className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white">Streaming Rewards</h3>
+                    <Sparkles className="w-4 h-4 text-yellow-400 animate-pulse" />
+                  </div>
+                  <p className="text-sm text-purple-300">Earn OGUN from every stream</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowStreamingDetails(!showStreamingDetails)}
+                className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1"
+              >
+                {showStreamingDetails ? 'Hide' : 'Details'}
+                <span className={`transition-transform ${showStreamingDetails ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+            </div>
+
+            {/* Main Stats - Glowing Cards */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {/* Total OGUN Earned */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
+                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-yellow-500/30 hover:border-yellow-500/60 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Coins className="w-4 h-4 text-yellow-400" />
+                    <span className="text-xs text-yellow-400/80 uppercase tracking-wider">Earned</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                      {streamingLoading ? '...' : streamingStats.totalOgunEarned.toFixed(2)}
+                    </span>
+                    <span className="text-xs text-yellow-500/70">OGUN</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Streams */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
+                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-cyan-500/30 hover:border-cyan-500/60 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Play className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs text-cyan-400/80 uppercase tracking-wider">Streams</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                      {streamingLoading ? '...' : formatToCompactNumber(streamingStats.totalStreams)}
+                    </span>
+                    <span className="text-xs text-cyan-500/70">plays</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tracks Earning */}
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
+                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-pink-500/30 hover:border-pink-500/60 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Music className="w-4 h-4 text-pink-400" />
+                    <span className="text-xs text-pink-400/80 uppercase tracking-wider">Tracks</span>
+                  </div>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
+                      {streamingLoading ? '...' : streamingStats.tracksWithStreams}
+                    </span>
+                    <span className="text-xs text-pink-500/70">active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Reward Tiers Info */}
+            <div className="flex items-center justify-center gap-6 mb-4 py-3 bg-white/5 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-xs text-gray-400">NFT Mints:</span>
+                <span className="text-sm font-bold text-green-400">0.5 OGUN/stream</span>
+              </div>
+              <div className="w-px h-4 bg-gray-600" />
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full" />
+                <span className="text-xs text-gray-400">Non-NFT:</span>
+                <span className="text-sm font-bold text-blue-400">0.05 OGUN/stream</span>
+              </div>
+            </div>
+
+            {/* Expandable Top Tracks Section */}
+            {showStreamingDetails && streamingStats.topTracks.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-purple-500/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <Award className="w-4 h-4 text-yellow-400" />
+                  <h4 className="text-sm font-bold text-white">Top Earning Tracks</h4>
+                </div>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {streamingStats.topTracks.map((track: any, index: number) => (
+                    <div
+                      key={track.id}
+                      className="flex items-center justify-between p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
+                          index === 0 ? 'bg-yellow-500 text-black' :
+                          index === 1 ? 'bg-gray-400 text-black' :
+                          index === 2 ? 'bg-orange-600 text-white' :
+                          'bg-gray-700 text-gray-300'
+                        }`}>
+                          {index + 1}
+                        </span>
+                        <div>
+                          <p className="text-sm text-white font-mono">{track.scid}</p>
+                          <p className="text-xs text-gray-500">{track.streamCount} streams</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-yellow-400">+{track.ogunRewardsEarned?.toFixed(2)} OGUN</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Claim Button (Coming Soon) */}
+            <button
+              disabled
+              className="w-full mt-4 py-3 bg-gradient-to-r from-purple-600/50 to-pink-600/50 text-purple-300 font-bold rounded-xl flex items-center justify-center gap-2 cursor-not-allowed border border-purple-500/30"
+            >
+              <Gift className="w-5 h-5" />
+              Claim Streaming Rewards
+              <span className="text-xs bg-purple-500/30 px-2 py-0.5 rounded-full">Coming Soon</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Chain Selector */}
       <div className="flex items-center gap-2 p-3 bg-gray-800/50 rounded-lg">
