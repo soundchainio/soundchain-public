@@ -76,6 +76,7 @@ export const AudioEngine = () => {
     progressFromSlider,
     hasNext,
     volume,
+    loopMode,
     playNext,
     setPlayingState,
     setDurationState,
@@ -501,14 +502,30 @@ export const AudioEngine = () => {
         logStream(currentSong.trackId, playDuration, walletAddress || undefined)
           .catch(err => console.warn('[OGUN] Failed to log stream on end:', err))
       }
-      // Reset tracking since song completed
-      previousSongRef.current = null
     }
 
-    if (hasNext) {
+    // Handle loop mode 'one' - restart current track immediately
+    if (loopMode === 'one' && audioRef.current) {
+      audioRef.current.currentTime = 0
+      audioRef.current.play().catch(() => {})
+      // Reset tracking for new loop iteration
+      previousSongRef.current = {
+        trackId: currentSong.trackId,
+        playStartTime: Date.now(),
+      }
+      return
+    }
+
+    // Reset tracking since song completed (not looping single)
+    previousSongRef.current = null
+
+    // Always call playNext - it handles 'all' loop mode internally
+    // If no next track and not looping, it will just stop
+    if (hasNext || loopMode === 'all') {
       playNext()
     } else {
       setProgressState(0)
+      setPlayingState(false)
     }
   }
 
@@ -524,6 +541,8 @@ export const AudioEngine = () => {
       playsInline
       preload="auto"
       crossOrigin="anonymous"
+      // Native loop attribute for single track repeat (most reliable)
+      loop={loopMode === 'one'}
       // iOS background playback attributes
       // @ts-ignore - webkit specific attributes
       webkit-playsinline="true"

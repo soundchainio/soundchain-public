@@ -729,13 +729,15 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   const { balance: maticBalance, ogunBalance, account: walletAccount } = useMagicContext()
 
   // Transaction history query for wallet activity
+  // Uses walletAccount from Magic context, or falls back to userWallet from GraphQL
   const { data: maticUsdData } = useMaticUsdQuery()
+  const txWallet = walletAccount || userData?.me?.defaultWallet || ''
   const { data: transactionData, loading: transactionsLoading } = usePolygonscanQuery({
     variables: {
-      wallet: walletAccount || '',
+      wallet: txWallet,
       page: { first: 10 },
     },
-    skip: !walletAccount, // Only fetch when wallet is connected
+    skip: !txWallet, // Only fetch when wallet is available
   })
 
   // Unified Wallet Context - synced across all pages (includes Web3Modal)
@@ -1281,6 +1283,11 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // User profile from GraphQL - REAL DATA
   const user = userData?.me?.profile
   const userWallet = userData?.me?.defaultWallet
+  // Effective wallet: prefer Magic wallet account, fallback to stored user wallet
+  const effectiveWallet = walletAccount || userWallet || ''
+  // Effective balances: prefer Magic context balances, fallback to unified wallet context
+  const effectiveOgunBalance = ogunBalance || activeOgunBalance || '0.00'
+  const effectiveMaticBalance = maticBalance || activeBalance || '0.00'
   const userTracks = tracksData?.groupedTracks?.nodes || []
   const ownedTracks = ownedTracksData?.groupedTracks?.nodes || [] // User-owned NFTs for wallet page
   const marketTracks = listingData?.listingItems?.nodes || []
@@ -3376,8 +3383,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                   </div>
                 </Card>
 
-                {/* Connected Wallets */}
-                {walletAccount ? (
+                {/* Connected Wallets - use walletAccount OR userWallet from GraphQL */}
+                {(walletAccount || userWallet) ? (
                   <div className="space-y-3 mb-6">
                     {/* Primary Wallet (Current Session) */}
                     <Card className="metadata-section p-4 border-cyan-500/50">
@@ -3391,7 +3398,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                               <p className="text-xs text-gray-400">SoundChain Wallet</p>
                               <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Active</Badge>
                             </div>
-                            <p className="font-mono text-cyan-400 text-sm">{walletAccount.slice(0, 10)}...{walletAccount.slice(-8)}</p>
+                            <p className="font-mono text-cyan-400 text-sm">{effectiveWallet.slice(0, 10)}...{effectiveWallet.slice(-8)}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -3399,12 +3406,12 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => { navigator.clipboard.writeText(walletAccount); }}
+                            onClick={() => { navigator.clipboard.writeText(effectiveWallet); }}
                             className="hover:bg-cyan-500/20"
                           >
                             <Copy className="w-4 h-4 text-cyan-400" />
                           </Button>
-                          <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
+                          <a href={`https://polygonscan.com/address/${effectiveWallet}`} target="_blank" rel="noreferrer">
                             <Button variant="ghost" size="sm" className="hover:bg-purple-500/20">
                               <ExternalLink className="w-4 h-4 text-purple-400" />
                             </Button>
@@ -3509,15 +3516,15 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 )}
 
                 {/* Balance Cards - Real data from Magic wallet */}
-                {walletAccount && (
+                {(walletAccount || userWallet) && (
                   <div className="mb-2 text-center">
                     <a
-                      href={`https://polygonscan.com/address/${walletAccount}`}
+                      href={`https://polygonscan.com/address/${effectiveWallet}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
                     >
-                      Verify on Polygonscan: {walletAccount.slice(0, 8)}...{walletAccount.slice(-6)} ↗
+                      Verify on Polygonscan: {effectiveWallet.slice(0, 8)}...{effectiveWallet.slice(-6)} ↗
                     </a>
                   </div>
                 )}
@@ -3525,7 +3532,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                   <Card className="metadata-section p-4 text-center hover:border-yellow-500/50 transition-all">
                     <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                     <p className="text-xs text-gray-400 mb-1">OGUN</p>
-                    <p className="text-xl font-bold text-yellow-400">{ogunBalance || '0.00'}</p>
+                    <p className="text-xl font-bold text-yellow-400">{effectiveOgunBalance}</p>
                     <p className="text-xs text-gray-500">≈ $0.00</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-purple-500/50 transition-all">
@@ -3533,7 +3540,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       <svg viewBox="0 0 38 33" fill="currentColor"><path d="M29.7 16.5l-11.7 6.7-11.7-6.7 11.7-16.5 11.7 16.5zM18 25.2l-11.7-6.7 11.7 16.5 11.7-16.5-11.7 6.7z"/></svg>
                     </div>
                     <p className="text-xs text-gray-400 mb-1">MATIC</p>
-                    <p className="text-xl font-bold text-purple-400">{maticBalance || '0.00'}</p>
+                    <p className="text-xl font-bold text-purple-400">{effectiveMaticBalance}</p>
                     <p className="text-xs text-gray-500">≈ $0.00</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-cyan-500/50 transition-all">
@@ -3573,9 +3580,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     variant="outline"
                     className="border-purple-500/50 hover:bg-purple-500/10 flex-col h-auto py-4"
                     onClick={() => {
-                      if (userWallet) {
-                        navigator.clipboard.writeText(userWallet)
-                        alert(`📥 Receive Crypto\n\nYour wallet address copied to clipboard:\n\n${userWallet}\n\nSend MATIC or OGUN to this address on Polygon network.`)
+                      if (effectiveWallet) {
+                        navigator.clipboard.writeText(effectiveWallet)
+                        alert(`📥 Receive Crypto\n\nYour wallet address copied to clipboard:\n\n${effectiveWallet}\n\nSend MATIC or OGUN to this address on Polygon network.`)
                       } else {
                         alert('Please connect your wallet first.')
                       }
@@ -3994,8 +4001,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <BarChart3 className="w-6 h-6 text-cyan-400" />
                     <h3 className="retro-title text-lg">Recent Activity</h3>
                   </div>
-                  {walletAccount && (
-                    <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
+                  {effectiveWallet && (
+                    <a href={`https://polygonscan.com/address/${effectiveWallet}`} target="_blank" rel="noreferrer">
                       <Button variant="ghost" size="sm" className="text-xs text-cyan-400 hover:bg-cyan-500/10">
                         View All <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
@@ -4018,7 +4025,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 ) : transactionData?.getTransactionHistory?.result?.length ? (
                   <div className="space-y-2 max-h-80 overflow-y-auto">
                     {transactionData.getTransactionHistory.result.slice(0, 10).map((tx: any) => {
-                      const isIncoming = tx.to?.toLowerCase() === walletAccount?.toLowerCase()
+                      const isIncoming = tx.to?.toLowerCase() === effectiveWallet?.toLowerCase()
                       const valueInMatic = tx.value ? (parseFloat(tx.value) / 1e18).toFixed(4) : '0'
                       const usdValue = maticUsdData?.maticUsd ? (parseFloat(valueInMatic) * parseFloat(maticUsdData.maticUsd)).toFixed(2) : '0.00'
                       const date = tx.timeStamp ? new Date(parseInt(tx.timeStamp) * 1000).toLocaleDateString() : ''

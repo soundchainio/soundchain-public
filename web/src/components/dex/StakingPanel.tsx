@@ -102,8 +102,8 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   const { data: streamingData, loading: streamingLoading, refetch: refetchStreaming } = useQuery(
     GET_USER_STREAMING_REWARDS,
     {
-      variables: { profileId: me?.profileId || '' },
-      skip: !me?.profileId,
+      variables: { profileId: me?.profile?.id || '' },
+      skip: !me?.profile?.id,
     }
   )
 
@@ -195,7 +195,10 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     { phase: 4, days: 120, reward: '250,000', status: 'upcoming' },
   ]
 
-  // Load wallet
+  // User's stored wallet address from profile (fallback for Magic session issues)
+  const userWallet = me?.defaultWallet
+
+  // Load wallet - prefer connected wallets, fallback to user's stored wallet
   useEffect(() => {
     if (walletconnectAccount && wcWeb3) {
       setAccount(walletconnectAccount)
@@ -206,8 +209,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     } else if (magicLinkAccount && magicLinkWeb3) {
       setAccount(magicLinkAccount)
       setWeb3(magicLinkWeb3)
+    } else if (userWallet && magicLinkWeb3) {
+      // Fallback: use stored wallet address with Magic web3 for read-only balance fetching
+      console.log('💳 Staking: Using fallback wallet from user profile:', userWallet)
+      setAccount(userWallet)
+      setWeb3(magicLinkWeb3)
     }
-  }, [walletconnectAccount, metamaskAccount, magicLinkAccount, wcWeb3, metamaskWeb3, magicLinkWeb3])
+  }, [walletconnectAccount, metamaskAccount, magicLinkAccount, wcWeb3, metamaskWeb3, magicLinkWeb3, userWallet])
 
   // Fetch balances
   const fetchBalances = useCallback(async () => {
@@ -378,7 +386,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       </div>
 
       {/* ========== STREAMING REWARDS AGGREGATOR ========== */}
-      {me?.profileId && (
+      {me?.profile?.id && (
         <div className="relative overflow-hidden rounded-2xl">
           {/* Animated gradient background */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-500/20 to-cyan-500/20 animate-pulse" />
