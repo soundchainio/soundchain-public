@@ -326,7 +326,7 @@ export class SCidService extends Service {
     }
 
     // Get the track to check if it's an NFT mint
-    const track = await this.context.trackService.findById(scidRecord.trackId);
+    const track = await this.context.trackService.getTrack(scidRecord.trackId);
     const isNFTMint = track?.nftData?.tokenId != null;
 
     // Calculate OGUN reward based on mint type
@@ -681,12 +681,15 @@ export class SCidService extends Service {
     const existingTrackIds = new Set(existingScids.map(s => s.trackId));
 
     // Find all tracks
-    const allTracks = await this.context.trackService.findAll({
-      limit: 10000, // Get all tracks
-    });
+    const allTracksResult = await this.context.trackService.getTracks(
+      undefined, // no filter
+      undefined, // no sort
+      { first: 10000 } // Get all tracks
+    );
+    const allTracks = allTracksResult.nodes || [];
 
     const totalTracksFound = allTracks.length;
-    const tracksWithoutScid = allTracks.filter(t => !existingTrackIds.has(t._id.toString()));
+    const tracksWithoutScid = allTracks.filter((t: any) => !existingTrackIds.has(t._id.toString()));
 
     let registered = 0;
     let skipped = 0;
@@ -720,7 +723,7 @@ export class SCidService extends Service {
     for (const track of tracksToProcess) {
       try {
         const trackId = track._id.toString();
-        const profileId = track.profileId?.toString() || track.profile?._id?.toString();
+        const profileId = track.profileId?.toString();
 
         if (!profileId) {
           errors.push(`Track ${trackId}: No profile ID found`);
