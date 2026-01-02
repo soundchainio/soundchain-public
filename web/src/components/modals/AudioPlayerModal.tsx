@@ -14,6 +14,7 @@ import { Pause } from 'icons/PauseBottomAudioPlayer'
 import { Play } from 'icons/PlayBottomAudioPlayer'
 import { Playlists } from 'icons/Playlists'
 import { Rewind } from 'icons/RewindButton'
+import { Repeat } from 'icons/Repeat'
 import { Shuffle } from 'icons/Shuffle'
 import { TrackDocument, useToggleFavoriteMutation } from 'lib/graphql'
 import { useTrackComments } from 'hooks/useTrackComments'
@@ -81,6 +82,7 @@ export const AudioPlayerModal = () => {
     currentSong,
     isPlaying,
     isShuffleOn,
+    loopMode,
     duration,
     progress,
     hasNext,
@@ -94,6 +96,7 @@ export const AudioPlayerModal = () => {
     playNext,
     jumpTo,
     toggleShuffle,
+    toggleLoop,
     setPlayerFavorite,
     isPlaylistOpen,
     setIsPlaylistOpen,
@@ -300,14 +303,17 @@ export const AudioPlayerModal = () => {
                 <SkipForward className="w-9 h-9 text-white fill-white drop-shadow-lg" />
               </button>
 
-              {/* Playlist toggle */}
+              {/* Loop/Repeat */}
               <button
-                onClick={() => setIsPlaylistOpen(!isPlaylistOpen)}
-                className="p-2 rounded-full hover:bg-white/10 transition-colors"
-                aria-label="Show playlist"
+                onClick={toggleLoop}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors relative"
+                aria-label={`Loop: ${loopMode}`}
+                title={loopMode === 'off' ? 'Loop off' : loopMode === 'all' ? 'Loop all' : 'Loop one'}
               >
-                <ListMusic
-                  className={`w-6 h-6 ${isPlaylistOpen ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-white/60'}`}
+                <Repeat
+                  width={24}
+                  showOne={loopMode === 'one'}
+                  className={`w-6 h-6 ${loopMode !== 'off' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-white/60'}`}
                 />
               </button>
             </div>
