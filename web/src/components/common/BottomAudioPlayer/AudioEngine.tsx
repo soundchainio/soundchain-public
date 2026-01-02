@@ -1,12 +1,9 @@
 import { config } from 'config'
 import Hls from 'hls.js'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
-import { useLogStream } from 'hooks/useLogStream'
 import { useMe } from 'hooks/useMe'
-import { useMagicContext } from 'hooks/useMagicContext'
 import mux from 'mux-embed'
 import { useEffect, useRef, useCallback } from 'react'
-import { toast } from 'react-toastify'
 
 /**
  * Audio Normalization Settings
@@ -39,7 +36,6 @@ const NORMALIZATION_CONFIG = {
  */
 export const AudioEngine = () => {
   const me = useMe()
-  const { account: walletAddress } = useMagicContext()
   const audioRef = useRef<HTMLAudioElement>(null)
   const hlsRef = useRef<Hls | null>(null)
   // Web Audio API refs for normalization (gain only, no compression)
@@ -47,36 +43,12 @@ export const AudioEngine = () => {
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null)
   const gainNodeRef = useRef<GainNode | null>(null)
   const isAudioGraphConnected = useRef(false)
-
-  // Stream logging for OGUN rewards
-  const { logStream, startTracking, stopTracking } = useLogStream({
-    minDuration: 30, // 30 seconds minimum to count as stream
-    onReward: (reward) => {
-      if (reward > 0) {
-        toast.success(`+${reward.toFixed(2)} OGUN earned!`, {
-          position: 'bottom-right',
-          autoClose: 3000,
-          hideProgressBar: true,
-        })
-      }
-    },
-    onDailyLimitReached: () => {
-      toast.info('Daily OGUN limit reached for this track', {
-        position: 'bottom-right',
-        autoClose: 3000,
-      })
-    },
-  })
-  // Track previous song to log streams when song changes
-  const previousSongRef = useRef<{ trackId: string; playStartTime: number } | null>(null)
-
   const {
     currentSong,
     isPlaying,
     progressFromSlider,
     hasNext,
     volume,
-    loopMode,
     playNext,
     setPlayingState,
     setDurationState,
@@ -266,30 +238,6 @@ export const AudioEngine = () => {
       }
     }
   }, [currentSong, me?.id, updateMediaSession, initializeAudioGraph])
-
-  // OGUN Stream Logging - Track song changes and log streams
-  useEffect(() => {
-    if (!currentSong.trackId) return
-
-    // When song changes, log the previous song's stream
-    if (previousSongRef.current && previousSongRef.current.trackId !== currentSong.trackId) {
-      const prevTrackId = previousSongRef.current.trackId
-      const playDuration = Math.floor((Date.now() - previousSongRef.current.playStartTime) / 1000)
-
-      // Only log if played for at least 30 seconds
-      if (playDuration >= 30) {
-        logStream(prevTrackId, playDuration, walletAddress || undefined)
-          .catch(err => console.warn('[OGUN] Failed to log stream:', err))
-      }
-    }
-
-    // Start tracking new song
-    previousSongRef.current = {
-      trackId: currentSong.trackId,
-      playStartTime: Date.now(),
-    }
-    startTracking(currentSong.trackId)
-  }, [currentSong.trackId, logStream, startTracking, walletAddress])
 
   // Handle play/pause state
   useEffect(() => {
@@ -495,37 +443,10 @@ export const AudioEngine = () => {
   }
 
   function handleEndedSong() {
-    // Log stream for OGUN rewards when song ends naturally
-    if (previousSongRef.current && currentSong.trackId) {
-      const playDuration = Math.floor((Date.now() - previousSongRef.current.playStartTime) / 1000)
-      if (playDuration >= 30) {
-        logStream(currentSong.trackId, playDuration, walletAddress || undefined)
-          .catch(err => console.warn('[OGUN] Failed to log stream on end:', err))
-      }
-    }
-
-    // Handle loop mode 'one' - restart current track immediately
-    if (loopMode === 'one' && audioRef.current) {
-      audioRef.current.currentTime = 0
-      audioRef.current.play().catch(() => {})
-      // Reset tracking for new loop iteration
-      previousSongRef.current = {
-        trackId: currentSong.trackId,
-        playStartTime: Date.now(),
-      }
-      return
-    }
-
-    // Reset tracking since song completed (not looping single)
-    previousSongRef.current = null
-
-    // Always call playNext - it handles 'all' loop mode internally
-    // If no next track and not looping, it will just stop
-    if (hasNext || loopMode === 'all') {
+    if (hasNext) {
       playNext()
     } else {
       setProgressState(0)
-      setPlayingState(false)
     }
   }
 
@@ -541,8 +462,6 @@ export const AudioEngine = () => {
       playsInline
       preload="auto"
       crossOrigin="anonymous"
-      // Native loop attribute for single track repeat (most reliable)
-      loop={loopMode === 'one'}
       // iOS background playback attributes
       // @ts-ignore - webkit specific attributes
       webkit-playsinline="true"

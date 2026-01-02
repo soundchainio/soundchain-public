@@ -1,4 +1,4 @@
-import { TrackQuery, useToggleFavoriteMutation, useTrackLazyQuery } from 'lib/graphql'
+import { TrackQuery, useToggleFavoriteMutation, useTrackLazyQuery } from 'lib/graphql-hooks'
 import { useRouter } from 'next/router'
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import { errorHandler } from 'utils/errorHandler'

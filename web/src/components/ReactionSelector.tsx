@@ -6,7 +6,7 @@ import {
   useRetractReactionMutation,
   useGuestReactToPostMutation,
   ReactionType,
-} from 'lib/graphql'
+} from 'lib/graphql-hooks'
 
 interface ReactionSelectorProps {
   postId: string

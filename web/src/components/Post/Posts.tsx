@@ -110,25 +110,8 @@ const PostDetailModal = ({ postId, onClose, handleOnPlayClicked }: { postId: str
 }
 
 export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
-  // Auto-disable virtualization for profile pages and mobile devices
-  // Mobile Safari has issues with virtualized lists + AutoSizer height calculation
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    // Check for mobile device on mount
-    const checkMobile = () => {
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-      const isSmallScreen = window.innerWidth < 768
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
-      setIsMobile(isTouchDevice || isSmallScreen || isSafari)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  // Use simple mode (no virtualization) for: profile pages, mobile, Safari, or when explicitly disabled
-  const useSimpleMode = disableVirtualization || !!profileId || isMobile
+  // Auto-disable virtualization for profile pages (they have their own scroll container)
+  const useSimpleMode = disableVirtualization || !!profileId
   const [viewMode, setViewMode] = useState<ViewMode>('list') // Default to list view for better content visibility
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [activePostId, setActivePostId] = useState<string | null>(null) // Track last interacted/playing post
@@ -299,22 +282,13 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
     return 5                        // Desktop: 5 columns for tight stacking
   }
 
-  // Simple mode rendering for profile pages and mobile (no virtualization)
+  // Simple mode rendering for profile pages (no virtualization)
   // This avoids AutoSizer issues when Posts is inside a parent with its own scroll
   if (useSimpleMode) {
     const simpleNodes = nodes || []
 
     return (
       <>
-        {/* Post Form - only show on main feed (not profile pages) */}
-        {!profileId && (
-          <div className="flex justify-center px-4 mb-4">
-            <div className="w-full max-w-[614px]">
-              <PostFormTimeline />
-            </div>
-          </div>
-        )}
-
         {/* Simple mapped posts - no virtualization */}
         <div className="space-y-4">
           {(simpleNodes as PostType[]).map((post) => (

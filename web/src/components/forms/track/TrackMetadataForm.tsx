@@ -13,31 +13,8 @@ import { GenreLabel, genres } from 'utils/Genres'
 import * as yup from 'yup'
 import { ArtworkUploader } from './ArtworkUploader'
 
-// Supported blockchain chains with explorer info
-interface ChainInfo {
-  name: string;
-  explorer: string;
-  symbol: string;
-  status: 'live' | 'coming_soon';
-  recommended?: boolean;
-}
-
-const SUPPORTED_CHAINS: Record<string, ChainInfo> = {
-  'Polygon': { name: 'Polygon', explorer: 'https://polygonscan.com', symbol: 'POL', status: 'live', recommended: true },
-  'ZetaChain': { name: 'ZetaChain', explorer: 'https://explorer.zetachain.com', symbol: 'ZETA', status: 'live' },
-  'Base': { name: 'Base', explorer: 'https://basescan.org', symbol: 'ETH', status: 'live' },
-  'Ethereum': { name: 'Ethereum', explorer: 'https://etherscan.io', symbol: 'ETH', status: 'live' },
-  'Arbitrum': { name: 'Arbitrum', explorer: 'https://arbiscan.io', symbol: 'ETH', status: 'live' },
-  'Optimism': { name: 'Optimism', explorer: 'https://optimistic.etherscan.io', symbol: 'ETH', status: 'live' },
-  'Avalanche': { name: 'Avalanche', explorer: 'https://snowtrace.io', symbol: 'AVAX', status: 'live' },
-  'BSC': { name: 'BNB Chain', explorer: 'https://bscscan.com', symbol: 'BNB', status: 'live' },
-  'Blast': { name: 'Blast', explorer: 'https://blastscan.io', symbol: 'ETH', status: 'live' },
-  'Zora': { name: 'Zora', explorer: 'https://explorer.zora.energy', symbol: 'ETH', status: 'live' },
-  'Solana': { name: 'Solana', explorer: 'https://explorer.solana.com', symbol: 'SOL', status: 'coming_soon' },
-  'Tezos': { name: 'Tezos', explorer: 'https://tzstats.com', symbol: 'XTZ', status: 'coming_soon' },
-};
-
-const supportedChains = Object.keys(SUPPORTED_CHAINS);
+// Supported blockchain chains
+const supportedChains = ['Polygon', 'Ethereum', 'Solana', 'Base', 'Tezos'];
 
 // Role categories and sub-roles
 const collaboratorCategories = {
@@ -255,29 +232,12 @@ function InnerForm(props: InnerFormProps) {
           onChange={(e) => setFieldValue('chain', e.target.value)}
           className="p-2 border border-gray-30 rounded w-full bg-gray-20 text-white text-sm"
         >
-          {supportedChains.map(chain => {
-            const info = SUPPORTED_CHAINS[chain];
-            const label = info.recommended ? ' (Recommended - Low Gas)' : info.status === 'coming_soon' ? ' (Coming Soon)' : '';
-            return (
-              <option key={chain} value={chain}>
-                {info.name} - {info.symbol}{label}
-              </option>
-            );
-          })}
+          {supportedChains.map(chain => (
+            <option key={chain} value={chain}>
+              {chain} {chain === 'Polygon' ? '(Recommended - Low Gas)' : chain === 'Solana' ? '(Coming Soon)' : ''}
+            </option>
+          ))}
         </select>
-        {values.chain && SUPPORTED_CHAINS[values.chain] && (
-          <div className="mt-2 text-xs text-gray-400 flex items-center gap-2">
-            <span>Explorer:</span>
-            <a
-              href={SUPPORTED_CHAINS[values.chain].explorer}
-              target="_blank"
-              rel="noreferrer"
-              className="text-cyan-400 hover:underline"
-            >
-              {SUPPORTED_CHAINS[values.chain].explorer.replace('https://', '')}
-            </a>
-          </div>
-        )}
         {errors.chain && <p className="text-red-500 text-xs mt-1">{errors.chain}</p>}
       </div>
       <div className="flex items-center gap-2 px-4">

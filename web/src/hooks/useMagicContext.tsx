@@ -113,30 +113,13 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const handleSetAccount = useCallback(async () => {
     try {
       if (web3) {
-        const [web3Account] = await web3.eth.getAccounts()
-        if (web3Account) {
-          console.log('💳 Got account from web3:', web3Account)
-          setAccount(web3Account)
-        } else if (me?.defaultWallet) {
-          // Fallback to user's stored wallet address if web3 session not ready
-          console.log('💳 Using fallback wallet from user profile:', me.defaultWallet)
-          setAccount(me.defaultWallet)
-        }
-      } else if (me?.defaultWallet) {
-        // No web3 yet but user has wallet - use it for display
-        console.log('💳 No web3, using wallet from user profile:', me.defaultWallet)
-        setAccount(me.defaultWallet)
+        const [account] = await web3.eth.getAccounts()
+        setAccount(account)
       }
     } catch (error) {
-      // On error, try fallback to user's stored wallet
-      if (me?.defaultWallet) {
-        console.log('💳 Error getting web3 account, using fallback:', me.defaultWallet)
-        setAccount(me.defaultWallet)
-      } else {
-        handleError(error as Error | { code: number })
-      }
+      handleError(error as Error | { code: number })
     }
-  }, [handleError, web3, me?.defaultWallet])
+  }, [handleError, web3])
 
   const handleSetBalance = useCallback(async () => {
     try {
@@ -165,10 +148,9 @@ export function MagicProvider({ children }: MagicProviderProps) {
     }
   }, [account, handleError, web3])
 
-  // Fetch account when web3 is ready OR when user data is available
+  // Fetch account when web3 is ready
   useEffect(() => {
-    if (!me) return
-    // Try to set account - will use web3 if available, fallback to me.defaultWallet
+    if (!me || !web3) return
     handleSetAccount()
   }, [me, web3, handleSetAccount])
 

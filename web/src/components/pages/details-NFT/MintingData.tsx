@@ -14,69 +14,16 @@ interface MintingDataProps {
   account?: string // New prop for WalletConnect account
 }
 
-// Comprehensive chain explorer mapping for all supported chains
-const CHAIN_EXPLORERS: Record<string, string> = {
-  // Layer 1
-  'Polygon': 'https://polygonscan.com/tx/',
-  'polygon': 'https://polygonscan.com/tx/',
-  'Ethereum': 'https://etherscan.io/tx/',
-  'ethereum': 'https://etherscan.io/tx/',
-  'Solana': 'https://explorer.solana.com/tx/',
-  'solana': 'https://explorer.solana.com/tx/',
-  'Avalanche': 'https://snowtrace.io/tx/',
-  'avalanche': 'https://snowtrace.io/tx/',
-  'Bitcoin': 'https://mempool.space/tx/',
-  'bitcoin': 'https://mempool.space/tx/',
-  // Layer 2
-  'Arbitrum': 'https://arbiscan.io/tx/',
-  'arbitrum': 'https://arbiscan.io/tx/',
-  'Optimism': 'https://optimistic.etherscan.io/tx/',
-  'optimism': 'https://optimistic.etherscan.io/tx/',
-  'Base': 'https://basescan.org/tx/',
-  'base': 'https://basescan.org/tx/',
-  'Blast': 'https://blastscan.io/tx/',
-  'blast': 'https://blastscan.io/tx/',
-  // Omnichain
-  'ZetaChain': 'https://explorer.zetachain.com/tx/',
-  'zetachain': 'https://explorer.zetachain.com/tx/',
-  // Specialized
-  'Zora': 'https://explorer.zora.energy/tx/',
-  'zora': 'https://explorer.zora.energy/tx/',
-  'Ronin': 'https://explorer.roninchain.com/tx/',
-  'ronin': 'https://explorer.roninchain.com/tx/',
-  // Other
-  'BSC': 'https://bscscan.com/tx/',
-  'bsc': 'https://bscscan.com/tx/',
-  'Tezos': 'https://tzstats.com/',
-  'tezos': 'https://tzstats.com/',
-  'Fantom': 'https://ftmscan.com/tx/',
-  'fantom': 'https://ftmscan.com/tx/',
-  'Cronos': 'https://cronoscan.com/tx/',
-  'cronos': 'https://cronoscan.com/tx/',
-  'Gnosis': 'https://gnosisscan.io/tx/',
-  'gnosis': 'https://gnosisscan.io/tx/',
-  'Celo': 'https://celoscan.io/tx/',
-  'celo': 'https://celoscan.io/tx/',
-  'Moonbeam': 'https://moonscan.io/tx/',
-  'moonbeam': 'https://moonscan.io/tx/',
-  'zkSync': 'https://explorer.zksync.io/tx/',
-  'zksync': 'https://explorer.zksync.io/tx/',
-  'Linea': 'https://lineascan.build/tx/',
-  'linea': 'https://lineascan.build/tx/',
-  'Scroll': 'https://scrollscan.com/tx/',
-  'scroll': 'https://scrollscan.com/tx/',
-  'Mantle': 'https://explorer.mantle.xyz/tx/',
-  'mantle': 'https://explorer.mantle.xyz/tx/',
-  'Manta': 'https://pacific-explorer.manta.network/tx/',
-  'manta': 'https://pacific-explorer.manta.network/tx/',
-  'Mode': 'https://explorer.mode.network/tx/',
-  'mode': 'https://explorer.mode.network/tx/',
-}
-
 export const MintingData = ({ ipfsCid, transactionHash, ownerProfile, collaborators, chain, account }: MintingDataProps) => {
-  const getChainExplorer = (chainName: string | undefined) => {
-    if (!chainName) return 'https://polygonscan.com/tx/';
-    return CHAIN_EXPLORERS[chainName] || CHAIN_EXPLORERS[chainName.toLowerCase()] || 'https://polygonscan.com/tx/';
+  const getChainExplorer = (chain: string | undefined) => {
+    switch (chain) {
+      case 'Polygon': return 'https://polygonscan.com/tx/';
+      case 'Ethereum': return 'https://etherscan.io/tx/';
+      case 'Solana': return 'https://explorer.solana.com/tx/';
+      case 'Base': return 'https://basescan.org/tx/';
+      case 'Tezos': return 'https://tzstats.com/';
+      default: return 'https://polygonscan.com/tx/';
+    }
   };
 
   return (

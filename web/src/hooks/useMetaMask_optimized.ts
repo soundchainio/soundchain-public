@@ -1,6 +1,6 @@
 import MetaMaskOnboarding from '@metamask/onboarding'
 import { network } from 'lib/blockchainNetworks'
-import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql'
+import { useUpdateMetaMaskAddressesMutation } from 'lib/graphql-hooks'
 import { useEffect, useRef, useState } from 'react'
 import Web3 from 'web3'
 import { useMe } from './useMe'

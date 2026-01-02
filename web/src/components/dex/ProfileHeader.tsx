@@ -32,7 +32,6 @@ interface ProfileHeaderProps {
     avatar?: string
     isVerified?: boolean
     coverPicture?: string
-    userHandle?: string // For generating share URLs
   }
   isOwnProfile?: boolean // Only show portfolio/sensitive data if viewing own profile
 }
@@ -182,7 +181,6 @@ function BlurAggregatorPanel() {
 }
 
 export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps) {
-  const [shareSuccess, setShareSuccess] = useState(false)
   const defaultUser = {
     name: "Xamã",
     username: "@xama",
@@ -194,7 +192,6 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
     avatar: profileAvatar,
     isVerified: true,
     coverPicture: undefined as string | undefined,
-    userHandle: 'xama',
   }
 
   const userData = user || defaultUser
@@ -202,35 +199,6 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
   const copyAddress = () => {
     navigator.clipboard.writeText(userData.walletAddress)
     alert('Address copied!')
-  }
-
-  const shareProfile = async () => {
-    const handle = userData.userHandle || userData.username?.replace('@', '')
-    const shareUrl = `${window.location.origin}/dex/users/${handle}`
-    const shareText = `Check out ${userData.name} on SoundChain!`
-
-    // Try native share first (mobile)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${userData.name} on SoundChain`,
-          text: shareText,
-          url: shareUrl,
-        })
-        return
-      } catch (err) {
-        // User cancelled or share failed, fall back to clipboard
-      }
-    }
-
-    // Fallback to clipboard
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      setShareSuccess(true)
-      setTimeout(() => setShareSuccess(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy:', err)
-    }
   }
 
   return (
@@ -256,19 +224,12 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
           <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* Profile image */}
             <div className="relative">
-              <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-600 to-cyan-600">
-                {userData.avatar ? (
-                  <img
-                    src={userData.avatar}
-                    alt="User Profile"
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.currentTarget.style.display = 'none' }}
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white">
-                    {userData.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </div>
-                )}
+              <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow">
+                <img
+                  src={userData.avatar}
+                  alt="User Profile"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-4 border-black/50 flex items-center justify-center shadow-lg">
                 <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
@@ -314,13 +275,8 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Message
                 </Button>
-                <Button
-                  variant="outline"
-                  className={`border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 transition-all ${shareSuccess ? 'bg-green-500/20 border-green-500/50 text-green-300' : ''}`}
-                  onClick={shareProfile}
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  {shareSuccess ? 'Copied!' : 'Share'}
+                <Button variant="outline" className="border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300">
+                  <Share2 className="w-4 h-4" />
                 </Button>
               </div>
 

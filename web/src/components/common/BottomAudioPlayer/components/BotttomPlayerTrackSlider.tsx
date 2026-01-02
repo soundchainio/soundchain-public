@@ -5,7 +5,6 @@ import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
 import { Rewind } from 'icons/RewindButton'
 import { Shuffle } from 'icons/Shuffle'
-import { Repeat } from 'icons/Repeat'
 import tw from 'tailwind-styled-components'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { MiniWaveform } from './MiniWaveform'
@@ -14,13 +13,12 @@ interface BotttomPlayerTrackSliderProps {
   song: Song
   hideSlider?: boolean
   hideShuffle?: boolean
-  hideLoop?: boolean
   playerClassNames?: string
   showWaveform?: boolean
 }
 
 export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) => {
-  const { song, hideSlider, hideShuffle, hideLoop, playerClassNames, showWaveform = true } = props
+  const { song, hideSlider, hideShuffle, playerClassNames, showWaveform = true } = props
   const {
     duration,
     progress,
@@ -33,9 +31,6 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
     playNext,
     isShuffleOn,
     toggleShuffle,
-    isLoopOn,
-    loopMode,
-    toggleLoop,
   } = useAudioPlayerContext()
 
   const onSliderChange = (value: number) => {
@@ -58,20 +53,6 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
             onClick={toggleShuffle}
           >
             <Shuffle width={18} stroke={isShuffleOn ? 'white' : '#808080'} className="hover:stroke-white" />
-          </button>
-        )}
-        {!hideLoop && (
-          <button
-            aria-label={loopMode === 'off' ? 'Loop off' : loopMode === 'all' ? 'Loop all' : 'Loop one'}
-            className="flex h-10 w-10 items-center justify-center"
-            onClick={toggleLoop}
-          >
-            <Repeat
-              width={18}
-              stroke={loopMode !== 'off' ? 'white' : '#808080'}
-              showOne={loopMode === 'one'}
-              className="hover:stroke-white"
-            />
           </button>
         )}
         <RewindButton aria-label="Previous track" onClick={playPrevious} disabled={!hasPrevious}>

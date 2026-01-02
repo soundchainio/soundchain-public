@@ -78,7 +78,6 @@ const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAu
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
 const CreateModal = dynamic(() => import('components/modals/CreateModal'), { ssr: false })
-const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr: false })
 const PostModal = dynamic(() => import('components/Post/PostModal').then(mod => ({ default: mod.PostModal })), { ssr: false })
 const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActionsModal').then(mod => ({ default: mod.AuthorActionsModal })), { ssr: false })
 const CommentModal = dynamic(() => import('components/Comment/CommentModal'), { ssr: false })
@@ -597,7 +596,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
       case 'marketplace': return 'marketplace'
       case 'feed': return 'feed'
       case 'wallet': return 'wallet'
-      case 'staking': return 'staking'
       case 'settings': return 'settings'
       case 'messages': return 'messages'
       case 'notifications': return 'notifications'
@@ -609,7 +607,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'staking' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -638,21 +636,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // Profile tab state (Feed | Music | Playlists)
   const [profileTab, setProfileTab] = useState<'feed' | 'music' | 'playlists'>('feed')
 
-  // Sync profile tab with URL query param (for ?tab=music links)
-  // Reset to default (feed) when profile changes, then apply URL param if present
-  useEffect(() => {
-    if (!router.isReady) return
-    // Reset to feed first when viewing a new profile
-    if (selectedView === 'profile') {
-      const tabParam = router.query.tab as string
-      if (tabParam && ['feed', 'music', 'playlists'].includes(tabParam)) {
-        setProfileTab(tabParam as 'feed' | 'music' | 'playlists')
-      } else {
-        setProfileTab('feed')
-      }
-    }
-  }, [router.isReady, router.query.tab, routeId, selectedView])
-
   // Announcements state (from /v1/feed API)
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [announcementsLoading, setAnnouncementsLoading] = useState(true)
@@ -674,7 +657,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   useEffect(() => {
     if (!router.isReady) return
     const newView = getInitialView()
-    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'marketplace', 'feed', 'dashboard', 'wallet', 'staking', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
+    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
       console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, routeId, isReady: router.isReady })
       setSelectedView(newView as any)
     }
@@ -729,15 +712,13 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   const { balance: maticBalance, ogunBalance, account: walletAccount } = useMagicContext()
 
   // Transaction history query for wallet activity
-  // Uses walletAccount from Magic context, or falls back to userWallet from GraphQL
   const { data: maticUsdData } = useMaticUsdQuery()
-  const txWallet = walletAccount || userData?.me?.defaultWallet || ''
   const { data: transactionData, loading: transactionsLoading } = usePolygonscanQuery({
     variables: {
-      wallet: txWallet,
+      wallet: walletAccount || '',
       page: { first: 10 },
     },
-    skip: !txWallet, // Only fetch when wallet is available
+    skip: !walletAccount, // Only fetch when wallet is connected
   })
 
   // Unified Wallet Context - synced across all pages (includes Web3Modal)
@@ -1283,11 +1264,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // User profile from GraphQL - REAL DATA
   const user = userData?.me?.profile
   const userWallet = userData?.me?.defaultWallet
-  // Effective wallet: prefer Magic wallet account, fallback to stored user wallet
-  const effectiveWallet = walletAccount || userWallet || ''
-  // Effective balances: prefer Magic context balances, fallback to unified wallet context
-  const effectiveOgunBalance = ogunBalance || activeOgunBalance || '0.00'
-  const effectiveMaticBalance = maticBalance || activeBalance || '0.00'
   const userTracks = tracksData?.groupedTracks?.nodes || []
   const ownedTracks = ownedTracksData?.groupedTracks?.nodes || [] // User-owned NFTs for wallet page
   const marketTracks = listingData?.listingItems?.nodes || []
@@ -1437,7 +1413,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 </span>
               </Link>
 
-              {/* Mobile Post+, Mint+, and My Music buttons - visible on small screens */}
+              {/* Mobile Post+ and Mint+ buttons - visible on small screens */}
               <div className="flex lg:hidden items-center space-x-1">
                 <Button
                   variant="ghost"
@@ -1457,30 +1433,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 >
                   <Music className="w-5 h-5 text-purple-400" />
                 </Button>
-                {me?.profile?.userHandle && (
-                  <Link href={`/dex/users/${me.profile.userHandle}?tab=music`}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="hover:bg-indigo-500/10 px-2"
-                      title="My Music"
-                    >
-                      <ImageIcon className="w-5 h-5 text-indigo-400" />
-                    </Button>
-                  </Link>
-                )}
-                {/* Staking Button - Mobile */}
-                <Link href="/dex/staking">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:bg-yellow-500/10 px-2 relative"
-                    title="OGUN Staking"
-                  >
-                    <Coins className="w-5 h-5 text-yellow-400" />
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-                  </Button>
-                </Link>
               </div>
 
               {/* Desktop navigation with full labels - visible on large screens */}
@@ -1527,20 +1479,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <span className="text-purple-400">Mint+</span>
                   </Button>
                 )}
-
-                {/* Staking Button - Desktop with glow effect */}
-                <Link href="/dex/staking">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hover:bg-yellow-500/10 relative group"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-md opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <Coins className="w-4 h-4 mr-2 text-yellow-400" />
-                    <span className="text-yellow-400">Stake</span>
-                    <span className="ml-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-                  </Button>
-                </Link>
               </div>
             </div>
 
@@ -1684,13 +1622,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                               <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('wallet')}}>
                                 <WalletIcon className="w-4 h-4 mr-3" />
                                 Wallet
-                              </Button>
-                            </Link>
-                            <Link href="/dex/staking">
-                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-purple-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('staking')}}>
-                                <Coins className="w-4 h-4 mr-3 text-purple-400" />
-                                Staking
-                                <Badge className="ml-auto bg-purple-500/20 text-purple-400 text-xs">OGUN</Badge>
                               </Button>
                             </Link>
                             <Link href="https://soundchain.gitbook.io/soundchain/" target="_blank" rel="noreferrer">
@@ -2629,12 +2560,12 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
-              {/* Main Feed - overflow-y-auto for mobile scroll */}
-              <div className="flex-1 max-w-[614px] overflow-y-auto pb-32" style={{ minHeight: '600px', WebkitOverflowScrolling: 'touch' }}>
-                {/* Announcements from /v1/feed API - filter out Spotify/Playlist announcements */}
-                {announcements.filter((a: any) => !a.title?.toLowerCase().includes('playlist') && !a.imageUrl?.toLowerCase().includes('spotify')).length > 0 && (
+              {/* Main Feed */}
+              <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+                {/* Announcements from /v1/feed API */}
+                {announcements.length > 0 && (
                   <div className="mb-4 space-y-4">
-                    {announcements.filter((a: any) => !a.title?.toLowerCase().includes('playlist') && !a.imageUrl?.toLowerCase().includes('spotify')).map((announcement: any) => (
+                    {announcements.map((announcement: any) => (
                       <Card key={announcement.id} className="retro-card overflow-hidden border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 via-purple-500/5 to-pink-500/10 hover:border-cyan-400 transition-all duration-300 cursor-pointer group" onClick={() => setSelectedAnnouncement(announcement)}>
                         {/* Hero Image - Full width, eye-catching */}
                         {announcement.imageUrl && (
@@ -3383,8 +3314,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                   </div>
                 </Card>
 
-                {/* Connected Wallets - use walletAccount OR userWallet from GraphQL */}
-                {(walletAccount || userWallet) ? (
+                {/* Connected Wallets */}
+                {walletAccount ? (
                   <div className="space-y-3 mb-6">
                     {/* Primary Wallet (Current Session) */}
                     <Card className="metadata-section p-4 border-cyan-500/50">
@@ -3398,7 +3329,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                               <p className="text-xs text-gray-400">SoundChain Wallet</p>
                               <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Active</Badge>
                             </div>
-                            <p className="font-mono text-cyan-400 text-sm">{effectiveWallet.slice(0, 10)}...{effectiveWallet.slice(-8)}</p>
+                            <p className="font-mono text-cyan-400 text-sm">{walletAccount.slice(0, 10)}...{walletAccount.slice(-8)}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -3406,12 +3337,12 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => { navigator.clipboard.writeText(effectiveWallet); }}
+                            onClick={() => { navigator.clipboard.writeText(walletAccount); }}
                             className="hover:bg-cyan-500/20"
                           >
                             <Copy className="w-4 h-4 text-cyan-400" />
                           </Button>
-                          <a href={`https://polygonscan.com/address/${effectiveWallet}`} target="_blank" rel="noreferrer">
+                          <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
                             <Button variant="ghost" size="sm" className="hover:bg-purple-500/20">
                               <ExternalLink className="w-4 h-4 text-purple-400" />
                             </Button>
@@ -3516,15 +3447,15 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 )}
 
                 {/* Balance Cards - Real data from Magic wallet */}
-                {(walletAccount || userWallet) && (
+                {walletAccount && (
                   <div className="mb-2 text-center">
                     <a
-                      href={`https://polygonscan.com/address/${effectiveWallet}`}
+                      href={`https://polygonscan.com/address/${walletAccount}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
                     >
-                      Verify on Polygonscan: {effectiveWallet.slice(0, 8)}...{effectiveWallet.slice(-6)} ↗
+                      Verify on Polygonscan: {walletAccount.slice(0, 8)}...{walletAccount.slice(-6)} ↗
                     </a>
                   </div>
                 )}
@@ -3532,7 +3463,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                   <Card className="metadata-section p-4 text-center hover:border-yellow-500/50 transition-all">
                     <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                     <p className="text-xs text-gray-400 mb-1">OGUN</p>
-                    <p className="text-xl font-bold text-yellow-400">{effectiveOgunBalance}</p>
+                    <p className="text-xl font-bold text-yellow-400">{ogunBalance || '0.00'}</p>
                     <p className="text-xs text-gray-500">≈ $0.00</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-purple-500/50 transition-all">
@@ -3540,7 +3471,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       <svg viewBox="0 0 38 33" fill="currentColor"><path d="M29.7 16.5l-11.7 6.7-11.7-6.7 11.7-16.5 11.7 16.5zM18 25.2l-11.7-6.7 11.7 16.5 11.7-16.5-11.7 6.7z"/></svg>
                     </div>
                     <p className="text-xs text-gray-400 mb-1">MATIC</p>
-                    <p className="text-xl font-bold text-purple-400">{effectiveMaticBalance}</p>
+                    <p className="text-xl font-bold text-purple-400">{maticBalance || '0.00'}</p>
                     <p className="text-xs text-gray-500">≈ $0.00</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-cyan-500/50 transition-all">
@@ -3580,9 +3511,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     variant="outline"
                     className="border-purple-500/50 hover:bg-purple-500/10 flex-col h-auto py-4"
                     onClick={() => {
-                      if (effectiveWallet) {
-                        navigator.clipboard.writeText(effectiveWallet)
-                        alert(`📥 Receive Crypto\n\nYour wallet address copied to clipboard:\n\n${effectiveWallet}\n\nSend MATIC or OGUN to this address on Polygon network.`)
+                      if (userWallet) {
+                        navigator.clipboard.writeText(userWallet)
+                        alert(`📥 Receive Crypto\n\nYour wallet address copied to clipboard:\n\n${userWallet}\n\nSend MATIC or OGUN to this address on Polygon network.`)
                       } else {
                         alert('Please connect your wallet first.')
                       }
@@ -3917,15 +3848,33 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <span className="ml-3 text-gray-400">Loading your NFTs...</span>
                   </div>
                 ) : ownedTracks.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                  <div className="space-y-1">
                     {ownedTracks.slice(0, 12).map((track: any, index: number) => (
-                      <TrackNFTCard
+                      <CoinbaseNFTCard
                         key={track.id}
-                        track={track}
+                        track={{
+                          id: track.id,
+                          title: track.title,
+                          artist: track.artist || track.profile?.displayName || 'Unknown Artist',
+                          artistProfileId: track.profile?.id,
+                          artworkUrl: track.artworkMedia?.url || track.coverMedia?.url,
+                          playbackCount: track.playbackCount,
+                          playbackCountFormatted: track.playbackCount?.toLocaleString(),
+                          nftData: {
+                            tokenId: track.tokenId,
+                            owner: track.owner,
+                          },
+                          listingItem: track.listingItem ? {
+                            price: track.listingItem.price,
+                            pricePerItem: track.listingItem.pricePerItem,
+                            pricePerItemToShow: track.listingItem.pricePerItemToShow,
+                            acceptsOGUN: track.listingItem.acceptsOGUN,
+                          } : undefined,
+                        }}
                         onPlay={() => handlePlayTrack(track, index, ownedTracks)}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
-                        listView={false}
+                        onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
                       />
                     ))}
                   </div>
@@ -4001,8 +3950,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <BarChart3 className="w-6 h-6 text-cyan-400" />
                     <h3 className="retro-title text-lg">Recent Activity</h3>
                   </div>
-                  {effectiveWallet && (
-                    <a href={`https://polygonscan.com/address/${effectiveWallet}`} target="_blank" rel="noreferrer">
+                  {walletAccount && (
+                    <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
                       <Button variant="ghost" size="sm" className="text-xs text-cyan-400 hover:bg-cyan-500/10">
                         View All <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
@@ -4025,7 +3974,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 ) : transactionData?.getTransactionHistory?.result?.length ? (
                   <div className="space-y-2 max-h-80 overflow-y-auto">
                     {transactionData.getTransactionHistory.result.slice(0, 10).map((tx: any) => {
-                      const isIncoming = tx.to?.toLowerCase() === effectiveWallet?.toLowerCase()
+                      const isIncoming = tx.to?.toLowerCase() === walletAccount?.toLowerCase()
                       const valueInMatic = tx.value ? (parseFloat(tx.value) / 1e18).toFixed(4) : '0'
                       const usdValue = maticUsdData?.maticUsd ? (parseFloat(valueInMatic) * parseFloat(maticUsdData.maticUsd)).toFixed(2) : '0.00'
                       const date = tx.timeStamp ? new Date(parseInt(tx.timeStamp) * 1000).toLocaleDateString() : ''
@@ -4073,13 +4022,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 )}
               </Card>
             </div>
-          )}
-
-          {/* Staking View */}
-          {selectedView === 'staking' && (
-            <Card className="retro-card">
-              <StakingPanel />
-            </Card>
           )}
 
           {/* Settings View */}
@@ -4965,7 +4907,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       avatar: viewingProfile.profilePicture || undefined,
                       isVerified: viewingProfile.verified || viewingProfile.teamMember || false,
                       coverPicture: viewingProfile.coverPicture || undefined,
-                      userHandle: viewingProfile.userHandle || undefined,
                     }}
                     isOwnProfile={me?.profile?.id === viewingProfile.id}
                   />

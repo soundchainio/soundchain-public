@@ -3,7 +3,7 @@ import { OAuthExtension } from '@magic-ext/oauth2';
 import { config } from 'config';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useMe } from 'hooks/useMe';
-import { MeQuery } from 'lib/graphql';
+import { MeQuery } from 'lib/graphql-hooks';
 import { useCallback } from 'react';
 import { Soundchain721 } from 'types/web3-v1-contracts/Soundchain721';
 import { SoundchainAuction } from 'types/web3-v1-contracts/SoundchainAuction';

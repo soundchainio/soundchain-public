@@ -20,7 +20,7 @@ export interface FormValues {
 }
 
 const postSchema: yup.Schema<FormValues> = yup.object().shape({
-  body: yup.string().required().max(500),
+  body: yup.string().required().max(160),
 })
 
 const defaultInitialValues = { body: '' }
@@ -66,7 +66,7 @@ export const CommentForm = ({ afterSubmit, initialValues, onCancel }: CommentFor
               </div>
             </div>
           </div>
-          <PostBodyField name="body" placeholder="What's happening?" maxLength={500} />
+          <PostBodyField name="body" placeholder="What's happening?" maxLength={160} />
         </Form>
       )}
     </Formik>

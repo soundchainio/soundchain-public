@@ -149,7 +149,6 @@ mutation AddPlaylistItem($input: AddPlaylistItemInput!) {
       position
     }
     success
-    error
   }
 }
 

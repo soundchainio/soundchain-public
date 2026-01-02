@@ -131,26 +131,13 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
     <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ isSubmitting, isValid, dirty, values, setFieldValue }: FormikProps<FormValues>) => {
         // Debounced link detection - safe inside render prop as it uses refs
-        // Skip link detection for emote markdown URLs (7tv, BTTV, FFZ CDN)
         if (linkDetectionRef.current) {
           clearTimeout(linkDetectionRef.current)
         }
         linkDetectionRef.current = setTimeout(async () => {
-          // Remove emote markdown before checking for links
-          // Pattern: ![emote:name](url) or [emote:name](url)
-          const textWithoutEmotes = values.body.replace(/!?\[!?emote:[^\]]+\]\([^)]+\)/g, '')
-
-          // Also ignore raw emote CDN URLs (not embeddable content)
-          const isOnlyEmoteCDN = /^https?:\/\/(cdn\.7tv\.app|cdn\.betterttv\.net|cdn\.frankerfacez\.com)/i.test(values.body.trim())
-
-          if (!isOnlyEmoteCDN && hasLink(textWithoutEmotes)) {
-            const normalizedLink = await getNormalizedLink(textWithoutEmotes)
-            // Double-check the extracted link isn't an emote CDN
-            if (normalizedLink && !/cdn\.(7tv\.app|betterttv\.net|frankerfacez\.com)/i.test(normalizedLink)) {
-              setLinkPreview(normalizedLink)
-            } else {
-              setLinkPreview(undefined)
-            }
+          if (hasLink(values.body)) {
+            const normalizedLink = await getNormalizedLink(values.body)
+            setLinkPreview(normalizedLink)
           } else {
             setLinkPreview(undefined)
           }
