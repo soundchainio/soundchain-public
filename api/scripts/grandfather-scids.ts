@@ -16,7 +16,9 @@ import { TrackModel } from '../src/models/Track';
 import { SCidGenerator, ChainCode } from '../src/utils/SCidGenerator';
 
 // Use production DocumentDB via SSH tunnel on port 27018
-const MONGO_URL = 'mongodb://soundchainadmin:C%3A8F4lx%5DmpF.C8Fmwd2ixdoIGUGM@localhost:27018/test?authSource=admin&authMechanism=SCRAM-SHA-1&tls=true&tlsAllowInvalidCertificates=true&retryWrites=false&directConnection=true';
+// Correct endpoint: soundchain-cluster.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com
+// Password from SESSION_HANDOFF_DEC17.md: r.*[XQ8Y8p*FV0ffeP!tQal8EVC8
+const MONGO_URL = 'mongodb://soundchainadmin:r.*%5BXQ8Y8p*FV0ffeP!tQal8EVC8@localhost:27018/test?authSource=admin&tls=true&tlsAllowInvalidCertificates=true&retryWrites=false&directConnection=true';
 
 interface GrandfatherResult {
   totalTracks: number;

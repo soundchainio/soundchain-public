@@ -606,6 +606,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
       case 'profile': return 'profile'
       case 'track': return 'track'
       case 'playlist': return 'playlist'
+      case 'staking': return 'staking'
       case 'marketplace': return 'marketplace'
       case 'feed': return 'feed'
       case 'wallet': return 'wallet'
@@ -620,7 +621,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'staking' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -670,7 +671,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   useEffect(() => {
     if (!router.isReady) return
     const newView = getInitialView()
-    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
+    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'staking', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
       console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, routeId, isReady: router.isReady })
       setSelectedView(newView as any)
     }
@@ -1874,6 +1875,16 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
               <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'playlist' ? 'text-pink-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'playlist' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Playlist
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedView('staking')}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${selectedView === 'staking' ? 'bg-yellow-500/10' : ''}`}
+            >
+              <Coins className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'staking' ? 'text-yellow-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'staking' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Stake
               </span>
             </Button>
           </div>
@@ -4407,6 +4418,24 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
             </div>
           )}
 
+          {/* Staking View - OGUN Staking Panel */}
+          {selectedView === 'staking' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20">
+                    <Coins className="w-8 h-8 text-yellow-400" />
+                  </div>
+                  <div>
+                    <h2 className="retro-title text-xl">OGUN Staking</h2>
+                    <p className="text-gray-400 text-sm">Stake OGUN to earn streaming rewards</p>
+                  </div>
+                </div>
+              </Card>
+              <StakingPanel />
+            </div>
+          )}
+
           {/* Feedback View - Google Forms iframe */}
           {selectedView === 'feedback' && (
             <div className="space-y-6">
@@ -4922,6 +4951,13 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       coverPicture: viewingProfile.coverPicture || undefined,
                     }}
                     isOwnProfile={me?.profile?.id === viewingProfile.id}
+                    currentUserWallet={magicWallet || ''}
+                    ownedNfts={ownedTracksData?.groupedTracks?.nodes?.map((t: any) => ({
+                      id: t.id,
+                      title: t.title || 'Untitled',
+                      artworkUrl: t.artworkUrl
+                    })) || []}
+                    onEditProfile={() => setSelectedView('settings')}
                   />
 
                   {/* Social Links */}
