@@ -81,6 +81,9 @@ export const AudioEngine = () => {
     setDurationState,
     setProgressState,
     setProgressStateFromSlider,
+    loopMode,
+    playlist,
+    jumpTo,
   } = useAudioPlayerContext()
 
   // Setup Media Session API for CarPlay/external device metadata
@@ -500,13 +503,38 @@ export const AudioEngine = () => {
         logStream(previousSongRef.current.trackId, playDuration, walletAddress || undefined)
           .catch(err => console.warn('[OGUN] Failed to log stream on track end:', err))
       }
-      previousSongRef.current = null // Reset after logging
+      // Only reset if not looping one - we want to continue tracking for repeat
+      if (loopMode !== 'one') {
+        previousSongRef.current = null
+      }
     }
 
-    if (hasNext) {
-      playNext()
+    // Handle loop modes
+    if (loopMode === 'one') {
+      // Loop single track - restart from beginning
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0
+        audioRef.current.play().catch(() => {})
+        // Reset tracking for the repeat
+        previousSongRef.current = { trackId: currentSong.trackId, playStartTime: Date.now() }
+      }
+    } else if (loopMode === 'all') {
+      // Loop all tracks - go to next or restart playlist
+      if (hasNext) {
+        playNext()
+      } else if (playlist.length > 0) {
+        // At end of playlist, restart from beginning
+        jumpTo(0)
+      } else {
+        setProgressState(0)
+      }
     } else {
-      setProgressState(0)
+      // No loop - play next or stop
+      if (hasNext) {
+        playNext()
+      } else {
+        setProgressState(0)
+      }
     }
   }
 

@@ -11,9 +11,12 @@ export type Song = {
   isFavorite?: boolean | null
 }
 
+type LoopMode = 'off' | 'all' | 'one'
+
 interface AudioPlayerContextData {
   isPlaying: boolean
   isShuffleOn: boolean
+  loopMode: LoopMode
   currentSong: Song
   duration: number
   progress: number
@@ -38,6 +41,7 @@ interface AudioPlayerContextData {
   playNext: () => void
   jumpTo: (index: number) => void
   toggleShuffle: () => void
+  toggleLoop: () => void
   setPlayerFavorite: (isFavorite: boolean) => void
   setIsPlaylistOpen: (isPlaylistOpen: boolean) => void
   isPlaylistOpen: boolean
@@ -60,6 +64,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   const [volume, setVolume] = useState(0.5) // goes from 0 to 1
   const [isPlaying, setIsPlaying] = useState(false)
   const [isShuffleOn, setIsShuffleOn] = useState(false)
+  const [loopMode, setLoopMode] = useState<LoopMode>('off')
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false)
   const [currentSong, setCurrentSong] = useState<Song>({} as Song)
   const [originalPlaylist, setOriginalPlaylist] = useState<Song[]>([])
@@ -353,6 +358,15 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     setIsShuffleOn(prev => !prev)
   }, [])
 
+  // Toggle loop mode: off -> all -> one -> off
+  const toggleLoop = useCallback(() => {
+    setLoopMode(prev => {
+      if (prev === 'off') return 'all'
+      if (prev === 'all') return 'one'
+      return 'off'
+    })
+  }, [])
+
   const shuffle = useCallback(() => {
     /* Copy the current state of the queue before shuffling */
     setOriginalPlaylist([...playlist])
@@ -408,6 +422,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       value={{
         isPlaying,
         isShuffleOn,
+        loopMode,
         currentSong,
         progress,
         progressFromSlider,
@@ -432,6 +447,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         playNext,
         jumpTo,
         toggleShuffle,
+        toggleLoop,
         setPlayerFavorite,
         setIsPlaylistOpen,
         isPlaylistOpen,

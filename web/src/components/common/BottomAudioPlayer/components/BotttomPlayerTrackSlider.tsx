@@ -3,6 +3,7 @@ import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { Forward } from 'icons/ForwardButton'
 import { Pause } from 'icons/Pause'
 import { Play } from 'icons/Play'
+import { Repeat } from 'icons/Repeat'
 import { Rewind } from 'icons/RewindButton'
 import { Shuffle } from 'icons/Shuffle'
 import tw from 'tailwind-styled-components'
@@ -31,6 +32,8 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
     playNext,
     isShuffleOn,
     toggleShuffle,
+    loopMode,
+    toggleLoop,
   } = useAudioPlayerContext()
 
   const onSliderChange = (value: number) => {
@@ -70,6 +73,20 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
         <ForwardButton aria-label="Next track" onClick={playNext} disabled={!hasNext}>
           <Forward className="hover:cursor-pointer hover:fill-white active:text-gray-80" height="100" width="100" />
         </ForwardButton>
+        {!hideShuffle && (
+          <button
+            aria-label={`Loop: ${loopMode}`}
+            className="flex h-10 w-10 items-center justify-center"
+            onClick={toggleLoop}
+            title={loopMode === 'off' ? 'Loop off' : loopMode === 'all' ? 'Loop all' : 'Loop one'}
+          >
+            <Repeat
+              width={18}
+              showOne={loopMode === 'one'}
+              className={loopMode !== 'off' ? 'text-white' : 'text-gray-500 hover:text-white'}
+            />
+          </button>
+        )}
       </PlaySectionContainer>
 
       {!hideSlider && (
