@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { apolloClient } from 'lib/apollo'
-import { UploadUrlDocument, UploadUrlQuery } from 'lib/graphql-hooks'
+import { UploadUrlDocument, UploadUrlQuery } from 'lib/graphql'
 import { gql } from '@apollo/client'
 import { useCallback, useState } from 'react'
 
