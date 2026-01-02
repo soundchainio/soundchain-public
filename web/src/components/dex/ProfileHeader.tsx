@@ -306,18 +306,14 @@ export function ProfileHeader({ user, isOwnProfile = false }: ProfileHeaderProps
 
               {/* Action buttons */}
               <div className="flex flex-wrap gap-3">
-                {!isOwnProfile && (
-                  <>
-                    <Button className="retro-button">
-                      <Users className="w-4 h-4 mr-2" />
-                      Follow
-                    </Button>
-                    <Button variant="outline" className="border-purple-500/50 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300">
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Message
-                    </Button>
-                  </>
-                )}
+                <Button className="retro-button">
+                  <Users className="w-4 h-4 mr-2" />
+                  Follow
+                </Button>
+                <Button variant="outline" className="border-purple-500/50 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Message
+                </Button>
                 <Button
                   variant="outline"
                   className={`border-cyan-500/50 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 transition-all ${shareSuccess ? 'bg-green-500/20 border-green-500/50 text-green-300' : ''}`}

@@ -51,18 +51,6 @@ const SCID_BY_TRACK_QUERY = gql`
     }
   }
 `
-
-// Profile streaming rewards query - for the compact aggregator below bio
-const PROFILE_STREAMING_REWARDS_QUERY = gql`
-  query ProfileStreamingRewards($profileId: String!) {
-    scidsByProfile(profileId: $profileId) {
-      id
-      scid
-      streamCount
-      ogunRewardsEarned
-    }
-  }
-`
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -820,9 +808,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     ssr: false,
     fetchPolicy: 'cache-first', // Speed: use cache, don't hit network unless stale
   })
-
-  // OGUN Streaming Rewards - temporarily disabled until scidsByProfile is deployed
-  const streamingStats = { totalStreams: 0, totalEarned: 0 }
 
   // GraphQL query for tracks by genre (Spotify-style horizontal scrolling)
   // Note: Simplified query - only request fields that exist in Track model
@@ -1829,30 +1814,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     {!userLoading && !user && (
                       <p className="text-red-400 text-xs mt-2">⚠️ User data failed to load. Check console for errors.</p>
                     )}
-
-                    {/* OGUN Streaming Rewards Aggregator - blur.io inspired compact design */}
-                    <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500/10 via-yellow-500/5 to-orange-500/10 border border-orange-500/20 backdrop-blur-sm max-w-md hover:border-orange-500/40 transition-all cursor-pointer group">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse shadow-lg shadow-orange-500/50" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-orange-400/80">OGUN</span>
-                      </div>
-                      <div className="h-3 w-px bg-orange-500/20" />
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Play className="w-3 h-3 text-cyan-400" />
-                          <span className="text-gray-400">Streams</span>
-                          <span className="font-mono text-white font-medium">{streamingStats.totalStreams.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Zap className="w-3 h-3 text-yellow-400" />
-                          <span className="text-gray-400">Earned</span>
-                          <span className="font-mono text-orange-400 font-bold">{streamingStats.totalEarned.toFixed(2)}</span>
-                        </div>
-                      </div>
-                      <div className="ml-auto flex items-center gap-1 text-[9px] text-gray-500 group-hover:text-orange-400 transition-colors">
-                        <span className="px-1.5 py-0.5 rounded bg-gray-800/50 text-gray-400 group-hover:bg-orange-500/20 group-hover:text-orange-400 transition-all">LIVE</span>
-                      </div>
-                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
@@ -1871,26 +1832,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <Button
-                      className="retro-button"
-                      onClick={() => router.push('/profile/edit')}
-                    >
-                      <SettingsIcon className="w-4 h-4 mr-2" />Edit Profile
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="border-cyan-500/50"
-                      onClick={() => {
-                        const profileUrl = `${window.location.origin}/dex/users/${user?.userHandle}`
-                        navigator.clipboard.writeText(profileUrl)
-                        // Show toast notification
-                        import('react-toastify').then(({ toast }) => {
-                          toast.success('Profile link copied!')
-                        })
-                      }}
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />Share
-                    </Button>
+                    <Button className="retro-button"><Users className="w-4 h-4 mr-2" />Follow</Button>
+                    <Button variant="outline" className="border-purple-500/50"><MessageCircle className="w-4 h-4 mr-2" />Message</Button>
+                    <Button variant="outline" className="border-cyan-500/50"><Share2 className="w-4 h-4" /></Button>
                   </div>
 
                   {userWallet && (
