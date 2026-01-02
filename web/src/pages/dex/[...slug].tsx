@@ -1829,6 +1829,16 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
+              onClick={() => setSelectedView('staking')}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${selectedView === 'staking' ? 'bg-yellow-500/10' : ''}`}
+            >
+              <Coins className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'staking' ? 'text-yellow-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'staking' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Stake
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
               onClick={() => setSelectedView('users')}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-indigo-500/10 ${selectedView === 'users' ? 'bg-indigo-500/10' : ''}`}
             >
@@ -1875,16 +1885,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
               <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'playlist' ? 'text-pink-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'playlist' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Playlist
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedView('staking')}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${selectedView === 'staking' ? 'bg-yellow-500/10' : ''}`}
-            >
-              <Coins className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'staking' ? 'text-yellow-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'staking' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Stake
               </span>
             </Button>
           </div>
