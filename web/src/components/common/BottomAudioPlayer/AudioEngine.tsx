@@ -1,9 +1,12 @@
 import { config } from 'config'
 import Hls from 'hls.js'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { useLogStream } from 'hooks/useLogStream'
 import { useMe } from 'hooks/useMe'
+import { useMagicContext } from 'hooks/useMagicContext'
 import mux from 'mux-embed'
 import { useEffect, useRef, useCallback } from 'react'
+import { toast } from 'react-toastify'
 
 /**
  * Audio Normalization Settings
@@ -36,6 +39,7 @@ const NORMALIZATION_CONFIG = {
  */
 export const AudioEngine = () => {
   const me = useMe()
+  const { account: walletAddress } = useMagicContext()
   const audioRef = useRef<HTMLAudioElement>(null)
   const hlsRef = useRef<Hls | null>(null)
   // Web Audio API refs for normalization (gain only, no compression)
@@ -43,6 +47,29 @@ export const AudioEngine = () => {
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null)
   const gainNodeRef = useRef<GainNode | null>(null)
   const isAudioGraphConnected = useRef(false)
+
+  // Stream logging for OGUN rewards
+  const { logStream, startTracking, stopTracking } = useLogStream({
+    minDuration: 30, // 30 seconds minimum to count as stream
+    onReward: (reward) => {
+      if (reward > 0) {
+        toast.success(`+${reward.toFixed(2)} OGUN earned!`, {
+          position: 'bottom-right',
+          autoClose: 3000,
+          hideProgressBar: true,
+        })
+      }
+    },
+    onDailyLimitReached: () => {
+      toast.info('Daily OGUN limit reached for this track', {
+        position: 'bottom-right',
+        autoClose: 3000,
+      })
+    },
+  })
+  // Track previous song to log streams when song changes
+  const previousSongRef = useRef<{ trackId: string; playStartTime: number } | null>(null)
+
   const {
     currentSong,
     isPlaying,
@@ -295,6 +322,29 @@ export const AudioEngine = () => {
     }
   }, [])
 
+  // OGUN Stream Logging - Track song changes and log streams
+  useEffect(() => {
+    if (!currentSong.trackId) return
+
+    // When song changes, log the previous song's stream if played for 30+ seconds
+    if (previousSongRef.current && previousSongRef.current.trackId !== currentSong.trackId) {
+      const prevTrackId = previousSongRef.current.trackId
+      const playDuration = Math.floor((Date.now() - previousSongRef.current.playStartTime) / 1000)
+
+      if (playDuration >= 30) {
+        logStream(prevTrackId, playDuration, walletAddress || undefined)
+          .catch(err => console.warn('[OGUN] Failed to log stream:', err))
+      }
+    }
+
+    // Start tracking new song
+    previousSongRef.current = { trackId: currentSong.trackId, playStartTime: Date.now() }
+    startTracking(currentSong.trackId)
+
+    // No cleanup needed - we manage state via previousSongRef
+    // and the hook's internal Map clears on unmount
+  }, [currentSong.trackId, logStream, startTracking, walletAddress])
+
   // Setup Media Session action handlers for CarPlay controls
   useEffect(() => {
     if ('mediaSession' in navigator) {
@@ -443,6 +493,16 @@ export const AudioEngine = () => {
   }
 
   function handleEndedSong() {
+    // Log stream when track ends naturally (user listened to the end)
+    if (previousSongRef.current) {
+      const playDuration = Math.floor((Date.now() - previousSongRef.current.playStartTime) / 1000)
+      if (playDuration >= 30) {
+        logStream(previousSongRef.current.trackId, playDuration, walletAddress || undefined)
+          .catch(err => console.warn('[OGUN] Failed to log stream on track end:', err))
+      }
+      previousSongRef.current = null // Reset after logging
+    }
+
     if (hasNext) {
       playNext()
     } else {

@@ -37,20 +37,6 @@ import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, SortTrackField, SortOrder } from 'lib/graphql'
-
-// SCid query - inline until codegen generates the hook
-const SCID_BY_TRACK_QUERY = gql`
-  query ScidByTrack($trackId: String!) {
-    scidByTrack(trackId: $trackId) {
-      scid
-      chainCode
-      status
-      streamCount
-      ogunRewardsEarned
-      createdAt
-    }
-  }
-`
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -91,6 +77,33 @@ const ProfilePictureForm = dynamic(() => import('components/forms/profile/Profil
 const CoverPictureForm = dynamic(() => import('components/forms/profile/CoverPictureForm').then(mod => ({ default: mod.CoverPictureForm })), { ssr: false })
 const SocialLinksForm = dynamic(() => import('components/forms/profile/SocialLinksForm').then(mod => ({ default: mod.SocialLinksForm })), { ssr: false })
 const SecurityForm = dynamic(() => import('components/forms/profile/SecurityForm').then(mod => ({ default: mod.SecurityForm })), { ssr: false })
+const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr: false })
+
+// SCid query - inline until codegen generates the hook
+const SCID_BY_TRACK_QUERY = gql`
+  query ScidByTrack($trackId: String!) {
+    scidByTrack(trackId: $trackId) {
+      scid
+      chainCode
+      status
+      streamCount
+      ogunRewardsEarned
+      createdAt
+    }
+  }
+`
+
+// Profile streaming rewards query - for the compact aggregator below bio
+const PROFILE_STREAMING_REWARDS_QUERY = gql`
+  query ProfileStreamingRewards($profileId: String!) {
+    scidsByProfile(profileId: $profileId) {
+      id
+      scid
+      streamCount
+      ogunRewardsEarned
+    }
+  }
+`
 
 // Real NFT data comes from the database via listingItems query
 // NFT listings with prices will be shown in the NFT tab
