@@ -97,12 +97,11 @@ async function grandfatherExistingTracks(): Promise<GrandfatherResult> {
         // Generate the SCid string
         const scid = SCidGenerator.generate({
           chainCode,
-          artistHash,
-          year,
-          sequence,
+          artistIdentifier: profileId,
+          sequenceNumber: sequence,
         });
 
-        // Create SCid record
+        // Create SCid record (cast to any to bypass mongoose auto-fields)
         await SCidModel.create({
           scid,
           trackId,
@@ -111,11 +110,14 @@ async function grandfatherExistingTracks(): Promise<GrandfatherResult> {
           artistHash,
           year,
           sequence,
-          status: SCidStatus.ACTIVE,
+          status: SCidStatus.PENDING,
           walletAddress: track.nftData?.minter || track.nftData?.owner || undefined,
           streamCount: 0,
           ogunRewardsEarned: 0,
-        });
+          dailyOgunEarned: 0,
+          ogunRewardsClaimed: 0,
+          transferHistory: [],
+        } as any);
 
         registered++;
 
