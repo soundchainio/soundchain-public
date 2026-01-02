@@ -821,26 +821,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     fetchPolicy: 'cache-first', // Speed: use cache, don't hit network unless stale
   })
 
-  // OGUN Streaming Rewards Query - fetch SCids and earnings for current user
-  const { data: streamingRewardsData } = useQuery(PROFILE_STREAMING_REWARDS_QUERY, {
-    variables: { profileId: userData?.me?.profile?.id || '' },
-    skip: !userData?.me?.profile?.id,
-    fetchPolicy: 'cache-and-network',
-  })
-
-  // Calculate total streams and earnings from SCids
-  const streamingStats = useMemo(() => {
-    if (!streamingRewardsData?.scidsByProfile) {
-      return { totalStreams: 0, totalEarned: 0 }
-    }
-    return streamingRewardsData.scidsByProfile.reduce(
-      (acc: { totalStreams: number; totalEarned: number }, scid: { streamCount?: number; ogunRewardsEarned?: number }) => ({
-        totalStreams: acc.totalStreams + (scid.streamCount || 0),
-        totalEarned: acc.totalEarned + (scid.ogunRewardsEarned || 0),
-      }),
-      { totalStreams: 0, totalEarned: 0 }
-    )
-  }, [streamingRewardsData])
+  // OGUN Streaming Rewards - temporarily disabled until scidsByProfile is deployed
+  const streamingStats = { totalStreams: 0, totalEarned: 0 }
 
   // GraphQL query for tracks by genre (Spotify-style horizontal scrolling)
   // Note: Simplified query - only request fields that exist in Track model
