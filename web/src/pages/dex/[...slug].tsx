@@ -1137,16 +1137,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network',
   })
 
-  // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
-  const isViewingOwnProfile = selectedView === 'profile' && viewingProfile?.id === me?.profile?.id
-  const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
-  const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
-    variables: {},
-    skip: shouldSkipPlaylists,
-    fetchPolicy: 'network-only', // Always fetch fresh, don't use cache
-    errorPolicy: 'all', // Return partial data even if there are errors
-  })
-
   // Follow/Unfollow mutations
   const [followProfile, { loading: followLoading }] = useFollowProfileMutation()
   const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation()
@@ -1181,9 +1171,21 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   })
 
   // Merge profile data from either query source
+  // IMPORTANT: This MUST be defined BEFORE isViewingOwnProfile which depends on it
   const viewingProfile = profileDetailData?.profile || profileByHandleData?.profileByHandle
   const viewingProfileLoading = profileDetailLoading || profileByHandleLoading
   const viewingProfileError = profileDetailError || profileByHandleError
+
+  // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
+  // NOTE: isViewingOwnProfile uses viewingProfile which is now defined above
+  const isViewingOwnProfile = selectedView === 'profile' && viewingProfile?.id === me?.profile?.id
+  const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
+  const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
+    variables: {},
+    skip: shouldSkipPlaylists,
+    fetchPolicy: 'network-only', // Always fetch fresh, don't use cache
+    errorPolicy: 'all', // Return partial data even if there are errors
+  })
 
   // Handle follow toggle
   const handleFollowToggle = async (profileId: string, isFollowed: boolean, handle: string) => {

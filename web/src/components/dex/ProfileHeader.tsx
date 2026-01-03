@@ -466,13 +466,18 @@ export function ProfileHeader({
   const userData = user || defaultUser
 
   // Format wallet address for display (full address, truncated in UI)
+  // Validates that it's a proper Ethereum address (0x + 40 hex chars)
   const formatWalletAddress = (address: string) => {
     if (!address || address === '0x...' || address.length < 10) return 'Not connected'
+    // Validate it's a proper Ethereum address format
+    const isValidEthAddress = /^0x[a-fA-F0-9]{40}$/.test(address)
+    if (!isValidEthAddress) return 'Not connected'
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
   const copyAddress = () => {
-    if (userData.walletAddress && userData.walletAddress !== '0x...') {
+    const isValidEthAddress = /^0x[a-fA-F0-9]{40}$/.test(userData.walletAddress || '')
+    if (userData.walletAddress && isValidEthAddress) {
       navigator.clipboard.writeText(userData.walletAddress)
       alert('Address copied!')
     }
