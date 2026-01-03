@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -96,6 +96,7 @@ export default function LoginPage() {
   const { magic } = useMagicContext();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
+  const oauthProcessingRef = useRef(false); // Prevent OAuth callback from running multiple times
 
   useEffect(() => {
     setIsClient(true);
@@ -255,18 +256,31 @@ export default function LoginPage() {
   // Legacy-style OAuth callback handler (matching working develop/staging branches)
   useEffect(() => {
     async function handleOAuthCallback() {
+      // Prevent re-entrancy - only process once
+      if (oauthProcessingRef.current) {
+        console.log('[OAuth] Already processing, skipping duplicate call');
+        return;
+      }
+
       if (magic && router.query.magic_credential) {
+        // Mark as processing immediately to prevent race conditions
+        oauthProcessingRef.current = true;
+
         console.log('[OAuth] Detected magic_credential, processing callback...');
         console.log('[OAuth] Full URL:', window.location.href);
         setLoggingIn(true);
         setError(null);
+
+        // Clear the URL parameters immediately to prevent re-triggering
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
 
         try {
           console.log('[OAuth] Calling getRedirectResult()...');
 
           // Add 30s timeout to prevent infinite hanging
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OAuth timeout - getRedirectResult took too long')), 30000)
+            setTimeout(() => reject(new Error('OAuth timeout - getRedirectResult() took too long. Please try again.')), 30000)
           );
 
           const result = await Promise.race([
@@ -282,6 +296,8 @@ export default function LoginPage() {
 
             if (loginResult.data?.login.jwt) {
               await setJwt(loginResult.data.login.jwt);
+              // Store the token for session persistence
+              localStorage.setItem('didToken', result.magic.idToken);
               const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
               console.log('[OAuth] Success! Redirecting to:', redirectUrl);
               router.push(redirectUrl);
@@ -295,6 +311,7 @@ export default function LoginPage() {
           console.error('[OAuth] Callback error:', err);
           setError(err.message || 'Google login failed. Please try again.');
           setLoggingIn(false);
+          oauthProcessingRef.current = false; // Reset so user can retry
         }
       }
     }
