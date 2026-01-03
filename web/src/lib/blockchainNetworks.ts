@@ -25,7 +25,18 @@ export const testnetNetwork: BlockchainNetwork = {
   blockExplorer: 'https://www.oklink.com/amoy',
 }
 
-export const network: BlockchainNetwork =
-  process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' ? testnetNetwork : mainNetwork
+// Use mainnet by default for production
+// NEXT_PUBLIC_VERCEL_ENV is not automatically set by Vercel, so we check multiple indicators
+const isProduction =
+  process.env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+  process.env.NODE_ENV === 'production' ||
+  (typeof window !== 'undefined' && (
+    window.location.hostname === 'soundchain.fm' ||
+    window.location.hostname === 'www.soundchain.fm' ||
+    window.location.hostname === 'soundchain.io' ||
+    window.location.hostname === 'www.soundchain.io'
+  ))
+
+export const network: BlockchainNetwork = isProduction ? mainNetwork : testnetNetwork
 
 export const isMainNetwork = network.id === mainNetwork.id

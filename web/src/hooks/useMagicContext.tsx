@@ -134,16 +134,28 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetOgunBalance = useCallback(async () => {
     try {
-      if (!config.ogunTokenAddress) throw Error('No token contract address found when setting Ogun balance')
+      const ogunAddress = config.ogunTokenAddress
+      console.log('💎 OGUN Token Address from config:', ogunAddress)
+
+      if (!ogunAddress) {
+        console.error('❌ No OGUN token address found in config!')
+        throw Error('No token contract address found when setting Ogun balance')
+      }
+
       if (web3 && account) {
-        const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress)
+        console.log('💎 Fetching OGUN balance for account:', account)
+        const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
         const tokenAmount = await ogunContract.methods.balanceOf(account).call()
+        console.log('💎 Raw OGUN balance:', tokenAmount)
+
         // Type guard to ensure tokenAmount is a valid string or number
         const validTokenAmount = typeof tokenAmount === 'string' || typeof tokenAmount === 'number' ? tokenAmount : '0'
         const tokenAmountInEther = Number(web3.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
+        console.log('💎 OGUN balance in ether:', tokenAmountInEther)
         setOgunBalance(tokenAmountInEther)
       }
     } catch (error) {
+      console.error('❌ Error fetching OGUN balance:', error)
       handleError(error as Error | { code: number })
     }
   }, [account, handleError, web3])

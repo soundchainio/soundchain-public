@@ -1,8 +1,7 @@
-'use client'
-
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import {
   Menu,
   DollarSign,
@@ -15,8 +14,17 @@ import {
   Radio,
   Gift,
   Monitor,
-  ExternalLink
+  ExternalLink,
+  Home,
+  Search,
+  Library,
+  ShoppingBag,
+  BarChart3
 } from 'lucide-react'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { useMe } from 'hooks/useMe'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
+import { Logo } from 'icons/Logo'
 
 // Stat Card Component
 const StatCard = ({
@@ -194,73 +202,118 @@ const AirdropRow = ({
 
 export default function BackendDashboard() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const router = useRouter()
+  const me = useMe()
 
-  // Mock data
+  // Real wallet data
+  const { account: magicAccount, balance: maticBalance, ogunBalance, refetchBalance, isRefetchingBalance } = useMagicContext()
+  const { activeAddress, activeBalance, activeOgunBalance, isConnected, chainName } = useUnifiedWallet()
+
+  // Use Magic wallet data or unified wallet data
+  const displayAccount = magicAccount || activeAddress || ''
+  const displayMaticBalance = maticBalance || activeBalance || '0.00'
+  const displayOgunBalance = ogunBalance || activeOgunBalance || '0.00'
+
+  // Mock data for other sections
   const mockNfts = Array(16).fill('/default-pictures/album-artwork.png')
+
+  // Truncate address helper
+  const truncateAddress = (addr: string) => addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ''
 
   return (
     <>
       <Head>
-        <title>Web3 Backend Dashboard | SoundChain</title>
+        <title>Backend Dashboard | SoundChain</title>
       </Head>
 
       <div className="min-h-screen bg-[#030d1b] text-white">
-        {/* Header */}
-        <header className="border-b border-cyan-900/30 px-6 py-4">
+        {/* Header with Navigation */}
+        <header className="border-b border-cyan-900/30 px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 hover:bg-cyan-900/20 rounded"
-              >
-                <Menu className="w-5 h-5 text-cyan-400" />
-              </button>
-              <div>
-                <h1 className="text-xl font-bold text-cyan-400 tracking-wider">
-                  SOUNDCHAIN WEB3 BACKEND
-                </h1>
-                <div className="flex gap-2 mt-1">
-                  <span className="text-xs px-2 py-0.5 bg-cyan-900/30 text-cyan-400 rounded">
-                    FULL DECENTRALIZATION
-                  </span>
-                  <span className="text-xs px-2 py-0.5 bg-cyan-900/30 text-cyan-400 rounded">
-                    TRANSPARENCY
-                  </span>
-                </div>
-              </div>
+            <div className="flex items-center gap-6">
+              <Link href="/dex" className="flex items-center gap-2">
+                <Logo className="h-8 w-8" />
+                <span className="hidden md:block text-white font-bold">SoundChain</span>
+              </Link>
+
+              {/* Desktop Navigation */}
+              <nav className="hidden md:flex items-center gap-4">
+                <Link href="/dex" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-sm">
+                  <Home className="w-4 h-4" />
+                  <span>Home</span>
+                </Link>
+                <Link href="/explore" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-sm">
+                  <Search className="w-4 h-4" />
+                  <span>Explore</span>
+                </Link>
+                <Link href="/library" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-sm">
+                  <Library className="w-4 h-4" />
+                  <span>Library</span>
+                </Link>
+                <Link href="/marketplace" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-sm">
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>Market</span>
+                </Link>
+                <Link href="/backend" className="flex items-center gap-1.5 px-3 py-1.5 text-cyan-400 border-b-2 border-cyan-400 transition-colors text-sm">
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Backend</span>
+                </Link>
+              </nav>
             </div>
-            <div className="flex items-center gap-4">
+
+            <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs text-green-400 font-mono">REAL-TIME</span>
+                <span className="text-xs text-green-400 font-mono hidden sm:block">LIVE</span>
               </div>
-              <Link
-                href="/dex"
-                className="px-4 py-2 bg-cyan-900/30 border border-cyan-400 text-cyan-400 rounded hover:bg-cyan-900/50 transition-colors text-sm"
-              >
-                FRONTEND
-              </Link>
+              {displayAccount && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800 border border-cyan-900/50 rounded-lg">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span className="text-xs text-cyan-400 font-mono">{truncateAddress(displayAccount)}</span>
+                </div>
+              )}
             </div>
           </div>
         </header>
 
-        {/* Sub-header */}
-        <div className="px-6 py-3 border-b border-cyan-900/30">
-          <h2 className="text-lg font-bold tracking-wider mb-1">WEB3 BACKEND DASHBOARD</h2>
-          <div className="text-xs text-cyan-400 font-mono">
-            SYSTEM_STATUS: <span className="text-green-400">ONLINE</span> | DATA_AGGREGATION: <span className="text-green-400">ACTIVE</span>
+        {/* Page Title */}
+        <div className="px-4 md:px-6 py-4 border-b border-cyan-900/30 bg-[#061220]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-cyan-400 tracking-wider">
+                WEB3 BACKEND DASHBOARD
+              </h1>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="text-xs px-2 py-0.5 bg-cyan-900/30 text-cyan-400 rounded">
+                  DECENTRALIZED
+                </span>
+                <span className="text-xs px-2 py-0.5 bg-cyan-900/30 text-cyan-400 rounded">
+                  TRANSPARENT
+                </span>
+                <span className="text-xs px-2 py-0.5 bg-green-900/30 text-green-400 rounded">
+                  ONLINE
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => refetchBalance()}
+              disabled={isRefetchingBalance}
+              className="px-4 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-400 rounded-lg hover:bg-cyan-900/50 transition-colors text-sm disabled:opacity-50"
+            >
+              {isRefetchingBalance ? 'Refreshing...' : 'Refresh Data'}
+            </button>
           </div>
         </div>
 
         {/* Stats Row */}
-        <div className="px-6 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <StatCard icon={DollarSign} value="47.2K" label="Total Value" change="+12.5%" prefix="$" />
-            <StatCard icon={Wallet} value="5" label="Active Wallets" change="+10" />
-            <StatCard icon={ImageIcon} value="281" label="NFTs Owned" />
-            <StatCard icon={Play} value="89.4K" label="Monthly Streams" change="+23%" />
-            <StatCard icon={Users} value="12" label="Collaborations" change="+3" />
-            <StatCard icon={TrendingUp} value="23.7K" label="Total Earnings" change="+48.2%" prefix="$" />
+        <div className="px-4 md:px-6 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+            <StatCard icon={DollarSign} value={displayOgunBalance} label="OGUN Balance" />
+            <StatCard icon={Wallet} value={displayMaticBalance} label="MATIC Balance" />
+            <StatCard icon={ImageIcon} value="0" label="NFTs Owned" />
+            <StatCard icon={Play} value="0" label="Monthly Streams" />
+            <StatCard icon={Users} value="0" label="Collaborations" />
+            <StatCard icon={TrendingUp} value="0" label="Total Earnings" prefix="$" />
           </div>
         </div>
 
@@ -276,32 +329,36 @@ export default function BackendDashboard() {
                   CONNECTED WALLETS
                 </h3>
 
-                <WalletCard
-                  address="0x7e24...8f3e"
-                  chain="Ethereum"
-                  balance="2.34"
-                  currency="ETH"
-                  nftCount={125}
-                  nfts={mockNfts}
-                />
+                {displayAccount ? (
+                  <WalletCard
+                    address={truncateAddress(displayAccount)}
+                    chain="Polygon"
+                    balance={displayMaticBalance}
+                    currency="MATIC"
+                    nftCount={0}
+                    nfts={mockNfts}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Wallet className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No wallet connected</p>
+                    <p className="text-xs mt-1">Login to view your wallet</p>
+                  </div>
+                )}
 
-                <WalletCard
-                  address="0x5e9c...2c18"
-                  chain="Polygon"
-                  balance="1847.92"
-                  currency="MATIC"
-                  nftCount={89}
-                  nfts={mockNfts}
-                />
-
-                <WalletCard
-                  address="0xpd3...7VkL"
-                  chain="Solana"
-                  balance="45.8"
-                  currency="SOL"
-                  nftCount={67}
-                  nfts={mockNfts}
-                />
+                {/* OGUN Token Balance */}
+                {displayAccount && (
+                  <div className="bg-[#0a1628] border border-yellow-900/30 rounded-lg p-4 mt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-yellow-400 font-bold">OGUN Token</span>
+                      <span className="text-xs px-2 py-0.5 bg-yellow-900/30 text-yellow-400 rounded">ERC-20</span>
+                    </div>
+                    <div className="text-2xl font-bold text-white">{displayOgunBalance}</div>
+                    <div className="text-xs text-gray-500 font-mono mt-1">
+                      Contract: 0x45f1...a15c
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Collaborator Network */}
@@ -487,7 +544,44 @@ export default function BackendDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#030d1b] border-t border-cyan-900/30 px-4 py-2 z-50">
+          <div className="flex items-center justify-around">
+            <Link href="/dex" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+              <Home className="w-5 h-5" />
+              <span className="text-[10px]">Home</span>
+            </Link>
+            <Link href="/explore" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+              <Search className="w-5 h-5" />
+              <span className="text-[10px]">Explore</span>
+            </Link>
+            <Link href="/library" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+              <Library className="w-5 h-5" />
+              <span className="text-[10px]">Library</span>
+            </Link>
+            <Link href="/marketplace" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white">
+              <ShoppingBag className="w-5 h-5" />
+              <span className="text-[10px]">Market</span>
+            </Link>
+            <Link href="/backend" className="flex flex-col items-center gap-1 text-cyan-400">
+              <BarChart3 className="w-5 h-5" />
+              <span className="text-[10px]">Backend</span>
+            </Link>
+          </div>
+        </nav>
+
+        {/* Bottom spacing for mobile nav */}
+        <div className="md:hidden h-16" />
       </div>
     </>
   )
+}
+
+// Custom layout to bypass the standard Layout wrapper
+import { ReactElement } from 'react'
+import { ApolloProvider } from 'lib/apollo'
+
+BackendDashboard.getLayout = function getLayout(page: ReactElement) {
+  return page
 }
