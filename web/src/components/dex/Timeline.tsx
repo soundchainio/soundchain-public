@@ -239,8 +239,8 @@ export function Timeline() {
     {
       id: 0,
       author: "SoundChain.io",
-      content: "Check out our curated collection of Music NFTs from our amazing artists on the SoundChain platform. This is what the future of music sounds like! #SoundChain #MusicNFTs #Web3Music",
-      image: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&h=400&fit=crop",
+      content: "🎵 OFFICIAL SOUNDCHAIN MUSIC NFTs MIXTAPE RELEASE! 🚀 Check out our curated collection of Music NFTs from our amazing artists on the SoundChain platform. This is what the future of music sounds like! 🔥✨ #SoundChain #MusicNFTs #Web3Music",
+      youtubeUrl: "https://youtu.be/example",
       premium: false,
       avatar: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=100&h=100&fit=crop&crop=face",
       verified: true,
@@ -251,7 +251,7 @@ export function Timeline() {
     },
     {
       id: 1,
-      author: "Xama",
+      author: "Xamã",
       content: "Good morning SoundChain Users!! New UI/UX updates are on the horizon!! OGUN Gamification is in the works and coming soon!!",
       image: postImage,
       likes: 4,
@@ -262,8 +262,8 @@ export function Timeline() {
     {
       id: 2,
       author: "MusicProducer.eth",
-      content: "Just dropped an exclusive behind-the-scenes look at my latest studio session! This is premium content - unlock to see how the magic happens.",
-      image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&h=400&fit=crop",
+      content: "🔥 Just dropped an exclusive behind-the-scenes video of my latest studio session! This is premium content - unlock to see how the magic happens ✨🎵",
+      youtubeUrl: "https://youtu.be/example",
       premium: true,
       avatar: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop&crop=face",
       verified: true,
@@ -275,7 +275,7 @@ export function Timeline() {
     {
       id: 3,
       author: "Web3Artist",
-      content: "The future of music is here with Web3 technology. Excited to be part of this revolutionary platform that puts artists first!",
+      content: "The future of music is here with Web3 technology. Excited to be part of this revolutionary platform that puts artists first! 🚀",
       image: postImage,
       likes: 23,
       comments: 15,
@@ -285,9 +285,9 @@ export function Timeline() {
   ]
 
   const mockPlaylists: Playlist[] = [
-    { title: "Banging Beats", artist: "Dylan Yem", plays: 128, likes: 24 },
-    { title: "Chill Vibes", artist: "Dylan Yem", plays: 256, likes: 47 },
-    { title: "Web3 Anthems", artist: "Various Artists", plays: 512, likes: 89 }
+    { title: "Banging Beats", artist: "Dylan Yem", plays: 0, likes: 0 },
+    { title: "Chill Vibes", artist: "Dylan Yem", plays: 15, likes: 3 },
+    { title: "Web3 Anthems", artist: "Various Artists", plays: 42, likes: 18 }
   ]
 
   const genres = [

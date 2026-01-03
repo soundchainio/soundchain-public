@@ -143,7 +143,11 @@ const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
         try {
           const accounts = await walletProvider.enable();
           const account = accounts[0];
-          const contractAddress = getContractAddress ? getContractAddress(tokenSymbol || 'MATIC', chainId) : '0x0000000000000000000000000000000000000000';
+          if (!getContractAddress) {
+            console.error('TrackGrid: getContractAddress prop is required for listing');
+            return;
+          }
+          const contractAddress = getContractAddress(tokenSymbol || 'MATIC', chainId);
           const client = createPublicClient({
             chain: chainId === 137 ? polygon : zetachain,
             transport: http(),

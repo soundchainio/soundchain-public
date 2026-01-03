@@ -228,8 +228,14 @@ export default function BackendDashboard() {
   const totalTracks = tracksData?.tracks?.totalCount || 0
   const nftsMinted = ownedTracksData?.groupedTracks?.nodes?.length || 0
 
-  // Mock data for sections without real data yet
-  const mockNfts = Array(16).fill('/default-pictures/album-artwork.png')
+  // Get real NFT artwork from owned tracks, fallback to default if none
+  const ownedNftArtwork = ownedTracksData?.groupedTracks?.nodes?.map(
+    (track: { artworkUrl?: string }) => track.artworkUrl || '/default-pictures/album-artwork.png'
+  ) || []
+  // Pad with default artwork if less than 16 NFTs
+  const nftArtworkDisplay = ownedNftArtwork.length > 0
+    ? [...ownedNftArtwork, ...Array(Math.max(0, 16 - ownedNftArtwork.length)).fill('/default-pictures/album-artwork.png')].slice(0, 16)
+    : Array(16).fill('/default-pictures/album-artwork.png')
 
   // Truncate address helper
   const truncateAddress = (addr: string) => addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : ''
@@ -351,7 +357,7 @@ export default function BackendDashboard() {
                     balance={displayMaticBalance}
                     currency="MATIC"
                     nftCount={nftsMinted}
-                    nfts={mockNfts}
+                    nfts={nftArtworkDisplay}
                   />
                 ) : (
                   <div className="text-center py-8 text-gray-500">

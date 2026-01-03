@@ -72,7 +72,7 @@ export const TransferOgunForm = ({ handleSubmit }: Props) => {
                 type="text"
                 label="wallet address"
                 name="recipient"
-                placeholder="0xDbaF8fB344D9E57fff48659A4Eb718c480A1Fd62"
+                placeholder="0x..."
               />
             </div>
             <div className="space-y-2">
