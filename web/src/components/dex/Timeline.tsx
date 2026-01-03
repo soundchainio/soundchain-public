@@ -17,6 +17,7 @@ import {
   Headphones,
   Pause
 } from 'lucide-react'
+import { useGetUserPlaylistsQuery } from 'lib/graphql'
 
 const userAvatar = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
 const postImage = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop"
@@ -235,6 +236,25 @@ function PlaylistCard({ playlist }: { playlist: Playlist }) {
 }
 
 export function Timeline() {
+  // Fetch real playlists from API
+  const { data: playlistsData } = useGetUserPlaylistsQuery({
+    variables: { page: { first: 5 } },
+    fetchPolicy: 'cache-first'
+  })
+
+  // Transform API data to component format
+  const userPlaylists: Playlist[] = playlistsData?.getUserPlaylists?.nodes?.map(playlist => ({
+    title: playlist.title || 'Untitled Playlist',
+    artist: 'You', // User's own playlists
+    plays: playlist.tracks?.nodes?.length || 0,
+    likes: playlist.favoriteCount || 0
+  })) || []
+
+  // Show default example playlists if user has none
+  const displayPlaylists = userPlaylists.length > 0 ? userPlaylists : [
+    { title: "Create your first playlist", artist: "Get started", plays: 0, likes: 0 }
+  ]
+
   const mockPosts: Post[] = [
     {
       id: 0,
@@ -284,12 +304,6 @@ export function Timeline() {
     }
   ]
 
-  const mockPlaylists: Playlist[] = [
-    { title: "Banging Beats", artist: "Dylan Yem", plays: 0, likes: 0 },
-    { title: "Chill Vibes", artist: "Dylan Yem", plays: 15, likes: 3 },
-    { title: "Web3 Anthems", artist: "Various Artists", plays: 42, likes: 18 }
-  ]
-
   const genres = [
     "Acoustic", "Alternative", "Blues", "Americana", "Cannabis",
     "Ambient", "C-Pop", "Electronic", "Hip-Hop", "Jazz"
@@ -322,7 +336,7 @@ export function Timeline() {
         <div className="space-y-4">
           <h3 className="metadata-label">Playlists</h3>
           <div className="space-y-3">
-            {mockPlaylists.map((playlist, index) => (
+            {displayPlaylists.map((playlist, index) => (
               <PlaylistCard key={index} playlist={playlist} />
             ))}
           </div>

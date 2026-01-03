@@ -11,6 +11,7 @@ import {
   PlaylistTrackSourceType,
   AddPlaylistItemInput
 } from 'lib/graphql'
+import { useUpload } from 'hooks/useUpload'
 
 interface AddToPlaylistModalProps {
   isOpen: boolean
@@ -99,6 +100,7 @@ export const AddToPlaylistModal = ({ isOpen, onClose, playlistId, onSuccess }: A
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [addPlaylistItem] = useAddPlaylistItemMutation()
+  const { upload: uploadToS3 } = useUpload()
 
   // Handle URL paste/add
   const handleAddUrl = () => {
@@ -201,12 +203,19 @@ export const AddToPlaylistModal = ({ isOpen, onClose, playlistId, onSuccess }: A
         }
 
         if (item.sourceType === PlaylistTrackSourceType.Upload && item.file) {
-          // TODO: Upload file to S3 first, then use the URL
-          // For now, we'll skip file uploads until S3 integration is ready
-          setPendingItems(prev => prev.map(p =>
-            p.id === item.id ? { ...p, status: 'error', error: 'File upload coming soon' } : p
-          ))
-          continue
+          // Upload file to S3 first, then use the URL
+          try {
+            const uploadedUrl = await uploadToS3([item.file])
+            if (!uploadedUrl) {
+              throw new Error('Failed to upload file')
+            }
+            input.externalUrl = uploadedUrl
+          } catch (uploadError: any) {
+            setPendingItems(prev => prev.map(p =>
+              p.id === item.id ? { ...p, status: 'error', error: uploadError.message || 'Upload failed' } : p
+            ))
+            continue
+          }
         } else if (item.url) {
           input.externalUrl = item.url
         }

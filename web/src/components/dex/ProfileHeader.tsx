@@ -21,6 +21,8 @@ import {
   Image as ImageIcon,
   Coins
 } from 'lucide-react'
+import { useBlockchainV2 } from 'hooks/useBlockchainV2'
+import { useMagicContext } from 'hooks/useMagicContext'
 
 // Mock profile images
 const profileAvatar = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
@@ -61,37 +63,88 @@ function TipBucketModal({
   recipientName: string
   recipientWallet: string
   senderWallet: string
-  ownedNfts?: Array<{ id: string; title: string; artworkUrl?: string }>
+  ownedNfts?: Array<{ id: string; title: string; artworkUrl?: string; tokenId?: number }>
 }) {
   const [activeTab, setActiveTab] = useState<'tip' | 'airdrop'>('tip')
   const [tipAmount, setTipAmount] = useState('')
   const [selectedNfts, setSelectedNfts] = useState<string[]>([])
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  // Get blockchain functions for real transfers
+  const { sendOgun, transferNftToken } = useBlockchainV2()
+  const { web3 } = useMagicContext()
 
   if (!isOpen) return null
 
   const handleSendTip = async () => {
     if (!tipAmount || parseFloat(tipAmount) <= 0) return
+    if (!senderWallet || !recipientWallet) {
+      setError('Missing wallet addresses')
+      return
+    }
+
     setSending(true)
-    // TODO: Implement OGUN transfer via smart contract
-    console.log(`Sending ${tipAmount} OGUN from ${senderWallet} to ${recipientWallet}`)
-    setTimeout(() => {
+    setError(null)
+    setSuccess(null)
+
+    try {
+      // Use actual OGUN transfer via smart contract
+      const sendTransaction = sendOgun(recipientWallet, senderWallet, tipAmount)
+      if (web3) {
+        await sendTransaction.execute(web3)
+        setSuccess(`Successfully sent ${tipAmount} OGUN to ${recipientName}!`)
+        setTimeout(() => {
+          setSending(false)
+          onClose()
+        }, 2000)
+      } else {
+        throw new Error('Web3 not initialized')
+      }
+    } catch (err: any) {
+      console.error('OGUN transfer failed:', err)
+      setError(err.message || 'Transfer failed. Please try again.')
       setSending(false)
-      alert(`Sent ${tipAmount} OGUN to ${recipientName}!`)
-      onClose()
-    }, 1500)
+    }
   }
 
   const handleAirdrop = async () => {
     if (selectedNfts.length === 0) return
+    if (!senderWallet || !recipientWallet) {
+      setError('Missing wallet addresses')
+      return
+    }
+
     setSending(true)
-    // TODO: Implement NFT transfer
-    console.log(`Airdropping ${selectedNfts.length} NFTs to ${recipientWallet}`)
-    setTimeout(() => {
+    setError(null)
+    setSuccess(null)
+
+    try {
+      // Find the selected NFTs with their token IDs
+      const nftsToTransfer = ownedNfts.filter(nft => selectedNfts.includes(nft.id))
+
+      if (web3) {
+        // Transfer each NFT using the smart contract
+        for (const nft of nftsToTransfer) {
+          if (nft.tokenId !== undefined) {
+            const transferTransaction = transferNftToken(nft.tokenId, senderWallet, recipientWallet, {})
+            await transferTransaction.execute(web3)
+          }
+        }
+        setSuccess(`Successfully airdropped ${selectedNfts.length} NFT(s) to ${recipientName}!`)
+        setTimeout(() => {
+          setSending(false)
+          onClose()
+        }, 2000)
+      } else {
+        throw new Error('Web3 not initialized')
+      }
+    } catch (err: any) {
+      console.error('NFT airdrop failed:', err)
+      setError(err.message || 'Airdrop failed. Please try again.')
       setSending(false)
-      alert(`Airdropped ${selectedNfts.length} NFT(s) to ${recipientName}!`)
-      onClose()
-    }, 1500)
+    }
   }
 
   const toggleNftSelection = (nftId: string) => {
@@ -204,7 +257,7 @@ function TipBucketModal({
               {/* Send button */}
               <Button
                 onClick={handleSendTip}
-                disabled={!tipAmount || parseFloat(tipAmount) <= 0 || sending}
+                disabled={!tipAmount || parseFloat(tipAmount) <= 0 || sending || !web3}
                 className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold py-3"
               >
                 {sending ? (
@@ -219,6 +272,23 @@ function TipBucketModal({
                   </span>
                 )}
               </Button>
+
+              {/* Status Messages */}
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+              {success && (
+                <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/50 text-green-400 text-sm">
+                  {success}
+                </div>
+              )}
+              {!web3 && (
+                <div className="p-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-sm">
+                  Please connect your wallet to send OGUN
+                </div>
+              )}
             </div>
           )}
 
@@ -271,7 +341,7 @@ function TipBucketModal({
               {/* Airdrop button */}
               <Button
                 onClick={handleAirdrop}
-                disabled={selectedNfts.length === 0 || sending}
+                disabled={selectedNfts.length === 0 || sending || !web3}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3"
               >
                 {sending ? (
@@ -286,6 +356,23 @@ function TipBucketModal({
                   </span>
                 )}
               </Button>
+
+              {/* Status Messages */}
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+              {success && (
+                <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/50 text-green-400 text-sm">
+                  {success}
+                </div>
+              )}
+              {!web3 && (
+                <div className="p-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-sm">
+                  Please connect your wallet to airdrop NFTs
+                </div>
+              )}
             </div>
           )}
         </div>

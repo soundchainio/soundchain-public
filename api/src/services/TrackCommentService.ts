@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 import { DocumentType } from '@typegoose/typegoose';
-import { UserInputError } from 'apollo-server-express';
+import { UserInputError, ForbiddenError } from 'apollo-server-express';
 import { FilterQuery } from 'mongoose';
 import { PaginateResult } from '../db/pagination/paginate';
 import { TrackComment, TrackCommentModel } from '../models/TrackComment';
+import { TrackModel } from '../models/Track';
 import { Context } from '../types/Context';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
@@ -169,14 +170,24 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
   /**
    * Pin/unpin a comment (track owner only)
    */
-  async togglePinComment(commentId: string, trackOwnerId: mongoose.Types.ObjectId): Promise<TrackComment> {
+  async togglePinComment(commentId: string, requestingProfileId: mongoose.Types.ObjectId): Promise<TrackComment> {
     const comment = await this.model.findById(commentId);
 
     if (!comment) {
       throw new UserInputError('Comment not found');
     }
 
-    // TODO: Verify trackOwnerId owns the track
+    // Verify the requesting user owns the track
+    const track = await TrackModel.findById(comment.trackId);
+    if (!track) {
+      throw new UserInputError('Track not found');
+    }
+
+    // Check if the requesting user is the track owner
+    if (track.profileId.toString() !== requestingProfileId.toString()) {
+      throw new ForbiddenError('Only the track owner can pin/unpin comments');
+    }
+
     comment.isPinned = !comment.isPinned;
     await comment.save();
     return comment;

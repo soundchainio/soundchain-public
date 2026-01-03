@@ -203,7 +203,16 @@ export function CrossChainPurchase({
     isLoading,
     error,
     supportedChains,
+    contracts,
   } = useOmnichain();
+
+  // Cross-chain purchase requires deployed contracts
+  // Hide component if contracts are not available yet
+  const hasContracts = contracts?.feeCollector || contracts?.omnichain;
+  if (!hasContracts) {
+    // Return null - feature not yet available
+    return null;
+  }
 
   const [selectedChain, setSelectedChain] = useState<number>(137); // Default Polygon
   const [fee, setFee] = useState<string>('0');

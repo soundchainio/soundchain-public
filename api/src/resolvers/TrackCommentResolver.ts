@@ -134,4 +134,17 @@ export class TrackCommentResolver {
   ): Promise<TrackComment | null> {
     return trackCommentService.getComment(commentId);
   }
+
+  /**
+   * Toggle pin/unpin a comment (track owner only)
+   */
+  @Mutation(() => TrackComment)
+  @Authorized()
+  async togglePinTrackComment(
+    @Ctx() { trackCommentService }: Context,
+    @CurrentUser() { profileId }: User,
+    @Arg('commentId') commentId: string,
+  ): Promise<TrackComment> {
+    return trackCommentService.togglePinComment(commentId, profileId);
+  }
 }
