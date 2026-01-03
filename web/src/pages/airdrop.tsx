@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
     import { Button } from 'components/common/Buttons/Button'
+    import { TOKEN_ADDRESSES, QUICKSWAP_SWAP_URL } from 'constants/tokens'
     import { WalletButton } from 'components/common/Buttons/WalletButton'
     import { LoaderAnimation } from 'components/LoaderAnimation'
     import SEO from 'components/SEO'
@@ -294,8 +295,7 @@ import { useEffect, useState } from 'react'
         )
       }
 
-      const quickSwapLink =
-        'https://legacy.quickswap.exchange/#/swap?inputCurrency=0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270&outputCurrency=0x45f1af89486aeec2da0b06340cd9cd3bd741a15c'
+      const quickSwapLink = QUICKSWAP_SWAP_URL(TOKEN_ADDRESSES.MATIC, TOKEN_ADDRESSES.OGUN)
 
       const ClosedState = () => {
         return (

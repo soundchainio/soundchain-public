@@ -1,3 +1,4 @@
+import { TOKEN_ADDRESSES, QUICKSWAP_SWAP_URL } from 'constants/tokens'
 import { Button } from 'components/common/Buttons/Button'
 import { WalletButton } from 'components/common/Buttons/WalletButton'
 import { config } from 'config'
@@ -238,7 +239,7 @@ export default function LPStake() {
         <div className="flex max-w-3xl flex-col items-center justify-center gap-y-6">
           <StakeTitle />
           <a
-            href="https://legacy.quickswap.exchange/#/swap?inputCurrency=0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270&outputCurrency=0x45f1af89486aeec2da0b06340cd9cd3bd741a15c"
+            href={QUICKSWAP_SWAP_URL(TOKEN_ADDRESSES.MATIC, TOKEN_ADDRESSES.OGUN)}
             target="_blank"
             rel="noreferrer"
           >

@@ -15,6 +15,7 @@ import { useMe } from 'hooks/useMe'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { toast } from 'react-toastify'
 import { formatToCompactNumber } from 'utils/format'
+import { TOKEN_ADDRESSES, QUICKSWAP_SWAP_URL } from 'constants/tokens'
 import Web3 from 'web3'
 import { Contract } from 'web3-eth-contract'
 import { AbiItem } from 'web3-utils'
@@ -756,7 +757,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               Swap tokens directly on SoundChain with ZetaChain omnichain support
             </p>
             <a
-              href="https://app.uniswap.org/#/swap?outputCurrency=0x45f1af89486aeec2da0b06340cd9cd3bd741a15c"
+              href={`https://app.uniswap.org/#/swap?outputCurrency=${TOKEN_ADDRESSES.OGUN}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300"
@@ -765,7 +766,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
             </a>
           </div>
           <a
-            href="https://legacy.quickswap.exchange/#/swap?inputCurrency=0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270&outputCurrency=0x45f1af89486aeec2da0b06340cd9cd3bd741a15c"
+            href={QUICKSWAP_SWAP_URL(TOKEN_ADDRESSES.MATIC, TOKEN_ADDRESSES.OGUN)}
             target="_blank"
             rel="noreferrer"
             className="w-full py-4 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"

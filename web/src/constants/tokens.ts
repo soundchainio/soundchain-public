@@ -54,6 +54,21 @@ export const validateTokens = (tokens: string[]): Token[] => {
 /**
  * Token display information
  */
+/**
+ * Token contract addresses on Polygon Mainnet
+ * Single source of truth - use these instead of hardcoding addresses
+ */
+export const TOKEN_ADDRESSES = {
+  MATIC: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', // Wrapped MATIC
+  OGUN: '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c',  // OGUN Token
+} as const;
+
+/**
+ * QuickSwap DEX URLs for token swaps
+ */
+export const QUICKSWAP_SWAP_URL = (inputToken: string, outputToken: string) =>
+  `https://quickswap.exchange/#/swap?currency0=${inputToken}&currency1=${outputToken}`;
+
 export const TOKEN_INFO: Record<Token, { name: string; icon?: string }> = {
   MATIC: { name: 'Polygon', icon: '⬡' },
   OGUN: { name: 'SoundChain Token', icon: '🔊' },
