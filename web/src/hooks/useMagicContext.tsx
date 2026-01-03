@@ -118,12 +118,8 @@ export function MagicProvider({ children }: MagicProviderProps) {
         if (accountFromWeb3) {
           console.log('💳 Magic: Got account from web3:', accountFromWeb3)
           setAccount(accountFromWeb3)
-        } else if (me?.defaultWallet) {
-          // Fallback: use stored wallet address when Magic session doesn't return account
-          console.log('💳 Magic: Using fallback defaultWallet:', me.defaultWallet)
-          setAccount(me.defaultWallet)
         } else if (me?.magicWalletAddress) {
-          // Secondary fallback: use Magic wallet address from user profile
+          // FIX: Use magicWalletAddress (actual 0x address), NOT defaultWallet (which is an ENUM)
           console.log('💳 Magic: Using fallback magicWalletAddress:', me.magicWalletAddress)
           setAccount(me.magicWalletAddress)
         } else {
@@ -132,17 +128,15 @@ export function MagicProvider({ children }: MagicProviderProps) {
       }
     } catch (error) {
       // Even on error, try to use fallback addresses
-      if (me?.defaultWallet) {
-        console.log('💳 Magic: Error getting account, using fallback defaultWallet:', me.defaultWallet)
-        setAccount(me.defaultWallet)
-      } else if (me?.magicWalletAddress) {
+      // FIX: Use magicWalletAddress (actual 0x address), NOT defaultWallet (which is an ENUM)
+      if (me?.magicWalletAddress) {
         console.log('💳 Magic: Error getting account, using fallback magicWalletAddress:', me.magicWalletAddress)
         setAccount(me.magicWalletAddress)
       } else {
         handleError(error as Error | { code: number })
       }
     }
-  }, [handleError, web3, me?.defaultWallet, me?.magicWalletAddress])
+  }, [handleError, web3, me?.magicWalletAddress])
 
   const handleSetBalance = useCallback(async () => {
     try {
@@ -188,7 +182,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
     if (!me || !web3) return
     // Also trigger when user's wallet addresses become available
     handleSetAccount()
-  }, [me, web3, handleSetAccount, me?.defaultWallet, me?.magicWalletAddress])
+  }, [me, web3, handleSetAccount, me?.magicWalletAddress])
 
   // Fetch balances when account is set (separate effect to avoid stale closure)
   useEffect(() => {

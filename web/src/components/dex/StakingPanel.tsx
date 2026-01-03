@@ -197,7 +197,8 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   ]
 
   // User's stored wallet address from profile (fallback for Magic session issues)
-  const userWallet = me?.defaultWallet
+  // FIX: defaultWallet is ENUM, use magicWalletAddress for actual 0x address
+  const userWallet = me?.magicWalletAddress
 
   // Load wallet - prefer connected wallets, fallback to user's stored wallet
   useEffect(() => {

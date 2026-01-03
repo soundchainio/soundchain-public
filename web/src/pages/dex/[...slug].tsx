@@ -897,8 +897,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   })
 
   // Fetch USER-OWNED NFTs for wallet page AND library - filter by wallet address
-  // Note: Use userData?.me?.defaultWallet directly since userWallet is defined later
-  const walletAddress = userData?.me?.defaultWallet
+  // FIX: defaultWallet is an ENUM (Soundchain/MetaMask), NOT the actual 0x address!
+  // Must use magicWalletAddress for the actual blockchain address
+  const walletAddress = userData?.me?.magicWalletAddress
   const { data: ownedTracksData, loading: ownedTracksLoading, error: ownedTracksError } = useGroupedTracksQuery({
     variables: {
       filter: walletAddress ? { nftData: { owner: walletAddress } } : {},
@@ -1330,7 +1331,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
 
   // User profile from GraphQL - REAL DATA
   const user = userData?.me?.profile
-  const userWallet = userData?.me?.defaultWallet
+  // FIX: defaultWallet is ENUM, use magicWalletAddress for actual 0x address
+  const userWallet = userData?.me?.magicWalletAddress
   const userTracks = tracksData?.groupedTracks?.nodes || []
   const ownedTracks = ownedTracksData?.groupedTracks?.nodes || [] // User-owned NFTs for wallet page
   const marketTracks = listingData?.listingItems?.nodes || []
