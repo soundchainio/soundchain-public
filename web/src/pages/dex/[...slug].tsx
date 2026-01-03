@@ -734,7 +734,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   const { play, playlistState, isPlaying, currentSong, togglePlay } = useAudioPlayerContext()
 
   // Magic Wallet Context - Real balances from blockchain
-  const { balance: maticBalance, ogunBalance, account: walletAccount, web3: magicWeb3 } = useMagicContext()
+  const { balance: maticBalance, ogunBalance, account: walletAccount, web3: magicWeb3, refetchBalance } = useMagicContext()
 
   // State for staked OGUN balance (separate from liquid balance)
   const [stakedOgunBalance, setStakedOgunBalance] = useState<string>('0')
@@ -764,6 +764,14 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     }
     fetchStakedBalance()
   }, [magicWeb3, walletAccount])
+
+  // Refetch balances when wallet view is selected
+  useEffect(() => {
+    if (selectedView === 'wallet' && refetchBalance) {
+      console.log('💰 Wallet view selected, refreshing balances...')
+      refetchBalance()
+    }
+  }, [selectedView, refetchBalance])
 
   // Transaction history query for wallet activity
   const { data: maticUsdData } = useMaticUsdQuery()

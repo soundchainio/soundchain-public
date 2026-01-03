@@ -163,10 +163,18 @@ export function MagicProvider({ children }: MagicProviderProps) {
         console.log('💎 Fetching OGUN balance for account:', account)
         const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
         const tokenAmount = await ogunContract.methods.balanceOf(account).call()
-        console.log('💎 Raw OGUN balance:', tokenAmount)
+        console.log('💎 Raw OGUN balance:', tokenAmount, 'type:', typeof tokenAmount)
 
-        // Type guard to ensure tokenAmount is a valid string or number
-        const validTokenAmount = typeof tokenAmount === 'string' || typeof tokenAmount === 'number' ? tokenAmount : '0'
+        // Handle BigInt, string, or number from web3.js (v4 returns BigInt)
+        let validTokenAmount: string
+        if (typeof tokenAmount === 'bigint') {
+          validTokenAmount = tokenAmount.toString()
+        } else if (typeof tokenAmount === 'string' || typeof tokenAmount === 'number') {
+          validTokenAmount = String(tokenAmount)
+        } else {
+          validTokenAmount = '0'
+        }
+
         const tokenAmountInEther = Number(web3.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
         console.log('💎 OGUN balance in ether:', tokenAmountInEther)
         setOgunBalance(tokenAmountInEther)
