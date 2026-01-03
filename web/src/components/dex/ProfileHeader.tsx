@@ -19,7 +19,11 @@ import {
   Gift,
   X,
   Image as ImageIcon,
-  Coins
+  Coins,
+  Music,
+  Play,
+  Pause,
+  ExternalLink
 } from 'lucide-react'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -33,6 +37,16 @@ interface FollowUser {
   username: string
   avatar?: string
   isVerified?: boolean
+}
+
+interface NFTTrack {
+  id: string
+  title: string
+  artist?: string
+  artworkUrl?: string
+  audioUrl?: string
+  tokenId?: number
+  chain?: string
 }
 
 interface ProfileHeaderProps {
@@ -51,6 +65,7 @@ interface ProfileHeaderProps {
   isOwnProfile?: boolean // Only show portfolio/sensitive data if viewing own profile
   currentUserWallet?: string // Current logged-in user's wallet for tipping
   ownedNfts?: Array<{ id: string; title: string; artworkUrl?: string }> // For NFT airdrop
+  nftCollection?: NFTTrack[] // User's NFT music collection
   followersList?: FollowUser[] // List of followers for avatar grid
   followingList?: FollowUser[] // List of following for avatar grid
   onFollow?: () => void
@@ -58,6 +73,8 @@ interface ProfileHeaderProps {
   isFollowing?: boolean
   onEditProfile?: () => void
   onProfileClick?: (userId: string) => void // Navigate to a user's profile
+  onTrackClick?: (trackId: string) => void // Navigate to a track
+  onPlayTrack?: (track: NFTTrack) => void // Play a track inline
 }
 
 // Tip Bucket Modal Component
@@ -483,6 +500,143 @@ function FollowersFollowingModal({
   )
 }
 
+// NFT Collection Modal - Figma-style grid with inline playback
+function NFTCollectionModal({
+  isOpen,
+  onClose,
+  title,
+  walletAddress,
+  nfts,
+  onTrackClick,
+  onPlayTrack,
+  currentlyPlayingId,
+  chain = 'Polygon'
+}: {
+  isOpen: boolean
+  onClose: () => void
+  title: string
+  walletAddress: string
+  nfts: NFTTrack[]
+  onTrackClick?: (trackId: string) => void
+  onPlayTrack?: (track: NFTTrack) => void
+  currentlyPlayingId?: string
+  chain?: string
+}) {
+  if (!isOpen) return null
+
+  const formatWallet = (addr: string) => {
+    if (!addr || addr.length < 10) return 'Unknown'
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={onClose} />
+
+      <div className="relative z-10 w-full max-w-2xl mx-4 overflow-hidden rounded-2xl border border-cyan-500/30 bg-gray-900/95 shadow-2xl">
+        {/* Header */}
+        <div className="relative px-6 pt-6 pb-4 border-b border-cyan-500/20">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 p-0 rounded-full hover:bg-gray-800"
+          >
+            <X className="w-4 h-4 text-gray-400" />
+          </Button>
+          <h2 className="text-lg font-bold text-white mb-1">{title}</h2>
+        </div>
+
+        {/* Wallet Info Card - Figma style */}
+        <div className="p-4">
+          <div className="rounded-xl border border-cyan-500/30 bg-black/40 p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                <Wallet className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-gray-500">{chain}</p>
+                <p className="text-sm text-cyan-400 font-mono">{formatWallet(walletAddress)}</p>
+              </div>
+              <Badge variant="outline" className="border-cyan-500/50 text-cyan-400">
+                {nfts.length} NFTs
+              </Badge>
+            </div>
+
+            {/* NFT Grid - Figma style */}
+            <div className="mt-3">
+              <p className="text-xs text-gray-500 mb-2 uppercase tracking-wider">NFT Collection</p>
+              <ScrollArea className="h-64">
+                {nfts.length > 0 ? (
+                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2">
+                    {nfts.map((nft) => (
+                      <div
+                        key={nft.id}
+                        className="group relative aspect-square rounded-lg overflow-hidden cursor-pointer border border-transparent hover:border-cyan-500/50 transition-all"
+                        onClick={() => onTrackClick?.(nft.id)}
+                      >
+                        {/* NFT Artwork */}
+                        <img
+                          src={nft.artworkUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=100&h=100&fit=crop'}
+                          alt={nft.title}
+                          className="w-full h-full object-cover"
+                        />
+
+                        {/* Play button overlay */}
+                        {nft.audioUrl && (
+                          <div
+                            className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onPlayTrack?.(nft)
+                            }}
+                          >
+                            <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center">
+                              {currentlyPlayingId === nft.id ? (
+                                <Pause className="w-4 h-4 text-white" />
+                              ) : (
+                                <Play className="w-4 h-4 text-white ml-0.5" />
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Currently playing indicator */}
+                        {currentlyPlayingId === nft.id && (
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 to-purple-500">
+                            <div className="h-full w-1/3 bg-white/50 animate-pulse" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+                    <Music className="w-12 h-12 mb-3 opacity-50" />
+                    <p className="text-sm">No NFTs in this collection</p>
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-6">
+          <Button
+            variant="outline"
+            className="w-full border-cyan-500/30 hover:bg-cyan-500/10 text-cyan-400"
+            onClick={onClose}
+          >
+            Close
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BlurAggregatorPanel() {
   const [activeTab, setActiveTab] = useState("overview")
 
@@ -632,17 +786,32 @@ export function ProfileHeader({
   isOwnProfile = false,
   currentUserWallet = '',
   ownedNfts = [],
+  nftCollection = [],
   followersList = [],
   followingList = [],
   onFollow,
   onUnfollow,
   isFollowing = false,
   onEditProfile,
-  onProfileClick
+  onProfileClick,
+  onTrackClick,
+  onPlayTrack
 }: ProfileHeaderProps) {
   const [showTipBucket, setShowTipBucket] = useState(false)
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showFollowingModal, setShowFollowingModal] = useState(false)
+  const [showNFTModal, setShowNFTModal] = useState(false)
+  const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | undefined>(undefined)
+
+  // Handle inline track play
+  const handlePlayTrack = (track: NFTTrack) => {
+    if (currentlyPlayingId === track.id) {
+      setCurrentlyPlayingId(undefined)
+    } else {
+      setCurrentlyPlayingId(track.id)
+      onPlayTrack?.(track)
+    }
+  }
 
   const defaultUser = {
     name: "Xamã",
@@ -731,7 +900,10 @@ export function ProfileHeader({
 
               {/* Real-time Stats Grid */}
               <div className="grid grid-cols-3 gap-3 lg:gap-4">
-                <div className="metadata-section p-3 lg:p-4 text-center">
+                <div
+                  className="metadata-section p-3 lg:p-4 text-center cursor-pointer hover:border-purple-400/50 transition-colors"
+                  onClick={() => setShowNFTModal(true)}
+                >
                   <div className="retro-text text-xl lg:text-2xl">{userData.tracks.toLocaleString()}</div>
                   <div className="metadata-label text-xs">Tracks</div>
                 </div>
@@ -892,6 +1064,19 @@ export function ProfileHeader({
         title="Following"
         users={followingList}
         onProfileClick={onProfileClick}
+      />
+
+      {/* NFT Collection Modal */}
+      <NFTCollectionModal
+        isOpen={showNFTModal}
+        onClose={() => setShowNFTModal(false)}
+        title={`${userData.name}'s NFT Collection`}
+        walletAddress={userData.walletAddress}
+        nfts={nftCollection}
+        onTrackClick={onTrackClick}
+        onPlayTrack={handlePlayTrack}
+        currentlyPlayingId={currentlyPlayingId}
+        chain="Polygon"
       />
     </div>
   )
