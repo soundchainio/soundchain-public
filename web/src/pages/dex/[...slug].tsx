@@ -36,7 +36,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1019,7 +1019,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // Load users with pagination - API max is 200 per page
   const { data: exploreUsersData, loading: exploreUsersLoading, error: exploreUsersError, refetch: refetchUsers, fetchMore: fetchMoreUsers } = useExploreUsersQuery({
     variables: {
-      search: selectedView === 'users' ? undefined : (exploreSearchQuery.trim() || undefined), // No search filter on users view = get ALL users
+      search: exploreSearchQuery.trim() || undefined, // Search works in both users view and explore view
       page: { first: 200 } // Load 200 users at once (max allowed by API)
     },
     skip: selectedView !== 'explore' && selectedView !== 'users',
@@ -1150,6 +1150,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // Follow/Unfollow mutations
   const [followProfile, { loading: followLoading }] = useFollowProfileMutation()
   const [unfollowProfile, { loading: unfollowLoading }] = useUnfollowProfileMutation()
+  const [toggleFavorite] = useToggleFavoriteMutation()
 
   // Track Detail Query - fetch single track when viewing /dex/track/[id]
   const { data: trackDetailData, loading: trackDetailLoading, error: trackDetailError } = useTrackQuery({
@@ -2887,6 +2888,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
                         listView={false}
+                        onFavorite={async () => {
+                          await toggleFavorite({ variables: { trackId: track.id } })
+                        }}
                       />
                     ))}
                   </div>
@@ -4208,9 +4212,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <div className="divide-y divide-gray-800">
                       {chatsData?.chats?.nodes?.map((chat: any) => (
                         <div
-                          key={chat._id}
-                          onClick={() => setSelectedChatId(chat._id)}
-                          className={`p-4 cursor-pointer hover:bg-cyan-500/5 transition-colors ${selectedChatId === chat._id ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
+                          key={chat.id}
+                          onClick={() => setSelectedChatId(chat.id)}
+                          className={`p-4 cursor-pointer hover:bg-cyan-500/5 transition-colors ${selectedChatId === chat.id ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
                         >
                           <div className="flex items-center gap-3">
                             <Avatar className="w-12 h-12">
@@ -4279,7 +4283,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                         chatHistoryData?.chatHistory?.nodes?.map((message: any) => {
                           const isMe = message.fromId === user?.id
                           return (
-                            <div key={message._id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                            <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                               <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${isMe ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-white'}`}>
                                 <p className="text-sm">{message.message}</p>
                                 <p className={`text-xs mt-1 ${isMe ? 'text-cyan-900' : 'text-gray-500'}`}>
@@ -4655,16 +4659,44 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-3 pt-4">
-                          <Button className="retro-button">
-                            <Heart className="w-4 h-4 mr-2" />
-                            Favorite
+                          <Button
+                            className={trackDetailData.track.isFavorite ? "bg-red-500 hover:bg-red-600 text-white" : "retro-button"}
+                            onClick={async () => {
+                              if (!me) {
+                                router.push('/login')
+                                return
+                              }
+                              await toggleFavorite({ variables: { trackId: trackDetailData.track.id } })
+                            }}
+                          >
+                            <Heart className={`w-4 h-4 mr-2 ${trackDetailData.track.isFavorite ? 'fill-current' : ''}`} />
+                            {trackDetailData.track.isFavorite ? 'Favorited' : 'Favorite'}
                           </Button>
-                          <Button variant="outline" className="border-cyan-500/50 hover:bg-cyan-500/10">
+                          <Button
+                            variant="outline"
+                            className="border-cyan-500/50 hover:bg-cyan-500/10"
+                            onClick={async () => {
+                              const shareData = {
+                                title: `${trackDetailData.track.title} by ${trackDetailData.track.artist}`,
+                                text: `Listen to ${trackDetailData.track.title} on SoundChain`,
+                                url: `${window.location.origin}/dex/track/${trackDetailData.track.id}`,
+                              }
+                              if (navigator.share) {
+                                await navigator.share(shareData)
+                              } else {
+                                await navigator.clipboard.writeText(shareData.url)
+                                alert('Link copied to clipboard!')
+                              }
+                            }}
+                          >
                             <Share2 className="w-4 h-4 mr-2" />
                             Share
                           </Button>
                           {trackDetailData.track.price && (
-                            <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
+                            <Button
+                              className="bg-green-500 hover:bg-green-600 text-black font-bold"
+                              onClick={() => router.push(`/tracks/${trackDetailData.track.id}/buy-now`)}
+                            >
                               <ShoppingBag className="w-4 h-4 mr-2" />
                               Buy NFT
                             </Button>
@@ -4958,6 +4990,17 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       artworkUrl: t.artworkUrl
                     })) || []}
                     onEditProfile={() => setSelectedView('settings')}
+                    isFollowing={viewingProfile.isFollowed || false}
+                    onFollow={async () => {
+                      if (!me) {
+                        router.push('/login')
+                        return
+                      }
+                      await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                    }}
+                    onUnfollow={async () => {
+                      await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                    }}
                   />
 
                   {/* Social Links */}

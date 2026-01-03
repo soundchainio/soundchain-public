@@ -9,8 +9,12 @@ export const ImageUploadField = ({ name, ...rest }: ImageUploadFieldProps) => {
   return (
     <Field
       name={name}
-      component={({ field: { value, onChange } }: FieldProps<string>) => (
-        <ImageUpload value={value} onChange={onChange(name)} {...rest} />
+      component={({ field: { value }, form: { setFieldValue } }: FieldProps<string>) => (
+        <ImageUpload
+          value={value}
+          onChange={(newValue: string) => setFieldValue(name, newValue)}
+          {...rest}
+        />
       )}
     />
   )

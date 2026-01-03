@@ -402,10 +402,11 @@ export default function LPStake() {
                       readOnly={lpSelected === 'Unstake'}
                     />
                     <button
-                      className="h-10 w-full border-transparent bg-white py-2 px-3 font-normal text-black md:w-3/12"
+                      className="h-10 w-full border-transparent bg-white py-2 px-3 font-normal text-black md:w-3/12 disabled:opacity-50 disabled:cursor-not-allowed"
                       type="submit"
+                      disabled={Boolean(lpTransactionState)}
                     >
-                      {lpSelected.toUpperCase()}
+                      {lpTransactionState || lpSelected.toUpperCase()}
                     </button>
                   </div>
                 </Form>

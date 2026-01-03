@@ -317,7 +317,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     if (hasPrevious && progress < RESTART_TOLERANCE_TIME) {
       const previousIndex = currentPlaylistIndex - 1
       setCurrentPlaylistIndex(previousIndex)
-      play(playlist[previousIndex])
+      play(playlist[previousIndex], true) // fromPlaylist = true to prevent shuffle trigger
     } else {
       setProgressStateFromSlider(0)
     }
@@ -327,7 +327,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     if (hasNext) {
       const nextIndex = currentPlaylistIndex + 1
       setCurrentPlaylistIndex(nextIndex)
-      play(playlist[nextIndex])
+      play(playlist[nextIndex], true) // fromPlaylist = true to prevent shuffle trigger
     }
   }, [currentPlaylistIndex, hasNext, play, playlist])
 
@@ -346,9 +346,9 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   const jumpTo = useCallback(
     (index: number) => {
-      if (playlist.length > index + 1) {
+      if (playlist.length > index) {
         setCurrentPlaylistIndex(index)
-        play(playlist[index])
+        play(playlist[index], true) // fromPlaylist = true to prevent shuffle trigger
       }
     },
     [play, playlist],

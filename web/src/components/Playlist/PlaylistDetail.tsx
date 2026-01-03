@@ -819,9 +819,19 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                       <SkipForward className="w-4 h-4 text-white" />
                     </button>
                     <button
-                      onClick={() => { setActiveEmbed(null); setIsPlayingAll(false); setCurrentQueueIndex(-1); }}
+                      onClick={() => {
+                        // When closing embed, auto-advance to next track if available
+                        if (currentQueueIndex < tracks.length - 1) {
+                          playNextInQueue()
+                        } else {
+                          // No more tracks, stop playback
+                          setActiveEmbed(null)
+                          setIsPlayingAll(false)
+                          setCurrentQueueIndex(-1)
+                        }
+                      }}
                       className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                      aria-label="Close player"
+                      aria-label="Skip to next / Close player"
                     >
                       <X className="w-4 h-4 text-gray-400" />
                     </button>
