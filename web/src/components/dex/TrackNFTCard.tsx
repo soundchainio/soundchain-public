@@ -6,6 +6,7 @@ import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Play, Pause, Heart, RotateCcw, X, Maximize2, Share2, ShoppingCart, ExternalLink, Music2 } from 'lucide-react'
 import { config } from 'config'
+import { getIpfsUrl } from 'utils/ipfs'
 
 interface TrackNFTCardProps {
   track: {
@@ -89,8 +90,8 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   const currency = track.listingItem?.acceptsOGUN ? 'OGUN' : 'MATIC'
   const defaultImage = '/default-pictures/album-artwork.png'
 
-  // Use fallback if no artwork or if image failed to load
-  const displayImage = (!track.artworkUrl || imageError) ? defaultImage : track.artworkUrl
+  // Transform IPFS URLs and handle fallbacks
+  const displayImage = imageError ? defaultImage : getIpfsUrl(track.artworkUrl, defaultImage)
 
   // List view - simple row
   if (listView) {

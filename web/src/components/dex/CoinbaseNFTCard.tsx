@@ -1,6 +1,7 @@
 import React, { memo, useState } from 'react'
 import Link from 'next/link'
 import { Play, Pause, ChevronRight } from 'lucide-react'
+import { getIpfsUrl } from 'utils/ipfs'
 
 interface CoinbaseNFTCardProps {
   track: {
@@ -36,7 +37,11 @@ const CoinbaseNFTCardComponent: React.FC<CoinbaseNFTCardProps> = ({
   onTrackClick
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false)
-  const defaultImage = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'
+  const [imageError, setImageError] = useState(false)
+  const defaultImage = '/default-pictures/album-artwork.png'
+
+  // Transform IPFS URLs and handle fallbacks
+  const displayImage = imageError ? defaultImage : getIpfsUrl(track.artworkUrl, defaultImage)
 
   const hasListing = track.listingItem?.price || track.listingItem?.pricePerItem || track.listingItem?.pricePerItemToShow
   const price = track.listingItem?.pricePerItemToShow || track.listingItem?.pricePerItem || track.listingItem?.price || 0
@@ -56,10 +61,11 @@ const CoinbaseNFTCardComponent: React.FC<CoinbaseNFTCardProps> = ({
               <div className="absolute inset-0 bg-neutral-700 animate-pulse rounded-md" />
             )}
             <img
-              src={track.artworkUrl || defaultImage}
+              src={displayImage}
               alt={track.title}
               className={`w-full h-full object-cover transition-opacity duration-200 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
             />
           </div>
           {/* Play button overlay on hover */}
@@ -137,7 +143,11 @@ export const CoinbaseNFTGridCard: React.FC<CoinbaseNFTCardProps> = ({
   onTrackClick
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false)
-  const defaultImage = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'
+  const [imageError, setImageError] = useState(false)
+  const defaultImage = '/default-pictures/album-artwork.png'
+
+  // Transform IPFS URLs and handle fallbacks
+  const displayImage = imageError ? defaultImage : getIpfsUrl(track.artworkUrl, defaultImage)
 
   return (
     <div
@@ -150,10 +160,11 @@ export const CoinbaseNFTGridCard: React.FC<CoinbaseNFTCardProps> = ({
           <div className="absolute inset-0 bg-neutral-700 animate-pulse" />
         )}
         <img
-          src={track.artworkUrl || defaultImage}
+          src={displayImage}
           alt={track.title}
           className={`w-full h-full object-cover transition-all duration-200 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={() => setImageLoaded(true)}
+          onError={() => setImageError(true)}
         />
         {/* Play button overlay */}
         <button
