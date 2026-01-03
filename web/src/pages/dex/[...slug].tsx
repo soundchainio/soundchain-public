@@ -27,6 +27,7 @@ import { NFTCard } from 'components/dex/NFTCard'
 import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
+import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
 import { GenreLeaderboard } from 'components/dex/GenreLeaderboard'
@@ -3976,57 +3977,38 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 </div>
               </Card>
 
-              {/* Your NFT Collection - Shows OWNED NFTs */}
-              <Card className="retro-card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <ImageIcon className="w-6 h-6 text-purple-400" />
-                    <h3 className="retro-title text-lg">Your NFT Collection</h3>
-                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">
-                      {ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || ownedTracks.length}
-                    </Badge>
-                  </div>
-                  <Button variant="ghost" size="sm" onClick={() => setSelectedView('library')} className="text-purple-400 hover:bg-purple-500/10">
-                    View All
-                  </Button>
-                </div>
-                {ownedTracksLoading ? (
+              {/* Your NFT Collection - Figma-style Connected Wallets Design */}
+              {ownedTracksLoading ? (
+                <Card className="retro-card p-6">
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
                     <span className="ml-3 text-gray-400">Loading your NFTs...</span>
                   </div>
-                ) : ownedTracks.length > 0 ? (
-                  <div className="space-y-1">
-                    {ownedTracks.slice(0, 12).map((track: any, index: number) => (
-                      <CoinbaseNFTCard
-                        key={track.id}
-                        track={{
-                          id: track.id,
-                          title: track.title,
-                          artist: track.artist || track.profile?.displayName || 'Unknown Artist',
-                          artistProfileId: track.profile?.id,
-                          artworkUrl: track.artworkMedia?.url || track.coverMedia?.url,
-                          playbackCount: track.playbackCount,
-                          playbackCountFormatted: track.playbackCount?.toLocaleString(),
-                          nftData: {
-                            tokenId: track.tokenId,
-                            owner: track.owner,
-                          },
-                          listingItem: track.listingItem ? {
-                            price: track.listingItem.price,
-                            pricePerItem: track.listingItem.pricePerItem,
-                            pricePerItemToShow: track.listingItem.pricePerItemToShow,
-                            acceptsOGUN: track.listingItem.acceptsOGUN,
-                          } : undefined,
-                        }}
-                        onPlay={() => handlePlayTrack(track, index, ownedTracks)}
-                        isPlaying={isPlaying}
-                        isCurrentTrack={currentSong?.trackId === track.id}
-                        onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
-                      />
-                    ))}
-                  </div>
-                ) : (
+                </Card>
+              ) : ownedTracks.length > 0 ? (
+                <WalletNFTCollection
+                  walletAddress={userWallet || ''}
+                  balance={maticBalance || '0'}
+                  currency="MATIC"
+                  chainName="Polygon"
+                  nfts={ownedTracks.map((track: any) => ({
+                    id: track.id,
+                    title: track.title,
+                    artist: track.artist || track.profile?.displayName || 'Unknown Artist',
+                    artworkUrl: track.artworkUrl,
+                    audioUrl: track.playbackUrl,
+                    tokenId: track.nftData?.tokenId || track.tokenId,
+                  }))}
+                  onPlayTrack={(nft, index) => {
+                    const track = ownedTracks.find((t: any) => t.id === nft.id)
+                    if (track) handlePlayTrack(track, index, ownedTracks)
+                  }}
+                  onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
+                  currentTrackId={currentSong?.trackId}
+                  isPlaying={isPlaying}
+                />
+              ) : (
+                <Card className="retro-card p-6">
                   <div className="text-center py-8">
                     <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-400 text-sm">No NFTs owned yet</p>
@@ -4036,8 +4018,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       Browse Marketplace
                     </Button>
                   </div>
-                )}
-              </Card>
+                </Card>
+              )}
 
               {/* Transfer NFTs Section */}
               <Card className="retro-card p-6">
