@@ -27,6 +27,14 @@ import { useMagicContext } from 'hooks/useMagicContext'
 // Mock profile images
 const profileAvatar = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
 
+interface FollowUser {
+  id: string
+  name: string
+  username: string
+  avatar?: string
+  isVerified?: boolean
+}
+
 interface ProfileHeaderProps {
   user?: {
     name: string
@@ -35,7 +43,7 @@ interface ProfileHeaderProps {
     walletAddress: string
     tracks: number
     followers: number
-    likes: number
+    following: number
     avatar?: string
     isVerified?: boolean
     coverPicture?: string
@@ -43,10 +51,13 @@ interface ProfileHeaderProps {
   isOwnProfile?: boolean // Only show portfolio/sensitive data if viewing own profile
   currentUserWallet?: string // Current logged-in user's wallet for tipping
   ownedNfts?: Array<{ id: string; title: string; artworkUrl?: string }> // For NFT airdrop
+  followersList?: FollowUser[] // List of followers for avatar grid
+  followingList?: FollowUser[] // List of following for avatar grid
   onFollow?: () => void
   onUnfollow?: () => void
   isFollowing?: boolean
   onEditProfile?: () => void
+  onProfileClick?: (userId: string) => void // Navigate to a user's profile
 }
 
 // Tip Bucket Modal Component
@@ -381,6 +392,97 @@ function TipBucketModal({
   )
 }
 
+// Followers/Following Avatar Grid Modal
+function FollowersFollowingModal({
+  isOpen,
+  onClose,
+  title,
+  users,
+  onProfileClick
+}: {
+  isOpen: boolean
+  onClose: () => void
+  title: string
+  users: FollowUser[]
+  onProfileClick?: (userId: string) => void
+}) {
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-xl" onClick={onClose} />
+
+      <div className="relative z-10 w-full max-w-lg mx-4 overflow-hidden rounded-2xl border border-cyan-500/30 bg-gray-900/95 shadow-2xl">
+        {/* Header */}
+        <div className="relative px-6 pt-6 pb-4 border-b border-cyan-500/20">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 p-0 rounded-full hover:bg-gray-800"
+          >
+            <X className="w-4 h-4 text-gray-400" />
+          </Button>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white">{title}</h2>
+              <p className="text-sm text-gray-400">{users.length} profiles</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Avatar Grid */}
+        <div className="p-6">
+          <ScrollArea className="h-80">
+            {users.length > 0 ? (
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                {users.map((user) => (
+                  <div
+                    key={user.id}
+                    onClick={() => onProfileClick?.(user.id)}
+                    className="group cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <div className="relative">
+                      <Avatar className="w-14 h-14 ring-2 ring-transparent group-hover:ring-cyan-500/50 transition-all">
+                        <AvatarImage src={user.avatar || profileAvatar} />
+                        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-purple-600 text-white">
+                          {user.name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      {user.isVerified && (
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full flex items-center justify-center border-2 border-gray-900">
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-white truncate max-w-[60px] group-hover:text-cyan-400 transition-colors">
+                        {user.name}
+                      </p>
+                      <p className="text-[10px] text-gray-500 truncate max-w-[60px]">
+                        {user.username}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <Users className="w-12 h-12 mb-3 opacity-50" />
+                <p className="text-sm">No {title.toLowerCase()} yet</p>
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BlurAggregatorPanel() {
   const [activeTab, setActiveTab] = useState("overview")
 
@@ -530,12 +632,17 @@ export function ProfileHeader({
   isOwnProfile = false,
   currentUserWallet = '',
   ownedNfts = [],
+  followersList = [],
+  followingList = [],
   onFollow,
   onUnfollow,
   isFollowing = false,
-  onEditProfile
+  onEditProfile,
+  onProfileClick
 }: ProfileHeaderProps) {
   const [showTipBucket, setShowTipBucket] = useState(false)
+  const [showFollowersModal, setShowFollowersModal] = useState(false)
+  const [showFollowingModal, setShowFollowingModal] = useState(false)
 
   const defaultUser = {
     name: "Xamã",
@@ -544,7 +651,7 @@ export function ProfileHeader({
     walletAddress: "0xf30...345",
     tracks: 25,
     followers: 3537,
-    likes: 1237,
+    following: 1237,
     avatar: profileAvatar,
     isVerified: true,
     coverPicture: undefined as string | undefined,
@@ -623,13 +730,23 @@ export function ProfileHeader({
               </div>
 
               {/* Real-time Stats Grid */}
-              <div className="grid grid-cols-2 gap-3 lg:gap-4">
+              <div className="grid grid-cols-3 gap-3 lg:gap-4">
                 <div className="metadata-section p-3 lg:p-4 text-center">
+                  <div className="retro-text text-xl lg:text-2xl">{userData.tracks.toLocaleString()}</div>
+                  <div className="metadata-label text-xs">Tracks</div>
+                </div>
+                <div
+                  className="metadata-section p-3 lg:p-4 text-center cursor-pointer hover:border-cyan-400/50 transition-colors"
+                  onClick={() => setShowFollowersModal(true)}
+                >
                   <div className="retro-text text-xl lg:text-2xl">{userData.followers.toLocaleString()}</div>
                   <div className="metadata-label text-xs">Followers</div>
                 </div>
-                <div className="metadata-section p-3 lg:p-4 text-center">
-                  <div className="retro-text text-xl lg:text-2xl">{userData.likes.toLocaleString()}</div>
+                <div
+                  className="metadata-section p-3 lg:p-4 text-center cursor-pointer hover:border-cyan-400/50 transition-colors"
+                  onClick={() => setShowFollowingModal(true)}
+                >
+                  <div className="retro-text text-xl lg:text-2xl">{userData.following.toLocaleString()}</div>
                   <div className="metadata-label text-xs">Following</div>
                 </div>
               </div>
@@ -757,6 +874,24 @@ export function ProfileHeader({
         recipientWallet={userData.walletAddress}
         senderWallet={currentUserWallet}
         ownedNfts={ownedNfts}
+      />
+
+      {/* Followers Modal */}
+      <FollowersFollowingModal
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        title="Followers"
+        users={followersList}
+        onProfileClick={onProfileClick}
+      />
+
+      {/* Following Modal */}
+      <FollowersFollowingModal
+        isOpen={showFollowingModal}
+        onClose={() => setShowFollowingModal(false)}
+        title="Following"
+        users={followingList}
+        onProfileClick={onProfileClick}
       />
     </div>
   )

@@ -40,7 +40,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1226,6 +1226,44 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     fetchPolicy: 'cache-first',
   })
   const viewingProfileTrackCount = viewingProfileTracksData?.groupedTracks?.pageInfo?.totalCount || 0
+
+  // Query to get followers list for viewed profile
+  const { data: viewingProfileFollowersData } = useFollowersQuery({
+    variables: {
+      profileId: viewingProfile?.id || '',
+      page: { first: 100 },
+    },
+    skip: !viewingProfile?.id || selectedView !== 'profile',
+    fetchPolicy: 'cache-first',
+  })
+
+  // Query to get following list for viewed profile
+  const { data: viewingProfileFollowingData } = useFollowingQuery({
+    variables: {
+      profileId: viewingProfile?.id || '',
+      page: { first: 100 },
+    },
+    skip: !viewingProfile?.id || selectedView !== 'profile',
+    fetchPolicy: 'cache-first',
+  })
+
+  // Transform followers data for ProfileHeader
+  const followersList = viewingProfileFollowersData?.followers?.nodes?.map(f => ({
+    id: f.followerProfile.id,
+    name: f.followerProfile.displayName || f.followerProfile.userHandle,
+    username: `@${f.followerProfile.userHandle}`,
+    avatar: f.followerProfile.profilePicture || undefined,
+    isVerified: f.followerProfile.verified || f.followerProfile.teamMember || false,
+  })) || []
+
+  // Transform following data for ProfileHeader
+  const followingList = viewingProfileFollowingData?.following?.nodes?.map(f => ({
+    id: f.followedProfile.id,
+    name: f.followedProfile.displayName || f.followedProfile.userHandle,
+    username: `@${f.followedProfile.userHandle}`,
+    avatar: f.followedProfile.profilePicture || undefined,
+    isVerified: f.followedProfile.verified || f.followedProfile.teamMember || false,
+  })) || []
 
   // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
   // NOTE: isViewingOwnProfile uses viewingProfile which is now defined above
@@ -5038,7 +5076,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       walletAddress: viewingProfile.magicWalletAddress || '0x...',
                       tracks: viewingProfileTrackCount,
                       followers: viewingProfile.followerCount || 0,
-                      likes: viewingProfile.followingCount || 0,
+                      following: viewingProfile.followingCount || 0,
                       avatar: viewingProfile.profilePicture || undefined,
                       isVerified: viewingProfile.verified || viewingProfile.teamMember || false,
                       coverPicture: viewingProfile.coverPicture || undefined,
@@ -5050,6 +5088,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       title: t.title || 'Untitled',
                       artworkUrl: t.artworkUrl
                     })) || []}
+                    followersList={followersList}
+                    followingList={followingList}
                     onEditProfile={() => setSelectedView('settings')}
                     isFollowing={viewingProfile.isFollowed || false}
                     onFollow={async () => {
@@ -5062,6 +5102,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     onUnfollow={async () => {
                       await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
                     }}
+                    onProfileClick={(userId) => router.push(`/dex/users/${userId}`)}
                   />
 
                   {/* Social Links */}
