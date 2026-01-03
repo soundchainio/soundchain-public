@@ -87,11 +87,11 @@ Mumbai:  https://polygon-mumbai.g.alchemy.com/v2/aMF793l_JpVtk7RaER-KZZW4vH7vWXi
 
 | Contract | Address | Status |
 |----------|---------|--------|
-| OGUN Token | `0x99Db69EEe7637101FA216Ab4A3276eBedC63e146` | LIVE |
+| OGUN Token | `0x45f1af89486aeec2da0b06340cd9cd3bd741a15c` | LIVE |
 | SoundChain NFT | `0x...` | LIVE |
 | Marketplace | `0x...` | LIVE |
 | Staking | `0x...` | LIVE |
-| StreamingRewardsDistributor | **PENDING** | Ready to deploy |
+| StreamingRewardsDistributor v2 | `0xcf9416c49D525f7a50299c71f33606A158F28546` | **LIVE** |
 
 ---
 
