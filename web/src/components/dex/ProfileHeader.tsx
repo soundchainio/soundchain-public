@@ -21,7 +21,7 @@ import {
   Image as ImageIcon,
   Coins
 } from 'lucide-react'
-import { useBlockchainV2 } from 'hooks/useBlockchainV2'
+import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useMagicContext } from 'hooks/useMagicContext'
 
 // Mock profile images
