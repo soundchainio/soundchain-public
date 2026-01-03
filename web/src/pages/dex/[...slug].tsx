@@ -1215,6 +1215,17 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   const viewingProfileLoading = profileDetailLoading || profileByHandleLoading
   const viewingProfileError = profileDetailError || profileByHandleError
 
+  // Query to get track count for viewed profile
+  const { data: viewingProfileTracksData } = useGroupedTracksQuery({
+    variables: {
+      filter: { profileId: viewingProfile?.id },
+      page: { first: 1 }, // Only need count, not actual tracks
+    },
+    skip: !viewingProfile?.id || selectedView !== 'profile',
+    fetchPolicy: 'cache-first',
+  })
+  const viewingProfileTrackCount = viewingProfileTracksData?.groupedTracks?.pageInfo?.totalCount || 0
+
   // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
   // NOTE: isViewingOwnProfile uses viewingProfile which is now defined above
   const isViewingOwnProfile = selectedView === 'profile' && viewingProfile?.id === me?.profile?.id
@@ -3546,7 +3557,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     </div>
                     <p className="text-xs text-gray-400 mb-1">MATIC</p>
                     <p className="text-xl font-bold text-purple-400">{maticBalance || '0.00'}</p>
-                    <p className="text-xs text-gray-500">≈ $0.00</p>
+                    <p className="text-xs text-gray-500">≈ ${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-cyan-500/50 transition-all">
                     <ImageIcon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
@@ -3559,7 +3570,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                   <Card className="metadata-section p-4 text-center hover:border-green-500/50 transition-all">
                     <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-2" />
                     <p className="text-xs text-gray-400 mb-1">Total Value</p>
-                    <p className="text-xl font-bold text-green-400">$0.00</p>
+                    <p className="text-xl font-bold text-green-400">
+                      ${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}
+                    </p>
                     <p className="text-xs text-gray-500">Portfolio</p>
                   </Card>
                 </div>
@@ -5021,14 +5034,14 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       username: `@${viewingProfile.userHandle}`,
                       bio: viewingProfile.bio || '',
                       walletAddress: viewingProfile.magicWalletAddress || '0x...',
-                      tracks: 0, // TODO: Add tracks count to profile query
+                      tracks: viewingProfileTrackCount,
                       followers: viewingProfile.followerCount || 0,
                       likes: viewingProfile.followingCount || 0,
                       avatar: viewingProfile.profilePicture || undefined,
                       isVerified: viewingProfile.verified || viewingProfile.teamMember || false,
                       coverPicture: viewingProfile.coverPicture || undefined,
                     }}
-                    isOwnProfile={me?.profile?.id === viewingProfile.id}
+                    isOwnProfile={Boolean(me?.profile?.id && viewingProfile?.id && me.profile.id === viewingProfile.id)}
                     currentUserWallet={magicWallet || ''}
                     ownedNfts={ownedTracksData?.groupedTracks?.nodes?.map((t: any) => ({
                       id: t.id,
