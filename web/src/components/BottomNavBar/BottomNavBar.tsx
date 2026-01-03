@@ -7,6 +7,7 @@ import { Library } from 'icons/Library'
 import { MarketplaceNavBar } from 'icons/MarketplaceNavBar'
 import { NewPost } from 'icons/NewPost'
 import { Search } from 'icons/Search'
+import { Backend } from 'icons/Backend'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import { NavBarButton } from 'components/common/Buttons/NavBarButton'
@@ -78,6 +79,14 @@ export const BottomNavBar = () => {
             color="purple-green"
             path={me ? '/messages' : '/login'}
             badge={me ? InboxBadgeWrapper : undefined}
+            alwaysShowLabel
+          />
+          <NavBarButton
+            id="nav-backend-"
+            label=""
+            icon={Backend}
+            color="cyan"
+            path={'/backend'}
             alwaysShowLabel
           />
         </div>

@@ -7,6 +7,7 @@ import { MarketplaceNavBar } from 'icons/MarketplaceNavBar'
 import { NewPost } from 'icons/NewPost'
 import { Search } from 'icons/Search'
 import { DEX } from 'icons/DEX'
+import { Backend } from 'icons/Backend'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
@@ -66,6 +67,14 @@ export const NavBar = () => {
           icon={DEX}
           color="green-yellow"
           path={'/dex'}
+          alwaysShowLabel
+        />
+        <NavBarButton
+          id="top-backend-"
+          label="Backend"
+          icon={Backend}
+          color="cyan"
+          path={'/backend'}
           alwaysShowLabel
         />
       </div>
