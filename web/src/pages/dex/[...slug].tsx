@@ -5,6 +5,10 @@ import { GetServerSideProps } from 'next'
 import Image from 'next/image'
 import Head from 'next/head'
 import { config } from 'config'
+import Web3 from 'web3'
+import { Contract } from 'web3-eth-contract'
+import { AbiItem } from 'web3-utils'
+import StakingRewards from '../../contract/StakingRewards.sol/StakingRewards.json'
 import { Logo } from 'icons/Logo'
 import { SoundchainGoldLogo } from 'icons/SoundchainGoldLogo'
 import { Verified as VerifiedIcon } from 'icons/Verified'
@@ -78,6 +82,12 @@ const CoverPictureForm = dynamic(() => import('components/forms/profile/CoverPic
 const SocialLinksForm = dynamic(() => import('components/forms/profile/SocialLinksForm').then(mod => ({ default: mod.SocialLinksForm })), { ssr: false })
 const SecurityForm = dynamic(() => import('components/forms/profile/SecurityForm').then(mod => ({ default: mod.SecurityForm })), { ssr: false })
 const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr: false })
+
+// Staking contract helper for fetching staked OGUN balance
+const tokenStakeContractAddress = config.tokenStakeContractAddress as string
+const getStakingContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(StakingRewards.abi as AbiItem[], tokenStakeContractAddress)
+}
 
 // SCid query - inline until codegen generates the hook
 const SCID_BY_TRACK_QUERY = gql`
@@ -723,7 +733,36 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   const { play, playlistState, isPlaying, currentSong, togglePlay } = useAudioPlayerContext()
 
   // Magic Wallet Context - Real balances from blockchain
-  const { balance: maticBalance, ogunBalance, account: walletAccount } = useMagicContext()
+  const { balance: maticBalance, ogunBalance, account: walletAccount, web3: magicWeb3 } = useMagicContext()
+
+  // State for staked OGUN balance (separate from liquid balance)
+  const [stakedOgunBalance, setStakedOgunBalance] = useState<string>('0')
+
+  // Fetch staked OGUN balance from staking contract
+  useEffect(() => {
+    const fetchStakedBalance = async () => {
+      if (!magicWeb3 || !walletAccount || !tokenStakeContractAddress) return
+      try {
+        const stakingContract = getStakingContract(magicWeb3)
+        const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
+        if (balanceData) {
+          const [stakedAmount] = balanceData
+          const validStaked = stakedAmount !== undefined && (typeof stakedAmount === 'string' || typeof stakedAmount === 'number')
+            ? stakedAmount.toString()
+            : '0'
+          const formattedStaked = magicWeb3.utils.fromWei(validStaked, 'ether')
+          setStakedOgunBalance(Number(formattedStaked).toFixed(6))
+        }
+      } catch (error: any) {
+        // User hasn't staked - this is expected for most users
+        if (!error.toString().includes("address hasn't stake any tokens yet")) {
+          console.log('Error fetching staked balance:', error)
+        }
+        setStakedOgunBalance('0')
+      }
+    }
+    fetchStakedBalance()
+  }, [magicWeb3, walletAccount])
 
   // Transaction history query for wallet activity
   const { data: maticUsdData } = useMaticUsdQuery()
@@ -3492,9 +3531,14 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <Card className="metadata-section p-4 text-center hover:border-yellow-500/50 transition-all">
                     <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400 mb-1">OGUN</p>
-                    <p className="text-xl font-bold text-yellow-400">{ogunBalance || '0.00'}</p>
-                    <p className="text-xs text-gray-500">≈ $0.00</p>
+                    <p className="text-xs text-gray-400 mb-1">OGUN Total</p>
+                    <p className="text-xl font-bold text-yellow-400">
+                      {(Number(ogunBalance || 0) + Number(stakedOgunBalance || 0)).toFixed(2)}
+                    </p>
+                    <div className="text-xs text-gray-500 space-y-0.5 mt-1">
+                      <p className="text-green-400/80">{ogunBalance || '0.00'} liquid</p>
+                      <p className="text-orange-400/80">{stakedOgunBalance || '0.00'} staked</p>
+                    </div>
                   </Card>
                   <Card className="metadata-section p-4 text-center hover:border-purple-500/50 transition-all">
                     <div className="w-8 h-8 mx-auto mb-2 text-purple-400">
