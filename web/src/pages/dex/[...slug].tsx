@@ -1227,6 +1227,27 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   })
   const viewingProfileTrackCount = viewingProfileTracksData?.groupedTracks?.pageInfo?.totalCount || 0
 
+  // Query to get full track list for viewed profile's NFT modal
+  const { data: viewingProfileNFTsData } = useGroupedTracksQuery({
+    variables: {
+      filter: { profileId: viewingProfile?.id },
+      page: { first: 100 }, // Get tracks for NFT modal
+    },
+    skip: !viewingProfile?.id || selectedView !== 'profile',
+    fetchPolicy: 'cache-first',
+  })
+
+  // Transform tracks to NFT collection format
+  const viewingProfileNFTs = viewingProfileNFTsData?.groupedTracks?.nodes?.map((t: any) => ({
+    id: t.id,
+    title: t.title || 'Untitled',
+    artist: t.artist || t.profile?.displayName || 'Unknown Artist',
+    artworkUrl: t.artworkMedia?.url || t.coverMedia?.url || t.artworkUrl,
+    audioUrl: t.streamMedia?.url || t.audioMedia?.url,
+    tokenId: t.tokenId,
+    chain: 'Polygon',
+  })) || []
+
   // Query to get followers list for viewed profile
   const { data: viewingProfileFollowersData } = useFollowersQuery({
     variables: {
@@ -5103,6 +5124,16 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
                     }}
                     onProfileClick={(userId) => router.push(`/dex/users/${userId}`)}
+                    nftCollection={viewingProfileNFTs}
+                    onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
+                    onPlayTrack={(nftTrack) => {
+                      // Find the full track in the data to play it
+                      const tracks = viewingProfileNFTsData?.groupedTracks?.nodes || []
+                      const trackIndex = tracks.findIndex((t: any) => t.id === nftTrack.id)
+                      if (trackIndex >= 0) {
+                        handlePlayTrack(tracks[trackIndex], trackIndex, tracks)
+                      }
+                    }}
                   />
 
                   {/* Social Links */}
