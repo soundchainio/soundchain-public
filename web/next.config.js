@@ -32,10 +32,11 @@ module.exports = {
     };
     return config;
   },
-  // Fix Google OAuth Permissions-Policy error
+  // Fix Google OAuth Permissions-Policy error + Cache control for fresh content
   async headers() {
     return [
       {
+        // HTML pages - no cache to always get fresh content
         source: '/:path*',
         headers: [
           {
@@ -49,6 +50,20 @@ module.exports = {
           {
             key: 'Cross-Origin-Embedder-Policy',
             value: 'credentialless',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+      {
+        // Static assets - cache for performance
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
