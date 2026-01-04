@@ -353,95 +353,81 @@ export function MultiWalletAggregator({
                 wallet.isActive ? 'border-cyan-500/50' : ''
               }`}
             >
-              {/* Wallet Header - Clickable to expand */}
-              <button
-                className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
-                onClick={() => toggleExpanded(wallet.id)}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    wallet.type === 'magic' ? 'bg-cyan-500/20' :
-                    wallet.type === 'metamask' ? 'bg-orange-500/20' :
-                    'bg-blue-500/20'
-                  }`}>
-                    <span className="text-xl">{getWalletIcon(wallet.type)}</span>
-                  </div>
-                  <div className="text-left">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-cyan-400 text-sm">{formatAddress(wallet.address)}</span>
-                      {wallet.isActive && (
-                        <Badge className="bg-green-500/20 text-green-400 text-[10px]">Active</Badge>
-                      )}
+              {/* Wallet Header - Figma Style */}
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      wallet.type === 'magic' ? 'bg-cyan-500/20' :
+                      wallet.type === 'metamask' ? 'bg-orange-500/20' :
+                      'bg-blue-500/20'
+                    }`}>
+                      <span className="text-lg">{getWalletIcon(wallet.type)}</span>
                     </div>
-                    <p className="text-xs text-gray-500">{getWalletName(wallet.type)} • {wallet.chainName}</p>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-cyan-400 text-sm">{formatAddress(wallet.address)}</span>
+                        <a
+                          href={`${config.polygonscan}address/${wallet.address}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-gray-500 hover:text-cyan-400 transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                        {wallet.isActive && (
+                          <Badge className="bg-green-500/20 text-green-400 text-[10px]">Active</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">{wallet.chainName}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-white font-bold text-sm">{wallet.balance} MATIC</p>
-                    <p className="text-xs text-purple-400">{wallet.ogunBalance} OGUN</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">
-                      {wallet.nfts.length} NFTs
-                    </Badge>
-                    {expandedWallets.has(wallet.id) ? (
-                      <ChevronUp className="w-4 h-4 text-gray-400" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-3">
+                    {(wallet.type === 'metamask' || wallet.type === 'walletconnect' || wallet.id === 'magic-external') && (
+                      <button
+                        onClick={() => {
+                          if (wallet.type === 'metamask') disconnectMetaMask()
+                          else disconnectExternalWallet()
+                        }}
+                        className="text-gray-500 hover:text-red-400 transition-colors p-1"
+                        title="Disconnect"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
                 </div>
-              </button>
 
-              {/* Expanded NFT Collection */}
-              {expandedWallets.has(wallet.id) && (
-                <div className="border-t border-cyan-500/20 p-4 bg-black/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">
+                {/* Balance Row - Figma Style */}
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-2xl font-bold text-white">{wallet.balance} <span className="text-sm text-gray-400">MATIC</span></p>
+                    {parseFloat(wallet.ogunBalance) > 0 && (
+                      <p className="text-sm text-purple-400">{wallet.ogunBalance} OGUN</p>
+                    )}
+                  </div>
+                  <Badge className="bg-purple-500/20 text-purple-400 px-3 py-1">
+                    {wallet.nfts.length} NFTs
+                  </Badge>
+                </div>
+
+                {/* NFT Collection Row - Always Visible (Figma Style) */}
+                <div className="border-t border-cyan-500/20 pt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge className="bg-cyan-500/10 text-cyan-400 text-xs font-bold tracking-wider">
                       NFT COLLECTION
                     </Badge>
-                    <div className="flex items-center gap-2">
-                      <a
-                        href={`${config.polygonscan}address/${wallet.address}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-gray-500 hover:text-cyan-400 transition-colors"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigator.clipboard.writeText(wallet.address)
-                        }}
-                        className="text-gray-500 hover:text-cyan-400 transition-colors"
-                      >
-                        <Copy className="w-3 h-3" />
-                      </button>
-                      {wallet.type === 'metamask' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            disconnectMetaMask()
-                          }}
-                          className="text-gray-500 hover:text-red-400 transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                    <button
+                      onClick={() => toggleExpanded(wallet.id)}
+                      className="text-gray-500 hover:text-cyan-400 transition-colors text-xs flex items-center gap-1"
+                    >
+                      {expandedWallets.has(wallet.id) ? 'Less' : 'More'}
+                      {expandedWallets.has(wallet.id) ? (
+                        <ChevronUp className="w-3 h-3" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3" />
                       )}
-                      {(wallet.type === 'walletconnect' || wallet.id === 'magic-external') && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            disconnectExternalWallet()
-                          }}
-                          className="text-gray-500 hover:text-red-400 transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
+                    </button>
                   </div>
 
                   {wallet.nfts.length > 0 ? (
@@ -449,7 +435,7 @@ export function MultiWalletAggregator({
                       className="flex gap-2 overflow-x-auto pb-2"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                      {wallet.nfts.map((nft, index) => (
+                      {wallet.nfts.slice(0, expandedWallets.has(wallet.id) ? wallet.nfts.length : 8).map((nft, index) => (
                         <NFTThumbnail
                           key={nft.id}
                           nft={nft}
@@ -459,14 +445,22 @@ export function MultiWalletAggregator({
                           onClick={() => onTrackClick?.(nft.id)}
                         />
                       ))}
+                      {!expandedWallets.has(wallet.id) && wallet.nfts.length > 8 && (
+                        <button
+                          onClick={() => toggleExpanded(wallet.id)}
+                          className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs font-bold hover:bg-purple-500/30 transition-colors flex-shrink-0"
+                        >
+                          +{wallet.nfts.length - 8}
+                        </button>
+                      )}
                     </div>
                   ) : (
-                    <div className="py-4 text-center text-gray-500 text-sm">
-                      {wallet.type === 'magic' ? 'No NFTs owned yet' : 'NFT loading coming soon'}
+                    <div className="py-3 text-center text-gray-500 text-sm">
+                      {wallet.type === 'magic' ? 'No NFTs owned yet' : 'Connect to view NFTs'}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </Card>
           ))
         )}
