@@ -14,9 +14,24 @@ export const NotificationBadge = () => {
   useEffect(() => {
     fetchNotificationCount()
 
-    const intervalId = setInterval(refetchNotificationCount, 5000)
+    // Poll every 30 seconds instead of 5 to save battery on mobile
+    let intervalId = setInterval(refetchNotificationCount, 30000)
 
-    return () => clearInterval(intervalId)
+    // Pause polling when tab is hidden to save battery
+    const handleVisibility = () => {
+      if (document.hidden) {
+        clearInterval(intervalId)
+      } else {
+        refetchNotificationCount()
+        intervalId = setInterval(refetchNotificationCount, 30000)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [router.pathname, fetchNotificationCount, refetchNotificationCount])
 
   return (

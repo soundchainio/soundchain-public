@@ -24,7 +24,7 @@ export const ListingsCard = (props: ListingsCardProps) => {
       filter: { trackEdition: track.trackEditionId as string },
     },
     skip: !track.trackEditionId,
-    pollInterval: 10000,
+    pollInterval: 30000, // 30s instead of 10s for battery efficiency
     ssr: false,
   })
 

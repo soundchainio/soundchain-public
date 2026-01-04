@@ -3264,6 +3264,9 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 userWallet={userWallet}
                 maticBalance={maticBalance}
                 ogunBalance={ogunBalance}
+                stakedOgunBalance={stakedOgunBalance}
+                totalNFTs={ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}
+                maticUsdPrice={maticUsdData?.maticUsd ? Number(maticUsdData.maticUsd) : undefined}
                 ownedTracks={ownedTracks}
                 onPlayTrack={(track, index) => handlePlayTrack(track, index, ownedTracks)}
                 onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}

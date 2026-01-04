@@ -6,6 +6,9 @@ import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { Service } from './Service';
 
+// DISABLED: Mailchimp subscription paused - set to true to re-enable
+const MAILCHIMP_ENABLED = false;
+
 export class MailchimpService extends Service {
   mainListId = 'fbe7aa8603';
   transactionalClient: ReturnType<typeof mailchimpTransactional>;
@@ -22,6 +25,7 @@ export class MailchimpService extends Service {
   }
 
   async addMember(user: User): Promise<void> {
+    if (!MAILCHIMP_ENABLED) return;
     if (!config.env.isProduction) return;
     if (!user) return;
 
@@ -40,6 +44,7 @@ export class MailchimpService extends Service {
     templateName: string,
     templateContent: Record<string, string>,
   ): Promise<MessagesSendResponse[] | unknown> {
+    if (!MAILCHIMP_ENABLED) return [];
     try {
       return this.transactionalClient.messages.sendTemplate({
         template_name: templateName,

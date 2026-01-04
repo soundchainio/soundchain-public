@@ -255,6 +255,8 @@ export default function LoginPage() {
   // Legacy-style OAuth callback handler (matching working develop/staging branches)
   useEffect(() => {
     async function handleOAuthCallback() {
+      // Wait for router to be ready before checking query params
+      if (!router.isReady) return;
       if (magic && router.query.magic_credential) {
         console.log('[OAuth] Detected magic_credential, processing callback...');
         console.log('[OAuth] Full URL:', window.location.href);
@@ -299,7 +301,7 @@ export default function LoginPage() {
       }
     }
     handleOAuthCallback();
-  }, [magic, router.query.magic_credential, login, router]);
+  }, [magic, router.isReady, router.query.magic_credential, login, router]);
 
   async function handleSubmit(values: FormValues) {
     try {

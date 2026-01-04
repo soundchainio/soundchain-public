@@ -19,7 +19,22 @@ export const useTimer = (countDownDate: Date) => {
     setData(data => ({ ...data, loading: true }))
     getTime()
     timer.current = window.setInterval(getTime, 1000)
-    return () => window.clearInterval(timer.current || 0)
+
+    // Pause timer when tab hidden to save battery
+    const handleVisibility = () => {
+      if (document.hidden) {
+        window.clearInterval(timer.current || 0)
+      } else {
+        getTime() // Recalculate immediately when visible
+        timer.current = window.setInterval(getTime, 1000)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      window.clearInterval(timer.current || 0)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [countDownDate])
 
   function getTime() {

@@ -22,7 +22,7 @@ export const BidHistory = (props: BidHistoryProps) => {
     variables: {
       auctionId: auctionId || '',
     },
-    pollInterval: 10000,
+    pollInterval: 30000, // 30s instead of 10s for battery efficiency
     skip: !auctionId,
   })
 

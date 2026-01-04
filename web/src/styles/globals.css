@@ -1041,3 +1041,28 @@ input[type='number'] {
 .view-toggle button:hover:not(.active) {
   background: rgba(255, 255, 255, 0.05);
 }
+
+/* ============================================
+   BATTERY SAVING: Respect user's reduced motion preference
+   Disables animations for users who have enabled
+   "Reduce Motion" on iOS/Android/macOS/Windows
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable specific Tailwind animations */
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce,
+  .animate-ping,
+  .animate-wave {
+    animation: none !important;
+  }
+}

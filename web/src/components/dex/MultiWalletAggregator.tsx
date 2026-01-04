@@ -16,7 +16,10 @@ import {
   ChevronDown,
   ChevronUp,
   Zap,
-  Check
+  Check,
+  Coins,
+  TrendingUp,
+  Image as ImageIcon
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -50,11 +53,15 @@ interface MultiWalletAggregatorProps {
   userWallet?: string
   maticBalance?: string
   ogunBalance?: string
+  stakedOgunBalance?: string
+  totalNFTs?: number
+  maticUsdPrice?: number
   ownedTracks?: any[]
   onPlayTrack?: (track: any, index: number) => void
   onTrackClick?: (trackId: string) => void
   currentTrackId?: string
   isPlaying?: boolean
+  openWeb3Modal?: () => void
 }
 
 // Token contract helper
@@ -76,6 +83,9 @@ export function MultiWalletAggregator({
   userWallet,
   maticBalance,
   ogunBalance,
+  stakedOgunBalance,
+  totalNFTs,
+  maticUsdPrice,
   ownedTracks = [],
   onPlayTrack,
   onTrackClick,
@@ -325,6 +335,57 @@ export function MultiWalletAggregator({
           Connect multiple wallets to view all your NFTs in one place
         </p>
       </Card>
+
+      {/* Balance Cards - Real data from Magic wallet */}
+      {userWallet && (
+        <Card className="retro-card p-4">
+          <div className="mb-3 text-center">
+            <a
+              href={`https://polygonscan.com/address/${userWallet}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
+            >
+              Verify on Polygonscan: {userWallet.slice(0, 8)}...{userWallet.slice(-6)} ↗
+            </a>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card className="metadata-section p-3 text-center hover:border-yellow-500/50 transition-all">
+              <Coins className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
+              <p className="text-xs text-gray-400 mb-1">OGUN Total</p>
+              <p className="text-lg font-bold text-yellow-400">
+                {(Number(ogunBalance || 0) + Number(stakedOgunBalance || 0)).toFixed(2)}
+              </p>
+              <div className="text-xs text-gray-500 space-y-0.5">
+                <p className="text-green-400/80">{ogunBalance || '0.00'} liquid</p>
+                <p className="text-orange-400/80">{stakedOgunBalance || '0.00'} staked</p>
+              </div>
+            </Card>
+            <Card className="metadata-section p-3 text-center hover:border-purple-500/50 transition-all">
+              <div className="w-6 h-6 mx-auto mb-1 text-purple-400">
+                <svg viewBox="0 0 38 33" fill="currentColor"><path d="M29.7 16.5l-11.7 6.7-11.7-6.7 11.7-16.5 11.7 16.5zM18 25.2l-11.7-6.7 11.7 16.5 11.7-16.5-11.7 6.7z"/></svg>
+              </div>
+              <p className="text-xs text-gray-400 mb-1">MATIC</p>
+              <p className="text-lg font-bold text-purple-400">{maticBalance || '0.00'}</p>
+              <p className="text-xs text-gray-500">≈ ${maticUsdPrice ? (Number(maticBalance || 0) * maticUsdPrice).toFixed(2) : '0.00'}</p>
+            </Card>
+            <Card className="metadata-section p-3 text-center hover:border-cyan-500/50 transition-all">
+              <ImageIcon className="w-6 h-6 text-cyan-400 mx-auto mb-1" />
+              <p className="text-xs text-gray-400 mb-1">NFTs</p>
+              <p className="text-lg font-bold text-cyan-400">{totalNFTs ?? 0}</p>
+              <p className="text-xs text-gray-500">Owned</p>
+            </Card>
+            <Card className="metadata-section p-3 text-center hover:border-green-500/50 transition-all">
+              <TrendingUp className="w-6 h-6 text-green-400 mx-auto mb-1" />
+              <p className="text-xs text-gray-400 mb-1">Total Value</p>
+              <p className="text-lg font-bold text-green-400">
+                ${maticUsdPrice ? (Number(maticBalance || 0) * maticUsdPrice).toFixed(2) : '0.00'}
+              </p>
+              <p className="text-xs text-gray-500">Portfolio</p>
+            </Card>
+          </div>
+        </Card>
+      )}
 
       {/* Connected Wallets with NFT Collections */}
       <div className="space-y-3">
