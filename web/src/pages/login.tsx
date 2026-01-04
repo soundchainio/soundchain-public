@@ -190,6 +190,9 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
+  // Detect Chrome browser (has issues with redirect-based OAuth due to cookie policies)
+  const isChrome = typeof navigator !== 'undefined' && /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+
   // Legacy-style OAuth handlers (matching working develop/staging branches)
   const handleGoogleLogin = async () => {
     if (!magic) {
@@ -203,14 +206,45 @@ export default function LoginPage() {
     }
     try {
       setLoggingIn(true);
-      await (magic as any).oauth.loginWithRedirect({
-        provider: 'google',
-        redirectURI: `${config.domainUrl}/login`,
-        scope: ['openid'],
-      });
+      setError(null);
+
+      // Use popup for Chrome (redirect has cookie issues), redirect for Safari/others
+      if (isChrome) {
+        console.log('[OAuth] Using popup flow for Chrome...');
+        const result = await (magic as any).oauth.loginWithPopup({
+          provider: 'google',
+          scope: ['openid', 'email'],
+        });
+
+        console.log('[OAuth] Popup result:', result);
+
+        if (result?.magic?.idToken) {
+          console.log('[OAuth] Got idToken from popup, logging in...');
+          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            localStorage.setItem('didToken', result.magic.idToken);
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            console.log('[OAuth] Success! Redirecting to:', redirectUrl);
+            router.push(redirectUrl);
+          } else {
+            throw new Error('No JWT returned from server');
+          }
+        } else {
+          throw new Error('No idToken in OAuth popup result');
+        }
+      } else {
+        console.log('[OAuth] Using redirect flow for Safari/other browsers...');
+        await (magic as any).oauth.loginWithRedirect({
+          provider: 'google',
+          redirectURI: `${config.domainUrl}/login`,
+          scope: ['openid'],
+        });
+      }
     } catch (err: any) {
-      console.error('[OAuth] Google redirect error:', err);
-      setError(err.message || 'Google login failed');
+      console.error('[OAuth] Google login error:', err);
+      setError(err.message || 'Google login failed. Please try again or use Email login.');
       setLoggingIn(false);
     }
   };
