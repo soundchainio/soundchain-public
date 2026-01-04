@@ -189,7 +189,7 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
-  // OAuth handler - use config.domainUrl to match Magic Dashboard registration
+  // OAuth handler - use current origin to ensure PKCE verifier is on same domain
   const handleGoogleLogin = async () => {
     if (!magic) {
       setError('Login not ready. Please refresh the page.');
@@ -201,20 +201,12 @@ export default function LoginPage() {
       return;
     }
 
-    // CRITICAL: Redirect to non-www domain BEFORE starting OAuth
-    // This ensures the PKCE verifier is stored on the same domain we'll return to
-    // (localStorage is domain-specific - www.soundchain.io !== soundchain.io)
-    const targetDomain = config.domainUrl; // https://soundchain.io (no www)
-    if (typeof window !== 'undefined' && window.location.origin !== targetDomain) {
-      console.log('[OAuth] Redirecting to canonical domain before OAuth:', targetDomain);
-      window.location.href = `${targetDomain}/login`;
-      return;
-    }
-
     try {
       setLoggingIn(true);
       setError(null);
-      const redirectURI = `${config.domainUrl}/login`;
+      // Use window.location.origin so we return to the SAME domain
+      // This ensures localStorage (where PKCE verifier is stored) is accessible
+      const redirectURI = `${window.location.origin}/login`;
       console.log('[OAuth] Starting Google redirect to:', redirectURI);
       await (magic as any).oauth.loginWithRedirect({
         provider: 'google',
