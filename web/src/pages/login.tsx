@@ -204,47 +204,24 @@ export default function LoginPage() {
       setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
       return;
     }
+
+    // Warn Chrome users about potential issues
+    if (isChrome) {
+      console.log('[OAuth] Chrome detected - redirect OAuth may have issues');
+    }
+
     try {
       setLoggingIn(true);
       setError(null);
-
-      // Use popup for Chrome (redirect has cookie issues), redirect for Safari/others
-      if (isChrome) {
-        console.log('[OAuth] Using popup flow for Chrome...');
-        const result = await (magic as any).oauth.loginWithPopup({
-          provider: 'google',
-          scope: ['openid', 'email'],
-        });
-
-        console.log('[OAuth] Popup result:', result);
-
-        if (result?.magic?.idToken) {
-          console.log('[OAuth] Got idToken from popup, logging in...');
-          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-
-          if (loginResult.data?.login.jwt) {
-            await setJwt(loginResult.data.login.jwt);
-            localStorage.setItem('didToken', result.magic.idToken);
-            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            console.log('[OAuth] Success! Redirecting to:', redirectUrl);
-            router.push(redirectUrl);
-          } else {
-            throw new Error('No JWT returned from server');
-          }
-        } else {
-          throw new Error('No idToken in OAuth popup result');
-        }
-      } else {
-        console.log('[OAuth] Using redirect flow for Safari/other browsers...');
-        await (magic as any).oauth.loginWithRedirect({
-          provider: 'google',
-          redirectURI: `${config.domainUrl}/login`,
-          scope: ['openid'],
-        });
-      }
+      console.log('[OAuth] Starting Google redirect flow...');
+      await (magic as any).oauth.loginWithRedirect({
+        provider: 'google',
+        redirectURI: `${window.location.origin}/login`,
+        scope: ['openid', 'email'],
+      });
     } catch (err: any) {
-      console.error('[OAuth] Google login error:', err);
-      setError(err.message || 'Google login failed. Please try again or use Email login.');
+      console.error('[OAuth] Google redirect error:', err);
+      setError(err.message || 'Google login failed. Please try Email login instead.');
       setLoggingIn(false);
     }
   };
@@ -302,6 +279,7 @@ export default function LoginPage() {
 
         console.log('[OAuth] Detected magic_credential, processing callback...');
         console.log('[OAuth] Full URL:', window.location.href);
+        console.log('[OAuth] Browser:', navigator.userAgent);
         setLoggingIn(true);
         setError(null);
 
@@ -309,20 +287,42 @@ export default function LoginPage() {
         const cleanUrl = window.location.pathname;
         window.history.replaceState({}, '', cleanUrl);
 
+        // Helper function to attempt getRedirectResult with timeout
+        const attemptGetResult = async (timeoutMs: number): Promise<any> => {
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout after ${timeoutMs/1000}s`)), timeoutMs)
+          );
+          return Promise.race([
+            (magic as any).oauth.getRedirectResult(),
+            timeoutPromise
+          ]);
+        };
+
         try {
           console.log('[OAuth] Calling getRedirectResult()...');
 
-          // Add 30s timeout to prevent infinite hanging
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OAuth timeout - getRedirectResult() took too long. Please try again.')), 30000)
-          );
+          let result: any = null;
+          let lastError: Error | null = null;
 
-          const result = await Promise.race([
-            (magic as any).oauth.getRedirectResult(),
-            timeoutPromise
-          ]) as any;
-
-          console.log('[OAuth] Got result:', result);
+          // Try up to 3 times with increasing timeouts
+          const timeouts = [15000, 30000, 45000];
+          for (let i = 0; i < timeouts.length; i++) {
+            try {
+              console.log(`[OAuth] Attempt ${i + 1}/${timeouts.length} (${timeouts[i]/1000}s timeout)...`);
+              result = await attemptGetResult(timeouts[i]);
+              if (result?.magic?.idToken) {
+                console.log('[OAuth] Success on attempt', i + 1);
+                break;
+              }
+            } catch (err: any) {
+              console.log(`[OAuth] Attempt ${i + 1} failed:`, err.message);
+              lastError = err;
+              // Small delay before retry
+              if (i < timeouts.length - 1) {
+                await new Promise(r => setTimeout(r, 1000));
+              }
+            }
+          }
 
           if (result?.magic?.idToken) {
             console.log('[OAuth] Got idToken, logging in...');
@@ -339,18 +339,27 @@ export default function LoginPage() {
               throw new Error('No JWT returned from server');
             }
           } else {
-            throw new Error('No idToken in OAuth result');
+            // All attempts failed
+            const errorMsg = isChrome
+              ? 'Google login timed out on Chrome. Please try Safari browser or use Email login instead.'
+              : 'Google login failed. Please try again or use Email login.';
+            throw new Error(lastError?.message || errorMsg);
           }
         } catch (err: any) {
           console.error('[OAuth] Callback error:', err);
-          setError(err.message || 'Google login failed. Please try again.');
+          const friendlyError = err.message?.includes('timeout') || err.message?.includes('Timeout')
+            ? (isChrome
+                ? 'Google login is not working on Chrome. Please use Safari or Email login instead.'
+                : 'Login timed out. Please try again.')
+            : (err.message || 'Google login failed. Please try again.');
+          setError(friendlyError);
           setLoggingIn(false);
           oauthProcessingRef.current = false; // Reset so user can retry
         }
       }
     }
     handleOAuthCallback();
-  }, [magic, router.query.magic_credential, login, router]);
+  }, [magic, router.query.magic_credential, login, router, isChrome]);
 
   async function handleSubmit(values: FormValues) {
     try {
