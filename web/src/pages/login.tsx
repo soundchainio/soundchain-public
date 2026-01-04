@@ -189,7 +189,7 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
-  // OAuth handler - use current origin to ensure PKCE verifier is on same domain
+  // Legacy-style OAuth handlers (matching working develop/staging branches)
   const handleGoogleLogin = async () => {
     if (!magic) {
       setError('Login not ready. Please refresh the page.');
@@ -200,22 +200,16 @@ export default function LoginPage() {
       setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
       return;
     }
-
     try {
       setLoggingIn(true);
-      setError(null);
-      // Use window.location.origin so we return to the SAME domain
-      // This ensures localStorage (where PKCE verifier is stored) is accessible
-      const redirectURI = `${window.location.origin}/login`;
-      console.log('[OAuth] Starting Google redirect to:', redirectURI);
       await (magic as any).oauth.loginWithRedirect({
         provider: 'google',
-        redirectURI,
+        redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
       });
     } catch (err: any) {
       console.error('[OAuth] Google redirect error:', err);
-      setError(err.message || 'Google login failed. Please try Email login instead.');
+      setError(err.message || 'Google login failed');
       setLoggingIn(false);
     }
   };
@@ -258,36 +252,50 @@ export default function LoginPage() {
     }
   };
 
-  // OAuth callback handler - matches working develop branch pattern exactly
+  // Legacy-style OAuth callback handler (matching working develop/staging branches)
   useEffect(() => {
-    function handleOAuthCallback() {
+    async function handleOAuthCallback() {
       if (magic && router.query.magic_credential) {
-        console.log('[OAuth] Processing callback...');
+        console.log('[OAuth] Detected magic_credential, processing callback...');
+        console.log('[OAuth] Full URL:', window.location.href);
         setLoggingIn(true);
         setError(null);
-        (magic as any).oauth
-          .getRedirectResult()
-          .then((result: any) => {
-            console.log('[OAuth] Got result:', result?.magic?.idToken ? 'token received' : 'no token');
-            return login({ variables: { input: { token: result.magic.idToken } } });
-          })
-          .then((result: any) => {
-            console.log('[OAuth] Login successful, setting JWT');
-            setJwt(result.data?.login.jwt);
-          })
-          .catch((err: any) => {
-            console.error('[OAuth] Error:', err);
-            if (err.message?.includes('already exists')) {
-              setLoggingIn(false);
-              const authMethodFromError = err.graphQLErrors?.find((e: any) => e.extensions?.with)?.extensions?.with;
-              if (authMethodFromError) setAuthMethod([authMethodFromError]);
-            } else if (err.message?.toLowerCase().includes('invalid credentials')) {
-              router.push('/create-account');
+
+        try {
+          console.log('[OAuth] Calling getRedirectResult()...');
+
+          // Add 30s timeout to prevent infinite hanging
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('OAuth timeout - getRedirectResult took too long')), 30000)
+          );
+
+          const result = await Promise.race([
+            (magic as any).oauth.getRedirectResult(),
+            timeoutPromise
+          ]) as any;
+
+          console.log('[OAuth] Got result:', result);
+
+          if (result?.magic?.idToken) {
+            console.log('[OAuth] Got idToken, logging in...');
+            const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+
+            if (loginResult.data?.login.jwt) {
+              await setJwt(loginResult.data.login.jwt);
+              const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+              console.log('[OAuth] Success! Redirecting to:', redirectUrl);
+              router.push(redirectUrl);
             } else {
-              setError(err.message || 'Google login failed. Please try again.');
-              setLoggingIn(false);
+              throw new Error('No JWT returned from server');
             }
-          });
+          } else {
+            throw new Error('No idToken in OAuth result');
+          }
+        } catch (err: any) {
+          console.error('[OAuth] Callback error:', err);
+          setError(err.message || 'Google login failed. Please try again.');
+          setLoggingIn(false);
+        }
       }
     }
     handleOAuthCallback();
