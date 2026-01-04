@@ -20,7 +20,6 @@ import {
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
-import { usePolygonNFTs } from 'hooks/usePolygonNFTs'
 import { config } from 'config'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
@@ -99,12 +98,6 @@ export function MultiWalletAggregator({
   const [metamaskOgunBalance, setMetamaskOgunBalance] = useState<string>('0')
   const [isConnectingMetaMask, setIsConnectingMetaMask] = useState(false)
 
-  // Fetch Polygon NFTs for connected MetaMask wallet
-  const { nfts: metamaskNFTs, isLoading: nftsLoading } = usePolygonNFTs(metamaskAddress || undefined)
-
-  // Fetch Polygon NFTs for Magic external wallet
-  const { nfts: externalWalletNFTs } = usePolygonNFTs(walletConnectedAddress || undefined)
-
   // Check if MetaMask is installed
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -182,15 +175,7 @@ export function MultiWalletAggregator({
         chainName: 'Polygon',
         balance: metamaskBalance,
         ogunBalance: metamaskOgunBalance,
-        // Map Polygon NFTs to NFTTrack format
-        nfts: metamaskNFTs.map((nft) => ({
-          id: nft.tokenId,
-          title: nft.name || `SoundChain #${nft.tokenId}`,
-          artist: nft.artist,
-          artworkUrl: nft.image,
-          audioUrl: nft.audioUrl,
-          tokenId: nft.tokenId,
-        })),
+        nfts: [], // Would need to query NFTs for this address
         isActive: !walletConnectedAddress && !!metamaskAddress
       })
     }
@@ -204,21 +189,13 @@ export function MultiWalletAggregator({
         chainName: 'Polygon',
         balance: '0', // Would need to fetch
         ogunBalance: '0',
-        // Map external wallet NFTs
-        nfts: externalWalletNFTs.map((nft) => ({
-          id: nft.tokenId,
-          title: nft.name || `SoundChain #${nft.tokenId}`,
-          artist: nft.artist,
-          artworkUrl: nft.image,
-          audioUrl: nft.audioUrl,
-          tokenId: nft.tokenId,
-        })),
+        nfts: [],
         isActive: true
       })
     }
 
     setConnectedWallets(wallets)
-  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, metamaskNFTs, externalWalletNFTs])
+  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress])
 
   const toggleExpanded = (walletId: string) => {
     setExpandedWallets(prev => {
@@ -268,7 +245,7 @@ export function MultiWalletAggregator({
           </Badge>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {/* Magic Wallet - SoundChain Native */}
           <button
             className={`p-3 rounded-lg border-2 text-left transition-all ${
@@ -286,25 +263,47 @@ export function MultiWalletAggregator({
             <p className="text-xs text-gray-500">Native wallet</p>
           </button>
 
-          {/* Magic Wallet Connect - Primary button for ALL external wallets (inline modal) */}
+          {/* Magic Wallet Connect - Primary button for external wallets */}
           <button
             className={`p-3 rounded-lg border-2 text-left transition-all ${
-              walletConnectedAddress || metamaskAddress
+              walletConnectedAddress
                 ? 'border-purple-500 bg-purple-500/10'
-                : 'border-gray-700 bg-black/30 hover:border-purple-500/50 hover:bg-purple-500/5'
+                : 'border-gray-700 bg-black/30 hover:border-purple-500/50'
             }`}
-            onClick={walletConnectedAddress ? () => toggleExpanded('walletconnect') : connectWallet}
+            onClick={connectWallet}
             disabled={isConnectingWallet}
           >
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🔗</span>
-              <span className={`font-bold text-sm ${walletConnectedAddress || metamaskAddress ? 'text-purple-400' : 'text-gray-400'}`}>
+              <span className={`font-bold text-sm ${walletConnectedAddress ? 'text-purple-400' : 'text-gray-400'}`}>
                 {isConnectingWallet ? 'Connecting...' : 'Connect Wallet'}
               </span>
-              {(walletConnectedAddress || metamaskAddress) && <Check className="w-3 h-3 text-green-400" />}
+              {walletConnectedAddress && <Check className="w-3 h-3 text-green-400" />}
             </div>
             <p className="text-xs text-gray-500">
-              {walletConnectedAddress ? formatAddress(walletConnectedAddress) : '🦊 MetaMask, Coinbase...'}
+              {walletConnectedAddress ? formatAddress(walletConnectedAddress) : 'MetaMask, Coinbase...'}
+            </p>
+          </button>
+
+          {/* Direct MetaMask - Fallback for power users */}
+          <button
+            className={`p-3 rounded-lg border-2 text-left transition-all ${
+              metamaskAddress
+                ? 'border-orange-500 bg-orange-500/10'
+                : 'border-gray-700 bg-black/30 hover:border-orange-500/50'
+            }`}
+            onClick={metamaskAddress ? () => toggleExpanded('metamask') : connectMetaMask}
+            disabled={isConnectingMetaMask}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">🦊</span>
+              <span className={`font-bold text-sm ${metamaskAddress ? 'text-orange-400' : 'text-gray-400'}`}>
+                {isConnectingMetaMask ? '...' : 'MetaMask'}
+              </span>
+              {metamaskAddress && <Check className="w-3 h-3 text-green-400" />}
+            </div>
+            <p className="text-xs text-gray-500">
+              {metamaskAddress ? formatAddress(metamaskAddress) : (isMetaMaskInstalled ? 'Direct connect' : 'Install')}
             </p>
           </button>
 
@@ -323,7 +322,7 @@ export function MultiWalletAggregator({
         </div>
 
         <p className="text-xs text-gray-500 mt-3 text-center">
-          Connect external wallets to view legacy NFTs
+          Connect multiple wallets to view all your NFTs in one place
         </p>
       </Card>
 
@@ -353,81 +352,95 @@ export function MultiWalletAggregator({
                 wallet.isActive ? 'border-cyan-500/50' : ''
               }`}
             >
-              {/* Wallet Header - Figma Style */}
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      wallet.type === 'magic' ? 'bg-cyan-500/20' :
-                      wallet.type === 'metamask' ? 'bg-orange-500/20' :
-                      'bg-blue-500/20'
-                    }`}>
-                      <span className="text-lg">{getWalletIcon(wallet.type)}</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-cyan-400 text-sm">{formatAddress(wallet.address)}</span>
-                        <a
-                          href={`${config.polygonscan}address/${wallet.address}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-gray-500 hover:text-cyan-400 transition-colors"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                        {wallet.isActive && (
-                          <Badge className="bg-green-500/20 text-green-400 text-[10px]">Active</Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500">{wallet.chainName}</p>
-                    </div>
+              {/* Wallet Header - Clickable to expand */}
+              <button
+                className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+                onClick={() => toggleExpanded(wallet.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    wallet.type === 'magic' ? 'bg-cyan-500/20' :
+                    wallet.type === 'metamask' ? 'bg-orange-500/20' :
+                    'bg-blue-500/20'
+                  }`}>
+                    <span className="text-xl">{getWalletIcon(wallet.type)}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {(wallet.type === 'metamask' || wallet.type === 'walletconnect' || wallet.id === 'magic-external') && (
-                      <button
-                        onClick={() => {
-                          if (wallet.type === 'metamask') disconnectMetaMask()
-                          else disconnectExternalWallet()
-                        }}
-                        className="text-gray-500 hover:text-red-400 transition-colors p-1"
-                        title="Disconnect"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                  <div className="text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-cyan-400 text-sm">{formatAddress(wallet.address)}</span>
+                      {wallet.isActive && (
+                        <Badge className="bg-green-500/20 text-green-400 text-[10px]">Active</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{getWalletName(wallet.type)} • {wallet.chainName}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-white font-bold text-sm">{wallet.balance} MATIC</p>
+                    <p className="text-xs text-purple-400">{wallet.ogunBalance} OGUN</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">
+                      {wallet.nfts.length} NFTs
+                    </Badge>
+                    {expandedWallets.has(wallet.id) ? (
+                      <ChevronUp className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
                     )}
                   </div>
                 </div>
+              </button>
 
-                {/* Balance Row - Figma Style */}
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-2xl font-bold text-white">{wallet.balance} <span className="text-sm text-gray-400">MATIC</span></p>
-                    {parseFloat(wallet.ogunBalance) > 0 && (
-                      <p className="text-sm text-purple-400">{wallet.ogunBalance} OGUN</p>
-                    )}
-                  </div>
-                  <Badge className="bg-purple-500/20 text-purple-400 px-3 py-1">
-                    {wallet.nfts.length} NFTs
-                  </Badge>
-                </div>
-
-                {/* NFT Collection Row - Always Visible (Figma Style) */}
-                <div className="border-t border-cyan-500/20 pt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <Badge className="bg-cyan-500/10 text-cyan-400 text-xs font-bold tracking-wider">
+              {/* Expanded NFT Collection */}
+              {expandedWallets.has(wallet.id) && (
+                <div className="border-t border-cyan-500/20 p-4 bg-black/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">
                       NFT COLLECTION
                     </Badge>
-                    <button
-                      onClick={() => toggleExpanded(wallet.id)}
-                      className="text-gray-500 hover:text-cyan-400 transition-colors text-xs flex items-center gap-1"
-                    >
-                      {expandedWallets.has(wallet.id) ? 'Less' : 'More'}
-                      {expandedWallets.has(wallet.id) ? (
-                        <ChevronUp className="w-3 h-3" />
-                      ) : (
-                        <ChevronDown className="w-3 h-3" />
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`${config.polygonscan}address/${wallet.address}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-gray-500 hover:text-cyan-400 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigator.clipboard.writeText(wallet.address)
+                        }}
+                        className="text-gray-500 hover:text-cyan-400 transition-colors"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                      {wallet.type === 'metamask' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            disconnectMetaMask()
+                          }}
+                          className="text-gray-500 hover:text-red-400 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                       )}
-                    </button>
+                      {(wallet.type === 'walletconnect' || wallet.id === 'magic-external') && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            disconnectExternalWallet()
+                          }}
+                          className="text-gray-500 hover:text-red-400 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {wallet.nfts.length > 0 ? (
@@ -435,7 +448,7 @@ export function MultiWalletAggregator({
                       className="flex gap-2 overflow-x-auto pb-2"
                       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                     >
-                      {wallet.nfts.slice(0, expandedWallets.has(wallet.id) ? wallet.nfts.length : 8).map((nft, index) => (
+                      {wallet.nfts.map((nft, index) => (
                         <NFTThumbnail
                           key={nft.id}
                           nft={nft}
@@ -445,22 +458,14 @@ export function MultiWalletAggregator({
                           onClick={() => onTrackClick?.(nft.id)}
                         />
                       ))}
-                      {!expandedWallets.has(wallet.id) && wallet.nfts.length > 8 && (
-                        <button
-                          onClick={() => toggleExpanded(wallet.id)}
-                          className="w-12 h-12 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 text-xs font-bold hover:bg-purple-500/30 transition-colors flex-shrink-0"
-                        >
-                          +{wallet.nfts.length - 8}
-                        </button>
-                      )}
                     </div>
                   ) : (
-                    <div className="py-3 text-center text-gray-500 text-sm">
-                      {wallet.type === 'magic' ? 'No NFTs owned yet' : 'Connect to view NFTs'}
+                    <div className="py-4 text-center text-gray-500 text-sm">
+                      {wallet.type === 'magic' ? 'No NFTs owned yet' : 'NFT loading coming soon'}
                     </div>
                   )}
                 </div>
-              </div>
+              )}
             </Card>
           ))
         )}

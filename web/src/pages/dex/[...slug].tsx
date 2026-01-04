@@ -29,7 +29,6 @@ import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
-import { OmnichainWalletDashboard } from 'components/dex/OmnichainWalletDashboard'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
 import { GenreLeaderboard } from 'components/dex/GenreLeaderboard'
@@ -3273,30 +3272,396 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 openWeb3Modal={openWeb3Modal}
               />
 
-              {/* Omnichain Dashboard - Multi-Chain Balances & Polygon NFTs */}
-              <OmnichainWalletDashboard
-                walletAddress={userWallet || undefined}
-                onPlayTrack={(nft) => {
-                  if (nft.audioUrl) {
-                    const song: Song = {
-                      trackId: nft.tokenId,
-                      artistName: nft.artist || 'Unknown Artist',
-                      title: nft.name || `SoundChain #${nft.tokenId}`,
-                      artworkUrl: nft.image || '/default-pictures/album-artwork.png',
-                      songUrl: nft.audioUrl,
-                    }
-                    setCurrentSong(song)
-                    setIsPlaying(true)
-                  }
-                }}
-              />
+              {/* Header Card */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-cyan-500/20">
+                      <Wallet className="w-8 h-8 text-green-400" />
+                    </div>
+                    <div>
+                      <h2 className="retro-title text-xl">Wallet Overview</h2>
+                      <p className="text-gray-400 text-sm">Balances & Transactions</p>
+                    </div>
+                  </div>
+                  {chainName && (
+                    <Badge className="bg-purple-500/20 text-purple-400 px-3 py-1">
+                      <span className="w-2 h-2 bg-purple-400 rounded-full inline-block mr-2 animate-pulse" />
+                      {chainName}
+                    </Badge>
+                  )}
+                </div>
 
-              {/* Quick Actions Card */}
-              <Card className="retro-card p-4">
-                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-yellow-400" />
-                  Quick Actions
-                </h3>
+                {/* Active Wallet Display - Synced Globally */}
+                {isUnifiedWalletConnected && activeAddress && (
+                  <Card className="metadata-section p-4 mb-4 border-cyan-500/50 bg-cyan-500/5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center">
+                          <span className="text-white text-xl">
+                            {activeWalletType === 'magic' ? '✨' : activeWalletType === 'metamask' ? '🦊' : '🔗'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs text-gray-400">Active Wallet</p>
+                            <Badge className="bg-green-500/20 text-green-400 text-xs">
+                              <span className="w-1.5 h-1.5 bg-green-400 rounded-full inline-block mr-1 animate-pulse" />
+                              Connected
+                            </Badge>
+                          </div>
+                          <p className="font-mono text-cyan-400 text-lg">{activeAddress.slice(0, 10)}...{activeAddress.slice(-8)}</p>
+                          <p className="text-xs text-gray-500">
+                            {activeWalletType === 'magic' ? 'SoundChain Wallet' :
+                             activeWalletType === 'metamask' ? 'MetaMask' :
+                             chainName || 'External Wallet'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { navigator.clipboard.writeText(activeAddress); }}
+                          className="hover:bg-cyan-500/20"
+                        >
+                          <Copy className="w-4 h-4 text-cyan-400" />
+                        </Button>
+                        <a href={`https://polygonscan.com/address/${activeAddress}`} target="_blank" rel="noreferrer">
+                          <Button variant="ghost" size="sm" className="hover:bg-purple-500/20">
+                            <ExternalLink className="w-4 h-4 text-purple-400" />
+                          </Button>
+                        </a>
+                        {activeWalletType === 'web3modal' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={unifiedDisconnectWallet}
+                            className="hover:bg-red-500/20 text-red-400"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
+                {/* Default Wallet Selection */}
+                <Card className="metadata-section p-4 mb-4 border-yellow-500/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400">⚡</span>
+                      <h4 className="text-sm font-bold text-white">Default Wallet</h4>
+                    </div>
+                    <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Active</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {/* Magic Wallet - Default (already connected via login) */}
+                    <button
+                      className="p-3 rounded-lg border-2 border-cyan-500 bg-cyan-500/10 text-left transition-all hover:bg-cyan-500/20"
+                      onClick={() => alert('✨ Magic Wallet\n\nThis is your default wallet, automatically connected when you log in.\n\nWallet: ' + (userWallet || 'Not connected'))}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">✨</span>
+                        <span className="font-bold text-cyan-400 text-sm">Magic</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Native wallet</p>
+                    </button>
+                    {/* WalletConnect (includes MetaMask, Rainbow, Trust, etc.) */}
+                    <button
+                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10"
+                      onClick={() => openWeb3Modal()}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">🔗</span>
+                        <span className="font-bold text-gray-400 text-sm">WalletConnect</span>
+                      </div>
+                      <p className="text-xs text-gray-500">300+ wallets</p>
+                    </button>
+                    {/* Coinbase Wallet */}
+                    <button
+                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10"
+                      onClick={() => openWeb3Modal()}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">🔵</span>
+                        <span className="font-bold text-gray-400 text-sm">Coinbase</span>
+                      </div>
+                      <p className="text-xs text-gray-500">Coinbase Wallet</p>
+                    </button>
+                    {/* ZetaChain */}
+                    <button
+                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-green-500/50 hover:bg-green-500/10 relative"
+                      onClick={() => alert('🟢 ZetaChain Wallet\n\nOmnichain wallet integration coming soon!\n\nThis will enable universal cross-chain transactions across Bitcoin, Ethereum, BNB, Polygon & more.')}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">🟢</span>
+                        <span className="font-bold text-gray-400 text-sm">ZetaChain</span>
+                      </div>
+                      <p className="text-xs text-gray-500">Omnichain</p>
+                      <Badge className="absolute -top-2 -right-2 bg-yellow-500/20 text-yellow-400 text-[10px] px-1">Soon</Badge>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">Your default wallet is used for transactions, minting, and receiving payments.</p>
+                </Card>
+
+                {/* OAuth Wallets Section */}
+                <Card className="metadata-section p-4 mb-4 border-purple-500/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-purple-400">🔐</span>
+                    <h4 className="text-sm font-bold text-white">OAuth Wallets</h4>
+                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">Magic.link</Badge>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-4">Each login method creates a unique wallet on Polygon.</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Email Wallet */}
+                    <div className={`p-3 rounded-lg border ${userData?.me?.emailWalletAddress ? 'border-cyan-500/50 bg-cyan-500/5' : 'border-gray-700 border-dashed'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span>📧</span>
+                        <span className="text-xs text-gray-400">Email</span>
+                      </div>
+                      {userData?.me?.emailWalletAddress ? (
+                        <div className="flex items-center justify-between">
+                          <p className="font-mono text-cyan-400 text-xs">{userData.me.emailWalletAddress.slice(0, 6)}...{userData.me.emailWalletAddress.slice(-4)}</p>
+                          <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(userData?.me?.emailWalletAddress || '')} className="h-6 w-6 p-0">
+                            <Copy className="w-3 h-3 text-cyan-400" />
+                          </Button>
+                        </div>
+                      ) : <p className="text-gray-600 text-xs">Not connected</p>}
+                    </div>
+                    {/* Google Wallet */}
+                    <div className={`p-3 rounded-lg border ${userData?.me?.googleWalletAddress ? 'border-red-500/50 bg-red-500/5' : 'border-gray-700 border-dashed'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span>🔴</span>
+                        <span className="text-xs text-gray-400">Google</span>
+                      </div>
+                      {userData?.me?.googleWalletAddress ? (
+                        <div className="flex items-center justify-between">
+                          <p className="font-mono text-red-400 text-xs">{userData.me.googleWalletAddress.slice(0, 6)}...{userData.me.googleWalletAddress.slice(-4)}</p>
+                          <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(userData?.me?.googleWalletAddress || '')} className="h-6 w-6 p-0">
+                            <Copy className="w-3 h-3 text-red-400" />
+                          </Button>
+                        </div>
+                      ) : <p className="text-gray-600 text-xs">Not connected</p>}
+                    </div>
+                    {/* Discord Wallet */}
+                    <div className={`p-3 rounded-lg border ${userData?.me?.discordWalletAddress ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-gray-700 border-dashed'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span>🟣</span>
+                        <span className="text-xs text-gray-400">Discord</span>
+                      </div>
+                      {userData?.me?.discordWalletAddress ? (
+                        <div className="flex items-center justify-between">
+                          <p className="font-mono text-indigo-400 text-xs">{userData.me.discordWalletAddress.slice(0, 6)}...{userData.me.discordWalletAddress.slice(-4)}</p>
+                          <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(userData?.me?.discordWalletAddress || '')} className="h-6 w-6 p-0">
+                            <Copy className="w-3 h-3 text-indigo-400" />
+                          </Button>
+                        </div>
+                      ) : <p className="text-gray-600 text-xs">Not connected</p>}
+                    </div>
+                    {/* Twitch Wallet */}
+                    <div className={`p-3 rounded-lg border ${userData?.me?.twitchWalletAddress ? 'border-purple-500/50 bg-purple-500/5' : 'border-gray-700 border-dashed'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span>💜</span>
+                        <span className="text-xs text-gray-400">Twitch</span>
+                      </div>
+                      {userData?.me?.twitchWalletAddress ? (
+                        <div className="flex items-center justify-between">
+                          <p className="font-mono text-purple-400 text-xs">{userData.me.twitchWalletAddress.slice(0, 6)}...{userData.me.twitchWalletAddress.slice(-4)}</p>
+                          <Button variant="ghost" size="sm" onClick={() => navigator.clipboard.writeText(userData?.me?.twitchWalletAddress || '')} className="h-6 w-6 p-0">
+                            <Copy className="w-3 h-3 text-purple-400" />
+                          </Button>
+                        </div>
+                      ) : <p className="text-gray-600 text-xs">Not connected</p>}
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Connected Wallets */}
+                {walletAccount ? (
+                  <div className="space-y-3 mb-6">
+                    {/* Primary Wallet (Current Session) */}
+                    <Card className="metadata-section p-4 border-cyan-500/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center">
+                            <span className="text-white text-lg">✨</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-gray-400">SoundChain Wallet</p>
+                              <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Active</Badge>
+                            </div>
+                            <p className="font-mono text-cyan-400 text-sm">{walletAccount.slice(0, 10)}...{walletAccount.slice(-8)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-purple-500/20 text-purple-400 text-xs">Polygon</Badge>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { navigator.clipboard.writeText(walletAccount); }}
+                            className="hover:bg-cyan-500/20"
+                          >
+                            <Copy className="w-4 h-4 text-cyan-400" />
+                          </Button>
+                          <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
+                            <Button variant="ghost" size="sm" className="hover:bg-purple-500/20">
+                              <ExternalLink className="w-4 h-4 text-purple-400" />
+                            </Button>
+                          </a>
+                        </div>
+                      </div>
+                    </Card>
+
+                    {/* ZetaChain Wallet (Coming Soon) */}
+                    <Card className="metadata-section p-4 border-green-500/30 opacity-75">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+                            <span className="text-white text-lg">🟢</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-gray-400">ZetaChain Wallet</p>
+                              <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Coming Soon</Badge>
+                            </div>
+                            <p className="font-mono text-gray-500 text-sm">Universal omnichain address</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-green-500/20 text-green-400 text-xs">ZetaChain</Badge>
+                          <Button variant="ghost" size="sm" disabled className="opacity-50">
+                            <Plus className="w-4 h-4 text-gray-500" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mt-3 p-2 rounded bg-green-500/10 border border-green-500/20">
+                        <p className="text-xs text-green-400">🚀 ZetaChain integration coming soon! Bridge assets across Bitcoin, Ethereum, BNB, Polygon & more.</p>
+                      </div>
+                    </Card>
+
+                    {/* WalletConnect (includes MetaMask, Rainbow, Trust, etc.) */}
+                    <Card className="metadata-section p-4 border-blue-500/30">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                            <span className="text-white text-lg">🔗</span>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-gray-400">WalletConnect</p>
+                              <Badge className="bg-blue-500/20 text-blue-400 text-xs">v2</Badge>
+                            </div>
+                            <p className="text-gray-400 text-sm">300+ wallets supported</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openWeb3Modal()}
+                          className="border-blue-500/50 hover:bg-blue-500/10 text-blue-400"
+                        >
+                          Connect
+                        </Button>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="px-2 py-1 bg-orange-500/20 rounded text-xs text-orange-400">🦊 MetaMask</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">Rainbow</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">Trust</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">Argent</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">Ledger</span>
+                        <span className="px-2 py-1 bg-black/30 rounded text-xs text-gray-500">+300 more</span>
+                      </div>
+                    </Card>
+
+                    {/* Coinbase Wallet */}
+                    <Card className="metadata-section p-4 border-dashed border-gray-700">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
+                            <span className="text-lg">🔵</span>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Coinbase Wallet</p>
+                            <p className="text-gray-400 text-sm">Mobile or browser extension</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openWeb3Modal()}
+                          className="border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/10"
+                        >
+                          Connect
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 mb-6">
+                    <Wallet className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400 mb-4">Connect your wallet to view assets</p>
+                    <Button onClick={() => openWeb3Modal()} className="retro-button">
+                      <Wallet className="w-4 h-4 mr-2" />
+                      Connect Wallet
+                    </Button>
+                  </div>
+                )}
+
+                {/* Balance Cards - Real data from Magic wallet */}
+                {walletAccount && (
+                  <div className="mb-2 text-center">
+                    <a
+                      href={`https://polygonscan.com/address/${walletAccount}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
+                    >
+                      Verify on Polygonscan: {walletAccount.slice(0, 8)}...{walletAccount.slice(-6)} ↗
+                    </a>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <Card className="metadata-section p-4 text-center hover:border-yellow-500/50 transition-all">
+                    <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-400 mb-1">OGUN Total</p>
+                    <p className="text-xl font-bold text-yellow-400">
+                      {(Number(ogunBalance || 0) + Number(stakedOgunBalance || 0)).toFixed(2)}
+                    </p>
+                    <div className="text-xs text-gray-500 space-y-0.5 mt-1">
+                      <p className="text-green-400/80">{ogunBalance || '0.00'} liquid</p>
+                      <p className="text-orange-400/80">{stakedOgunBalance || '0.00'} staked</p>
+                    </div>
+                  </Card>
+                  <Card className="metadata-section p-4 text-center hover:border-purple-500/50 transition-all">
+                    <div className="w-8 h-8 mx-auto mb-2 text-purple-400">
+                      <svg viewBox="0 0 38 33" fill="currentColor"><path d="M29.7 16.5l-11.7 6.7-11.7-6.7 11.7-16.5 11.7 16.5zM18 25.2l-11.7-6.7 11.7 16.5 11.7-16.5-11.7 6.7z"/></svg>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-1">MATIC</p>
+                    <p className="text-xl font-bold text-purple-400">{maticBalance || '0.00'}</p>
+                    <p className="text-xs text-gray-500">≈ ${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
+                  </Card>
+                  <Card className="metadata-section p-4 text-center hover:border-cyan-500/50 transition-all">
+                    <ImageIcon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-400 mb-1">NFTs</p>
+                    <p className="text-xl font-bold text-cyan-400">
+                      {ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}
+                    </p>
+                    <p className="text-xs text-gray-500">Owned</p>
+                  </Card>
+                  <Card className="metadata-section p-4 text-center hover:border-green-500/50 transition-all">
+                    <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                    <p className="text-xs text-gray-400 mb-1">Total Value</p>
+                    <p className="text-xl font-bold text-green-400">
+                      ${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}
+                    </p>
+                    <p className="text-xs text-gray-500">Portfolio</p>
+                  </Card>
+                </div>
+
+                {/* Quick Actions */}
                 <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                   <Button
                     className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 flex-col h-auto py-4"
