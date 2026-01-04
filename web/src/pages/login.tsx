@@ -201,10 +201,19 @@ export default function LoginPage() {
       return;
     }
 
+    // CRITICAL: Redirect to non-www domain BEFORE starting OAuth
+    // This ensures the PKCE verifier is stored on the same domain we'll return to
+    // (localStorage is domain-specific - www.soundchain.io !== soundchain.io)
+    const targetDomain = config.domainUrl; // https://soundchain.io (no www)
+    if (typeof window !== 'undefined' && window.location.origin !== targetDomain) {
+      console.log('[OAuth] Redirecting to canonical domain before OAuth:', targetDomain);
+      window.location.href = `${targetDomain}/login`;
+      return;
+    }
+
     try {
       setLoggingIn(true);
       setError(null);
-      // Use config.domainUrl - MUST match what's registered in Magic Dashboard
       const redirectURI = `${config.domainUrl}/login`;
       console.log('[OAuth] Starting Google redirect to:', redirectURI);
       await (magic as any).oauth.loginWithRedirect({
