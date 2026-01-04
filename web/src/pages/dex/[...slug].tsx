@@ -28,6 +28,7 @@ import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
+import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
 import { GenreLeaderboard } from 'components/dex/GenreLeaderboard'
@@ -3255,9 +3256,22 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
             }}
           />
 
-          {/* Wallet View - Comprehensive DEX Wallet Management */}
+          {/* Wallet View - Multi-Wallet Aggregator */}
           {selectedView === 'wallet' && (
             <div className="space-y-6">
+              {/* Multi-Wallet Aggregator - Connect & View All Wallets */}
+              <MultiWalletAggregator
+                userWallet={userWallet}
+                maticBalance={maticBalance}
+                ogunBalance={ogunBalance}
+                ownedTracks={ownedTracks}
+                onPlayTrack={(track, index) => handlePlayTrack(track, index, ownedTracks)}
+                onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
+                currentTrackId={currentSong?.trackId}
+                isPlaying={isPlaying}
+                openWeb3Modal={openWeb3Modal}
+              />
+
               {/* Header Card */}
               <Card className="retro-card p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -3266,8 +3280,8 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                       <Wallet className="w-8 h-8 text-green-400" />
                     </div>
                     <div>
-                      <h2 className="retro-title text-xl">Wallet</h2>
-                      <p className="text-gray-400 text-sm">Manage your crypto assets</p>
+                      <h2 className="retro-title text-xl">Wallet Overview</h2>
+                      <p className="text-gray-400 text-sm">Balances & Transactions</p>
                     </div>
                   </div>
                   {chainName && (
