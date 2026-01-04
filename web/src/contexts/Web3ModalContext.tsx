@@ -47,12 +47,12 @@ const optimism = {
   rpcUrl: 'https://mainnet.optimism.io'
 }
 
-// Web3Modal metadata - use www subdomain to match production
+// Web3Modal metadata - use soundchain.io (without www) to match production
 const metadata = {
   name: 'SoundChain',
   description: 'Music NFT Marketplace',
-  url: 'https://www.soundchain.io',
-  icons: ['https://www.soundchain.io/favicons/apple-touch-icon.png']
+  url: 'https://soundchain.io',
+  icons: ['https://soundchain.io/favicons/apple-touch-icon.png']
 }
 
 // Track if Web3Modal has been initialized

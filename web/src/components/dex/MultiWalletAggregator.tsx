@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
+import { usePolygonNFTs } from 'hooks/usePolygonNFTs'
 import { config } from 'config'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
@@ -98,6 +99,12 @@ export function MultiWalletAggregator({
   const [metamaskOgunBalance, setMetamaskOgunBalance] = useState<string>('0')
   const [isConnectingMetaMask, setIsConnectingMetaMask] = useState(false)
 
+  // Fetch Polygon NFTs for connected MetaMask wallet
+  const { nfts: metamaskNFTs, isLoading: nftsLoading } = usePolygonNFTs(metamaskAddress || undefined)
+
+  // Fetch Polygon NFTs for Magic external wallet
+  const { nfts: externalWalletNFTs } = usePolygonNFTs(walletConnectedAddress || undefined)
+
   // Check if MetaMask is installed
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -175,7 +182,15 @@ export function MultiWalletAggregator({
         chainName: 'Polygon',
         balance: metamaskBalance,
         ogunBalance: metamaskOgunBalance,
-        nfts: [], // Would need to query NFTs for this address
+        // Map Polygon NFTs to NFTTrack format
+        nfts: metamaskNFTs.map((nft) => ({
+          id: nft.tokenId,
+          title: nft.name || `SoundChain #${nft.tokenId}`,
+          artist: nft.artist,
+          artworkUrl: nft.image,
+          audioUrl: nft.audioUrl,
+          tokenId: nft.tokenId,
+        })),
         isActive: !walletConnectedAddress && !!metamaskAddress
       })
     }
@@ -189,13 +204,21 @@ export function MultiWalletAggregator({
         chainName: 'Polygon',
         balance: '0', // Would need to fetch
         ogunBalance: '0',
-        nfts: [],
+        // Map external wallet NFTs
+        nfts: externalWalletNFTs.map((nft) => ({
+          id: nft.tokenId,
+          title: nft.name || `SoundChain #${nft.tokenId}`,
+          artist: nft.artist,
+          artworkUrl: nft.image,
+          audioUrl: nft.audioUrl,
+          tokenId: nft.tokenId,
+        })),
         isActive: true
       })
     }
 
     setConnectedWallets(wallets)
-  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress])
+  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, metamaskNFTs, externalWalletNFTs])
 
   const toggleExpanded = (walletId: string) => {
     setExpandedWallets(prev => {

@@ -29,6 +29,7 @@ import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
+import { OmnichainWalletDashboard } from 'components/dex/OmnichainWalletDashboard'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
 import { GenreLeaderboard } from 'components/dex/GenreLeaderboard'
@@ -3270,6 +3271,24 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 currentTrackId={currentSong?.trackId}
                 isPlaying={isPlaying}
                 openWeb3Modal={openWeb3Modal}
+              />
+
+              {/* Omnichain Dashboard - Multi-Chain Balances & Polygon NFTs */}
+              <OmnichainWalletDashboard
+                walletAddress={userWallet || undefined}
+                onPlayTrack={(nft) => {
+                  if (nft.audioUrl) {
+                    const song: Song = {
+                      trackId: nft.tokenId,
+                      artistName: nft.artist || 'Unknown Artist',
+                      title: nft.name || `SoundChain #${nft.tokenId}`,
+                      artworkUrl: nft.image || '/default-pictures/album-artwork.png',
+                      songUrl: nft.audioUrl,
+                    }
+                    setCurrentSong(song)
+                    setIsPlaying(true)
+                  }
+                }}
               />
 
               {/* Header Card */}
