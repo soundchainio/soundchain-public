@@ -67,16 +67,20 @@ function initializeWeb3Modal() {
       chains: [polygon, ethereum, base, arbitrum, optimism],
       projectId,
       enableAnalytics: false,
+      enableOnramp: false, // Disable fiat onramp to prevent external redirects
       themeMode: 'dark',
       themeVariables: {
         '--w3m-accent': '#8B5CF6',
         '--w3m-border-radius-master': '8px',
+        '--w3m-z-index': '9999',
       },
       featuredWalletIds: [
         'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
         'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase Wallet
         '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet
       ],
+      // Keep users on site - use modal only
+      enableExplorer: false, // Disable wallet explorer to prevent external navigation
     })
     isInitialized = true
     console.log('Web3Modal initialized successfully')

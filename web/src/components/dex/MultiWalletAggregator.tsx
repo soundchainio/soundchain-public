@@ -268,7 +268,7 @@ export function MultiWalletAggregator({
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {/* Magic Wallet - SoundChain Native */}
           <button
             className={`p-3 rounded-lg border-2 text-left transition-all ${
@@ -286,47 +286,25 @@ export function MultiWalletAggregator({
             <p className="text-xs text-gray-500">Native wallet</p>
           </button>
 
-          {/* Magic Wallet Connect - Primary button for external wallets */}
+          {/* Magic Wallet Connect - Primary button for ALL external wallets (inline modal) */}
           <button
             className={`p-3 rounded-lg border-2 text-left transition-all ${
-              walletConnectedAddress
+              walletConnectedAddress || metamaskAddress
                 ? 'border-purple-500 bg-purple-500/10'
-                : 'border-gray-700 bg-black/30 hover:border-purple-500/50'
+                : 'border-gray-700 bg-black/30 hover:border-purple-500/50 hover:bg-purple-500/5'
             }`}
-            onClick={connectWallet}
+            onClick={walletConnectedAddress ? () => toggleExpanded('walletconnect') : connectWallet}
             disabled={isConnectingWallet}
           >
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🔗</span>
-              <span className={`font-bold text-sm ${walletConnectedAddress ? 'text-purple-400' : 'text-gray-400'}`}>
+              <span className={`font-bold text-sm ${walletConnectedAddress || metamaskAddress ? 'text-purple-400' : 'text-gray-400'}`}>
                 {isConnectingWallet ? 'Connecting...' : 'Connect Wallet'}
               </span>
-              {walletConnectedAddress && <Check className="w-3 h-3 text-green-400" />}
+              {(walletConnectedAddress || metamaskAddress) && <Check className="w-3 h-3 text-green-400" />}
             </div>
             <p className="text-xs text-gray-500">
-              {walletConnectedAddress ? formatAddress(walletConnectedAddress) : 'MetaMask, Coinbase...'}
-            </p>
-          </button>
-
-          {/* Direct MetaMask - Fallback for power users */}
-          <button
-            className={`p-3 rounded-lg border-2 text-left transition-all ${
-              metamaskAddress
-                ? 'border-orange-500 bg-orange-500/10'
-                : 'border-gray-700 bg-black/30 hover:border-orange-500/50'
-            }`}
-            onClick={metamaskAddress ? () => toggleExpanded('metamask') : connectMetaMask}
-            disabled={isConnectingMetaMask}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🦊</span>
-              <span className={`font-bold text-sm ${metamaskAddress ? 'text-orange-400' : 'text-gray-400'}`}>
-                {isConnectingMetaMask ? '...' : 'MetaMask'}
-              </span>
-              {metamaskAddress && <Check className="w-3 h-3 text-green-400" />}
-            </div>
-            <p className="text-xs text-gray-500">
-              {metamaskAddress ? formatAddress(metamaskAddress) : (isMetaMaskInstalled ? 'Direct connect' : 'Install')}
+              {walletConnectedAddress ? formatAddress(walletConnectedAddress) : '🦊 MetaMask, Coinbase...'}
             </p>
           </button>
 
@@ -345,7 +323,7 @@ export function MultiWalletAggregator({
         </div>
 
         <p className="text-xs text-gray-500 mt-3 text-center">
-          Connect multiple wallets to view all your NFTs in one place
+          Connect external wallets to view legacy NFTs
         </p>
       </Card>
 
