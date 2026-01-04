@@ -202,7 +202,7 @@ export default function LoginPage() {
     }
     try {
       setLoggingIn(true);
-      await (magic as any).oauth.loginWithRedirect({
+      await (magic as any).oauth2.loginWithRedirect({
         provider: 'google',
         redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
@@ -221,7 +221,7 @@ export default function LoginPage() {
     }
     try {
       setLoggingIn(true);
-      await (magic as any).oauth.loginWithRedirect({
+      await (magic as any).oauth2.loginWithRedirect({
         provider: 'discord',
         redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
@@ -240,7 +240,7 @@ export default function LoginPage() {
     }
     try {
       setLoggingIn(true);
-      await (magic as any).oauth.loginWithRedirect({
+      await (magic as any).oauth2.loginWithRedirect({
         provider: 'twitch',
         redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
@@ -270,7 +270,7 @@ export default function LoginPage() {
           );
 
           const result = await Promise.race([
-            (magic as any).oauth.getRedirectResult(),
+            (magic as any).oauth2.getRedirectResult(),
             timeoutPromise
           ]) as any;
 
