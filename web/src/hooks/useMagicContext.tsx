@@ -26,6 +26,12 @@ interface MagicContextData {
   refetchBalance: () => Promise<void>
   isRefetchingBalance: boolean
   isLoggedIn: boolean
+  // Magic Wallet Module - connect external wallets
+  connectWallet: () => Promise<string[] | null>
+  walletConnectedAddress: string | null
+  isConnectingWallet: boolean
+  disconnectExternalWallet: () => void
+  getWalletProvider: () => Promise<any>
 }
 
 const MagicContext = createContext<MagicContextData>({} as MagicContextData);
@@ -74,6 +80,10 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const [ogunBalance, setOgunBalance] = useState('')
   const [isRefetchingBalance, setIsRefetchingBalance] = useState(false)
 
+  // Magic Wallet Module state
+  const [walletConnectedAddress, setWalletConnectedAddress] = useState<string | null>(null)
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false)
+
   // Initialize Magic SDK on the client side
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -109,6 +119,70 @@ export function MagicProvider({ children }: MagicProviderProps) {
       setIsRefetchingBalance(false)
     }
   }
+
+  // Magic Wallet Module - Connect external wallets (MetaMask, etc.)
+  const connectWallet = useCallback(async (): Promise<string[] | null> => {
+    if (!magic) {
+      console.error('Magic SDK not initialized')
+      return null
+    }
+
+    try {
+      setIsConnectingWallet(true)
+      console.log('🔗 Opening Magic wallet connect UI...')
+
+      // Use Magic's built-in wallet connection UI
+      const accounts = await (magic as any).wallet.connectWithUI()
+      console.log('🔗 Wallet connected:', accounts)
+
+      if (accounts && accounts.length > 0) {
+        setWalletConnectedAddress(accounts[0])
+        // Store in localStorage for persistence
+        localStorage.setItem('magic_wallet_connected', accounts[0])
+        return accounts
+      }
+      return null
+    } catch (error: any) {
+      console.error('🔗 Wallet connect error:', error)
+      // User closed modal or cancelled
+      if (error.message?.includes('User denied') || error.message?.includes('cancelled')) {
+        console.log('🔗 User cancelled wallet connection')
+      }
+      return null
+    } finally {
+      setIsConnectingWallet(false)
+    }
+  }, [magic])
+
+  // Disconnect external wallet
+  const disconnectExternalWallet = useCallback(() => {
+    setWalletConnectedAddress(null)
+    localStorage.removeItem('magic_wallet_connected')
+    console.log('🔗 External wallet disconnected')
+  }, [])
+
+  // Get wallet provider for web3/ethers integration
+  const getWalletProvider = useCallback(async () => {
+    if (!magic) {
+      console.error('Magic SDK not initialized')
+      return null
+    }
+    try {
+      const provider = await (magic as any).wallet.getProvider()
+      return provider
+    } catch (error) {
+      console.error('Error getting wallet provider:', error)
+      return null
+    }
+  }, [magic])
+
+  // Restore wallet connection from localStorage on mount
+  useEffect(() => {
+    const savedAddress = localStorage.getItem('magic_wallet_connected')
+    if (savedAddress) {
+      setWalletConnectedAddress(savedAddress)
+    }
+  }, [])
 
   const handleSetAccount = useCallback(async () => {
     try {
@@ -202,7 +276,22 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   return (
     <MagicContext.Provider
-      value={{ magic, web3, account, balance: maticBalance, ogunBalance, refetchBalance, isRefetchingBalance, isLoggedIn: !!me }}
+      value={{
+        magic,
+        web3,
+        account,
+        balance: maticBalance,
+        ogunBalance,
+        refetchBalance,
+        isRefetchingBalance,
+        isLoggedIn: !!me,
+        // Magic Wallet Module
+        connectWallet,
+        walletConnectedAddress,
+        isConnectingWallet,
+        disconnectExternalWallet,
+        getWalletProvider,
+      }}
     >
       {children}
     </MagicContext.Provider>

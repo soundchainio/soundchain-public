@@ -20,7 +20,6 @@ import {
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
-import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { config } from 'config'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
@@ -56,7 +55,6 @@ interface MultiWalletAggregatorProps {
   onTrackClick?: (trackId: string) => void
   currentTrackId?: string
   isPlaying?: boolean
-  openWeb3Modal?: () => void
 }
 
 // Token contract helper
@@ -83,10 +81,14 @@ export function MultiWalletAggregator({
   onTrackClick,
   currentTrackId,
   isPlaying,
-  openWeb3Modal
 }: MultiWalletAggregatorProps) {
-  const { web3: magicWeb3 } = useMagicContext()
-  const { activeAddress, activeWalletType, isConnected: isUnifiedConnected, disconnectWallet } = useUnifiedWallet()
+  const {
+    web3: magicWeb3,
+    connectWallet,
+    walletConnectedAddress,
+    isConnectingWallet,
+    disconnectExternalWallet
+  } = useMagicContext()
 
   const [connectedWallets, setConnectedWallets] = useState<ConnectedWallet[]>([])
   const [expandedWallets, setExpandedWallets] = useState<Set<string>>(new Set(['magic']))
@@ -160,7 +162,7 @@ export function MultiWalletAggregator({
           audioUrl: t.playbackUrl,
           tokenId: t.tokenId,
         })),
-        isActive: activeWalletType === 'magic'
+        isActive: !walletConnectedAddress && !metamaskAddress
       })
     }
 
@@ -174,26 +176,26 @@ export function MultiWalletAggregator({
         balance: metamaskBalance,
         ogunBalance: metamaskOgunBalance,
         nfts: [], // Would need to query NFTs for this address
-        isActive: activeWalletType === 'metamask'
+        isActive: !walletConnectedAddress && !!metamaskAddress
       })
     }
 
-    // WalletConnect/Web3Modal Wallet (if connected and different from Magic)
-    if (isUnifiedConnected && activeAddress && activeAddress !== userWallet && activeAddress !== metamaskAddress) {
+    // Magic Wallet Module connected wallet (external wallets like MetaMask via Magic UI)
+    if (walletConnectedAddress && walletConnectedAddress !== userWallet && walletConnectedAddress !== metamaskAddress) {
       wallets.push({
-        id: 'walletconnect',
-        type: 'walletconnect',
-        address: activeAddress,
+        id: 'magic-external',
+        type: 'walletconnect', // Using walletconnect type for display purposes
+        address: walletConnectedAddress,
         chainName: 'Polygon',
         balance: '0', // Would need to fetch
         ogunBalance: '0',
         nfts: [],
-        isActive: activeWalletType === 'web3modal'
+        isActive: true
       })
     }
 
     setConnectedWallets(wallets)
-  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, isUnifiedConnected, activeAddress, activeWalletType])
+  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress])
 
   const toggleExpanded = (walletId: string) => {
     setExpandedWallets(prev => {
@@ -243,8 +245,8 @@ export function MultiWalletAggregator({
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-          {/* Magic Wallet - Default */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {/* Magic Wallet - SoundChain Native */}
           <button
             className={`p-3 rounded-lg border-2 text-left transition-all ${
               userWallet
@@ -255,13 +257,35 @@ export function MultiWalletAggregator({
           >
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">✨</span>
-              <span className={`font-bold text-sm ${userWallet ? 'text-cyan-400' : 'text-gray-400'}`}>Magic</span>
+              <span className={`font-bold text-sm ${userWallet ? 'text-cyan-400' : 'text-gray-400'}`}>SoundChain</span>
               {userWallet && <Check className="w-3 h-3 text-green-400" />}
             </div>
             <p className="text-xs text-gray-500">Native wallet</p>
           </button>
 
-          {/* MetaMask - Direct Connection */}
+          {/* Magic Wallet Connect - Primary button for external wallets */}
+          <button
+            className={`p-3 rounded-lg border-2 text-left transition-all ${
+              walletConnectedAddress
+                ? 'border-purple-500 bg-purple-500/10'
+                : 'border-gray-700 bg-black/30 hover:border-purple-500/50'
+            }`}
+            onClick={connectWallet}
+            disabled={isConnectingWallet}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">🔗</span>
+              <span className={`font-bold text-sm ${walletConnectedAddress ? 'text-purple-400' : 'text-gray-400'}`}>
+                {isConnectingWallet ? 'Connecting...' : 'Connect Wallet'}
+              </span>
+              {walletConnectedAddress && <Check className="w-3 h-3 text-green-400" />}
+            </div>
+            <p className="text-xs text-gray-500">
+              {walletConnectedAddress ? formatAddress(walletConnectedAddress) : 'MetaMask, Coinbase...'}
+            </p>
+          </button>
+
+          {/* Direct MetaMask - Fallback for power users */}
           <button
             className={`p-3 rounded-lg border-2 text-left transition-all ${
               metamaskAddress
@@ -279,37 +303,8 @@ export function MultiWalletAggregator({
               {metamaskAddress && <Check className="w-3 h-3 text-green-400" />}
             </div>
             <p className="text-xs text-gray-500">
-              {metamaskAddress ? formatAddress(metamaskAddress) : (isMetaMaskInstalled ? 'Click to connect' : 'Install')}
+              {metamaskAddress ? formatAddress(metamaskAddress) : (isMetaMaskInstalled ? 'Direct connect' : 'Install')}
             </p>
-          </button>
-
-          {/* WalletConnect */}
-          <button
-            className={`p-3 rounded-lg border-2 text-left transition-all ${
-              isUnifiedConnected && activeWalletType === 'web3modal'
-                ? 'border-blue-500 bg-blue-500/10'
-                : 'border-gray-700 bg-black/30 hover:border-blue-500/50'
-            }`}
-            onClick={openWeb3Modal}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🔗</span>
-              <span className="font-bold text-gray-400 text-sm">WalletConnect</span>
-              {isUnifiedConnected && activeWalletType === 'web3modal' && <Check className="w-3 h-3 text-green-400" />}
-            </div>
-            <p className="text-xs text-gray-500">300+ wallets</p>
-          </button>
-
-          {/* Coinbase */}
-          <button
-            className="p-3 rounded-lg border-2 border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50"
-            onClick={openWeb3Modal}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🔵</span>
-              <span className="font-bold text-gray-400 text-sm">Coinbase</span>
-            </div>
-            <p className="text-xs text-gray-500">Coinbase Wallet</p>
           </button>
 
           {/* ZetaChain - Coming Soon */}
@@ -434,11 +429,11 @@ export function MultiWalletAggregator({
                           <X className="w-3 h-3" />
                         </button>
                       )}
-                      {wallet.type === 'walletconnect' && (
+                      {(wallet.type === 'walletconnect' || wallet.id === 'magic-external') && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation()
-                            disconnectWallet()
+                            disconnectExternalWallet()
                           }}
                           className="text-gray-500 hover:text-red-400 transition-colors"
                         >

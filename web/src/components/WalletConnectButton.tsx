@@ -1,6 +1,6 @@
 'use client'
 
-import { useWeb3Modal, useWeb3ModalAccount, useDisconnect } from '@web3modal/ethers5/react'
+import { useMagicContext } from 'hooks/useMagicContext'
 import classNames from 'classnames'
 
 interface WalletConnectButtonProps {
@@ -14,24 +14,26 @@ export const WalletConnectButton = ({
   variant = 'default',
   showAddress = true
 }: WalletConnectButtonProps) => {
-  const { open } = useWeb3Modal()
-  const { address, isConnected } = useWeb3ModalAccount()
-  const { disconnect } = useDisconnect()
+  const { connectWallet, walletConnectedAddress, isConnectingWallet, account, disconnectExternalWallet } = useMagicContext()
 
   const truncateAddress = (addr: string) => {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
   }
 
-  if (isConnected && address) {
+  // Show connected external wallet or Magic wallet
+  const displayAddress = walletConnectedAddress || account
+  const isConnected = !!displayAddress
+
+  if (isConnected && displayAddress) {
     return (
       <div className={classNames('flex items-center gap-2', className)}>
         {showAddress && variant !== 'icon' && (
           <span className="text-xs text-gray-60">
-            {truncateAddress(address)}
+            {truncateAddress(displayAddress)}
           </span>
         )}
         <button
-          onClick={() => open({ view: 'Account' })}
+          onClick={connectWallet}
           className={classNames(
             'flex items-center justify-center rounded-lg bg-gray-20 border border-gray-30 hover:bg-gray-25 transition-colors',
             {
@@ -52,9 +54,10 @@ export const WalletConnectButton = ({
 
   return (
     <button
-      onClick={() => open()}
+      onClick={connectWallet}
+      disabled={isConnectingWallet}
       className={classNames(
-        'flex items-center justify-center rounded-lg bg-purple-600 hover:bg-purple-700 transition-colors text-white font-medium',
+        'flex items-center justify-center rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50 transition-colors text-white font-medium',
         {
           'px-4 py-2 gap-2': variant === 'default',
           'px-3 py-1.5 gap-1.5 text-xs': variant === 'compact',
@@ -64,7 +67,7 @@ export const WalletConnectButton = ({
       )}
     >
       <WalletIcon className="w-4 h-4" />
-      {variant !== 'icon' && <span>Connect Wallet</span>}
+      {variant !== 'icon' && <span>{isConnectingWallet ? 'Connecting...' : 'Connect Wallet'}</span>}
     </button>
   )
 }
