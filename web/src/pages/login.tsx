@@ -403,8 +403,12 @@ export default function LoginPage() {
 
   const GoogleButton = () => (
     <button
+      type="button"
       className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-yellow-400"
-      onClick={handleGoogleLogin}
+      onClick={(e) => {
+        e.preventDefault();
+        handleGoogleLogin();
+      }}
     >
       <Google className="h-5 w-5" />
       <span>Login with Google</span>
@@ -413,8 +417,12 @@ export default function LoginPage() {
 
   const DiscordButton = () => (
     <button
+      type="button"
       className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-[#5865F2]"
-      onClick={handleDiscordLogin}
+      onClick={(e) => {
+        e.preventDefault();
+        handleDiscordLogin();
+      }}
     >
       <Discord className="h-5 w-5" />
       <span>Login with Discord</span>
@@ -423,8 +431,12 @@ export default function LoginPage() {
 
   const TwitchButton = () => (
     <button
+      type="button"
       className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-[#9146FF]"
-      onClick={handleTwitchLogin}
+      onClick={(e) => {
+        e.preventDefault();
+        handleTwitchLogin();
+      }}
     >
       <Twitch className="h-5 w-5" />
       <span>Login with Twitch</span>
