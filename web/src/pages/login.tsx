@@ -189,6 +189,9 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
+  // Detect mobile for different OAuth approach
+  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   // Legacy-style OAuth handlers (matching working develop/staging branches)
   const handleGoogleLogin = async () => {
     if (!magic) {
@@ -200,68 +203,56 @@ export default function LoginPage() {
       setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
       return;
     }
-    try {
-      setLoggingIn(true);
-      const redirectURI = `${config.domainUrl}/login`;
-      console.log('[OAuth] Starting Google login...');
-      console.log('[OAuth] domainUrl:', config.domainUrl);
-      console.log('[OAuth] redirectURI:', redirectURI);
-      console.log('[OAuth] magic.oauth2 exists:', !!(magic as any).oauth2);
-      console.log('[OAuth] loginWithRedirect type:', typeof (magic as any).oauth2?.loginWithRedirect);
-      console.log('[OAuth] getRedirectResult type:', typeof (magic as any).oauth2?.getRedirectResult);
 
-      // Set a timeout - if redirect doesn't happen in 10s, something is wrong
-      const timeoutId = setTimeout(() => {
-        console.error('[OAuth] Redirect timeout - page should have navigated by now');
-        setError('Google login timed out. Please try again or use Email login.');
-        setLoggingIn(false);
-      }, 10000);
+    setLoggingIn(true);
+    setError(null);
+    const redirectURI = `${config.domainUrl}/login`;
 
-      // Try loginWithPopup first (more reliable), fallback to redirect
-      console.log('[OAuth] Trying loginWithPopup...');
+    // Mobile: Use popup (works well), Desktop: Use redirect (more reliable)
+    if (isMobile) {
+      console.log('[OAuth] Mobile detected, using popup...');
       try {
         const result = await (magic as any).oauth2.loginWithPopup({
           provider: 'google',
           scope: ['email', 'profile'],
         });
-        clearTimeout(timeoutId);
         console.log('[OAuth] Popup result:', result);
 
         if (result?.magic?.idToken) {
-          console.log('[OAuth] Got idToken from popup, logging in...');
           const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-
           if (loginResult.data?.login.jwt) {
             await setJwt(loginResult.data.login.jwt);
-            const callbackUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            console.log('[OAuth] Success! Redirecting to:', callbackUrl);
-            router.push(callbackUrl);
+            router.push(router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin);
             return;
           }
         }
         throw new Error('No idToken in popup result');
-      } catch (popupErr: any) {
-        clearTimeout(timeoutId);
-        console.error('[OAuth] Popup failed:', popupErr?.message);
-        // If popup was blocked, fall back to redirect
-        if (popupErr?.message?.includes('blocked') || popupErr?.message?.includes('closed')) {
-          console.log('[OAuth] Popup blocked, trying redirect...');
-          await (magic as any).oauth2.loginWithRedirect({
-            provider: 'google',
-            redirectURI,
-            scope: ['email', 'profile'],
-          });
-        } else {
-          throw popupErr;
-        }
+      } catch (err: any) {
+        console.error('[OAuth] Popup error:', err);
+        setError(err.message || 'Google login failed');
+        setLoggingIn(false);
       }
-    } catch (err: any) {
-      console.error('[OAuth] Google redirect error:', err);
-      console.error('[OAuth] Error name:', err?.name);
-      console.error('[OAuth] Error code:', err?.code);
-      console.error('[OAuth] Error rawMessage:', err?.rawMessage);
-      setError(err.message || 'Google login failed');
-      setLoggingIn(false);
+    } else {
+      // Desktop: Use redirect approach
+      console.log('[OAuth] Desktop detected, using redirect...');
+      try {
+        await (magic as any).oauth2.loginWithRedirect({
+          provider: 'google',
+          redirectURI,
+          scope: ['email', 'profile'],
+        });
+        // If we get here without redirecting, something went wrong
+        setTimeout(() => {
+          if (loggingIn) {
+            setError('Google login timed out. Please try again.');
+            setLoggingIn(false);
+          }
+        }, 15000);
+      } catch (err: any) {
+        console.error('[OAuth] Redirect error:', err);
+        setError(err.message || 'Google login failed');
+        setLoggingIn(false);
+      }
     }
   };
 
