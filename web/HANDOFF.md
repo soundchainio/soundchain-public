@@ -1,8 +1,125 @@
 # SoundChain Codebase Handoff Document
 
-**Last Updated:** December 22, 2025
-**Total Commits:** 4,637+ on production branch
+**Last Updated:** January 5, 2026
+**Total Commits:** 4,800+ on production branch
 **Project Start:** July 14, 2021
+
+---
+
+## ⚠️ CRITICAL: CURRENT STATUS (Jan 5, 2026)
+
+### Google OAuth Login Status
+- **Mobile Chrome:** BROKEN (was working, needs fix)
+- **Desktop Chrome:** BROKEN (timeout issues)
+- **Last Known Working Commit:** `a6977e07b` (Dec 31) - @magic-ext/oauth2
+
+### Package Versions That Work
+```json
+"@magic-ext/oauth2": "14.0.0",
+"magic-sdk": "28.4.0",
+"@magic-sdk/commons": "24.0.0"
+```
+
+### OAuth Debugging History (Jan 3-5, 2026)
+The OAuth login has been unstable. Key commits in the debugging journey:
+- `a6977e07b` (12/31) - Upgrade to @magic-ext/oauth2
+- `9815054d4` (01/03) - Popup-based OAuth for Chrome
+- `1895d4a61` (01/04) - Another oauth2 upgrade attempt
+- `2d9b14660` (01/04) - Battery optimization + OAuth race fix
+- `ea4c884e9` (01/05) - Popup flow for all platforms
+
+**DO NOT** modify the global `useMe` hook - it breaks OAuth login flow.
+
+---
+
+## 📅 RECENT CHANGES (Dec 22, 2025 - Jan 5, 2026)
+
+### January 5, 2026
+- `0574b009e` - Revert login prompt fix (broke OAuth)
+- `8f8676ecb` - Fix login prompt in AudioPlayerModal (REVERTED)
+- `ba76fe294` - Remove debug code from wallet page
+- `ea4c884e9` - Use popup flow for Google OAuth
+- `471bdcb9a` - Reinstall OAuth2 extension
+
+### January 4, 2026
+- `2d9b14660` - Battery optimization + Google OAuth race condition fix
+- `a979bd483` - Restore original wallet page
+- `75ce69b96` - Restore Figma-style wallet cards with NFT rows
+- `1895d4a61` - Upgrade to @magic-ext/oauth2 for Chrome
+- `d13bd92cb` - Add Magic wallet.connectWithUI()
+- `6680c4238` - Multi-chain aggregator + WalletConnect fix
+
+### January 3, 2026
+- `2b8ae01d1` - Full Backend dashboard from Figma
+- `fe0724f33` - Major UI audit fixes
+- `f23f5f327` - CRITICAL: defaultWallet is ENUM not address
+- `87b1ab809` - NFT Collection modal with Figma grid
+- `ba93030a5` - Figma-style NFT grid for wallet page
+- `9815054d4` - Popup-based OAuth for Chrome (cookie blocking)
+- `c8a85ba69` - Multi-wallet aggregator inline NFT display
+
+### January 2, 2026
+- `3b52dce4d` - Web3 Backend Dashboard + StreamingRewards FUNDED
+- `e8413b55b` - Stake tab, Tip Bucket feature
+- `ecf07b5e4` - Loop mode button in music player
+- `8893fca2f` - OGUN streaming rewards with correct imports
+
+### January 1, 2026
+- `979b02fbd` - OGUN Streaming Rewards System
+- `f27696761` - OGUN Staking panel in DEX
+- `d01f31006` - Loop mode, chain explorers, mint chain selection
+- `4773bed30` - Loop playback properly restarts track
+
+### December 31, 2025
+- `a6977e07b` - Upgrade to @magic-ext/oauth2 (LAST STABLE OAUTH?)
+- `e166914ac` - Artwork fallback handling
+- `c63bc8543` - window.location.origin for OAuth redirect
+- `32d58b8ec` - Fix toggleFavorite in TracksGrid
+- `864a00c3c` - Track grid cards in profile Music tab
+- `af03df674` - Playlist bugs - delete, external links, NFT playback
+- `d073425a3` - Comment system fixes - emote rendering
+
+### December 30, 2025
+- `e003f0b9a` - Critical GraphQL errors fixed
+- `b889d2fa0` - SCid certificate upload to Create Modal
+- `90b8576a5` - Developer Portal with API key management
+- `aa797aef2` - Google login using shared Magic context
+- `8c3c08464` - iOS text input fix (white text on white bg)
+
+### December 29, 2025
+- `26a3ec6ce` - Non-web3 SCid minting (Bandcamp/DistroKid style)
+- `cb183851b` - Developer Platform for startup announcements
+- `e4679b0e5` - Skip Web Audio API on iOS/Safari for CarPlay
+- `8783b4bc6` - Deduplicate user avatars
+- `a1cfa3977` - -24 LUFS audio normalization
+
+### December 28, 2025
+- `554738be7` - Pinata/IPFS streaming integration
+- `ed7d127b9` - IPFS CID migration for decentralized streaming
+- `75da829d3` - artworkWithFallback field resolver
+- `1ffc42510` - Top Charts mobile display fixes
+
+### December 26, 2025
+- `b8c3a68ee` - SoundCloud-style waveform with comments
+- `664b40e95` - Full-width static waveform visualization
+- `be9ea3f35` - DAW-style vertical bars from center
+- `6143c22f2` - Emoji picker and stickers for comments
+- `677a066ab` - New Year's 2026 themed comment eruptions
+
+### December 24, 2025
+- `d761b9e04` - Library page shows real data
+- `634ea4f73` - Playlist item mutations for external links
+- `903aa7371` - Playlist tracks loading fix
+- `d5b10ce30` - External link input to PlaylistDetail
+
+### December 23, 2025
+- `bf260835c` - Inline playable share cards for Twitter/Discord
+- `5533fdb45` - Profile page posts feed loads correctly
+- `e51208422` - Revamped playlist modal - external links
+- `960423b1e` - Artwork upload to playlist creation
+- `1b8284093` - Playlist play functionality + delete
+
+---
 
 **Related Documents:**
 - `LEGACY_TO_DEX_MIGRATION.md` - Full audit of legacy flows to port
