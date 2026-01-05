@@ -220,7 +220,7 @@ export default function LoginPage() {
       console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
 
       // Direct call to loginWithRedirect using oauth2 extension
-      await (magic as any).oauth2.loginWithRedirect({
+      (magic as any).oauth2.loginWithRedirect({
         provider,
         redirectURI,
         scope: ['openid'],
