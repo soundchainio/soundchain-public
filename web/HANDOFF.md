@@ -60,10 +60,14 @@ The OAuth login has been unstable. Key commits in the debugging journey:
 
 ## 📅 RECENT CHANGES (Dec 22, 2025 - Jan 5, 2026)
 
-### January 5, 2026 (Session 3) - Legacy Wallet Integration + POL Rebrand
+### January 5, 2026 (Session 3) - Legacy Wallet + POL + SCid Worker
 - `5b18600a0` - Rebrand MATIC to POL in all user-facing UI
 - `4bf71c332` - Re-enable DefaultWallet switching mutation
 - `94b2735e7` - MetaMask fallback to WalletConnect (instead of install redirect)
+- **NEW:** Created SCid Worker (`~/soundchain-agent/scid_worker.py`) - Local AI assistant
+  - Run `~/soundchain-agent/start_worker.sh` before sessions to save API tokens
+  - Delegates bash, grep, file reads to local Ollama models (FREE)
+  - See `~/soundchain-agent/HANDOFF_2026-01-05_SCidWorker.md` for details
 
 ### January 5, 2026 (Session 2)
 - `86b522d21` - Remove await blocking OAuth redirect
