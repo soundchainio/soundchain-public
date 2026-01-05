@@ -217,61 +217,17 @@ export default function LoginPage() {
 
       // Use window.location.origin to match the actual domain (www vs non-www)
       const redirectURI = `${typeof window !== 'undefined' ? window.location.origin : config.domainUrl}/login`;
-      console.log('[OAuth] Starting redirect to', provider, 'with URI:', redirectURI);
-      console.log('[OAuth] Current location:', window.location.href);
-      console.log('[OAuth] Magic oauth2 available:', !!(magic as any).oauth2);
+      console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
 
-      // CRITICAL: Don't set loggingIn until AFTER we're sure redirect started
-      // Setting state before redirect can cause React re-render issues on mobile
+      // Direct call to loginWithRedirect using oauth2 extension
+      await (magic as any).oauth2.loginWithRedirect({
+        provider,
+        redirectURI,
+        scope: ['openid'],
+      });
 
-      try {
-        // Direct call to loginWithRedirect using oauth2 extension
-        const redirectPromise = (magic as any).oauth2.loginWithRedirect({
-          provider,
-          redirectURI,
-          scope: ['openid'],
-        });
-
-        // Log that we called the method
-        console.log('[OAuth] loginWithRedirect called, waiting for redirect...');
-
-        // Handle all possible outcomes
-        redirectPromise
-          .then((result: any) => {
-            console.log('[OAuth] loginWithRedirect resolved with:', result);
-            // If we get here, something went wrong - redirect should have happened
-            setError('Login redirect failed. Please try again.');
-            setLoggingIn(false);
-          })
-          .catch((err: any) => {
-            console.error('[OAuth] loginWithRedirect rejected:', err);
-            setError(err.message || 'OAuth redirect failed');
-            setLoggingIn(false);
-          });
-
-        // Also listen to events
-        if (redirectPromise.on) {
-          redirectPromise.on('error', (err: any) => {
-            console.error('[OAuth2] Event error:', err);
-          });
-          redirectPromise.on('done', (result: any) => {
-            console.log('[OAuth2] Event done:', result);
-          });
-        }
-
-        // Timeout as last resort
-        setTimeout(() => {
-          if (document.location.pathname === '/login' && !document.location.search.includes('magic_credential')) {
-            console.warn('[OAuth2] Still on login page after 8 seconds');
-            setError('Google login timed out. Please try again or use Email login.');
-            setLoggingIn(false);
-          }
-        }, 8000);
-      } catch (innerError: any) {
-        console.error('[OAuth] Sync error calling loginWithRedirect:', innerError);
-        setError(innerError.message || 'Failed to start OAuth');
-        setLoggingIn(false);
-      }
+      // If we get here without redirecting, something is wrong
+      console.warn('[OAuth2] loginWithRedirect returned without navigating');
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || `${provider} login failed. Please try again.`);
@@ -447,12 +403,8 @@ export default function LoginPage() {
 
   const GoogleButton = () => (
     <button
-      type="button"
       className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-yellow-400"
-      onClick={(e) => {
-        e.preventDefault();
-        handleGoogleLogin();
-      }}
+      onClick={handleGoogleLogin}
     >
       <Google className="h-5 w-5" />
       <span>Login with Google</span>
@@ -461,12 +413,8 @@ export default function LoginPage() {
 
   const DiscordButton = () => (
     <button
-      type="button"
       className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-[#5865F2]"
-      onClick={(e) => {
-        e.preventDefault();
-        handleDiscordLogin();
-      }}
+      onClick={handleDiscordLogin}
     >
       <Discord className="h-5 w-5" />
       <span>Login with Discord</span>
@@ -475,12 +423,8 @@ export default function LoginPage() {
 
   const TwitchButton = () => (
     <button
-      type="button"
       className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-[#9146FF]"
-      onClick={(e) => {
-        e.preventDefault();
-        handleTwitchLogin();
-      }}
+      onClick={handleTwitchLogin}
     >
       <Twitch className="h-5 w-5" />
       <span>Login with Twitch</span>
