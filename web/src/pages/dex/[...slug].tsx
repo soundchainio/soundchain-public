@@ -4105,23 +4105,13 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                     <BarChart3 className="w-6 h-6 text-cyan-400" />
                     <h3 className="retro-title text-lg">Recent Activity</h3>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <a
-                      href="https://polygonscan.com/token/0xf01d323bdac88ee39543cbbc568c6fc76258ffe0"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                    >
-                      NFT Contract ↗
+                  {walletAccount && (
+                    <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
+                      <Button variant="ghost" size="sm" className="text-xs text-cyan-400 hover:bg-cyan-500/10">
+                        View All <ExternalLink className="w-3 h-3 ml-1" />
+                      </Button>
                     </a>
-                    {walletAccount && (
-                      <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
-                        <Button variant="ghost" size="sm" className="text-xs text-cyan-400 hover:bg-cyan-500/10">
-                          View All <ExternalLink className="w-3 h-3 ml-1" />
-                        </Button>
-                      </a>
-                    )}
-                  </div>
+                  )}
                 </div>
 
                 {transactionsLoading ? (
