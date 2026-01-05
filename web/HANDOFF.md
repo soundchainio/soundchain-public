@@ -19,27 +19,25 @@
 - Bastion host is STOPPED - start it to run query
 - Query: `db.collection('users').find({ authMethod: 'google' })`
 
-### NEXT SESSION: Restore Legacy Wallet Functionality
-User provided 9 legacy screenshots showing working web3 transactions.
-**Research needed from `develop` and `staging` branches:**
-1. MetaMask wallet connection (currently redirects to install page - WRONG)
-2. SoundChain OAuth wallet integration
-3. Default wallet dropdown (SoundChain/MetaMask toggle)
-4. Transaction confirmation modals with gas fees
-5. Send Tokens page with recipient/amount/gas estimation
-6. WalletConnect + Coinbase integration
-7. Magic Wallet popup for transfers
+### Legacy Wallet Functionality - MOSTLY INTEGRATED ✅
+User provided 9 legacy screenshots. After analysis, most functionality **already exists** in production:
 
-**DO NOT** change current UI - just restore functionality first.
-Site is a "layering tool over blockchain explorers" with 24 token support via ZetaChain omnichain.
+**Already Working:**
+- ✅ `useBlockchainV2.ts` - Full blockchain operations (sendMatic, sendOgun, NFT operations)
+- ✅ `TransferConfirmationModal.tsx` - Transaction confirmation with gas fees and 2FA
+- ✅ `WalletSelected.tsx` - Wallet display component
+- ✅ `useMaxGasFee.tsx` - Gas fee estimation
+- ✅ `MaxGasFee.tsx` - Gas fee display component
+- ✅ `useWalletContext.tsx` - DefaultWallet switching (re-enabled in `4bf71c332`)
 
-**IMPORTANT:** MATIC → POL rebrand. Legacy code references "MATIC" but Polygon's native token is now "POL". Update all references when integrating.
+**Jan 5 Fixes:**
+- `94b2735e7` - MetaMask now falls back to WalletConnect (instead of install page redirect)
+- `4bf71c332` - Re-enabled DefaultWallet switching mutation (was disabled due to webpack issue)
 
-**Legacy reference files saved to:** `/src/legacy-reference/`
-- useBlockchainV2.ts (sendMatic→sendPol, sendOgun, gas estimation)
-- TransferConfirmationModal.tsx
-- WalletSelected.tsx (DefaultWallet enum)
-- MaxGasFee.tsx, useMaxGasFee.tsx
+**Still TODO:**
+- MATIC → POL rebrand (cosmetic, ~30 files affected, separate task)
+
+**Legacy reference files saved to:** `/src/legacy-reference/` (for comparison only)
 
 ### Package Versions That Work
 ```json
@@ -61,6 +59,10 @@ The OAuth login has been unstable. Key commits in the debugging journey:
 ---
 
 ## 📅 RECENT CHANGES (Dec 22, 2025 - Jan 5, 2026)
+
+### January 5, 2026 (Session 3) - Legacy Wallet Integration
+- `4bf71c332` - Re-enable DefaultWallet switching mutation
+- `94b2735e7` - MetaMask fallback to WalletConnect (instead of install redirect)
 
 ### January 5, 2026 (Session 2)
 - `86b522d21` - Remove await blocking OAuth redirect
