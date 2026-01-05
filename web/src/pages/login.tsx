@@ -215,19 +215,27 @@ export default function LoginPage() {
       setError(null);
       localStorage.removeItem('didToken');
 
-      // Use window.location.origin to match the actual domain (www vs non-www)
-      const redirectURI = `${typeof window !== 'undefined' ? window.location.origin : config.domainUrl}/login`;
-      console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
+      // Use popup instead of redirect - redirect not working with network config
+      console.log('[OAuth] Using popup for', provider);
 
-      // Direct call to loginWithRedirect using oauth2 extension
-      (magic as any).oauth2.loginWithRedirect({
+      const result = await (magic as any).oauth2.loginWithPopup({
         provider,
-        redirectURI,
         scope: ['openid'],
       });
 
-      // If we get here without redirecting, something is wrong
-      console.warn('[OAuth2] loginWithRedirect returned without navigating');
+      console.log('[OAuth] Popup result:', result);
+
+      if (result?.magic?.idToken) {
+        const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+        if (loginResult.data?.login.jwt) {
+          await setJwt(loginResult.data.login.jwt);
+          localStorage.setItem('didToken', result.magic.idToken);
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          router.push(redirectUrl);
+          return;
+        }
+      }
+      throw new Error('OAuth login failed - no token received');
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || `${provider} login failed. Please try again.`);
