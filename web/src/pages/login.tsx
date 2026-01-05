@@ -215,9 +215,21 @@ export default function LoginPage() {
       setError(null);
       localStorage.removeItem('didToken');
 
-      // Use popup instead of redirect - redirect not working with network config
-      console.log('[OAuth] Using popup for', provider);
+      // Use redirect on mobile (popup blocked), popup on desktop
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const redirectURI = `${window.location.origin}/login`;
 
+      if (isMobile) {
+        console.log('[OAuth] Mobile detected, using redirect for', provider);
+        (magic as any).oauth2.loginWithRedirect({
+          provider,
+          redirectURI,
+          scope: ['openid'],
+        });
+        return; // Don't continue - page will redirect
+      }
+
+      console.log('[OAuth] Desktop, using popup for', provider);
       const result = await (magic as any).oauth2.loginWithPopup({
         provider,
         scope: ['openid'],
