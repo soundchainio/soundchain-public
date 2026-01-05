@@ -12,7 +12,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { MessageCircle, Send, X, Heart, Sparkles, Link2 } from 'lucide-react'
 import { Avatar } from './Avatar'
-import { useMe } from 'hooks/useMe'
+import { useMeWithLoading } from 'hooks/useMe'
 import { formatDistanceToNow } from 'date-fns'
 import { StickerPicker } from './StickerPicker'
 import { EmoteRenderer } from './EmoteRenderer'
@@ -401,7 +401,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   variant = 'default',
 }) => {
   const waveformRef = useRef<HTMLDivElement>(null)
-  const me = useMe()
+  const { me, loading: meLoading } = useMeWithLoading()
 
   const [isReady, setIsReady] = useState(false)
   const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null)
@@ -919,8 +919,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
         </div>
       )}
 
-      {/* Login prompt for non-logged-in users */}
-      {!me && (
+      {/* Login prompt for non-logged-in users - only show when NOT loading */}
+      {!me && !meLoading && (
         <div className="mt-2 text-center">
           <p className="text-neutral-500 text-sm">
             <a href="/login" className="text-cyan-400 hover:underline">Login</a> to leave timestamped comments
