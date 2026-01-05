@@ -220,14 +220,30 @@ export default function LoginPage() {
       console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
 
       // Direct call to loginWithRedirect using oauth2 extension
-      await (magic as any).oauth2.loginWithRedirect({
+      // NOTE: Don't await - loginWithRedirect immediately redirects the browser
+      // The PromiEvent resolves only if redirect fails
+      const redirectPromise = (magic as any).oauth2.loginWithRedirect({
         provider,
         redirectURI,
         scope: ['openid'],
       });
 
-      // If we get here without redirecting, something is wrong
-      console.warn('[OAuth2] loginWithRedirect returned without navigating');
+      // Add error handler to catch any issues
+      redirectPromise.on('error', (err: any) => {
+        console.error('[OAuth2] Redirect error:', err);
+        setError(err.message || 'OAuth redirect failed');
+        setLoggingIn(false);
+      });
+
+      // Also add a timeout - if we're still here after 5s, something went wrong
+      setTimeout(() => {
+        console.warn('[OAuth2] Redirect did not occur after 5 seconds');
+        // Only show error if we're still on this page (not redirected)
+        if (document.location.pathname === '/login') {
+          setError('Google login timed out. Please try again or use Email login.');
+          setLoggingIn(false);
+        }
+      }, 5000);
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || `${provider} login failed. Please try again.`);
