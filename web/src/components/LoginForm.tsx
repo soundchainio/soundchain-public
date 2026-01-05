@@ -18,11 +18,11 @@ export const LoginForm = ({ handleMagicLogin }: LoginFormProps) => {
   return (
     <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleMagicLogin}>
       {({ isSubmitting }) => (
-        <Form className="flex flex-1 flex-col justify-between">
+        <Form className="flex flex-col">
           <div>
             <InputField placeholder="Email address" type="email" name="email" />
           </div>
-          <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="mt-6 w-full transition">
+          <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="mt-4 w-full transition">
             Login
           </Button>
         </Form>
