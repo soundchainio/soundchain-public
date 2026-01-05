@@ -189,11 +189,11 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
 
       // Check if MetaMask is installed (desktop)
       if (typeof window.ethereum === 'undefined') {
-        // Open MetaMask download page
-        window.open('https://metamask.io/download/', '_blank')
-        setError('MetaMask not detected. Opening download page...')
+        // No MetaMask? Use WalletConnect instead (connects to MetaMask mobile via QR)
+        console.log('🔗 MetaMask not detected, falling back to WalletConnect')
         setConnecting(false)
         setConnectingWallet(null)
+        await handleWalletConnectV2()
         return
       }
 
