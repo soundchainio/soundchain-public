@@ -9,9 +9,15 @@
 ## ⚠️ CRITICAL: CURRENT STATUS (Jan 5, 2026)
 
 ### Google OAuth Login Status
-- **Mobile Chrome:** BROKEN (was working, needs fix)
-- **Desktop Chrome:** BROKEN (timeout issues)
+- **Mobile Chrome:** BROKEN - `await` on loginWithRedirect blocks redirect
+- **Desktop Chrome:** BROKEN - same issue, spinning wheel hangs
 - **Last Known Working Commit:** `a6977e07b` (Dec 31) - @magic-ext/oauth2
+- **Latest Fix Attempt:** `86b522d21` - removed `await` from loginWithRedirect
+
+### URGENT: Google OAuth Users Locked Out
+- Need to query DB for users with `authMethod: 'google'`
+- Bastion host is STOPPED - start it to run query
+- Query: `db.collection('users').find({ authMethod: 'google' })`
 
 ### Package Versions That Work
 ```json
@@ -34,7 +40,17 @@ The OAuth login has been unstable. Key commits in the debugging journey:
 
 ## 📅 RECENT CHANGES (Dec 22, 2025 - Jan 5, 2026)
 
-### January 5, 2026
+### January 5, 2026 (Session 2)
+- `86b522d21` - Remove await blocking OAuth redirect
+- `3c5c13947` - Move LOGIN button closer to email field
+- `b5c6dd6fa` - Restore working OAuth from a6977e07b
+- `8b12edd7e` - Debug OAuth redirect logging (rolled back)
+- `1625f8667` - Remove await blocking OAuth (first attempt)
+- `7652f078d` - Add type=button to OAuth buttons
+- `8a82f3e96` - Restore OAuth2 redirect flow
+- `0e8b701ab` - Update HANDOFF.md with 2 weeks progress
+
+### January 5, 2026 (Session 1)
 - `0574b009e` - Revert login prompt fix (broke OAuth)
 - `8f8676ecb` - Fix login prompt in AudioPlayerModal (REVERTED)
 - `ba76fe294` - Remove debug code from wallet page
