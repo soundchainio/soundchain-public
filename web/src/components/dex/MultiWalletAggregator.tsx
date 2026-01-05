@@ -387,6 +387,15 @@ export function MultiWalletAggregator({
         </Card>
       )}
 
+      {/* DEBUG: Show what data is being passed - REMOVE AFTER FIXING */}
+      {process.env.NODE_ENV !== 'production' || true ? (
+        <Card className="metadata-section p-3 mb-3 border-yellow-500/50 bg-yellow-500/10">
+          <p className="text-xs text-yellow-400 font-mono">
+            DEBUG: wallet={userWallet?.slice(0,10)}... | ownedTracks={ownedTracks.length} | totalNFTs={totalNFTs}
+          </p>
+        </Card>
+      ) : null}
+
       {/* Connected Wallets with NFT Collections */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
