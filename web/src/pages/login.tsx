@@ -217,33 +217,61 @@ export default function LoginPage() {
 
       // Use window.location.origin to match the actual domain (www vs non-www)
       const redirectURI = `${typeof window !== 'undefined' ? window.location.origin : config.domainUrl}/login`;
-      console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
+      console.log('[OAuth] Starting redirect to', provider, 'with URI:', redirectURI);
+      console.log('[OAuth] Current location:', window.location.href);
+      console.log('[OAuth] Magic oauth2 available:', !!(magic as any).oauth2);
 
-      // Direct call to loginWithRedirect using oauth2 extension
-      // NOTE: Don't await - loginWithRedirect immediately redirects the browser
-      // The PromiEvent resolves only if redirect fails
-      const redirectPromise = (magic as any).oauth2.loginWithRedirect({
-        provider,
-        redirectURI,
-        scope: ['openid'],
-      });
+      // CRITICAL: Don't set loggingIn until AFTER we're sure redirect started
+      // Setting state before redirect can cause React re-render issues on mobile
 
-      // Add error handler to catch any issues
-      redirectPromise.on('error', (err: any) => {
-        console.error('[OAuth2] Redirect error:', err);
-        setError(err.message || 'OAuth redirect failed');
-        setLoggingIn(false);
-      });
+      try {
+        // Direct call to loginWithRedirect using oauth2 extension
+        const redirectPromise = (magic as any).oauth2.loginWithRedirect({
+          provider,
+          redirectURI,
+          scope: ['openid'],
+        });
 
-      // Also add a timeout - if we're still here after 5s, something went wrong
-      setTimeout(() => {
-        console.warn('[OAuth2] Redirect did not occur after 5 seconds');
-        // Only show error if we're still on this page (not redirected)
-        if (document.location.pathname === '/login') {
-          setError('Google login timed out. Please try again or use Email login.');
-          setLoggingIn(false);
+        // Log that we called the method
+        console.log('[OAuth] loginWithRedirect called, waiting for redirect...');
+
+        // Handle all possible outcomes
+        redirectPromise
+          .then((result: any) => {
+            console.log('[OAuth] loginWithRedirect resolved with:', result);
+            // If we get here, something went wrong - redirect should have happened
+            setError('Login redirect failed. Please try again.');
+            setLoggingIn(false);
+          })
+          .catch((err: any) => {
+            console.error('[OAuth] loginWithRedirect rejected:', err);
+            setError(err.message || 'OAuth redirect failed');
+            setLoggingIn(false);
+          });
+
+        // Also listen to events
+        if (redirectPromise.on) {
+          redirectPromise.on('error', (err: any) => {
+            console.error('[OAuth2] Event error:', err);
+          });
+          redirectPromise.on('done', (result: any) => {
+            console.log('[OAuth2] Event done:', result);
+          });
         }
-      }, 5000);
+
+        // Timeout as last resort
+        setTimeout(() => {
+          if (document.location.pathname === '/login' && !document.location.search.includes('magic_credential')) {
+            console.warn('[OAuth2] Still on login page after 8 seconds');
+            setError('Google login timed out. Please try again or use Email login.');
+            setLoggingIn(false);
+          }
+        }, 8000);
+      } catch (innerError: any) {
+        console.error('[OAuth] Sync error calling loginWithRedirect:', innerError);
+        setError(innerError.message || 'Failed to start OAuth');
+        setLoggingIn(false);
+      }
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
       setError(error.message || `${provider} login failed. Please try again.`);
