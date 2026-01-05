@@ -1418,6 +1418,20 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     })
   }
 
+  // Debug NFT Collection loading
+  if (typeof window !== 'undefined' && selectedView === 'wallet') {
+    console.log('🖼️ NFT Collection Debug:', {
+      walletAddress,
+      userDataLoaded: !!userData?.me,
+      ownedTracksLoading,
+      ownedTracksError: ownedTracksError?.message,
+      ownedTracksCount: ownedTracks.length,
+      totalNFTs: ownedTracksData?.groupedTracks?.pageInfo?.totalCount,
+      querySkipped: !walletAddress,
+      selectedView,
+    })
+  }
+
   // Debug logging - Only log errors (disabled verbose logging for performance)
   if (typeof window !== 'undefined') {
     // Log only errors to avoid console spam
