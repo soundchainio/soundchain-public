@@ -910,7 +910,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // FIX: defaultWallet is an ENUM (Soundchain/MetaMask), NOT the actual 0x address!
   // Must use magicWalletAddress for the actual blockchain address
   const walletAddress = userData?.me?.magicWalletAddress
-  const { data: ownedTracksData, loading: ownedTracksLoading, error: ownedTracksError, refetch: refetchOwnedTracks } = useGroupedTracksQuery({
+  const { data: ownedTracksData, loading: ownedTracksLoading, error: ownedTracksError } = useGroupedTracksQuery({
     variables: {
       filter: walletAddress ? { nftData: { owner: walletAddress } } : {},
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
@@ -919,14 +919,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     skip: (selectedView !== 'wallet' && selectedView !== 'library') || !walletAddress, // Fetch on wallet and library pages
     fetchPolicy: 'cache-and-network', // Fresher data for owned NFTs
   })
-
-  // Refetch owned tracks when walletAddress becomes available on wallet/library view
-  useEffect(() => {
-    if (walletAddress && (selectedView === 'wallet' || selectedView === 'library') && !ownedTracksData && !ownedTracksLoading) {
-      console.log('🔄 Refetching owned tracks - wallet address now available:', walletAddress)
-      refetchOwnedTracks()
-    }
-  }, [walletAddress, selectedView, ownedTracksData, ownedTracksLoading, refetchOwnedTracks])
 
   // Track if we're loading more
   const [loadingMore, setLoadingMore] = useState(false)
@@ -1423,20 +1415,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
       badges: user.badges,
       followerCount: user.followerCount,
       tracksCount: userTracks.length,
-    })
-  }
-
-  // Debug NFT Collection loading
-  if (typeof window !== 'undefined' && selectedView === 'wallet') {
-    console.log('🖼️ NFT Collection Debug:', {
-      walletAddress,
-      userDataLoaded: !!userData?.me,
-      ownedTracksLoading,
-      ownedTracksError: ownedTracksError?.message,
-      ownedTracksCount: ownedTracks.length,
-      totalNFTs: ownedTracksData?.groupedTracks?.pageInfo?.totalCount,
-      querySkipped: !walletAddress,
-      selectedView,
     })
   }
 
@@ -3286,9 +3264,6 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
                 userWallet={userWallet}
                 maticBalance={maticBalance}
                 ogunBalance={ogunBalance}
-                stakedOgunBalance={stakedOgunBalance}
-                totalNFTs={ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}
-                maticUsdPrice={maticUsdData?.maticUsd ? Number(maticUsdData.maticUsd) : undefined}
                 ownedTracks={ownedTracks}
                 onPlayTrack={(track, index) => handlePlayTrack(track, index, ownedTracks)}
                 onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}

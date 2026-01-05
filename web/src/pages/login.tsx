@@ -83,6 +83,13 @@ function isInAppBrowser(): boolean {
   return inAppPatterns.some(pattern => pattern.test(ua));
 }
 
+// Detect mobile devices - popup works on mobile, redirect better for desktop
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+}
+
 export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
@@ -189,7 +196,7 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
-  // Legacy-style OAuth handlers - Use popup for all platforms (more reliable with oauth2)
+  // OAuth handlers - Use redirect for desktop (popups blocked), popup for mobile (works well)
   const handleGoogleLogin = async () => {
     if (!magic) {
       setError('Login not ready. Please refresh the page.');
@@ -204,45 +211,53 @@ export default function LoginPage() {
     setLoggingIn(true);
     setError(null);
 
-    // Use popup for all platforms - it's more reliable with oauth2 package
-    console.log('[OAuth] Using popup flow...');
-    try {
-      const result = await (magic as any).oauth2.loginWithPopup({
-        provider: 'google',
-        scope: ['email', 'profile'],
-      });
-      console.log('[OAuth] Popup result:', result);
+    const isMobile = isMobileDevice();
+    console.log('[OAuth] Device type:', isMobile ? 'mobile' : 'desktop');
 
-      if (result?.magic?.idToken) {
-        console.log('[OAuth] Got idToken, logging in to backend...');
-        const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-        if (loginResult.data?.login.jwt) {
-          await setJwt(loginResult.data.login.jwt);
-          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-          console.log('[OAuth] Success! Redirecting to:', redirectUrl);
-          router.push(redirectUrl);
-          return;
+    if (isMobile) {
+      // Mobile: Use popup flow (user confirmed this works)
+      console.log('[OAuth] Using popup flow for mobile...');
+      try {
+        const result = await (magic as any).oauth2.loginWithPopup({
+          provider: 'google',
+          scope: ['email', 'profile'],
+        });
+        console.log('[OAuth] Popup result:', result);
+
+        if (result?.magic?.idToken) {
+          console.log('[OAuth] Got idToken, logging in to backend...');
+          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            console.log('[OAuth] Success! Redirecting to:', redirectUrl);
+            router.push(redirectUrl);
+            return;
+          }
         }
-      }
-      throw new Error('No idToken in popup result');
-    } catch (err: any) {
-      console.error('[OAuth] Popup error:', err);
-      // If popup failed, try redirect as fallback
-      if (err?.message?.includes('closed') || err?.message?.includes('blocked')) {
-        console.log('[OAuth] Popup was closed/blocked, trying redirect...');
-        try {
-          await (magic as any).oauth2.loginWithRedirect({
-            provider: 'google',
-            redirectURI: `${config.domainUrl}/login`,
-            scope: ['email', 'profile'],
-          });
-        } catch (redirectErr: any) {
-          console.error('[OAuth] Redirect also failed:', redirectErr);
-          setError('Google login failed. Please allow popups or try Email login.');
-          setLoggingIn(false);
-        }
-      } else {
+        throw new Error('No idToken in popup result');
+      } catch (err: any) {
+        console.error('[OAuth] Mobile popup error:', err);
         setError(err.message || 'Google login failed');
+        setLoggingIn(false);
+      }
+    } else {
+      // Desktop: Use redirect flow (popups are blocked/unreliable)
+      console.log('[OAuth] Using redirect flow for desktop...');
+      try {
+        // Build redirect URL - use current origin to handle www vs non-www
+        const redirectURI = `${window.location.origin}/login`;
+        console.log('[OAuth] Redirect URI:', redirectURI);
+
+        await (magic as any).oauth2.loginWithRedirect({
+          provider: 'google',
+          redirectURI,
+          scope: ['email', 'profile'],
+        });
+        // Page will navigate away, no need to handle response here
+      } catch (err: any) {
+        console.error('[OAuth] Desktop redirect error:', err);
+        setError(err.message || 'Google login failed. Please try again.');
         setLoggingIn(false);
       }
     }
