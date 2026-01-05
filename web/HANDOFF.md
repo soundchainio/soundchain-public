@@ -19,6 +19,20 @@
 - Bastion host is STOPPED - start it to run query
 - Query: `db.collection('users').find({ authMethod: 'google' })`
 
+### NEXT SESSION: Restore Legacy Wallet Functionality
+User provided 9 legacy screenshots showing working web3 transactions.
+**Research needed from `develop` and `staging` branches:**
+1. MetaMask wallet connection (currently redirects to install page - WRONG)
+2. SoundChain OAuth wallet integration
+3. Default wallet dropdown (SoundChain/MetaMask toggle)
+4. Transaction confirmation modals with gas fees
+5. Send Tokens page with recipient/amount/gas estimation
+6. WalletConnect + Coinbase integration
+7. Magic Wallet popup for transfers
+
+**DO NOT** change current UI - just restore functionality first.
+Site is a "layering tool over blockchain explorers" with 24 token support via ZetaChain omnichain.
+
 ### Package Versions That Work
 ```json
 "@magic-ext/oauth2": "14.0.0",
