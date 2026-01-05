@@ -212,7 +212,7 @@ export default function LoginPage() {
     if (isMobile) {
       console.log('[OAuth] Mobile detected, using popup...');
       try {
-        const result = await (magic as any).oauth2.loginWithPopup({
+        const result = await (magic as any).oauth.loginWithPopup({
           provider: 'google',
           scope: ['email', 'profile'],
         });
@@ -237,7 +237,7 @@ export default function LoginPage() {
       console.log('[OAuth] Desktop detected, using redirect...');
       try {
         // Don't await - the redirect should happen immediately
-        const promiEvent = (magic as any).oauth2.loginWithRedirect({
+        const promiEvent = (magic as any).oauth.loginWithRedirect({
           provider: 'google',
           redirectURI,
           scope: ['email', 'profile'],
@@ -255,7 +255,7 @@ export default function LoginPage() {
           if (document.visibilityState === 'visible') {
             console.log('[OAuth] Still on page after 3s, redirect may have failed');
             // Try popup as fallback
-            (magic as any).oauth2.loginWithPopup({
+            (magic as any).oauth.loginWithPopup({
               provider: 'google',
               scope: ['email', 'profile'],
             }).then(async (result: any) => {
@@ -288,7 +288,7 @@ export default function LoginPage() {
     }
     try {
       setLoggingIn(true);
-      await (magic as any).oauth2.loginWithRedirect({
+      await (magic as any).oauth.loginWithRedirect({
         provider: 'discord',
         redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
@@ -307,7 +307,7 @@ export default function LoginPage() {
     }
     try {
       setLoggingIn(true);
-      await (magic as any).oauth2.loginWithRedirect({
+      await (magic as any).oauth.loginWithRedirect({
         provider: 'twitch',
         redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
@@ -339,7 +339,7 @@ export default function LoginPage() {
           );
 
           const result = await Promise.race([
-            (magic as any).oauth2.getRedirectResult(),
+            (magic as any).oauth.getRedirectResult(),
             timeoutPromise
           ]) as any;
 
