@@ -34,8 +34,8 @@ User provided 9 legacy screenshots. After analysis, most functionality **already
 - `94b2735e7` - MetaMask now falls back to WalletConnect (instead of install page redirect)
 - `4bf71c332` - Re-enabled DefaultWallet switching mutation (was disabled due to webpack issue)
 
-**Still TODO:**
-- MATIC → POL rebrand (cosmetic, ~30 files affected, separate task)
+**Completed:**
+- ✅ MATIC → POL rebrand done in `5b18600a0` (user-facing text only)
 
 **Legacy reference files saved to:** `/src/legacy-reference/` (for comparison only)
 
@@ -60,7 +60,8 @@ The OAuth login has been unstable. Key commits in the debugging journey:
 
 ## 📅 RECENT CHANGES (Dec 22, 2025 - Jan 5, 2026)
 
-### January 5, 2026 (Session 3) - Legacy Wallet Integration
+### January 5, 2026 (Session 3) - Legacy Wallet Integration + POL Rebrand
+- `5b18600a0` - Rebrand MATIC to POL in all user-facing UI
 - `4bf71c332` - Re-enable DefaultWallet switching mutation
 - `94b2735e7` - MetaMask fallback to WalletConnect (instead of install redirect)
 
