@@ -33,6 +33,14 @@ User provided 9 legacy screenshots showing working web3 transactions.
 **DO NOT** change current UI - just restore functionality first.
 Site is a "layering tool over blockchain explorers" with 24 token support via ZetaChain omnichain.
 
+**IMPORTANT:** MATIC → POL rebrand. Legacy code references "MATIC" but Polygon's native token is now "POL". Update all references when integrating.
+
+**Legacy reference files saved to:** `/src/legacy-reference/`
+- useBlockchainV2.ts (sendMatic→sendPol, sendOgun, gas estimation)
+- TransferConfirmationModal.tsx
+- WalletSelected.tsx (DefaultWallet enum)
+- MaxGasFee.tsx, useMaxGasFee.tsx
+
 ### Package Versions That Work
 ```json
 "@magic-ext/oauth2": "14.0.0",
