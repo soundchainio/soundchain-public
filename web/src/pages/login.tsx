@@ -217,46 +217,43 @@ export default function LoginPage() {
         setLoggingIn(false);
       }, 10000);
 
-      // Use PromiEvent handlers to catch any silent errors
-      console.log('[OAuth] Calling loginWithRedirect...');
-      const promiEvent = (magic as any).oauth2.loginWithRedirect({
-        provider: 'google',
-        redirectURI,
-        scope: ['openid'],
-      });
-      console.log('[OAuth] PromiEvent created:', !!promiEvent);
-
-      // Listen for events
-      promiEvent.on('error', (err: any) => {
+      // Try loginWithPopup first (more reliable), fallback to redirect
+      console.log('[OAuth] Trying loginWithPopup...');
+      try {
+        const result = await (magic as any).oauth2.loginWithPopup({
+          provider: 'google',
+          scope: ['email', 'profile'],
+        });
         clearTimeout(timeoutId);
-        console.error('[OAuth] PromiEvent error event:', err);
-        console.error('[OAuth] Error message:', err?.message);
-        console.error('[OAuth] Error code:', err?.code);
-        console.error('[OAuth] Error data:', err?.data);
-        setError(err?.message || 'Google login failed');
-        setLoggingIn(false);
-      });
+        console.log('[OAuth] Popup result:', result);
 
-      promiEvent.on('done', (result: any) => {
+        if (result?.magic?.idToken) {
+          console.log('[OAuth] Got idToken from popup, logging in...');
+          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            const callbackUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            console.log('[OAuth] Success! Redirecting to:', callbackUrl);
+            router.push(callbackUrl);
+            return;
+          }
+        }
+        throw new Error('No idToken in popup result');
+      } catch (popupErr: any) {
         clearTimeout(timeoutId);
-        console.log('[OAuth] PromiEvent done event:', result);
-      });
-
-      promiEvent.on('settled', () => {
-        console.log('[OAuth] PromiEvent settled event');
-      });
-
-      // Also await the promise
-      console.log('[OAuth] Awaiting promiEvent...');
-      const result = await promiEvent;
-      console.log('[OAuth] Await completed with result:', result);
-
-      // If we reach here without redirecting, clear timeout and show error
-      clearTimeout(timeoutId);
-      console.log('[OAuth] loginWithRedirect returned:', result);
-      if (result === null) {
-        setError('Google login was cancelled or failed. Please try again.');
-        setLoggingIn(false);
+        console.error('[OAuth] Popup failed:', popupErr?.message);
+        // If popup was blocked, fall back to redirect
+        if (popupErr?.message?.includes('blocked') || popupErr?.message?.includes('closed')) {
+          console.log('[OAuth] Popup blocked, trying redirect...');
+          await (magic as any).oauth2.loginWithRedirect({
+            provider: 'google',
+            redirectURI,
+            scope: ['email', 'profile'],
+          });
+        } else {
+          throw popupErr;
+        }
       }
     } catch (err: any) {
       console.error('[OAuth] Google redirect error:', err);
