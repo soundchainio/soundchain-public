@@ -10,7 +10,7 @@ const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJ
 const polygon = {
   chainId: 137,
   name: 'Polygon',
-  currency: 'MATIC',
+  currency: 'POL', // Formerly MATIC, rebranded Sept 2024
   explorerUrl: 'https://polygonscan.com',
   rpcUrl: 'https://polygon-rpc.com'
 }

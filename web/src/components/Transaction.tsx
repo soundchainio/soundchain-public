@@ -44,7 +44,7 @@ export const Transaction = ({ transaction, maticUsdValue }: TransactionProps) =>
         <p className="flex items-center gap-1 text-sm font-bold text-white">
           {getValueInMaticField.toLocaleString('fullwide', { useGrouping: false })}
           <Matic height="10" width="10" />
-          <span className="text-xxs font-bold uppercase text-gray-80"> Matic</span>
+          <span className="text-xxs font-bold uppercase text-gray-80"> POL</span>
         </p>
         <p className="text-right text-xxs font-bold text-gray-50">{`${currency(getValueInDollarField)} USD`}</p>
       </div>

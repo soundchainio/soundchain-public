@@ -21,7 +21,7 @@ export const Matic = ({ value = '', truncate, className, variant }: Props) => {
       return (
         <div className={classNames('font-bold', className)}>
           <p className="text-white">
-            <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
+            <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">POL</span>
           </p>
           <p className="text-sm text-gray-60">{`${currencyValue}`}</p>
         </div>
@@ -38,13 +38,13 @@ export const Matic = ({ value = '', truncate, className, variant }: Props) => {
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
           <MaticIcon className="inline" />
           <span className={`${truncate}`}>{fixedDecimals(value)}</span>
-          <span className="hidden text-xs text-gray-80 xs:inline">MATIC</span>
+          <span className="hidden text-xs text-gray-80 xs:inline">POL</span>
         </p>
       )
     default:
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">MATIC</span>
+          <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">POL</span>
         </p>
       )
   }
