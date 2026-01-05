@@ -189,10 +189,7 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
-  // Detect mobile for different OAuth approach
-  const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-  // Legacy-style OAuth handlers (matching working develop/staging branches)
+  // Legacy-style OAuth handlers - Use popup for all platforms (more reliable with oauth2)
   const handleGoogleLogin = async () => {
     if (!magic) {
       setError('Login not ready. Please refresh the page.');
@@ -206,75 +203,45 @@ export default function LoginPage() {
 
     setLoggingIn(true);
     setError(null);
-    const redirectURI = `${config.domainUrl}/login`;
 
-    // Mobile: Use popup (works well), Desktop: Use redirect (more reliable)
-    if (isMobile) {
-      console.log('[OAuth] Mobile detected, using popup...');
-      try {
-        const result = await (magic as any).oauth.loginWithPopup({
-          provider: 'google',
-          scope: ['email', 'profile'],
-        });
-        console.log('[OAuth] Popup result:', result);
+    // Use popup for all platforms - it's more reliable with oauth2 package
+    console.log('[OAuth] Using popup flow...');
+    try {
+      const result = await (magic as any).oauth2.loginWithPopup({
+        provider: 'google',
+        scope: ['email', 'profile'],
+      });
+      console.log('[OAuth] Popup result:', result);
 
-        if (result?.magic?.idToken) {
-          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-          if (loginResult.data?.login.jwt) {
-            await setJwt(loginResult.data.login.jwt);
-            router.push(router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin);
-            return;
-          }
+      if (result?.magic?.idToken) {
+        console.log('[OAuth] Got idToken, logging in to backend...');
+        const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+        if (loginResult.data?.login.jwt) {
+          await setJwt(loginResult.data.login.jwt);
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          console.log('[OAuth] Success! Redirecting to:', redirectUrl);
+          router.push(redirectUrl);
+          return;
         }
-        throw new Error('No idToken in popup result');
-      } catch (err: any) {
-        console.error('[OAuth] Popup error:', err);
-        setError(err.message || 'Google login failed');
-        setLoggingIn(false);
       }
-    } else {
-      // Desktop: Use redirect approach - DON'T await, just fire and forget
-      console.log('[OAuth] Desktop detected, using redirect...');
-      try {
-        // Don't await - the redirect should happen immediately
-        const promiEvent = (magic as any).oauth.loginWithRedirect({
-          provider: 'google',
-          redirectURI,
-          scope: ['email', 'profile'],
-        });
-
-        // Listen for any errors
-        promiEvent.on('error', (err: any) => {
-          console.error('[OAuth] Redirect error event:', err);
-          setError(err?.message || 'Google login failed');
+      throw new Error('No idToken in popup result');
+    } catch (err: any) {
+      console.error('[OAuth] Popup error:', err);
+      // If popup failed, try redirect as fallback
+      if (err?.message?.includes('closed') || err?.message?.includes('blocked')) {
+        console.log('[OAuth] Popup was closed/blocked, trying redirect...');
+        try {
+          await (magic as any).oauth2.loginWithRedirect({
+            provider: 'google',
+            redirectURI: `${config.domainUrl}/login`,
+            scope: ['email', 'profile'],
+          });
+        } catch (redirectErr: any) {
+          console.error('[OAuth] Redirect also failed:', redirectErr);
+          setError('Google login failed. Please allow popups or try Email login.');
           setLoggingIn(false);
-        });
-
-        // Give it 3 seconds, then if we're still here, try opening in new window
-        setTimeout(() => {
-          if (document.visibilityState === 'visible') {
-            console.log('[OAuth] Still on page after 3s, redirect may have failed');
-            // Try popup as fallback
-            (magic as any).oauth.loginWithPopup({
-              provider: 'google',
-              scope: ['email', 'profile'],
-            }).then(async (result: any) => {
-              if (result?.magic?.idToken) {
-                const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-                if (loginResult.data?.login.jwt) {
-                  await setJwt(loginResult.data.login.jwt);
-                  router.push(router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin);
-                }
-              }
-            }).catch((err: any) => {
-              console.error('[OAuth] Popup fallback failed:', err);
-              setError('Google login failed. Please try Discord or Email login.');
-              setLoggingIn(false);
-            });
-          }
-        }, 3000);
-      } catch (err: any) {
-        console.error('[OAuth] Redirect error:', err);
+        }
+      } else {
         setError(err.message || 'Google login failed');
         setLoggingIn(false);
       }
@@ -288,7 +255,7 @@ export default function LoginPage() {
     }
     try {
       setLoggingIn(true);
-      await (magic as any).oauth.loginWithRedirect({
+      await (magic as any).oauth2.loginWithRedirect({
         provider: 'discord',
         redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
@@ -307,7 +274,7 @@ export default function LoginPage() {
     }
     try {
       setLoggingIn(true);
-      await (magic as any).oauth.loginWithRedirect({
+      await (magic as any).oauth2.loginWithRedirect({
         provider: 'twitch',
         redirectURI: `${config.domainUrl}/login`,
         scope: ['openid'],
@@ -339,7 +306,7 @@ export default function LoginPage() {
           );
 
           const result = await Promise.race([
-            (magic as any).oauth.getRedirectResult(),
+            (magic as any).oauth2.getRedirectResult(),
             timeoutPromise
           ]) as any;
 
