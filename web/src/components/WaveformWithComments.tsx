@@ -920,7 +920,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
       )}
 
       {/* Login prompt for non-logged-in users - check both me and localStorage token */}
-      {!me && typeof window !== 'undefined' && !localStorage.getItem('didToken') && (
+      {!me && typeof window !== 'undefined' && !localStorage.getItem('didToken') && !localStorage.getItem('jwt') && (
         <div className="mt-2 text-center">
           <p className="text-neutral-500 text-sm">
             <a href="/login" className="text-cyan-400 hover:underline">Login</a> to leave timestamped comments
