@@ -910,7 +910,7 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
   // FIX: defaultWallet is an ENUM (Soundchain/MetaMask), NOT the actual 0x address!
   // Must use magicWalletAddress for the actual blockchain address
   const walletAddress = userData?.me?.magicWalletAddress
-  const { data: ownedTracksData, loading: ownedTracksLoading, error: ownedTracksError } = useGroupedTracksQuery({
+  const { data: ownedTracksData, loading: ownedTracksLoading, error: ownedTracksError, refetch: refetchOwnedTracks } = useGroupedTracksQuery({
     variables: {
       filter: walletAddress ? { nftData: { owner: walletAddress } } : {},
       sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
@@ -919,6 +919,14 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
     skip: (selectedView !== 'wallet' && selectedView !== 'library') || !walletAddress, // Fetch on wallet and library pages
     fetchPolicy: 'cache-and-network', // Fresher data for owned NFTs
   })
+
+  // Refetch owned tracks when walletAddress becomes available on wallet/library view
+  useEffect(() => {
+    if (walletAddress && (selectedView === 'wallet' || selectedView === 'library') && !ownedTracksData && !ownedTracksLoading) {
+      console.log('🔄 Refetching owned tracks - wallet address now available:', walletAddress)
+      refetchOwnedTracks()
+    }
+  }, [walletAddress, selectedView, ownedTracksData, ownedTracksLoading, refetchOwnedTracks])
 
   // Track if we're loading more
   const [loadingMore, setLoadingMore] = useState(false)
