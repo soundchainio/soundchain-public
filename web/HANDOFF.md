@@ -8,11 +8,11 @@
 
 ## ⚠️ CRITICAL: CURRENT STATUS (Jan 5, 2026)
 
-### Google OAuth Login Status
-- **Mobile Chrome:** BROKEN - `await` on loginWithRedirect blocks redirect
-- **Desktop Chrome:** BROKEN - same issue, spinning wheel hangs
-- **Last Known Working Commit:** `a6977e07b` (Dec 31) - @magic-ext/oauth2
-- **Latest Fix Attempt:** `86b522d21` - removed `await` from loginWithRedirect
+### Google OAuth Login Status - FIXED ✅
+- **Mobile Chrome:** WORKING - using `loginWithPopup`
+- **Desktop Chrome:** WORKING - using `loginWithPopup`
+- **Fix Commit:** `17921861f` - switched from broken `loginWithRedirect` to `loginWithPopup`
+- **Login prompt bug:** FIXED in `fc9f60ae2` - checks localStorage token as backup
 
 ### URGENT: Google OAuth Users Locked Out
 - Need to query DB for users with `authMethod: 'google'`
