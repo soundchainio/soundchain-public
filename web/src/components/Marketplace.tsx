@@ -72,16 +72,6 @@ export const Marketplace = () => {
     ssr: false,
   })
 
-  // Debug logging - check console for data flow
-  console.log('[Marketplace Debug]', {
-    loading,
-    error: error?.message,
-    hasData: !!data,
-    totalCount: data?.listingItems?.pageInfo?.totalCount,
-    nodesLength: data?.listingItems?.nodes?.length,
-    firstTrack: data?.listingItems?.nodes?.[0]?.title,
-  })
-
   useEffect(() => {
     if (genresFromModal) setGenres(genresFromModal)
   }, [genresFromModal])
