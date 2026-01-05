@@ -233,21 +233,46 @@ export default function LoginPage() {
         setLoggingIn(false);
       }
     } else {
-      // Desktop: Use redirect approach
+      // Desktop: Use redirect approach - DON'T await, just fire and forget
       console.log('[OAuth] Desktop detected, using redirect...');
       try {
-        await (magic as any).oauth2.loginWithRedirect({
+        // Don't await - the redirect should happen immediately
+        const promiEvent = (magic as any).oauth2.loginWithRedirect({
           provider: 'google',
           redirectURI,
           scope: ['email', 'profile'],
         });
-        // If we get here without redirecting, something went wrong
+
+        // Listen for any errors
+        promiEvent.on('error', (err: any) => {
+          console.error('[OAuth] Redirect error event:', err);
+          setError(err?.message || 'Google login failed');
+          setLoggingIn(false);
+        });
+
+        // Give it 3 seconds, then if we're still here, try opening in new window
         setTimeout(() => {
-          if (loggingIn) {
-            setError('Google login timed out. Please try again.');
-            setLoggingIn(false);
+          if (document.visibilityState === 'visible') {
+            console.log('[OAuth] Still on page after 3s, redirect may have failed');
+            // Try popup as fallback
+            (magic as any).oauth2.loginWithPopup({
+              provider: 'google',
+              scope: ['email', 'profile'],
+            }).then(async (result: any) => {
+              if (result?.magic?.idToken) {
+                const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+                if (loginResult.data?.login.jwt) {
+                  await setJwt(loginResult.data.login.jwt);
+                  router.push(router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin);
+                }
+              }
+            }).catch((err: any) => {
+              console.error('[OAuth] Popup fallback failed:', err);
+              setError('Google login failed. Please try Discord or Email login.');
+              setLoggingIn(false);
+            });
           }
-        }, 15000);
+        }, 3000);
       } catch (err: any) {
         console.error('[OAuth] Redirect error:', err);
         setError(err.message || 'Google login failed');
