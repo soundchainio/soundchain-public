@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { Button } from 'components/common/Buttons/Button';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
@@ -83,13 +83,6 @@ function isInAppBrowser(): boolean {
   return inAppPatterns.some(pattern => pattern.test(ua));
 }
 
-// Detect mobile devices - popup works on mobile, redirect better for desktop
-function isMobileDevice(): boolean {
-  if (typeof window === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-}
-
 export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
@@ -103,6 +96,7 @@ export default function LoginPage() {
   const { magic } = useMagicContext();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
+  const isProcessingCredential = useRef(false); // Prevent multiple OAuth processing
 
   useEffect(() => {
     setIsClient(true);
@@ -196,161 +190,137 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
-  // OAuth handlers - Use redirect for desktop (popups blocked), popup for mobile (works well)
-  const handleGoogleLogin = async () => {
-    if (!magic) {
-      setError('Login not ready. Please refresh the page.');
-      return;
+  const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
+    console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
+
+    try {
+      // Check for in-app browser (Google blocks OAuth in these)
+      if (isInAppBrowser() && provider === 'google') {
+        setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
+        return;
+      }
+
+      if (!magic) {
+        setError('Login not ready. Please refresh the page and try again.');
+        return;
+      }
+
+      // Check for oauth2 extension (from @magic-ext/oauth2)
+      if (!(magic as any).oauth2) {
+        setError('OAuth not available. Please refresh the page and try again.');
+        return;
+      }
+
+      setLoggingIn(true);
+      setError(null);
+      localStorage.removeItem('didToken');
+
+      // Use window.location.origin to match the actual domain (www vs non-www)
+      const redirectURI = `${typeof window !== 'undefined' ? window.location.origin : config.domainUrl}/login`;
+      console.log('[OAuth] Redirecting to', provider, 'with URI:', redirectURI);
+
+      // Direct call to loginWithRedirect using oauth2 extension
+      await (magic as any).oauth2.loginWithRedirect({
+        provider,
+        redirectURI,
+        scope: ['openid'],
+      });
+
+      // If we get here without redirecting, something is wrong
+      console.warn('[OAuth2] loginWithRedirect returned without navigating');
+    } catch (error: any) {
+      console.error('[OAuth2] Error:', error);
+      setError(error.message || `${provider} login failed. Please try again.`);
+      setLoggingIn(false);
     }
-    // Check for in-app browser (Google blocks OAuth in these)
-    if (isInAppBrowser()) {
-      setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
-      return;
-    }
+  };
 
-    setLoggingIn(true);
-    setError(null);
+  const handleGoogleLogin = () => handleSocialLogin('google');
+  const handleDiscordLogin = () => handleSocialLogin('discord');
+  const handleTwitchLogin = () => handleSocialLogin('twitch');
 
-    const isMobile = isMobileDevice();
-    console.log('[OAuth] Device type:', isMobile ? 'mobile' : 'desktop');
+  // Unified handler for magic_credential callbacks (OAuth and Email Magic Links)
+  // Uses ref to prevent multiple concurrent runs (state is async, ref is sync)
+  useEffect(() => {
+    async function handleMagicCredential() {
+      // Use ref for instant check - state updates are async and cause race conditions
+      if (!magic || !magicParam || isProcessingCredential.current) {
+        return;
+      }
 
-    if (isMobile) {
-      // Mobile: Use popup flow (user confirmed this works)
-      console.log('[OAuth] Using popup flow for mobile...');
+      // Mark as processing IMMEDIATELY (sync) before any async work
+      isProcessingCredential.current = true;
+      setLoggingIn(true);
+      setError(null);
+
       try {
-        const result = await (magic as any).oauth2.loginWithPopup({
-          provider: 'google',
-          scope: ['email', 'profile'],
-        });
-        console.log('[OAuth] Popup result:', result);
+        console.log('[Auth] Processing magic_credential callback - trying OAuth first');
 
-        if (result?.magic?.idToken) {
-          console.log('[OAuth] Got idToken, logging in to backend...');
-          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+        // Try OAuth with timeout to prevent infinite hanging
+        let oauthResult = null;
+        let oauthError: any = null;
+        try {
+          const oauthPromise = (magic as any).oauth2.getRedirectResult();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('OAuth timeout after 10s')), 10000)
+          );
+          oauthResult = await Promise.race([oauthPromise, timeoutPromise]);
+          console.log('[OAuth] getRedirectResult returned:', oauthResult);
+        } catch (err: any) {
+          oauthError = err;
+          console.log('[OAuth] getRedirectResult error:', err?.message);
+        }
+
+        if (oauthResult?.magic?.idToken) {
+          console.log('[OAuth] Got OAuth result with idToken');
+          const loginResult = await login({ variables: { input: { token: oauthResult.magic.idToken } } });
           if (loginResult.data?.login.jwt) {
             await setJwt(loginResult.data.login.jwt);
+            localStorage.setItem('didToken', oauthResult.magic.idToken);
             const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            console.log('[OAuth] Success! Redirecting to:', redirectUrl);
             router.push(redirectUrl);
             return;
-          }
-        }
-        throw new Error('No idToken in popup result');
-      } catch (err: any) {
-        console.error('[OAuth] Mobile popup error:', err);
-        setError(err.message || 'Google login failed');
-        setLoggingIn(false);
-      }
-    } else {
-      // Desktop: Use redirect flow (popups are blocked/unreliable)
-      console.log('[OAuth] Using redirect flow for desktop...');
-      try {
-        // Build redirect URL - use current origin to handle www vs non-www
-        const redirectURI = `${window.location.origin}/login`;
-        console.log('[OAuth] Redirect URI:', redirectURI);
-
-        await (magic as any).oauth2.loginWithRedirect({
-          provider: 'google',
-          redirectURI,
-          scope: ['email', 'profile'],
-        });
-        // Page will navigate away, no need to handle response here
-      } catch (err: any) {
-        console.error('[OAuth] Desktop redirect error:', err);
-        setError(err.message || 'Google login failed. Please try again.');
-        setLoggingIn(false);
-      }
-    }
-  };
-
-  const handleDiscordLogin = async () => {
-    if (!magic) {
-      setError('Login not ready. Please refresh the page.');
-      return;
-    }
-    try {
-      setLoggingIn(true);
-      await (magic as any).oauth2.loginWithRedirect({
-        provider: 'discord',
-        redirectURI: `${config.domainUrl}/login`,
-        scope: ['openid'],
-      });
-    } catch (err: any) {
-      console.error('[OAuth] Discord redirect error:', err);
-      setError(err.message || 'Discord login failed');
-      setLoggingIn(false);
-    }
-  };
-
-  const handleTwitchLogin = async () => {
-    if (!magic) {
-      setError('Login not ready. Please refresh the page.');
-      return;
-    }
-    try {
-      setLoggingIn(true);
-      await (magic as any).oauth2.loginWithRedirect({
-        provider: 'twitch',
-        redirectURI: `${config.domainUrl}/login`,
-        scope: ['openid'],
-      });
-    } catch (err: any) {
-      console.error('[OAuth] Twitch redirect error:', err);
-      setError(err.message || 'Twitch login failed');
-      setLoggingIn(false);
-    }
-  };
-
-  // Legacy-style OAuth callback handler (matching working develop/staging branches)
-  useEffect(() => {
-    async function handleOAuthCallback() {
-      // Wait for router to be ready before checking query params
-      if (!router.isReady) return;
-      if (magic && router.query.magic_credential) {
-        console.log('[OAuth] Detected magic_credential, processing callback...');
-        console.log('[OAuth] Full URL:', window.location.href);
-        setLoggingIn(true);
-        setError(null);
-
-        try {
-          console.log('[OAuth] Calling getRedirectResult()...');
-
-          // Add 30s timeout to prevent infinite hanging
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OAuth timeout - getRedirectResult took too long')), 30000)
-          );
-
-          const result = await Promise.race([
-            (magic as any).oauth2.getRedirectResult(),
-            timeoutPromise
-          ]) as any;
-
-          console.log('[OAuth] Got result:', result);
-
-          if (result?.magic?.idToken) {
-            console.log('[OAuth] Got idToken, logging in...');
-            const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-
-            if (loginResult.data?.login.jwt) {
-              await setJwt(loginResult.data.login.jwt);
-              const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-              console.log('[OAuth] Success! Redirecting to:', redirectUrl);
-              router.push(redirectUrl);
-            } else {
-              throw new Error('No JWT returned from server');
-            }
           } else {
-            throw new Error('No idToken in OAuth result');
+            throw new Error('OAuth login failed: No JWT returned from server');
           }
-        } catch (err: any) {
-          console.error('[OAuth] Callback error:', err);
-          setError(err.message || 'Google login failed. Please try again.');
-          setLoggingIn(false);
         }
+
+        // If OAuth timed out or had a specific error, don't try magic link - show error
+        if (oauthError) {
+          throw new Error(`Google login failed: ${oauthError.message}. Please try again.`);
+        }
+
+        // Only try magic link if OAuth returned null (meaning this is actually a magic link callback)
+        console.log('[Auth] No OAuth result, trying email magic link');
+        await magic.auth.loginWithCredential();
+        const didToken = await magic.user.getIdToken();
+        console.log('[MagicLink] Received didToken from credential');
+        localStorage.setItem('didToken', didToken);
+        const loginResult = await login({ variables: { input: { token: didToken } } });
+        if (loginResult.data?.login.jwt) {
+          await setJwt(loginResult.data.login.jwt);
+          await new Promise(resolve => setTimeout(resolve, 200));
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          router.push(redirectUrl);
+        } else {
+          throw new Error('Login failed: No JWT returned');
+        }
+      } catch (error: any) {
+        console.error('[Auth] Callback error:', error);
+        if (error.message?.includes('already exists')) {
+          const authMethodFromError = error.graphQLErrors?.find((err: any) => err.extensions?.with)?.extensions?.with;
+          if (authMethodFromError) setAuthMethod([authMethodFromError]);
+        } else if (error.message?.toLowerCase().includes('invalid credentials')) {
+          router.push('/create-account');
+        } else {
+          setError(error.message || 'Login failed. Please try again.');
+        }
+        setLoggingIn(false);
+        isProcessingCredential.current = false;
       }
     }
-    handleOAuthCallback();
-  }, [magic, router.isReady, router.query.magic_credential, login, router]);
+    handleMagicCredential();
+  }, [magic, magicParam, login, handleError, router]);
 
   async function handleSubmit(values: FormValues) {
     try {
