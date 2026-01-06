@@ -1612,7 +1612,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       )}
 
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Full-screen Cover Photo Background */}
+      {/* Full-screen Cover Photo Background - Hide when viewing other profiles */}
+      {selectedView !== 'profile' && (
       <div className="fixed inset-0 z-0">
         {user?.coverPicture && !coverImageError ? (
           <>
@@ -1640,6 +1641,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </>
         )}
       </div>
+      )}
 
       {/* REMOVED ScrollingBackground - it was covering user's real cover art with Unsplash placeholders */}
 
