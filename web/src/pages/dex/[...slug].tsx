@@ -1612,10 +1612,23 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       )}
 
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Full-screen Cover Photo Background - Hide when viewing other profiles */}
-      {selectedView !== 'profile' && (
+      {/* Full-screen Cover Photo Background */}
       <div className="fixed inset-0 z-0">
-        {user?.coverPicture && !coverImageError ? (
+        {selectedView === 'profile' && viewingProfile?.coverPicture ? (
+          /* Viewing another user's profile - show their cover */
+          <>
+            <img
+              src={viewingProfile.coverPicture}
+              alt="Cover"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+          </>
+        ) : selectedView === 'profile' ? (
+          /* Viewing profile but no cover - show gradient */
+          <div className="w-full h-full bg-gradient-to-br from-purple-900 via-cyan-900 to-black" />
+        ) : user?.coverPicture && !coverImageError ? (
+          /* Own profile / other views - show logged-in user's cover */
           <>
             <img
               src={user.coverPicture}
@@ -1641,7 +1654,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </>
         )}
       </div>
-      )}
 
       {/* REMOVED ScrollingBackground - it was covering user's real cover art with Unsplash placeholders */}
 
@@ -5211,227 +5223,229 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
-                  {/* Floating Back Button - positioned over cover */}
-                  <div className="absolute top-4 left-4 z-30">
-                    <Button
-                      variant="ghost"
-                      onClick={() => router.back()}
-                      className="bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white border border-white/20"
-                    >
-                      <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
-                      Back
-                    </Button>
-                  </div>
+                  {/* Profile Header - Same layout as logged-in user */}
+                  <div className="relative z-10 pt-8 pb-6">
+                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
+                      {/* Back Button */}
+                      <Button
+                        variant="ghost"
+                        onClick={() => router.back()}
+                        className="mb-4 hover:bg-cyan-500/10"
+                      >
+                        <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
+                        Back
+                      </Button>
 
-                  {/* Full Profile Header Component */}
-                  <ProfileHeader
-                    user={{
-                      name: viewingProfile.displayName || 'Unknown',
-                      username: `@${viewingProfile.userHandle}`,
-                      bio: viewingProfile.bio || '',
-                      walletAddress: viewingProfile.magicWalletAddress || '0x...',
-                      tracks: viewingProfileTrackCount,
-                      followers: viewingProfile.followerCount || 0,
-                      following: viewingProfile.followingCount || 0,
-                      avatar: viewingProfile.profilePicture || undefined,
-                      isVerified: viewingProfile.verified || viewingProfile.teamMember || false,
-                      coverPicture: viewingProfile.coverPicture || undefined,
-                    }}
-                    isOwnProfile={Boolean(me?.profile?.id && viewingProfile?.id && me.profile.id === viewingProfile.id)}
-                    currentUserWallet={userData?.me?.magicWalletAddress || ''}
-                    ownedNfts={ownedTracksData?.groupedTracks?.nodes?.map((t: any) => ({
-                      id: t.id,
-                      title: t.title || 'Untitled',
-                      artworkUrl: t.artworkUrl
-                    })) || []}
-                    followersList={followersList}
-                    followingList={followingList}
-                    onEditProfile={() => setSelectedView('settings')}
-                    isFollowing={viewingProfile.isFollowed || false}
-                    onFollow={async () => {
-                      if (!me) {
-                        router.push('/login')
-                        return
-                      }
-                      await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
-                    }}
-                    onUnfollow={async () => {
-                      await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
-                    }}
-                    onProfileClick={(userId) => router.push(`/dex/users/${userId}`)}
-                    nftCollection={viewingProfileNFTs}
-                    onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
-                    onPlayTrack={(nftTrack) => {
-                      // Find the full track in the data to play it
-                      const tracks = viewingProfileNFTsData?.groupedTracks?.nodes || []
-                      const trackIndex = tracks.findIndex((t: any) => t.id === nftTrack.id)
-                      if (trackIndex >= 0) {
-                        handlePlayTrack(tracks[trackIndex], trackIndex, tracks)
-                      }
-                    }}
-                  />
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+                        {/* User Profile */}
+                        <div className="flex flex-col lg:flex-row gap-6 items-start">
+                          <div className="relative">
+                            <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900">
+                              {viewingProfile.profilePicture ? (
+                                <img
+                                  src={viewingProfile.profilePicture}
+                                  alt={viewingProfile.displayName || 'Profile'}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-6xl text-white font-bold">
+                                  {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
+                                </div>
+                              )}
+                            </div>
+                            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-4 border-black/50 flex items-center justify-center">
+                              <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                            </div>
+                          </div>
 
-                  {/* Content Section with black background */}
-                  <div className="bg-black relative z-10">
-                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 space-y-6">
-                  {/* Social Links */}
-                  {viewingProfile.socialMedias && (
-                    <Card className="retro-card">
-                      <CardContent className="p-6">
-                        <h2 className="retro-title text-lg mb-4">Social Links</h2>
-                        <div className="flex flex-wrap gap-3">
-                          {viewingProfile.socialMedias.twitter && (
-                            <a href={viewingProfile.socialMedias.twitter} target="_blank" rel="noreferrer">
-                              <Button variant="outline" size="sm" className="border-blue-500/50 hover:bg-blue-500/10">
-                                Twitter
-                                <ExternalLink className="w-3 h-3 ml-2" />
-                              </Button>
-                            </a>
-                          )}
-                          {viewingProfile.socialMedias.instagram && (
-                            <a href={viewingProfile.socialMedias.instagram} target="_blank" rel="noreferrer">
-                              <Button variant="outline" size="sm" className="border-pink-500/50 hover:bg-pink-500/10">
-                                Instagram
-                                <ExternalLink className="w-3 h-3 ml-2" />
-                              </Button>
-                            </a>
-                          )}
-                          {viewingProfile.socialMedias.spotify && (
-                            <a href={viewingProfile.socialMedias.spotify} target="_blank" rel="noreferrer">
-                              <Button variant="outline" size="sm" className="border-green-500/50 hover:bg-green-500/10">
-                                Spotify
-                                <ExternalLink className="w-3 h-3 ml-2" />
-                              </Button>
-                            </a>
-                          )}
-                          {viewingProfile.socialMedias.soundcloud && (
-                            <a href={viewingProfile.socialMedias.soundcloud} target="_blank" rel="noreferrer">
-                              <Button variant="outline" size="sm" className="border-orange-500/50 hover:bg-orange-500/10">
-                                SoundCloud
-                                <ExternalLink className="w-3 h-3 ml-2" />
-                              </Button>
-                            </a>
-                          )}
+                          <div className="flex-1 space-y-4">
+                            <div className="space-y-2">
+                              {/* Username with inline badges */}
+                              <div className="flex items-center gap-2">
+                                <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace" }}>
+                                  {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
+                                </h1>
+                                {/* Team Member Badge */}
+                                {viewingProfile.teamMember && (
+                                  <SoundchainGoldLogo className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="SoundChain Team Member" />
+                                )}
+                                {/* Verified Badge */}
+                                {!viewingProfile.teamMember && viewingProfile.verified && (
+                                  <VerifiedIcon className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="Verified user" />
+                                )}
+                              </div>
+                              <p className="retro-json text-sm">@{viewingProfile.userHandle || 'user'}</p>
+                              <p className="text-gray-300 text-sm max-w-md">{viewingProfile.bio || ''}</p>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4">
+                              <div className="metadata-section p-4 text-center">
+                                <div className="retro-text text-xl">{viewingProfileTrackCount}</div>
+                                <div className="metadata-label text-xs">Tracks</div>
+                              </div>
+                              <div className="metadata-section p-4 text-center">
+                                <div className="retro-text text-xl">{viewingProfile.followerCount?.toLocaleString() || 0}</div>
+                                <div className="metadata-label text-xs">Followers</div>
+                              </div>
+                              <div className="metadata-section p-4 text-center">
+                                <div className="retro-text text-xl">{viewingProfile.followingCount?.toLocaleString() || 0}</div>
+                                <div className="metadata-label text-xs">Following</div>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3">
+                              {me?.profile?.id === viewingProfile.id ? (
+                                <Button className="retro-button" onClick={() => setSelectedView('settings')}>
+                                  <Settings className="w-4 h-4 mr-2" />
+                                  Edit Profile
+                                </Button>
+                              ) : (
+                                <Button
+                                  className={viewingProfile.isFollowed ? 'border-cyan-500/50 bg-cyan-500/10 hover:bg-red-500/20 text-cyan-300' : 'retro-button'}
+                                  variant={viewingProfile.isFollowed ? 'outline' : 'default'}
+                                  onClick={async () => {
+                                    if (!me) {
+                                      router.push('/login')
+                                      return
+                                    }
+                                    if (viewingProfile.isFollowed) {
+                                      await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                                    } else {
+                                      await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                                    }
+                                  }}
+                                >
+                                  <Users className="w-4 h-4 mr-2" />
+                                  {viewingProfile.isFollowed ? 'Following' : 'Follow'}
+                                </Button>
+                              )}
+                              <Button variant="outline" className="border-purple-500/50"><MessageCircle className="w-4 h-4 mr-2" />Message</Button>
+                              <Button variant="outline" className="border-cyan-500/50"><Share2 className="w-4 h-4" /></Button>
+                            </div>
+
+                            {viewingProfile.magicWalletAddress && (
+                              <Card className="retro-card p-3 w-fit">
+                                <div className="flex items-center gap-3">
+                                  <Wallet className="w-4 h-4 text-orange-400" />
+                                  <span className="retro-json text-sm">{viewingProfile.magicWalletAddress.slice(0, 6)}...{viewingProfile.magicWalletAddress.slice(-4)}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(viewingProfile.magicWalletAddress || '')
+                                      alert('Address copied!')
+                                    }}
+                                    className="p-1"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </Card>
+                            )}
+                          </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Favorite Genres */}
-                  {(viewingProfile.favoriteGenres?.length ?? 0) > 0 && (
-                    <Card className="retro-card">
-                      <CardContent className="p-6">
-                        <h2 className="retro-title text-lg mb-4">Favorite Genres</h2>
-                        <div className="flex flex-wrap gap-2">
-                          {viewingProfile.favoriteGenres?.map((genre) => (
-                            <Badge key={genre} className="bg-purple-500/20 text-purple-400">{genre}</Badge>
-                          ))}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Profile Tabs - Feed | Music | Playlists */}
-                  <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-sm border-b border-neutral-800">
-                    <div className="flex">
-                      <button
-                        onClick={() => setProfileTab('feed')}
-                        className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                          profileTab === 'feed'
-                            ? 'text-white border-b-2 border-cyan-400'
-                            : 'text-neutral-500 hover:text-neutral-300'
-                        }`}
-                      >
-                        <NewPost className="w-4 h-4" fillColor={profileTab === 'feed' ? '#22d3ee' : '#6b7280'} />
-                        Feed
-                      </button>
-                      <button
-                        onClick={() => setProfileTab('music')}
-                        className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                          profileTab === 'music'
-                            ? 'text-white border-b-2 border-purple-400'
-                            : 'text-neutral-500 hover:text-neutral-300'
-                        }`}
-                      >
-                        <Music className={`w-4 h-4 ${profileTab === 'music' ? 'text-purple-400' : ''}`} />
-                        Music
-                      </button>
-                      <button
-                        onClick={() => setProfileTab('playlists')}
-                        className={`flex-1 py-3 px-4 flex items-center justify-center gap-2 text-sm font-semibold transition-all ${
-                          profileTab === 'playlists'
-                            ? 'text-white border-b-2 border-pink-400'
-                            : 'text-neutral-500 hover:text-neutral-300'
-                        }`}
-                      >
-                        <ListMusic className={`w-4 h-4 ${profileTab === 'playlists' ? 'text-pink-400' : ''}`} />
-                        Playlists
-                      </button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Tab Content */}
-                  <div className="mt-4 min-h-[400px]">
-                    {profileTab === 'feed' && (
-                      <Posts profileId={viewingProfile.id} />
-                    )}
-                    {profileTab === 'music' && (
-                      <TracksGrid profileId={viewingProfile.id} />
-                    )}
-                    {profileTab === 'playlists' && (
-                      <div className="space-y-4">
-                        {/* Playlists Section */}
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-white font-semibold">Playlists</h3>
-                          {me?.profile?.id === viewingProfile.id && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShowCreatePlaylistModal(true)}
-                              className="border-pink-500/50 hover:bg-pink-500/10 text-pink-400"
-                            >
-                              <Plus className="w-4 h-4 mr-2" />
-                              Create Playlist
-                            </Button>
-                          )}
-                        </div>
-                        {/* User playlists */}
-                        {playlistsLoading ? (
-                          <div className="flex justify-center py-8">
-                            <RefreshCw className="w-6 h-6 animate-spin text-pink-400" />
-                          </div>
-                        ) : playlistsData?.getUserPlaylists?.nodes && playlistsData.getUserPlaylists.nodes.length > 0 ? (
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {playlistsData.getUserPlaylists.nodes.map((playlist) => (
-                              <PlaylistCard
-                                key={playlist.id}
-                                playlist={playlist}
-                                onSelect={(p) => setSelectedPlaylist(p)}
-                                compact
-                              />
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-center py-8 text-neutral-500">
-                            <ListMusic className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>No playlists yet</p>
+                  {/* Main Content */}
+                  <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
+                    {/* Profile Tabs - Feed | Dashboard | Stake - Same as logged-in user */}
+                    <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setProfileTab('feed')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'feed' ? 'bg-green-500/10' : ''}`}
+                      >
+                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'feed' ? 'text-green-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'feed' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Feed
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setProfileTab('music')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-purple-500/10 ${profileTab === 'music' ? 'bg-purple-500/10' : ''}`}
+                      >
+                        <Music className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'music' ? 'text-purple-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'music' ? 'purple-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Music
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setProfileTab('playlists')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-pink-500/10 ${profileTab === 'playlists' ? 'bg-pink-500/10' : ''}`}
+                      >
+                        <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'playlists' ? 'text-pink-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'playlists' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Playlists
+                        </span>
+                      </Button>
+                    </div>
+
+                    {/* Tab Content */}
+                    <div className="min-h-[400px]">
+                      {profileTab === 'feed' && (
+                        <Posts profileId={viewingProfile.id} />
+                      )}
+                      {profileTab === 'music' && (
+                        <TracksGrid profileId={viewingProfile.id} />
+                      )}
+                      {profileTab === 'playlists' && (
+                        <div className="space-y-4">
+                          {/* Playlists Section */}
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-white font-semibold">Playlists</h3>
                             {me?.profile?.id === viewingProfile.id && (
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => setShowCreatePlaylistModal(true)}
-                                className="mt-3 text-pink-400 hover:bg-pink-500/10"
+                                className="border-pink-500/50 hover:bg-pink-500/10 text-pink-400"
                               >
-                                Create your first playlist
+                                <Plus className="w-4 h-4 mr-2" />
+                                Create Playlist
                               </Button>
                             )}
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                          {/* User playlists */}
+                          {playlistsLoading ? (
+                            <div className="flex justify-center py-8">
+                              <RefreshCw className="w-6 h-6 animate-spin text-pink-400" />
+                            </div>
+                          ) : playlistsData?.getUserPlaylists?.nodes && playlistsData.getUserPlaylists.nodes.length > 0 ? (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                              {playlistsData.getUserPlaylists.nodes.map((playlist) => (
+                                <PlaylistCard
+                                  key={playlist.id}
+                                  playlist={playlist}
+                                  onClick={() => router.push(`/dex/playlist/${playlist.id}`)}
+                                  compact
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8 text-neutral-500">
+                              <ListMusic className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                              <p>No playlists yet</p>
+                              {me?.profile?.id === viewingProfile.id && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setShowCreatePlaylistModal(true)}
+                                  className="mt-3 text-pink-400 hover:bg-pink-500/10"
+                                >
+                                  Create your first playlist
+                                </Button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
+
                 </>
               )}
             </div>
