@@ -3,7 +3,7 @@ import { OAuthExtension } from '@magic-ext/oauth2'
 import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider'
 import { setJwt } from 'lib/apollo'
 import { Magic, RPCErrorCode } from 'magic-sdk'
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, ReactNode, useCallback, useContext, useEffect, useState, useRef } from 'react'
 import Web3 from 'web3'
 import { network } from '../lib/blockchainNetworks'
 import { useMe } from './useMe'
@@ -229,7 +229,8 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
       if (!ogunAddress) {
         console.log('💎 No OGUN token address in config, skipping balance fetch')
-        setOgunBalance('0')
+        // Only set to 0 if we don't have a balance yet
+        setOgunBalance(prev => prev || '0')
         return
       }
 
@@ -271,15 +272,17 @@ export function MagicProvider({ children }: MagicProviderProps) {
           console.log('💎 OGUN balance in ether:', tokenAmountInEther)
           setOgunBalance(tokenAmountInEther)
         } catch (contractErr: any) {
-          // Contract call failed - likely wrong chain or RPC issue
+          // Contract call failed - keep existing balance, don't reset to 0
           console.error('💎 OGUN contract call failed:', contractErr?.message || contractErr)
-          setOgunBalance('0')
+          // Only set to 0 if we have no balance yet
+          setOgunBalance(prev => prev || '0')
         }
       }
     } catch (error: any) {
-      // Don't propagate OGUN balance errors - just set to 0
+      // Don't propagate OGUN balance errors - keep existing balance
       console.error('💎 OGUN balance fetch failed:', error?.message || error)
-      setOgunBalance('0')
+      // Only set to 0 if we have no balance yet
+      setOgunBalance(prev => prev || '0')
     }
   }, [account, web3])
 
@@ -290,12 +293,37 @@ export function MagicProvider({ children }: MagicProviderProps) {
     handleSetAccount()
   }, [me, web3, handleSetAccount, me?.magicWalletAddress])
 
+  // Debounce ref to prevent rapid re-fetches
+  const balanceFetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastFetchedAccountRef = useRef<string | null>(null)
+
   // Fetch balances when account is set (separate effect to avoid stale closure)
   useEffect(() => {
     if (!account || !web3) return
-    console.log('💰 Fetching balances for account:', account)
-    handleSetBalance()
-    handleSetOgunBalance()
+
+    // Skip if we just fetched for this account (prevents flickering)
+    if (lastFetchedAccountRef.current === account && balanceFetchTimeoutRef.current) {
+      return
+    }
+
+    // Clear any pending fetch
+    if (balanceFetchTimeoutRef.current) {
+      clearTimeout(balanceFetchTimeoutRef.current)
+    }
+
+    // Debounce the fetch to prevent rapid re-fetches
+    balanceFetchTimeoutRef.current = setTimeout(() => {
+      console.log('💰 Fetching balances for account:', account)
+      lastFetchedAccountRef.current = account
+      handleSetBalance()
+      handleSetOgunBalance()
+    }, 100) // 100ms debounce
+
+    return () => {
+      if (balanceFetchTimeoutRef.current) {
+        clearTimeout(balanceFetchTimeoutRef.current)
+      }
+    }
   }, [account, web3, handleSetBalance, handleSetOgunBalance])
 
   return (
