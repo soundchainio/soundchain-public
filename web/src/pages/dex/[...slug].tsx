@@ -1804,17 +1804,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               <Button
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault()
                   if (isWeb3ModalConnected || isWalletConnected) {
                     // Disconnect - try unified wallet first (handles all types)
                     unifiedDisconnectWallet()
                     handleWalletDisconnect()
                   } else {
                     // Open native Web3Modal (QuickSwap-style with QR codes, 300+ wallets)
-                    openWeb3Modal()
+                    if (isWeb3ModalReady) {
+                      openWeb3Modal()
+                    } else {
+                      // Fallback to legacy modal if Web3Modal not ready
+                      console.log('Web3Modal not ready, using fallback modal')
+                      setShowWalletModal(true)
+                    }
                   }
                 }}
-                className={(isWeb3ModalConnected || isWalletConnected) ? 'bg-green-600 hover:bg-green-700' : 'retro-button'}
+                className={`touch-manipulation ${(isWeb3ModalConnected || isWalletConnected) ? 'bg-green-600 hover:bg-green-700' : 'retro-button'}`}
                 size="sm"
               >
                 <Wallet className="w-4 h-4 sm:mr-2" />
@@ -3493,65 +3500,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
                   </Card>
                 )}
-
-                {/* Default Wallet Selection */}
-                <Card className="metadata-section p-4 mb-4 border-yellow-500/30">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-yellow-400">⚡</span>
-                      <h4 className="text-sm font-bold text-white">Default Wallet</h4>
-                    </div>
-                    <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Active</Badge>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {/* Magic Wallet - Default (already connected via login) */}
-                    <button
-                      className="p-3 rounded-lg border-2 border-cyan-500 bg-cyan-500/10 text-left transition-all hover:bg-cyan-500/20"
-                      onClick={() => alert('✨ Magic Wallet\n\nThis is your default wallet, automatically connected when you log in.\n\nWallet: ' + (userWallet || 'Not connected'))}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">✨</span>
-                        <span className="font-bold text-cyan-400 text-sm">Magic</span>
-                      </div>
-                      <p className="text-xs text-gray-400">Native wallet</p>
-                    </button>
-                    {/* WalletConnect (includes MetaMask, Rainbow, Trust, etc.) */}
-                    <button
-                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10"
-                      onClick={() => openWeb3Modal()}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">🔗</span>
-                        <span className="font-bold text-gray-400 text-sm">WalletConnect</span>
-                      </div>
-                      <p className="text-xs text-gray-500">300+ wallets</p>
-                    </button>
-                    {/* Coinbase Wallet */}
-                    <button
-                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-blue-500/50 hover:bg-blue-500/10"
-                      onClick={() => openWeb3Modal()}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">🔵</span>
-                        <span className="font-bold text-gray-400 text-sm">Coinbase</span>
-                      </div>
-                      <p className="text-xs text-gray-500">Coinbase Wallet</p>
-                    </button>
-                    {/* ZetaChain */}
-                    <button
-                      className="p-3 rounded-lg border border-gray-700 bg-black/30 text-left transition-all hover:border-green-500/50 hover:bg-green-500/10 relative"
-                      onClick={() => alert('🟢 ZetaChain Wallet\n\nOmnichain wallet integration coming soon!\n\nThis will enable universal cross-chain transactions across Bitcoin, Ethereum, BNB, Polygon & more.')}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-lg">🟢</span>
-                        <span className="font-bold text-gray-400 text-sm">ZetaChain</span>
-                      </div>
-                      <p className="text-xs text-gray-500">Omnichain</p>
-                      <Badge className="absolute -top-2 -right-2 bg-yellow-500/20 text-yellow-400 text-[10px] px-1">Soon</Badge>
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-3">Your default wallet is used for transactions, minting, and receiving payments.</p>
-                </Card>
 
                 {/* OAuth Wallets Section */}
                 <Card className="metadata-section p-4 mb-4 border-purple-500/30">

@@ -362,12 +362,12 @@ export function MultiWalletAggregator({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {/* Magic Wallet - SoundChain Native */}
           <button
-            className={`p-3 rounded-lg border-2 text-left transition-all ${
+            className={`p-3 rounded-lg border-2 text-left transition-all touch-manipulation ${
               userWallet
                 ? 'border-cyan-500 bg-cyan-500/10'
                 : 'border-gray-700 bg-black/30 hover:border-cyan-500/50'
             }`}
-            onClick={() => userWallet && toggleExpanded('magic')}
+            onClick={(e) => { e.preventDefault(); userWallet && toggleExpanded('magic') }}
           >
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">✨</span>
@@ -379,12 +379,12 @@ export function MultiWalletAggregator({
 
           {/* Web3Modal - Primary button for external wallets (300+ options) */}
           <button
-            className={`p-3 rounded-lg border-2 text-left transition-all ${
+            className={`p-3 rounded-lg border-2 text-left transition-all touch-manipulation ${
               isWeb3ModalConnected && web3ModalAddress
                 ? 'border-purple-500 bg-purple-500/10'
                 : 'border-gray-700 bg-black/30 hover:border-purple-500/50'
             }`}
-            onClick={isWeb3ModalConnected ? () => toggleExpanded('web3modal') : connectWeb3Modal}
+            onClick={(e) => { e.preventDefault(); isWeb3ModalConnected ? toggleExpanded('web3modal') : connectWeb3Modal() }}
           >
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🌐</span>
@@ -400,12 +400,12 @@ export function MultiWalletAggregator({
 
           {/* Direct MetaMask - Fallback for power users */}
           <button
-            className={`p-3 rounded-lg border-2 text-left transition-all ${
+            className={`p-3 rounded-lg border-2 text-left transition-all touch-manipulation ${
               metamaskAddress
                 ? 'border-orange-500 bg-orange-500/10'
                 : 'border-gray-700 bg-black/30 hover:border-orange-500/50'
             }`}
-            onClick={metamaskAddress ? () => toggleExpanded('metamask') : connectMetaMask}
+            onClick={(e) => { e.preventDefault(); metamaskAddress ? toggleExpanded('metamask') : connectMetaMask() }}
             disabled={isConnectingMetaMask}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -422,12 +422,12 @@ export function MultiWalletAggregator({
 
           {/* ZetaChain - Omnichain Support */}
           <button
-            className={`p-3 rounded-lg border-2 text-left transition-all ${
+            className={`p-3 rounded-lg border-2 text-left transition-all touch-manipulation ${
               isWeb3ModalConnected && web3ModalChainName === 'ZetaChain'
                 ? 'border-green-500 bg-green-500/10'
                 : 'border-gray-700 bg-black/30 hover:border-green-500/50'
             }`}
-            onClick={connectWeb3Modal}
+            onClick={(e) => { e.preventDefault(); connectWeb3Modal() }}
           >
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🟢</span>
