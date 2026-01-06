@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, ReactElement, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useCallback, ReactElement, useEffect, useRef, Component, ErrorInfo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
@@ -124,6 +124,50 @@ const PROFILE_STREAMING_REWARDS_QUERY = gql`
 
 // Navigation pages removed - all tabs now in main DEX view
 const navigationPages: { name: string; href: string; icon: React.ComponentType<{ className?: string }> }[] = []
+
+// Error Boundary for catching render errors in profile view
+interface ErrorBoundaryProps {
+  children: React.ReactNode
+  fallback?: React.ReactNode
+}
+interface ErrorBoundaryState {
+  hasError: boolean
+  error: Error | null
+}
+class ProfileErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error }
+  }
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Profile view error:', error, errorInfo)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 text-center">
+          <p className="text-red-400 mb-2">Something went wrong loading this profile</p>
+          <p className="text-gray-500 text-sm mb-4 font-mono bg-black/50 p-3 rounded overflow-auto max-h-40">
+            {this.state.error?.message || 'Unknown error'}
+          </p>
+          <p className="text-gray-500 text-xs mb-4 font-mono bg-black/50 p-3 rounded overflow-auto max-h-40">
+            {this.state.error?.stack?.split('\n').slice(0, 5).join('\n')}
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded hover:bg-cyan-500/30"
+          >
+            Try Again
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // WalletConnect Modal Component - Uses WalletConnect v2 with EthereumProvider
 function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; onClose: () => void; onConnect: (address: string, walletType: string) => void }) {
@@ -5112,6 +5156,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Profile View - /dex/profile/[handle] */}
           {selectedView === 'profile' && routeId && router.isReady && (
+            <ProfileErrorBoundary>
             <div className="space-y-6 pb-32 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
               {viewingProfile && (
@@ -5377,6 +5422,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </>
               )}
             </div>
+            </ProfileErrorBoundary>
           )}
         </div>
 
