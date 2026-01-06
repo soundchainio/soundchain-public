@@ -17,7 +17,8 @@ import {
   ChevronUp,
   Zap,
   Check,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -27,6 +28,7 @@ import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
 import SoundchainOGUN20 from 'contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import MetaMaskOnboarding from '@metamask/onboarding'
+import { useGroupedTracksLazyQuery, SortTrackField, SortOrder } from 'lib/graphql'
 
 interface ConnectedWallet {
   id: string
@@ -114,6 +116,13 @@ export function MultiWalletAggregator({
   const [metamaskOgunBalance, setMetamaskOgunBalance] = useState<string>('0')
   const [isConnectingMetaMask, setIsConnectingMetaMask] = useState(false)
 
+  // NFT fetching for external wallets
+  const [externalWalletNfts, setExternalWalletNfts] = useState<Record<string, NFTTrack[]>>({})
+  const [loadingNfts, setLoadingNfts] = useState<Record<string, boolean>>({})
+
+  // GraphQL lazy query for fetching NFTs by owner address
+  const [fetchNftsForWallet] = useGroupedTracksLazyQuery()
+
   // Check if MetaMask is installed
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -157,6 +166,52 @@ export function MultiWalletAggregator({
     setMetamaskOgunBalance('0')
   }, [])
 
+  // Fetch NFTs for any wallet address (SoundChain NFTs on Polygon)
+  const fetchNftsForAddress = useCallback(async (address: string) => {
+    if (!address || loadingNfts[address] || externalWalletNfts[address]) return
+
+    setLoadingNfts(prev => ({ ...prev, [address]: true }))
+
+    try {
+      const result = await fetchNftsForWallet({
+        variables: {
+          filter: { nftData: { owner: address } },
+          sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
+        },
+      })
+
+      const tracks = result.data?.groupedTracks?.nodes || []
+      const nfts: NFTTrack[] = tracks.map((track: any) => ({
+        id: track.id,
+        title: track.title,
+        artist: track.artist || track.profile?.displayName || 'Unknown Artist',
+        artworkUrl: track.artworkUrl,
+        audioUrl: track.playbackUrl,
+        tokenId: track.nftData?.tokenId || track.tokenId,
+      }))
+
+      setExternalWalletNfts(prev => ({ ...prev, [address]: nfts }))
+    } catch (error) {
+      console.error('Failed to fetch NFTs for wallet:', address, error)
+      setExternalWalletNfts(prev => ({ ...prev, [address]: [] }))
+    } finally {
+      setLoadingNfts(prev => ({ ...prev, [address]: false }))
+    }
+  }, [fetchNftsForWallet, loadingNfts, externalWalletNfts])
+
+  // Auto-fetch NFTs when external wallets connect
+  useEffect(() => {
+    if (isWeb3ModalConnected && web3ModalAddress && web3ModalAddress !== userWallet) {
+      fetchNftsForAddress(web3ModalAddress)
+    }
+  }, [isWeb3ModalConnected, web3ModalAddress, userWallet, fetchNftsForAddress])
+
+  useEffect(() => {
+    if (metamaskAddress && metamaskAddress !== userWallet) {
+      fetchNftsForAddress(metamaskAddress)
+    }
+  }, [metamaskAddress, userWallet, fetchNftsForAddress])
+
   // Build connected wallets list
   useEffect(() => {
     const wallets: ConnectedWallet[] = []
@@ -193,7 +248,7 @@ export function MultiWalletAggregator({
         chainName: web3ModalChainName || 'Unknown Chain',
         balance: web3ModalBalance || '0',
         ogunBalance: web3ModalOgunBalance || '0',
-        nfts: [], // TODO: Fetch NFTs for this wallet
+        nfts: externalWalletNfts[web3ModalAddress] || [],
         isActive: activeWalletType === 'web3modal',
         icon: '🔗'
       })
@@ -209,7 +264,7 @@ export function MultiWalletAggregator({
         chainId: 137,
         balance: metamaskBalance,
         ogunBalance: metamaskOgunBalance,
-        nfts: [], // TODO: Fetch NFTs for this wallet
+        nfts: externalWalletNfts[metamaskAddress] || [],
         isActive: !walletConnectedAddress && !!metamaskAddress && !isWeb3ModalConnected,
         icon: '🦊'
       })
@@ -225,14 +280,14 @@ export function MultiWalletAggregator({
         chainId: 137,
         balance: '0',
         ogunBalance: '0',
-        nfts: [],
+        nfts: externalWalletNfts[walletConnectedAddress] || [],
         isActive: true,
         icon: '🔗'
       })
     }
 
     setConnectedWallets(wallets)
-  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType])
+  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType, externalWalletNfts])
 
   const toggleExpanded = (walletId: string) => {
     setExpandedWallets(prev => {
@@ -535,7 +590,12 @@ export function MultiWalletAggregator({
                     </div>
                   </div>
 
-                  {wallet.nfts.length > 0 ? (
+                  {loadingNfts[wallet.address] ? (
+                    <div className="py-6 text-center">
+                      <Loader2 className="w-6 h-6 text-cyan-400 mx-auto animate-spin mb-2" />
+                      <div className="text-gray-500 text-sm">Loading SoundChain NFTs...</div>
+                    </div>
+                  ) : wallet.nfts.length > 0 ? (
                     <div
                       className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 pb-2"
                     >
@@ -555,14 +615,30 @@ export function MultiWalletAggregator({
                       <div className="text-gray-500 text-sm mb-2">
                         {wallet.type === 'magic'
                           ? 'No NFTs owned yet'
-                          : wallet.type === 'web3modal'
-                            ? `No SoundChain NFTs found on ${wallet.chainName}`
-                            : 'NFT loading coming soon'}
+                          : `No SoundChain NFTs found on ${wallet.chainName}`}
                       </div>
                       {wallet.type !== 'magic' && (
-                        <p className="text-xs text-gray-600">
-                          Only SoundChain music NFTs are displayed
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-600">
+                            Only SoundChain music NFTs are displayed
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              // Clear cached NFTs to force refetch
+                              setExternalWalletNfts(prev => {
+                                const next = { ...prev }
+                                delete next[wallet.address]
+                                return next
+                              })
+                              fetchNftsForAddress(wallet.address)
+                            }}
+                            className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 mx-auto"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            Refresh
+                          </button>
+                        </div>
                       )}
                     </div>
                   )}
