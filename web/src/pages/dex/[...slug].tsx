@@ -5230,7 +5230,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       coverPicture: viewingProfile.coverPicture || undefined,
                     }}
                     isOwnProfile={Boolean(me?.profile?.id && viewingProfile?.id && me.profile.id === viewingProfile.id)}
-                    currentUserWallet={magicWallet || ''}
+                    currentUserWallet={userData?.me?.magicWalletAddress || ''}
                     ownedNfts={ownedTracksData?.groupedTracks?.nodes?.map((t: any) => ({
                       id: t.id,
                       title: t.title || 'Untitled',
