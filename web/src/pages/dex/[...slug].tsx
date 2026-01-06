@@ -747,6 +747,26 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
   const [usersViewMode, setUsersViewMode] = useState<'browse' | 'leaderboard'>('browse')
 
+  // Users grid scroll position restoration
+  useEffect(() => {
+    if (selectedView === 'users') {
+      // Restore scroll position when returning to Users view
+      const savedScrollY = sessionStorage.getItem('usersGridScrollY')
+      if (savedScrollY) {
+        // Delay to allow content to render
+        setTimeout(() => {
+          window.scrollTo(0, parseInt(savedScrollY, 10))
+          sessionStorage.removeItem('usersGridScrollY')
+        }, 100)
+      }
+    }
+  }, [selectedView])
+
+  // Function to save scroll position before navigating to profile
+  const saveUsersScrollPosition = () => {
+    sessionStorage.setItem('usersGridScrollY', String(window.scrollY))
+  }
+
   // Messaging state
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
   const [messageInput, setMessageInput] = useState('')
@@ -2690,7 +2710,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         const isGif = profile.profilePicture && /\.gif$/i.test(profile.profilePicture)
 
                         return (
-                          <Link key={profile.id} href={`/dex/users/${profile.userHandle}`}>
+                          <Link key={profile.id} href={`/dex/users/${profile.userHandle}`} onClick={saveUsersScrollPosition}>
                             <div className="relative group cursor-pointer">
                               {/* Micro card with avatar as main visual */}
                               <div className="aspect-square rounded-lg overflow-hidden bg-neutral-800 ring-1 ring-neutral-700 group-hover:ring-indigo-500/60 transition-all duration-300">
@@ -2803,7 +2823,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           .sort((a: any, b: any) => (b.followerCount || 0) - (a.followerCount || 0))
                           .slice(0, 20)
                           .map((profile: any, index: number) => (
-                            <Link key={profile.id} href={`/dex/users/${profile.userHandle}`}>
+                            <Link key={profile.id} href={`/dex/users/${profile.userHandle}`} onClick={saveUsersScrollPosition}>
                               <div className="flex items-center gap-4 p-4 hover:bg-white/5 transition-colors cursor-pointer">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                                   index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-black' :
