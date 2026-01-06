@@ -35,6 +35,7 @@ interface FollowUser {
   id: string
   name: string
   username: string
+  userHandle?: string // The actual handle without @ prefix for navigation
   avatar?: string
   isVerified?: boolean
 }
@@ -72,7 +73,7 @@ interface ProfileHeaderProps {
   onUnfollow?: () => void
   isFollowing?: boolean
   onEditProfile?: () => void
-  onProfileClick?: (userId: string) => void // Navigate to a user's profile
+  onProfileClick?: (userHandle: string) => void // Navigate to a user's profile by handle
   onTrackClick?: (trackId: string) => void // Navigate to a track
   onPlayTrack?: (track: NFTTrack) => void // Play a track inline
 }
@@ -421,7 +422,7 @@ function FollowersFollowingModal({
   onClose: () => void
   title: string
   users: FollowUser[]
-  onProfileClick?: (userId: string) => void
+  onProfileClick?: (userHandle: string) => void
 }) {
   if (!isOpen) return null
 
@@ -460,7 +461,7 @@ function FollowersFollowingModal({
                 {users.map((user) => (
                   <div
                     key={user.id}
-                    onClick={() => onProfileClick?.(user.id)}
+                    onClick={() => user.userHandle && onProfileClick?.(user.userHandle)}
                     className="group cursor-pointer flex flex-col items-center gap-2"
                   >
                     <div className="relative">

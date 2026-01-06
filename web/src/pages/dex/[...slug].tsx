@@ -1329,6 +1329,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     id: f.followerProfile.id,
     name: f.followerProfile.displayName || f.followerProfile.userHandle,
     username: `@${f.followerProfile.userHandle}`,
+    userHandle: f.followerProfile.userHandle, // For navigation
     avatar: f.followerProfile.profilePicture || undefined,
     isVerified: f.followerProfile.verified || f.followerProfile.teamMember || false,
   })) || []
@@ -1338,6 +1339,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     id: f.followedProfile.id,
     name: f.followedProfile.displayName || f.followedProfile.userHandle,
     username: `@${f.followedProfile.userHandle}`,
+    userHandle: f.followedProfile.userHandle, // For navigation
     avatar: f.followedProfile.profilePicture || undefined,
     isVerified: f.followedProfile.verified || f.followedProfile.teamMember || false,
   })) || []
