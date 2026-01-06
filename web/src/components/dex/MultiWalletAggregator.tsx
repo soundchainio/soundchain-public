@@ -63,9 +63,20 @@ interface MultiWalletAggregatorProps {
   isPlaying?: boolean
 }
 
-// Token contract helper
+// Token contract helper - ONLY works on Polygon (chain 137)
 const getOgunBalance = async (web3: Web3, address: string): Promise<string> => {
   try {
+    // Check if we're on Polygon - OGUN contract only exists there
+    const chainId = await web3.eth.getChainId()
+    if (Number(chainId) !== 137) {
+      // Not on Polygon - OGUN contract doesn't exist
+      return '0'
+    }
+
+    if (!config.ogunTokenAddress) {
+      return '0'
+    }
+
     const contract = new web3.eth.Contract(
       SoundchainOGUN20.abi as AbiItem[],
       config.ogunTokenAddress as string
@@ -73,7 +84,9 @@ const getOgunBalance = async (web3: Web3, address: string): Promise<string> => {
     const balance = await contract.methods.balanceOf(address).call()
     const validBalance = typeof balance === 'bigint' ? balance.toString() : String(balance || '0')
     return Number(web3.utils.fromWei(validBalance, 'ether')).toFixed(2)
-  } catch {
+  } catch (err) {
+    // Silently fail - contract may not exist on this chain
+    console.log('OGUN balance fetch skipped (not on Polygon or contract error)')
     return '0'
   }
 }

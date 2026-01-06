@@ -226,14 +226,28 @@ export function MagicProvider({ children }: MagicProviderProps) {
   const handleSetOgunBalance = useCallback(async () => {
     try {
       const ogunAddress = config.ogunTokenAddress
-      console.log('💎 OGUN Token Address from config:', ogunAddress)
 
       if (!ogunAddress) {
-        console.error('❌ No OGUN token address found in config!')
-        throw Error('No token contract address found when setting Ogun balance')
+        console.log('💎 No OGUN token address in config, skipping balance fetch')
+        setOgunBalance('0')
+        return
       }
 
       if (web3 && account) {
+        // Check if we're on Polygon (chain 137) - OGUN only exists there
+        try {
+          const chainId = await web3.eth.getChainId()
+          if (Number(chainId) !== 137) {
+            console.log('💎 Not on Polygon, skipping OGUN balance fetch')
+            setOgunBalance('0')
+            return
+          }
+        } catch {
+          // Can't get chain ID - skip OGUN balance
+          setOgunBalance('0')
+          return
+        }
+
         console.log('💎 Fetching OGUN balance for account:', account)
         const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
         const tokenAmount = await ogunContract.methods.balanceOf(account).call()
@@ -254,10 +268,11 @@ export function MagicProvider({ children }: MagicProviderProps) {
         setOgunBalance(tokenAmountInEther)
       }
     } catch (error) {
-      console.error('❌ Error fetching OGUN balance:', error)
-      handleError(error as Error | { code: number })
+      // Don't propagate OGUN balance errors - just set to 0
+      console.log('💎 OGUN balance fetch failed, setting to 0')
+      setOgunBalance('0')
     }
-  }, [account, handleError, web3])
+  }, [account, web3])
 
   // Fetch account when web3 is ready (or when me changes with wallet info)
   useEffect(() => {
