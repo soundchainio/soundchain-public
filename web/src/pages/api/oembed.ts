@@ -62,6 +62,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 /**
  * Handle oEmbed requests for SoundChain content
+ * Fetches actual track/profile data for rich embeds
  */
 async function handleSoundChainOEmbed(
   req: NextApiRequest,
@@ -88,34 +89,127 @@ async function handleSoundChainOEmbed(
   const postMatch = pathname.match(/^\/posts\/([a-zA-Z0-9]+)/)
   // Match track URLs: /tracks/{id} or /dex/track/{id}
   const trackMatch = pathname.match(/^\/(?:tracks|dex\/track)\/([a-zA-Z0-9]+)/)
+  // Match profile URLs: /dex/users/{handle}
+  const profileMatch = pathname.match(/^\/dex\/users\/([a-zA-Z0-9_-]+)/)
 
-  if (!postMatch && !trackMatch) {
+  if (!postMatch && !trackMatch && !profileMatch) {
     return res.status(404).json({ error: 'URL not supported for embedding' })
   }
 
-  const resourceId = postMatch ? postMatch[1] : trackMatch![1]
-  const resourceType = postMatch ? 'post' : 'track'
+  const domainUrl = config.domainUrl || 'https://soundchain.fm'
+  const fallbackImage = `${domainUrl}/soundchain-meta-logo.png`
 
   // Calculate dimensions
   const width = Math.min(parseInt(maxwidth || '640') || 640, 1280)
   const height = Math.min(parseInt(maxheight || '360') || 360, 720)
 
-  // Build embed URL
-  const domainUrl = config.domainUrl || 'https://soundchain.fm'
-  const embedUrl = resourceType === 'post'
-    ? `${domainUrl}/embed/post/${resourceId}`
-    : `${domainUrl}/embed/track/${resourceId}`
+  // Default oEmbed response
+  let title = 'SoundChain'
+  let authorName = 'SoundChain'
+  let authorUrl = domainUrl
+  let thumbnailUrl = fallbackImage
+  let embedUrl = domainUrl
+  let resourceType = 'link'
 
-  // Build oEmbed response
+  // Fetch actual data from GraphQL API
+  const apiUrl = config.graphqlEndpoint || process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'https://api.soundchain.io/graphql'
+
+  if (trackMatch) {
+    const trackId = trackMatch[1]
+    resourceType = 'track'
+    embedUrl = `${domainUrl}/embed/track/${trackId}`
+
+    try {
+      const response = await axios.post(apiUrl, {
+        query: `
+          query Track($id: String!) {
+            track(id: $id) {
+              id
+              title
+              artist
+              artworkUrl
+              playbackCountFormatted
+              description
+            }
+          }
+        `,
+        variables: { id: trackId }
+      }, { timeout: 5000 })
+
+      const track = response.data?.data?.track
+      if (track) {
+        title = `${track.title || 'Track'} by ${track.artist || 'Unknown Artist'}`
+        authorName = track.artist || 'Unknown Artist'
+        authorUrl = `${domainUrl}/dex/track/${trackId}`
+        if (track.artworkUrl) {
+          thumbnailUrl = track.artworkUrl.startsWith('http')
+            ? track.artworkUrl
+            : `${domainUrl}${track.artworkUrl.startsWith('/') ? '' : '/'}${track.artworkUrl}`
+        }
+      }
+    } catch (err) {
+      console.error('oEmbed track fetch error:', err)
+    }
+  }
+
+  if (profileMatch) {
+    const handle = profileMatch[1]
+    resourceType = 'profile'
+    embedUrl = `${domainUrl}/dex/users/${handle}`
+
+    try {
+      const response = await axios.post(apiUrl, {
+        query: `
+          query ProfileByHandle($handle: String!) {
+            profileByHandle(handle: $handle) {
+              id
+              displayName
+              userHandle
+              profilePicture
+              coverPicture
+              bio
+            }
+          }
+        `,
+        variables: { handle }
+      }, { timeout: 5000 })
+
+      const profile = response.data?.data?.profileByHandle
+      if (profile) {
+        title = `${profile.displayName || profile.userHandle} | SoundChain`
+        authorName = profile.displayName || profile.userHandle
+        authorUrl = `${domainUrl}/dex/users/${handle}`
+        const profileImg = profile.profilePicture || profile.coverPicture
+        if (profileImg) {
+          thumbnailUrl = profileImg.startsWith('http')
+            ? profileImg
+            : `${domainUrl}${profileImg.startsWith('/') ? '' : '/'}${profileImg}`
+        }
+      }
+    } catch (err) {
+      console.error('oEmbed profile fetch error:', err)
+    }
+  }
+
+  if (postMatch) {
+    const postId = postMatch[1]
+    resourceType = 'post'
+    embedUrl = `${domainUrl}/embed/post/${postId}`
+    // Posts can be enhanced similarly if needed
+  }
+
+  // Build oEmbed response with actual data
   const oembedResponse: OEmbedResponse = {
     type: 'video',
     version: '1.0',
-    title: 'SoundChain',
+    title,
+    author_name: authorName,
+    author_url: authorUrl,
     provider_name: 'SoundChain',
     provider_url: domainUrl,
-    thumbnail_url: `${domainUrl}/soundchain-meta-logo.png`,
+    thumbnail_url: thumbnailUrl,
     thumbnail_width: 1200,
-    thumbnail_height: 630,
+    thumbnail_height: 1200,
     html: `<iframe width="${width}" height="${height}" src="${embedUrl}" frameborder="0" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>`,
     width,
     height,

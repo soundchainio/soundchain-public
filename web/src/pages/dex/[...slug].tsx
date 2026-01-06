@@ -1504,6 +1504,14 @@ function DEXDashboard({ ogData }: DEXDashboardProps) {
           <meta name="twitter:description" content={ogData.description || 'Web3 Music Platform'} />
           {ogData.image && <meta name="twitter:image" content={ogData.image} />}
           <meta name="twitter:site" content="@SoundChainFM" />
+
+          {/* oEmbed Discovery - enables rich embeds in Discord, Slack, etc */}
+          <link
+            rel="alternate"
+            type="application/json+oembed"
+            href={`${config.domainUrl}/api/oembed?url=${encodeURIComponent(`${config.domainUrl}${ogData.url}`)}`}
+            title={ogData.title || 'SoundChain'}
+          />
         </Head>
       )}
 
