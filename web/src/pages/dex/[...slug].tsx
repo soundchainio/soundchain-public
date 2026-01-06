@@ -2589,10 +2589,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   ) : (exploreUsersData?.exploreUsers?.nodes?.length ?? 0) > 0 ? (
                     <>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2">
-                      {/* Deduplicate users by ID to prevent duplicate avatars */}
+                      {/* Deduplicate users by ID and filter out profiles without userHandle */}
                       {exploreUsersData?.exploreUsers?.nodes
                         ?.filter((profile: any, index: number, self: any[]) =>
-                          self.findIndex((p: any) => p.id === profile.id) === index
+                          profile.userHandle && self.findIndex((p: any) => p.id === profile.id) === index
                         )
                         ?.map((profile: any) => {
                         // Check if profile picture is a video/gif
@@ -2705,10 +2705,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </h3>
                       </div>
                       <div className="divide-y divide-cyan-500/20">
-                        {/* Deduplicate users by ID before sorting */}
+                        {/* Deduplicate users by ID and filter out profiles without userHandle */}
                         {[...(exploreUsersData?.exploreUsers?.nodes || [])]
                           .filter((profile: any, index: number, self: any[]) =>
-                            self.findIndex((p: any) => p.id === profile.id) === index
+                            profile.userHandle && self.findIndex((p: any) => p.id === profile.id) === index
                           )
                           .sort((a: any, b: any) => (b.followerCount || 0) - (a.followerCount || 0))
                           .slice(0, 20)
