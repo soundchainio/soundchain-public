@@ -13,6 +13,7 @@
 7. **`151759637`** - fix: Back button now returns to Users grid with scroll position
 8. **`a50fb0475`** - fix: Full-screen cover for profile view at top level
 9. **`7ee9a8201`** - fix: Profile page UI layout and cover image display
+10. **`9a2c6d046`** - fix: Remove external wallet redirects - keep users inline via WalletConnect QR
 
 ---
 
@@ -162,6 +163,24 @@ The wallet connect system is now fully operational:
   - `e.preventDefault()` on all button clicks
   - No more 300ms tap delay on iOS/Android
 
+### 7. External Redirect Removal (Latest)
+**File:** `src/pages/dex/[...slug].tsx`
+
+**Critical UX Fix - Users Never Leave SoundChain:**
+- Removed MetaMask deep links (`metamask.app.link/dapp/...`)
+- Removed Coinbase deep links (`go.cb-w.com/dapp/...`)
+- All mobile wallet connections now use WalletConnect QR modal
+- Users stay on the platform - no external redirects to wallet apps
+
+```tsx
+// Before (redirected users away):
+window.location.href = `https://metamask.app.link/dapp/${window.location.host}`
+
+// After (keeps users inline):
+console.log('Mobile detected, using WalletConnect QR (no external redirect)')
+await handleWalletConnectV2()
+```
+
 ---
 
 ## Next Session TODO
@@ -183,4 +202,4 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=8e33134dfeea545054faa3493a504b8d
 ---
 
 *Session Date: January 6, 2026*
-*Commits: fa1959aa6, 854373a03, 3ac8ccbfd, 8e2be8d24, e925f730d, 151759637, a50fb0475, 7ee9a8201*
+*Commits: fa1959aa6, 854373a03, 3ac8ccbfd, 8e2be8d24, e925f730d, 151759637, a50fb0475, 7ee9a8201, 09d6d4823, 9a2c6d046*
