@@ -192,6 +192,18 @@ await handleWalletConnectV2()
 
 ---
 
+## Session Complete (Final Deployment)
+
+**All Tasks Completed:**
+- ✅ Disabled external wallet redirects/deep links
+- ✅ Kept wallet connections inline via WalletConnect QR
+- ✅ Auto-load NFT decks on wallet connect
+- ✅ Deployed to production via Vercel
+
+**Live at:** https://soundchain.io/dex/wallet
+
+---
+
 ## WalletConnect Project ID
 
 Already registered and configured:
