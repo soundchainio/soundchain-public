@@ -1324,25 +1324,29 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-first',
   })
 
-  // Transform followers data for ProfileHeader
-  const followersList = viewingProfileFollowersData?.followers?.nodes?.map(f => ({
-    id: f.followerProfile.id,
-    name: f.followerProfile.displayName || f.followerProfile.userHandle,
-    username: `@${f.followerProfile.userHandle}`,
-    userHandle: f.followerProfile.userHandle, // For navigation
-    avatar: f.followerProfile.profilePicture || undefined,
-    isVerified: f.followerProfile.verified || f.followerProfile.teamMember || false,
-  })) || []
+  // Transform followers data for ProfileHeader (filter out null profiles)
+  const followersList = viewingProfileFollowersData?.followers?.nodes
+    ?.filter(f => f?.followerProfile)
+    ?.map(f => ({
+      id: f.followerProfile.id,
+      name: f.followerProfile.displayName || f.followerProfile.userHandle,
+      username: `@${f.followerProfile.userHandle}`,
+      userHandle: f.followerProfile.userHandle, // For navigation
+      avatar: f.followerProfile.profilePicture || undefined,
+      isVerified: f.followerProfile.verified || f.followerProfile.teamMember || false,
+    })) || []
 
-  // Transform following data for ProfileHeader
-  const followingList = viewingProfileFollowingData?.following?.nodes?.map(f => ({
-    id: f.followedProfile.id,
-    name: f.followedProfile.displayName || f.followedProfile.userHandle,
-    username: `@${f.followedProfile.userHandle}`,
-    userHandle: f.followedProfile.userHandle, // For navigation
-    avatar: f.followedProfile.profilePicture || undefined,
-    isVerified: f.followedProfile.verified || f.followedProfile.teamMember || false,
-  })) || []
+  // Transform following data for ProfileHeader (filter out null profiles)
+  const followingList = viewingProfileFollowingData?.following?.nodes
+    ?.filter(f => f?.followedProfile)
+    ?.map(f => ({
+      id: f.followedProfile.id,
+      name: f.followedProfile.displayName || f.followedProfile.userHandle,
+      username: `@${f.followedProfile.userHandle}`,
+      userHandle: f.followedProfile.userHandle, // For navigation
+      avatar: f.followedProfile.profilePicture || undefined,
+      isVerified: f.followedProfile.verified || f.followedProfile.teamMember || false,
+    })) || []
 
   // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
   // NOTE: isViewingOwnProfile uses viewingProfile which is now defined above
@@ -5107,7 +5111,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
 
           {/* Profile View - /dex/profile/[handle] */}
-          {selectedView === 'profile' && routeId && (
+          {selectedView === 'profile' && routeId && router.isReady && (
             <div className="space-y-6 pb-32 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
               {viewingProfile && (
