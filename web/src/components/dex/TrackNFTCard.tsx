@@ -208,12 +208,12 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                     <Link href={`/tracks/${track.id}`} onClick={() => setIsFullscreen(false)}>
                       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 hover:text-cyan-400 transition-colors cursor-pointer">{track.title}</h1>
                     </Link>
-                    {track.artistProfileId || track.artistId ? (
-                      <Link href={`/profiles/${track.artistProfileId || track.artistId}`} onClick={() => setIsFullscreen(false)}>
+                    {track.artist ? (
+                      <Link href={`/dex/users/${track.artist}`} onClick={() => setIsFullscreen(false)}>
                         <p className="text-base md:text-lg text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer">{track.artist}</p>
                       </Link>
                     ) : (
-                      <p className="text-base md:text-lg text-cyan-400">{track.artist}</p>
+                      <p className="text-base md:text-lg text-cyan-400">Unknown Artist</p>
                     )}
                   </div>
 

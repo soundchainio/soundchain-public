@@ -107,7 +107,7 @@ export default function RequestPage({ data }: RequestPageProps) {
       <SEO title="Manage Request | SoundChain" canonicalUrl={router.asPath} description="SoundChain Manage Request" />
       <div className="flex h-full flex-col justify-between">
         <div>
-          <NextLink href={`/profiles/${data.profileId}`} passHref className="flex cursor-pointer flex-col text-white">
+          <NextLink href={`/profiles/${profile.profile.userHandle}`} passHref className="flex cursor-pointer flex-col text-white">
             <div className="relative flex items-center p-4">
               <Avatar profile={profile.profile} pixels={40} className="flex min-w-max items-center rounded-full" />
               <div className="mx-4">

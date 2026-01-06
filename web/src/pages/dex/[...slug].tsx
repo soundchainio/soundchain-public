@@ -2876,23 +2876,37 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <div className="flex items-start gap-4">
                           {/* Avatar with Online Status */}
                           <div className="relative flex-shrink-0">
-                            <Link href={`/dex/users/${user.userHandle || user.id}`}>
+                            {user.userHandle ? (
+                              <Link href={`/dex/users/${user.userHandle}`}>
+                                <Avatar className="w-16 h-16 border-2 border-cyan-500/30">
+                                  <AvatarImage src={user.profilePicture || '/default-avatar.png'} alt={user.displayName} className="object-cover" />
+                                  <AvatarFallback className="bg-gray-700 text-white">{user.displayName?.charAt(0) || '?'}</AvatarFallback>
+                                </Avatar>
+                              </Link>
+                            ) : (
                               <Avatar className="w-16 h-16 border-2 border-cyan-500/30">
                                 <AvatarImage src={user.profilePicture || '/default-avatar.png'} alt={user.displayName} className="object-cover" />
                                 <AvatarFallback className="bg-gray-700 text-white">{user.displayName?.charAt(0) || '?'}</AvatarFallback>
                               </Avatar>
-                            </Link>
+                            )}
                             {/* Online Status Indicator (Green Dot) */}
                             <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full" title="Online"></div>
                           </div>
                           {/* User Info */}
                           <div className="flex-1 min-w-0">
-                            <Link href={`/dex/users/${user.userHandle || user.id}`}>
-                              <h3 className="text-white font-bold truncate hover:text-cyan-400 transition-colors flex items-center gap-1">
+                            {user.userHandle ? (
+                              <Link href={`/dex/users/${user.userHandle}`}>
+                                <h3 className="text-white font-bold truncate hover:text-cyan-400 transition-colors flex items-center gap-1">
+                                  {user.displayName || 'Unknown User'}
+                                  {user.isVerified && <BadgeCheck className="w-4 h-4 text-cyan-400" />}
+                                </h3>
+                              </Link>
+                            ) : (
+                              <h3 className="text-white font-bold truncate flex items-center gap-1">
                                 {user.displayName || 'Unknown User'}
                                 {user.isVerified && <BadgeCheck className="w-4 h-4 text-cyan-400" />}
                               </h3>
-                            </Link>
+                            )}
                             <p className="text-gray-400 text-sm truncate">@{user.userHandle || user.id?.slice(0, 8)}</p>
                             <p className="text-gray-500 text-xs mt-1">{user.followerCount || 0} followers</p>
                           </div>
@@ -4785,11 +4799,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <div>
                           <h1 className="text-3xl font-bold text-white mb-2">{trackDetailData.track.title}</h1>
                           {/* Artist - Clickable Link to Profile */}
-                          <Link href={`/${trackDetailData.track.artistProfileId || trackDetailData.track.artistId}`}>
-                            <p className="text-cyan-400 text-lg hover:text-cyan-300 cursor-pointer transition-colors">
-                              {trackDetailData.track.artist}
-                            </p>
-                          </Link>
+                          {trackDetailData.track.artist ? (
+                            <Link href={`/dex/users/${trackDetailData.track.artist}`}>
+                              <p className="text-cyan-400 text-lg hover:text-cyan-300 cursor-pointer transition-colors">
+                                {trackDetailData.track.artist}
+                              </p>
+                            </Link>
+                          ) : (
+                            <p className="text-cyan-400 text-lg">Unknown Artist</p>
+                          )}
                         </div>
 
                         {/* Stats Row */}
