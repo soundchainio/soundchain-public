@@ -204,6 +204,34 @@ await handleWalletConnectV2()
 
 ---
 
+## Emergency Fix: OGUN Balance Error (Late Night)
+
+**Commit:** `a2daaef05` - fix: OGUN balance check now validates Polygon chain before contract call
+
+**Issue:** "Parameter decoding error" when MetaMask connected to non-Polygon chain
+- Error: `nf: Parameter decoding error: Returned values aren't valid`
+- Cause: OGUN contract only exists on Polygon (chain 137), but code tried to call it on any chain
+
+**Fix Applied:**
+```tsx
+// Added chainId check before calling OGUN contract
+const chainId = await web3.eth.getChainId()
+if (Number(chainId) !== 137) {
+  // Not on Polygon - OGUN contract doesn't exist
+  return '0'
+}
+```
+
+**Files Fixed:**
+- `src/components/dex/MultiWalletAggregator.tsx`
+- `src/hooks/useMagicContext.tsx`
+
+**Mobile Magic RPC Error:**
+- Still investigating "Magic RPC Error: [-32603] Load failed" on mobile
+- May be Magic SDK network issue - not blocking login flow
+
+---
+
 ## WalletConnect Project ID
 
 Already registered and configured:
