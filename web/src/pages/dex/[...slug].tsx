@@ -593,9 +593,55 @@ interface DEXDashboardProps {
     image?: string
     url?: string
   }
+  isBot?: boolean
 }
 
-function DEXDashboard({ ogData }: DEXDashboardProps) {
+function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
+  // For bots (Discord, Twitter, etc.), render minimal HTML with OG tags only
+  // This ensures social media crawlers get proper preview cards
+  if (isBot && ogData?.type) {
+    const domainUrl = config.domainUrl || 'https://soundchain.io'
+    return (
+      <>
+        <Head>
+          <title>{ogData.title || 'SoundChain'}</title>
+          <meta name="description" content={ogData.description || 'Web3 Music Platform'} />
+
+          {/* Open Graph - Primary tags for social media previews */}
+          <meta property="og:type" content={ogData.type === 'track' ? 'music.song' : 'website'} />
+          <meta property="og:title" content={ogData.title || 'SoundChain'} />
+          <meta property="og:description" content={ogData.description || 'Web3 Music Platform'} />
+          {ogData.image && <meta property="og:image" content={ogData.image} />}
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="1200" />
+          <meta property="og:url" content={`${domainUrl}${ogData.url}`} />
+          <meta property="og:site_name" content="SoundChain" />
+
+          {/* Twitter Card */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={ogData.title || 'SoundChain'} />
+          <meta name="twitter:description" content={ogData.description || 'Web3 Music Platform'} />
+          {ogData.image && <meta name="twitter:image" content={ogData.image} />}
+          <meta name="twitter:site" content="@SoundChainFM" />
+
+          {/* oEmbed Discovery */}
+          <link
+            rel="alternate"
+            type="application/json+oembed"
+            href={`${domainUrl}/api/oembed?url=${encodeURIComponent(`${domainUrl}${ogData.url}`)}`}
+            title={ogData.title || 'SoundChain'}
+          />
+        </Head>
+        <div style={{ padding: '20px', fontFamily: 'system-ui' }}>
+          <h1>{ogData.title}</h1>
+          <p>{ogData.description}</p>
+          {ogData.image && <img src={ogData.image} alt={ogData.title} style={{ maxWidth: '400px' }} />}
+          <p><a href={`${domainUrl}${ogData.url}`}>View on SoundChain</a></p>
+        </div>
+      </>
+    )
+  }
+
   const router = useRouter()
 
   // Parse slug for routing: /dex/explore, /dex/library, /dex/profile/[handle], /dex/track/[id]
@@ -5476,6 +5522,22 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   // Default empty OG data - page will still load even if data fetch fails
   const emptyOgData = { type: null as 'track' | 'profile' | 'playlist' | null }
 
+  // Detect social media crawlers/bots for SSR-only rendering
+  const userAgent = context.req.headers['user-agent'] || ''
+  const botPatterns = [
+    'Discordbot',           // Discord
+    'Twitterbot',           // Twitter/X
+    'facebookexternalhit',  // Facebook
+    'LinkedInBot',          // LinkedIn
+    'Slackbot',             // Slack
+    'TelegramBot',          // Telegram
+    'WhatsApp',             // WhatsApp
+    'Googlebot',            // Google
+    'bingbot',              // Bing
+    'Applebot',             // Apple/iMessage
+  ]
+  const isBot = botPatterns.some(bot => userAgent.toLowerCase().includes(bot.toLowerCase()))
+
   try {
     const slug = context.params?.slug as string[] | undefined
     const routeType = slug?.[0]
@@ -5483,7 +5545,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
     // Only fetch OG data for track, profile, and playlist pages
     if (!routeType || !routeId || (routeType !== 'track' && routeType !== 'users' && routeType !== 'playlist')) {
-      return { props: { ogData: emptyOgData } }
+      return { props: { ogData: emptyOgData, isBot } }
     }
 
     // Dynamic imports to avoid loading heavy modules for non-OG routes
@@ -5520,6 +5582,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
                 image: ogImage,
                 url: `/dex/track/${routeId}`,
               },
+              isBot,
             },
           }
         }
@@ -5555,6 +5618,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
                 image: ogImage,
                 url: `/dex/users/${routeId}`,
               },
+              isBot,
             },
           }
         }
@@ -5590,6 +5654,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
                 image: ogImage,
                 url: `/dex/playlist/${routeId}`,
               },
+              isBot,
             },
           }
         }
@@ -5602,7 +5667,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   }
 
   // Return empty OG data if anything fails - page still loads
-  return { props: { ogData: emptyOgData } }
+  return { props: { ogData: emptyOgData, isBot } }
 }
 
 export default DEXDashboard
