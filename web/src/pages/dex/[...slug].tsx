@@ -224,10 +224,13 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
       setConnectingWallet('metamask')
       setError(null)
 
-      // On mobile without injected wallet, deep link to MetaMask app
+      // ALWAYS use WalletConnect on mobile - NO deep links that redirect users away!
+      // Users stay on SoundChain and scan QR code with their wallet app
       if (isMobile && !hasInjectedWallet) {
-        const currentUrl = encodeURIComponent(window.location.href)
-        window.location.href = `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}`
+        console.log('🔗 Mobile detected, using WalletConnect QR (no external redirect)')
+        setConnecting(false)
+        setConnectingWallet(null)
+        await handleWalletConnectV2()
         return
       }
 
@@ -273,10 +276,13 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
       setConnectingWallet('coinbase')
       setError(null)
 
-      // On mobile, deep link to Coinbase Wallet app
+      // ALWAYS use WalletConnect on mobile - NO deep links that redirect users away!
+      // Users stay on SoundChain and scan QR code with Coinbase Wallet app
       if (isMobile) {
-        const currentUrl = encodeURIComponent(window.location.href)
-        window.location.href = `https://go.cb-w.com/dapp?cb_url=${currentUrl}`
+        console.log('🔗 Mobile detected, using WalletConnect QR for Coinbase (no external redirect)')
+        setConnecting(false)
+        setConnectingWallet(null)
+        await handleWalletConnectV2()
         return
       }
 
