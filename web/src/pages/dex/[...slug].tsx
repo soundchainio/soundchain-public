@@ -1612,8 +1612,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       )}
 
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Full-screen Cover Photo Background - Hide when viewing another user's profile */}
-      <div className={`fixed inset-0 z-0 ${selectedView === 'profile' && routeId ? 'hidden' : ''}`}>
+      {/* Full-screen Cover Photo Background */}
+      <div className="fixed inset-0 z-0">
         {user?.coverPicture && !coverImageError ? (
           <>
             <img
@@ -5157,7 +5157,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Profile View - /dex/profile/[handle] */}
           {selectedView === 'profile' && routeId && router.isReady && (
             <ProfileErrorBoundary>
-            <div className="space-y-6 pb-32 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="space-y-6 pb-32 overflow-y-auto bg-black min-h-screen" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
               {viewingProfile && (
                 <Head>
