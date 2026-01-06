@@ -130,5 +130,28 @@ web/src/components/NewCommentForm.tsx    # Emote preview panel
 
 ---
 
+---
+
+## Additional Fixes (Same Day - Later Session)
+
+### Commit: `7faa42b03`
+
+**1. OGUN Balance Mobile Fix**
+- Improved resilience for Magic SDK on mobile
+- Chain ID check now continues even if it fails (Magic defaults to Polygon)
+- Better error logging to diagnose balance issues
+
+**2. Staking Chains - Removed "Coming Soon"**
+- ZetaChain, Ethereum, Base now show as live options
+- These chains are already supported in Web3Modal
+- Staking currently only works on Polygon (OGUN native chain)
+
+**3. Emote Loading - URL Format Fix**
+- Changed 7TV URLs to use default format (no extension)
+- CDN auto-serves best format based on browser capabilities
+- Improved fallback chain: `default -> webp -> gif -> png -> text`
+
+---
+
 *Session Date: January 6, 2026 (Afternoon)*
-*Commit: 0e2b38cf8*
+*Commits: 0e2b38cf8, 7faa42b03*
