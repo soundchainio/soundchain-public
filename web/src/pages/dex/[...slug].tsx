@@ -1612,8 +1612,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       )}
 
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Full-screen Cover Photo Background */}
-      <div className="fixed inset-0 z-0">
+      {/* Full-screen Cover Photo Background - Hide when viewing another user's profile */}
+      <div className={`fixed inset-0 z-0 ${selectedView === 'profile' && routeId ? 'hidden' : ''}`}>
         {user?.coverPicture && !coverImageError ? (
           <>
             <img

@@ -849,8 +849,8 @@ export function ProfileHeader({
 
   return (
     <div className="relative z-10">
-      {/* Full-screen Background Cover */}
-      <div className="absolute inset-0 -z-10 h-80 lg:h-96">
+      {/* Full-screen Background Cover - Fixed to cover entire viewport */}
+      <div className="fixed inset-0 -z-10">
         {userData.coverPicture ? (
           <img
             src={userData.coverPicture}
@@ -860,7 +860,7 @@ export function ProfileHeader({
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-purple-900 via-cyan-900 to-black" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-gray-900/90" />
       </div>
 
       <div className="pt-32 lg:pt-48 pb-6">
