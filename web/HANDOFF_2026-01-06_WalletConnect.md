@@ -232,6 +232,55 @@ if (Number(chainId) !== 137) {
 
 ---
 
+## Morning Session - Comment Modal & Scroll Fixes
+
+### 1. Comment Modal Mobile Responsiveness
+**Commit:** `dd1990ca1` - fix: Comment modal and sticker picker mobile responsiveness
+
+**Issues Fixed:**
+- Comment modal was 85vh on mobile - reduced to 60vh for better fit
+- Sticker picker was cropped at top - now uses fixed positioning on mobile
+- Emoji/sticker pickers now full-width on mobile
+- Emote grid height reduced on mobile (h-48 vs h-80)
+
+**Files:**
+- `src/components/Comment/CommentModal.tsx`
+- `src/components/NewCommentForm.tsx`
+- `src/components/StickerPicker.tsx`
+
+### 2. Users Grid Scroll Position Restoration
+**Commit:** `83b232a17` - fix: Users grid scroll position restoration on back navigation
+
+**Issue:** Back button returned to top of Users grid instead of previous scroll position
+
+**Solution:**
+```tsx
+// Save scroll position when clicking user profile
+const saveUsersScrollPosition = () => {
+  sessionStorage.setItem('usersGridScrollY', String(window.scrollY))
+}
+
+// Restore on return to Users view
+useEffect(() => {
+  if (selectedView === 'users') {
+    const savedScrollY = sessionStorage.getItem('usersGridScrollY')
+    if (savedScrollY) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollY, 10))
+        sessionStorage.removeItem('usersGridScrollY')
+      }, 100)
+    }
+  }
+}, [selectedView])
+```
+
+### 3. Holiday Stickers Note
+The 7TV/BTTV/FFZ emotes include seasonal content from streamer emote sets. These are fetched from external APIs (7TV trending) and naturally include holiday themes. Filtering these would require:
+- Maintaining a seasonal emote blocklist
+- Or switching to curated SoundChain-specific emote sets
+
+---
+
 ## WalletConnect Project ID
 
 Already registered and configured:
