@@ -36,7 +36,7 @@ interface NormalizedEmote {
   source: 'twitch' | '7tv' | 'bttv' | 'ffz' | 'kick' | 'tenor' | 'soundchain'
 }
 
-type StickerCategory = '7tv' | 'bttv' | 'ffz' | 'trending' | 'reactions' | 'music'
+type StickerCategory = '7tv' | 'bttv' | 'ffz' | 'trending' | 'reactions' | 'music' | 'twitch' | 'kick'
 
 interface StickerPickerProps {
   onSelect: (stickerUrl: string, stickerName: string) => void
@@ -56,6 +56,8 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     { id: 'trending' as const, label: 'Hot', icon: '🔥' },
     { id: 'reactions' as const, label: 'React', icon: '😂' },
     { id: 'music' as const, label: 'Music', icon: '🎵' },
+    { id: 'twitch' as const, label: 'Twitch', icon: '💜' },
+    { id: 'kick' as const, label: 'Kick', icon: '💚' },
     { id: '7tv' as const, label: '7TV', icon: '7️⃣' },
     { id: 'bttv' as const, label: 'BTTV', icon: '🅱️' },
     { id: 'ffz' as const, label: 'FFZ', icon: '😎' },
@@ -138,6 +140,126 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     } catch (error) {
       console.error('Failed to fetch FFZ emotes:', error)
       return []
+    }
+  }
+
+  // Fetch Twitch Global Emotes (curated popular emotes via static CDN)
+  const fetchTwitchEmotes = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['twitch']) return emoteCache['twitch']
+
+    // Popular Twitch global emote IDs (these are stable Twitch emote IDs)
+    const twitchEmotes = [
+      { id: '25', name: 'Kappa' },
+      { id: '1', name: ':)' },
+      { id: '2', name: ':(' },
+      { id: '7', name: 'B)' },
+      { id: '8', name: 'O_o' },
+      { id: '86', name: 'BibleThump' },
+      { id: '88', name: 'PogChamp' },
+      { id: '354', name: '4Head' },
+      { id: '425618', name: 'LUL' },
+      { id: '30259', name: 'HeyGuys' },
+      { id: '28', name: 'MrDestructoid' },
+      { id: '36', name: 'PJSalt' },
+      { id: '41', name: 'Kreygasm' },
+      { id: '58765', name: 'NotLikeThis' },
+      { id: '68856', name: 'WutFace' },
+      { id: '33', name: 'DansGame' },
+      { id: '114836', name: 'CoolStoryBob' },
+      { id: '425688', name: 'SeemsGood' },
+      { id: '81274', name: 'VoHiYo' },
+      { id: '425614', name: 'FailFish' },
+      { id: '46881', name: 'AngelThump' },
+      { id: '80393', name: 'TriHard' },
+      { id: '86', name: 'BibleThump' },
+      { id: '120232', name: 'CorgiDerp' },
+      { id: '52', name: 'SMOrc' },
+      { id: '244', name: 'FrankerZ' },
+      { id: '167', name: 'OSFrog' },
+      { id: '65', name: 'SwiftRage' },
+      { id: '138', name: 'ResidentSleeper' },
+      { id: '55338', name: 'KonCha' },
+      { id: '160401', name: 'TPFufun' },
+      { id: '160395', name: 'GunRun' },
+      { id: '425670', name: 'PJSugar' },
+      { id: '160394', name: 'DogFace' },
+      { id: '102242', name: 'VoteYea' },
+      { id: '102243', name: 'VoteNay' },
+      { id: '160392', name: 'CarlSmile' },
+      { id: '28087', name: 'WutFace' },
+      { id: '191762', name: 'bleedPurple' },
+    ]
+
+    const normalized: NormalizedEmote[] = twitchEmotes.map(emote => ({
+      id: `twitch-${emote.id}`,
+      name: emote.name,
+      url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/2.0`,
+      animated: false,
+      source: 'twitch' as const,
+    }))
+
+    emoteCache['twitch'] = normalized
+    return normalized
+  }
+
+  // Fetch Kick Global Emotes (curated popular emotes)
+  const fetchKickEmotes = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['kick']) return emoteCache['kick']
+
+    // Kick emotes - using public CDN URLs for popular Kick emotes
+    // Kick's emote system is similar to 7TV/BTTV
+    const kickEmotes = [
+      { id: '37224', name: 'KickLOL' },
+      { id: '37225', name: 'KickPog' },
+      { id: '37228', name: 'KickSad' },
+      { id: '37221', name: 'KickLove' },
+      { id: '37222', name: 'KickHype' },
+      { id: '37223', name: 'KickSus' },
+      { id: '37226', name: 'KickFire' },
+      { id: '37227', name: 'KickCool' },
+      { id: '37229', name: 'KickRage' },
+      { id: '37230', name: 'KickGG' },
+    ]
+
+    // Since Kick's API is limited, we'll use 7TV emotes popular with Kick streamers
+    // and some curated animated emotes that are popular on Kick
+    try {
+      // Fetch popular emotes from Kick-focused 7TV sets
+      const response = await fetch('https://7tv.io/v3/emote-sets/01GFXJ8WK0000014MXH9PNH9F7') // Popular Kick streamer set
+      const data = await response.json()
+
+      const fromSets: NormalizedEmote[] = (data.emotes || []).slice(0, 40).map((emote: SevenTVEmote) => ({
+        id: `kick-${emote.id}`,
+        name: emote.name,
+        url: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
+        animated: emote.data?.animated || false,
+        source: 'kick' as const,
+      }))
+
+      // Combine with curated Kick emotes
+      const curatedKick = kickEmotes.map(e => ({
+        id: `kick-native-${e.id}`,
+        name: e.name,
+        url: `https://files.kick.com/emotes/${e.id}/fullsize`,
+        animated: false,
+        source: 'kick' as const,
+      }))
+
+      const combined = [...curatedKick, ...fromSets]
+      emoteCache['kick'] = combined
+      return combined
+    } catch (error) {
+      console.error('Failed to fetch Kick emotes:', error)
+      // Fallback to just curated emotes
+      const fallback = kickEmotes.map(e => ({
+        id: `kick-${e.id}`,
+        name: e.name,
+        url: `https://files.kick.com/emotes/${e.id}/fullsize`,
+        animated: false,
+        source: 'kick' as const,
+      }))
+      emoteCache['kick'] = fallback
+      return fallback
     }
   }
 
@@ -282,6 +404,12 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
           case 'ffz':
             loadedEmotes = await fetchFFZEmotes()
             break
+          case 'twitch':
+            loadedEmotes = await fetchTwitchEmotes()
+            break
+          case 'kick':
+            loadedEmotes = await fetchKickEmotes()
+            break
           case 'reactions':
             loadedEmotes = getReactionEmotes()
             break
@@ -290,24 +418,29 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
             break
           case 'trending':
             // Load a massive mix of popular animated emotes from all sources
-            const [sevenTV, bttv, ffz, trending] = await Promise.all([
+            const [sevenTV, bttv, ffz, trending, twitchGlobal, kickEmotesData] = await Promise.all([
               fetch7TVEmotes(),
               fetchBTTVEmotes(),
               fetchFFZEmotes(),
               fetch7TVTrending(),
+              fetchTwitchEmotes(),
+              fetchKickEmotes(),
             ])
 
             // Prioritize animated emotes and mix from all sources
-            const animated7tv = sevenTV.filter(e => e.animated).slice(0, 25)
-            const animatedBttv = bttv.filter(e => e.animated).slice(0, 25)
-            const animatedFfz = ffz.filter(e => e.animated).slice(0, 15)
-            const trendingEmotes = trending.filter(e => e.animated).slice(0, 25)
+            const animated7tv = sevenTV.filter(e => e.animated).slice(0, 20)
+            const animatedBttv = bttv.filter(e => e.animated).slice(0, 20)
+            const animatedFfz = ffz.filter(e => e.animated).slice(0, 10)
+            const trendingEmotes = trending.filter(e => e.animated).slice(0, 20)
+            const animatedKick = kickEmotesData.filter(e => e.animated).slice(0, 10)
 
-            // Also get some popular static ones
-            const static7tv = sevenTV.filter(e => !e.animated).slice(0, 10)
-            const staticBttv = bttv.filter(e => !e.animated).slice(0, 10)
+            // Also get some popular static ones including Twitch classics
+            const static7tv = sevenTV.filter(e => !e.animated).slice(0, 8)
+            const staticBttv = bttv.filter(e => !e.animated).slice(0, 8)
+            const twitchClassics = twitchGlobal.slice(0, 15) // Kappa, LUL, PogChamp etc.
+            const staticKick = kickEmotesData.filter(e => !e.animated).slice(0, 5)
 
-            loadedEmotes = [...trendingEmotes, ...animated7tv, ...animatedBttv, ...animatedFfz, ...static7tv, ...staticBttv]
+            loadedEmotes = [...trendingEmotes, ...animated7tv, ...animatedBttv, ...animatedFfz, ...animatedKick, ...twitchClassics, ...static7tv, ...staticBttv, ...staticKick]
             break
         }
 
@@ -354,19 +487,19 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
         />
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex border-b border-neutral-700">
+      {/* Category Tabs - scrollable on mobile */}
+      <div className="flex border-b border-neutral-700 overflow-x-auto scrollbar-hide">
         {categories.map((category) => (
           <button
             key={category.id}
             onClick={() => setActiveCategory(category.id)}
-            className={classNames('flex-1 px-3 py-2.5 text-xs font-medium transition-all', {
+            className={classNames('flex-shrink-0 px-2 sm:px-3 py-2.5 text-[10px] sm:text-xs font-medium transition-all whitespace-nowrap', {
               'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-400': activeCategory === category.id,
               'text-neutral-400 hover:bg-neutral-800 hover:text-white': activeCategory !== category.id && theme === 'dark',
               'text-gray-500 hover:bg-gray-50 hover:text-gray-900': activeCategory !== category.id && theme === 'light',
             })}
           >
-            <span className="mr-1">{category.icon}</span>
+            <span className="mr-0.5 sm:mr-1">{category.icon}</span>
             {category.label}
           </button>
         ))}
@@ -431,7 +564,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
           )}
         </span>
         <span className="flex items-center gap-1">
-          Powered by 7TV, BTTV, FFZ
+          💜 Twitch • 💚 Kick • 7TV • BTTV • FFZ
         </span>
       </div>
     </div>

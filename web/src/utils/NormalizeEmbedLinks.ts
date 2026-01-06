@@ -371,26 +371,30 @@ const normalizeCustomHTML = (str: string) => {
 }
 
 export const getNormalizedLink = async (str: string) => {
+  // First, remove any markdown image syntax to avoid matching emote/sticker URLs
+  // Pattern: ![anything](url) - used for emotes/stickers
+  const strWithoutEmotes = str.replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+
   // Check if it's custom HTML embed code first
-  if (customEmbedRegex.test(str)) {
+  if (customEmbedRegex.test(strWithoutEmotes)) {
     // Try to identify the platform from the embed code
-    if (youtubeRegex.test(str)) return normalizeYoutube(str)
-    if (soundcloudRegex.test(str)) return await normalizeSoundcloud(str)
-    if (spotifyRegex.test(str)) return normalizeSpotify(str)
-    if (vimeoRegex.test(str)) return normalizeVimeo(str)
-    if (bandcampRegex.test(str)) return await normalizeBandcamp(str)
-    if (instagramRegex.test(str)) return normalizeInstagram(str)
-    if (tiktokRegex.test(str)) return normalizeTikTok(str)
-    if (facebookRegex.test(str)) return normalizeFacebook(str)
-    if (xRegex.test(str)) return normalizeX(str)
-    if (twitchRegex.test(str)) return normalizeTwitch(str)
-    if (discordRegex.test(str)) return normalizeDiscord(str)
+    if (youtubeRegex.test(strWithoutEmotes)) return normalizeYoutube(strWithoutEmotes)
+    if (soundcloudRegex.test(strWithoutEmotes)) return await normalizeSoundcloud(strWithoutEmotes)
+    if (spotifyRegex.test(strWithoutEmotes)) return normalizeSpotify(strWithoutEmotes)
+    if (vimeoRegex.test(strWithoutEmotes)) return normalizeVimeo(strWithoutEmotes)
+    if (bandcampRegex.test(strWithoutEmotes)) return await normalizeBandcamp(strWithoutEmotes)
+    if (instagramRegex.test(strWithoutEmotes)) return normalizeInstagram(strWithoutEmotes)
+    if (tiktokRegex.test(strWithoutEmotes)) return normalizeTikTok(strWithoutEmotes)
+    if (facebookRegex.test(strWithoutEmotes)) return normalizeFacebook(strWithoutEmotes)
+    if (xRegex.test(strWithoutEmotes)) return normalizeX(strWithoutEmotes)
+    if (twitchRegex.test(strWithoutEmotes)) return normalizeTwitch(strWithoutEmotes)
+    if (discordRegex.test(strWithoutEmotes)) return normalizeDiscord(strWithoutEmotes)
 
     // If we can't identify it, treat as custom HTML
-    return normalizeCustomHTML(str)
+    return normalizeCustomHTML(strWithoutEmotes)
   }
 
-  const link = (str.match(linksRegex) || [])[0]
+  const link = (strWithoutEmotes.match(linksRegex) || [])[0]
 
   if (!link) return undefined
 
@@ -410,7 +414,10 @@ export const getNormalizedLink = async (str: string) => {
 }
 
 export const hasLink = (str: string) => {
-  return str.match(linksRegex) ? true : false
+  // First, remove any markdown image syntax to avoid matching emote URLs
+  // Pattern: ![anything](url) - used for emotes/stickers
+  const strWithoutEmotes = str.replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+  return strWithoutEmotes.match(linksRegex) ? true : false
 }
 
 export const IdentifySource = (str: string) => {

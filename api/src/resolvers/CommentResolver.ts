@@ -19,30 +19,39 @@ import { UpdateCommentPayload } from '../types/UpdateCommentPayload';
 @Resolver(Comment)
 export class CommentResolver {
   @FieldResolver(() => Post, { nullable: true })
-  post(@Ctx() { postService }: Context, @Root() comment: Comment): Promise<Post | null> {
+  async post(@Ctx() { postService }: Context, @Root() comment: Comment): Promise<Post | null> {
     // Defensive null check to prevent mongoose scope errors
     if (!comment || !comment.postId) {
-      return Promise.resolve(null);
+      console.warn('[CommentResolver] post() - Missing comment or postId');
+      return null;
     }
     try {
-      return postService.getPost(comment.postId.toString());
+      // Safely convert postId to string, handling both ObjectId and string types
+      const postIdString = typeof comment.postId === 'string'
+        ? comment.postId
+        : comment.postId.toString();
+      return await postService.getPost(postIdString);
     } catch (err) {
       console.error('[CommentResolver] Error fetching post:', err);
-      return Promise.resolve(null);
+      return null;
     }
   }
 
   @FieldResolver(() => Profile, { nullable: true })
-  profile(@Ctx() { profileService }: Context, @Root() comment: Comment): Promise<Profile | null> {
+  async profile(@Ctx() { profileService }: Context, @Root() comment: Comment): Promise<Profile | null> {
     // Defensive null check + guest comments don't have a profile
     if (!comment || comment.isGuest || !comment.profileId) {
-      return Promise.resolve(null);
+      return null;
     }
     try {
-      return profileService.getProfile(comment.profileId.toString());
+      // Safely convert profileId to string, handling both ObjectId and string types
+      const profileIdString = typeof comment.profileId === 'string'
+        ? comment.profileId
+        : comment.profileId.toString();
+      return await profileService.getProfile(profileIdString);
     } catch (err) {
       console.error('[CommentResolver] Error fetching profile:', err);
-      return Promise.resolve(null);
+      return null;
     }
   }
 
@@ -56,10 +65,15 @@ export class CommentResolver {
   async addComment(
     @Ctx() { commentService }: Context,
     @Arg('input') input: AddCommentInput,
-    @CurrentUser() { profileId }: User,
+    @CurrentUser() user: User,
   ): Promise<AddCommentPayload> {
+    // Validate user has a profile before creating comment
+    if (!user || !user.profileId) {
+      throw new Error('User profile not found. Please complete your profile setup.');
+    }
+
     const comment = await commentService.createComment({
-      profileId,
+      profileId: user.profileId,
       postId: new mongoose.Types.ObjectId(input.postId),
       body: input.body,
     });
