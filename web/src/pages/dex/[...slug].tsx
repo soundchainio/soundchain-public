@@ -1804,12 +1804,27 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               <Button
-                onClick={() => isWalletConnected ? handleWalletDisconnect() : setShowWalletModal(true)}
-                className={isWalletConnected ? 'bg-green-600 hover:bg-green-700' : 'retro-button'}
+                onClick={() => {
+                  if (isWeb3ModalConnected || isWalletConnected) {
+                    // Disconnect - try unified wallet first (handles all types)
+                    unifiedDisconnectWallet()
+                    handleWalletDisconnect()
+                  } else {
+                    // Open native Web3Modal (QuickSwap-style with QR codes, 300+ wallets)
+                    openWeb3Modal()
+                  }
+                }}
+                className={(isWeb3ModalConnected || isWalletConnected) ? 'bg-green-600 hover:bg-green-700' : 'retro-button'}
                 size="sm"
               >
                 <Wallet className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">{isWalletConnected ? `${connectedWallet?.slice(0, 6)}...` : 'Connect'}</span>
+                <span className="hidden sm:inline">
+                  {isWeb3ModalConnected
+                    ? `${web3ModalAddress?.slice(0, 6)}...${web3ModalAddress?.slice(-4)}`
+                    : isWalletConnected
+                      ? `${connectedWallet?.slice(0, 6)}...`
+                      : 'Connect'}
+                </span>
               </Button>
 
               <div className="relative">
