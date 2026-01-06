@@ -4,14 +4,15 @@
 
 ### Commits Pushed to Production
 
-1. **`fa1959aa6`** - feat: Add NFT fetching for external wallets in MultiWalletAggregator
-2. **`854373a03`** - feat: Enable ZetaChain omnichain support in Web3Modal
-3. **`3ac8ccbfd`** - feat: Enhance MultiWalletAggregator with Web3Modal integration
-4. **`8e2be8d24`** - feat: Use native Web3Modal for wallet connect (QuickSwap-style UX)
-5. **`e925f730d`** - feat: URL-based navigation for all tabs with scroll restoration
-6. **`151759637`** - fix: Back button now returns to Users grid with scroll position
-7. **`a50fb0475`** - fix: Full-screen cover for profile view at top level
-8. **`7ee9a8201`** - fix: Profile page UI layout and cover image display
+1. **`09d6d4823`** - fix: Wallet page cleanup and mobile touch handling
+2. **`fa1959aa6`** - feat: Add NFT fetching for external wallets in MultiWalletAggregator
+3. **`854373a03`** - feat: Enable ZetaChain omnichain support in Web3Modal
+4. **`3ac8ccbfd`** - feat: Enhance MultiWalletAggregator with Web3Modal integration
+5. **`8e2be8d24`** - feat: Use native Web3Modal for wallet connect (QuickSwap-style UX)
+6. **`e925f730d`** - feat: URL-based navigation for all tabs with scroll restoration
+7. **`151759637`** - fix: Back button now returns to Users grid with scroll position
+8. **`a50fb0475`** - fix: Full-screen cover for profile view at top level
+9. **`7ee9a8201`** - fix: Profile page UI layout and cover image display
 
 ---
 
@@ -142,11 +143,31 @@ The wallet connect system is now fully operational:
 
 ---
 
+### 6. Wallet Page Audit & Fixes (Latest)
+**File:** `src/pages/dex/[...slug].tsx`, `src/components/dex/MultiWalletAggregator.tsx`
+
+**Issues Found & Fixed:**
+- **Header Connect button not working on mobile Chrome**:
+  - Added `isWeb3ModalReady` check with fallback to legacy modal
+  - Added `touch-manipulation` CSS for instant mobile response
+  - Added `e.preventDefault()` to prevent ghost clicks
+
+- **Duplicate UI components removed**:
+  - Removed "Default Wallet Selection" card (was duplicating MultiWalletAggregator)
+  - ZetaChain button in duplicate section still showed "Coming Soon"
+  - Consolidated all wallet connect buttons into MultiWalletAggregator
+
+- **Mobile touch handling improved**:
+  - All wallet buttons now have `touch-manipulation` class
+  - `e.preventDefault()` on all button clicks
+  - No more 300ms tap delay on iOS/Android
+
+---
+
 ## Next Session TODO
 
-- [ ] Test multi-wallet connections in production
+- [ ] Test multi-wallet connections on mobile Chrome/Safari
 - [ ] Verify OGUN streaming rewards flow
-- [ ] Clean up duplicate/over-engineered wallet page components
 - [ ] Add cross-chain NFT aggregation from other networks
 - [ ] Consider adding Solana/Bitcoin wallet support via ZetaChain
 
