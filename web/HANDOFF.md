@@ -1,6 +1,6 @@
 # SoundChain Codebase Handoff Document
 
-**Last Updated:** January 5, 2026
+**Last Updated:** January 6, 2026
 **Total Commits:** 4,800+ on production branch
 **Project Start:** July 14, 2021
 
@@ -60,13 +60,30 @@ The OAuth login has been unstable. Key commits in the debugging journey:
 
 ## 📅 RECENT CHANGES (Dec 22, 2025 - Jan 5, 2026)
 
-### January 6, 2026 - Rich oEmbed Share Previews
-- `5e504f442` - Fix Discord/social media share previews
-  - **Problem:** Share URLs showed plain text instead of rich embeds with artwork
-  - **Solution:**
-    - Updated `/api/oembed.ts` to fetch actual track/profile data from GraphQL
-    - Added oEmbed discovery `<link>` tag to page Head
-  - Now shares show: track title, artist name, artwork image, playable embed
+### January 6, 2026 - Rich Social Share Previews (OG Tags)
+- `91ea375b1` - Profile page OG tags for social shares
+- `957078009` - Bot detection for proper SSR OG tag rendering
+- `5e504f442` - Rich oEmbed previews for Discord/social media
+
+**Problem:** Share URLs showed plain text instead of rich embeds with artwork on Discord, iMessage, Twitter, etc.
+
+**Root Cause:** OG meta tags were inside client-only providers (`ssr: false` in _app.tsx), so crawlers couldn't see them.
+
+**Solution:** Added bot detection in `getServerSideProps` to render minimal SSR pages with full OG tags for social media crawlers.
+
+**Share URL Coverage Map:**
+| URL Pattern | OG Tags | File |
+|-------------|---------|------|
+| `/tracks/[id]` | ✅ Artwork, title, artist, Twitter player | `pages/tracks/[id].tsx` |
+| `/dex/track/[id]` | ✅ Same via slug | `pages/dex/[...slug].tsx` |
+| `/profiles/[handle]` | ✅ Profile pic, name, bio | `pages/profiles/[handle].tsx` |
+| `/dex/users/[handle]` | ✅ Same via slug | `pages/dex/[...slug].tsx` |
+| `/posts/[id]` | ✅ Track/YouTube/profile artwork | `pages/posts/[id].tsx` |
+| `/dex/playlist/[id]` | ✅ Playlist artwork, title | `pages/dex/[...slug].tsx` |
+
+**Bot Detection Covers:** Discord, Twitter, Facebook, LinkedIn, Slack, Telegram, WhatsApp, Google, Bing, Apple/iMessage
+
+**oEmbed API:** `/api/oembed.ts` - Returns rich embed data with actual track/profile info from GraphQL
 
 ### January 5, 2026 (Session 3) - Legacy Wallet + POL + SCid Worker
 - `5b18600a0` - Rebrand MATIC to POL in all user-facing UI
