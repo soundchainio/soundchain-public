@@ -594,10 +594,10 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
           onChange={(e) => setSelectedChain(e.target.value)}
           className="bg-gray-700 text-white text-sm rounded px-3 py-1 border-none"
         >
-          <option value="Polygon">Polygon (Live)</option>
-          <option value="ZetaChain">ZetaChain (Coming Soon)</option>
-          <option value="Ethereum">Ethereum (Coming Soon)</option>
-          <option value="Base">Base (Coming Soon)</option>
+          <option value="Polygon">Polygon (Live - OGUN Native)</option>
+          <option value="ZetaChain">ZetaChain (Omnichain)</option>
+          <option value="Ethereum">Ethereum</option>
+          <option value="Base">Base</option>
         </select>
         <a
           href={CHAIN_EXPLORERS[selectedChain]}

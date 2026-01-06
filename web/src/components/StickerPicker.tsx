@@ -74,8 +74,9 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
       const normalized: NormalizedEmote[] = (data.emotes || []).map((emote: SevenTVEmote) => ({
         id: emote.id,
         name: emote.name,
-        // Use .gif format for better iOS Safari compatibility (webp doesn't work on older iOS)
-        url: `https://cdn.7tv.app/emote/${emote.id}/2x.gif`,
+        // Use default URL (no extension) - CDN serves best format for browser
+        // Fallback chain in onError: default -> webp -> png
+        url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
         animated: emote.data?.animated || false,
         source: '7tv' as const,
       }))
@@ -227,7 +228,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
               allEmotes.push({
                 id: `kick-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x.gif`,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
                 animated: emote.data?.animated || false,
                 source: 'kick' as const,
               })
@@ -250,7 +251,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
       const curated = curatedKickEmotes.map(e => ({
         id: `kick-curated-${e.id}`,
         name: e.name,
-        url: `https://cdn.7tv.app/emote/${e.id}/2x.gif`,
+        url: `https://cdn.7tv.app/emote/${e.id}/2x`,
         animated: true,
         source: 'kick' as const,
       }))
@@ -288,7 +289,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
               allEmotes.push({
                 id: `trend-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x.gif`,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
                 animated: emote.data?.animated || false,
                 source: '7tv' as const,
               })
@@ -346,7 +347,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return reactions.map(r => ({
       id: `react-${r.id}`,
       name: r.name,
-      url: `https://cdn.7tv.app/emote/${r.id}/2x.gif`,
+      url: `https://cdn.7tv.app/emote/${r.id}/2x`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -381,7 +382,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return musicEmotes.map(e => ({
       id: `music-${e.id}`,
       name: e.name,
-      url: `https://cdn.7tv.app/emote/${e.id}/2x.gif`,
+      url: `https://cdn.7tv.app/emote/${e.id}/2x`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -540,12 +541,20 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
                   className="w-7 h-7 object-contain"
                   loading="lazy"
                   onError={(e) => {
-                    // Fallback: try png format, then show text placeholder
+                    // Fallback chain: default -> webp -> gif -> png -> text
                     const img = e.target as HTMLImageElement
-                    if (img.src.includes('.gif')) {
-                      img.src = img.src.replace('.gif', '.png')
+                    const url = img.src
+                    if (!url.includes('.webp') && !url.includes('.gif') && !url.includes('.png')) {
+                      // Default URL failed, try webp
+                      img.src = url + '.webp'
+                    } else if (url.includes('.webp')) {
+                      // webp failed, try gif
+                      img.src = url.replace('.webp', '.gif')
+                    } else if (url.includes('.gif')) {
+                      // gif failed, try png
+                      img.src = url.replace('.gif', '.png')
                     } else {
-                      // Show text fallback
+                      // All formats failed - show text fallback
                       img.style.display = 'none'
                       img.parentElement?.classList.add('bg-neutral-700', 'text-[8px]', 'text-cyan-400')
                       if (img.parentElement) {
