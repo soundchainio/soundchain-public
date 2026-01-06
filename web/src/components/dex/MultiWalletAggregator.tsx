@@ -281,6 +281,9 @@ export function MultiWalletAggregator({
       case 'base': return 'ETH'
       case 'arbitrum': return 'ETH'
       case 'optimism': return 'ETH'
+      case 'zetachain': return 'ZETA'
+      case 'avalanche': return 'AVAX'
+      case 'solana': return 'SOL'
       default: return 'POL'
     }
   }
@@ -362,17 +365,25 @@ export function MultiWalletAggregator({
             </p>
           </button>
 
-          {/* ZetaChain - Coming Soon */}
+          {/* ZetaChain - Omnichain Support */}
           <button
-            className="p-3 rounded-lg border-2 border-gray-700 bg-black/30 text-left transition-all relative opacity-60"
-            disabled
+            className={`p-3 rounded-lg border-2 text-left transition-all ${
+              isWeb3ModalConnected && web3ModalChainName === 'ZetaChain'
+                ? 'border-green-500 bg-green-500/10'
+                : 'border-gray-700 bg-black/30 hover:border-green-500/50'
+            }`}
+            onClick={connectWeb3Modal}
           >
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🟢</span>
-              <span className="font-bold text-gray-400 text-sm">ZetaChain</span>
+              <span className={`font-bold text-sm ${
+                isWeb3ModalConnected && web3ModalChainName === 'ZetaChain' ? 'text-green-400' : 'text-gray-400'
+              }`}>
+                ZetaChain
+              </span>
+              {isWeb3ModalConnected && web3ModalChainName === 'ZetaChain' && <Check className="w-3 h-3 text-green-400" />}
             </div>
             <p className="text-xs text-gray-500">Omnichain</p>
-            <Badge className="absolute -top-2 -right-2 bg-yellow-500/20 text-yellow-400 text-[10px] px-1">Soon</Badge>
           </button>
         </div>
 
@@ -434,6 +445,9 @@ export function MultiWalletAggregator({
                         wallet.chainName === 'Polygon' ? 'bg-purple-500/20 text-purple-400' :
                         wallet.chainName === 'Ethereum' ? 'bg-blue-500/20 text-blue-400' :
                         wallet.chainName === 'Base' ? 'bg-blue-500/20 text-blue-400' :
+                        wallet.chainName === 'ZetaChain' ? 'bg-green-500/20 text-green-400' :
+                        wallet.chainName === 'Arbitrum' ? 'bg-blue-500/20 text-blue-400' :
+                        wallet.chainName === 'Optimism' ? 'bg-red-500/20 text-red-400' :
                         'bg-gray-500/20 text-gray-400'
                       }`}>
                         {wallet.chainName}

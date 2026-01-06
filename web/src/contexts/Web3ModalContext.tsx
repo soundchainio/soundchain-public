@@ -47,6 +47,14 @@ const optimism = {
   rpcUrl: 'https://mainnet.optimism.io'
 }
 
+const zetachain = {
+  chainId: 7000,
+  name: 'ZetaChain',
+  currency: 'ZETA',
+  explorerUrl: 'https://explorer.zetachain.com',
+  rpcUrl: 'https://zetachain-evm.blockpi.network/v1/rpc/public'
+}
+
 // Web3Modal metadata - use soundchain.io (without www) to match production
 const metadata = {
   name: 'SoundChain',
@@ -64,7 +72,7 @@ function initializeWeb3Modal() {
   try {
     createWeb3Modal({
       ethersConfig: defaultConfig({ metadata }),
-      chains: [polygon, ethereum, base, arbitrum, optimism],
+      chains: [polygon, ethereum, base, arbitrum, optimism, zetachain],
       projectId,
       enableAnalytics: false,
       enableOnramp: false, // Disable fiat onramp to prevent external redirects
