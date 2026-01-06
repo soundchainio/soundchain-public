@@ -103,6 +103,17 @@ curl -X POST "$WEBHOOK" -H "Content-Type: application/json" -d '{
 
 **SCid Worker Usage This Session:** Minimal - most work done directly via Claude Code tools. Worker available at `localhost:8787` for future delegation.
 
+### Profile Link Bug Fix (Jan 6, 2026)
+**Commit:** `facdaa784` - Fix profile link URLs to use handles instead of IDs
+
+**Problem:** Clicking artist names on track detail pages caused 404 errors. Links were using MongoDB ObjectIDs (`artistProfileId`, `artistId`) instead of user handles.
+
+**Files Fixed:**
+- `TrackNFTCard.tsx` - Changed `/profiles/${artistProfileId}` → `/dex/users/${track.artist}`
+- `dex/[...slug].tsx` - Fixed artist link on track detail view (line 4788)
+- `dex/[...slug].tsx` - Fixed explore users avatar/name links (lines 2879, 2897) - now only link if `userHandle` exists
+- `manage-requests/[id].tsx` - Changed to use `profile.profile.userHandle`
+
 ### January 5, 2026 (Session 3) - Legacy Wallet + POL + SCid Worker
 - `5b18600a0` - Rebrand MATIC to POL in all user-facing UI
 - `4bf71c332` - Re-enable DefaultWallet switching mutation
