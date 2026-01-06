@@ -16,10 +16,12 @@ import {
   ChevronDown,
   ChevronUp,
   Zap,
-  Check
+  Check,
+  RefreshCw
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { config } from 'config'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
@@ -28,13 +30,15 @@ import MetaMaskOnboarding from '@metamask/onboarding'
 
 interface ConnectedWallet {
   id: string
-  type: 'magic' | 'metamask' | 'walletconnect' | 'coinbase'
+  type: 'magic' | 'metamask' | 'walletconnect' | 'coinbase' | 'web3modal' | 'rainbow' | 'base'
   address: string
   chainName: string
+  chainId?: number
   balance: string
   ogunBalance: string
   nfts: NFTTrack[]
   isActive: boolean
+  icon?: string
 }
 
 interface NFTTrack {
@@ -89,6 +93,18 @@ export function MultiWalletAggregator({
     isConnectingWallet,
     disconnectExternalWallet
   } = useMagicContext()
+
+  // Web3Modal / Unified Wallet integration
+  const {
+    activeWalletType,
+    activeAddress: web3ModalAddress,
+    activeBalance: web3ModalBalance,
+    activeOgunBalance: web3ModalOgunBalance,
+    isConnected: isWeb3ModalConnected,
+    chainName: web3ModalChainName,
+    connectWeb3Modal,
+    disconnectWallet: disconnectWeb3Modal,
+  } = useUnifiedWallet()
 
   const [connectedWallets, setConnectedWallets] = useState<ConnectedWallet[]>([])
   const [expandedWallets, setExpandedWallets] = useState<Set<string>>(new Set(['magic']))
@@ -152,6 +168,7 @@ export function MultiWalletAggregator({
         type: 'magic',
         address: userWallet,
         chainName: 'Polygon',
+        chainId: 137,
         balance: maticBalance || '0',
         ogunBalance: ogunBalance || '0',
         nfts: ownedTracks.map((t: any) => ({
@@ -162,40 +179,60 @@ export function MultiWalletAggregator({
           audioUrl: t.playbackUrl,
           tokenId: t.tokenId,
         })),
-        isActive: !walletConnectedAddress && !metamaskAddress
+        isActive: !walletConnectedAddress && !metamaskAddress && !isWeb3ModalConnected,
+        icon: '✨'
       })
     }
 
-    // MetaMask Wallet (if connected directly)
-    if (metamaskAddress && metamaskAddress !== userWallet) {
+    // Web3Modal Wallet (MetaMask, Coinbase, Rainbow, etc. via Web3Modal)
+    if (isWeb3ModalConnected && web3ModalAddress && web3ModalAddress !== userWallet) {
+      wallets.push({
+        id: 'web3modal',
+        type: 'web3modal',
+        address: web3ModalAddress,
+        chainName: web3ModalChainName || 'Unknown Chain',
+        balance: web3ModalBalance || '0',
+        ogunBalance: web3ModalOgunBalance || '0',
+        nfts: [], // TODO: Fetch NFTs for this wallet
+        isActive: activeWalletType === 'web3modal',
+        icon: '🔗'
+      })
+    }
+
+    // MetaMask Wallet (if connected directly - legacy)
+    if (metamaskAddress && metamaskAddress !== userWallet && metamaskAddress !== web3ModalAddress) {
       wallets.push({
         id: 'metamask',
         type: 'metamask',
         address: metamaskAddress,
         chainName: 'Polygon',
+        chainId: 137,
         balance: metamaskBalance,
         ogunBalance: metamaskOgunBalance,
-        nfts: [], // Would need to query NFTs for this address
-        isActive: !walletConnectedAddress && !!metamaskAddress
+        nfts: [], // TODO: Fetch NFTs for this wallet
+        isActive: !walletConnectedAddress && !!metamaskAddress && !isWeb3ModalConnected,
+        icon: '🦊'
       })
     }
 
     // Magic Wallet Module connected wallet (external wallets like MetaMask via Magic UI)
-    if (walletConnectedAddress && walletConnectedAddress !== userWallet && walletConnectedAddress !== metamaskAddress) {
+    if (walletConnectedAddress && walletConnectedAddress !== userWallet && walletConnectedAddress !== metamaskAddress && walletConnectedAddress !== web3ModalAddress) {
       wallets.push({
         id: 'magic-external',
-        type: 'walletconnect', // Using walletconnect type for display purposes
+        type: 'walletconnect',
         address: walletConnectedAddress,
         chainName: 'Polygon',
-        balance: '0', // Would need to fetch
+        chainId: 137,
+        balance: '0',
         ogunBalance: '0',
         nfts: [],
-        isActive: true
+        isActive: true,
+        icon: '🔗'
       })
     }
 
     setConnectedWallets(wallets)
-  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress])
+  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType])
 
   const toggleExpanded = (walletId: string) => {
     setExpandedWallets(prev => {
@@ -209,12 +246,16 @@ export function MultiWalletAggregator({
     })
   }
 
-  const getWalletIcon = (type: string) => {
+  const getWalletIcon = (type: string, icon?: string) => {
+    if (icon) return icon
     switch (type) {
       case 'magic': return '✨'
       case 'metamask': return '🦊'
       case 'walletconnect': return '🔗'
+      case 'web3modal': return '🌐'
       case 'coinbase': return '🔵'
+      case 'rainbow': return '🌈'
+      case 'base': return '🔷'
       default: return '💳'
     }
   }
@@ -224,8 +265,23 @@ export function MultiWalletAggregator({
       case 'magic': return 'SoundChain Wallet'
       case 'metamask': return 'MetaMask'
       case 'walletconnect': return 'WalletConnect'
+      case 'web3modal': return 'External Wallet'
       case 'coinbase': return 'Coinbase'
+      case 'rainbow': return 'Rainbow'
+      case 'base': return 'Base'
       default: return 'Wallet'
+    }
+  }
+
+  // Get chain-specific currency symbol
+  const getChainCurrency = (chainName: string) => {
+    switch (chainName?.toLowerCase()) {
+      case 'ethereum': return 'ETH'
+      case 'polygon': return 'POL'
+      case 'base': return 'ETH'
+      case 'arbitrum': return 'ETH'
+      case 'optimism': return 'ETH'
+      default: return 'POL'
     }
   }
 
@@ -263,25 +319,24 @@ export function MultiWalletAggregator({
             <p className="text-xs text-gray-500">Native wallet</p>
           </button>
 
-          {/* Magic Wallet Connect - Primary button for external wallets */}
+          {/* Web3Modal - Primary button for external wallets (300+ options) */}
           <button
             className={`p-3 rounded-lg border-2 text-left transition-all ${
-              walletConnectedAddress
+              isWeb3ModalConnected && web3ModalAddress
                 ? 'border-purple-500 bg-purple-500/10'
                 : 'border-gray-700 bg-black/30 hover:border-purple-500/50'
             }`}
-            onClick={connectWallet}
-            disabled={isConnectingWallet}
+            onClick={isWeb3ModalConnected ? () => toggleExpanded('web3modal') : connectWeb3Modal}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🔗</span>
-              <span className={`font-bold text-sm ${walletConnectedAddress ? 'text-purple-400' : 'text-gray-400'}`}>
-                {isConnectingWallet ? 'Connecting...' : 'Connect Wallet'}
+              <span className="text-lg">🌐</span>
+              <span className={`font-bold text-sm ${isWeb3ModalConnected ? 'text-purple-400' : 'text-gray-400'}`}>
+                Web3 Wallet
               </span>
-              {walletConnectedAddress && <Check className="w-3 h-3 text-green-400" />}
+              {isWeb3ModalConnected && <Check className="w-3 h-3 text-green-400" />}
             </div>
             <p className="text-xs text-gray-500">
-              {walletConnectedAddress ? formatAddress(walletConnectedAddress) : 'MetaMask, Coinbase...'}
+              {isWeb3ModalConnected && web3ModalAddress ? formatAddress(web3ModalAddress) : 'MetaMask, Coinbase, Rainbow...'}
             </p>
           </button>
 
@@ -358,26 +413,37 @@ export function MultiWalletAggregator({
                 onClick={() => toggleExpanded(wallet.id)}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    wallet.type === 'magic' ? 'bg-cyan-500/20' :
-                    wallet.type === 'metamask' ? 'bg-orange-500/20' :
-                    'bg-blue-500/20'
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
+                    wallet.type === 'magic' ? 'bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 border border-cyan-500/30' :
+                    wallet.type === 'metamask' ? 'bg-gradient-to-br from-orange-500/30 to-orange-600/20 border border-orange-500/30' :
+                    wallet.type === 'web3modal' ? 'bg-gradient-to-br from-purple-500/30 to-purple-600/20 border border-purple-500/30' :
+                    'bg-gradient-to-br from-blue-500/30 to-blue-600/20 border border-blue-500/30'
                   }`}>
-                    <span className="text-xl">{getWalletIcon(wallet.type)}</span>
+                    <span className="text-2xl">{getWalletIcon(wallet.type, wallet.icon)}</span>
                   </div>
                   <div className="text-left">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-cyan-400 text-sm">{formatAddress(wallet.address)}</span>
+                      <span className="font-mono text-cyan-400 font-bold">{formatAddress(wallet.address)}</span>
                       {wallet.isActive && (
-                        <Badge className="bg-green-500/20 text-green-400 text-[10px]">Active</Badge>
+                        <Badge className="bg-green-500/20 text-green-400 text-[10px] px-1.5">Active</Badge>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500">{getWalletName(wallet.type)} • {wallet.chainName}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-gray-400">{getWalletName(wallet.type)}</span>
+                      <Badge className={`text-[10px] px-1.5 ${
+                        wallet.chainName === 'Polygon' ? 'bg-purple-500/20 text-purple-400' :
+                        wallet.chainName === 'Ethereum' ? 'bg-blue-500/20 text-blue-400' :
+                        wallet.chainName === 'Base' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-gray-500/20 text-gray-400'
+                      }`}>
+                        {wallet.chainName}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-white font-bold text-sm">{wallet.balance} MATIC</p>
+                    <p className="text-white font-bold text-sm">{wallet.balance} {getChainCurrency(wallet.chainName)}</p>
                     <p className="text-xs text-purple-400">{wallet.ogunBalance} OGUN</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -440,13 +506,24 @@ export function MultiWalletAggregator({
                           <X className="w-3 h-3" />
                         </button>
                       )}
+                      {wallet.type === 'web3modal' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            disconnectWeb3Modal()
+                          }}
+                          className="text-gray-500 hover:text-red-400 transition-colors"
+                          title="Disconnect wallet"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
                   {wallet.nfts.length > 0 ? (
                     <div
-                      className="flex gap-2 overflow-x-auto pb-2"
-                      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                      className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 pb-2"
                     >
                       {wallet.nfts.map((nft, index) => (
                         <NFTThumbnail
@@ -460,8 +537,19 @@ export function MultiWalletAggregator({
                       ))}
                     </div>
                   ) : (
-                    <div className="py-4 text-center text-gray-500 text-sm">
-                      {wallet.type === 'magic' ? 'No NFTs owned yet' : 'NFT loading coming soon'}
+                    <div className="py-6 text-center">
+                      <div className="text-gray-500 text-sm mb-2">
+                        {wallet.type === 'magic'
+                          ? 'No NFTs owned yet'
+                          : wallet.type === 'web3modal'
+                            ? `No SoundChain NFTs found on ${wallet.chainName}`
+                            : 'NFT loading coming soon'}
+                      </div>
+                      {wallet.type !== 'magic' && (
+                        <p className="text-xs text-gray-600">
+                          Only SoundChain music NFTs are displayed
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
