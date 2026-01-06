@@ -60,12 +60,13 @@ The OAuth login has been unstable. Key commits in the debugging journey:
 
 ## 📅 RECENT CHANGES (Dec 22, 2025 - Jan 5, 2026)
 
-### January 6, 2026 - Rich Social Share Previews (OG Tags)
+### January 6, 2026 - Share Previews + Favicon + Discord Rich Embeds
+- `bafae0bd0` - Rainbow SCid favicon (all sizes)
 - `91ea375b1` - Profile page OG tags for social shares
 - `957078009` - Bot detection for proper SSR OG tag rendering
 - `5e504f442` - Rich oEmbed previews for Discord/social media
 
-**Problem:** Share URLs showed plain text instead of rich embeds with artwork on Discord, iMessage, Twitter, etc.
+**BUG FIXED:** Share URLs showed plain text instead of rich embeds with artwork on Discord, iMessage, Twitter/X.
 
 **Root Cause:** OG meta tags were inside client-only providers (`ssr: false` in _app.tsx), so crawlers couldn't see them.
 
@@ -81,9 +82,26 @@ The OAuth login has been unstable. Key commits in the debugging journey:
 | `/posts/[id]` | ✅ Track/YouTube/profile artwork | `pages/posts/[id].tsx` |
 | `/dex/playlist/[id]` | ✅ Playlist artwork, title | `pages/dex/[...slug].tsx` |
 
-**Bot Detection Covers:** Discord, Twitter, Facebook, LinkedIn, Slack, Telegram, WhatsApp, Google, Bing, Apple/iMessage
+**Bot Detection Covers:** Discord, Twitter/X, Facebook, LinkedIn, Slack, Telegram, WhatsApp, Google, Bing, Apple/iMessage
+
+**Tested & Verified:**
+- ✅ Discord - Rich unfurls with artwork
+- ✅ iMessage - Full artwork previews
+- ✅ X/Twitter - Player cards (use Card Validator to refresh cache)
+
+**New Favicon:** Rainbow gradient SCid logo (`public/favicons/`) - all sizes regenerated
+
+**Discord Rich Embeds:** For NFT-bot style posts, use webhook API with embed objects:
+```bash
+curl -X POST "$WEBHOOK" -H "Content-Type: application/json" -d '{
+  "username": "SCid",
+  "embeds": [{"title": "...", "fields": [...], "image": {"url": "..."}}]
+}'
+```
 
 **oEmbed API:** `/api/oembed.ts` - Returns rich embed data with actual track/profile info from GraphQL
+
+**SCid Worker Usage This Session:** Minimal - most work done directly via Claude Code tools. Worker available at `localhost:8787` for future delegation.
 
 ### January 5, 2026 (Session 3) - Legacy Wallet + POL + SCid Worker
 - `5b18600a0` - Rebrand MATIC to POL in all user-facing UI
