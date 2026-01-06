@@ -74,7 +74,8 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
       const normalized: NormalizedEmote[] = (data.emotes || []).map((emote: SevenTVEmote) => ({
         id: emote.id,
         name: emote.name,
-        url: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
+        // Use .gif format for better iOS Safari compatibility (webp doesn't work on older iOS)
+        url: `https://cdn.7tv.app/emote/${emote.id}/2x.gif`,
         animated: emote.data?.animated || false,
         source: '7tv' as const,
       }))
@@ -202,64 +203,64 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return normalized
   }
 
-  // Fetch Kick Global Emotes (curated popular emotes)
+  // Fetch Kick-style emotes (popular streaming emotes from 7TV)
+  // Note: Kick.com doesn't have a public emote CDN, so we use 7TV emotes popular with Kick streamers
   const fetchKickEmotes = async (): Promise<NormalizedEmote[]> => {
     if (emoteCache['kick']) return emoteCache['kick']
 
-    // Kick emotes - using public CDN URLs for popular Kick emotes
-    // Kick's emote system is similar to 7TV/BTTV
-    const kickEmotes = [
-      { id: '37224', name: 'KickLOL' },
-      { id: '37225', name: 'KickPog' },
-      { id: '37228', name: 'KickSad' },
-      { id: '37221', name: 'KickLove' },
-      { id: '37222', name: 'KickHype' },
-      { id: '37223', name: 'KickSus' },
-      { id: '37226', name: 'KickFire' },
-      { id: '37227', name: 'KickCool' },
-      { id: '37229', name: 'KickRage' },
-      { id: '37230', name: 'KickGG' },
-    ]
-
-    // Since Kick's API is limited, we'll use 7TV emotes popular with Kick streamers
-    // and some curated animated emotes that are popular on Kick
     try {
-      // Fetch popular emotes from Kick-focused 7TV sets
-      const response = await fetch('https://7tv.io/v3/emote-sets/01GFXJ8WK0000014MXH9PNH9F7') // Popular Kick streamer set
-      const data = await response.json()
+      // Fetch popular emotes from multiple Kick streamer 7TV sets
+      const setIds = [
+        '01GFXJ8WK0000014MXH9PNH9F7', // Popular Kick streamer set
+        '01GG9NZS6G000CXPT2B0TZFZ3J', // Additional popular set
+      ]
 
-      const fromSets: NormalizedEmote[] = (data.emotes || []).slice(0, 40).map((emote: SevenTVEmote) => ({
-        id: `kick-${emote.id}`,
-        name: emote.name,
-        url: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
-        animated: emote.data?.animated || false,
-        source: 'kick' as const,
-      }))
+      const allEmotes: NormalizedEmote[] = []
 
-      // Combine with curated Kick emotes
-      const curatedKick = kickEmotes.map(e => ({
-        id: `kick-native-${e.id}`,
+      for (const setId of setIds) {
+        try {
+          const response = await fetch(`https://7tv.io/v3/emote-sets/${setId}`)
+          const data = await response.json()
+
+          if (data.emotes) {
+            for (const emote of data.emotes.slice(0, 25)) {
+              allEmotes.push({
+                id: `kick-${emote.id}`,
+                name: emote.name,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x.gif`,
+                animated: emote.data?.animated || false,
+                source: 'kick' as const,
+              })
+            }
+          }
+        } catch (e) {
+          // Skip failed set
+        }
+      }
+
+      // Add some curated popular streaming emotes
+      const curatedKickEmotes = [
+        { id: '60ae958e229664e8667aea38', name: 'KEKW' },
+        { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
+        { id: '60b0d3ec8ed8b373e421e7a7', name: 'OMEGALUL' },
+        { id: '60aec9186d0b8c60ac0be7c0', name: 'catJAM' },
+        { id: '60ae8cac229664e8667ae5a8', name: 'pepeD' },
+      ]
+
+      const curated = curatedKickEmotes.map(e => ({
+        id: `kick-curated-${e.id}`,
         name: e.name,
-        url: `https://files.kick.com/emotes/${e.id}/fullsize`,
-        animated: false,
+        url: `https://cdn.7tv.app/emote/${e.id}/2x.gif`,
+        animated: true,
         source: 'kick' as const,
       }))
 
-      const combined = [...curatedKick, ...fromSets]
+      const combined = [...curated, ...allEmotes]
       emoteCache['kick'] = combined
       return combined
     } catch (error) {
       console.error('Failed to fetch Kick emotes:', error)
-      // Fallback to just curated emotes
-      const fallback = kickEmotes.map(e => ({
-        id: `kick-${e.id}`,
-        name: e.name,
-        url: `https://files.kick.com/emotes/${e.id}/fullsize`,
-        animated: false,
-        source: 'kick' as const,
-      }))
-      emoteCache['kick'] = fallback
-      return fallback
+      return []
     }
   }
 
@@ -287,7 +288,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
               allEmotes.push({
                 id: `trend-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x.webp`,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x.gif`,
                 animated: emote.data?.animated || false,
                 source: '7tv' as const,
               })
@@ -345,7 +346,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return reactions.map(r => ({
       id: `react-${r.id}`,
       name: r.name,
-      url: `https://cdn.7tv.app/emote/${r.id}/2x.webp`,
+      url: `https://cdn.7tv.app/emote/${r.id}/2x.gif`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -380,7 +381,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return musicEmotes.map(e => ({
       id: `music-${e.id}`,
       name: e.name,
-      url: `https://cdn.7tv.app/emote/${e.id}/2x.webp`,
+      url: `https://cdn.7tv.app/emote/${e.id}/2x.gif`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -538,6 +539,20 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
                   alt={emote.name}
                   className="w-7 h-7 object-contain"
                   loading="lazy"
+                  onError={(e) => {
+                    // Fallback: try png format, then show text placeholder
+                    const img = e.target as HTMLImageElement
+                    if (img.src.includes('.gif')) {
+                      img.src = img.src.replace('.gif', '.png')
+                    } else {
+                      // Show text fallback
+                      img.style.display = 'none'
+                      img.parentElement?.classList.add('bg-neutral-700', 'text-[8px]', 'text-cyan-400')
+                      if (img.parentElement) {
+                        img.parentElement.textContent = emote.name.slice(0, 4)
+                      }
+                    }
+                  }}
                 />
                 {/* Animated indicator */}
                 {emote.animated && (

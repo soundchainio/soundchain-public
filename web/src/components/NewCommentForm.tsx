@@ -10,7 +10,7 @@ import { GuestAvatar, formatWalletAddress } from 'components/GuestAvatar'
 import { FlexareaField } from './FlexareaField'
 import { StickerPicker } from './StickerPicker'
 import Picker from '@emoji-mart/react'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { getNormalizedLink, IdentifySource, hasLink } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 
@@ -164,6 +164,17 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
           // Don't close picker - allow sticker flurries!
         }
 
+        // Extract emotes from body for preview
+        const emoteRegex = /!\[emote:([^\]]+)\]\(([^)]+)\)/g
+        const emotes: { name: string; url: string }[] = []
+        let match
+        const bodyText = values.body || ''
+        while ((match = emoteRegex.exec(bodyText)) !== null) {
+          emotes.push({ name: match[1], url: match[2] })
+        }
+        // Reset regex for next render
+        emoteRegex.lastIndex = 0
+
         return (
           <Form>
             <div className="flex flex-col bg-gray-25">
@@ -190,6 +201,27 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
                 )}
                 <div className="flex-1 relative">
                   <FlexareaField id="commentField" name="body" maxLength={500} placeholder="Write a comment..." />
+                  {/* Emote preview row - shows selected emotes as images */}
+                  {emotes.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1 p-1.5 bg-neutral-800/50 rounded-lg">
+                      {emotes.map((emote, i) => (
+                        <img
+                          key={`preview-${i}-${emote.name}`}
+                          src={emote.url}
+                          alt={emote.name}
+                          title={emote.name}
+                          className="w-6 h-6 object-contain"
+                          onError={(e) => {
+                            const img = e.target as HTMLImageElement
+                            img.style.display = 'none'
+                          }}
+                        />
+                      ))}
+                      <span className="text-[10px] text-neutral-500 self-center ml-1">
+                        {emotes.length} emote{emotes.length > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  )}
                   {/* Emoji/Sticker toolbar */}
                   <div className="flex items-center gap-2 mt-1">
                     <button
