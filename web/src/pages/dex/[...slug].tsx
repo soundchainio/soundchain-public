@@ -5159,7 +5159,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Profile View - /dex/profile/[handle] */}
           {selectedView === 'profile' && routeId && router.isReady && (
             <ProfileErrorBoundary>
-            <div className="space-y-6 pb-32 overflow-y-auto bg-black min-h-screen" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="relative pb-32 overflow-y-auto min-h-screen" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
               {viewingProfile && (
                 <Head>
@@ -5211,11 +5211,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
-                  {/* Back Button */}
-                  <Button variant="ghost" onClick={() => router.back()} className="mb-4 hover:bg-cyan-500/10">
-                    <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
-                    Back
-                  </Button>
+                  {/* Floating Back Button - positioned over cover */}
+                  <div className="absolute top-4 left-4 z-30">
+                    <Button
+                      variant="ghost"
+                      onClick={() => router.back()}
+                      className="bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white border border-white/20"
+                    >
+                      <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
+                      Back
+                    </Button>
+                  </div>
 
                   {/* Full Profile Header Component */}
                   <ProfileHeader
@@ -5265,6 +5271,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     }}
                   />
 
+                  {/* Content Section with black background */}
+                  <div className="bg-black relative z-10">
+                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 space-y-6">
                   {/* Social Links */}
                   {viewingProfile.socialMedias && (
                     <Card className="retro-card">
@@ -5362,7 +5371,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
 
                   {/* Tab Content */}
-                  <div className="mt-4 min-h-[400px] bg-black">
+                  <div className="mt-4 min-h-[400px]">
                     {profileTab === 'feed' && (
                       <Posts profileId={viewingProfile.id} />
                     )}
@@ -5420,6 +5429,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         )}
                       </div>
                     )}
+                  </div>
+                    </div>
                   </div>
                 </>
               )}
