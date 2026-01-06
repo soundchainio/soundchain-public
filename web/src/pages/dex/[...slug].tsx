@@ -2051,7 +2051,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('feed')}
+              onClick={() => router.push('/dex/feed', undefined, { shallow: false })}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${selectedView === 'feed' ? 'bg-green-500/10' : ''}`}
             >
               <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'feed' ? 'text-green-400' : 'text-gray-400'}`} />
@@ -2061,7 +2061,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('dashboard')}
+              onClick={() => router.push('/dex/dashboard', undefined, { shallow: false })}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${selectedView === 'dashboard' ? 'bg-cyan-500/10' : ''}`}
             >
               <Home className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'dashboard' ? 'text-cyan-400' : 'text-gray-400'}`} />
@@ -2071,7 +2071,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('staking')}
+              onClick={() => router.push('/dex/staking', undefined, { shallow: false })}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${selectedView === 'staking' ? 'bg-yellow-500/10' : ''}`}
             >
               <Coins className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'staking' ? 'text-yellow-400' : 'text-gray-400'}`} />
@@ -2091,7 +2091,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('marketplace')}
+              onClick={() => router.push('/dex/marketplace', undefined, { shallow: false })}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-purple-500/10 ${selectedView === 'marketplace' ? 'bg-purple-500/10' : ''}`}
             >
               <ShoppingBag className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'marketplace' ? 'text-purple-400' : 'text-gray-400'}`} />
@@ -2101,7 +2101,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('explore')}
+              onClick={() => router.push('/dex/explore', undefined, { shallow: false })}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-orange-500/10 ${selectedView === 'explore' ? 'bg-orange-500/10' : ''}`}
             >
               <Compass className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'explore' ? 'text-orange-400' : 'text-gray-400'}`} />
@@ -2111,7 +2111,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('library')}
+              onClick={() => router.push('/dex/library', undefined, { shallow: false })}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-blue-500/10 ${selectedView === 'library' ? 'bg-blue-500/10' : ''}`}
             >
               <Library className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'library' ? 'text-blue-400' : 'text-gray-400'}`} />
@@ -2121,7 +2121,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('playlist')}
+              onClick={() => router.push('/dex/playlist', undefined, { shallow: false })}
               className={`flex-shrink-0 transition-all duration-300 hover:bg-pink-500/10 ${selectedView === 'playlist' ? 'bg-pink-500/10' : ''}`}
             >
               <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'playlist' ? 'text-pink-400' : 'text-gray-400'}`} />
