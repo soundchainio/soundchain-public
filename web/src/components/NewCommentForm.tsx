@@ -210,15 +210,15 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
                     </button>
                     <span className="text-xs text-gray-500 ml-auto">{values.body?.length || 0}/500</span>
                   </div>
-                  {/* Emoji Picker Dropdown */}
+                  {/* Emoji Picker Dropdown - positioned to fit on mobile */}
                   {showEmojiPicker && (
-                    <div ref={pickerRef} className="absolute left-0 bottom-12 z-50">
+                    <div ref={pickerRef} className="fixed left-2 right-2 bottom-24 sm:absolute sm:left-0 sm:bottom-12 sm:right-auto z-[60]">
                       <Picker theme="dark" perLine={8} onEmojiSelect={handleEmojiSelect} />
                     </div>
                   )}
-                  {/* Sticker Picker Dropdown */}
+                  {/* Sticker Picker Dropdown - positioned to fit on mobile */}
                   {showStickerPicker && (
-                    <div className="absolute left-0 bottom-12 z-50">
+                    <div className="fixed left-2 right-2 bottom-24 sm:absolute sm:left-0 sm:bottom-12 sm:right-auto z-[60]">
                       <StickerPicker theme="dark" onSelect={handleStickerSelect} />
                     </div>
                   )}

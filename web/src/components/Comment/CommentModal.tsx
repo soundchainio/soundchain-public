@@ -70,7 +70,7 @@ export const CommentModal = () => {
       >
         <div
           ref={modalRef}
-          className="bg-neutral-900 w-full sm:w-[500px] max-h-[85vh] sm:max-h-[70vh] rounded-t-2xl sm:rounded-2xl flex flex-col overflow-hidden border border-neutral-800"
+          className="bg-neutral-900 w-full sm:w-[500px] max-h-[60vh] sm:max-h-[70vh] rounded-t-2xl sm:rounded-2xl flex flex-col overflow-hidden border border-neutral-800"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
