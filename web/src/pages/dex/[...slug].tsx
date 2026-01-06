@@ -2081,11 +2081,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => setSelectedView('users')}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-indigo-500/10 ${selectedView === 'users' ? 'bg-indigo-500/10' : ''}`}
+              onClick={() => router.push('/dex/users', undefined, { shallow: false })}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-indigo-500/10 ${selectedView === 'users' || selectedView === 'profile' ? 'bg-indigo-500/10' : ''}`}
             >
-              <Users className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'users' ? 'text-indigo-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'users' ? 'indigo-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+              <Users className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'users' || selectedView === 'profile' ? 'text-indigo-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'users' || selectedView === 'profile' ? 'indigo-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Users
               </span>
             </Button>

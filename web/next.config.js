@@ -1,5 +1,9 @@
 module.exports = {
   reactStrictMode: false,
+  // Enable scroll position restoration on back/forward navigation
+  experimental: {
+    scrollRestoration: true,
+  },
   images: {
     domains: [
       'placeimg.com',
