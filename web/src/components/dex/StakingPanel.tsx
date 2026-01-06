@@ -78,7 +78,7 @@ interface StakingPanelProps {
 
 export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   const me = useMe()
-  const { web3: magicLinkWeb3, account: magicLinkAccount } = useMagicContext()
+  const { web3: magicLinkWeb3, account: magicLinkAccount, ogunBalance: magicOgunBalance } = useMagicContext()
   const { web3: metamaskWeb3, account: metamaskAccount } = useMetaMask()
   const { web3: wcWeb3, account: walletconnectAccount } = useWalletConnect()
   const { getCurrentGasPrice } = useBlockchain()
@@ -224,9 +224,27 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     if (!web3 || !account) return
 
     try {
-      // OGUN Balance
-      const balance = await tokenContract(web3).methods.balanceOf(account).call() as string
-      setOgunBalance(web3.utils.fromWei(balance || '0', 'ether'))
+      // OGUN Balance - try to fetch, but use Magic context balance as fallback
+      try {
+        // Check chain ID first (OGUN only exists on Polygon)
+        const chainId = await web3.eth.getChainId()
+        if (Number(chainId) === 137) {
+          const balance = await tokenContract(web3).methods.balanceOf(account).call() as string
+          setOgunBalance(web3.utils.fromWei(balance || '0', 'ether'))
+        } else {
+          // Not on Polygon - use Magic context balance if available
+          console.log('⚠️ StakingPanel: Not on Polygon, using Magic context balance')
+          if (magicOgunBalance) {
+            setOgunBalance(magicOgunBalance)
+          }
+        }
+      } catch (balanceErr) {
+        console.error('⚠️ StakingPanel: OGUN balance fetch failed:', balanceErr)
+        // Fallback to Magic context balance
+        if (magicOgunBalance) {
+          setOgunBalance(magicOgunBalance)
+        }
+      }
 
       // Staked Balance & Rewards
       try {
@@ -247,7 +265,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     } catch (error) {
       console.error('Error fetching balances:', error)
     }
-  }, [web3, account])
+  }, [web3, account, magicOgunBalance])
 
   useEffect(() => {
     fetchBalances()
