@@ -5360,7 +5360,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
 
                   {/* Tab Content */}
-                  <div className="mt-4">
+                  <div className="mt-4 min-h-[400px] bg-black">
                     {profileTab === 'feed' && (
                       <Posts profileId={viewingProfile.id} />
                     )}
