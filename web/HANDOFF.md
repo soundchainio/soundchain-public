@@ -60,6 +60,14 @@ The OAuth login has been unstable. Key commits in the debugging journey:
 
 ## 📅 RECENT CHANGES (Dec 22, 2025 - Jan 5, 2026)
 
+### January 6, 2026 - Rich oEmbed Share Previews
+- `5e504f442` - Fix Discord/social media share previews
+  - **Problem:** Share URLs showed plain text instead of rich embeds with artwork
+  - **Solution:**
+    - Updated `/api/oembed.ts` to fetch actual track/profile data from GraphQL
+    - Added oEmbed discovery `<link>` tag to page Head
+  - Now shares show: track title, artist name, artwork image, playable embed
+
 ### January 5, 2026 (Session 3) - Legacy Wallet + POL + SCid Worker
 - `5b18600a0` - Rebrand MATIC to POL in all user-facing UI
 - `4bf71c332` - Re-enable DefaultWallet switching mutation
