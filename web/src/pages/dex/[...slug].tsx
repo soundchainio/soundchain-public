@@ -1743,15 +1743,113 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Mobile WIN-WIN and Mint+ buttons - visible on small screens */}
               <div className="flex lg:hidden items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowWinWinStatsModal(true)}
-                  className="hover:bg-pink-500/10 px-2"
-                  title="WIN-WIN Streaming Rewards"
-                >
-                  <PiggyBank className="w-5 h-5 text-pink-400" />
-                </Button>
+                {/* PiggyBank with dropdown accordion */}
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowWinWinStatsModal(!showWinWinStatsModal)}
+                    className="hover:bg-pink-500/10 px-2"
+                    title="WIN-WIN Streaming Rewards"
+                  >
+                    <PiggyBank className="w-5 h-5 text-pink-400" />
+                  </Button>
+
+                  {/* WIN-WIN Accordion Dropdown - SoundChain Colors */}
+                  {showWinWinStatsModal && (
+                    <Card className="absolute left-0 top-12 w-80 z-50 shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900">
+                      {/* Header */}
+                      <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-gradient-to-r from-orange-900/50 to-yellow-900/50">
+                        <div className="flex items-center gap-2">
+                          <div className="relative">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
+                              <PiggyBank className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full flex items-center justify-center animate-pulse">
+                              <Coins className="w-2 h-2 text-cyan-900" />
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400">WIN-WIN Rewards</h3>
+                            <p className="text-[10px] text-cyan-400/80">Stream to Earn OGUN</p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => setShowWinWinStatsModal(false)} className="w-6 h-6 p-0 hover:bg-orange-500/20">
+                          <X className="w-4 h-4 text-orange-400" />
+                        </Button>
+                      </div>
+
+                      {/* Your Earnings */}
+                      {me && (
+                        <div className="p-3 border-b border-orange-500/20">
+                          <div className="text-[10px] text-orange-400/80 uppercase tracking-wider mb-2 text-center">Your Streaming Earnings</div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="text-center p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                              <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                                {myStreamingRewardsLoading ? '...' : myTotalOgunEarned.toFixed(2)}
+                              </div>
+                              <div className="text-[9px] text-yellow-500/70">OGUN</div>
+                            </div>
+                            <div className="text-center p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                              <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                                {myStreamingRewardsLoading ? '...' : myTotalStreams.toLocaleString()}
+                              </div>
+                              <div className="text-[9px] text-cyan-500/70">streams</div>
+                            </div>
+                            <div className="text-center p-2 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                              <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">
+                                {myStreamingRewardsLoading ? '...' : (myStreamingRewardsData?.scidsByProfile?.length || 0)}
+                              </div>
+                              <div className="text-[9px] text-orange-500/70">tracks</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reward Rates */}
+                      <div className="p-3 border-b border-orange-500/20">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="text-center p-2 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-lg border border-yellow-500/30">
+                            <div className="text-[10px] text-yellow-400/80">NFT Tracks</div>
+                            <div className="text-base font-bold text-yellow-400">0.5 OGUN</div>
+                            <div className="text-[9px] text-gray-500">per stream</div>
+                          </div>
+                          <div className="text-center p-2 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/30">
+                            <div className="text-[10px] text-cyan-400/80">Regular</div>
+                            <div className="text-base font-bold text-cyan-400">0.05 OGUN</div>
+                            <div className="text-[9px] text-gray-500">per stream</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="p-3 grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                          className="py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold rounded-lg text-sm flex items-center justify-center gap-1"
+                        >
+                          <Wallet className="w-3 h-3" />
+                          Claim
+                        </button>
+                        <button
+                          onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                          className="py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-1"
+                        >
+                          <Zap className="w-3 h-3" />
+                          Stake
+                        </button>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="px-3 pb-2 text-center">
+                        <p className="text-[9px] text-gray-500">
+                          Creator 70% · Listener 30% · 30sec min · Polygon
+                        </p>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+
                 <Button
                   variant="ghost"
                   size="sm"
@@ -5463,127 +5561,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
       {/* Modals */}
       <WalletConnectModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} onConnect={handleWalletConnect} />
-
-      {/* WIN-WIN Accordion Modal - AS/400 Retro Terminal Style */}
-      {showWinWinStatsModal && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/90" onClick={() => setShowWinWinStatsModal(false)} />
-          <div
-            className="relative z-10 w-full max-w-lg overflow-hidden border-t-4 border-x-2 border-green-500 bg-black shadow-[0_-10px_60px_rgba(34,197,94,0.4),inset_0_0_60px_rgba(34,197,94,0.05)]"
-            style={{ animation: 'slideUp 0.3s ease-out' }}
-          >
-            {/* Scanline overlay effect */}
-            <div className="absolute inset-0 pointer-events-none opacity-10 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(34,197,94,0.1)_2px,rgba(34,197,94,0.1)_4px)]" />
-
-            {/* Terminal Header Bar */}
-            <div className="bg-green-900/80 border-b-2 border-green-500 px-4 py-2 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-10 h-10 border-2 border-green-400 bg-black flex items-center justify-center">
-                    <PiggyBank className="w-6 h-6 text-green-400" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 border border-yellow-600 flex items-center justify-center animate-pulse">
-                    <Coins className="w-2 h-2 text-yellow-900" />
-                  </div>
-                </div>
-                <div className="font-mono">
-                  <div className="text-green-400 text-sm tracking-widest">WIN-WIN REWARDS</div>
-                  <div className="text-green-600 text-xs">SOUNDCHAIN TERMINAL v2.0</div>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowWinWinStatsModal(false)}
-                className="w-8 h-8 border border-green-500 bg-black hover:bg-green-900 flex items-center justify-center transition-colors"
-              >
-                <X className="w-4 h-4 text-green-400" />
-              </button>
-            </div>
-
-            {/* Your Earnings Section - AS/400 Style */}
-            {me && (
-              <div className="p-4 font-mono">
-                <div className="border border-green-500/50 bg-black/50 p-3">
-                  <div className="text-green-600 text-xs mb-2 border-b border-green-500/30 pb-1">
-                    ┌─ YOUR STREAMING EARNINGS ─────────────────┐
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="border border-green-500/30 p-2">
-                      <div className="text-green-600 text-[10px] tracking-wider">EARNED</div>
-                      <div className="text-2xl font-bold text-green-400 tabular-nums">
-                        {myStreamingRewardsLoading ? '---' : myTotalOgunEarned.toFixed(2)}
-                      </div>
-                      <div className="text-yellow-500 text-xs">OGUN</div>
-                    </div>
-                    <div className="border border-green-500/30 p-2">
-                      <div className="text-green-600 text-[10px] tracking-wider">STREAMS</div>
-                      <div className="text-2xl font-bold text-cyan-400 tabular-nums">
-                        {myStreamingRewardsLoading ? '---' : myTotalStreams.toLocaleString()}
-                      </div>
-                      <div className="text-green-600 text-xs">PLAYS</div>
-                    </div>
-                    <div className="border border-green-500/30 p-2">
-                      <div className="text-green-600 text-[10px] tracking-wider">TRACKS</div>
-                      <div className="text-2xl font-bold text-purple-400 tabular-nums">
-                        {myStreamingRewardsLoading ? '---' : (myStreamingRewardsData?.scidsByProfile?.length || 0)}
-                      </div>
-                      <div className="text-green-600 text-xs">ACTIVE</div>
-                    </div>
-                  </div>
-                  <div className="text-green-600 text-xs mt-2 border-t border-green-500/30 pt-1">
-                    └──────────────────────────────────────────┘
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Reward Rates - Terminal Style */}
-            <div className="px-4 pb-4 font-mono">
-              <div className="flex gap-2">
-                <div className="flex-1 border border-green-500/50 bg-green-950/30 p-2 text-center">
-                  <div className="text-green-600 text-[10px]">NFT_RATE</div>
-                  <div className="text-xl font-bold text-green-400">0.5</div>
-                  <div className="text-green-600 text-[10px]">OGUN/STREAM</div>
-                </div>
-                <div className="flex-1 border border-yellow-500/50 bg-yellow-950/30 p-2 text-center">
-                  <div className="text-yellow-600 text-[10px]">BASE_RATE</div>
-                  <div className="text-xl font-bold text-yellow-400">0.05</div>
-                  <div className="text-yellow-600 text-[10px]">OGUN/STREAM</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons - Terminal Style */}
-            <div className="px-4 pb-4 font-mono">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
-                  className="flex-1 border-2 border-green-500 bg-green-950/50 hover:bg-green-900/50 text-green-400 font-bold py-3 flex items-center justify-center gap-2 transition-colors"
-                >
-                  <Wallet className="w-4 h-4" />
-                  <span className="text-sm tracking-wider">CLAIM</span>
-                </button>
-                <button
-                  onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
-                  className="flex-1 border-2 border-purple-500 bg-purple-950/50 hover:bg-purple-900/50 text-purple-400 font-bold py-3 flex items-center justify-center gap-2 transition-colors"
-                >
-                  <Zap className="w-4 h-4" />
-                  <span className="text-sm tracking-wider">STAKE</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Footer - Terminal Style */}
-            <div className="px-4 pb-3 font-mono text-center border-t border-green-500/30">
-              <div className="text-green-600 text-[10px] pt-2 tracking-wider">
-                CREATOR:70% │ LISTENER:30% │ MIN:30SEC │ POLYGON MAINNET
-              </div>
-              <div className="text-green-800 text-[9px] mt-1">
-                ▓▓▓▓▓▓▓▓▓▓ SOUNDCHAIN WIN-WIN PROTOCOL ▓▓▓▓▓▓▓▓▓▓
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Top 100 NFTs Modal */}
       {showTop100Modal && (
