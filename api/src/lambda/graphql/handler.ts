@@ -37,6 +37,88 @@ const handleRestApi = async (event: APIGatewayProxyEvent): Promise<any> => {
     return { statusCode: 200, headers: corsHeaders, body: '' };
   }
 
+  // GET /v1/stats - Public historical streaming stats (OG Rewards preview)
+  if (path === '/v1/stats' && method === 'GET') {
+    const TrackModel = mongoose.model('Track');
+
+    const [
+      totalTracks,
+      tracksWithPlays,
+      playsAgg,
+      nftPlaysAgg,
+      uniqueCreatorsAgg,
+      topTracksResult,
+    ] = await Promise.all([
+      TrackModel.countDocuments({ deleted: { $ne: true } }),
+      TrackModel.countDocuments({ playbackCount: { $gt: 0 }, deleted: { $ne: true } }),
+      TrackModel.aggregate([
+        { $match: { deleted: { $ne: true } } },
+        { $group: { _id: null, total: { $sum: '$playbackCount' } } }
+      ]),
+      TrackModel.aggregate([
+        {
+          $match: {
+            playbackCount: { $gt: 0 },
+            deleted: { $ne: true },
+            $or: [
+              { 'nftData.tokenId': { $exists: true, $ne: null } },
+              { 'nftData.contract': { $exists: true, $ne: null } }
+            ]
+          }
+        },
+        { $group: { _id: null, total: { $sum: '$playbackCount' } } }
+      ]),
+      TrackModel.aggregate([
+        { $match: { playbackCount: { $gt: 0 }, deleted: { $ne: true } } },
+        { $group: { _id: '$profileId' } },
+        { $count: 'count' }
+      ]),
+      TrackModel.find({ playbackCount: { $gt: 0 }, deleted: { $ne: true } })
+        .sort({ playbackCount: -1 })
+        .limit(10)
+        .select('_id title playbackCount nftData profileId')
+        .lean()
+    ]);
+
+    const totalPlays = playsAgg[0]?.total || 0;
+    const nftPlays = nftPlaysAgg[0]?.total || 0;
+    const nonNftPlays = totalPlays - nftPlays;
+    const uniqueCreators = uniqueCreatorsAgg[0]?.count || 0;
+
+    // Calculate estimated OGUN (creator's 70% share)
+    const nftOgun = nftPlays * 0.35;
+    const nonNftOgun = nonNftPlays * 0.035;
+    const estimatedCreatorOgun = nftOgun + nonNftOgun;
+
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        message: '🎵 SoundChain Historical Streaming Stats',
+        stats: {
+          totalTracks,
+          tracksWithPlays,
+          totalPlays,
+          nftPlays,
+          nonNftPlays,
+          uniqueCreators,
+        },
+        ogRewardsEstimate: {
+          nftOgun: Math.round(nftOgun * 100) / 100,
+          nonNftOgun: Math.round(nonNftOgun * 100) / 100,
+          totalEstimatedOgun: Math.round(estimatedCreatorOgun * 100) / 100,
+          note: 'NFT tracks: 0.35 OGUN/play, Non-NFT: 0.035 OGUN/play (creator 70%)',
+        },
+        topTracks: (topTracksResult as any[]).slice(0, 10).map((t, i) => ({
+          rank: i + 1,
+          title: t.title || 'Untitled',
+          plays: t.playbackCount || 0,
+          isNft: !!(t.nftData?.tokenId || t.nftData?.contract),
+        })),
+      }, null, 2),
+    };
+  }
+
   // GET /v1/feed - Public feed (no auth)
   if (path === '/v1/feed' && method === 'GET') {
     const params = event.queryStringParameters || {};
@@ -153,6 +235,120 @@ const handleRestApi = async (event: APIGatewayProxyEvent): Promise<any> => {
         message: '🚀 Announcement posted to SoundChain!',
       }),
     };
+  }
+
+  // POST /v1/admin/grandfather-og - Run OG Grandfather Rewards (requires admin secret)
+  if (path === '/v1/admin/grandfather-og' && method === 'POST') {
+    const adminSecret = process.env.ADMIN_SECRET || 'soundchain-og-rewards-2026';
+    const providedSecret = event.headers?.['x-admin-secret'] || event.headers?.['X-Admin-Secret'];
+
+    if (providedSecret !== adminSecret) {
+      return {
+        statusCode: 401,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Invalid admin secret', hint: 'Set X-Admin-Secret header' }),
+      };
+    }
+
+    const body = JSON.parse(event.body || '{}');
+    const dryRun = body.dryRun !== false; // Default to dry run for safety
+    const limit = body.limit || 0;
+    const minPlays = body.minPlays || 1;
+
+    const TrackModel = mongoose.model('Track');
+    const SCidModel = mongoose.model('SCid');
+
+    const OG_REWARD_CONFIG = {
+      nftRewardPerPlay: 0.35,
+      baseRewardPerPlay: 0.035,
+      maxRewardPerTrack: 10000,
+    };
+
+    const result = {
+      dryRun,
+      totalTracksProcessed: 0,
+      totalPlaysRewarded: 0,
+      totalOgunCredited: 0,
+      nftTracksRewarded: 0,
+      nonNftTracksRewarded: 0,
+      creatorsRewarded: 0,
+      topRewarded: [] as any[],
+      errors: [] as string[],
+    };
+
+    const creatorsSet = new Set<string>();
+    const trackRewards: any[] = [];
+
+    try {
+      let query = TrackModel.find({
+        playbackCount: { $gte: minPlays },
+        deleted: { $ne: true }
+      }).sort({ playbackCount: -1 });
+
+      if (limit > 0) query = query.limit(limit);
+
+      const tracks = await query.lean().exec() as any[];
+
+      for (const track of tracks) {
+        try {
+          const trackId = track._id.toString();
+          const profileId = track.profileId?.toString();
+          const playbackCount = track.playbackCount || 0;
+          const isNft = !!(track.nftData?.tokenId || track.nftData?.contract);
+
+          if (!profileId) continue;
+
+          const rewardPerPlay = isNft ? OG_REWARD_CONFIG.nftRewardPerPlay : OG_REWARD_CONFIG.baseRewardPerPlay;
+          const ogunToCredit = Math.min(playbackCount * rewardPerPlay, OG_REWARD_CONFIG.maxRewardPerTrack);
+
+          if (!dryRun) {
+            // Update or create SCid with rewards
+            await SCidModel.updateOne(
+              { trackId },
+              {
+                $inc: {
+                  streamCount: playbackCount,
+                  ogunRewardsEarned: ogunToCredit,
+                },
+              },
+              { upsert: false } // Only update existing SCids
+            );
+          }
+
+          result.totalTracksProcessed++;
+          result.totalPlaysRewarded += playbackCount;
+          result.totalOgunCredited += ogunToCredit;
+          if (isNft) result.nftTracksRewarded++;
+          else result.nonNftTracksRewarded++;
+
+          creatorsSet.add(profileId);
+          trackRewards.push({ trackId, title: track.title, plays: playbackCount, ogun: ogunToCredit });
+
+        } catch (err: any) {
+          result.errors.push(`${track._id}: ${err.message}`);
+        }
+      }
+
+      result.creatorsRewarded = creatorsSet.size;
+      result.topRewarded = trackRewards.sort((a, b) => b.ogun - a.ogun).slice(0, 20);
+      result.totalOgunCredited = Math.round(result.totalOgunCredited * 100) / 100;
+
+      return {
+        statusCode: 200,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          message: dryRun ? '🔍 DRY RUN - No changes made' : '🚀 OG REWARDS CREDITED!',
+          result,
+        }, null, 2),
+      };
+
+    } catch (err: any) {
+      return {
+        statusCode: 500,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: err.message }),
+      };
+    }
   }
 
   return { statusCode: 404, headers: corsHeaders, body: JSON.stringify({ error: 'Not found' }) };
