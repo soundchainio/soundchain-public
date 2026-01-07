@@ -237,6 +237,128 @@ const handleRestApi = async (event: APIGatewayProxyEvent): Promise<any> => {
     };
   }
 
+  // POST /v1/admin/grandfather-tracks - Create SCids for existing tracks (MUST RUN FIRST!)
+  if (path === '/v1/admin/grandfather-tracks' && method === 'POST') {
+    const adminSecret = process.env.ADMIN_SECRET || 'soundchain-og-rewards-2026';
+    const providedSecret = event.headers?.['x-admin-secret'] || event.headers?.['X-Admin-Secret'];
+
+    if (providedSecret !== adminSecret) {
+      return {
+        statusCode: 401,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Invalid admin secret', hint: 'Set X-Admin-Secret header' }),
+      };
+    }
+
+    const body = JSON.parse(event.body || '{}');
+    const dryRun = body.dryRun !== false;
+    const limit = body.limit || 0;
+
+    const TrackModel = mongoose.model('Track');
+    const SCidModel = mongoose.model('SCid');
+    const ProfileModel = mongoose.model('Profile');
+
+    const result = {
+      dryRun,
+      totalTracksFound: 0,
+      tracksWithoutScid: 0,
+      scidsCreated: 0,
+      skipped: 0,
+      nftTracks: 0,
+      nonNftTracks: 0,
+      errors: [] as string[],
+    };
+
+    try {
+      // Find all non-deleted tracks
+      let query = TrackModel.find({ deleted: { $ne: true } });
+      if (limit > 0) query = query.limit(limit);
+      const tracks = await query.lean().exec() as any[];
+      result.totalTracksFound = tracks.length;
+
+      for (const track of tracks) {
+        try {
+          const trackId = track._id.toString();
+          const profileId = track.profileId?.toString();
+
+          if (!profileId) {
+            result.skipped++;
+            continue;
+          }
+
+          // Check if SCid already exists
+          const existingScid = await SCidModel.findOne({ trackId });
+          if (existingScid) {
+            result.skipped++;
+            continue;
+          }
+
+          result.tracksWithoutScid++;
+
+          if (!dryRun) {
+            // Get profile for artist name
+            const profile = await ProfileModel.findById(profileId).lean() as any;
+            const artistName = profile?.displayName || profile?.username || profileId;
+
+            // Count existing SCids for sequence
+            const existingCount = await SCidModel.countDocuments({ profileId });
+
+            // Generate SCid code: SC-P-{artistHash}-{year}-{sequence}
+            const artistHash = artistName.substring(0, 4).toUpperCase().replace(/[^A-Z0-9]/g, 'X').padEnd(4, 'X');
+            const year = new Date().getFullYear().toString().slice(-2);
+            const sequence = String(existingCount + 1).padStart(3, '0');
+            const scidCode = `SC-P-${artistHash}-${year}-${sequence}`;
+
+            // Create SCid record
+            await SCidModel.create({
+              scid: scidCode,
+              trackId,
+              profileId,
+              chainCode: 'P', // Polygon
+              artistHash,
+              year,
+              sequence: existingCount + 1,
+              status: 'PENDING',
+              streamCount: 0,
+              ogunRewardsEarned: 0,
+              ogunRewardsClaimed: 0,
+            });
+
+            result.scidsCreated++;
+          }
+
+          const isNft = !!(track.nftData?.tokenId || track.nftData?.contract);
+          if (isNft) result.nftTracks++;
+          else result.nonNftTracks++;
+
+        } catch (err: any) {
+          result.errors.push(`${track._id}: ${err.message}`);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          message: dryRun
+            ? '🔍 DRY RUN - No SCids created. Run with dryRun: false to create them!'
+            : `🚀 Created ${result.scidsCreated} SCids! WIN-WIN system now active for these tracks!`,
+          result,
+          nextStep: dryRun
+            ? 'Run POST /v1/admin/grandfather-tracks with { "dryRun": false } to create SCids'
+            : 'Now run POST /v1/admin/grandfather-og to credit historical OGUN rewards',
+        }, null, 2),
+      };
+
+    } catch (err: any) {
+      return {
+        statusCode: 500,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: err.message }),
+      };
+    }
+  }
+
   // POST /v1/admin/grandfather-og - Run OG Grandfather Rewards (requires admin secret)
   if (path === '/v1/admin/grandfather-og' && method === 'POST') {
     const adminSecret = process.env.ADMIN_SECRET || 'soundchain-og-rewards-2026';

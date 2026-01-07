@@ -64,7 +64,7 @@ import {
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
-  AlertCircle, RefreshCcw
+  AlertCircle, RefreshCcw, PiggyBank, Settings
 } from 'lucide-react'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
@@ -742,6 +742,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showGuestPostModal, setShowGuestPostModal] = useState(false)
+  const [showWinWinStatsModal, setShowWinWinStatsModal] = useState(false)
   const [profileImageError, setProfileImageError] = useState(false)
   const [coverImageError, setCoverImageError] = useState(false)
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
@@ -1422,7 +1423,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
   // NOTE: isViewingOwnProfile uses viewingProfile which is now defined above
-  const isViewingOwnProfile = selectedView === 'profile' && viewingProfile?.id === me?.profile?.id
+  // Using String() for robust comparison - IDs may be ObjectId vs string
+  const isViewingOwnProfile = selectedView === 'profile' && Boolean(viewingProfile?.id) && Boolean(me?.profile?.id) && String(viewingProfile?.id) === String(me?.profile?.id)
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
@@ -5229,7 +5231,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             </div>
 
                             <div className="flex flex-wrap gap-3">
-                              {me?.profile?.id === viewingProfile.id ? (
+                              {isViewingOwnProfile ? (
                                 <Button className="retro-button" onClick={() => setSelectedView('settings')}>
                                   <Settings className="w-4 h-4 mr-2" />
                                   Edit Profile
@@ -5273,6 +5275,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                     className="p-1"
                                   >
                                     <Copy className="w-3 h-3" />
+                                  </Button>
+                                  {/* WIN-WIN Piggy Bank - Shows streaming rewards stats */}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowWinWinStatsModal(true)}
+                                    className="hover:bg-pink-500/20 p-1 group"
+                                    title="WIN-WIN Streaming Rewards"
+                                  >
+                                    <PiggyBank className="w-4 h-4 text-pink-400 group-hover:text-pink-300 group-hover:scale-110 transition-all" />
                                   </Button>
                                 </div>
                               </Card>
@@ -5364,7 +5376,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <div className="text-center py-8 text-neutral-500">
                               <ListMusic className="w-12 h-12 mx-auto mb-3 opacity-50" />
                               <p>No playlists yet</p>
-                              {me?.profile?.id === viewingProfile.id && (
+                              {isViewingOwnProfile && (
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -5399,6 +5411,56 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
       {/* Modals */}
       <WalletConnectModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} onConnect={handleWalletConnect} />
+
+      {/* WIN-WIN Stats Modal */}
+      {showWinWinStatsModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/95" onClick={() => setShowWinWinStatsModal(false)} />
+          <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-none border-2 border-cyan-500 bg-black shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+            {/* Terminal Header */}
+            <div className="bg-gradient-to-r from-cyan-900 to-cyan-800 px-4 py-2 flex items-center justify-between border-b border-cyan-500">
+              <div className="flex items-center gap-2">
+                <PiggyBank className="w-5 h-5 text-yellow-400" />
+                <span className="font-mono text-cyan-100 text-sm tracking-wider">WIN-WIN REWARDS v2.0</span>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowWinWinStatsModal(false)} className="w-6 h-6 p-0 text-cyan-300 hover:text-white">
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            {/* Content */}
+            <div className="p-4 font-mono text-sm">
+              <div className="text-center mb-4 text-cyan-400 border border-cyan-500/30 p-2">
+                <span className="text-yellow-400">STREAM TO EARN - EVERYONE WINS!</span>
+              </div>
+              <div className="space-y-2 text-cyan-300">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">NFT_RATE:</span>
+                  <span className="text-green-400">0.5 OGUN/stream</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">BASE_RATE:</span>
+                  <span className="text-yellow-400">0.05 OGUN/stream</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">CREATOR_SHARE:</span>
+                  <span className="text-purple-400">70%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">LISTENER_SHARE:</span>
+                  <span className="text-cyan-400">30%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">MIN_STREAM:</span>
+                  <span className="text-orange-400">30 seconds</span>
+                </div>
+              </div>
+              <div className="mt-4 pt-3 border-t border-cyan-500/30 text-xs text-gray-500 text-center">
+                SOUNDCHAIN WIN-WIN | POLYGON MAINNET
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {connectedWallet && (
         <GuestPostModal
           isOpen={showGuestPostModal}
