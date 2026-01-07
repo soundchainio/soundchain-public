@@ -155,13 +155,16 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           </div>
         )}
-        <button
-          aria-label="More options"
-          className="p-1.5 rounded-full hover:bg-neutral-800 transition-colors"
-          onClick={onEllipsisClick}
-        >
-          <Ellipsis className="h-5 w-5 text-neutral-400" />
-        </button>
+        {/* Only show menu for authors/admins - not on other people's posts */}
+        {canEdit && (
+          <button
+            aria-label="More options"
+            className="p-1.5 rounded-full hover:bg-neutral-800 transition-colors"
+            onClick={onEllipsisClick}
+          >
+            <Ellipsis className="h-5 w-5 text-neutral-400" />
+          </button>
+        )}
       </header>
 
       {/* Body text - Instagram style padding */}
