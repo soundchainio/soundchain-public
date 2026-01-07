@@ -182,7 +182,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           onClick={() => dispatchShowCommentModal({ show: true, postId })}
         >
           <ChatBubbleLeftIcon className="mr-1 h-4 w-4" />
-          Comment
+          Reply
         </button>
       </div>
       <div className={commonClasses}>
