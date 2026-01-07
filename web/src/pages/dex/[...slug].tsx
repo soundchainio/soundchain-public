@@ -2877,9 +2877,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Main Feed */}
               <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-                {/* Announcements from /v1/feed API */}
+                {/* Announcements from /v1/feed API - Mobile/Tablet only (desktop shows in sidebar) */}
                 {announcements.length > 0 && (
-                  <div className="mb-4 space-y-4">
+                  <div className="mb-4 space-y-4 xl:hidden">
                     {announcements.map((announcement: any) => (
                       <Card key={announcement.id} className="retro-card overflow-hidden border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 via-purple-500/5 to-pink-500/10 hover:border-cyan-400 transition-all duration-300 cursor-pointer group" onClick={() => setSelectedAnnouncement(announcement)}>
                         {/* Hero Image - Full width, eye-catching */}

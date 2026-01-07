@@ -1,14 +1,50 @@
 'use client'
 
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import { useMe } from 'hooks/useMe'
 import { useFavoriteTracksQuery, useTracksQuery, useGetUserPlaylistsQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { Avatar } from '../Avatar'
-import { Music, Users, Heart, Disc3, Settings, Wallet, ListMusic } from 'lucide-react'
+import { Music, Users, Heart, Disc3, Settings, Wallet, ListMusic, Rocket, ExternalLink, Share2, Megaphone } from 'lucide-react'
+
+// Announcement type from /v1/feed API
+interface Announcement {
+  id: string
+  title: string
+  content: string
+  imageUrl?: string
+  link?: string
+  type?: string
+  companyName?: string
+  publishedAt?: string
+  createdAt?: string
+  tags?: string[]
+}
 
 export const LeftSidebar = () => {
   const me = useMe()
   const profile = me?.profile
+
+  // Fetch announcements for sidebar (desktop only)
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchAnnouncements() {
+      try {
+        const response = await fetch('https://19ne212py4.execute-api.us-east-1.amazonaws.com/production/v1/feed?limit=3')
+        if (response.ok) {
+          const data = await response.json()
+          setAnnouncements(data.announcements || [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch announcements:', err)
+      } finally {
+        setAnnouncementsLoading(false)
+      }
+    }
+    fetchAnnouncements()
+  }, [])
 
   // Get user's recent tracks (if they're an artist)
   const { data: tracksData } = useTracksQuery({
@@ -37,10 +73,10 @@ export const LeftSidebar = () => {
   const playlists = playlistsData?.getUserPlaylists?.nodes || []
 
   if (!me || !profile) {
-    // Show guest sidebar
+    // Show guest sidebar with announcements
     return (
       <div className="w-[280px] flex-shrink-0 hidden xl:block">
-        <div className="sticky top-4 space-y-4">
+        <div className="sticky top-4 space-y-4 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-700 scrollbar-track-transparent">
           {/* Welcome Card */}
           <div className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl p-5 border border-cyan-500/20">
             <div className="text-center">
@@ -57,6 +93,107 @@ export const LeftSidebar = () => {
               </Link>
             </div>
           </div>
+
+          {/* Announcements - Fully Expanded */}
+          {announcements.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 px-1">
+                <Megaphone className="w-4 h-4 text-cyan-400" />
+                <h4 className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Announcements</h4>
+              </div>
+              {announcements.map((announcement) => (
+                <div
+                  key={announcement.id}
+                  className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl overflow-hidden border border-cyan-500/30 hover:border-cyan-400/50 transition-all"
+                >
+                  {/* Hero Image */}
+                  {announcement.imageUrl && (
+                    <div className="relative w-full h-32 overflow-hidden">
+                      <img
+                        src={announcement.imageUrl}
+                        alt={announcement.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.currentTarget.style.display = 'none' }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      <div className="absolute bottom-2 left-3 right-3">
+                        <span className="inline-block px-2 py-0.5 bg-cyan-500/90 text-black text-[10px] font-bold rounded mb-1">
+                          {announcement.type?.replace('_', ' ') || 'UPDATE'}
+                        </span>
+                        <h3 className="text-white font-bold text-sm drop-shadow-lg line-clamp-2">{announcement.title}</h3>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Content - Fully Expanded */}
+                  <div className="p-4">
+                    {!announcement.imageUrl && (
+                      <>
+                        <span className="inline-block px-2 py-0.5 bg-cyan-500/90 text-black text-[10px] font-bold rounded mb-2">
+                          {announcement.type?.replace('_', ' ') || 'UPDATE'}
+                        </span>
+                        <h3 className="text-white font-bold text-sm mb-2">{announcement.title}</h3>
+                      </>
+                    )}
+
+                    {/* Author & Date */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center">
+                        <Rocket className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-cyan-400 text-xs font-medium">{announcement.companyName || 'SoundChain'}</span>
+                      <span className="text-gray-600 text-xs">•</span>
+                      <span className="text-gray-500 text-xs">
+                        {new Date(announcement.publishedAt || announcement.createdAt || '').toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    {/* Full Content - No truncation! */}
+                    <p className="text-gray-300 text-xs leading-relaxed whitespace-pre-wrap mb-3">
+                      {announcement.content}
+                    </p>
+
+                    {/* Tags */}
+                    {announcement.tags && announcement.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-3">
+                        {announcement.tags.slice(0, 4).map((tag) => (
+                          <span key={tag} className="px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/30 rounded text-cyan-400 text-[10px]">
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      {announcement.link && (
+                        <a
+                          href={announcement.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-cyan-500 text-black text-xs font-semibold rounded-lg hover:bg-cyan-400 transition-colors"
+                        >
+                          Visit Link <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                      <button
+                        onClick={() => {
+                          navigator.share?.({
+                            title: announcement.title,
+                            text: announcement.content?.substring(0, 100) + '...',
+                            url: window.location.href,
+                          }).catch(() => {})
+                        }}
+                        className="p-2 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors"
+                      >
+                        <Share2 className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Quick Stats */}
           <div className="bg-neutral-900/80 rounded-2xl p-4 border border-neutral-800">
