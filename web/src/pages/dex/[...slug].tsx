@@ -63,7 +63,8 @@ import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
-  Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw
+  Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
+  AlertCircle, RefreshCcw
 } from 'lucide-react'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
@@ -4126,6 +4127,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
                     <span className="ml-3 text-gray-400">Loading your NFTs...</span>
+                  </div>
+                </Card>
+              ) : ownedTracksError ? (
+                <Card className="retro-card p-6">
+                  <div className="text-center py-8">
+                    <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
+                    <p className="text-red-400 text-sm font-medium mb-2">Failed to load NFTs</p>
+                    <p className="text-gray-500 text-xs mb-4">{ownedTracksError.message || 'Network error'}</p>
+                    <Button
+                      onClick={() => window.location.reload()}
+                      className="retro-button"
+                      size="sm"
+                    >
+                      <RefreshCcw className="w-4 h-4 mr-2" />
+                      Retry
+                    </Button>
                   </div>
                 </Card>
               ) : ownedTracks.length > 0 ? (
