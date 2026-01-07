@@ -443,20 +443,17 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
             </div>
 
             {/* Main Stats - Glowing Cards */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-3 gap-2 mb-4">
               {/* Total OGUN Earned */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-yellow-500/30 hover:border-yellow-500/60 transition-all">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Coins className="w-4 h-4 text-yellow-400" />
-                    <span className="text-xs text-yellow-400/80 uppercase tracking-wider">Earned</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-yellow-500/30 hover:border-yellow-500/60 transition-all min-h-[90px]">
+                  <div className="text-[10px] text-yellow-400/80 uppercase tracking-wider mb-1 text-center">Earned</div>
+                  <div className="text-center">
+                    <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 leading-tight">
                       {streamingLoading ? '...' : streamingStats.totalOgunEarned.toFixed(2)}
-                    </span>
-                    <span className="text-xs text-yellow-500/70">OGUN</span>
+                    </div>
+                    <div className="text-[10px] text-yellow-500/70 mt-0.5">OGUN</div>
                   </div>
                 </div>
               </div>
@@ -464,16 +461,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               {/* Total Streams */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-cyan-500/30 hover:border-cyan-500/60 transition-all">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Play className="w-4 h-4 text-cyan-400" />
-                    <span className="text-xs text-cyan-400/80 uppercase tracking-wider">Streams</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-cyan-500/30 hover:border-cyan-500/60 transition-all min-h-[90px]">
+                  <div className="text-[10px] text-cyan-400/80 uppercase tracking-wider mb-1 text-center">Streams</div>
+                  <div className="text-center">
+                    <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 leading-tight">
                       {streamingLoading ? '...' : formatToCompactNumber(streamingStats.totalStreams)}
-                    </span>
-                    <span className="text-xs text-cyan-500/70">plays</span>
+                    </div>
+                    <div className="text-[10px] text-cyan-500/70 mt-0.5">plays</div>
                   </div>
                 </div>
               </div>
@@ -481,33 +475,35 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               {/* Tracks Earning */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-pink-500/30 hover:border-pink-500/60 transition-all">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Music className="w-4 h-4 text-pink-400" />
-                    <span className="text-xs text-pink-400/80 uppercase tracking-wider">Tracks</span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
+                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-pink-500/30 hover:border-pink-500/60 transition-all min-h-[90px]">
+                  <div className="text-[10px] text-pink-400/80 uppercase tracking-wider mb-1 text-center">Tracks</div>
+                  <div className="text-center">
+                    <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 leading-tight">
                       {streamingLoading ? '...' : streamingStats.tracksWithStreams}
-                    </span>
-                    <span className="text-xs text-pink-500/70">active</span>
+                    </div>
+                    <div className="text-[10px] text-pink-500/70 mt-0.5">active</div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Reward Tiers Info */}
-            <div className="flex items-center justify-center gap-6 mb-4 py-3 bg-white/5 rounded-lg">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-xs text-gray-400">NFT Mints:</span>
-                <span className="text-sm font-bold text-green-400">0.5 OGUN/stream</span>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="flex flex-col items-center py-2 px-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                <div className="flex items-center gap-1 mb-0.5">
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-[10px] text-gray-400">NFT</span>
+                </div>
+                <span className="text-sm font-bold text-green-400">0.5</span>
+                <span className="text-[9px] text-green-500/70">OGUN/stream</span>
               </div>
-              <div className="w-px h-4 bg-gray-600" />
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full" />
-                <span className="text-xs text-gray-400">Non-NFT:</span>
-                <span className="text-sm font-bold text-blue-400">0.05 OGUN/stream</span>
+              <div className="flex flex-col items-center py-2 px-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <div className="flex items-center gap-1 mb-0.5">
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                  <span className="text-[10px] text-gray-400">Non-NFT</span>
+                </div>
+                <span className="text-sm font-bold text-blue-400">0.05</span>
+                <span className="text-[9px] text-blue-500/70">OGUN/stream</span>
               </div>
             </div>
 
