@@ -1,10 +1,13 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react'
 import { useMagicContext } from 'hooks/useMagicContext'
 import useMetaMask from 'hooks/useMetaMask'
 import { useWeb3ModalContext } from './Web3ModalContext'
 import Web3 from 'web3'
+import { config } from 'config'
+import SoundchainOGUN20 from 'contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
+import { AbiItem } from 'web3-utils'
 
 // Wallet types supported across SoundChain
 export type WalletType = 'magic' | 'metamask' | 'web3modal' | null
@@ -77,6 +80,8 @@ function UnifiedWalletInner({
 }) {
   const [activeWalletType, setActiveWalletType] = useState<WalletType>(null)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [web3ModalOgunBalance, setWeb3ModalOgunBalance] = useState<string | null>(null)
+  const web3ModalBalanceFetchRef = useRef<string | null>(null)
 
   // Web3Modal hooks
   const { open } = web3ModalHooks.useWeb3Modal()
@@ -96,10 +101,63 @@ function UnifiedWalletInner({
   const {
     account: metamaskAccount,
     balance: metamaskBalance,
+    OGUNBalance: metamaskOgunBalance,  // Added OGUN balance from MetaMask
     web3: metamaskWeb3,
     refetchBalance: metamaskRefetchBalance,
     chainId: metamaskChainId,
   } = useMetaMask()
+
+  // Fetch OGUN balance for Web3Modal when connected on Polygon
+  useEffect(() => {
+    const fetchWeb3ModalOgunBalance = async () => {
+      // Only fetch if Web3Modal connected on Polygon (chain 137)
+      if (!isWeb3ModalConnected || !web3ModalAddress || web3ModalChainId !== 137) {
+        // Not on Polygon - can't fetch OGUN balance
+        if (web3ModalChainId && web3ModalChainId !== 137) {
+          console.log('⚠️ Web3Modal: Not on Polygon (chain', web3ModalChainId, '), OGUN balance unavailable')
+        }
+        setWeb3ModalOgunBalance(null)
+        return
+      }
+
+      // Skip if already fetching for this address
+      if (web3ModalBalanceFetchRef.current === web3ModalAddress) return
+      web3ModalBalanceFetchRef.current = web3ModalAddress
+
+      const ogunAddress = config.ogunTokenAddress
+      if (!ogunAddress) {
+        console.log('⚠️ Web3Modal: No OGUN token address configured')
+        return
+      }
+
+      try {
+        // Use window.ethereum for Web3Modal (it shares the provider)
+        if (!window.ethereum) return
+
+        const web3 = new Web3(window.ethereum as any)
+        const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
+        const tokenAmount = await ogunContract.methods.balanceOf(web3ModalAddress).call()
+
+        let validTokenAmount: string
+        if (typeof tokenAmount === 'bigint') {
+          validTokenAmount = tokenAmount.toString()
+        } else if (typeof tokenAmount === 'string' || typeof tokenAmount === 'number') {
+          validTokenAmount = String(tokenAmount)
+        } else {
+          validTokenAmount = '0'
+        }
+
+        const balance = Number(web3.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
+        console.log('💎 Web3Modal OGUN balance:', balance)
+        setWeb3ModalOgunBalance(balance)
+      } catch (error) {
+        console.error('⚠️ Web3Modal OGUN balance fetch failed:', error)
+        setWeb3ModalOgunBalance(null)
+      }
+    }
+
+    fetchWeb3ModalOgunBalance()
+  }, [isWeb3ModalConnected, web3ModalAddress, web3ModalChainId])
 
   // Load persisted wallet choice on mount
   useEffect(() => {
@@ -192,6 +250,7 @@ function UnifiedWalletInner({
     case 'metamask':
       activeAddress = metamaskAccount || null
       activeBalance = metamaskBalance || null
+      activeOgunBalance = metamaskOgunBalance || null  // Added OGUN balance for MetaMask
       isConnected = !!metamaskAccount
       chainId = metamaskChainId || null
       web3 = metamaskWeb3 || null
@@ -199,6 +258,7 @@ function UnifiedWalletInner({
       break
     case 'web3modal':
       activeAddress = web3ModalAddress || null
+      activeOgunBalance = web3ModalOgunBalance  // Added OGUN balance for Web3Modal
       isConnected = isWeb3ModalConnected
       chainId = web3ModalChainId || null
       break
