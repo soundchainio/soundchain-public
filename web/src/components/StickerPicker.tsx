@@ -43,8 +43,29 @@ interface StickerPickerProps {
   theme?: 'dark' | 'light'
 }
 
-// Cache for loaded emotes
+// Cache for loaded emotes (cleared on page refresh)
 const emoteCache: { [key: string]: NormalizedEmote[] } = {}
+
+// Filter out seasonal/holiday emotes
+// Update this list seasonally: remove holiday keywords after the season, add new ones before
+const SEASONAL_KEYWORDS = [
+  // Christmas/Winter (remove after Jan 15)
+  'christmas', 'xmas', 'santa', 'holiday', 'reindeer', 'snowman', 'gift', 'present',
+  'mistletoe', 'ornament', 'sleigh', 'elf', 'grinch', 'rudolph', 'frosty', 'jingle',
+  'noel', 'yule', 'candycane', 'stocking', 'wreath', 'nutcracker', 'festive',
+  // Add more seasonal keywords as needed:
+  // Halloween: 'halloween', 'spooky', 'ghost', 'witch', 'pumpkin', 'skeleton'
+  // Easter: 'easter', 'bunny', 'egg'
+]
+
+const isSeasonalEmote = (name: string): boolean => {
+  const lowerName = name.toLowerCase()
+  return SEASONAL_KEYWORDS.some(keyword => lowerName.includes(keyword))
+}
+
+const filterSeasonalEmotes = (emotes: NormalizedEmote[]): NormalizedEmote[] => {
+  return emotes.filter(emote => !isSeasonalEmote(emote.name))
+}
 
 export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) => {
   const [activeCategory, setActiveCategory] = useState<StickerCategory>('trending')
@@ -446,7 +467,8 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
             break
         }
 
-        setEmotes(loadedEmotes)
+        // Filter out seasonal/holiday emotes
+        setEmotes(filterSeasonalEmotes(loadedEmotes))
       } catch (error) {
         console.error('Failed to load emotes:', error)
         setEmotes([])
