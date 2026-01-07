@@ -975,6 +975,28 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-first', // Speed: use cache, don't hit network unless stale
   })
 
+  // Fetch user's streaming rewards data for PiggyBank accordion modal
+  const { data: myStreamingRewardsData, loading: myStreamingRewardsLoading } = useQuery(PROFILE_STREAMING_REWARDS_QUERY, {
+    variables: { profileId: userData?.me?.profile?.id || '' },
+    skip: !userData?.me?.profile?.id,
+    fetchPolicy: 'cache-first',
+  })
+
+  // Calculate total earnings from all tracks
+  const myTotalOgunEarned = React.useMemo(() => {
+    if (!myStreamingRewardsData?.scidsByProfile) return 0
+    return myStreamingRewardsData.scidsByProfile.reduce((total: number, scid: any) => {
+      return total + (scid.ogunRewardsEarned || 0)
+    }, 0)
+  }, [myStreamingRewardsData])
+
+  const myTotalStreams = React.useMemo(() => {
+    if (!myStreamingRewardsData?.scidsByProfile) return 0
+    return myStreamingRewardsData.scidsByProfile.reduce((total: number, scid: any) => {
+      return total + (scid.streamCount || 0)
+    }, 0)
+  }, [myStreamingRewardsData])
+
   // GraphQL query for tracks by genre (Spotify-style horizontal scrolling)
   // Note: Simplified query - only request fields that exist in Track model
   const TRACKS_BY_GENRE_QUERY = gql`
@@ -5364,7 +5386,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     {/* Tab Content */}
                     <div className="min-h-[400px]">
                       {profileTab === 'feed' && (
-                        <Posts profileId={viewingProfile.id} />
+                        <Posts profileId={viewingProfile.id} disableVirtualization />
                       )}
                       {profileTab === 'music' && (
                         <TracksGrid profileId={viewingProfile.id} />
@@ -5442,50 +5464,121 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       {/* Modals */}
       <WalletConnectModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} onConnect={handleWalletConnect} />
 
-      {/* WIN-WIN Stats Modal */}
+      {/* WIN-WIN Accordion Modal - AS/400 Retro Terminal Style */}
       {showWinWinStatsModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/95" onClick={() => setShowWinWinStatsModal(false)} />
-          <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-none border-2 border-cyan-500 bg-black shadow-[0_0_30px_rgba(6,182,212,0.3)]">
-            {/* Terminal Header */}
-            <div className="bg-gradient-to-r from-cyan-900 to-cyan-800 px-4 py-2 flex items-center justify-between border-b border-cyan-500">
-              <div className="flex items-center gap-2">
-                <PiggyBank className="w-5 h-5 text-yellow-400" />
-                <span className="font-mono text-cyan-100 text-sm tracking-wider">WIN-WIN REWARDS v2.0</span>
+        <div className="fixed inset-0 z-[100] flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/90" onClick={() => setShowWinWinStatsModal(false)} />
+          <div
+            className="relative z-10 w-full max-w-lg overflow-hidden border-t-4 border-x-2 border-green-500 bg-black shadow-[0_-10px_60px_rgba(34,197,94,0.4),inset_0_0_60px_rgba(34,197,94,0.05)]"
+            style={{ animation: 'slideUp 0.3s ease-out' }}
+          >
+            {/* Scanline overlay effect */}
+            <div className="absolute inset-0 pointer-events-none opacity-10 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(34,197,94,0.1)_2px,rgba(34,197,94,0.1)_4px)]" />
+
+            {/* Terminal Header Bar */}
+            <div className="bg-green-900/80 border-b-2 border-green-500 px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="w-10 h-10 border-2 border-green-400 bg-black flex items-center justify-center">
+                    <PiggyBank className="w-6 h-6 text-green-400" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 border border-yellow-600 flex items-center justify-center animate-pulse">
+                    <Coins className="w-2 h-2 text-yellow-900" />
+                  </div>
+                </div>
+                <div className="font-mono">
+                  <div className="text-green-400 text-sm tracking-widest">WIN-WIN REWARDS</div>
+                  <div className="text-green-600 text-xs">SOUNDCHAIN TERMINAL v2.0</div>
+                </div>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setShowWinWinStatsModal(false)} className="w-6 h-6 p-0 text-cyan-300 hover:text-white">
-                <X className="w-4 h-4" />
-              </Button>
+              <button
+                onClick={() => setShowWinWinStatsModal(false)}
+                className="w-8 h-8 border border-green-500 bg-black hover:bg-green-900 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4 text-green-400" />
+              </button>
             </div>
-            {/* Content */}
-            <div className="p-4 font-mono text-sm">
-              <div className="text-center mb-4 text-cyan-400 border border-cyan-500/30 p-2">
-                <span className="text-yellow-400">STREAM TO EARN - EVERYONE WINS!</span>
+
+            {/* Your Earnings Section - AS/400 Style */}
+            {me && (
+              <div className="p-4 font-mono">
+                <div className="border border-green-500/50 bg-black/50 p-3">
+                  <div className="text-green-600 text-xs mb-2 border-b border-green-500/30 pb-1">
+                    ┌─ YOUR STREAMING EARNINGS ─────────────────┐
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="border border-green-500/30 p-2">
+                      <div className="text-green-600 text-[10px] tracking-wider">EARNED</div>
+                      <div className="text-2xl font-bold text-green-400 tabular-nums">
+                        {myStreamingRewardsLoading ? '---' : myTotalOgunEarned.toFixed(2)}
+                      </div>
+                      <div className="text-yellow-500 text-xs">OGUN</div>
+                    </div>
+                    <div className="border border-green-500/30 p-2">
+                      <div className="text-green-600 text-[10px] tracking-wider">STREAMS</div>
+                      <div className="text-2xl font-bold text-cyan-400 tabular-nums">
+                        {myStreamingRewardsLoading ? '---' : myTotalStreams.toLocaleString()}
+                      </div>
+                      <div className="text-green-600 text-xs">PLAYS</div>
+                    </div>
+                    <div className="border border-green-500/30 p-2">
+                      <div className="text-green-600 text-[10px] tracking-wider">TRACKS</div>
+                      <div className="text-2xl font-bold text-purple-400 tabular-nums">
+                        {myStreamingRewardsLoading ? '---' : (myStreamingRewardsData?.scidsByProfile?.length || 0)}
+                      </div>
+                      <div className="text-green-600 text-xs">ACTIVE</div>
+                    </div>
+                  </div>
+                  <div className="text-green-600 text-xs mt-2 border-t border-green-500/30 pt-1">
+                    └──────────────────────────────────────────┘
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2 text-cyan-300">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">NFT_RATE:</span>
-                  <span className="text-green-400">0.5 OGUN/stream</span>
+            )}
+
+            {/* Reward Rates - Terminal Style */}
+            <div className="px-4 pb-4 font-mono">
+              <div className="flex gap-2">
+                <div className="flex-1 border border-green-500/50 bg-green-950/30 p-2 text-center">
+                  <div className="text-green-600 text-[10px]">NFT_RATE</div>
+                  <div className="text-xl font-bold text-green-400">0.5</div>
+                  <div className="text-green-600 text-[10px]">OGUN/STREAM</div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">BASE_RATE:</span>
-                  <span className="text-yellow-400">0.05 OGUN/stream</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">CREATOR_SHARE:</span>
-                  <span className="text-purple-400">70%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">LISTENER_SHARE:</span>
-                  <span className="text-cyan-400">30%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">MIN_STREAM:</span>
-                  <span className="text-orange-400">30 seconds</span>
+                <div className="flex-1 border border-yellow-500/50 bg-yellow-950/30 p-2 text-center">
+                  <div className="text-yellow-600 text-[10px]">BASE_RATE</div>
+                  <div className="text-xl font-bold text-yellow-400">0.05</div>
+                  <div className="text-yellow-600 text-[10px]">OGUN/STREAM</div>
                 </div>
               </div>
-              <div className="mt-4 pt-3 border-t border-cyan-500/30 text-xs text-gray-500 text-center">
-                SOUNDCHAIN WIN-WIN | POLYGON MAINNET
+            </div>
+
+            {/* Action Buttons - Terminal Style */}
+            <div className="px-4 pb-4 font-mono">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                  className="flex-1 border-2 border-green-500 bg-green-950/50 hover:bg-green-900/50 text-green-400 font-bold py-3 flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Wallet className="w-4 h-4" />
+                  <span className="text-sm tracking-wider">CLAIM</span>
+                </button>
+                <button
+                  onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                  className="flex-1 border-2 border-purple-500 bg-purple-950/50 hover:bg-purple-900/50 text-purple-400 font-bold py-3 flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Zap className="w-4 h-4" />
+                  <span className="text-sm tracking-wider">STAKE</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer - Terminal Style */}
+            <div className="px-4 pb-3 font-mono text-center border-t border-green-500/30">
+              <div className="text-green-600 text-[10px] pt-2 tracking-wider">
+                CREATOR:70% │ LISTENER:30% │ MIN:30SEC │ POLYGON MAINNET
+              </div>
+              <div className="text-green-800 text-[9px] mt-1">
+                ▓▓▓▓▓▓▓▓▓▓ SOUNDCHAIN WIN-WIN PROTOCOL ▓▓▓▓▓▓▓▓▓▓
               </div>
             </div>
           </div>
