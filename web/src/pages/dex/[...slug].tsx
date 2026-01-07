@@ -718,6 +718,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       case 'staking': return 'staking'
       case 'marketplace': return 'marketplace'
       case 'feed': return 'feed'
+      case 'announcements': return 'announcements'
       case 'wallet': return 'wallet'
       case 'settings': return 'settings'
       case 'messages': return 'messages'
@@ -730,7 +731,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'staking' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'staking' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin' | 'announcements'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -800,7 +801,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   useEffect(() => {
     if (!router.isReady) return
     const newView = getInitialView()
-    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'staking', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users'].includes(newView)) {
+    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'staking', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users', 'announcements'].includes(newView)) {
       console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, routeId, isReady: router.isReady })
       setSelectedView(newView as any)
     }
@@ -2110,10 +2111,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => router.push('/dex/dashboard', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${selectedView === 'dashboard' ? 'bg-cyan-500/10' : ''}`}
+              onClick={() => router.push('/dex/announcements', undefined, { shallow: false })}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${selectedView === 'announcements' ? 'bg-cyan-500/10' : ''}`}
             >
-              <Home className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'dashboard' ? 'text-cyan-400' : 'text-gray-400'}`} />
+              <Rocket className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'announcements' ? 'text-cyan-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'announcements' ? 'cyan-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Announcements
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/dex/dashboard', undefined, { shallow: false })}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${selectedView === 'dashboard' ? 'bg-yellow-500/10' : ''}`}
+            >
+              <Home className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'dashboard' ? 'text-yellow-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'dashboard' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Dashboard
               </span>
@@ -2210,78 +2221,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </div>
           )}
 
-          {/* Dashboard View */}
+          {/* Dashboard View - Genres & Leaderboards Only */}
           {selectedView === 'dashboard' && (
           <>
-          {/* Filters */}
-          <Card className="retro-card mb-6">
-            <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row md:items-center gap-4">
-                {/* Scrollable tabs container on mobile */}
-                <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-2 md:pb-0 -mx-1 px-1 flex-shrink-0">
-                  {(['tracks', 'nft', 'token', 'bundle'] as const).map((type) => {
-                    const isActive = selectedPurchaseType === type
-                    const config = {
-                      tracks: { icon: Music, gradient: 'yellow-gradient-text', iconColor: 'text-yellow-400', bgColor: 'bg-yellow-500/10', hoverBg: 'hover:bg-yellow-500/10', label: 'Tracks' },
-                      nft: { icon: ImageIcon, gradient: 'purple-gradient-text', iconColor: 'text-purple-400', bgColor: 'bg-purple-500/10', hoverBg: 'hover:bg-purple-500/10', label: 'NFTs' },
-                      token: { icon: Coins, gradient: 'green-gradient-text', iconColor: 'text-green-400', bgColor: 'bg-green-500/10', hoverBg: 'hover:bg-green-500/10', label: 'Tokens' },
-                      bundle: { icon: Package, gradient: 'green-yellow-gradient-text', iconColor: 'text-cyan-400', bgColor: 'bg-cyan-500/10', hoverBg: 'hover:bg-cyan-500/10', label: 'Bundles' },
-                    }[type]
-                    const IconComponent = config.icon
-                    return (
-                      <Button
-                        key={type}
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedPurchaseType(type)}
-                        className={`flex-shrink-0 transition-all duration-300 ${config.hoverBg} ${isActive ? config.bgColor : ''}`}
-                      >
-                        <IconComponent className={`w-4 h-4 mr-2 transition-colors duration-300 ${isActive ? config.iconColor : 'text-gray-400'}`} />
-                        <span className={`text-xs font-black transition-all duration-300 ${isActive ? `${config.gradient} text-transparent bg-clip-text` : 'text-gray-400'}`}>
-                          {config.label}
-                        </span>
-                      </Button>
-                    )
-                  })}
-                </div>
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="text" placeholder="Search tracks, artists, users..." value={searchQuery} onChange={(e) => {
-                    setSearchQuery(e.target.value)
-                    // Also update explore search and switch to explore view for deep search
-                    if (e.target.value.length >= 2) {
-                      setExploreSearchQuery(e.target.value)
-                      setSelectedView('explore')
-                    }
-                  }}
-                    className="w-full bg-black/50 border border-cyan-500/30 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-400" />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className={`transition-all duration-300 hover:bg-cyan-500/10 ${viewMode === 'grid' ? 'bg-cyan-500/10' : ''}`}
-                  >
-                    <Grid className={`w-4 h-4 transition-colors duration-300 ${viewMode === 'grid' ? 'text-cyan-400' : 'text-gray-400'}`} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className={`transition-all duration-300 hover:bg-cyan-500/10 ${viewMode === 'list' ? 'bg-cyan-500/10' : ''}`}
-                  >
-                    <List className={`w-4 h-4 transition-colors duration-300 ${viewMode === 'list' ? 'text-cyan-400' : 'text-gray-400'}`} />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Content */}
-          {selectedPurchaseType === 'tracks' && (
             <div className="space-y-6">
-              {/* Tracks view mode toggle */}
+              {/* Browse / Leaderboard Toggle */}
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">
                   <Button
@@ -2438,79 +2382,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </>
               )}
             </div>
-          )}
-
-          {selectedPurchaseType === 'nft' && (
-            <>
-              {/* All tracks shown as NFT cards - Rarible inspired grid */}
-              {userTracks.length > 0 ? (
-                <>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="retro-title">NFT Collection ({tracksData?.groupedTracks?.pageInfo?.totalCount || userTracks.length})</h2>
-                    {tracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400">Loading...</Badge>}
-                  </div>
-                  <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
-                    {userTracks.map((track: any, index: number) => (
-                      <TrackNFTCard
-                        key={track.id}
-                        track={{
-                          ...track,
-                          listingItem: marketTracks.find((l: any) => l.track?.id === track.id)?.listingItem || track.listingItem
-                        }}
-                        onPlay={() => handlePlayTrack(track, index, userTracks)}
-                        isPlaying={isPlaying}
-                        isCurrentTrack={currentSong?.trackId === track.id}
-                        listView={viewMode === 'list'}
-                      />
-                    ))}
-                  </div>
-                  {/* Infinite scroll sentinel + Load More NFTs Button */}
-                  <div ref={nftScrollRef} className="h-4" />
-                  {(tracksData?.groupedTracks?.pageInfo?.hasNextPage || loadingMore) && (
-                    <div className="flex justify-center mt-6">
-                      {loadingMore ? (
-                        <div className="flex items-center gap-2 text-purple-400">
-                          <div className="animate-spin h-5 w-5 border-2 border-purple-400 border-t-transparent rounded-full" />
-                          <span>Loading more NFTs...</span>
-                        </div>
-                      ) : (
-                        <Button
-                          onClick={handleLoadMore}
-                          disabled={loadingMore}
-                          className="retro-button px-8"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Load More NFTs ({(tracksData?.groupedTracks?.pageInfo?.totalCount || 0) - userTracks.length} remaining)
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Card className="retro-card p-8 text-center">
-                  <ImageIcon className="w-12 h-12 mx-auto mb-4 text-purple-400 opacity-50" />
-                  <h3 className="retro-title mb-2">No NFTs Found</h3>
-                  <p className="text-gray-400 text-sm">{tracksLoading ? 'Loading NFTs from blockchain...' : 'NFT marketplace is empty. Mint your first music NFT!'}</p>
-                </Card>
-              )}
-            </>
-          )}
-
-          {selectedPurchaseType === 'token' && (
-            <Card className="retro-card p-8 text-center">
-              <Coins className="w-12 h-12 mx-auto mb-4 text-green-400 opacity-50" />
-              <h3 className="retro-title mb-2">Token Listings Coming Soon</h3>
-              <p className="text-gray-400 text-sm">OGUN and music token listings will be available here. Stay tuned!</p>
-            </Card>
-          )}
-
-          {selectedPurchaseType === 'bundle' && (
-            <Card className="retro-card p-8 text-center">
-              <Package className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
-              <h3 className="retro-title mb-2">Bundle Listings Coming Soon</h3>
-              <p className="text-gray-400 text-sm">NFT + Token bundles with exclusive perks will be available here. Stay tuned!</p>
-            </Card>
-          )}
           </>
           )}
 
@@ -2875,54 +2746,112 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
-              {/* Main Feed */}
+              {/* Main Feed - Posts only (announcements moved to dedicated tab) */}
               <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-                {/* Announcements from /v1/feed API - Mobile/Tablet only (desktop shows in sidebar) */}
-                {announcements.length > 0 && (
-                  <div className="mb-4 space-y-4 xl:hidden">
-                    {announcements.map((announcement: any) => (
-                      <Card key={announcement.id} className="retro-card overflow-hidden border-cyan-500/50 bg-gradient-to-br from-cyan-500/10 via-purple-500/5 to-pink-500/10 hover:border-cyan-400 transition-all duration-300 cursor-pointer group" onClick={() => setSelectedAnnouncement(announcement)}>
-                        {/* Hero Image - Full width, eye-catching */}
-                        {announcement.imageUrl && (
-                          <div className="relative w-full h-48 sm:h-56 overflow-hidden">
-                            <img
-                              src={announcement.imageUrl}
-                              alt={announcement.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              onError={(e) => { e.currentTarget.style.display = 'none' }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                            <div className="absolute bottom-3 left-4 right-4">
-                              <Badge className="bg-cyan-500/90 text-black text-xs font-bold mb-2">{announcement.type?.replace('_', ' ') || 'UPDATE'}</Badge>
-                              <h3 className="text-white font-bold text-lg sm:text-xl drop-shadow-lg">{announcement.title}</h3>
-                            </div>
-                          </div>
-                        )}
-                        <div className="p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center">
-                              <Rocket className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="font-bold text-cyan-400 text-sm">{announcement.companyName || 'SoundChain'}</span>
-                            <span className="text-gray-500 text-xs">{new Date(announcement.publishedAt || announcement.createdAt).toLocaleDateString()}</span>
-                          </div>
-                          {!announcement.imageUrl && (
-                            <h3 className="text-white font-bold text-lg mb-2">{announcement.title}</h3>
-                          )}
-                          <p className="text-gray-300 text-sm whitespace-pre-wrap line-clamp-3 mb-3">{announcement.content}</p>
-                          <button className="inline-flex items-center gap-2 text-cyan-400 text-sm font-semibold hover:text-cyan-300 transition-colors">
-                            Read full announcement <ExternalLink className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
                 <Posts />
               </div>
 
               {/* Right Sidebar - Desktop only */}
               <RightSidebar />
+            </div>
+          )}
+
+          {/* Announcements View - Mobile only (desktop sees announcements in sidebars) */}
+          {selectedView === 'announcements' && (
+            <div className="space-y-4 px-4 max-w-2xl mx-auto">
+              <div className="flex items-center gap-2 mb-6">
+                <Rocket className="w-6 h-6 text-cyan-400" />
+                <h2 className="text-xl font-bold text-white">Announcements</h2>
+              </div>
+
+              {announcementsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                  <span className="ml-3 text-gray-400">Loading announcements...</span>
+                </div>
+              ) : announcements.length > 0 ? (
+                <div className="space-y-4">
+                  {announcements.map((announcement: any) => (
+                    <Card key={announcement.id} className="retro-card overflow-hidden border border-cyan-500/30">
+                      {/* Hero Image */}
+                      {announcement.imageUrl && (
+                        <div className="relative w-full h-48 overflow-hidden">
+                          <img
+                            src={announcement.imageUrl}
+                            alt={announcement.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                          <div className="absolute bottom-3 left-4 right-4">
+                            <span className="inline-block px-2 py-1 bg-cyan-500 text-black text-xs font-bold rounded mb-2">
+                              {announcement.type?.replace('_', ' ') || 'UPDATE'}
+                            </span>
+                            <h3 className="text-white font-bold text-lg drop-shadow-lg">{announcement.title}</h3>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Content */}
+                      <CardContent className="p-4">
+                        {!announcement.imageUrl && (
+                          <>
+                            <span className="inline-block px-2 py-1 bg-cyan-500 text-black text-xs font-bold rounded mb-2">
+                              {announcement.type?.replace('_', ' ') || 'UPDATE'}
+                            </span>
+                            <h3 className="text-white font-bold text-lg mb-2">{announcement.title}</h3>
+                          </>
+                        )}
+
+                        {/* Author & Date */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center">
+                            <Rocket className="w-3 h-3 text-white" />
+                          </div>
+                          <span className="text-cyan-400 text-sm font-medium">{announcement.companyName || 'SoundChain'}</span>
+                          <span className="text-gray-600">•</span>
+                          <span className="text-gray-500 text-sm">
+                            {new Date(announcement.publishedAt || announcement.createdAt || '').toLocaleDateString()}
+                          </span>
+                        </div>
+
+                        {/* Full Content */}
+                        <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap mb-4">
+                          {announcement.content}
+                        </p>
+
+                        {/* Tags */}
+                        {announcement.tags && announcement.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {announcement.tags.map((tag: string) => (
+                              <span key={tag} className="px-2 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded text-cyan-400 text-xs">
+                                #{tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        {announcement.link && (
+                          <a
+                            href={announcement.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500 text-black font-semibold rounded-lg hover:bg-cyan-400 transition-colors"
+                          >
+                            Visit Link <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card className="retro-card p-8 text-center">
+                  <Rocket className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
+                  <h3 className="text-white font-bold mb-2">No Announcements</h3>
+                  <p className="text-gray-400 text-sm">Check back later for updates from SoundChain!</p>
+                </Card>
+              )}
             </div>
           )}
 
