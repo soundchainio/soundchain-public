@@ -23,7 +23,13 @@ import {
   Music,
   Play,
   Pause,
-  ExternalLink
+  ExternalLink,
+  PiggyBank,
+  ChevronDown,
+  ChevronUp,
+  Headphones,
+  Upload,
+  Clock
 } from 'lucide-react'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -638,6 +644,307 @@ function NFTCollectionModal({
   )
 }
 
+// WIN-WIN Stats Modal - AS/400 IBM Retro Terminal Style
+function WinWinStatsModal({
+  isOpen,
+  onClose,
+  userName,
+  walletAddress,
+  isOwnProfile = false
+}: {
+  isOpen: boolean
+  onClose: () => void
+  userName: string
+  walletAddress: string
+  isOwnProfile?: boolean
+}) {
+  const [expandedSection, setExpandedSection] = useState<string | null>('earnings')
+  const [blinkCursor, setBlinkCursor] = useState(true)
+
+  // Blinking cursor effect
+  React.useEffect(() => {
+    const interval = setInterval(() => setBlinkCursor(prev => !prev), 500)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (!isOpen) return null
+
+  // Mock WIN-WIN data (in production, fetch from API)
+  const winWinData = {
+    // Creator stats (if viewing own profile or has earnings data)
+    creator: {
+      totalEarned: '1,247.83',
+      todayEarned: '12.45',
+      totalStreams: '24,891',
+      todayStreams: '342',
+      topTrack: 'Midnight Dreams',
+      topTrackEarnings: '458.32',
+      avgPerStream: '0.05',
+      nftBonus: '10x',
+      verifiedBonus: '1.5x'
+    },
+    // Listener stats
+    listener: {
+      totalEarned: '156.72',
+      todayEarned: '3.21',
+      dailyLimit: '50.00',
+      dailyRemaining: '46.79',
+      tracksStreamed: '1,892',
+      todayTracksStreamed: '47',
+      favoriteArtist: 'JSan619',
+      minutesListened: '4,521'
+    },
+    // System info
+    system: {
+      contractAddress: '0xcf94...F28546',
+      chain: 'Polygon Mainnet',
+      treasuryFunded: '5,000,000',
+      totalDistributed: '847,291.45',
+      lastPayout: '2026-01-07 18:42:31'
+    }
+  }
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section)
+  }
+
+  const formatWallet = (addr: string) => {
+    if (!addr || addr.length < 10) return '0x0000...0000'
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/95" onClick={onClose} />
+
+      {/* AS/400 Terminal Window */}
+      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-none border-2 border-cyan-500 bg-black shadow-[0_0_30px_rgba(6,182,212,0.3),inset_0_0_60px_rgba(0,0,0,0.8)]">
+        {/* Terminal Header - IBM AS/400 Style */}
+        <div className="bg-gradient-to-r from-cyan-900 to-cyan-800 px-4 py-2 flex items-center justify-between border-b border-cyan-500">
+          <div className="flex items-center gap-2">
+            <PiggyBank className="w-5 h-5 text-yellow-400" />
+            <span className="font-mono text-cyan-100 text-sm tracking-wider">
+              WIN-WIN REWARDS SYSTEM v2.0
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="w-6 h-6 p-0 text-cyan-300 hover:text-white hover:bg-cyan-700/50"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* System Status Bar */}
+        <div className="bg-cyan-950/50 px-4 py-1 border-b border-cyan-500/50 flex items-center justify-between font-mono text-xs">
+          <span className="text-cyan-400">SOUNDCHAIN://OGUN/REWARDS</span>
+          <span className="text-green-400 flex items-center gap-1">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            ONLINE
+          </span>
+        </div>
+
+        {/* Terminal Content */}
+        <div className="p-4 font-mono text-sm max-h-[70vh] overflow-y-auto">
+          {/* Welcome Banner */}
+          <div className="text-center mb-4 text-cyan-500 border border-cyan-500/30 p-2">
+            <pre className="text-[10px] leading-tight text-cyan-400">{`
+╔═══════════════════════════════════════════╗
+║   ██╗    ██╗██╗███╗   ██╗                 ║
+║   ██║    ██║██║████╗  ██║                 ║
+║   ██║ █╗ ██║██║██╔██╗ ██║  ━━━━━━━━━━━    ║
+║   ██║███╗██║██║██║╚██╗██║  WIN-WIN        ║
+║   ╚███╔███╔╝██║██║ ╚████║                 ║
+║    ╚══╝╚══╝ ╚═╝╚═╝  ╚═══╝  REWARDS       ║
+╚═══════════════════════════════════════════╝`}</pre>
+          </div>
+
+          {/* User Info Line */}
+          <div className="mb-4 text-cyan-300">
+            <span className="text-green-400">&gt;</span> USER: <span className="text-yellow-400">{userName}</span>
+            <br />
+            <span className="text-green-400">&gt;</span> WALLET: <span className="text-purple-400">{formatWallet(walletAddress)}</span>
+            {blinkCursor && <span className="text-cyan-400">█</span>}
+          </div>
+
+          {/* Creator Earnings Section */}
+          <div className="mb-3">
+            <button
+              onClick={() => toggleSection('earnings')}
+              className="w-full flex items-center justify-between text-left p-2 bg-cyan-950/30 border border-cyan-500/30 hover:border-cyan-400/50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Upload className="w-4 h-4 text-purple-400" />
+                <span className="text-cyan-100">CREATOR EARNINGS</span>
+              </span>
+              {expandedSection === 'earnings' ? (
+                <ChevronUp className="w-4 h-4 text-cyan-400" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-cyan-400" />
+              )}
+            </button>
+            {expandedSection === 'earnings' && (
+              <div className="border border-t-0 border-cyan-500/30 p-3 bg-black/50 space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TOTAL_EARNED:</span>
+                  <span className="text-green-400">{winWinData.creator.totalEarned} OGUN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TODAY_EARNED:</span>
+                  <span className="text-yellow-400">+{winWinData.creator.todayEarned} OGUN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TOTAL_STREAMS:</span>
+                  <span className="text-cyan-400">{winWinData.creator.totalStreams}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TOP_TRACK:</span>
+                  <span className="text-purple-400">{winWinData.creator.topTrack}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">NFT_MULTIPLIER:</span>
+                  <span className="text-orange-400">{winWinData.creator.nftBonus}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">VERIFIED_BONUS:</span>
+                  <span className="text-pink-400">{winWinData.creator.verifiedBonus}</span>
+                </div>
+                <div className="mt-2 pt-2 border-t border-cyan-500/20 text-xs text-gray-500">
+                  [ CREATORS EARN 70% OF STREAM REWARDS ]
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Listener Earnings Section */}
+          <div className="mb-3">
+            <button
+              onClick={() => toggleSection('listening')}
+              className="w-full flex items-center justify-between text-left p-2 bg-cyan-950/30 border border-cyan-500/30 hover:border-cyan-400/50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Headphones className="w-4 h-4 text-cyan-400" />
+                <span className="text-cyan-100">LISTENER EARNINGS</span>
+              </span>
+              {expandedSection === 'listening' ? (
+                <ChevronUp className="w-4 h-4 text-cyan-400" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-cyan-400" />
+              )}
+            </button>
+            {expandedSection === 'listening' && (
+              <div className="border border-t-0 border-cyan-500/30 p-3 bg-black/50 space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TOTAL_EARNED:</span>
+                  <span className="text-green-400">{winWinData.listener.totalEarned} OGUN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TODAY_EARNED:</span>
+                  <span className="text-yellow-400">+{winWinData.listener.todayEarned} OGUN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">DAILY_LIMIT:</span>
+                  <span className="text-orange-400">{winWinData.listener.dailyLimit} OGUN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">REMAINING_TODAY:</span>
+                  <span className="text-cyan-400">{winWinData.listener.dailyRemaining} OGUN</span>
+                </div>
+                {/* Progress bar for daily limit */}
+                <div className="mt-2">
+                  <div className="h-2 bg-gray-800 border border-cyan-500/30">
+                    <div
+                      className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
+                      style={{ width: `${(parseFloat(winWinData.listener.todayEarned) / parseFloat(winWinData.listener.dailyLimit)) * 100}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TRACKS_STREAMED:</span>
+                  <span className="text-cyan-400">{winWinData.listener.tracksStreamed}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">MINUTES_LISTENED:</span>
+                  <span className="text-purple-400">{winWinData.listener.minutesListened}</span>
+                </div>
+                <div className="mt-2 pt-2 border-t border-cyan-500/20 text-xs text-gray-500">
+                  [ LISTENERS EARN 30% OF STREAM REWARDS ]
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* System Info Section */}
+          <div className="mb-3">
+            <button
+              onClick={() => toggleSection('system')}
+              className="w-full flex items-center justify-between text-left p-2 bg-cyan-950/30 border border-cyan-500/30 hover:border-cyan-400/50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-yellow-400" />
+                <span className="text-cyan-100">SYSTEM STATUS</span>
+              </span>
+              {expandedSection === 'system' ? (
+                <ChevronUp className="w-4 h-4 text-cyan-400" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-cyan-400" />
+              )}
+            </button>
+            {expandedSection === 'system' && (
+              <div className="border border-t-0 border-cyan-500/30 p-3 bg-black/50 space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">CONTRACT:</span>
+                  <span className="text-purple-400 text-xs">{winWinData.system.contractAddress}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">CHAIN:</span>
+                  <span className="text-cyan-400">{winWinData.system.chain}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TREASURY_FUNDED:</span>
+                  <span className="text-green-400">{winWinData.system.treasuryFunded} OGUN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">TOTAL_DISTRIBUTED:</span>
+                  <span className="text-yellow-400">{winWinData.system.totalDistributed} OGUN</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">LAST_PAYOUT:</span>
+                  <span className="text-gray-300 text-xs">{winWinData.system.lastPayout}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Command Line Footer */}
+          <div className="mt-4 pt-3 border-t border-cyan-500/30">
+            <div className="text-cyan-400 text-xs">
+              <span className="text-green-400">&gt;</span> STREAM_TO_EARN | EVERYONE_WINS
+              {blinkCursor && <span className="ml-1">█</span>}
+            </div>
+            <div className="text-gray-500 text-[10px] mt-1">
+              NFT tracks earn 10x base rate • Verified artists get 1.5x bonus
+            </div>
+          </div>
+        </div>
+
+        {/* Terminal Footer */}
+        <div className="bg-gradient-to-r from-cyan-900 to-purple-900 px-4 py-2 border-t border-cyan-500 flex items-center justify-between">
+          <span className="font-mono text-[10px] text-cyan-300">
+            SOUNDCHAIN WIN-WIN v2.0.0 | POLYGON
+          </span>
+          <div className="flex items-center gap-2">
+            <Coins className="w-4 h-4 text-yellow-400" />
+            <span className="font-mono text-xs text-yellow-400">5M OGUN TREASURY</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function BlurAggregatorPanel() {
   const [activeTab, setActiveTab] = useState("overview")
 
@@ -802,6 +1109,7 @@ export function ProfileHeader({
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showFollowingModal, setShowFollowingModal] = useState(false)
   const [showNFTModal, setShowNFTModal] = useState(false)
+  const [showWinWinModal, setShowWinWinModal] = useState(false)
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | undefined>(undefined)
 
   // Handle inline track play
@@ -990,6 +1298,16 @@ export function ProfileHeader({
                   >
                     <Copy className="w-3 h-3" />
                   </Button>
+                  {/* WIN-WIN Piggy Bank - Shows earnings stats */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowWinWinModal(true)}
+                    className="hover:bg-pink-500/20 p-1 group"
+                    title="WIN-WIN Rewards Stats"
+                  >
+                    <PiggyBank className="w-4 h-4 text-pink-400 group-hover:text-pink-300 group-hover:scale-110 transition-all" />
+                  </Button>
                   {/* Tip Bucket quick access for non-own profiles */}
                   {!isOwnProfile && (
                     <Button
@@ -1078,6 +1396,15 @@ export function ProfileHeader({
         onPlayTrack={handlePlayTrack}
         currentlyPlayingId={currentlyPlayingId}
         chain="Polygon"
+      />
+
+      {/* WIN-WIN Stats Modal - AS/400 Retro Terminal Quick Glance */}
+      <WinWinStatsModal
+        isOpen={showWinWinModal}
+        onClose={() => setShowWinWinModal(false)}
+        userName={userData.name}
+        walletAddress={userData.walletAddress}
+        isOwnProfile={isOwnProfile}
       />
     </div>
   )
