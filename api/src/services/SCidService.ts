@@ -12,7 +12,7 @@ import { getStreamingRewardsContract } from '../utils/StreamingRewardsContract';
 import { Context } from '../types/Context';
 import { Service } from './Service';
 
-// OGUN rewards configuration - Tiered by mint type
+// OGUN rewards configuration - WIN-WIN model (creators AND listeners earn!)
 const OGUN_REWARDS_CONFIG = {
   // NFT mints (on-chain with tokenId) get premium rate
   nftRewardPerStream: 0.5,          // 0.5 OGUN per stream for NFT mints
@@ -21,6 +21,11 @@ const OGUN_REWARDS_CONFIG = {
   bonusMultiplier: 1.5,             // Bonus for verified artists
   maxDailyRewards: 100,             // Max 100 OGUN per track per day (anti-bot farming)
   minStreamDuration: 30,            // Minimum 30 seconds to count as valid stream
+
+  // WIN-WIN SPLITS - Everyone earns!
+  creatorSplit: 0.7,                // 70% to creator/collaborators
+  listenerSplit: 0.3,               // 30% to listener
+  listenerMaxDaily: 50,             // Listeners can earn max 50 OGUN per day
 };
 
 export interface RegisterSCidInput {
@@ -38,6 +43,32 @@ export interface LogStreamInput {
   listenerWallet?: string;
   duration: number; // Stream duration in seconds
   timestamp?: Date;
+}
+
+// WIN-WIN Result - both parties earn!
+export interface WinWinRewardResult {
+  success: boolean;
+  totalStreams: number;
+  // Creator rewards
+  creatorReward: number;
+  creatorWallet?: string;
+  creatorProfileId?: string;
+  // Listener rewards (WIN-WIN!)
+  listenerReward: number;
+  listenerWallet?: string;
+  listenerProfileId?: string;
+  // Collaborator rewards (from NFT metadata)
+  collaboratorRewards?: Array<{
+    wallet: string;
+    amount: number;
+    role?: string;
+  }>;
+  // Daily limits
+  creatorDailyLimitReached?: boolean;
+  listenerDailyLimitReached?: boolean;
+  // Track info for notifications
+  trackTitle?: string;
+  trackId?: string;
 }
 
 export interface ClaimStreamingRewardsInput {
@@ -275,24 +306,29 @@ export class SCidService extends Service {
   }
 
   /**
-   * Log a stream and calculate OGUN rewards
+   * Log a stream and calculate OGUN rewards - WIN-WIN MODEL!
+   *
+   * Both CREATORS and LISTENERS earn OGUN tokens!
    *
    * Tiered rewards:
-   * - NFT mints (with tokenId): 0.5 OGUN per stream
-   * - Non-NFT mints: 0.05 OGUN per stream
-   * - Max 100 OGUN per track per day (anti-bot farming)
+   * - NFT mints (with tokenId): 0.5 OGUN per stream (split 70/30)
+   * - Non-NFT mints: 0.05 OGUN per stream (split 70/30)
+   * - Creator: 70% of reward
+   * - Listener: 30% of reward
+   * - Max 100 OGUN per track per day (creator anti-bot)
+   * - Max 50 OGUN per listener per day (listener anti-bot)
    */
-  async logStream(input: LogStreamInput): Promise<{
-    success: boolean;
-    ogunReward: number;
-    totalStreams: number;
-    dailyLimitReached?: boolean;
-  }> {
-    const { scid, duration, timestamp = new Date() } = input;
+  async logStream(input: LogStreamInput): Promise<WinWinRewardResult> {
+    const { scid, listenerProfileId, listenerWallet, duration, timestamp = new Date() } = input;
 
     // Validate minimum stream duration (30 seconds)
     if (duration < OGUN_REWARDS_CONFIG.minStreamDuration) {
-      return { success: false, ogunReward: 0, totalStreams: 0 };
+      return {
+        success: false,
+        totalStreams: 0,
+        creatorReward: 0,
+        listenerReward: 0,
+      };
     }
 
     // Find SCid
@@ -311,55 +347,154 @@ export class SCidService extends Service {
       scidRecord.lastDailyReset = todayStart;
     }
 
-    const todayRewards = scidRecord.dailyOgunEarned || 0;
+    const todayCreatorRewards = scidRecord.dailyOgunEarned || 0;
+    let creatorDailyLimitReached = todayCreatorRewards >= OGUN_REWARDS_CONFIG.maxDailyRewards;
 
-    if (todayRewards >= OGUN_REWARDS_CONFIG.maxDailyRewards) {
-      // Still count the stream but no reward (anti-bot)
-      scidRecord.streamCount += 1;
-      scidRecord.lastStreamAt = timestamp;
-      await scidRecord.save();
-      return {
-        success: true,
-        ogunReward: 0,
-        totalStreams: scidRecord.streamCount,
-        dailyLimitReached: true
-      };
-    }
-
-    // Get the track to check if it's an NFT mint
+    // Get the track to check if it's an NFT mint and get metadata
     const track = await this.context.trackService.getTrack(scidRecord.trackId);
     const isNFTMint = track?.nftData?.tokenId != null;
+    const trackTitle = track?.title || 'Unknown Track';
 
-    // Calculate OGUN reward based on mint type
-    let ogunReward = isNFTMint
+    // Calculate base OGUN reward based on mint type
+    let baseReward = isNFTMint
       ? OGUN_REWARDS_CONFIG.nftRewardPerStream    // 0.5 OGUN for NFT mints
       : OGUN_REWARDS_CONFIG.baseRewardPerStream;  // 0.05 OGUN for non-NFT mints
 
     // Check if artist is verified (bonus multiplier - 1.5x)
-    const profile = await this.context.profileService.getProfile(scidRecord.profileId);
-    if (profile?.verified) {
-      ogunReward *= OGUN_REWARDS_CONFIG.bonusMultiplier;
+    const creatorProfile = await this.context.profileService.getProfile(scidRecord.profileId);
+    if (creatorProfile?.verified) {
+      baseReward *= OGUN_REWARDS_CONFIG.bonusMultiplier;
     }
 
     // Apply duration bonus (longer streams = more rewards, max 2x for 3+ min)
     const durationBonus = Math.min(duration / 180, 2);
-    ogunReward *= durationBonus;
+    baseReward *= durationBonus;
 
-    // Cap to not exceed daily limit
-    const remainingDaily = OGUN_REWARDS_CONFIG.maxDailyRewards - todayRewards;
-    ogunReward = Math.min(ogunReward, remainingDaily);
+    // === WIN-WIN SPLIT ===
+    // Creator gets 70%, Listener gets 30%
+    let creatorReward = baseReward * OGUN_REWARDS_CONFIG.creatorSplit;
+    let listenerReward = baseReward * OGUN_REWARDS_CONFIG.listenerSplit;
 
-    // Update SCid record
+    // Cap creator reward to daily limit
+    if (!creatorDailyLimitReached) {
+      const remainingCreatorDaily = OGUN_REWARDS_CONFIG.maxDailyRewards - todayCreatorRewards;
+      creatorReward = Math.min(creatorReward, remainingCreatorDaily);
+    } else {
+      creatorReward = 0;
+    }
+
+    // Check listener daily limit (if listener has a profile)
+    let listenerDailyLimitReached = false;
+    if (listenerProfileId) {
+      // Get listener's daily earnings from their own listenerRewardsEarned counter
+      const listenerProfile = await this.context.profileService.getProfile(listenerProfileId);
+      const listenerDailyEarned = (listenerProfile as any)?.dailyListenerOgunEarned || 0;
+
+      // Reset listener daily if new day
+      const listenerLastReset = (listenerProfile as any)?.listenerDailyReset;
+      if (!listenerLastReset || new Date(listenerLastReset) < todayStart) {
+        // Reset via update - will be done below
+      } else if (listenerDailyEarned >= OGUN_REWARDS_CONFIG.listenerMaxDaily) {
+        listenerDailyLimitReached = true;
+        listenerReward = 0;
+      } else {
+        const remainingListenerDaily = OGUN_REWARDS_CONFIG.listenerMaxDaily - listenerDailyEarned;
+        listenerReward = Math.min(listenerReward, remainingListenerDaily);
+      }
+    } else if (!listenerWallet) {
+      // Anonymous listener with no wallet - can't earn
+      listenerReward = 0;
+    }
+
+    // Update SCid record with creator rewards
     scidRecord.streamCount += 1;
-    scidRecord.ogunRewardsEarned += ogunReward;
+    if (creatorReward > 0) {
+      scidRecord.ogunRewardsEarned += creatorReward;
+      scidRecord.dailyOgunEarned = todayCreatorRewards + creatorReward;
+    }
     scidRecord.lastStreamAt = timestamp;
-    scidRecord.dailyOgunEarned = todayRewards + ogunReward;
     await scidRecord.save();
+
+    // Get creator wallet
+    const creatorWallet = scidRecord.walletAddress || creatorProfile?.magicWalletAddress;
+
+    // Create notification for creator if they earned OGUN
+    if (creatorReward > 0 && scidRecord.profileId) {
+      try {
+        await this.context.notificationService.createOgunEarnedNotification({
+          profileId: scidRecord.profileId,
+          amount: creatorReward,
+          trackTitle,
+          trackId: scidRecord.trackId,
+          isCreator: true,
+          listenerName: listenerProfileId
+            ? (await this.context.profileService.getProfile(listenerProfileId))?.displayName
+            : 'Anonymous',
+        });
+      } catch (err) {
+        console.warn('[SCidService] Failed to create creator notification:', err);
+      }
+    }
+
+    // Update listener daily earnings if they have a profile
+    if (listenerReward > 0 && listenerProfileId) {
+      try {
+        // Update listener's daily reward counter
+        await this.context.profileService.updateListenerDailyRewards(
+          listenerProfileId,
+          listenerReward
+        );
+      } catch (err) {
+        console.warn('[SCidService] Failed to update listener daily rewards:', err);
+      }
+    }
+
+    // Get collaborator wallets from NFT metadata (if any)
+    let collaboratorRewards: WinWinRewardResult['collaboratorRewards'] = [];
+    if (isNFTMint && track?.nftData) {
+      // TODO: Parse NFT metadata for collaborator wallets
+      // For now, all creator rewards go to the track owner
+      // In future: read royaltyReceivers from contract or metadata
+    }
+
+    console.log(`[SCidService] WIN-WIN Stream: Creator=${creatorReward.toFixed(4)} OGUN, Listener=${listenerReward.toFixed(4)} OGUN, Track="${trackTitle}"`);
 
     return {
       success: true,
-      ogunReward,
       totalStreams: scidRecord.streamCount,
+      // Creator info
+      creatorReward,
+      creatorWallet,
+      creatorProfileId: scidRecord.profileId,
+      creatorDailyLimitReached,
+      // Listener info (WIN-WIN!)
+      listenerReward,
+      listenerWallet,
+      listenerProfileId,
+      listenerDailyLimitReached,
+      // Collaborators
+      collaboratorRewards,
+      // Track info
+      trackTitle,
+      trackId: scidRecord.trackId,
+    };
+  }
+
+  /**
+   * Legacy logStream return type for backward compatibility
+   */
+  async logStreamLegacy(input: LogStreamInput): Promise<{
+    success: boolean;
+    ogunReward: number;
+    totalStreams: number;
+    dailyLimitReached?: boolean;
+  }> {
+    const result = await this.logStream(input);
+    return {
+      success: result.success,
+      ogunReward: result.creatorReward + result.listenerReward,
+      totalStreams: result.totalStreams,
+      dailyLimitReached: result.creatorDailyLimitReached,
     };
   }
 

@@ -15,6 +15,10 @@ enum NotificationType {
   Reaction = 'Reaction',
   VerificationRequestUpdate = 'VerificationRequestUpdate',
   WonAuction = 'WonAuction',
+  // WIN-WIN Streaming Rewards
+  OgunEarnedCreator = 'OgunEarnedCreator',     // Creator earned OGUN from stream
+  OgunEarnedListener = 'OgunEarnedListener',   // Listener earned OGUN from streaming
+  OgunEarnedCollaborator = 'OgunEarnedCollaborator', // Collaborator earned OGUN split
 }
 
 registerEnumType(NotificationType, {

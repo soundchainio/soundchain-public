@@ -1,26 +1,30 @@
 /**
- * useLogStream Hook
+ * useLogStream Hook - WIN-WIN MODEL!
  *
- * Logs track streams to earn OGUN rewards.
+ * Logs track streams to earn OGUN rewards for BOTH creators AND listeners!
  *
- * Tiered rewards:
- * - NFT mints (with tokenId): 0.5 OGUN per stream
- * - Non-NFT mints: 0.05 OGUN per stream
- * - Max 100 OGUN per track per day (anti-bot farming)
+ * WIN-WIN Rewards:
+ * - NFT mints: 0.5 OGUN per stream (70% creator, 30% listener)
+ * - Non-NFT mints: 0.05 OGUN per stream (70% creator, 30% listener)
+ * - Creator max: 100 OGUN per track per day
+ * - Listener max: 50 OGUN per day total
  * - Minimum 30 seconds playback to qualify as a stream
  */
 
 import { gql, useMutation, useLazyQuery } from '@apollo/client'
 import { useCallback, useRef, useState } from 'react'
 
-// GraphQL mutation to log a stream
+// GraphQL mutation to log a stream - WIN-WIN returns both rewards!
 const LOG_STREAM_MUTATION = gql`
   mutation LogStream($input: LogStreamInput!) {
     logStream(input: $input) {
       success
-      ogunReward
       totalStreams
-      dailyLimitReached
+      creatorReward
+      listenerReward
+      creatorDailyLimitReached
+      listenerDailyLimitReached
+      trackTitle
     }
   }
 `
@@ -42,12 +46,23 @@ interface LogStreamInput {
   scid: string
   duration: number
   listenerWallet?: string
+  listenerProfileId?: string
 }
 
+// WIN-WIN Result - both creator and listener earn!
 interface LogStreamResult {
   success: boolean
-  ogunReward: number
   totalStreams: number
+  // Creator rewards
+  creatorReward: number
+  creatorDailyLimitReached?: boolean
+  // Listener rewards (WIN-WIN!)
+  listenerReward: number
+  listenerDailyLimitReached?: boolean
+  // Track info
+  trackTitle?: string
+  // Legacy compatibility
+  ogunReward?: number
   dailyLimitReached?: boolean
 }
 
@@ -61,18 +76,20 @@ interface SCidData {
 
 interface UseLogStreamOptions {
   minDuration?: number // Minimum seconds to qualify as stream (default 30)
-  onReward?: (reward: number) => void // Callback when OGUN is earned
-  onDailyLimitReached?: () => void // Callback when daily limit hit
+  onReward?: (reward: number, trackTitle?: string) => void // Callback when listener earns OGUN (WIN!)
+  onCreatorReward?: (reward: number, trackTitle?: string) => void // Callback when creator earns (for their own tracks)
+  onDailyLimitReached?: () => void // Callback when listener daily limit hit
 }
 
 // Cache SCid lookups to avoid repeated queries
 const scidCache = new Map<string, string>()
 
 export function useLogStream(options: UseLogStreamOptions = {}) {
-  const { minDuration = 30, onReward, onDailyLimitReached } = options
+  const { minDuration = 30, onReward, onCreatorReward, onDailyLimitReached } = options
 
   const [isLogging, setIsLogging] = useState(false)
   const [lastReward, setLastReward] = useState<number | null>(null)
+  const [lastCreatorReward, setLastCreatorReward] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Track which tracks we've already logged this session (prevent duplicates)
@@ -175,18 +192,34 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
         // Mark as logged
         loggedTracks.current.add(sessionKey)
 
-        // Update last reward
-        setLastReward(result.ogunReward)
+        // WIN-WIN: Update rewards for BOTH listener and creator
+        const listenerReward = result.listenerReward || 0
+        const creatorReward = result.creatorReward || 0
+        const totalReward = listenerReward + creatorReward
 
-        // Callbacks
-        if (result.ogunReward > 0 && onReward) {
-          onReward(result.ogunReward)
+        setLastReward(listenerReward)
+        setLastCreatorReward(creatorReward)
+
+        // Legacy compatibility
+        result.ogunReward = totalReward
+        result.dailyLimitReached = result.listenerDailyLimitReached
+
+        // WIN-WIN Callbacks - Listener earned OGUN!
+        if (listenerReward > 0 && onReward) {
+          onReward(listenerReward, result.trackTitle)
         }
-        if (result.dailyLimitReached && onDailyLimitReached) {
+
+        // Creator earned OGUN (for tracking if user is also the creator)
+        if (creatorReward > 0 && onCreatorReward) {
+          onCreatorReward(creatorReward, result.trackTitle)
+        }
+
+        // Daily limit reached for listener
+        if (result.listenerDailyLimitReached && onDailyLimitReached) {
           onDailyLimitReached()
         }
 
-        console.log(`[useLogStream] Logged stream: ${result.ogunReward} OGUN earned (total: ${result.totalStreams} streams)`)
+        console.log(`[useLogStream] WIN-WIN Stream: Listener=${listenerReward.toFixed(4)} OGUN, Creator=${creatorReward.toFixed(4)} OGUN, Track="${result.trackTitle}"`)
       }
 
       return result
@@ -198,7 +231,7 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
     } finally {
       setIsLogging(false)
     }
-  }, [minDuration, getScidForTrack, logStreamMutation, onReward, onDailyLimitReached])
+  }, [minDuration, getScidForTrack, logStreamMutation, onReward, onCreatorReward, onDailyLimitReached])
 
   /**
    * Log stream when track ends (convenience method)
@@ -228,7 +261,8 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
     stopTracking,
     resetSession,
     isLogging,
-    lastReward,
+    lastReward,           // Listener's reward (WIN-WIN!)
+    lastCreatorReward,    // Creator's reward
     error,
     getScidForTrack,
   }

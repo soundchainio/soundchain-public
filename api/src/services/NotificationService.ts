@@ -454,4 +454,89 @@ export class NotificationService extends ModelService<typeof Notification> {
     await notification.save();
     await this.incrementNotificationCount(profileId);
   }
+
+  // ============================================
+  // WIN-WIN OGUN REWARD NOTIFICATIONS
+  // ============================================
+
+  /**
+   * Create notification when user earns OGUN from streaming rewards
+   *
+   * WIN-WIN model: Both creators and listeners get notified!
+   */
+  async createOgunEarnedNotification(params: {
+    profileId: string;
+    amount: number;
+    trackTitle: string;
+    trackId: string;
+    isCreator: boolean;
+    listenerName?: string;
+    creatorName?: string;
+  }): Promise<void> {
+    const { profileId, amount, trackTitle, trackId, isCreator, listenerName, creatorName } = params;
+
+    // Skip tiny amounts to reduce notification spam
+    if (amount < 0.001) return;
+
+    const type = isCreator
+      ? NotificationType.OgunEarnedCreator
+      : NotificationType.OgunEarnedListener;
+
+    const metadata = {
+      amount: amount.toFixed(4),
+      trackTitle,
+      trackId,
+      isCreator,
+      listenerName: listenerName || 'Someone',
+      creatorName: creatorName || 'Unknown Artist',
+      timestamp: new Date().toISOString(),
+    };
+
+    const notification = new NotificationModel({
+      type,
+      profileId,
+      metadata,
+    });
+
+    await notification.save();
+    await this.incrementNotificationCount(profileId);
+
+    console.log(`[NotificationService] OGUN earned notification: ${isCreator ? 'Creator' : 'Listener'} ${profileId} earned ${amount.toFixed(4)} OGUN`);
+  }
+
+  /**
+   * Create notification for collaborator who earned OGUN from royalty split
+   */
+  async createCollaboratorOgunNotification(params: {
+    profileId: string;
+    walletAddress: string;
+    amount: number;
+    trackTitle: string;
+    trackId: string;
+    creatorName: string;
+    role?: string;
+  }): Promise<void> {
+    const { profileId, walletAddress, amount, trackTitle, trackId, creatorName, role } = params;
+
+    if (amount < 0.001) return;
+
+    const metadata = {
+      amount: amount.toFixed(4),
+      trackTitle,
+      trackId,
+      creatorName,
+      walletAddress,
+      role: role || 'Collaborator',
+      timestamp: new Date().toISOString(),
+    };
+
+    const notification = new NotificationModel({
+      type: NotificationType.OgunEarnedCollaborator,
+      profileId,
+      metadata,
+    });
+
+    await notification.save();
+    await this.incrementNotificationCount(profileId);
+  }
 }

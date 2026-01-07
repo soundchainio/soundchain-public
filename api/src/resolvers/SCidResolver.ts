@@ -37,6 +37,9 @@ export class LogStreamInput {
 
   @Field({ nullable: true })
   listenerWallet?: string;
+
+  @Field({ nullable: true })
+  listenerProfileId?: string;
 }
 
 @InputType()
@@ -84,11 +87,45 @@ export class LogStreamPayload {
   @Field()
   success: boolean;
 
-  @Field()
-  ogunReward: number;
-
   @Field(() => Int)
   totalStreams: number;
+
+  // WIN-WIN: Creator rewards
+  @Field()
+  creatorReward: number;
+
+  @Field({ nullable: true })
+  creatorWallet?: string;
+
+  @Field({ nullable: true })
+  creatorProfileId?: string;
+
+  @Field({ nullable: true })
+  creatorDailyLimitReached?: boolean;
+
+  // WIN-WIN: Listener rewards
+  @Field()
+  listenerReward: number;
+
+  @Field({ nullable: true })
+  listenerWallet?: string;
+
+  @Field({ nullable: true })
+  listenerProfileId?: string;
+
+  @Field({ nullable: true })
+  listenerDailyLimitReached?: boolean;
+
+  // Track info
+  @Field({ nullable: true })
+  trackTitle?: string;
+
+  @Field({ nullable: true })
+  trackId?: string;
+
+  // Legacy fields for backward compatibility
+  @Field({ nullable: true })
+  ogunReward?: number;
 
   @Field({ nullable: true })
   dailyLimitReached?: boolean;
@@ -397,18 +434,28 @@ export class SCidResolver {
   }
 
   /**
-   * Log a stream and earn OGUN rewards
+   * Log a stream and earn OGUN rewards - WIN-WIN MODEL!
+   *
+   * Both CREATORS and LISTENERS earn OGUN tokens!
    */
   @Mutation(() => LogStreamPayload)
   async logStream(
     @Ctx() { scidService }: Context,
     @Arg('input') input: LogStreamInput
   ): Promise<LogStreamPayload> {
-    return scidService.logStream({
+    const result = await scidService.logStream({
       scid: input.scid,
       duration: input.duration,
       listenerWallet: input.listenerWallet,
+      listenerProfileId: input.listenerProfileId,
     });
+
+    // Add legacy fields for backward compatibility
+    return {
+      ...result,
+      ogunReward: result.creatorReward + result.listenerReward,
+      dailyLimitReached: result.creatorDailyLimitReached || result.listenerDailyLimitReached,
+    };
   }
 
   /**

@@ -189,4 +189,82 @@ export class ProfileService extends ModelService<typeof Profile> {
       sort: { field: 'createdAt', order: SortOrder.DESC },
     });
   }
+
+  // ============================================
+  // WIN-WIN LISTENER REWARDS TRACKING
+  // ============================================
+
+  /**
+   * Update a listener's daily OGUN rewards earned
+   * Used to track WIN-WIN rewards for listeners
+   */
+  async updateListenerDailyRewards(profileId: string, amount: number): Promise<void> {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    // Get current profile
+    const profile = await this.model.findById(profileId);
+    if (!profile) return;
+
+    // Check if we need to reset the daily counter
+    const lastReset = (profile as any).listenerDailyReset;
+    if (!lastReset || new Date(lastReset) < todayStart) {
+      // New day - reset counter
+      await this.model.updateOne(
+        { _id: profileId },
+        {
+          $set: {
+            dailyListenerOgunEarned: amount,
+            listenerDailyReset: todayStart,
+          },
+          $inc: {
+            totalListenerOgunEarned: amount,
+          },
+        }
+      );
+    } else {
+      // Same day - increment
+      await this.model.updateOne(
+        { _id: profileId },
+        {
+          $inc: {
+            dailyListenerOgunEarned: amount,
+            totalListenerOgunEarned: amount,
+          },
+        }
+      );
+    }
+
+    console.log(`[ProfileService] Listener ${profileId} earned ${amount.toFixed(4)} OGUN`);
+  }
+
+  /**
+   * Get listener's total OGUN earned from streaming
+   */
+  async getListenerRewards(profileId: string): Promise<{
+    dailyEarned: number;
+    totalEarned: number;
+    dailyLimit: number;
+  }> {
+    const profile = await this.model.findById(profileId);
+    if (!profile) {
+      return { dailyEarned: 0, totalEarned: 0, dailyLimit: 50 };
+    }
+
+    // Check if daily reset needed
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const lastReset = (profile as any).listenerDailyReset;
+
+    let dailyEarned = (profile as any).dailyListenerOgunEarned || 0;
+    if (lastReset && new Date(lastReset) < todayStart) {
+      dailyEarned = 0; // New day, hasn't been reset yet
+    }
+
+    return {
+      dailyEarned,
+      totalEarned: (profile as any).totalListenerOgunEarned || 0,
+      dailyLimit: 50, // From OGUN_REWARDS_CONFIG.listenerMaxDaily
+    };
+  }
 }
