@@ -1,0 +1,45 @@
+# SoundChain Code Ownership Rules
+# These files require explicit approval from @soundchainio before merging
+# Protects critical bug fixes from being accidentally overwritten
+
+# ============================================
+# CRITICAL - MONGOOSE SERIALIZATION FIXES
+# ============================================
+# These files contain fixes for the Symbol(mongoose#Document#scope) error
+# that breaks comment creation. DO NOT modify without owner approval.
+# Bug was fixed multiple times (Dec 2025, Jan 2026) - commits: e295754ab, 40fc241ec, 7feea157d
+
+/api/src/services/CommentService.ts @soundchainio
+/api/src/services/TrackCommentService.ts @soundchainio
+
+# ============================================
+# CORE SERVICES - REQUIRE REVIEW
+# ============================================
+# Other critical backend services that affect core functionality
+
+/api/src/services/NotificationService.ts @soundchainio
+/api/src/services/PostService.ts @soundchainio
+/api/src/services/ProfileService.ts @soundchainio
+/api/src/services/SCidService.ts @soundchainio
+
+# ============================================
+# DATABASE & PAGINATION
+# ============================================
+# Paginate contains .lean() fix for GraphQL serialization
+
+/api/src/db/pagination/paginate.ts @soundchainio
+
+# ============================================
+# AUTHENTICATION & SESSION
+# ============================================
+# Session persistence and JWT handling - 30 day login fix
+
+/web/src/lib/apollo/index.tsx @soundchainio
+/web/src/hooks/useMagicContext.tsx @soundchainio
+
+# ============================================
+# SMART CONTRACTS
+# ============================================
+# Contract files should never be modified without explicit approval
+
+/soundchain-contracts/contracts/ @soundchainio

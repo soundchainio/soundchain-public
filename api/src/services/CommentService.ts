@@ -62,8 +62,11 @@ export class CommentService extends ModelService<typeof Comment> {
       }
     }
 
+    // ⚠️ CRITICAL FIX - DO NOT REMOVE ⚠️
     // Convert to plain object to avoid mongoose Symbol(mongoose#Document#scope) serialization errors
     // Without this, GraphQL tries to serialize internal mongoose properties and fails
+    // Bug was fixed multiple times (Dec 2025, Jan 2026) - this MUST stay or comments will break
+    // See commits: e295754ab, 40fc241ec, 7feea157d
     return newComment.toObject() as Comment;
   }
 
@@ -75,7 +78,7 @@ export class CommentService extends ModelService<typeof Comment> {
       walletAddress: params.walletAddress,
     });
     await newComment.save();
-    // Convert to plain object to avoid mongoose serialization errors
+    // ⚠️ CRITICAL - .toObject() prevents mongoose scope errors - DO NOT REMOVE
     return newComment.toObject() as Comment;
   }
 
