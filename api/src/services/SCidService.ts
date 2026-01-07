@@ -1018,7 +1018,7 @@ export class SCidService extends Service {
         deleted: { $ne: true },
         $or: [
           { 'nftData.tokenId': { $exists: true, $ne: null } },
-          { 'nftData.contractAddress': { $exists: true, $ne: null } }
+          { 'nftData.contract': { $exists: true, $ne: null } }
         ]
       }),
       TrackModel.aggregate([
@@ -1028,7 +1028,7 @@ export class SCidService extends Service {
             deleted: { $ne: true },
             $or: [
               { 'nftData.tokenId': { $exists: true, $ne: null } },
-              { 'nftData.contractAddress': { $exists: true, $ne: null } }
+              { 'nftData.contract': { $exists: true, $ne: null } }
             ]
           }
         },
@@ -1060,7 +1060,7 @@ export class SCidService extends Service {
       trackId: t._id.toString(),
       title: t.title || 'Untitled',
       plays: t.playbackCount || 0,
-      isNft: !!(t.nftData?.tokenId || t.nftData?.contractAddress),
+      isNft: !!(t.nftData?.tokenId || t.nftData?.contract),
     }));
 
     return {
@@ -1147,7 +1147,7 @@ export class SCidService extends Service {
           const trackId = track._id.toString();
           const profileId = track.profileId?.toString();
           const playbackCount = track.playbackCount || 0;
-          const isNft = !!(track.nftData?.tokenId || track.nftData?.contractAddress);
+          const isNft = !!(track.nftData?.tokenId || track.nftData?.contract);
 
           if (!profileId) {
             result.errors.push(`Track ${trackId}: No profileId`);

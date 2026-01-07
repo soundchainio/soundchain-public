@@ -41,7 +41,7 @@ async function checkHistoricalStreams() {
     playbackCount: { $gt: 0 },
     $or: [
       { 'nftData.tokenId': { $exists: true } },
-      { 'nftData.contractAddress': { $exists: true } }
+      { 'nftData.contract': { $exists: true } }
     ]
   });
   console.log(`🎵 NFT Tracks with Plays: ${nftTracksWithPlays.toLocaleString()}`);
@@ -53,7 +53,7 @@ async function checkHistoricalStreams() {
         playbackCount: { $gt: 0 },
         $or: [
           { 'nftData.tokenId': { $exists: true } },
-          { 'nftData.contractAddress': { $exists: true } }
+          { 'nftData.contract': { $exists: true } }
         ]
       }
     },
@@ -86,7 +86,7 @@ async function checkHistoricalStreams() {
     .toArray();
 
   topTracks.forEach((track, i) => {
-    const isNft = track.nftData?.tokenId || track.nftData?.contractAddress;
+    const isNft = track.nftData?.tokenId || track.nftData?.contract;
     const badge = isNft ? '🎵 NFT' : '🎶';
     console.log(`${i + 1}. ${badge} "${track.title}" - ${track.playbackCount?.toLocaleString() || 0} plays`);
   });

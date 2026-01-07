@@ -94,7 +94,7 @@ export async function grandfatherOGRewards(options: {
         const trackId = track._id.toString();
         const profileId = track.profileId?.toString();
         const playbackCount = track.playbackCount || 0;
-        const isNft = !!(track.nftData?.tokenId || track.nftData?.contractAddress);
+        const isNft = !!(track.nftData?.tokenId || track.nftData?.contract);
 
         if (!profileId) {
           result.errors.push(`Track ${trackId} has no profileId`);
@@ -122,14 +122,14 @@ export async function grandfatherOGRewards(options: {
           const scidCode = SCidGenerator.generate({
             artistIdentifier,
             sequenceNumber: existingCount + 1,
-            chainCode: ChainCode.POL,
+            chainCode: ChainCode.POLYGON,
           });
 
           const newScid = new SCidModel({
             scid: scidCode,
             trackId,
             profileId,
-            chainCode: ChainCode.POL,
+            chainCode: ChainCode.POLYGON,
             artistHash: SCidGenerator.parse(scidCode).components?.artistHash || '',
             year: new Date().getFullYear().toString().slice(-2),
             sequence: existingCount + 1,
