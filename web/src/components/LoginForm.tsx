@@ -12,18 +12,19 @@ const validationSchema = yup.object().shape({
 
 interface LoginFormProps {
   handleMagicLogin: (values: FormValues) => void;
+  disabled?: boolean;
 }
 
-export const LoginForm = ({ handleMagicLogin }: LoginFormProps) => {
+export const LoginForm = ({ handleMagicLogin, disabled }: LoginFormProps) => {
   return (
     <Formik initialValues={{ email: '' }} validationSchema={validationSchema} onSubmit={handleMagicLogin}>
       {({ isSubmitting }) => (
         <Form className="flex flex-col">
           <div>
-            <InputField placeholder="Email address" type="email" name="email" />
+            <InputField placeholder="Email address" type="email" name="email" disabled={disabled} />
           </div>
-          <Button type="submit" disabled={isSubmitting} loading={isSubmitting} className="mt-4 w-full transition">
-            Login
+          <Button type="submit" disabled={isSubmitting || disabled} loading={isSubmitting || disabled} className="mt-4 w-full transition">
+            {disabled ? 'Waiting for OTP...' : 'Login'}
           </Button>
         </Form>
       )}

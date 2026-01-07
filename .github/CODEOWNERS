@@ -33,9 +33,12 @@
 # AUTHENTICATION & SESSION
 # ============================================
 # Session persistence and JWT handling - 30 day login fix
+# Login page contains Magic SDK OTP/OAuth flow - CRITICAL
 
 /web/src/lib/apollo/index.tsx @soundchainio
 /web/src/hooks/useMagicContext.tsx @soundchainio
+/web/src/pages/login.tsx @soundchainio
+/web/src/pages/create-account.tsx @soundchainio
 
 # ============================================
 # SMART CONTRACTS

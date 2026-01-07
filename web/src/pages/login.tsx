@@ -86,6 +86,7 @@ function isInAppBrowser(): boolean {
 export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
+  const [waitingForOtp, setWaitingForOtp] = useState(false); // True while waiting for OTP modal
   const [error, setError] = useState<string | null>(null);
   const { data, loading: loadingMe } = useMeQuery({ skip: true });
   const me = data?.me;
@@ -334,46 +335,69 @@ export default function LoginPage() {
     try {
       if (!magic) throw new Error('Magic SDK not initialized. Please refresh the page.');
       console.log('[Email] Starting login process for email:', values.email);
-      setLoggingIn(true);
       setError(null);
 
       // Use Email OTP - shows modal with 6-digit code input
       console.log('[Email] Sending OTP code to email...');
 
-      // Keep loading spinner visible while Magic loads
-      // Magic's OTP modal will appear on top
+      // Set waitingForOtp true - this keeps the login form visible so Magic's OTP modal can appear
+      setWaitingForOtp(true);
 
       let didToken: string;
 
-      // Create a timeout promise for OTP (30 seconds - user needs time to enter code)
+      // Create a timeout promise for OTP (90 seconds - users need time to check email and enter code)
       const otpTimeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('OTP_TIMEOUT')), 30000)
+        setTimeout(() => reject(new Error('OTP_TIMEOUT')), 90000)
       );
 
       try {
         // Try OTP first (better UX when it works)
+        // Note: This will show Magic's OTP modal overlay on top of the login page
+        console.log('[Email] Waiting for Magic OTP modal to appear...');
         didToken = await Promise.race([
           magic.auth.loginWithEmailOTP({ email: values.email }),
           otpTimeout,
         ]);
       } catch (otpError: any) {
+        setWaitingForOtp(false);
+
+        // Check if user cancelled the OTP modal
+        if (otpError.message?.includes('User denied') || otpError.message?.includes('cancelled')) {
+          console.log('[Email] User cancelled OTP modal');
+          setError(null);
+          return;
+        }
+
         if (otpError.message === 'OTP_TIMEOUT') {
-          // OTP modal likely blocked - fall back to magic link
+          // OTP modal likely blocked or user didn't receive code - fall back to magic link
           console.log('[Email] OTP timed out, trying magic link fallback');
-          setError('OTP modal blocked. Sending login link to your email instead...');
-          didToken = await magic.auth.loginWithMagicLink({
-            email: values.email,
-            showUI: true,
-          });
+          setError('OTP timed out. Sending a login link to your email instead...');
+
+          // Send magic link - user must click link in email
+          try {
+            setWaitingForOtp(true);
+            didToken = await magic.auth.loginWithMagicLink({
+              email: values.email,
+              showUI: true,
+            });
+            setWaitingForOtp(false);
+          } catch (magicLinkError: any) {
+            console.error('[Email] Magic link error:', magicLinkError);
+            setError('Failed to send login email. Please try again.');
+            setWaitingForOtp(false);
+            return;
+          }
         } else {
           throw otpError;
         }
       }
 
-      // OTP complete - now show our loader while processing
+      // OTP or Magic Link complete - now process the token
+      setWaitingForOtp(false);
       setLoggingIn(true);
+      setError(null);
 
-      console.log('[Email] OTP authentication completed!');
+      console.log('[Email] Authentication completed!');
       console.log('[Email] Received didToken');
       localStorage.setItem('didToken', didToken);
 
@@ -399,6 +423,7 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       console.error('[Email] Login error:', error);
+      setWaitingForOtp(false);
       // Handle user cancellation gracefully
       if (error.message?.includes('User denied') || error.message?.includes('cancelled')) {
         setError('Login cancelled. Please try again.');
@@ -454,7 +479,9 @@ export default function LoginPage() {
     );
   }
 
-  if (loggingIn) {
+  // Only show full-screen loader after OTP/magic link completes (processing token)
+  // During OTP, keep login form visible so Magic's modal can appear on top
+  if (loggingIn && !waitingForOtp) {
     return (
       <>
         <SEO title="Login | SoundChain" description="Login warning" canonicalUrl="/login/" />
@@ -539,6 +566,16 @@ export default function LoginPage() {
               </p>
             </div>
           )}
+          {waitingForOtp && (
+            <div className="mb-4 rounded-lg bg-cyan-500/20 border border-cyan-500 p-4 text-center animate-pulse">
+              <p className="text-sm font-semibold text-cyan-400">
+                Check your email for a 6-digit code
+              </p>
+              <p className="text-xs text-cyan-300 mt-1">
+                Magic's popup should appear. If not, check your spam folder.
+              </p>
+            </div>
+          )}
           {error && (
             <div className="py-4 text-center text-sm text-red-500 font-semibold drop-shadow-md">
               {error}
@@ -550,7 +587,7 @@ export default function LoginPage() {
             <TwitchButton />
           </div>
           <div className="py-7 text-center text-sm font-bold text-gray-50 drop-shadow-md">OR</div>
-          <LoginForm handleMagicLogin={handleSubmit} />
+          <LoginForm handleMagicLogin={handleSubmit} disabled={waitingForOtp} />
         </ContentContainer>
       </div>
     </>
