@@ -164,77 +164,84 @@ const handleRestApi = async (event: APIGatewayProxyEvent): Promise<any> => {
     };
   }
 
-  // Authenticated endpoints
-  const authHeader = event.headers?.Authorization || event.headers?.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return {
-      statusCode: 401,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: 'Missing Authorization header', hint: 'Use: Authorization: Bearer sc_live_xxxxx' }),
-    };
-  }
-
-  const rawKey = authHeader.replace('Bearer ', '');
-  const hash = DeveloperApiKey.hashApiKey(rawKey);
-  const apiKey = await DeveloperApiKeyModel.findOne({ apiKeyHash: hash, status: 'ACTIVE' });
-
-  if (!apiKey) {
-    return {
-      statusCode: 401,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: 'Invalid API key' }),
-    };
-  }
-
-  // POST /v1/announcements - Create announcement
-  if (path === '/v1/announcements' && method === 'POST') {
-    const body = JSON.parse(event.body || '{}');
-    const { title, content, link, imageUrl, type, tags } = body;
-
-    if (!title || title.length > 200) {
-      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Title required (max 200 chars)' }) };
-    }
-    if (!content || content.length > 2000) {
-      return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Content required (max 2000 chars)' }) };
+  // Admin endpoints use X-Admin-Secret header instead of Bearer token
+  // Let them pass through to handle their own auth
+  if (path.startsWith('/v1/admin/')) {
+    // Admin endpoints are handled below with X-Admin-Secret auth
+    // Skip Bearer token auth for these
+  } else {
+    // Authenticated endpoints (require Bearer token)
+    const authHeader = event.headers?.Authorization || event.headers?.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return {
+        statusCode: 401,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Missing Authorization header', hint: 'Use: Authorization: Bearer sc_live_xxxxx' }),
+      };
     }
 
-    const validTypes = Object.values(AnnouncementType);
-    const announcementType = type && validTypes.includes(type) ? type : AnnouncementType.OTHER;
+    const rawKey = authHeader.replace('Bearer ', '');
+    const hash = DeveloperApiKey.hashApiKey(rawKey);
+    const apiKey = await DeveloperApiKeyModel.findOne({ apiKeyHash: hash, status: 'ACTIVE' });
 
-    const announcement = await AnnouncementModel.create({
-      apiKeyId: apiKey._id.toString(),
-      companyName: apiKey.companyName,
-      companyLogo: apiKey.logoUrl,
-      title: title.trim(),
-      content: content.trim(),
-      link, imageUrl,
-      type: announcementType,
-      tags: Array.isArray(tags) ? tags.slice(0, 10) : [],
-      status: AnnouncementStatus.APPROVED,
-      publishedAt: new Date(),
-      viewCount: 0, clickCount: 0, featured: false,
-    } as any);
+    if (!apiKey) {
+      return {
+        statusCode: 401,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Invalid API key' }),
+      };
+    }
 
-    // Update API key usage
-    apiKey.totalRequests += 1;
-    apiKey.lastUsedAt = new Date();
-    await apiKey.save();
+    // POST /v1/announcements - Create announcement
+    if (path === '/v1/announcements' && method === 'POST') {
+      const body = JSON.parse(event.body || '{}');
+      const { title, content, link, imageUrl, type, tags } = body;
 
-    return {
-      statusCode: 201,
-      headers: corsHeaders,
-      body: JSON.stringify({
-        success: true,
-        announcement: {
-          id: announcement._id,
-          title: announcement.title,
-          content: announcement.content,
-          companyName: announcement.companyName,
-          publishedAt: announcement.publishedAt,
-        },
-        message: '🚀 Announcement posted to SoundChain!',
-      }),
-    };
+      if (!title || title.length > 200) {
+        return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Title required (max 200 chars)' }) };
+      }
+      if (!content || content.length > 2000) {
+        return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Content required (max 2000 chars)' }) };
+      }
+
+      const validTypes = Object.values(AnnouncementType);
+      const announcementType = type && validTypes.includes(type) ? type : AnnouncementType.OTHER;
+
+      const announcement = await AnnouncementModel.create({
+        apiKeyId: apiKey._id.toString(),
+        companyName: apiKey.companyName,
+        companyLogo: apiKey.logoUrl,
+        title: title.trim(),
+        content: content.trim(),
+        link, imageUrl,
+        type: announcementType,
+        tags: Array.isArray(tags) ? tags.slice(0, 10) : [],
+        status: AnnouncementStatus.APPROVED,
+        publishedAt: new Date(),
+        viewCount: 0, clickCount: 0, featured: false,
+      } as any);
+
+      // Update API key usage
+      apiKey.totalRequests += 1;
+      apiKey.lastUsedAt = new Date();
+      await apiKey.save();
+
+      return {
+        statusCode: 201,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          success: true,
+          announcement: {
+            id: announcement._id,
+            title: announcement.title,
+            content: announcement.content,
+            companyName: announcement.companyName,
+            publishedAt: announcement.publishedAt,
+          },
+          message: '🚀 Announcement posted to SoundChain!',
+        }),
+      };
+    }
   }
 
   // POST /v1/admin/grandfather-tracks - Create SCids for existing tracks (MUST RUN FIRST!)
