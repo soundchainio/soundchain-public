@@ -57,7 +57,7 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
     const emoteName = match[1]
     const emoteUrl = match[2]
 
-    // Add the emote image with error handling
+    // Add the emote image with retry logic for different URL formats
     parts.push(
       <img
         key={`emote-${match.index}`}
@@ -67,13 +67,28 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
         className="inline-block w-7 h-7 align-middle mx-0.5"
         loading="lazy"
         onError={(e) => {
-          // On error, replace with emote name as fallback
           const target = e.target as HTMLImageElement
-          target.style.display = 'none'
-          const fallback = document.createElement('span')
-          fallback.className = 'inline-block px-1 py-0.5 text-xs bg-neutral-700 rounded text-cyan-400'
-          fallback.textContent = `:${emoteName}:`
-          target.parentNode?.insertBefore(fallback, target.nextSibling)
+          const currentSrc = target.src
+
+          // Try different formats: base -> .webp -> .gif -> .png -> text fallback
+          // 7TV and other CDNs often support multiple formats
+          if (!currentSrc.includes('.webp') && !currentSrc.includes('.gif') && !currentSrc.includes('.png')) {
+            // Base URL failed, try .webp
+            target.src = currentSrc + '.webp'
+          } else if (currentSrc.endsWith('.webp')) {
+            // .webp failed, try .gif
+            target.src = currentSrc.replace('.webp', '.gif')
+          } else if (currentSrc.endsWith('.gif')) {
+            // .gif failed, try .png
+            target.src = currentSrc.replace('.gif', '.png')
+          } else {
+            // All formats failed - show text fallback
+            target.style.display = 'none'
+            const fallback = document.createElement('span')
+            fallback.className = 'inline-block px-1 py-0.5 text-xs bg-neutral-700 rounded text-cyan-400'
+            fallback.textContent = `:${emoteName}:`
+            target.parentNode?.insertBefore(fallback, target.nextSibling)
+          }
         }}
       />
     )
