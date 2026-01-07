@@ -778,6 +778,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false)
   const [selectedPlaylist, setSelectedPlaylist] = useState<GetUserPlaylistsQuery['getUserPlaylists']['nodes'][0] | null>(null)
 
+  // Top 100 NFTs modal state
+  const [showTop100Modal, setShowTop100Modal] = useState(false)
+
   // Profile tab state (Feed | Music | Playlists)
   const [profileTab, setProfileTab] = useState<'feed' | 'music' | 'playlists'>('feed')
 
@@ -1011,6 +1014,23 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-first', // Speed: cache first, no network hit if cached
     skip: selectedView !== 'dashboard', // SPEED: Only fetch when needed
   })
+
+  // Fetch Top 100 NFT tracks for the Top 100 modal (fetch more to ensure 100 NFTs after filtering)
+  const { data: top100TracksData, loading: top100TracksLoading } = useTracksQuery({
+    variables: {
+      sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
+      page: { first: 200 },
+    },
+    fetchPolicy: 'cache-first',
+    skip: !showTop100Modal, // Only fetch when modal is open
+  })
+
+  // Filter for NFT tracks only and limit to 100
+  const top100NftTracks = React.useMemo(() => {
+    return (top100TracksData?.tracks?.nodes || [])
+      .filter((track: any) => track.nftData?.tokenId || track.nftData?.contract)
+      .slice(0, 100)
+  }, [top100TracksData])
 
   // Fetch ALL unique tracks (618 tracks from 8,236 NFT editions) with pagination
   // SPEED: Only fetch when on dashboard, cache-first
@@ -2189,6 +2209,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'playlist' ? 'text-pink-400' : 'text-gray-400'}`} />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'playlist' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Playlist
+              </span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setShowTop100Modal(true)}
+              className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${showTop100Modal ? 'bg-yellow-500/10' : ''}`}
+            >
+              <Trophy className={`w-4 h-4 mr-2 transition-colors duration-300 ${showTop100Modal ? 'text-yellow-400' : 'text-gray-400'}`} />
+              <span className={`text-sm font-black transition-all duration-300 ${showTop100Modal ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                Top 100
               </span>
             </Button>
           </div>
@@ -5461,6 +5491,92 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </div>
         </div>
       )}
+
+      {/* Top 100 NFTs Modal */}
+      {showTop100Modal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/95" onClick={() => setShowTop100Modal(false)} />
+          <div className="relative z-10 w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl border-2 border-yellow-500 bg-gradient-to-br from-neutral-900 via-yellow-900/10 to-neutral-900 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-yellow-900 to-orange-900 px-4 py-3 flex items-center justify-between border-b border-yellow-500">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-yellow-400" />
+                <div>
+                  <span className="font-bold text-yellow-100 text-sm">Top 100 NFTs</span>
+                  <p className="text-xs text-yellow-200/60">Most streamed NFT tracks</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowTop100Modal(false)} className="w-8 h-8 p-0 text-yellow-300 hover:text-white hover:bg-yellow-500/20">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[calc(85vh-60px)] p-4">
+              {top100TracksLoading ? (
+                <div className="py-8 text-center text-gray-400">
+                  <div className="animate-spin w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full mx-auto mb-2" />
+                  Loading Top 100...
+                </div>
+              ) : top100NftTracks.length === 0 ? (
+                <div className="py-8 text-center text-gray-400">No NFT tracks found</div>
+              ) : (
+                <div className="space-y-2">
+                  {top100NftTracks.map((track: any, index: number) => (
+                    <div
+                      key={track.id}
+                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-yellow-500/10 transition-colors group cursor-pointer"
+                      onClick={() => {
+                        handlePlayTrack(track)
+                        setShowTop100Modal(false)
+                      }}
+                    >
+                      {/* Rank */}
+                      <span className={`w-8 text-center font-bold text-sm ${
+                        index === 0 ? 'text-yellow-400 text-lg' :
+                        index === 1 ? 'text-gray-300' :
+                        index === 2 ? 'text-amber-600' :
+                        'text-gray-500'
+                      }`}>
+                        #{index + 1}
+                      </span>
+
+                      {/* Artwork */}
+                      <div className="w-12 h-12 rounded-lg overflow-hidden relative flex-shrink-0 ring-2 ring-yellow-500/30">
+                        <img
+                          src={track.artworkUrl ?? '/images/default-artwork.png'}
+                          alt={track.title ?? 'Track'}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Play className="w-5 h-5 text-white" fill="white" />
+                        </div>
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium truncate group-hover:text-yellow-400 transition-colors">
+                          {track.title}
+                        </p>
+                        <p className="text-gray-500 text-xs truncate">{track.artist}</p>
+                      </div>
+
+                      {/* Play count */}
+                      <div className="text-right flex-shrink-0">
+                        <span className="text-yellow-400 text-sm font-bold flex items-center gap-1">
+                          <TrendingUp className="w-3 h-3" />
+                          {track.playbackCountFormatted || '0'}
+                        </span>
+                        <span className="text-gray-500 text-xs">streams</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {connectedWallet && (
         <GuestPostModal
           isOpen={showGuestPostModal}
