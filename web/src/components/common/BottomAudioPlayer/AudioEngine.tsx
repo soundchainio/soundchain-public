@@ -7,6 +7,7 @@ import { useMagicContext } from 'hooks/useMagicContext'
 import mux from 'mux-embed'
 import { useEffect, useRef, useCallback } from 'react'
 import { toast } from 'react-toastify'
+import { OgunRewardToast, DailyLimitToast } from '../OgunRewardToast'
 
 /**
  * Audio Normalization Settings
@@ -53,17 +54,21 @@ export const AudioEngine = () => {
     minDuration: 30, // 30 seconds minimum to count as stream
     onReward: (reward) => {
       if (reward > 0) {
-        toast.success(`+${reward.toFixed(2)} OGUN earned!`, {
+        // Gamified toast with coin animation
+        toast(<OgunRewardToast amount={reward} trackTitle={currentSong?.title} />, {
           position: 'bottom-right',
-          autoClose: 3000,
+          autoClose: 4000,
           hideProgressBar: true,
+          className: 'ogun-reward-toast',
+          bodyClassName: 'ogun-reward-toast-body',
         })
       }
     },
     onDailyLimitReached: () => {
-      toast.info('Daily OGUN limit reached for this track', {
+      toast(<DailyLimitToast trackTitle={currentSong?.title} />, {
         position: 'bottom-right',
-        autoClose: 3000,
+        autoClose: 4000,
+        className: 'ogun-limit-toast',
       })
     },
   })
