@@ -61,7 +61,10 @@ export class CommentService extends ModelService<typeof Comment> {
         console.error('[CommentService] Failed to send notification, but comment was created:', notifyError);
       }
     }
-    return newComment;
+
+    // Convert to plain object to avoid mongoose Symbol(mongoose#Document#scope) serialization errors
+    // Without this, GraphQL tries to serialize internal mongoose properties and fails
+    return newComment.toObject() as Comment;
   }
 
   async createGuestComment(params: NewGuestCommentParams): Promise<Comment> {
@@ -72,7 +75,8 @@ export class CommentService extends ModelService<typeof Comment> {
       walletAddress: params.walletAddress,
     });
     await newComment.save();
-    return newComment;
+    // Convert to plain object to avoid mongoose serialization errors
+    return newComment.toObject() as Comment;
   }
 
   async updateComment({ commentId, body }: UpdateCommentParams): Promise<Comment> {
@@ -80,13 +84,13 @@ export class CommentService extends ModelService<typeof Comment> {
       { _id: commentId },
       { body },
       { new: true }
-    );
+    ).lean();
 
     if (!updatedComment) {
       throw new Error('Comment not found');
     }
 
-    return updatedComment;
+    return updatedComment as Comment;
   }
 
   async deleteComment(params: DeleteCommentParams): Promise<Comment> {
@@ -94,13 +98,13 @@ export class CommentService extends ModelService<typeof Comment> {
       { _id: params.commentId, profileId: params.profileId },
       { deleted: true },
       { new: true },
-    );
+    ).lean();
 
     if (!deletedComment) {
       throw new Error('Comment not found or you do not have permission to delete it');
     }
 
-    return deletedComment;
+    return deletedComment as Comment;
   }
 
   async deleteCommentByAdmin(params: DeleteCommentParams): Promise<Comment> {
@@ -108,24 +112,24 @@ export class CommentService extends ModelService<typeof Comment> {
       { _id: params.commentId },
       { deleted: true },
       { new: true },
-    );
+    ).lean();
 
     if (!deletedComment) {
       throw new Error('Comment not found');
     }
 
-    const post = await PostModel.findById(deletedComment.postId);
+    const post = await PostModel.findById(deletedComment.postId).lean();
 
     // Only notify if we have valid data
     if (post && deletedComment.profileId) {
       this.context.notificationService.notifyCommentDeletedByAdmin({
-        comment: deletedComment,
+        comment: deletedComment as Comment,
         post: post,
         authorProfileId: deletedComment.profileId.toString(),
       });
     }
 
-    return deletedComment;
+    return deletedComment as Comment;
   }
 
   countComments(postId: string): Promise<number> {

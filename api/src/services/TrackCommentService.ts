@@ -85,7 +85,8 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
     });
 
     await comment.save();
-    return comment;
+    // Convert to plain object to avoid mongoose Symbol(mongoose#Document#scope) serialization errors
+    return comment.toObject() as TrackComment;
   }
 
   /**
@@ -147,7 +148,8 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
 
     comment.deleted = true;
     await comment.save();
-    return comment;
+    // Convert to plain object to avoid mongoose serialization errors
+    return comment.toObject() as TrackComment;
   }
 
   /**
@@ -158,13 +160,13 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
       commentId,
       { $inc: { likeCount: 1 } },
       { new: true }
-    );
+    ).lean();
 
     if (!comment) {
       throw new UserInputError('Comment not found');
     }
 
-    return comment;
+    return comment as TrackComment;
   }
 
   /**
@@ -190,7 +192,8 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
 
     comment.isPinned = !comment.isPinned;
     await comment.save();
-    return comment;
+    // Convert to plain object to avoid mongoose serialization errors
+    return comment.toObject() as TrackComment;
   }
 
   /**
