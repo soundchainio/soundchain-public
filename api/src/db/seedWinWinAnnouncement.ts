@@ -6,7 +6,7 @@
 
 import mongoose from 'mongoose';
 import { AnnouncementModel, AnnouncementStatus, AnnouncementType, MediaType } from '../models/Announcement';
-import { DeveloperApiKeyModel, DeveloperTier } from '../models/DeveloperApiKey';
+import { DeveloperApiKeyModel, DeveloperApiKey, ApiKeyTier, ApiKeyStatus } from '../models/DeveloperApiKey';
 
 const { DATABASE_URL = 'mongodb://localhost:27017/soundchain' } = process.env;
 
@@ -19,16 +19,17 @@ async function seedWinWinAnnouncement() {
 
   if (!soundchainApiKey) {
     console.log('Creating SoundChain Official API key...');
+    const { key, hash, prefix } = DeveloperApiKey.generateApiKey(false);
     soundchainApiKey = await DeveloperApiKeyModel.create({
-      apiKey: 'sc_official_' + Date.now(),
+      apiKeyHash: hash,
+      keyPrefix: prefix,
+      profileId: 'soundchain-official',
       companyName: 'SoundChain Official',
-      companyLogo: '/images/soundchain-logo.png',
       contactEmail: 'team@soundchain.io',
-      tier: DeveloperTier.ENTERPRISE,
-      isActive: true,
-      usageCount: 0,
-      createdAt: new Date(),
+      tier: ApiKeyTier.ENTERPRISE,
+      status: ApiKeyStatus.ACTIVE,
     });
+    console.log('API Key created (save this, shown only once):', key);
   }
 
   console.log('Creating WIN-WIN Streaming Rewards Announcement...');
@@ -36,7 +37,7 @@ async function seedWinWinAnnouncement() {
   const announcement = await AnnouncementModel.create({
     apiKeyId: soundchainApiKey._id.toString(),
     companyName: 'SoundChain Official',
-    companyLogo: '/images/soundchain-logo.png',
+    logoUrl: '/favicon.ico', // Using the OGUN coin logo
 
     title: 'WIN-WIN STREAMING REWARDS ARE HERE!',
 
