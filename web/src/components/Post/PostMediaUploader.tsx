@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { X, Clock } from 'lucide-react'
 import { useUpload } from 'hooks/useUpload'
@@ -35,6 +35,12 @@ export const PostMediaUploader = ({
   )
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Sync internal state when parent clears the media (after successful post)
+  useEffect(() => {
+    setPreview(currentUrl || null)
+    setMediaType((currentType as 'image' | 'video' | 'audio') || null)
+  }, [currentUrl, currentType])
 
   const { upload } = useUpload(undefined, (url) => {
     if (url && mediaType) {
