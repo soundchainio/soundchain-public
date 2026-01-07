@@ -93,7 +93,7 @@ export class CommentService extends ModelService<typeof Comment> {
       throw new Error('Comment not found');
     }
 
-    return updatedComment as Comment;
+    return updatedComment as unknown as Comment;
   }
 
   async deleteComment(params: DeleteCommentParams): Promise<Comment> {
@@ -107,7 +107,7 @@ export class CommentService extends ModelService<typeof Comment> {
       throw new Error('Comment not found or you do not have permission to delete it');
     }
 
-    return deletedComment as Comment;
+    return deletedComment as unknown as Comment;
   }
 
   async deleteCommentByAdmin(params: DeleteCommentParams): Promise<Comment> {
@@ -126,13 +126,13 @@ export class CommentService extends ModelService<typeof Comment> {
     // Only notify if we have valid data
     if (post && deletedComment.profileId) {
       this.context.notificationService.notifyCommentDeletedByAdmin({
-        comment: deletedComment as Comment,
-        post: post,
+        comment: deletedComment as unknown as Comment,
+        post: post as any,
         authorProfileId: deletedComment.profileId.toString(),
       });
     }
 
-    return deletedComment as Comment;
+    return deletedComment as unknown as Comment;
   }
 
   countComments(postId: string): Promise<number> {

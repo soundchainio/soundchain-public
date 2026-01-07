@@ -166,7 +166,7 @@ export class TrackCommentService extends ModelService<typeof TrackComment, Track
       throw new UserInputError('Comment not found');
     }
 
-    return comment as TrackComment;
+    return comment as unknown as TrackComment;
   }
 
   /**
