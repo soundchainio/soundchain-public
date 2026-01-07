@@ -263,6 +263,95 @@ export class BulkRegisterPayload {
   errors: string[];
 }
 
+// Historical Stats Types
+@ObjectType()
+export class TopTrackStats {
+  @Field()
+  trackId: string;
+
+  @Field()
+  title: string;
+
+  @Field(() => Int)
+  plays: number;
+
+  @Field()
+  isNft: boolean;
+}
+
+@ObjectType()
+export class HistoricalStreamStatsPayload {
+  @Field(() => Int)
+  totalTracks: number;
+
+  @Field(() => Int)
+  tracksWithPlays: number;
+
+  @Field(() => Int)
+  totalPlays: number;
+
+  @Field(() => Int)
+  nftTracksWithPlays: number;
+
+  @Field(() => Int)
+  nftPlays: number;
+
+  @Field(() => Int)
+  nonNftPlays: number;
+
+  @Field()
+  estimatedCreatorOgun: number;
+
+  @Field(() => Int)
+  uniqueCreators: number;
+
+  @Field(() => [TopTrackStats])
+  topTracks: TopTrackStats[];
+}
+
+// OG Rewards Types
+@ObjectType()
+export class TopRewardedTrack {
+  @Field()
+  trackId: string;
+
+  @Field()
+  title: string;
+
+  @Field(() => Int)
+  plays: number;
+
+  @Field()
+  ogun: number;
+}
+
+@ObjectType()
+export class GrandfatherOGRewardsPayload {
+  @Field(() => Int)
+  totalTracksProcessed: number;
+
+  @Field(() => Int)
+  totalPlaysRewarded: number;
+
+  @Field()
+  totalOgunCredited: number;
+
+  @Field(() => Int)
+  nftTracksRewarded: number;
+
+  @Field(() => Int)
+  nonNftTracksRewarded: number;
+
+  @Field(() => Int)
+  creatorsRewarded: number;
+
+  @Field(() => [TopRewardedTrack])
+  topRewarded: TopRewardedTrack[];
+
+  @Field(() => [String])
+  errors: string[];
+}
+
 @Resolver(SCid)
 export class SCidResolver {
   /**
@@ -566,6 +655,46 @@ export class SCidResolver {
       limit,
       dryRun,
       chainCode,
+    });
+  }
+
+  // ==================== OG REWARDS QUERIES & MUTATIONS ====================
+
+  /**
+   * Get historical streaming statistics
+   *
+   * Admin query to see total playbackCount data across all tracks.
+   * Use this to preview what grandfatherOGRewards will process.
+   */
+  @Query(() => HistoricalStreamStatsPayload)
+  @Authorized(['ADMIN'])
+  async historicalStreamStats(
+    @Ctx() { scidService }: Context
+  ): Promise<HistoricalStreamStatsPayload> {
+    return scidService.getHistoricalStreamStats();
+  }
+
+  /**
+   * Grandfather OG Rewards
+   *
+   * Admin mutation to credit retroactive OGUN rewards to creators
+   * based on their historical playbackCount data from 2022-2026.
+   *
+   * This rewards OG users who've been supporting SoundChain!
+   * Rewards are added as CLAIMABLE BALANCE.
+   */
+  @Mutation(() => GrandfatherOGRewardsPayload)
+  @Authorized(['ADMIN'])
+  async grandfatherOGRewards(
+    @Ctx() { scidService }: Context,
+    @Arg('dryRun', { nullable: true, defaultValue: true }) dryRun: boolean,
+    @Arg('limit', () => Int, { nullable: true, defaultValue: 0 }) limit: number,
+    @Arg('minPlays', () => Int, { nullable: true, defaultValue: 1 }) minPlays: number
+  ): Promise<GrandfatherOGRewardsPayload> {
+    return scidService.grandfatherOGRewards({
+      dryRun,
+      limit,
+      minPlays,
     });
   }
 }

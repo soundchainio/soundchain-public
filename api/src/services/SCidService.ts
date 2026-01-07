@@ -975,6 +975,270 @@ export class SCidService extends Service {
       errors,
     };
   }
+
+  /**
+   * Get historical streaming statistics
+   *
+   * Returns aggregate data on playbackCount across all tracks.
+   * Use this before running grandfatherOGRewards to preview.
+   */
+  async getHistoricalStreamStats(): Promise<{
+    totalTracks: number;
+    tracksWithPlays: number;
+    totalPlays: number;
+    nftTracksWithPlays: number;
+    nftPlays: number;
+    nonNftPlays: number;
+    estimatedCreatorOgun: number;
+    uniqueCreators: number;
+    topTracks: Array<{ trackId: string; title: string; plays: number; isNft: boolean }>;
+  }> {
+    const { trackService } = this.context;
+
+    // Use raw MongoDB for aggregation
+    const TrackModel = mongoose.model('Track');
+
+    const [
+      totalTracks,
+      tracksWithPlays,
+      playsAgg,
+      nftTracksWithPlaysCount,
+      nftPlaysAgg,
+      uniqueCreatorsAgg,
+      topTracksResult,
+    ] = await Promise.all([
+      TrackModel.countDocuments({ deleted: { $ne: true } }),
+      TrackModel.countDocuments({ playbackCount: { $gt: 0 }, deleted: { $ne: true } }),
+      TrackModel.aggregate([
+        { $match: { deleted: { $ne: true } } },
+        { $group: { _id: null, total: { $sum: '$playbackCount' } } }
+      ]),
+      TrackModel.countDocuments({
+        playbackCount: { $gt: 0 },
+        deleted: { $ne: true },
+        $or: [
+          { 'nftData.tokenId': { $exists: true, $ne: null } },
+          { 'nftData.contractAddress': { $exists: true, $ne: null } }
+        ]
+      }),
+      TrackModel.aggregate([
+        {
+          $match: {
+            playbackCount: { $gt: 0 },
+            deleted: { $ne: true },
+            $or: [
+              { 'nftData.tokenId': { $exists: true, $ne: null } },
+              { 'nftData.contractAddress': { $exists: true, $ne: null } }
+            ]
+          }
+        },
+        { $group: { _id: null, total: { $sum: '$playbackCount' } } }
+      ]),
+      TrackModel.aggregate([
+        { $match: { playbackCount: { $gt: 0 }, deleted: { $ne: true } } },
+        { $group: { _id: '$profileId' } },
+        { $count: 'count' }
+      ]),
+      TrackModel.find({ playbackCount: { $gt: 0 }, deleted: { $ne: true } })
+        .sort({ playbackCount: -1 })
+        .limit(10)
+        .select('_id title playbackCount nftData')
+        .lean()
+    ]);
+
+    const totalPlays = playsAgg[0]?.total || 0;
+    const nftPlays = nftPlaysAgg[0]?.total || 0;
+    const nonNftPlays = totalPlays - nftPlays;
+    const uniqueCreators = uniqueCreatorsAgg[0]?.count || 0;
+
+    // Calculate estimated OGUN (creator's 70% share)
+    const nftOgun = nftPlays * 0.35; // 0.5 * 0.7
+    const nonNftOgun = nonNftPlays * 0.035; // 0.05 * 0.7
+    const estimatedCreatorOgun = nftOgun + nonNftOgun;
+
+    const topTracks = (topTracksResult as any[]).map(t => ({
+      trackId: t._id.toString(),
+      title: t.title || 'Untitled',
+      plays: t.playbackCount || 0,
+      isNft: !!(t.nftData?.tokenId || t.nftData?.contractAddress),
+    }));
+
+    return {
+      totalTracks,
+      tracksWithPlays,
+      totalPlays,
+      nftTracksWithPlays: nftTracksWithPlaysCount,
+      nftPlays,
+      nonNftPlays,
+      estimatedCreatorOgun,
+      uniqueCreators,
+      topTracks,
+    };
+  }
+
+  /**
+   * Grandfather OG Rewards
+   *
+   * Credits retroactive OGUN rewards to creators based on historical
+   * playbackCount data. This rewards OG users who've been on the platform!
+   *
+   * Rewards are added as CLAIMABLE BALANCE (ogunRewardsEarned - ogunRewardsClaimed)
+   *
+   * @param options.dryRun - If true, preview without making changes
+   * @param options.limit - Max tracks to process (0 = unlimited)
+   * @param options.minPlays - Minimum plays to qualify (default 1)
+   */
+  async grandfatherOGRewards(options: {
+    dryRun?: boolean;
+    limit?: number;
+    minPlays?: number;
+  } = {}): Promise<{
+    totalTracksProcessed: number;
+    totalPlaysRewarded: number;
+    totalOgunCredited: number;
+    nftTracksRewarded: number;
+    nonNftTracksRewarded: number;
+    creatorsRewarded: number;
+    topRewarded: Array<{ trackId: string; title: string; plays: number; ogun: number }>;
+    errors: string[];
+  }> {
+    const { dryRun = true, limit = 0, minPlays = 1 } = options;
+
+    // OG reward rates (creator's 70% share)
+    const OG_REWARD_CONFIG = {
+      nftRewardPerPlay: 0.35,    // 0.5 OGUN * 70%
+      baseRewardPerPlay: 0.035,  // 0.05 OGUN * 70%
+      maxRewardPerTrack: 10000,  // Cap at 10k OGUN per track
+    };
+
+    const TrackModel = mongoose.model('Track');
+
+    const result = {
+      totalTracksProcessed: 0,
+      totalPlaysRewarded: 0,
+      totalOgunCredited: 0,
+      nftTracksRewarded: 0,
+      nonNftTracksRewarded: 0,
+      creatorsRewarded: 0,
+      topRewarded: [] as Array<{ trackId: string; title: string; plays: number; ogun: number }>,
+      errors: [] as string[],
+    };
+
+    const creatorsSet = new Set<string>();
+    const trackRewards: Array<{ trackId: string; title: string; plays: number; ogun: number }> = [];
+
+    try {
+      // Find all tracks with plays
+      let query = TrackModel.find({
+        playbackCount: { $gte: minPlays },
+        deleted: { $ne: true }
+      }).sort({ playbackCount: -1 });
+
+      if (limit > 0) {
+        query = query.limit(limit);
+      }
+
+      const tracks = await query.lean().exec() as any[];
+
+      console.log(`[GrandfatherOG] Processing ${tracks.length} tracks with ${minPlays}+ plays (dryRun=${dryRun})`);
+
+      for (const track of tracks) {
+        try {
+          const trackId = track._id.toString();
+          const profileId = track.profileId?.toString();
+          const playbackCount = track.playbackCount || 0;
+          const isNft = !!(track.nftData?.tokenId || track.nftData?.contractAddress);
+
+          if (!profileId) {
+            result.errors.push(`Track ${trackId}: No profileId`);
+            continue;
+          }
+
+          // Calculate reward
+          const rewardPerPlay = isNft ? OG_REWARD_CONFIG.nftRewardPerPlay : OG_REWARD_CONFIG.baseRewardPerPlay;
+          let ogunToCredit = Math.min(playbackCount * rewardPerPlay, OG_REWARD_CONFIG.maxRewardPerTrack);
+
+          if (!dryRun) {
+            // Get or create SCid for this track
+            let scid = await SCidModel.findOne({ trackId });
+
+            if (!scid) {
+              // Create SCid for this track
+              const artistHash = SCidGenerator.generateArtistHash(profileId);
+              const existingCount = await SCidModel.countDocuments({ profileId });
+              const scidCode = SCidGenerator.generate({
+                artistIdentifier: profileId,
+                sequenceNumber: existingCount + 1,
+                chainCode: ChainCode.POLYGON,
+              });
+
+              scid = new SCidModel({
+                scid: scidCode,
+                trackId,
+                profileId,
+                chainCode: ChainCode.POLYGON,
+                artistHash,
+                year: new Date().getFullYear().toString().slice(-2),
+                sequence: existingCount + 1,
+                status: SCidStatus.PENDING,
+                streamCount: playbackCount,
+                ogunRewardsEarned: ogunToCredit,
+                ogunRewardsClaimed: 0,
+              });
+              await scid.save();
+            } else {
+              // Update existing SCid with grandfather rewards
+              await SCidModel.updateOne(
+                { trackId },
+                {
+                  $inc: {
+                    streamCount: playbackCount,
+                    ogunRewardsEarned: ogunToCredit,
+                  },
+                }
+              );
+            }
+          }
+
+          // Track stats
+          result.totalTracksProcessed++;
+          result.totalPlaysRewarded += playbackCount;
+          result.totalOgunCredited += ogunToCredit;
+
+          if (isNft) {
+            result.nftTracksRewarded++;
+          } else {
+            result.nonNftTracksRewarded++;
+          }
+
+          creatorsSet.add(profileId);
+          trackRewards.push({
+            trackId,
+            title: track.title || 'Untitled',
+            plays: playbackCount,
+            ogun: ogunToCredit,
+          });
+
+        } catch (err: any) {
+          result.errors.push(`Track ${track._id}: ${err.message}`);
+        }
+      }
+
+      result.creatorsRewarded = creatorsSet.size;
+      result.topRewarded = trackRewards
+        .sort((a, b) => b.ogun - a.ogun)
+        .slice(0, 20);
+
+      console.log(`[GrandfatherOG] Complete: ${result.totalTracksProcessed} tracks, ${result.totalOgunCredited.toFixed(2)} OGUN credited to ${result.creatorsRewarded} creators`);
+
+      return result;
+
+    } catch (err: any) {
+      console.error('[GrandfatherOG] Fatal error:', err);
+      result.errors.push(`Fatal: ${err.message}`);
+      return result;
+    }
+  }
 }
 
 export default SCidService;
