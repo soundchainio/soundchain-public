@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { OAuthExtension } from '@magic-ext/oauth2'
 import { InstanceWithExtensions, SDKBase } from '@magic-sdk/provider'
-import { setJwt } from 'lib/apollo'
+import { getJwt, setJwt } from 'lib/apollo'
 import { Magic, RPCErrorCode } from 'magic-sdk'
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState, useRef } from 'react'
 import Web3 from 'web3'
@@ -11,6 +11,7 @@ import { errorHandler } from 'utils/errorHandler'
 import SoundchainOGUN20 from '../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import { config } from 'config'
 import { AbiItem } from 'web3-utils'
+import { useLoginMutation } from 'lib/graphql'
 
 const magicPublicKey = process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101';
 
@@ -26,6 +27,7 @@ interface MagicContextData {
   refetchBalance: () => Promise<void>
   isRefetchingBalance: boolean
   isLoggedIn: boolean
+  isRestoringSession: boolean  // True while restoring session on page refresh
   // Magic Wallet Module - connect external wallets
   connectWallet: () => Promise<string[] | null>
   walletConnectedAddress: string | null
@@ -73,12 +75,15 @@ const createWeb3 = (
 
 export function MagicProvider({ children }: MagicProviderProps) {
   const me = useMe()
+  const [login] = useLoginMutation()
   const [magic, setMagic] = useState<MagicInstance>(null)
   const [web3, setWeb3] = useState<Web3 | null>(null)
   const [account, setAccount] = useState('')
   const [maticBalance, setMaticBalance] = useState('')
   const [ogunBalance, setOgunBalance] = useState('')
   const [isRefetchingBalance, setIsRefetchingBalance] = useState(false)
+  const [isRestoringSession, setIsRestoringSession] = useState(false)
+  const sessionRestorationAttempted = useRef(false)
 
   // Magic Wallet Module state
   const [walletConnectedAddress, setWalletConnectedAddress] = useState<string | null>(null)
@@ -98,6 +103,71 @@ export function MagicProvider({ children }: MagicProviderProps) {
       }
     }
   }, [])
+
+  // Session restoration - runs on ALL pages (not just login)
+  // This fixes the issue where page refresh logs users out
+  useEffect(() => {
+    const restoreSession = async () => {
+      // Only attempt once per mount
+      if (sessionRestorationAttempted.current) return
+      sessionRestorationAttempted.current = true
+
+      // Skip if not browser, Magic not ready, or already have user data
+      if (typeof window === 'undefined' || !magic || me) return
+
+      // Check if we already have a valid JWT
+      const existingJwt = getJwt()
+      if (existingJwt) {
+        console.log('[SessionRestore] JWT exists, skipping restoration')
+        return
+      }
+
+      // No JWT - check for stored Magic didToken
+      const storedToken = localStorage.getItem('didToken')
+      if (!storedToken) {
+        console.log('[SessionRestore] No stored didToken, user needs to log in')
+        return
+      }
+
+      console.log('[SessionRestore] Found stored didToken, validating with Magic...')
+      setIsRestoringSession(true)
+
+      try {
+        // Validate the stored token with Magic SDK
+        const isLoggedInPromise = magic.user.isLoggedIn()
+        const timeoutPromise = new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(new Error('isLoggedIn timeout')), 5000)
+        )
+
+        const isLoggedIn = await Promise.race([isLoggedInPromise, timeoutPromise])
+
+        if (isLoggedIn) {
+          console.log('[SessionRestore] Magic session valid, exchanging for JWT...')
+          const loginResult = await login({ variables: { input: { token: storedToken } } })
+
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt)
+            console.log('[SessionRestore] Session restored successfully!')
+          } else {
+            console.log('[SessionRestore] Login mutation succeeded but no JWT returned')
+          }
+        } else {
+          console.log('[SessionRestore] Magic session expired, clearing stored token')
+          localStorage.removeItem('didToken')
+        }
+      } catch (error: any) {
+        console.log('[SessionRestore] Restoration failed:', error.message)
+        // Don't clear token on timeout - Magic might be slow
+        if (!error.message?.includes('timeout')) {
+          localStorage.removeItem('didToken')
+        }
+      } finally {
+        setIsRestoringSession(false)
+      }
+    }
+
+    restoreSession()
+  }, [magic, me, login])
 
   const handleError = useCallback(async (error: Error | { code: number }) => {
     if ('code' in error && error.code === RPCErrorCode.InternalError) {
@@ -337,6 +407,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
         refetchBalance,
         isRefetchingBalance,
         isLoggedIn: !!me,
+        isRestoringSession,  // True while restoring session on page refresh
         // Magic Wallet Module
         connectWallet,
         walletConnectedAddress,

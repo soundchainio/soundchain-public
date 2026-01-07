@@ -69,11 +69,12 @@ export async function setJwt(newJwt?: string) {
   if (isBrowser) {
     if (jwt) {
       // Set cookie with proper options for persistence
+      // Extended to 30 days for better UX during testing/live-prod era
       Cookies.set(jwtKey, jwt, {
         sameSite: 'Lax',
         secure: !isSafari,
-        expires: 7,  // 7 days expiry
-        path: '/',   // Available on all paths
+        expires: 30,  // 30 days expiry for "stay logged in" feature
+        path: '/',    // Available on all paths
       })
 
       // Verify cookie was set
