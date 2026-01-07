@@ -1719,16 +1719,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </span>
               </Link>
 
-              {/* Mobile Post+ and Mint+ buttons - visible on small screens */}
+              {/* Mobile WIN-WIN and Mint+ buttons - visible on small screens */}
               <div className="flex lg:hidden items-center space-x-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleCreateClick}
-                  className="hover:bg-cyan-500/10 px-2"
-                  title="Create Post"
+                  onClick={() => setShowWinWinStatsModal(true)}
+                  className="hover:bg-pink-500/10 px-2"
+                  title="WIN-WIN Streaming Rewards"
                 >
-                  <NewPost className="w-5 h-5 text-cyan-400" />
+                  <PiggyBank className="w-5 h-5 text-pink-400" />
                 </Button>
                 <Button
                   variant="ghost"
