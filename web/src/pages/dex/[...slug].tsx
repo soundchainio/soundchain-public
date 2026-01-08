@@ -64,7 +64,7 @@ import {
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
-  AlertCircle, RefreshCcw, PiggyBank, Settings
+  AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones
 } from 'lucide-react'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
@@ -743,6 +743,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showGuestPostModal, setShowGuestPostModal] = useState(false)
   const [showWinWinStatsModal, setShowWinWinStatsModal] = useState(false)
+  const [winWinRewardsTab, setWinWinRewardsTab] = useState<'catalog' | 'listener'>('catalog')
   const [profileImageError, setProfileImageError] = useState(false)
   const [coverImageError, setCoverImageError] = useState(false)
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
@@ -1779,29 +1780,105 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </Button>
                       </div>
 
-                      {/* Your Earnings */}
+                      {/* Tabs: Catalog (Creator) | Listener */}
                       {me && (
+                        <div className="flex border-b border-orange-500/20">
+                          <button
+                            onClick={() => setWinWinRewardsTab('catalog')}
+                            className={`flex-1 py-2 px-3 text-xs font-bold flex items-center justify-center gap-1 transition-all ${
+                              winWinRewardsTab === 'catalog'
+                                ? 'bg-orange-500/20 text-orange-400 border-b-2 border-orange-500'
+                                : 'text-gray-400 hover:text-orange-300 hover:bg-orange-500/10'
+                            }`}
+                          >
+                            <Music className="w-3 h-3" />
+                            Catalog
+                          </button>
+                          <button
+                            onClick={() => setWinWinRewardsTab('listener')}
+                            className={`flex-1 py-2 px-3 text-xs font-bold flex items-center justify-center gap-1 transition-all ${
+                              winWinRewardsTab === 'listener'
+                                ? 'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-500'
+                                : 'text-gray-400 hover:text-cyan-300 hover:bg-cyan-500/10'
+                            }`}
+                          >
+                            <Headphones className="w-3 h-3" />
+                            Listener
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Catalog (Creator) Rewards Tab */}
+                      {me && winWinRewardsTab === 'catalog' && (
                         <div className="p-3 border-b border-orange-500/20">
-                          <div className="text-[10px] text-orange-400/80 uppercase tracking-wider mb-2 text-center">Your Streaming Earnings</div>
+                          <div className="text-[10px] text-orange-400/80 uppercase tracking-wider mb-2 text-center">
+                            Your Catalog Earnings (70% Creator Share)
+                          </div>
                           <div className="grid grid-cols-3 gap-2">
                             <div className="text-center p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                              <div className="text-[9px] text-yellow-500/70 uppercase">Catalog</div>
                               <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
                                 {myStreamingRewardsLoading ? '...' : myTotalOgunEarned.toFixed(2)}
                               </div>
                               <div className="text-[9px] text-yellow-500/70">OGUN</div>
                             </div>
                             <div className="text-center p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                              <div className="text-[9px] text-cyan-500/70 uppercase">Streams</div>
                               <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
                                 {myStreamingRewardsLoading ? '...' : myTotalStreams.toLocaleString()}
                               </div>
-                              <div className="text-[9px] text-cyan-500/70">streams</div>
+                              <div className="text-[9px] text-cyan-500/70">plays</div>
                             </div>
                             <div className="text-center p-2 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                              <div className="text-[9px] text-orange-500/70 uppercase">Tracks</div>
                               <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">
                                 {myStreamingRewardsLoading ? '...' : (myStreamingRewardsData?.scidsByProfile?.length || 0)}
                               </div>
-                              <div className="text-[9px] text-orange-500/70">tracks</div>
+                              <div className="text-[9px] text-orange-500/70">active</div>
                             </div>
+                          </div>
+                          <p className="text-[9px] text-gray-500 text-center mt-2">
+                            Earned when others stream YOUR tracks
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Listener Rewards Tab */}
+                      {me && winWinRewardsTab === 'listener' && (
+                        <div className="p-3 border-b border-cyan-500/20">
+                          <div className="text-[10px] text-cyan-400/80 uppercase tracking-wider mb-2 text-center">
+                            Your Listener Earnings (30% Listener Share)
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="text-center p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                              <div className="text-[9px] text-cyan-500/70 uppercase">Listener</div>
+                              <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                                0.00
+                              </div>
+                              <div className="text-[9px] text-cyan-500/70">OGUN</div>
+                            </div>
+                            <div className="text-center p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                              <div className="text-[9px] text-purple-500/70 uppercase">Streamed</div>
+                              <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                                0
+                              </div>
+                              <div className="text-[9px] text-purple-500/70">NFTs</div>
+                            </div>
+                            <div className="text-center p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                              <div className="text-[9px] text-green-500/70 uppercase">Rate</div>
+                              <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                                0.15
+                              </div>
+                              <div className="text-[9px] text-green-500/70">OGUN/NFT</div>
+                            </div>
+                          </div>
+                          <div className="mt-2 p-2 bg-cyan-500/5 rounded-lg border border-cyan-500/20">
+                            <p className="text-[9px] text-cyan-400 text-center">
+                              🎧 Coming Soon! Earn 30% when YOU stream NFT tracks
+                            </p>
+                            <p className="text-[8px] text-gray-500 text-center mt-1">
+                              Stream NFT tracks for 30+ sec → Earn 0.15 OGUN each
+                            </p>
                           </div>
                         </div>
                       )}

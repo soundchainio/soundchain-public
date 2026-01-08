@@ -444,11 +444,11 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
             {/* Main Stats - Glowing Cards */}
             <div className="grid grid-cols-3 gap-2 mb-4">
-              {/* Total OGUN Earned */}
+              {/* Total OGUN Catalog */}
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
                 <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-yellow-500/30 hover:border-yellow-500/60 transition-all min-h-[90px]">
-                  <div className="text-[10px] text-yellow-400/80 uppercase tracking-wider mb-1 text-center">Earned</div>
+                  <div className="text-[10px] text-yellow-400/80 uppercase tracking-wider mb-1 text-center">Catalog</div>
                   <div className="text-center">
                     <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 leading-tight">
                       {streamingLoading ? '...' : streamingStats.totalOgunEarned.toFixed(2)}
