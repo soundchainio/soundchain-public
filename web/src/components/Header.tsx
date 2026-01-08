@@ -77,7 +77,7 @@ export const Header = () => {
             {/* TODO: disabling this for the soft launch */}
             {/* <NavItem text="Stake" /> */}
             <NavItem text="Airdrop" />
-            <NavItem text="Tokenomics" link="https://soundchain.gitbook.io/soundchain/token/ogun" />
+            <NavItem text="Tokenomics" link="https://soundchain-1.gitbook.io/soundchain-docs/tokenomics/ogun-overview" />
             <div className="scale-95">
               <RainbowLink href="/marketplace" className="px-2 text-center text-sm font-medium uppercase">
                 CONTINUE TO SOUNDCHAIN
