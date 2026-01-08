@@ -4,6 +4,34 @@ Get started with SoundChain in under 5 minutes!
 
 ---
 
+## Step 0: Install the App (Optional)
+
+SoundChain is a **Progressive Web App (PWA)** — install it for the best experience!
+
+### iPhone / iPad (Safari)
+1. Open [soundchain.io](https://soundchain.io) in **Safari**
+2. Tap the **Share** button (square with arrow)
+3. Scroll down and tap **"Add to Home Screen"**
+4. Tap **"Add"** in the top right
+5. SoundChain icon appears on your home screen!
+
+### Android (Chrome)
+1. Open [soundchain.io](https://soundchain.io) in **Chrome**
+2. Tap the **⋮** menu (3 dots)
+3. Tap **"Add to Home screen"** or **"Install app"**
+4. Tap **"Add"**
+5. Launch from your home screen!
+
+### Desktop (Chrome/Edge)
+1. Open [soundchain.io](https://soundchain.io)
+2. Click the **install icon** in the address bar (⊕ or ↓)
+3. Click **"Install"**
+4. App opens in its own window!
+
+> 💡 **Why install?** Faster loading, offline support, fullscreen experience, and push notifications!
+
+---
+
 ## Step 1: Create Account
 
 1. Visit [soundchain.io](https://soundchain.io)
@@ -110,7 +138,7 @@ You need a small amount of **POL** (Polygon) to pay transaction fees:
 ## ❓ Need Help?
 
 - **FAQ:** [Common Questions](../support/faq.md)
-- **Community:** [Discord](https://discord.gg/soundchain)
+- **Community:** [Discord](https://discord.gg/5yZG6BTTHV)
 - **Support:** [Contact Us](../support/contact.md)
 
 ---

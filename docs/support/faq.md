@@ -186,8 +186,9 @@ Smart contracts are open source and verified on Polygonscan.
 <details>
 <summary><strong>How do I contact support?</strong></summary>
 
-- **Discord:** [Join Community](https://discord.gg/soundchain)
-- **Twitter:** [@soundaboreum](https://twitter.com/soundaboreum)
+- **Discord:** [Join Community](https://discord.gg/5yZG6BTTHV)
+- **Twitter/X:** [@soundchain_io](https://twitter.com/soundchain_io)
+- **Telegram:** [Join Chat](https://t.me/+DbHfqlVpV644ZGMx)
 - **Email:** support@soundchain.io
 </details>
 
@@ -205,6 +206,6 @@ Please report bugs via:
 
 **Still have questions?**
 
-[**Join Discord →**](https://discord.gg/soundchain) | [**Contact Support →**](contact.md)
+[**Join Discord →**](https://discord.gg/5yZG6BTTHV) | [**Contact Support →**](contact.md)
 
 </div>
