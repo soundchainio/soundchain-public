@@ -60,11 +60,11 @@ export const SocialLinksPanel = () => {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-700">
         <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 flex items-center justify-center">
-          <span className="text-lg">🔗</span>
+          <span className="text-lg">🎵</span>
         </div>
         <div>
-          <h3 className="font-bold text-white text-sm">Follow Us</h3>
-          <p className="text-xs text-gray-400">Stay connected with SoundChain</p>
+          <h3 className="font-bold text-white text-sm">Vibes</h3>
+          <p className="text-xs text-gray-400">Connect with SoundChain</p>
         </div>
       </div>
 

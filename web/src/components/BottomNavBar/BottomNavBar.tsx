@@ -11,7 +11,8 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { NavBarButton } from 'components/common/Buttons/NavBarButton'
 import { InboxBadge } from 'components/InboxBadge'
-import { PiggyBank, X } from 'lucide-react'
+import { PiggyBank, X, Users } from 'lucide-react'
+import { FaDiscord, FaTelegramPlane, FaTwitter, FaYoutube, FaInstagram } from 'react-icons/fa'
 
 export const BottomNavBar = () => {
   const { dispatchShowCreateModal } = useModalDispatch()
@@ -19,6 +20,7 @@ export const BottomNavBar = () => {
   const me = useMe()
   const { isMinting } = useHideBottomNavBar()
   const [showWinWinModal, setShowWinWinModal] = useState(false)
+  const [showSocialModal, setShowSocialModal] = useState(false)
 
   const handleCreateClick = () => {
     me ? dispatchShowCreateModal(true) : router.push('/login')
@@ -42,6 +44,11 @@ export const BottomNavBar = () => {
   // PiggyBank Icon component for NavBarButton
   const PiggyBankIcon = ({ className }: { className?: string }) => (
     <PiggyBank className={className || "w-6 h-6"} />
+  )
+
+  // Social/Connect Icon component for NavBarButton
+  const SocialIcon = ({ className }: { className?: string }) => (
+    <Users className={className || "w-6 h-6"} />
   )
 
   return (
@@ -97,6 +104,14 @@ export const BottomNavBar = () => {
               icon={Backend}
               color="cyan"
               path={'/backend'}
+              alwaysShowLabel
+            />
+            {/* Vibes - Social Links Button */}
+            <NavBarButton
+              label=""
+              icon={SocialIcon}
+              onClick={() => setShowSocialModal(true)}
+              color="purple-green"
               alwaysShowLabel
             />
           </div>
@@ -175,6 +190,118 @@ export const BottomNavBar = () => {
               <div className="pt-3 border-t border-pink-500/30 text-center">
                 <span className="text-xs text-gray-500">
                   SOUNDCHAIN WIN-WIN | POLYGON MAINNET
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vibes - Social Links Modal */}
+      {showSocialModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/95" onClick={() => setShowSocialModal(false)} />
+          <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-2xl border-2 border-purple-500 bg-gradient-to-br from-neutral-900 via-purple-900/20 to-neutral-900 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-900 to-cyan-900 px-4 py-3 flex items-center justify-between border-b border-purple-500">
+              <div className="flex items-center gap-2">
+                <Users className="w-6 h-6 text-purple-400" />
+                <div>
+                  <span className="font-bold text-purple-100 text-lg">Vibes</span>
+                  <p className="text-xs text-purple-200/60">Connect with SoundChain</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSocialModal(false)}
+                className="w-8 h-8 flex items-center justify-center text-purple-300 hover:text-white hover:bg-purple-500/20 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Social Links */}
+            <div className="p-4 space-y-3">
+              <a
+                href="https://twitter.com/soundchain_io"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                  <FaTwitter className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold text-white text-sm">Twitter / X</div>
+                  <div className="text-xs text-blue-400">@soundchain_io</div>
+                </div>
+              </a>
+
+              <a
+                href="https://discord.gg/5yZG6BTTHV"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                  <FaDiscord className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold text-white text-sm">Discord</div>
+                  <div className="text-xs text-indigo-400">Join Community</div>
+                </div>
+              </a>
+
+              <a
+                href="https://t.me/+DbHfqlVpV644ZGMx"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
+                  <FaTelegramPlane className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold text-white text-sm">Telegram</div>
+                  <div className="text-xs text-cyan-400">Join Chat</div>
+                </div>
+              </a>
+
+              <a
+                href="https://instagram.com/soundchain.io"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-400 via-purple-500 to-orange-400 flex items-center justify-center">
+                  <FaInstagram className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold text-white text-sm">Instagram</div>
+                  <div className="text-xs text-pink-400">@soundchain.io</div>
+                </div>
+              </a>
+
+              <a
+                href="https://youtube.com/channel/UC-TJ1KIYWCYLtngwaELgyLQ"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                  <FaYoutube className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="font-semibold text-white text-sm">YouTube</div>
+                  <div className="text-xs text-red-400">SoundChain</div>
+                </div>
+              </a>
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 pb-4">
+              <div className="pt-3 border-t border-purple-500/30 text-center">
+                <span className="text-xs text-gray-500">
+                  SOUNDCHAIN | THE FUTURE OF MUSIC
                 </span>
               </div>
             </div>
