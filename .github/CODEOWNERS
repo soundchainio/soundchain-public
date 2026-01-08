@@ -20,7 +20,21 @@
 /api/src/services/NotificationService.ts @soundchainio
 /api/src/services/PostService.ts @soundchainio
 /api/src/services/ProfileService.ts @soundchainio
+
+# SCidService - Contains claimStreamingRewards() with batch chunking fix
+# BUG FIX (Jan 7, 2026): Users with 100+ tracks got "batch must be between 1-100"
+# error because batchSubmitRewards() has max 100 items. Fixed by chunking batches.
+# Also fixes: rewards marked "claimed" before contract call (caused "already claimed" on retry)
+# Commit: 9d321542d
 /api/src/services/SCidService.ts @soundchainio
+
+# ============================================
+# STREAMING REWARDS CONTRACT UTILITY
+# ============================================
+# Contains batch size validation (max 100) - DO NOT change without testing large users
+# Works with StreamingRewardsDistributor: 0xcf9416c49D525f7a50299c71f33606A158F28546
+
+/api/src/utils/StreamingRewardsContract.ts @soundchainio
 
 # ============================================
 # DATABASE & PAGINATION
