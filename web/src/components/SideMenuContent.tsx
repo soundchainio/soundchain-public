@@ -165,7 +165,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
           url="https://twitter.com/Soundchain_io"
           icon={TwitterSquare}
         />
-        <SocialTag ariaLabel="SoundChain Discord account" url="https://discord.gg/maCHnxbbSz" icon={Discord} />
+        <SocialTag ariaLabel="SoundChain Discord account" url="https://discord.gg/5yZG6BTTHV" icon={Discord} />
         <SocialTag
           ariaLabel="SoundChain Instagram account"
           url="https://www.instagram.com/soundchain.io/"

@@ -8,14 +8,21 @@ import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useMagicContext } from 'hooks/useMagicContext'
+import { Users } from 'lucide-react'
 
 import { Button } from './common/Buttons/Button'
 import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
 import { NavBar } from './NavBar'
 import { NotificationBadge } from './NotificationBadge'
 import { Notifications } from './Notifications'
+import { SocialLinksPanel } from './SocialLinksPanel'
 import { Title } from './Title'
 import { TopNavBarButton } from './TopNavBarButton'
+
+// Social/Follow Us icon for nav bar
+const SocialIcon = () => (
+  <Users className="w-6 h-6 text-gray-80 hover:text-purple-400 transition-colors" />
+)
 
 // Magic Wallet Button for nav bar - uses magic.wallet.connectWithUI()
 const MagicWalletButton = () => {
@@ -144,6 +151,13 @@ export const TopNavBar = ({
             {me && (
               <>
                 <MagicWalletButton />
+                {/* Follow Us / Social Links */}
+                <div className="pr-1 pt-2">
+                  <SoundChainPopOver icon={SocialIcon}>
+                    <SocialLinksPanel />
+                  </SoundChainPopOver>
+                </div>
+                {/* Notifications */}
                 <div className="pr-1 pt-2">
                   <SoundChainPopOver icon={Bell} badge={NotificationBadge}>
                     <Notifications />
