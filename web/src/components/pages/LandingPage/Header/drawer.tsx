@@ -45,7 +45,7 @@ export const HeaderDrawer = ({ open, close }: { open: boolean; close: () => void
                       <Link href="/roadmap">Roadmap</Link>
                     </li>
                     <li className="text-md mb-4 cursor-pointer border-b-[1px] border-gray-30 bg-gradient-to-r from-[#ab4eff] to-[#84ff82] bg-clip-text pl-6 pb-4 font-normal text-gray-80 transition duration-150 ease-in-out hover:text-transparent">
-                      <Link href="https://soundchain.gitbook.io/" target="blank">
+                      <Link href="https://soundchain-1.gitbook.io/soundchain-docs/" target="blank">
                         Whitepaper
                       </Link>
                     </li>

@@ -10,7 +10,7 @@ export const Whitepaper = () => {
       {svgGradientFromPurpleToGreen()}
       <Dropdown title="Whitepaper" cursor="default">
         <div className="p-4">
-          <Link href="https://soundchain.gitbook.io/" target="_blank" rel="noreferrer" passHref>
+          <Link href="https://soundchain-1.gitbook.io/soundchain-docs/" target="_blank" rel="noreferrer" passHref>
             <div className="group flex items-start hover:cursor-pointer">
               <BsBookFill className="mr-4 mt-1 group-hover:fill-[url(#blue-gradient)]" size={20} />
               <span>
@@ -34,7 +34,7 @@ export const Whitepaper = () => {
               <span className="mb-2 font-semibold text-slate-300">Token</span>
 
               <Link
-                href="https://soundchain.gitbook.io/soundchain/token/ogun/airdrop"
+                href="https://soundchain-1.gitbook.io/soundchain-docs/tokenomics/ogun-overview"
                 target="_blank"
                 rel="noreferrer"
                 className="mb-1 "
@@ -46,7 +46,7 @@ export const Whitepaper = () => {
               </Link>
 
               <Link
-                href="https://soundchain.gitbook.io/soundchain/token/ogun/staking"
+                href="https://soundchain-1.gitbook.io/soundchain-docs/platform/staking"
                 target="_blank"
                 rel="noreferrer"
                 className="mb-1"
@@ -58,7 +58,7 @@ export const Whitepaper = () => {
               </Link>
 
               <Link
-                href="https://soundchain.gitbook.io/soundchain/token/ogun/buy-sell-ogun"
+                href="https://soundchain-1.gitbook.io/soundchain-docs/tokenomics/buy-sell"
                 target="_blank"
                 rel="noreferrer"
                 className="mb-1"
@@ -74,7 +74,7 @@ export const Whitepaper = () => {
               <span className="mb-2 font-semibold text-slate-300">Support</span>
 
               <Link
-                href="https://soundchain.gitbook.io/soundchain/support/faq"
+                href="https://soundchain-1.gitbook.io/soundchain-docs/support/faq"
                 passHref
                 target="_blank"
                 rel="noreferrer"
@@ -86,7 +86,7 @@ export const Whitepaper = () => {
               </Link>
 
               <Link
-                href="https://soundchain.gitbook.io/soundchain/support/social"
+                href="https://soundchain-1.gitbook.io/soundchain-docs/support/community"
                 passHref
                 target="_blank"
                 rel="noreferrer"
@@ -98,7 +98,7 @@ export const Whitepaper = () => {
               </Link>
 
               <Link
-                href="https://soundchain.gitbook.io/soundchain/support/feedback"
+                href="https://soundchain-1.gitbook.io/soundchain-docs/support/contact"
                 passHref
                 target="_blank"
                 rel="noreferrer"

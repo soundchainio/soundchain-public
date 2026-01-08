@@ -2149,7 +2149,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 Wallet
                               </Button>
                             </Link>
-                            <Link href="https://soundchain.gitbook.io/soundchain/" target="_blank" rel="noreferrer">
+                            <Link href="https://soundchain-1.gitbook.io/soundchain-docs/" target="_blank" rel="noreferrer">
                               <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => setShowUserMenu(false)}>
                                 <Document className="w-4 h-4 mr-3" />
                                 Docs

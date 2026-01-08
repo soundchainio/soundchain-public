@@ -136,7 +136,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
             label="Docs"
             target="_blank"
             rel="noreferrer"
-            href="https://soundchain.gitbook.io/soundchain/"
+            href="https://soundchain-1.gitbook.io/soundchain-docs/"
           />
           <MenuLink icon={Feedback} label="Leave Feedback" href="/feedback" />
           <MenuLink icon={Code} label="Developers" href="/developers" />

@@ -48,7 +48,7 @@ function HeaderDrawer({ open, close }: { open: boolean; close: () => void }) {
               <div className="p-4">
                 <ul className="flex flex-col gap-4">
                   <li className="text-md cursor-pointer font-semibold text-slate-400 hover:text-slate-200">
-                    <Link href="https://soundchain.gitbook.io/soundchain/token/ogun">Tokenomics</Link>
+                    <Link href="https://soundchain-1.gitbook.io/soundchain-docs/tokenomics/ogun-overview">Tokenomics</Link>
                   </li>
                 </ul>
               </div>
