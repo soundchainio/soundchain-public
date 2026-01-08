@@ -667,6 +667,8 @@ export class SCidService extends Service {
    * When StreamingRewardsDistributor contract is deployed, this will
    * also trigger on-chain distribution.
    *
+   * NOTE: Supports users with 100+ tracks by chunking into batches of 100.
+   *
    * @param input.profileId - User's profile ID
    * @param input.walletAddress - Wallet address to claim to
    * @param input.stakeDirectly - If true, stake rewards instead of claim
@@ -680,6 +682,7 @@ export class SCidService extends Service {
     error?: string;
   }> {
     const { profileId, walletAddress, stakeDirectly = false } = input;
+    const BATCH_SIZE = 100; // Max batch size for contract
 
     try {
       // Get all SCids for this user with unclaimed rewards
@@ -698,25 +701,25 @@ export class SCidService extends Service {
         };
       }
 
-      // Calculate total unclaimed rewards
-      let totalRewards = 0;
-      const tracksClaimed: string[] = [];
+      // Build list of SCids with unclaimed rewards (DO NOT mark claimed yet)
+      const unclaimedScids: Array<{
+        scid: typeof scids[0];
+        unclaimed: number;
+        isNft: boolean;
+      }> = [];
 
       for (const scid of scids) {
-        // Get unclaimed amount (total earned minus any already claimed)
         const unclaimedAmount = scid.ogunRewardsEarned - (scid.ogunRewardsClaimed || 0);
         if (unclaimedAmount > 0) {
-          totalRewards += unclaimedAmount;
-          tracksClaimed.push(scid.trackId);
-
-          // Mark as claimed
-          scid.ogunRewardsClaimed = scid.ogunRewardsEarned;
-          scid.lastClaimedAt = new Date();
-          await scid.save();
+          unclaimedScids.push({
+            scid,
+            unclaimed: unclaimedAmount,
+            isNft: !!scid.contractAddress,
+          });
         }
       }
 
-      if (totalRewards === 0) {
+      if (unclaimedScids.length === 0) {
         return {
           success: false,
           totalClaimed: 0,
@@ -726,95 +729,135 @@ export class SCidService extends Service {
         };
       }
 
+      const totalRewards = unclaimedScids.reduce((sum, s) => sum + s.unclaimed, 0);
+      console.log(`[SCidService] Found ${unclaimedScids.length} tracks with ${totalRewards.toFixed(4)} OGUN unclaimed`);
+
       // Get the streaming rewards contract
       const rewardsContract = getStreamingRewardsContract();
 
       if (!rewardsContract.isReady()) {
+        // Database-only claim (contract not available)
         console.warn('[SCidService] StreamingRewardsContract not initialized - database-only claim');
+
+        // Mark all as claimed in database
+        for (const item of unclaimedScids) {
+          item.scid.ogunRewardsClaimed = item.scid.ogunRewardsEarned;
+          item.scid.lastClaimedAt = new Date();
+          await item.scid.save();
+        }
+
         return {
           success: true,
           totalClaimed: totalRewards,
-          tracksCount: tracksClaimed.length,
+          tracksCount: unclaimedScids.length,
           staked: stakeDirectly,
           error: 'Contract not initialized - rewards tracked but not distributed on-chain yet',
         };
       }
 
-      // Prepare batch data for all unclaimed rewards
-      const users: string[] = [];
-      const scidStrings: string[] = [];
-      const amounts: number[] = [];
-      const isNfts: boolean[] = [];
-
-      for (const scid of scids) {
-        const unclaimed = scid.ogunRewardsEarned - (scid.ogunRewardsClaimed || 0);
-        if (unclaimed > 0) {
-          users.push(walletAddress);
-          scidStrings.push(scid.scid);
-          amounts.push(unclaimed);
-          isNfts.push(!!scid.contractAddress); // Has contractAddress = NFT (on-chain)
-        }
+      // Process in batches of BATCH_SIZE (100)
+      const batches: typeof unclaimedScids[] = [];
+      for (let i = 0; i < unclaimedScids.length; i += BATCH_SIZE) {
+        batches.push(unclaimedScids.slice(i, i + BATCH_SIZE));
       }
 
-      console.log(`[SCidService] Distributing ${totalRewards} OGUN to ${walletAddress} for ${users.length} tracks`);
+      console.log(`[SCidService] Processing ${batches.length} batch(es) for ${walletAddress}`);
 
-      // Call the contract based on stakeDirectly flag
-      let result;
-      if (users.length === 1) {
-        // Single claim
-        if (stakeDirectly) {
-          result = await rewardsContract.submitRewardAndStake(
-            walletAddress,
-            scidStrings[0],
-            amounts[0],
-            isNfts[0]
-          );
+      let totalClaimed = 0;
+      let tracksClaimed = 0;
+      const transactionHashes: string[] = [];
+      const successfulScids: typeof unclaimedScids = [];
+
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+
+        const users = batch.map(() => walletAddress);
+        const scidStrings = batch.map(s => s.scid.scid);
+        const amounts = batch.map(s => s.unclaimed);
+        const isNfts = batch.map(s => s.isNft);
+        const batchTotal = amounts.reduce((sum, a) => sum + a, 0);
+
+        console.log(`[SCidService] Batch ${batchIndex + 1}/${batches.length}: ${batch.length} tracks, ${batchTotal.toFixed(4)} OGUN`);
+
+        let result;
+        if (batch.length === 1) {
+          // Single claim
+          if (stakeDirectly) {
+            result = await rewardsContract.submitRewardAndStake(
+              walletAddress,
+              scidStrings[0],
+              amounts[0],
+              isNfts[0]
+            );
+          } else {
+            result = await rewardsContract.submitReward(
+              walletAddress,
+              scidStrings[0],
+              amounts[0],
+              isNfts[0]
+            );
+          }
         } else {
-          result = await rewardsContract.submitReward(
-            walletAddress,
-            scidStrings[0],
-            amounts[0],
-            isNfts[0]
+          // Batch claim
+          result = await rewardsContract.batchSubmitRewards(
+            users,
+            scidStrings,
+            amounts,
+            isNfts
           );
         }
-      } else {
-        // Batch claim (more gas efficient)
-        result = await rewardsContract.batchSubmitRewards(
-          users,
-          scidStrings,
-          amounts,
-          isNfts
-        );
-      }
 
-      if (!result.success) {
-        // Rollback database changes on contract failure
-        for (const scid of scids) {
-          const unclaimed = scid.ogunRewardsEarned - (scid.ogunRewardsClaimed || 0);
-          if (unclaimed > 0) {
-            scid.ogunRewardsClaimed = (scid.ogunRewardsClaimed || 0) - unclaimed;
-            scid.lastClaimedAt = undefined;
-            await scid.save();
+        if (result.success) {
+          // Mark this batch as claimed AFTER successful transaction
+          for (const item of batch) {
+            item.scid.ogunRewardsClaimed = item.scid.ogunRewardsEarned;
+            item.scid.lastClaimedAt = new Date();
+            await item.scid.save();
+            successfulScids.push(item);
+          }
+
+          totalClaimed += batchTotal;
+          tracksClaimed += batch.length;
+          if (result.transactionHash) {
+            transactionHashes.push(result.transactionHash);
+          }
+
+          console.log(`[SCidService] Batch ${batchIndex + 1} success: ${result.transactionHash}`);
+        } else {
+          // Batch failed - stop processing but keep partial success
+          console.error(`[SCidService] Batch ${batchIndex + 1} failed: ${result.error}`);
+
+          if (totalClaimed > 0) {
+            // Partial success - return what we got
+            return {
+              success: true,
+              totalClaimed,
+              tracksCount: tracksClaimed,
+              staked: stakeDirectly,
+              transactionHash: transactionHashes[0],
+              error: `Partial claim: ${tracksClaimed}/${unclaimedScids.length} tracks claimed. Batch ${batchIndex + 1} failed: ${result.error}`,
+            };
+          } else {
+            // First batch failed - total failure
+            return {
+              success: false,
+              totalClaimed: 0,
+              tracksCount: 0,
+              staked: false,
+              error: result.error || 'Contract call failed',
+            };
           }
         }
-
-        return {
-          success: false,
-          totalClaimed: 0,
-          tracksCount: 0,
-          staked: false,
-          error: result.error || 'Contract call failed',
-        };
       }
 
-      console.log(`[SCidService] Successfully distributed ${totalRewards} OGUN - tx: ${result.transactionHash}`);
+      console.log(`[SCidService] Successfully distributed ${totalClaimed.toFixed(4)} OGUN for ${tracksClaimed} tracks`);
 
       return {
         success: true,
-        totalClaimed: totalRewards,
-        tracksCount: tracksClaimed.length,
+        totalClaimed,
+        tracksCount: tracksClaimed,
         staked: stakeDirectly,
-        transactionHash: result.transactionHash,
+        transactionHash: transactionHashes[0], // Return first tx hash
       };
     } catch (err: any) {
       console.error('[SCidService] Claim error:', err);
