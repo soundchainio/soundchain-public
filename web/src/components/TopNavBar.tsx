@@ -150,15 +150,15 @@ export const TopNavBar = ({
                 </>
               )}
             </div>
-            {/* Follow Us / Social Links - Always visible */}
-            <div className="pr-1 pt-2">
-              <SoundChainPopOver icon={SocialIcon}>
-                <SocialLinksPanel />
-              </SoundChainPopOver>
-            </div>
             {me && (
               <>
                 <MagicWalletButton />
+                {/* Vibes - Social Links (next to bell) */}
+                <div className="pr-1 pt-2">
+                  <SoundChainPopOver icon={SocialIcon}>
+                    <SocialLinksPanel />
+                  </SoundChainPopOver>
+                </div>
                 {/* Notifications */}
                 <div className="pr-1 pt-2">
                   <SoundChainPopOver icon={Bell} badge={NotificationBadge}>
