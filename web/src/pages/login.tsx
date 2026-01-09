@@ -216,13 +216,66 @@ export default function LoginPage() {
       setError(null);
       localStorage.removeItem('didToken');
 
-      // Use popup instead of redirect - redirect not working with network config
-      console.log('[OAuth] Using popup for', provider);
+      // Detect mobile vs desktop for different OAuth strategies
+      // Mobile: Use redirect (popups often blocked)
+      // Desktop: Use popup with timeout (more reliable when it works)
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const redirectURI = `${window.location.origin}/login`;
 
-      const result = await (magic as any).oauth2.loginWithPopup({
-        provider,
-        scope: ['openid'],
-      });
+      if (isMobile) {
+        // MOBILE: Use redirect flow (popups blocked on mobile browsers)
+        console.log('[OAuth] Mobile detected, using redirect for', provider);
+        try {
+          await (magic as any).oauth2.loginWithRedirect({
+            provider,
+            redirectURI,
+            scope: ['openid'],
+          });
+          // Page will redirect - don't continue
+          return;
+        } catch (redirectError: any) {
+          console.error('[OAuth] Redirect error:', redirectError);
+          // If redirect fails, the page won't redirect so we need to reset state
+          setLoggingIn(false);
+          setError(`${provider} login failed. Please try again.`);
+          return;
+        }
+      }
+
+      // DESKTOP: Use popup with timeout to prevent infinite hang
+      console.log('[OAuth] Desktop, using popup for', provider);
+
+      // Create timeout promise (20 seconds for popup)
+      const popupTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('POPUP_TIMEOUT')), 20000)
+      );
+
+      let result;
+      try {
+        result = await Promise.race([
+          (magic as any).oauth2.loginWithPopup({
+            provider,
+            scope: ['openid'],
+          }),
+          popupTimeout,
+        ]);
+      } catch (popupError: any) {
+        if (popupError.message === 'POPUP_TIMEOUT') {
+          console.log('[OAuth] Popup timed out, may be blocked. Trying redirect...');
+          // Fallback to redirect if popup times out (might be blocked)
+          try {
+            await (magic as any).oauth2.loginWithRedirect({
+              provider,
+              redirectURI,
+              scope: ['openid'],
+            });
+            return; // Page will redirect
+          } catch (fallbackError: any) {
+            throw new Error('Login popup was blocked. Please allow popups for this site, or try Email login.');
+          }
+        }
+        throw popupError;
+      }
 
       console.log('[OAuth] Popup result:', result);
 
@@ -239,7 +292,12 @@ export default function LoginPage() {
       throw new Error('OAuth login failed - no token received');
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
-      setError(error.message || `${provider} login failed. Please try again.`);
+      // Check if user cancelled the popup
+      if (error.message?.includes('User denied') || error.message?.includes('cancelled') || error.message?.includes('closed')) {
+        setError('Login cancelled. Please try again.');
+      } else {
+        setError(error.message || `${provider} login failed. Please try again.`);
+      }
       setLoggingIn(false);
     }
   };
