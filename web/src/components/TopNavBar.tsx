@@ -19,9 +19,11 @@ import { SocialLinksPanel } from './SocialLinksPanel'
 import { Title } from './Title'
 import { TopNavBarButton } from './TopNavBarButton'
 
-// Social/Follow Us icon for nav bar
+// Social/Follow Us icon for nav bar - Vibes
 const SocialIcon = () => (
-  <Users className="w-6 h-6 text-gray-80 hover:text-purple-400 transition-colors" />
+  <div className="p-1.5 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 hover:from-purple-500/40 hover:to-cyan-500/40 transition-all">
+    <Users className="w-5 h-5 text-purple-400" />
+  </div>
 )
 
 // Magic Wallet Button for nav bar - uses magic.wallet.connectWithUI()
