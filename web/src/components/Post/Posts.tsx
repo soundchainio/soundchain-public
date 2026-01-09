@@ -430,7 +430,7 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
       <PullToRefresh onRefresh={refetch}>
         <AutoSizer>
           {({ height, width }) => (
-            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={postsCount} loadMoreItems={loadMoreItems}>
+            <InfiniteLoader isItemLoaded={isItemLoaded} itemCount={postsCount} loadMoreItems={loadMoreItems} threshold={5}>
               {({ onItemsRendered, ref }) => (
                 viewMode === 'list' ? (
                   <List
