@@ -42,16 +42,29 @@ export const RightSidebar = () => {
     .filter((track: any) => track.nftData?.tokenId || track.nftData?.contract)
     .slice(0, 100)
 
-  const handlePlayTrack = (track: any) => {
-    const song: Song = {
-      trackId: track.id,
-      src: track.playbackUrl,
-      art: track.artworkUrl,
-      title: track.title,
-      artist: track.artist,
-      isFavorite: track.isFavorite,
-    }
-    playlistState([song], 0)
+  // Play a track with full playlist context
+  const handlePlayTrendingTrack = (track: any, index: number) => {
+    const playlist: Song[] = trendingTracks.map(t => ({
+      trackId: t.id,
+      src: t.playbackUrl,
+      art: t.artworkUrl,
+      title: t.title,
+      artist: t.artist,
+      isFavorite: t.isFavorite,
+    }))
+    playlistState(playlist, index)
+  }
+
+  const handlePlayTop100Track = (track: any, index: number) => {
+    const playlist: Song[] = top100NftTracks.map((t: any) => ({
+      trackId: t.id,
+      src: t.playbackUrl,
+      art: t.artworkUrl,
+      title: t.title,
+      artist: t.artist,
+      isFavorite: t.isFavorite,
+    }))
+    playlistState(playlist, index)
   }
 
   return (
@@ -74,7 +87,7 @@ export const RightSidebar = () => {
               <div
                 key={track.id}
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-800/50 transition-colors group cursor-pointer"
-                onClick={() => handlePlayTrack(track)}
+                onClick={() => handlePlayTrendingTrack(track, index)}
               >
                 {/* Rank */}
                 <span className={`w-5 text-center font-bold text-sm ${
@@ -212,7 +225,7 @@ export const RightSidebar = () => {
                   <div
                     key={track.id}
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-800/50 transition-colors group cursor-pointer"
-                    onClick={() => handlePlayTrack(track)}
+                    onClick={() => handlePlayTop100Track(track, index)}
                   >
                     {/* Rank */}
                     <span className={`w-6 text-center font-bold text-xs ${
@@ -262,7 +275,7 @@ export const RightSidebar = () => {
                 <div
                   key={track.id}
                   className="flex items-center gap-2 p-2 rounded-lg hover:bg-neutral-800/50 transition-colors group cursor-pointer"
-                  onClick={() => handlePlayTrack(track)}
+                  onClick={() => handlePlayTop100Track(track, index)}
                 >
                   <span className={`w-6 text-center font-bold text-xs ${
                     index === 0 ? 'text-yellow-400' :
