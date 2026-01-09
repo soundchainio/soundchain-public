@@ -5762,7 +5762,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       key={track.id}
                       className="flex items-center gap-3 p-3 rounded-xl hover:bg-yellow-500/10 transition-colors group cursor-pointer"
                       onClick={() => {
-                        handlePlayTrack(track)
+                        handlePlayTrack(track, index, top100NftTracks)
                         setShowTop100Modal(false)
                       }}
                     >
