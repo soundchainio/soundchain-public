@@ -743,6 +743,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showGuestPostModal, setShowGuestPostModal] = useState(false)
   const [showWinWinStatsModal, setShowWinWinStatsModal] = useState(false)
+  const [showVibesModal, setShowVibesModal] = useState(false)
   const [winWinRewardsTab, setWinWinRewardsTab] = useState<'catalog' | 'listener'>('catalog')
   const [profileImageError, setProfileImageError] = useState(false)
   const [coverImageError, setCoverImageError] = useState(false)
@@ -1922,6 +1923,94 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <p className="text-[9px] text-gray-500">
                           Creator 70% · Listener 30% · 30sec min · Polygon
                         </p>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+
+                {/* Vibes - Social Links Button */}
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowVibesModal(!showVibesModal)}
+                    className="hover:bg-purple-500/10 px-2"
+                    title="Follow Us"
+                  >
+                    <Users className="w-5 h-5 text-purple-400" />
+                  </Button>
+
+                  {/* Vibes Dropdown Modal */}
+                  {showVibesModal && (
+                    <Card className="absolute left-0 top-12 w-72 z-50 shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900">
+                      {/* Header */}
+                      <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-cyan-900/50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                            <Users className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Vibes</h3>
+                            <p className="text-[10px] text-purple-300/80">Connect with SoundChain</p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => setShowVibesModal(false)} className="w-6 h-6 p-0 hover:bg-purple-500/20">
+                          <X className="w-4 h-4 text-purple-400" />
+                        </Button>
+                      </div>
+
+                      {/* Social Links */}
+                      <div className="p-3 space-y-2">
+                        <a href="https://twitter.com/soundchain_io" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                            <span className="text-white text-sm">𝕏</span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-white text-xs">Twitter / X</div>
+                            <div className="text-[10px] text-blue-400">@soundchain_io</div>
+                          </div>
+                        </a>
+                        <a href="https://discord.gg/5yZG6BTTHV" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                            <span className="text-white text-sm">🎮</span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-white text-xs">Discord</div>
+                            <div className="text-[10px] text-indigo-400">Join Community</div>
+                          </div>
+                        </a>
+                        <a href="https://t.me/+DbHfqlVpV644ZGMx" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
+                            <span className="text-white text-sm">✈️</span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-white text-xs">Telegram</div>
+                            <div className="text-[10px] text-cyan-400">Join Chat</div>
+                          </div>
+                        </a>
+                        <a href="https://instagram.com/soundchain.io" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20 transition-all">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 via-purple-500 to-orange-400 flex items-center justify-center">
+                            <span className="text-white text-sm">📷</span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-white text-xs">Instagram</div>
+                            <div className="text-[10px] text-pink-400">@soundchain.io</div>
+                          </div>
+                        </a>
+                        <a href="https://youtube.com/channel/UC-TJ1KIYWCYLtngwaELgyLQ" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                            <span className="text-white text-sm">▶️</span>
+                          </div>
+                          <div>
+                            <div className="font-semibold text-white text-xs">YouTube</div>
+                            <div className="text-[10px] text-red-400">SoundChain</div>
+                          </div>
+                        </a>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="px-3 pb-2 text-center border-t border-purple-500/20 pt-2">
+                        <p className="text-[9px] text-gray-500">SOUNDCHAIN · THE FUTURE OF MUSIC</p>
                       </div>
                     </Card>
                   )}
