@@ -184,7 +184,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
                 ) : isGuest ? (
                   <div className="flex items-center gap-2">
                     <GuestAvatar walletAddress={guestWallet!} pixels={40} />
-                    <span className="text-[8px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 bg-neutral-700 text-neutral-300 rounded-full font-medium">
                       Guest
                     </span>
                   </div>
@@ -194,7 +194,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact }: NewCommentFormPro
                     <div className="w-10 h-10 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-400">
                       👤
                     </div>
-                    <span className="text-[8px] px-1.5 py-0.5 bg-neutral-600 text-neutral-300 rounded-full font-medium">
+                    <span className="text-[10px] px-1.5 py-0.5 bg-neutral-700 text-neutral-300 rounded-full font-medium">
                       Public
                     </span>
                   </div>

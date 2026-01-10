@@ -203,7 +203,7 @@ export const PostFormTimeline = () => {
       <div className="mb-[16px] flex items-center justify-between">
         <span className="text-white">Post</span>
         {!me && (
-          <span className="text-[10px] px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full">Public</span>
+          <span className="text-[10px] px-1.5 py-0.5 bg-neutral-700 text-neutral-300 rounded-full font-medium">Public</span>
         )}
       </div>
       <PostFormMiddleContainer>
