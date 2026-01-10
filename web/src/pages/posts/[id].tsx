@@ -128,13 +128,12 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
       }
     }
 
-    // For regular users, return props directly (removed cacheFor to prevent SSR crashes)
-    // cacheFor can crash serverless functions when components access browser-only APIs
+    // For regular users, redirect to DEX feed (modern UI)
+    // The /posts/[id] page uses legacy layout - redirect to DEX-era design
     return {
-      props: {
-        post: data.post,
-        postId,
-        isBot: false,
+      redirect: {
+        destination: '/dex/feed',
+        permanent: false,
       },
     }
   } catch (e) {
