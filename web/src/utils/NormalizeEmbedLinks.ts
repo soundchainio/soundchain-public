@@ -10,7 +10,8 @@ const linksRegex = /\bhttps?:\/\/\S+/gi
 // YouTube - FULL support for all YouTube URL formats
 // Supported: watch, shorts, live, embed, v/, youtu.be, music.youtube.com, clips, playlists, @channel/live
 const youtubeVideoIdRegex = /(?:https?:\/\/)?(?:www\.)?(?:(?:music\.)?youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
-const youtubePlaylistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/
+// Playlist regex - supports both youtube.com and music.youtube.com playlists/albums
+const youtubePlaylistRegex = /(?:https?:\/\/)?(?:www\.)?(?:music\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/
 const youtubeClipRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/clip\/([a-zA-Z0-9_-]+)/
 const youtubeLiveChannelRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/@([a-zA-Z0-9_-]+)\/live/
 const youtubeEmbedUrlRegex = /youtube\.com\/embed\//
