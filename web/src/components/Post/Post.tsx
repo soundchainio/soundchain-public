@@ -7,7 +7,8 @@ import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { Clock } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
+import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { MediaProvider } from 'types/MediaProvider'
 
 // Helper to extract YouTube video ID and generate thumbnail URL
 const getYouTubeThumbnail = (url: string): string | null => {
@@ -256,75 +257,92 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           )}
 
-          {/* Embedded video/link - Instagram 4:5 aspect ratio for polish */}
+          {/* Embedded video/link - Responsive with proper aspect ratio */}
           {/* Key is stable to prevent remounting on orientation change */}
           {/* CSS contain/will-change/transform prevents iframe reload on mobile rotation */}
-          {post.mediaLink && (() => {
-            const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
-            const isPlaylist = mediaUrl.includes('videoseries') || mediaUrl.includes('list=')
-
-            // Use iframe for playlists (shows tracklist) or non-ReactPlayer platforms
-            const useIframe = isPlaylist || !hasLazyLoadWithThumbnailSupport(post.mediaLink)
-
-            if (!useIframe) {
-              // YouTube videos, Vimeo, Facebook - ReactPlayer with 4:5 Instagram aspect ratio
-              return (
-                <div
-                  key={`player-${post.id}`}
-                  className="relative w-full orientation-stable bg-black"
-                  style={{
-                    aspectRatio: '4/5',
-                    contain: 'layout style',
-                    willChange: 'contents',
-                    transform: 'translateZ(0)',
-                  }}
-                >
-                  <ReactPlayer
-                    width="100%"
-                    height="100%"
-                    style={{ position: 'absolute', top: 0, left: 0 }}
-                    url={post.mediaLink}
-                    playsinline
-                    controls
-                    light={getYouTubeThumbnail(post.mediaLink) || true}
-                    pip
-                    playing={false}
-                    stopOnUnmount={false}
-                    config={{
-                      youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' } },
-                      vimeo: { playerOptions: { responsive: true, playsinline: true } },
-                      facebook: { appId: '' },
-                    }}
-                  />
-                </div>
-              )
-            }
-
-            // All iframe embeds - Instagram 4:5 aspect ratio for consistency
-            return (
+          {post.mediaLink && (
+            hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
+              // YouTube, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
               <div
-                key={`iframe-wrapper-${post.id}`}
-                className="relative w-full orientation-stable bg-black"
+                key={`player-${post.id}`}
+                className="relative w-full orientation-stable"
                 style={{
-                  aspectRatio: '4/5',
+                  paddingTop: '56.25%',
                   contain: 'layout style',
                   willChange: 'contents',
                   transform: 'translateZ(0)',
                 }}
               >
-                <iframe
-                  key={`iframe-${post.id}`}
-                  frameBorder="0"
-                  className="absolute inset-0 w-full h-full"
-                  src={mediaUrl}
-                  title="Media"
-                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
+                <ReactPlayer
+                  width="100%"
+                  height="100%"
+                  style={{ position: 'absolute', top: 0, left: 0 }}
+                  url={post.mediaLink}
+                  playsinline
+                  controls
+                  light={getYouTubeThumbnail(post.mediaLink) || true}
+                  pip
+                  playing={false}
+                  stopOnUnmount={false}
+                  config={{
+                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' } },
+                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                    facebook: { appId: '' },
+                  }}
                 />
               </div>
+            ) : (
+              // All other platforms (audio + social) - use iframe embed (legacy style)
+              (() => {
+                const mediaType = IdentifySource(post.mediaLink).type
+                const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
+
+                // Platform-specific embed heights (legacy was min-h-[250px] for all)
+                // New platforms get optimized heights
+                const getEmbedHeight = () => {
+                  switch (mediaType) {
+                    // Audio platforms (optimized)
+                    case MediaProvider.BANDCAMP: return '470px'
+                    case MediaProvider.SPOTIFY: return '352px'
+                    case MediaProvider.SOUNDCLOUD: return '166px'
+                    // Social platforms (new - optimized for each)
+                    case MediaProvider.INSTAGRAM: return '540px'  // Instagram posts are taller
+                    case MediaProvider.TIKTOK: return '740px'     // TikTok vertical videos
+                    case MediaProvider.X: return '400px'          // Twitter/X tweets
+                    case MediaProvider.TWITCH: return '378px'     // Twitch 16:9
+                    case MediaProvider.DISCORD: return '400px'    // Discord widget
+                    case MediaProvider.CUSTOM_HTML: return '400px'
+                    default: return '250px'  // Legacy fallback
+                  }
+                }
+                const embedHeight = getEmbedHeight()
+
+                return (
+                  <div
+                    key={`iframe-wrapper-${post.id}`}
+                    className="orientation-stable"
+                    style={{
+                      contain: 'layout style',
+                      willChange: 'contents',
+                      transform: 'translateZ(0)',
+                    }}
+                  >
+                    <iframe
+                      key={`iframe-${post.id}`}
+                      frameBorder="0"
+                      className="w-full bg-black"
+                      style={{ minHeight: embedHeight }}
+                      src={mediaUrl}
+                      title="Media"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                      allowFullScreen
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  </div>
+                )
+              })()
             )
-          })()}
+          )}
 
           {/* Repost preview */}
           {post.repostId && (
