@@ -260,9 +260,14 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           {/* Embedded video/link - Responsive with proper aspect ratio */}
           {/* Key is stable to prevent remounting on orientation change */}
           {/* CSS contain/will-change/transform prevents iframe reload on mobile rotation */}
-          {post.mediaLink && (
-            hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-              // YouTube, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
+          {post.mediaLink && (() => {
+            const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
+            // Playlists need iframe to show tracklist - ReactPlayer doesn't support playlists
+            const isPlaylist = mediaUrl.includes('videoseries') || mediaUrl.includes('list=')
+            const useReactPlayer = !isPlaylist && hasLazyLoadWithThumbnailSupport(post.mediaLink)
+
+            return useReactPlayer ? (
+              // YouTube videos, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
               <div
                 key={`player-${post.id}`}
                 className="relative w-full orientation-stable"
@@ -292,27 +297,27 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 />
               </div>
             ) : (
-              // All other platforms (audio + social) - use iframe embed (legacy style)
+              // All other platforms (audio, social, playlists) - use iframe embed
               (() => {
                 const mediaType = IdentifySource(post.mediaLink).type
-                const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
 
-                // Platform-specific embed heights (legacy was min-h-[250px] for all)
-                // New platforms get optimized heights
+                // Platform-specific embed heights
+                // YouTube playlists need more height to show tracklist
                 const getEmbedHeight = () => {
+                  if (isPlaylist) return '500px'  // Taller for playlist tracklist
                   switch (mediaType) {
                     // Audio platforms (optimized)
                     case MediaProvider.BANDCAMP: return '470px'
                     case MediaProvider.SPOTIFY: return '352px'
                     case MediaProvider.SOUNDCLOUD: return '166px'
                     // Social platforms (new - optimized for each)
-                    case MediaProvider.INSTAGRAM: return '540px'  // Instagram posts are taller
-                    case MediaProvider.TIKTOK: return '740px'     // TikTok vertical videos
-                    case MediaProvider.X: return '400px'          // Twitter/X tweets
-                    case MediaProvider.TWITCH: return '378px'     // Twitch 16:9
-                    case MediaProvider.DISCORD: return '400px'    // Discord widget
+                    case MediaProvider.INSTAGRAM: return '540px'
+                    case MediaProvider.TIKTOK: return '740px'
+                    case MediaProvider.X: return '400px'
+                    case MediaProvider.TWITCH: return '378px'
+                    case MediaProvider.DISCORD: return '400px'
                     case MediaProvider.CUSTOM_HTML: return '400px'
-                    default: return '250px'  // Legacy fallback
+                    default: return '250px'
                   }
                 }
                 const embedHeight = getEmbedHeight()
@@ -342,7 +347,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 )
               })()
             )
-          )}
+          })()}
 
           {/* Repost preview */}
           {post.repostId && (
