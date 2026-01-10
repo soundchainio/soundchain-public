@@ -96,13 +96,15 @@ const normalizeYoutube = (str: string) => {
   // Check for YouTube Music album URL (watch with list param) - prioritize album embed
   const musicAlbumMatch = str.match(youtubeMusicAlbumRegex)
   if (musicAlbumMatch && musicAlbumMatch[1]) {
-    return `https://www.youtube.com/embed/videoseries?list=${musicAlbumMatch[1]}`
+    // Use listType=playlist format to show tracklist
+    return `https://www.youtube.com/embed?listType=playlist&list=${musicAlbumMatch[1]}`
   }
 
-  // Check for playlist URL - embed as playlist
+  // Check for playlist URL - embed as playlist with tracklist visible
   const playlistMatch = str.match(youtubePlaylistRegex)
   if (playlistMatch && playlistMatch[1]) {
-    return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}`
+    // Use listType=playlist format to show tracklist
+    return `https://www.youtube.com/embed?listType=playlist&list=${playlistMatch[1]}`
   }
 
   // Check for clip URL - clips use a different embed format

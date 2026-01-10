@@ -263,7 +263,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           {post.mediaLink && (() => {
             const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
             // Playlists need iframe to show tracklist - ReactPlayer doesn't support playlists
-            const isPlaylist = mediaUrl.includes('videoseries') || mediaUrl.includes('list=')
+            const isPlaylist = mediaUrl.includes('listType=playlist') || mediaUrl.includes('videoseries') || mediaUrl.includes('list=')
             const useReactPlayer = !isPlaylist && hasLazyLoadWithThumbnailSupport(post.mediaLink)
 
             return useReactPlayer ? (
