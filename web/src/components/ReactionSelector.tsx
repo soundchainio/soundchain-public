@@ -35,10 +35,27 @@ export const ReactionSelector = ({ postId, myReaction, opened, setOpened, isGues
   const [guestReactToPost] = useGuestReactToPostMutation()
 
   const handleSelect = async (type: ReactionType) => {
-    // Guest reaction - use guest mutation
+    // Guest reaction with wallet - use guest mutation
     if (isGuest && guestWallet) {
       await guestReactToPost({
         variables: { input: { postId, type }, walletAddress: guestWallet },
+        refetchQueries: ['Post', 'Posts'],
+      })
+      setOpened(false)
+      return
+    }
+
+    // Anonymous reaction (no account, no wallet) - generate random wallet address
+    if (!isGuest && !guestWallet && !myReaction) {
+      // Generate a random wallet address for anonymous reactions
+      const hexChars = '0123456789abcdef'
+      let addressBody = ''
+      for (let i = 0; i < 40; i++) {
+        addressBody += hexChars[Math.floor(Math.random() * 16)]
+      }
+      const anonymousAddress = `0x${addressBody}`
+      await guestReactToPost({
+        variables: { input: { postId, type }, walletAddress: anonymousAddress },
         refetchQueries: ['Post', 'Posts'],
       })
       setOpened(false)

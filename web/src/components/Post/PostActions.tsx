@@ -79,8 +79,8 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   }
 
   const handleLikeButton = () => {
-    // Allow likes for logged-in users OR guests with connected wallet
-    if (!me && !guestWallet) return router.push('/login')
+    // Allow likes for everyone - logged-in users, guests with wallet, or anonymous
+    // Anonymous users will have a wallet generated in the ReactionSelector
     setReactionSelectorOpened(!reactionSelectorOpened)
   }
 
