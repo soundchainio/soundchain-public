@@ -1,5 +1,56 @@
 module.exports = {
   reactStrictMode: false,
+  // Redirect all legacy routes to DEX (modern UI)
+  async redirects() {
+    return [
+      // Main routes → DEX feed
+      { source: '/', destination: '/dex/feed', permanent: false },
+      { source: '/home', destination: '/dex/feed', permanent: false },
+      { source: '/posts/:id', destination: '/dex/feed', permanent: false },
+
+      // Tracks → DEX track view
+      { source: '/tracks/:id', destination: '/dex/track/:id', permanent: false },
+
+      // Messages → DEX messages
+      { source: '/messages', destination: '/dex/messages', permanent: false },
+      { source: '/messages/:id', destination: '/dex/messages', permanent: false },
+
+      // Notifications → DEX notifications
+      { source: '/notifications', destination: '/dex/notifications', permanent: false },
+
+      // Library → DEX library
+      { source: '/library', destination: '/dex/library', permanent: false },
+
+      // Marketplace → DEX marketplace
+      { source: '/marketplace', destination: '/dex/marketplace', permanent: false },
+
+      // Settings → DEX settings
+      { source: '/settings', destination: '/dex/settings', permanent: false },
+      { source: '/settings/:path*', destination: '/dex/settings', permanent: false },
+
+      // Staking/rewards → DEX staking
+      { source: '/stake', destination: '/dex/staking', permanent: false },
+      { source: '/lp-stake', destination: '/dex/staking', permanent: false },
+      { source: '/airdrop', destination: '/dex/staking', permanent: false },
+      { source: '/ogun', destination: '/dex/staking', permanent: false },
+
+      // Wallet → DEX wallet
+      { source: '/wallet', destination: '/dex/wallet', permanent: false },
+      { source: '/wallet/:path*', destination: '/dex/wallet', permanent: false },
+
+      // Top tracks / explore → DEX explore
+      { source: '/top-tracks', destination: '/dex/explore', permanent: false },
+
+      // Roadmap → DEX announcements
+      { source: '/roadmap', destination: '/dex/announcements', permanent: false },
+
+      // User profiles → DEX profile
+      { source: '/users/:handle', destination: '/dex/users/:handle', permanent: false },
+
+      // Claim badge → DEX
+      { source: '/claim-badge-profile', destination: '/dex/feed', permanent: false },
+    ]
+  },
   // Enable scroll position restoration on back/forward navigation
   experimental: {
     scrollRestoration: true,
