@@ -55,7 +55,9 @@ export const PostModal = () => {
   const normalizeOriginalLink = useCallback(async () => {
     if (originalLink.length && hasLink(originalLink)) {
       const link = await getNormalizedLink(originalLink)
-      setPostLink(link)
+      if (link) {
+        setPostLink(link)
+      }
     } else {
       setPostLink('')
     }

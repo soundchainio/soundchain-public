@@ -7,9 +7,10 @@ import { MediaProvider } from 'types/MediaProvider'
 
 const linksRegex = /\bhttps?:\/\/\S+/gi
 
-// YouTube - support watch, shorts, embed, youtu.be (including already embedded URLs)
-const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+// YouTube - support watch, shorts, embed, youtu.be, music.youtube.com (including already embedded URLs)
+const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:(?:music\.)?youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
 const youtubeEmbedUrlRegex = /youtube\.com\/embed\//
+const youtubeMusicRegex = /music\.youtube\.com/
 const youtubeEmbedRegex = /<iframe[^>]+src="([^"]+youtube[^"]+)"/
 
 // SoundCloud - support regular links and embed codes
@@ -398,7 +399,7 @@ export const getNormalizedLink = async (str: string) => {
 
   if (!link) return undefined
 
-  if (youtubeRegex.test(link)) return normalizeYoutube(link)
+  if (youtubeRegex.test(link) || youtubeMusicRegex.test(link)) return normalizeYoutube(link)
   if (soundcloudRegex.test(link)) return await normalizeSoundcloud(link)
   if (spotifyRegex.test(link)) return normalizeSpotify(link)
   if (vimeoRegex.test(link)) return normalizeVimeo(link)
@@ -425,8 +426,8 @@ export const IdentifySource = (str: string) => {
     value: str,
   }
 
-  // Check for YouTube (including embed URLs that don't have video ID in standard format)
-  if (youtubeRegex.test(str) || youtubeEmbedUrlRegex.test(str)) ret.type = MediaProvider.YOUTUBE
+  // Check for YouTube (including embed URLs and YouTube Music)
+  if (youtubeRegex.test(str) || youtubeEmbedUrlRegex.test(str) || youtubeMusicRegex.test(str)) ret.type = MediaProvider.YOUTUBE
   if (soundcloudRegex.test(str)) ret.type = MediaProvider.SOUNDCLOUD
   if (spotifyRegex.test(str)) ret.type = MediaProvider.SPOTIFY
   if (vimeoRegex.test(str)) ret.type = MediaProvider.VIMEO
