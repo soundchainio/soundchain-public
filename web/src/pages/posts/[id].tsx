@@ -128,11 +128,11 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
       }
     }
 
-    // For regular users, redirect to DEX feed (modern UI)
+    // For regular users, redirect to DEX post view (modern UI)
     // The /posts/[id] page uses legacy layout - redirect to DEX-era design
     return {
       redirect: {
-        destination: '/dex/feed',
+        destination: `/dex/post/${postId}`,
         permanent: false,
       },
     }

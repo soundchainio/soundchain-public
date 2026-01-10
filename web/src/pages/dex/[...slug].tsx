@@ -42,7 +42,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -76,6 +76,8 @@ const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActions
 const CommentModal = dynamic(() => import('components/Comment/CommentModal'), { ssr: false })
 const AudioPlayerModal = dynamic(() => import('components/modals/AudioPlayerModal'), { ssr: false })
 const Posts = dynamic(() => import('components/Post/Posts').then(mod => ({ default: mod.Posts })), { ssr: false })
+const Post = dynamic(() => import('components/Post/Post').then(mod => ({ default: mod.Post })), { ssr: false })
+const Comments = dynamic(() => import('components/Comment/Comments').then(mod => ({ default: mod.Comments })), { ssr: false })
 const TracksGrid = dynamic(() => import('components/dex/TracksGrid').then(mod => ({ default: mod.TracksGrid })), { ssr: false })
 const GuestPostModal = dynamic(() => import('components/Post/GuestPostModal').then(mod => ({ default: mod.GuestPostModal })), { ssr: false })
 const Notifications = dynamic(() => import('components/Notifications').then(mod => ({ default: mod.Notifications })), { ssr: false })
@@ -714,6 +716,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       case 'library': return 'library'
       case 'profile': return 'profile'
       case 'track': return 'track'
+      case 'post': return 'post' // /dex/post/:id -> single post view
       case 'playlist': return 'playlist'
       case 'staking': return 'staking'
       case 'marketplace': return 'marketplace'
@@ -731,7 +734,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'staking' | 'profile' | 'track' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin' | 'announcements'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'staking' | 'profile' | 'track' | 'post' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin' | 'announcements'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -1359,6 +1362,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const { data: trackDetailData, loading: trackDetailLoading, error: trackDetailError } = useTrackQuery({
     variables: { id: routeId || '' },
     skip: selectedView !== 'track' || !routeId,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Post Detail Query - fetch single post when viewing /dex/post/[id]
+  const { data: postDetailData, loading: postDetailLoading, error: postDetailError } = usePostQuery({
+    variables: { id: routeId || '' },
+    skip: selectedView !== 'post' || !routeId,
     fetchPolicy: 'cache-and-network',
   })
 
@@ -3067,6 +3077,86 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {/* Main Feed - Posts only (announcements moved to dedicated tab) */}
               <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
                 <Posts />
+              </div>
+
+              {/* Right Sidebar - Desktop only */}
+              <RightSidebar />
+            </div>
+          )}
+
+          {/* Single Post View - /dex/post/[id] for shared links */}
+          {selectedView === 'post' && routeId && (
+            <div className="flex justify-center gap-6 px-0 md:px-4">
+              {/* Left Sidebar - Desktop only */}
+              <LeftSidebar />
+
+              {/* Single Post Content */}
+              <div className="flex-1 max-w-full md:max-w-[614px]">
+                {postDetailLoading && (
+                  <div className="flex items-center justify-center py-16">
+                    <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                    <span className="ml-3 text-cyan-400">Loading post...</span>
+                  </div>
+                )}
+                {postDetailError && (
+                  <Card className="m-4 p-6 text-center bg-neutral-900 border-neutral-800">
+                    <p className="text-red-400 mb-2">Error loading post</p>
+                    <p className="text-gray-500 text-sm mb-4">{postDetailError.message}</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push('/dex/feed')}
+                      className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                    >
+                      Go to Feed
+                    </Button>
+                  </Card>
+                )}
+                {postDetailData?.post && (
+                  <div className="pb-32">
+                    {/* The Post component */}
+                    <Post post={postDetailData.post} handleOnPlayClicked={(trackId: string) => {
+                      if (postDetailData.post?.track) {
+                        playlistState([{
+                          src: postDetailData.post.track.playbackUrl,
+                          trackId: postDetailData.post.track.id,
+                          art: postDetailData.post.track.artworkUrl,
+                          title: postDetailData.post.track.title,
+                          artist: postDetailData.post.track.artist,
+                          isFavorite: postDetailData.post.track.isFavorite,
+                        }] as Song[], 0)
+                      }
+                    }} />
+
+                    {/* Comments Section */}
+                    <div className="mt-4 px-0 md:px-0">
+                      <Comments postId={routeId} />
+                    </div>
+
+                    {/* View Full Feed CTA */}
+                    <div className="mt-6 px-4 text-center">
+                      <Button
+                        variant="outline"
+                        onClick={() => router.push('/dex/feed')}
+                        className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        View Full Feed
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {!postDetailLoading && !postDetailError && !postDetailData?.post && (
+                  <Card className="m-4 p-6 text-center bg-neutral-900 border-neutral-800">
+                    <p className="text-neutral-400 mb-4">Post not found</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push('/dex/feed')}
+                      className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                    >
+                      Go to Feed
+                    </Button>
+                  </Card>
+                )}
               </div>
 
               {/* Right Sidebar - Desktop only */}
