@@ -10,12 +10,19 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { MessageCircle, Send, X, Heart, Sparkles, Link2 } from 'lucide-react'
+import { MessageCircle, Send, X, Heart, Sparkles, Link2, Smile } from 'lucide-react'
 import { Avatar } from './Avatar'
 import { useMe } from 'hooks/useMe'
 import { formatDistanceToNow } from 'date-fns'
 import { StickerPicker } from './StickerPicker'
 import { EmoteRenderer } from './EmoteRenderer'
+import Picker from '@emoji-mart/react'
+
+interface Emoji {
+  id: string
+  name: string
+  native: string
+}
 
 // Types
 interface TrackComment {
@@ -415,6 +422,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [clickPosition, setClickPosition] = useState({ x: 0, y: 0 })
   const [showStickerPicker, setShowStickerPicker] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [showEmbedInput, setShowEmbedInput] = useState(false)
 
 
@@ -830,13 +838,32 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
               </button>
             </div>
 
-            {/* Action bar: Stickers, Embed, and character count */}
+            {/* Action bar: Emoji, Stickers, Embed, and character count */}
             <div className="flex items-center justify-between mt-3 gap-2">
               <div className="flex items-center gap-2">
+                {/* Emoji button */}
+                <button
+                  onClick={() => {
+                    setShowEmojiPicker(!showEmojiPicker)
+                    setShowStickerPicker(false)
+                    setShowEmbedInput(false)
+                  }}
+                  className={`p-2 rounded-lg transition-all flex items-center gap-1 ${
+                    showEmojiPicker
+                      ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 ring-2 ring-yellow-400'
+                      : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+                  }`}
+                  title="Add emoji"
+                >
+                  <Smile className="w-4 h-4" />
+                  <span className="text-xs font-medium hidden sm:inline">Emoji</span>
+                </button>
+
                 {/* Sticker button */}
                 <button
                   onClick={() => {
                     setShowStickerPicker(!showStickerPicker)
+                    setShowEmojiPicker(false)
                     setShowEmbedInput(false)
                   }}
                   className={`p-2 rounded-lg transition-all flex items-center gap-1 ${
@@ -900,6 +927,22 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Emoji Picker - stays open for emoji flurries */}
+            {showEmojiPicker && (
+              <div className="mt-3 animate-in fade-in slide-in-from-bottom-2 duration-200" onClick={(e) => e.stopPropagation()}>
+                <Picker
+                  theme="dark"
+                  perLine={8}
+                  onEmojiSelect={(emoji: Emoji) => {
+                    // Add emoji to text - keeps picker open for rapid selection
+                    if (commentText.length < 280) {
+                      setCommentText(prev => prev + emoji.native)
+                    }
+                  }}
+                />
               </div>
             )}
 
