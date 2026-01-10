@@ -12,6 +12,8 @@ const linksRegex = /\bhttps?:\/\/\S+/gi
 const youtubeVideoIdRegex = /(?:https?:\/\/)?(?:www\.)?(?:(?:music\.)?youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
 // Playlist regex - supports both youtube.com and music.youtube.com playlists/albums
 const youtubePlaylistRegex = /(?:https?:\/\/)?(?:www\.)?(?:music\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/
+// YouTube Music watch URL with list param (album context) - extract list ID
+const youtubeMusicAlbumRegex = /music\.youtube\.com\/watch\?.*list=([a-zA-Z0-9_-]+)/
 const youtubeClipRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/clip\/([a-zA-Z0-9_-]+)/
 const youtubeLiveChannelRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/@([a-zA-Z0-9_-]+)\/live/
 const youtubeEmbedUrlRegex = /youtube\.com\/embed\//
@@ -89,6 +91,12 @@ const normalizeYoutube = (str: string) => {
   // If it's already an embed URL, return it
   if (str.includes('youtube.com/embed/')) {
     return str
+  }
+
+  // Check for YouTube Music album URL (watch with list param) - prioritize album embed
+  const musicAlbumMatch = str.match(youtubeMusicAlbumRegex)
+  if (musicAlbumMatch && musicAlbumMatch[1]) {
+    return `https://www.youtube.com/embed/videoseries?list=${musicAlbumMatch[1]}`
   }
 
   // Check for playlist URL - embed as playlist
