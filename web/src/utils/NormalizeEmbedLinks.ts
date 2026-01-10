@@ -7,10 +7,15 @@ import { MediaProvider } from 'types/MediaProvider'
 
 const linksRegex = /\bhttps?:\/\/\S+/gi
 
-// YouTube - support watch, shorts, embed, youtu.be, music.youtube.com (including already embedded URLs)
-const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:(?:music\.)?youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+// YouTube - FULL support for all YouTube URL formats
+// Supported: watch, shorts, live, embed, v/, youtu.be, music.youtube.com, clips, playlists, @channel/live
+const youtubeVideoIdRegex = /(?:https?:\/\/)?(?:www\.)?(?:(?:music\.)?youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+const youtubePlaylistRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/
+const youtubeClipRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/clip\/([a-zA-Z0-9_-]+)/
+const youtubeLiveChannelRegex = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/@([a-zA-Z0-9_-]+)\/live/
 const youtubeEmbedUrlRegex = /youtube\.com\/embed\//
 const youtubeMusicRegex = /music\.youtube\.com/
+const youtubeGeneralRegex = /(?:youtube\.com|youtu\.be)/
 const youtubeEmbedRegex = /<iframe[^>]+src="([^"]+youtube[^"]+)"/
 
 // SoundCloud - support regular links and embed codes
@@ -73,7 +78,7 @@ const normalizeYoutube = (str: string) => {
   if (embedMatch && embedMatch[1]) {
     // Extract the src URL from iframe, convert to embed format if needed
     const srcUrl = embedMatch[1]
-    const match = srcUrl.match(youtubeRegex)
+    const match = srcUrl.match(youtubeVideoIdRegex)
     if (match && match[1]) {
       return `https://www.youtube.com/embed/${match[1]}`
     }
@@ -85,20 +90,57 @@ const normalizeYoutube = (str: string) => {
     return str
   }
 
-  // Extract video ID from any YouTube URL format
-  const match = str.match(youtubeRegex)
+  // Check for playlist URL - embed as playlist
+  const playlistMatch = str.match(youtubePlaylistRegex)
+  if (playlistMatch && playlistMatch[1]) {
+    return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}`
+  }
+
+  // Check for clip URL - clips use a different embed format
+  const clipMatch = str.match(youtubeClipRegex)
+  if (clipMatch && clipMatch[1]) {
+    return `https://www.youtube.com/embed/${clipMatch[1]}`
+  }
+
+  // Check for @channel/live URL - extract channel for live embed
+  const liveChannelMatch = str.match(youtubeLiveChannelRegex)
+  if (liveChannelMatch && liveChannelMatch[1]) {
+    // Live channel embeds use the channel's live stream
+    return `https://www.youtube.com/embed/live_stream?channel=${liveChannelMatch[1]}`
+  }
+
+  // Extract video ID from standard YouTube URL formats (watch, shorts, live, v/, youtu.be, music)
+  const match = str.match(youtubeVideoIdRegex)
   if (match && match[1]) {
     return `https://www.youtube.com/embed/${match[1]}`
   }
 
-  // Fallback for legacy handling
+  // Fallback: try to extract video ID from URL parameters
   let videoId = ''
+
+  // Handle youtu.be short links with query params
   if (str.includes('youtu.be/')) {
-    videoId = /[^/]*$/.exec(str)![0]
+    const shortMatch = str.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/)
+    if (shortMatch && shortMatch[1]) {
+      videoId = shortMatch[1]
+    }
   }
-  const urlParams = new URLSearchParams(str.replace('?', '&'))
-  if (urlParams.get('v')) {
-    videoId = urlParams.get('v')!
+
+  // Handle ?v= parameter (including when it has other params)
+  if (!videoId) {
+    try {
+      const url = new URL(str.startsWith('http') ? str : `https://${str}`)
+      const vParam = url.searchParams.get('v')
+      if (vParam && vParam.length === 11) {
+        videoId = vParam
+      }
+    } catch {
+      // Not a valid URL, try regex fallback
+      const vMatch = str.match(/[?&]v=([a-zA-Z0-9_-]{11})/)
+      if (vMatch && vMatch[1]) {
+        videoId = vMatch[1]
+      }
+    }
   }
 
   return videoId ? `https://www.youtube.com/embed/${videoId}` : str
@@ -379,7 +421,7 @@ export const getNormalizedLink = async (str: string) => {
   // Check if it's custom HTML embed code first
   if (customEmbedRegex.test(strWithoutEmotes)) {
     // Try to identify the platform from the embed code
-    if (youtubeRegex.test(strWithoutEmotes)) return normalizeYoutube(strWithoutEmotes)
+    if (youtubeGeneralRegex.test(strWithoutEmotes)) return normalizeYoutube(strWithoutEmotes)
     if (soundcloudRegex.test(strWithoutEmotes)) return await normalizeSoundcloud(strWithoutEmotes)
     if (spotifyRegex.test(strWithoutEmotes)) return normalizeSpotify(strWithoutEmotes)
     if (vimeoRegex.test(strWithoutEmotes)) return normalizeVimeo(strWithoutEmotes)
@@ -399,7 +441,7 @@ export const getNormalizedLink = async (str: string) => {
 
   if (!link) return undefined
 
-  if (youtubeRegex.test(link) || youtubeMusicRegex.test(link)) return normalizeYoutube(link)
+  if (youtubeGeneralRegex.test(link)) return normalizeYoutube(link)
   if (soundcloudRegex.test(link)) return await normalizeSoundcloud(link)
   if (spotifyRegex.test(link)) return normalizeSpotify(link)
   if (vimeoRegex.test(link)) return normalizeVimeo(link)
@@ -426,8 +468,8 @@ export const IdentifySource = (str: string) => {
     value: str,
   }
 
-  // Check for YouTube (including embed URLs and YouTube Music)
-  if (youtubeRegex.test(str) || youtubeEmbedUrlRegex.test(str) || youtubeMusicRegex.test(str)) ret.type = MediaProvider.YOUTUBE
+  // Check for YouTube (all formats: watch, shorts, live, playlists, clips, music, embeds)
+  if (youtubeGeneralRegex.test(str)) ret.type = MediaProvider.YOUTUBE
   if (soundcloudRegex.test(str)) ret.type = MediaProvider.SOUNDCLOUD
   if (spotifyRegex.test(str)) ret.type = MediaProvider.SPOTIFY
   if (vimeoRegex.test(str)) ret.type = MediaProvider.VIMEO
