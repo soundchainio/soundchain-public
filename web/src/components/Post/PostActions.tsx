@@ -161,7 +161,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   }, [postId, router.asPath])
 
   return (
-    <div className="relative flex items-center overflow-hidden bg-gray-25 px-0 py-2">
+    <div className="relative flex items-center bg-gray-25 px-0 py-2">
       <div className={commonClasses}>
         <button className="flex items-center space-x-1 font-bold" onClick={handleLikeButton}>
           {myReaction ? <ReactionEmoji name={myReaction} className="h-4 w-4" /> : <HandThumbUpIcon className="h-4 w-4" />}

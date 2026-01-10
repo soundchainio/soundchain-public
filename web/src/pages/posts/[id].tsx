@@ -12,7 +12,7 @@ import { TopNavBarProps } from 'components/TopNavBar'
 import { Song, useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
-import { cacheFor, createApolloClient } from 'lib/apollo'
+import { createApolloClient } from 'lib/apollo'
 import { PostDocument, PostQuery, usePostQuery } from 'lib/graphql'
 import { useEffect, useMemo } from 'react'
 
@@ -128,8 +128,15 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
       }
     }
 
-    // For regular users, use full caching
-    return cacheFor(PostPage, { post: data.post, postId, isBot: false }, context, apolloClient)
+    // For regular users, return props directly (removed cacheFor to prevent SSR crashes)
+    // cacheFor can crash serverless functions when components access browser-only APIs
+    return {
+      props: {
+        post: data.post,
+        postId,
+        isBot: false,
+      },
+    }
   } catch (e) {
     console.error('Error fetching post:', e)
 
