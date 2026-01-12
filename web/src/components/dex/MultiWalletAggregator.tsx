@@ -119,6 +119,7 @@ export function MultiWalletAggregator({
     chainName: web3ModalChainName,
     connectWeb3Modal,
     disconnectWallet: disconnectWeb3Modal,
+    directWalletSubtype,
   } = useUnifiedWallet()
 
   const [connectedWallets, setConnectedWallets] = useState<ConnectedWallet[]>([])
@@ -253,7 +254,7 @@ export function MultiWalletAggregator({
     }
 
     // Web3Modal Wallet (MetaMask, Coinbase, Rainbow, etc. via Web3Modal)
-    if (isWeb3ModalConnected && web3ModalAddress && web3ModalAddress !== userWallet) {
+    if (isWeb3ModalConnected && web3ModalAddress && web3ModalAddress !== userWallet && activeWalletType === 'web3modal') {
       wallets.push({
         id: 'web3modal',
         type: 'web3modal',
@@ -264,6 +265,25 @@ export function MultiWalletAggregator({
         nfts: externalWalletNfts[web3ModalAddress] || [],
         isActive: activeWalletType === 'web3modal',
         icon: '🔗'
+      })
+    }
+
+    // Direct SDK Connection (MetaMask, WalletConnect, Coinbase via WalletConnectButton)
+    if (activeWalletType === 'direct' && web3ModalAddress && web3ModalAddress !== userWallet) {
+      const walletIcon = directWalletSubtype === 'metamask' ? '🦊' :
+                        directWalletSubtype === 'coinbase' ? '🔵' :
+                        directWalletSubtype === 'walletconnect' ? '🔗' :
+                        directWalletSubtype === 'trust' ? '💙' : '💳'
+      wallets.push({
+        id: `direct-${directWalletSubtype || 'wallet'}`,
+        type: (directWalletSubtype as any) || 'walletconnect',
+        address: web3ModalAddress,
+        chainName: web3ModalChainName || 'Unknown Chain',
+        balance: web3ModalBalance || '0',
+        ogunBalance: web3ModalOgunBalance || '0',
+        nfts: externalWalletNfts[web3ModalAddress] || [],
+        isActive: true,
+        icon: walletIcon
       })
     }
 
@@ -300,7 +320,7 @@ export function MultiWalletAggregator({
     }
 
     setConnectedWallets(wallets)
-  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType, externalWalletNfts])
+  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType, directWalletSubtype, externalWalletNfts])
 
   const toggleExpanded = (walletId: string) => {
     setExpandedWallets(prev => {
