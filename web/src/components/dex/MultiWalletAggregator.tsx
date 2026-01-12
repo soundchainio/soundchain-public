@@ -389,8 +389,22 @@ export function MultiWalletAggregator({
 
   const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
+  // Debug info for mobile testing
+  const debugInfo = {
+    userWallet: userWallet ? `${userWallet.slice(0,6)}...` : 'none',
+    activeType: activeWalletType || 'none',
+    activeAddr: web3ModalAddress ? `${web3ModalAddress.slice(0,6)}...` : 'none',
+    subtype: directWalletSubtype || 'none',
+    walletsCount: connectedWallets.length,
+  }
+
   return (
     <div className="space-y-4">
+      {/* Debug Panel - Remove after testing */}
+      <div className="p-2 bg-yellow-500/20 border border-yellow-500/50 rounded text-xs font-mono text-yellow-400">
+        <div>DEBUG: magic={debugInfo.userWallet} | type={debugInfo.activeType} | direct={debugInfo.activeAddr} | subtype={debugInfo.subtype} | wallets={debugInfo.walletsCount}</div>
+      </div>
+
       {/* Connect Wallet Options - TOP OF PAGE */}
       <Card className="retro-card p-4 border-cyan-500/30">
         <div className="flex items-center justify-between mb-4">
