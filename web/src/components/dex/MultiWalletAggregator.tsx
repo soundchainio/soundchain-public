@@ -9,14 +9,11 @@ import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import {
   Wallet,
-  Plus,
   X,
   ExternalLink,
   Copy,
   ChevronDown,
   ChevronUp,
-  Zap,
-  Check,
   RefreshCw,
   Loader2
 } from 'lucide-react'
@@ -389,122 +386,8 @@ export function MultiWalletAggregator({
 
   const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
-  // Debug info for mobile testing
-  const debugInfo = {
-    userWallet: userWallet ? `${userWallet.slice(0,6)}...` : 'none',
-    activeType: activeWalletType || 'none',
-    activeAddr: web3ModalAddress ? `${web3ModalAddress.slice(0,6)}...` : 'none',
-    subtype: directWalletSubtype || 'none',
-    walletsCount: connectedWallets.length,
-  }
-
   return (
     <div className="space-y-4">
-      {/* Debug Panel - Remove after testing */}
-      <div className="p-2 bg-yellow-500/20 border border-yellow-500/50 rounded text-xs font-mono text-yellow-400">
-        <div>DEBUG: magic={debugInfo.userWallet} | type={debugInfo.activeType} | direct={debugInfo.activeAddr} | subtype={debugInfo.subtype} | wallets={debugInfo.walletsCount}</div>
-      </div>
-
-      {/* Connect Wallet Options - TOP OF PAGE */}
-      <Card className="retro-card p-4 border-cyan-500/30">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-sm font-bold text-white">Connect Wallets</h3>
-          </div>
-          <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">
-            {connectedWallets.length} Connected
-          </Badge>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {/* Magic Wallet - SoundChain Native */}
-          <button
-            className={`p-3 rounded-lg border-2 text-left transition-all touch-manipulation ${
-              userWallet
-                ? 'border-cyan-500 bg-cyan-500/10'
-                : 'border-gray-700 bg-black/30 hover:border-cyan-500/50'
-            }`}
-            onClick={(e) => { e.preventDefault(); userWallet && toggleExpanded('magic') }}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">✨</span>
-              <span className={`font-bold text-sm ${userWallet ? 'text-cyan-400' : 'text-gray-400'}`}>SoundChain</span>
-              {userWallet && <Check className="w-3 h-3 text-green-400" />}
-            </div>
-            <p className="text-xs text-gray-500">Native wallet</p>
-          </button>
-
-          {/* Web3Modal - Primary button for external wallets (300+ options) */}
-          <button
-            className={`p-3 rounded-lg border-2 text-left transition-all touch-manipulation ${
-              isWeb3ModalConnected && web3ModalAddress
-                ? 'border-purple-500 bg-purple-500/10'
-                : 'border-gray-700 bg-black/30 hover:border-purple-500/50'
-            }`}
-            onClick={(e) => { e.preventDefault(); isWeb3ModalConnected ? toggleExpanded('web3modal') : connectWeb3Modal() }}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🌐</span>
-              <span className={`font-bold text-sm ${isWeb3ModalConnected ? 'text-purple-400' : 'text-gray-400'}`}>
-                Web3 Wallet
-              </span>
-              {isWeb3ModalConnected && <Check className="w-3 h-3 text-green-400" />}
-            </div>
-            <p className="text-xs text-gray-500">
-              {isWeb3ModalConnected && web3ModalAddress ? formatAddress(web3ModalAddress) : 'MetaMask, Coinbase, Rainbow...'}
-            </p>
-          </button>
-
-          {/* Direct MetaMask - Fallback for power users */}
-          <button
-            className={`p-3 rounded-lg border-2 text-left transition-all touch-manipulation ${
-              metamaskAddress
-                ? 'border-orange-500 bg-orange-500/10'
-                : 'border-gray-700 bg-black/30 hover:border-orange-500/50'
-            }`}
-            onClick={(e) => { e.preventDefault(); metamaskAddress ? toggleExpanded('metamask') : connectMetaMask() }}
-            disabled={isConnectingMetaMask}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🦊</span>
-              <span className={`font-bold text-sm ${metamaskAddress ? 'text-orange-400' : 'text-gray-400'}`}>
-                {isConnectingMetaMask ? '...' : 'MetaMask'}
-              </span>
-              {metamaskAddress && <Check className="w-3 h-3 text-green-400" />}
-            </div>
-            <p className="text-xs text-gray-500">
-              {metamaskAddress ? formatAddress(metamaskAddress) : (isMetaMaskInstalled ? 'Direct connect' : 'Install')}
-            </p>
-          </button>
-
-          {/* ZetaChain - Omnichain Support */}
-          <button
-            className={`p-3 rounded-lg border-2 text-left transition-all touch-manipulation ${
-              isWeb3ModalConnected && web3ModalChainName === 'ZetaChain'
-                ? 'border-green-500 bg-green-500/10'
-                : 'border-gray-700 bg-black/30 hover:border-green-500/50'
-            }`}
-            onClick={(e) => { e.preventDefault(); connectWeb3Modal() }}
-          >
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">🟢</span>
-              <span className={`font-bold text-sm ${
-                isWeb3ModalConnected && web3ModalChainName === 'ZetaChain' ? 'text-green-400' : 'text-gray-400'
-              }`}>
-                ZetaChain
-              </span>
-              {isWeb3ModalConnected && web3ModalChainName === 'ZetaChain' && <Check className="w-3 h-3 text-green-400" />}
-            </div>
-            <p className="text-xs text-gray-500">Omnichain</p>
-          </button>
-        </div>
-
-        <p className="text-xs text-gray-500 mt-3 text-center">
-          Connect multiple wallets to view all your NFTs in one place
-        </p>
-      </Card>
-
       {/* Connected Wallets with NFT Collections */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
