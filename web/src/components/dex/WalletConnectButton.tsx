@@ -4,19 +4,61 @@
  * WalletConnectButton - Direct SDK Wallet Connections
  *
  * TRUE in-app wallet connections - NO external modals!
- * - WalletConnect v2: QR code displayed directly in dropdown
- * - Coinbase: Direct SDK with mobile deep links
- * - MetaMask: Direct eth_requestAccounts
- * - Rainbow/Trust: Scan WalletConnect QR
+ * - Desktop: QR codes displayed in dropdown
+ * - Mobile: Deep links to open wallet apps directly
  */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { Wallet, X, Check, Loader2, Copy, RefreshCw, Smartphone } from 'lucide-react'
+import { Wallet, X, Check, Loader2, Copy, RefreshCw, Smartphone, ExternalLink } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 
 // WalletConnect Project ID
 const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
+
+// Detect mobile device
+const isMobile = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
+// Detect if in-app browser (MetaMask, Coinbase, Trust, etc.)
+const isInAppBrowser = () => {
+  if (typeof window === 'undefined') return false
+  const ua = navigator.userAgent.toLowerCase()
+  return ua.includes('metamask') ||
+         ua.includes('coinbase') ||
+         ua.includes('trust') ||
+         ua.includes('rainbow') ||
+         (window as any).ethereum?.isMetaMask ||
+         (window as any).ethereum?.isCoinbaseWallet ||
+         (window as any).ethereum?.isTrust
+}
+
+// Get wallet deep links for mobile
+const getWalletDeepLink = (walletId: string, wcUri?: string) => {
+  const encodedUri = wcUri ? encodeURIComponent(wcUri) : ''
+
+  switch (walletId) {
+    case 'metamask':
+      // MetaMask mobile deep link
+      return wcUri
+        ? `metamask://wc?uri=${encodedUri}`
+        : `https://metamask.app.link/dapp/${typeof window !== 'undefined' ? window.location.host : 'soundchain.io'}`
+    case 'trust':
+      return wcUri
+        ? `trust://wc?uri=${encodedUri}`
+        : `https://link.trustwallet.com/open_url?url=${encodeURIComponent('https://soundchain.io')}`
+    case 'rainbow':
+      return wcUri
+        ? `rainbow://wc?uri=${encodedUri}`
+        : `https://rainbow.me`
+    case 'coinbase':
+      return `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent('https://soundchain.io')}`
+    default:
+      return null
+  }
+}
 
 // Wallet configuration
 const WALLETS = [
@@ -25,8 +67,8 @@ const WALLETS = [
     name: 'METAMASK',
     fallbackIcon: '🦊',
     hot: true,
-    description: 'Browser extension',
-    type: 'extension' as const,
+    description: 'Popular wallet',
+    mobileDescription: 'Open MetaMask app',
   },
   {
     id: 'walletconnect',
@@ -34,31 +76,31 @@ const WALLETS = [
     fallbackIcon: '🔗',
     hot: true,
     description: 'Scan QR with any wallet',
-    type: 'qr' as const,
+    mobileDescription: 'Connect 300+ wallets',
   },
   {
     id: 'coinbase',
     name: 'COINBASE WALLET',
     fallbackIcon: '🔵',
     hot: false,
-    description: 'Mobile app or extension',
-    type: 'hybrid' as const,
+    description: 'Coinbase app',
+    mobileDescription: 'Open Coinbase app',
   },
   {
     id: 'rainbow',
     name: 'RAINBOW',
     fallbackIcon: '🌈',
     hot: false,
-    description: 'Scan QR with Rainbow',
-    type: 'qr' as const,
+    description: 'Rainbow wallet',
+    mobileDescription: 'Open Rainbow app',
   },
   {
     id: 'trust',
     name: 'TRUST WALLET',
     fallbackIcon: '💙',
     hot: false,
-    description: 'Scan QR with Trust',
-    type: 'qr' as const,
+    description: 'Trust Wallet',
+    mobileDescription: 'Open Trust app',
   },
 ]
 
@@ -68,7 +110,7 @@ interface WalletConnectButtonProps {
   compact?: boolean
 }
 
-type ConnectionStep = 'select' | 'qr' | 'connecting' | 'success' | 'error'
+type ConnectionStep = 'select' | 'qr' | 'connecting' | 'success' | 'error' | 'mobile-options'
 
 export function WalletConnectButton({
   className = '',
@@ -81,6 +123,8 @@ export function WalletConnectButton({
   const [wcUri, setWcUri] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copiedUri, setCopiedUri] = useState(false)
+  const [isMobileDevice, setIsMobileDevice] = useState(false)
+  const [isWalletBrowser, setIsWalletBrowser] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const wcProviderRef = useRef<any>(null)
 
@@ -91,6 +135,12 @@ export function WalletConnectButton({
     activeWalletType,
     disconnectWallet
   } = useUnifiedWallet()
+
+  // Detect device type on mount
+  useEffect(() => {
+    setIsMobileDevice(isMobile())
+    setIsWalletBrowser(isInAppBrowser())
+  }, [])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -124,61 +174,80 @@ export function WalletConnectButton({
     setError(null)
   }
 
-  // Connect MetaMask directly
-  const connectMetaMask = useCallback(async () => {
-    if (typeof window === 'undefined') return
-
-    // Check for MetaMask
-    const ethereum = window.ethereum
-    if (!ethereum || !ethereum.isMetaMask) {
-      // Open MetaMask install page
-      window.open('https://metamask.io/download/', '_blank')
-      setError('MetaMask not installed - opening download page')
+  // Connect via injected provider (works in wallet browsers)
+  const connectInjected = useCallback(async () => {
+    if (typeof window === 'undefined' || !window.ethereum) {
+      setError('No wallet detected')
+      setStep('error')
       return
     }
 
     setStep('connecting')
-    setSelectedWallet('metamask')
     setError(null)
 
     try {
-      const accounts = await ethereum.request({ method: 'eth_requestAccounts' })
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
       if (accounts && accounts[0]) {
         setStep('success')
-        onConnect?.('metamask', accounts[0])
+        onConnect?.('injected', accounts[0])
         setTimeout(() => handleClose(), 1500)
       }
     } catch (err: any) {
-      console.error('MetaMask error:', err)
-      setError(err.message || 'Failed to connect MetaMask')
+      console.error('Injected wallet error:', err)
+      setError(err.message || 'Failed to connect')
       setStep('error')
     }
   }, [onConnect])
 
+  // Connect MetaMask
+  const connectMetaMask = useCallback(async () => {
+    setSelectedWallet('metamask')
+
+    // If we're in MetaMask browser, use injected
+    if ((window as any).ethereum?.isMetaMask) {
+      await connectInjected()
+      return
+    }
+
+    // On mobile, open MetaMask app via deep link
+    if (isMobileDevice) {
+      // First get WalletConnect URI for deep link
+      await initWalletConnectForMobile('metamask')
+      return
+    }
+
+    // Desktop without MetaMask extension
+    if (typeof window !== 'undefined' && !window.ethereum?.isMetaMask) {
+      window.open('https://metamask.io/download/', '_blank')
+      setError('MetaMask not installed')
+      setStep('error')
+      return
+    }
+
+    await connectInjected()
+  }, [isMobileDevice, connectInjected])
+
   // Initialize WalletConnect v2 and get QR URI
   const initWalletConnect = useCallback(async () => {
     setStep('connecting')
-    setSelectedWallet('walletconnect')
+    if (!selectedWallet) setSelectedWallet('walletconnect')
     setError(null)
 
     try {
-      // Dynamic import to avoid SSR issues
       const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
 
       // Disconnect any existing session
       if (wcProviderRef.current) {
         try {
           await wcProviderRef.current.disconnect()
-        } catch (e) {
-          // Ignore
-        }
+        } catch (e) {}
       }
 
       const provider = await EthereumProvider.init({
         projectId: WALLETCONNECT_PROJECT_ID,
-        chains: [137], // Polygon primary
-        optionalChains: [1, 8453, 42161, 7000], // ETH, Base, Arbitrum, ZetaChain
-        showQrModal: false, // WE control the QR display!
+        chains: [137],
+        optionalChains: [1, 8453, 42161, 7000],
+        showQrModal: false,
         metadata: {
           name: 'SoundChain',
           description: 'Web3 Music Platform',
@@ -189,14 +258,18 @@ export function WalletConnectButton({
 
       wcProviderRef.current = provider
 
-      // Listen for URI (for QR code)
       provider.on('display_uri', (uri: string) => {
         console.log('WalletConnect URI:', uri)
         setWcUri(uri)
-        setStep('qr')
+
+        // On mobile, show deep link options instead of QR
+        if (isMobileDevice) {
+          setStep('mobile-options')
+        } else {
+          setStep('qr')
+        }
       })
 
-      // Listen for connection
       provider.on('connect', () => {
         const address = provider.accounts[0]
         if (address) {
@@ -206,13 +279,11 @@ export function WalletConnectButton({
         }
       })
 
-      // Listen for disconnect
       provider.on('disconnect', () => {
         setWcUri(null)
         setStep('select')
       })
 
-      // Start connection (this triggers display_uri)
       await provider.connect()
 
     } catch (err: any) {
@@ -224,16 +295,90 @@ export function WalletConnectButton({
       }
       setStep('error')
     }
-  }, [onConnect])
+  }, [onConnect, isMobileDevice, selectedWallet])
 
-  // Connect Coinbase Wallet directly
-  const connectCoinbase = useCallback(async () => {
+  // Initialize WalletConnect for mobile deep link
+  const initWalletConnectForMobile = useCallback(async (walletId: string) => {
+    setSelectedWallet(walletId)
     setStep('connecting')
-    setSelectedWallet('coinbase')
     setError(null)
 
     try {
-      // Check for Coinbase extension first
+      const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
+
+      if (wcProviderRef.current) {
+        try {
+          await wcProviderRef.current.disconnect()
+        } catch (e) {}
+      }
+
+      const provider = await EthereumProvider.init({
+        projectId: WALLETCONNECT_PROJECT_ID,
+        chains: [137],
+        optionalChains: [1, 8453, 42161, 7000],
+        showQrModal: false,
+        metadata: {
+          name: 'SoundChain',
+          description: 'Web3 Music Platform',
+          url: 'https://soundchain.io',
+          icons: ['https://soundchain.io/favicons/apple-touch-icon.png'],
+        },
+      })
+
+      wcProviderRef.current = provider
+
+      provider.on('display_uri', (uri: string) => {
+        setWcUri(uri)
+        // Open the wallet app with the URI
+        const deepLink = getWalletDeepLink(walletId, uri)
+        if (deepLink) {
+          window.location.href = deepLink
+        }
+        setStep('mobile-options')
+      })
+
+      provider.on('connect', () => {
+        const address = provider.accounts[0]
+        if (address) {
+          setStep('success')
+          onConnect?.('walletconnect', address)
+          setTimeout(() => handleClose(), 1500)
+        }
+      })
+
+      await provider.connect()
+
+    } catch (err: any) {
+      console.error('Mobile WalletConnect error:', err)
+      setError(err.message || 'Failed to connect')
+      setStep('error')
+    }
+  }, [onConnect])
+
+  // Connect Coinbase Wallet
+  const connectCoinbase = useCallback(async () => {
+    setSelectedWallet('coinbase')
+    setStep('connecting')
+    setError(null)
+
+    // If in Coinbase browser, use injected
+    if ((window as any).ethereum?.isCoinbaseWallet) {
+      await connectInjected()
+      return
+    }
+
+    // On mobile, open Coinbase app
+    if (isMobileDevice) {
+      const deepLink = getWalletDeepLink('coinbase')
+      if (deepLink) {
+        window.location.href = deepLink
+      }
+      setStep('mobile-options')
+      return
+    }
+
+    // Desktop - use Coinbase SDK
+    try {
       const coinbaseExtension = (window as any).coinbaseWalletExtension
       if (coinbaseExtension) {
         const accounts = await coinbaseExtension.request({ method: 'eth_requestAccounts' })
@@ -245,16 +390,12 @@ export function WalletConnectButton({
         }
       }
 
-      // Use Coinbase Wallet SDK for mobile
       const { CoinbaseWalletSDK } = await import('@coinbase/wallet-sdk')
-
       const sdk = new CoinbaseWalletSDK({
         appName: 'SoundChain',
         appLogoUrl: 'https://soundchain.io/favicons/apple-touch-icon.png',
       })
-
       const provider = sdk.makeWeb3Provider()
-
       const accounts = await provider.request({ method: 'eth_requestAccounts' }) as string[]
 
       if (accounts && accounts[0]) {
@@ -267,30 +408,46 @@ export function WalletConnectButton({
       setError(err.message || 'Failed to connect Coinbase')
       setStep('error')
     }
-  }, [onConnect])
-
-  // Rainbow/Trust use WalletConnect QR
-  const connectViaWalletConnectQR = useCallback(async (walletId: string) => {
-    setSelectedWallet(walletId)
-    await initWalletConnect()
-  }, [initWalletConnect])
+  }, [isMobileDevice, connectInjected, onConnect])
 
   // Handle wallet selection
   const handleWalletClick = (walletId: string) => {
     setError(null)
+    setSelectedWallet(walletId)
+
+    // If in a wallet's in-app browser, just connect directly
+    if (isWalletBrowser && window.ethereum) {
+      connectInjected()
+      return
+    }
 
     switch (walletId) {
       case 'metamask':
         connectMetaMask()
         break
       case 'walletconnect':
-      case 'rainbow':
-      case 'trust':
-        connectViaWalletConnectQR(walletId)
+        initWalletConnect()
         break
       case 'coinbase':
         connectCoinbase()
         break
+      case 'rainbow':
+      case 'trust':
+        if (isMobileDevice) {
+          initWalletConnectForMobile(walletId)
+        } else {
+          setSelectedWallet(walletId)
+          initWalletConnect()
+        }
+        break
+    }
+  }
+
+  // Open wallet app on mobile
+  const openWalletApp = (walletId: string) => {
+    const deepLink = getWalletDeepLink(walletId, wcUri || undefined)
+    if (deepLink) {
+      window.location.href = deepLink
     }
   }
 
@@ -304,15 +461,12 @@ export function WalletConnectButton({
   }
 
   // Format address for display
-  const formatAddress = (addr: string) => {
-    return `${addr.slice(0, 6)}...${addr.slice(-4)}`
-  }
+  const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
-  // Get wallet name for QR display
+  // Get wallet name for display
   const getWalletName = () => {
-    if (selectedWallet === 'rainbow') return 'Rainbow'
-    if (selectedWallet === 'trust') return 'Trust Wallet'
-    return 'your wallet'
+    const wallet = WALLETS.find(w => w.id === selectedWallet)
+    return wallet?.name || 'Wallet'
   }
 
   // If connected, show connected state
@@ -339,10 +493,7 @@ export function WalletConnectButton({
               </div>
             </div>
             <button
-              onClick={() => {
-                disconnectWallet()
-                handleClose()
-              }}
+              onClick={() => { disconnectWallet(); handleClose(); }}
               className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 font-mono text-sm transition-colors"
             >
               DISCONNECT
@@ -380,7 +531,6 @@ export function WalletConnectButton({
           {/* Wallet Selection View */}
           {step === 'select' && (
             <>
-              {/* Header */}
               <div className="px-4 py-3 border-b border-cyan-500/20 bg-black/50">
                 <div className="flex items-center justify-between">
                   <span className="text-cyan-400 font-mono text-xs">"wallet_selection":</span>
@@ -389,17 +539,16 @@ export function WalletConnectButton({
                   </button>
                 </div>
                 <div className="text-gray-400 font-mono text-[10px] mt-1 uppercase tracking-wider">
-                  Select wallet provider from list
+                  {isMobileDevice ? 'Tap to open wallet app' : 'Select wallet provider'}
                 </div>
               </div>
 
-              {/* Wallet List */}
               <div className="py-2 max-h-80 overflow-y-auto">
                 {WALLETS.map((wallet) => (
                   <button
                     key={wallet.id}
                     onClick={() => handleWalletClick(wallet.id)}
-                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-cyan-500/10 transition-all duration-150"
+                    className="w-full px-4 py-3 flex items-center gap-3 hover:bg-cyan-500/10 transition-all duration-150 active:bg-cyan-500/20"
                   >
                     <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center text-xl">
                       {wallet.fallbackIcon}
@@ -416,26 +565,27 @@ export function WalletConnectButton({
                         )}
                       </div>
                       <div className="text-gray-500 text-[10px] font-mono">
-                        {wallet.description}
+                        {isMobileDevice ? wallet.mobileDescription : wallet.description}
                       </div>
                     </div>
-                    {wallet.type === 'qr' && (
+                    {isMobileDevice ? (
+                      <ExternalLink className="w-4 h-4 text-gray-600" />
+                    ) : wallet.id !== 'metamask' && wallet.id !== 'coinbase' ? (
                       <Smartphone className="w-4 h-4 text-gray-600" />
-                    )}
+                    ) : null}
                   </button>
                 ))}
               </div>
 
-              {/* Footer */}
               <div className="px-4 py-2 border-t border-cyan-500/20 bg-black/30">
                 <div className="text-gray-600 font-mono text-[9px] text-center uppercase tracking-wider">
-                  connection = terms_agreement
+                  {isMobileDevice ? 'opens wallet app on your device' : 'connection = terms_agreement'}
                 </div>
               </div>
             </>
           )}
 
-          {/* QR Code View */}
+          {/* QR Code View (Desktop) */}
           {step === 'qr' && wcUri && (
             <>
               <div className="px-4 py-3 border-b border-cyan-500/20 bg-black/50">
@@ -457,14 +607,8 @@ export function WalletConnectButton({
                   Scan with {getWalletName()}
                 </div>
 
-                {/* QR Code */}
                 <div className="p-4 bg-white rounded-xl">
-                  <QRCodeSVG
-                    value={wcUri}
-                    size={200}
-                    level="M"
-                    includeMargin={false}
-                  />
+                  <QRCodeSVG value={wcUri} size={200} level="M" includeMargin={false} />
                 </div>
 
                 <div className="mt-4 flex gap-2">
@@ -491,15 +635,70 @@ export function WalletConnectButton({
             </>
           )}
 
+          {/* Mobile Options View */}
+          {step === 'mobile-options' && wcUri && (
+            <>
+              <div className="px-4 py-3 border-b border-cyan-500/20 bg-black/50">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => { setStep('select'); setWcUri(null); }}
+                    className="text-gray-400 hover:text-white text-xs font-mono"
+                  >
+                    ← BACK
+                  </button>
+                  <button onClick={handleClose} className="text-gray-500 hover:text-white transition-colors">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4">
+                <div className="text-white font-mono text-sm mb-4 text-center">
+                  Open in wallet app
+                </div>
+
+                <div className="space-y-2">
+                  {['metamask', 'trust', 'rainbow', 'coinbase'].map((walletId) => {
+                    const wallet = WALLETS.find(w => w.id === walletId)
+                    if (!wallet) return null
+                    return (
+                      <button
+                        key={walletId}
+                        onClick={() => openWalletApp(walletId)}
+                        className="w-full px-4 py-3 flex items-center gap-3 bg-neutral-800 hover:bg-neutral-700 rounded-lg transition-colors"
+                      >
+                        <span className="text-xl">{wallet.fallbackIcon}</span>
+                        <span className="text-white font-mono text-sm">{wallet.name}</span>
+                        <ExternalLink className="w-4 h-4 text-gray-500 ml-auto" />
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-neutral-700">
+                  <button
+                    onClick={copyUri}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs font-mono text-gray-300 transition-colors"
+                  >
+                    {copiedUri ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+                    {copiedUri ? 'Copied!' : 'Copy connection link'}
+                  </button>
+                </div>
+
+                <div className="mt-4 text-gray-500 text-[10px] font-mono text-center">
+                  Waiting for connection...
+                </div>
+              </div>
+            </>
+          )}
+
           {/* Connecting View */}
           {step === 'connecting' && (
             <div className="p-8 flex flex-col items-center">
               <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mb-4" />
               <div className="text-white font-mono text-sm">Connecting...</div>
               <div className="text-gray-500 text-xs mt-2">
-                {selectedWallet === 'metamask' && 'Confirm in MetaMask'}
-                {selectedWallet === 'coinbase' && 'Opening Coinbase...'}
-                {selectedWallet === 'walletconnect' && 'Initializing...'}
+                {isMobileDevice ? 'Opening wallet app...' : 'Please wait...'}
               </div>
             </div>
           )}
@@ -524,9 +723,7 @@ export function WalletConnectButton({
                 <X className="w-8 h-8 text-red-400" />
               </div>
               <div className="text-white font-mono text-sm mb-2">Connection Failed</div>
-              <div className="text-red-400 text-xs text-center font-mono mb-4">
-                {error}
-              </div>
+              <div className="text-red-400 text-xs text-center font-mono mb-4">{error}</div>
               <button
                 onClick={() => setStep('select')}
                 className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs font-mono text-white transition-colors"
