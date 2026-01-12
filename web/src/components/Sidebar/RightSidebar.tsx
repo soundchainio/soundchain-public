@@ -323,7 +323,7 @@ export const RightSidebar = () => {
             <Link href="/privacy" className="hover:text-gray-400">Privacy</Link>
             <Link href="/dex/feedback" className="hover:text-gray-400">Feedback</Link>
           </div>
-          <p className="text-gray-700 text-xs mt-2">© 2024 SoundChain</p>
+          <p className="text-gray-700 text-xs mt-2">© 2026 SoundChain</p>
         </div>
       </div>
     </div>

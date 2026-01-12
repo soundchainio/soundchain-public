@@ -428,7 +428,7 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
           />
 
           {/* Copyright */}
-          <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} placeholder="© 2024 Artist Name" />
+          <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} placeholder="© 2026 Artist Name" />
 
           {/* Genres */}
           <div>

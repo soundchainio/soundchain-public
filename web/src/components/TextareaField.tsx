@@ -10,8 +10,8 @@ interface TextareaFieldProps {
   rows?: number
 }
 
-const commonInputClasses = `appearance-none block w-full p-3 rounded-md border border-gray-30 bg-gray-20 text-white cursor-text`
-const validInputClasses = `${commonInputClasses} border-gray-30`
+const commonInputClasses = `relative appearance-none block w-full p-3 rounded-md border bg-black/30 backdrop-blur-sm border-white/20 text-white cursor-text`
+const validInputClasses = `${commonInputClasses} border-white/20`
 const errorInputClasses = `${commonInputClasses} border-red-500`
 
 export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props }: TextareaFieldProps) => {
