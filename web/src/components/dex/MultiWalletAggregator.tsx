@@ -230,6 +230,17 @@ export function MultiWalletAggregator({
   useEffect(() => {
     const wallets: ConnectedWallet[] = []
 
+    // Debug: Log all wallet state for troubleshooting
+    console.log('🔧 MultiWalletAggregator state:', {
+      userWallet,
+      activeWalletType,
+      activeAddress: web3ModalAddress,
+      directWalletSubtype,
+      isWeb3ModalConnected,
+      metamaskAddress,
+      walletConnectedAddress,
+    })
+
     // Magic Wallet (always first if user is logged in)
     if (userWallet) {
       wallets.push({

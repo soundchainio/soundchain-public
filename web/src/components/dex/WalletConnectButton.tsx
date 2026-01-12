@@ -26,13 +26,35 @@ const isMobile = () => {
 const isInAppBrowser = () => {
   if (typeof window === 'undefined') return false
   const ua = navigator.userAgent.toLowerCase()
-  return ua.includes('metamask') ||
+  const eth = (window as any).ethereum
+  // Check user agent first
+  const isWalletUA = ua.includes('metamask') ||
          ua.includes('coinbase') ||
+         ua.includes('coinbasewallet') ||
+         ua.includes('cbwallet') ||
          ua.includes('trust') ||
-         ua.includes('rainbow') ||
-         (window as any).ethereum?.isMetaMask ||
-         (window as any).ethereum?.isCoinbaseWallet ||
-         (window as any).ethereum?.isTrust
+         ua.includes('rainbow')
+  // Check provider flags
+  const isWalletProvider = eth?.isMetaMask ||
+         eth?.isCoinbaseWallet ||
+         eth?.isCoinbaseBrowser ||
+         eth?.isTrust ||
+         eth?.isRainbow
+  // Log detection for debugging
+  if (typeof window !== 'undefined') {
+    console.log('🔍 Wallet browser detection:', {
+      userAgent: ua.substring(0, 100),
+      isWalletUA,
+      isWalletProvider,
+      ethereumFlags: eth ? {
+        isMetaMask: eth.isMetaMask,
+        isCoinbaseWallet: eth.isCoinbaseWallet,
+        isCoinbaseBrowser: eth.isCoinbaseBrowser,
+        isTrust: eth.isTrust,
+      } : 'no ethereum'
+    })
+  }
+  return isWalletUA || isWalletProvider
 }
 
 // Get wallet deep links for mobile
@@ -239,7 +261,7 @@ export function WalletConnectButton({
   }, [isMobileDevice, connectInjected])
 
   // Initialize WalletConnect v2 and get QR URI
-  const initWalletConnect = useCallback(async () => {
+  const initWalletConnect = useCallback(async (retryCount = 0) => {
     setStep('connecting')
     if (!selectedWallet) setSelectedWallet('walletconnect')
     setError(null)
@@ -254,7 +276,8 @@ export function WalletConnectButton({
         } catch (e) {}
       }
 
-      const provider = await EthereumProvider.init({
+      // Add timeout for provider init (relay can be slow)
+      const initPromise = EthereumProvider.init({
         projectId: WALLETCONNECT_PROJECT_ID,
         chains: [137],
         optionalChains: [1, 8453, 42161, 7000],
@@ -266,6 +289,12 @@ export function WalletConnectButton({
           icons: ['https://soundchain.io/favicons/apple-touch-icon.png'],
         },
       })
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timeout')), 15000)
+      )
+
+      const provider = await Promise.race([initPromise, timeoutPromise]) as any
 
       wcProviderRef.current = provider
 
@@ -302,8 +331,24 @@ export function WalletConnectButton({
 
     } catch (err: any) {
       console.error('WalletConnect error:', err)
+
+      // Retry up to 2 times for relay failures
+      if (retryCount < 2 && (
+        err.message?.includes('publish') ||
+        err.message?.includes('timeout') ||
+        err.message?.includes('relay')
+      )) {
+        console.log(`Retrying WalletConnect (attempt ${retryCount + 2}/3)...`)
+        setTimeout(() => initWalletConnect(retryCount + 1), 1000)
+        return
+      }
+
       if (err.message?.includes('User rejected')) {
         setError('Connection rejected')
+      } else if (err.message?.includes('timeout')) {
+        setError('Connection timed out. Please try again.')
+      } else if (err.message?.includes('publish')) {
+        setError('Network issue. Please check your connection and try again.')
       } else {
         setError(err.message || 'WalletConnect failed')
       }
