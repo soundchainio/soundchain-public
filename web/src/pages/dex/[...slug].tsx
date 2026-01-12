@@ -29,6 +29,7 @@ import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
+import { WalletConnectButton } from 'components/dex/WalletConnectButton'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
 import { GenreLeaderboard } from 'components/dex/GenreLeaderboard'
@@ -2149,36 +2150,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 )}
               </div>
 
-              <Button
-                onClick={(e) => {
-                  e.preventDefault()
-                  if (isWeb3ModalConnected || isWalletConnected) {
-                    // Disconnect - try unified wallet first (handles all types)
-                    unifiedDisconnectWallet()
-                    handleWalletDisconnect()
-                  } else {
-                    // Open native Web3Modal (QuickSwap-style with QR codes, 300+ wallets)
-                    if (isWeb3ModalReady) {
-                      openWeb3Modal()
-                    } else {
-                      // Fallback to legacy modal if Web3Modal not ready
-                      console.log('Web3Modal not ready, using fallback modal')
-                      setShowWalletModal(true)
-                    }
-                  }
-                }}
-                className={`touch-manipulation ${(isWeb3ModalConnected || isWalletConnected) ? 'bg-green-600 hover:bg-green-700' : 'retro-button'}`}
-                size="sm"
-              >
-                <Wallet className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">
-                  {isWeb3ModalConnected
-                    ? `${web3ModalAddress?.slice(0, 6)}...${web3ModalAddress?.slice(-4)}`
-                    : isWalletConnected
-                      ? `${connectedWallet?.slice(0, 6)}...`
-                      : 'Connect'}
-                </span>
-              </Button>
+{/* Retro-style Wallet Connect Button */}
+              <WalletConnectButton compact />
 
               <div className="relative">
                 <Avatar
@@ -4062,10 +4035,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <div className="text-center py-8 mb-6">
                     <Wallet className="w-16 h-16 text-gray-500 mx-auto mb-4" />
                     <p className="text-gray-400 mb-4">Connect your wallet to view assets</p>
-                    <Button onClick={() => openWeb3Modal()} className="retro-button">
-                      <Wallet className="w-4 h-4 mr-2" />
-                      Connect Wallet
-                    </Button>
+                    <WalletConnectButton />
                   </div>
                 )}
 
