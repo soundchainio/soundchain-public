@@ -133,7 +133,9 @@ export function WalletConnectButton({
     activeAddress,
     isConnected,
     activeWalletType,
-    disconnectWallet
+    disconnectWallet,
+    setDirectConnection,
+    directWalletSubtype,
   } = useUnifiedWallet()
 
   // Detect device type on mount
@@ -188,6 +190,15 @@ export function WalletConnectButton({
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
       if (accounts && accounts[0]) {
+        // Get chain ID
+        const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' })
+        const chainId = parseInt(chainIdHex as string, 16)
+        // Determine wallet type from injected provider
+        const walletType = window.ethereum.isMetaMask ? 'metamask' :
+                          (window as any).ethereum?.isCoinbaseWallet ? 'coinbase' :
+                          (window as any).ethereum?.isTrust ? 'trust' : 'injected'
+        // Update unified wallet context
+        setDirectConnection(accounts[0], walletType, chainId)
         setStep('success')
         onConnect?.('injected', accounts[0])
         setTimeout(() => handleClose(), 1500)
@@ -197,7 +208,7 @@ export function WalletConnectButton({
       setError(err.message || 'Failed to connect')
       setStep('error')
     }
-  }, [onConnect])
+  }, [onConnect, setDirectConnection])
 
   // Connect MetaMask
   const connectMetaMask = useCallback(async () => {
@@ -272,7 +283,10 @@ export function WalletConnectButton({
 
       provider.on('connect', () => {
         const address = provider.accounts[0]
+        const chainId = provider.chainId
         if (address) {
+          // Update unified wallet context
+          setDirectConnection(address, 'walletconnect', chainId)
           setStep('success')
           onConnect?.('walletconnect', address)
           setTimeout(() => handleClose(), 1500)
@@ -295,7 +309,7 @@ export function WalletConnectButton({
       }
       setStep('error')
     }
-  }, [onConnect, isMobileDevice, selectedWallet])
+  }, [onConnect, isMobileDevice, selectedWallet, setDirectConnection])
 
   // Initialize WalletConnect for mobile deep link
   const initWalletConnectForMobile = useCallback(async (walletId: string) => {
@@ -339,7 +353,10 @@ export function WalletConnectButton({
 
       provider.on('connect', () => {
         const address = provider.accounts[0]
+        const chainId = provider.chainId
         if (address) {
+          // Update unified wallet context
+          setDirectConnection(address, 'walletconnect', chainId)
           setStep('success')
           onConnect?.('walletconnect', address)
           setTimeout(() => handleClose(), 1500)
@@ -353,7 +370,7 @@ export function WalletConnectButton({
       setError(err.message || 'Failed to connect')
       setStep('error')
     }
-  }, [onConnect])
+  }, [onConnect, setDirectConnection])
 
   // Connect Coinbase Wallet
   const connectCoinbase = useCallback(async () => {
@@ -383,6 +400,10 @@ export function WalletConnectButton({
       if (coinbaseExtension) {
         const accounts = await coinbaseExtension.request({ method: 'eth_requestAccounts' })
         if (accounts && accounts[0]) {
+          const chainIdHex = await coinbaseExtension.request({ method: 'eth_chainId' })
+          const chainId = parseInt(chainIdHex as string, 16)
+          // Update unified wallet context
+          setDirectConnection(accounts[0], 'coinbase', chainId)
           setStep('success')
           onConnect?.('coinbase', accounts[0])
           setTimeout(() => handleClose(), 1500)
@@ -399,6 +420,10 @@ export function WalletConnectButton({
       const accounts = await provider.request({ method: 'eth_requestAccounts' }) as string[]
 
       if (accounts && accounts[0]) {
+        const chainIdHex = await provider.request({ method: 'eth_chainId' }) as string
+        const chainId = parseInt(chainIdHex, 16)
+        // Update unified wallet context
+        setDirectConnection(accounts[0], 'coinbase', chainId)
         setStep('success')
         onConnect?.('coinbase', accounts[0])
         setTimeout(() => handleClose(), 1500)
@@ -408,7 +433,7 @@ export function WalletConnectButton({
       setError(err.message || 'Failed to connect Coinbase')
       setStep('error')
     }
-  }, [isMobileDevice, connectInjected, onConnect])
+  }, [isMobileDevice, connectInjected, onConnect, setDirectConnection])
 
   // Handle wallet selection
   const handleWalletClick = (walletId: string) => {
@@ -489,7 +514,7 @@ export function WalletConnectButton({
               <div className="text-cyan-400 font-mono text-xs mb-1">"connected":</div>
               <div className="text-white font-mono text-sm truncate">{activeAddress}</div>
               <div className="text-gray-500 text-xs mt-1">
-                via {activeWalletType?.toUpperCase() || 'WALLET'}
+                via {(activeWalletType === 'direct' ? directWalletSubtype : activeWalletType)?.toUpperCase() || 'WALLET'}
               </div>
             </div>
             <button

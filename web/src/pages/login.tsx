@@ -7,6 +7,7 @@ import { TopNavBarButton } from 'components/TopNavBarButton';
 import { config } from 'config';
 import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMagicContext } from 'hooks/useMagicContext';
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext';
 import { Google } from 'icons/Google';
 import { Discord } from 'icons/Discord';
 import { Twitch } from 'icons/Twitch';
@@ -19,6 +20,7 @@ import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { isApolloError } from '@apollo/client';
 import styled from 'styled-components';
+import Web3 from 'web3';
 
 const Overlay = styled.div`
   position: fixed;
@@ -83,6 +85,30 @@ function isInAppBrowser(): boolean {
   return inAppPatterns.some(pattern => pattern.test(ua));
 }
 
+// Detect wallet in-app browsers (MetaMask, Coinbase, Trust, etc.)
+// These have issues with Magic OAuth popups and email OTP
+function isWalletBrowser(): { isWallet: boolean; walletName: string } {
+  if (typeof window === 'undefined') return { isWallet: false, walletName: '' };
+  const ua = navigator.userAgent.toLowerCase();
+  const ethereum = (window as any).ethereum;
+
+  // Check user agent and window.ethereum properties
+  if (ua.includes('metamask') || ethereum?.isMetaMask) {
+    return { isWallet: true, walletName: 'MetaMask' };
+  }
+  if (ua.includes('coinbase') || ethereum?.isCoinbaseWallet) {
+    return { isWallet: true, walletName: 'Coinbase Wallet' };
+  }
+  if (ua.includes('trust') || ethereum?.isTrust) {
+    return { isWallet: true, walletName: 'Trust Wallet' };
+  }
+  if (ua.includes('rainbow')) {
+    return { isWallet: true, walletName: 'Rainbow' };
+  }
+
+  return { isWallet: false, walletName: '' };
+}
+
 export default function LoginPage() {
   const [login] = useLoginMutation();
   const [loggingIn, setLoggingIn] = useState(false);
@@ -95,15 +121,26 @@ export default function LoginPage() {
   const [authMethod, setAuthMethod] = useState<AuthMethod[]>();
   const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
   const { magic } = useMagicContext();
+  const { setDirectConnection } = useUnifiedWallet();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
+  const [walletBrowserInfo, setWalletBrowserInfo] = useState<{ isWallet: boolean; walletName: string }>({ isWallet: false, walletName: '' });
   const isProcessingCredential = useRef(false); // Prevent multiple OAuth processing
+
+  // Wallet signature login state
+  const [walletLoginStep, setWalletLoginStep] = useState<'idle' | 'connecting' | 'signing' | 'success' | 'error'>('idle');
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
     // Detect in-app browser and warn user
     if (isInAppBrowser()) {
       setInAppBrowserWarning(true);
+    }
+    // Detect wallet browser
+    const walletInfo = isWalletBrowser();
+    if (walletInfo.isWallet) {
+      setWalletBrowserInfo(walletInfo);
     }
   }, []);
 
@@ -247,6 +284,113 @@ export default function LoginPage() {
   const handleGoogleLogin = () => handleSocialLogin('google');
   const handleDiscordLogin = () => handleSocialLogin('discord');
   const handleTwitchLogin = () => handleSocialLogin('twitch');
+
+  // Wallet signature login - works natively in wallet browsers
+  const handleWalletLogin = async () => {
+    if (typeof window === 'undefined' || !window.ethereum) {
+      setError('No wallet detected. Please use a wallet browser.');
+      return;
+    }
+
+    setWalletLoginStep('connecting');
+    setError(null);
+
+    try {
+      // Step 1: Request wallet connection
+      console.log('[WalletLogin] Requesting accounts...');
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts returned from wallet');
+      }
+
+      const address = accounts[0];
+      setWalletAddress(address);
+      console.log('[WalletLogin] Connected:', address);
+
+      // Step 2: Get chain ID
+      const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+      const chainId = parseInt(chainIdHex as string, 16);
+      console.log('[WalletLogin] Chain ID:', chainId);
+
+      // Step 3: Sign a message to verify ownership
+      setWalletLoginStep('signing');
+
+      // Create SIWE-style message
+      const timestamp = new Date().toISOString();
+      const nonce = Math.random().toString(36).substring(2, 15);
+      const message = `Welcome to SoundChain!
+
+Sign this message to verify your wallet ownership.
+
+Wallet: ${address}
+Timestamp: ${timestamp}
+Nonce: ${nonce}
+
+This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
+
+      console.log('[WalletLogin] Requesting signature...');
+
+      // Request signature using personal_sign
+      const signature = await window.ethereum.request({
+        method: 'personal_sign',
+        params: [message, address],
+      });
+
+      console.log('[WalletLogin] Signature received:', signature?.slice(0, 20) + '...');
+
+      // Step 4: Verify signature client-side using Web3
+      // This confirms the user actually controls the wallet
+      const web3 = new Web3(window.ethereum as any);
+      const recoveredAddress = web3.eth.accounts.recover(message, signature as string);
+
+      if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
+        throw new Error('Signature verification failed - address mismatch');
+      }
+
+      console.log('[WalletLogin] Signature verified!');
+
+      // Step 5: Success! Store wallet session and update context
+      setWalletLoginStep('success');
+
+      // Determine wallet type
+      const walletType = window.ethereum.isMetaMask ? 'metamask' :
+                        (window as any).ethereum?.isCoinbaseWallet ? 'coinbase' :
+                        (window as any).ethereum?.isTrust ? 'trust' : 'injected';
+
+      // Update the unified wallet context
+      setDirectConnection(address, walletType, chainId);
+
+      // Store wallet session info
+      localStorage.setItem('soundchain_wallet_session', JSON.stringify({
+        address,
+        walletType,
+        chainId,
+        signature: signature as string,
+        timestamp,
+        nonce,
+      }));
+
+      console.log('[WalletLogin] Session stored, redirecting...');
+
+      // Brief delay to show success, then redirect
+      setTimeout(() => {
+        const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+        router.push(redirectUrl);
+      }, 1000);
+
+    } catch (err: any) {
+      console.error('[WalletLogin] Error:', err);
+      setWalletLoginStep('error');
+
+      // Handle user rejection gracefully
+      if (err.code === 4001 || err.message?.includes('User rejected') || err.message?.includes('User denied')) {
+        setError('Wallet connection cancelled. Please try again.');
+      } else {
+        setError(err.message || 'Wallet login failed. Please try again.');
+      }
+    }
+  };
 
   // Unified handler for magic_credential callbacks (OAuth and Email Magic Links)
   // Uses ref to prevent multiple concurrent runs (state is async, ref is sync)
@@ -564,6 +708,82 @@ export default function LoginPage() {
               <p className="text-xs text-white mt-2">
                 Or use <strong>Email login</strong> below - it works everywhere!
               </p>
+            </div>
+          )}
+          {walletBrowserInfo.isWallet && (
+            <div className="mb-4 rounded-lg bg-gradient-to-br from-purple-500/30 to-cyan-500/20 border border-purple-500 p-5 text-center">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <span className="text-2xl">🦊</span>
+                <p className="text-lg font-bold text-white">
+                  {walletBrowserInfo.walletName} Detected
+                </p>
+              </div>
+
+              {walletLoginStep === 'idle' && (
+                <>
+                  <p className="text-sm text-purple-200 mb-4">
+                    Sign in directly with your wallet - no email needed!
+                  </p>
+                  <button
+                    onClick={handleWalletLogin}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-500/25"
+                  >
+                    🔐 Sign in with {walletBrowserInfo.walletName}
+                  </button>
+                  <p className="text-xs text-gray-400 mt-3">
+                    You'll sign a message to verify wallet ownership (no gas fees)
+                  </p>
+                </>
+              )}
+
+              {walletLoginStep === 'connecting' && (
+                <div className="py-4">
+                  <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto mb-3"></div>
+                  <p className="text-purple-300 font-medium">Connecting wallet...</p>
+                  <p className="text-xs text-gray-400 mt-1">Please approve in {walletBrowserInfo.walletName}</p>
+                </div>
+              )}
+
+              {walletLoginStep === 'signing' && (
+                <div className="py-4">
+                  <div className="animate-pulse text-4xl mb-3">✍️</div>
+                  <p className="text-cyan-300 font-medium">Sign the message</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Connected: {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                  </p>
+                  <p className="text-xs text-purple-300 mt-2">
+                    Check {walletBrowserInfo.walletName} for the signature request
+                  </p>
+                </div>
+              )}
+
+              {walletLoginStep === 'success' && (
+                <div className="py-4">
+                  <div className="text-4xl mb-3">✅</div>
+                  <p className="text-green-400 font-bold">Verified!</p>
+                  <p className="text-sm text-white mt-1">
+                    {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-2">Redirecting to SoundChain...</p>
+                </div>
+              )}
+
+              {walletLoginStep === 'error' && (
+                <div className="py-2">
+                  <button
+                    onClick={handleWalletLogin}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all"
+                  >
+                    🔄 Try Again
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-4 pt-3 border-t border-purple-500/30">
+                <p className="text-xs text-gray-500">
+                  Or open soundchain.io in Safari/Chrome for email login
+                </p>
+              </div>
             </div>
           )}
           {waitingForOtp && (

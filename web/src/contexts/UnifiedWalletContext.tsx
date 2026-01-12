@@ -10,7 +10,12 @@ import SoundchainOGUN20 from 'contract/SoundchainOGUN20.sol/SoundchainOGUN20.jso
 import { AbiItem } from 'web3-utils'
 
 // Wallet types supported across SoundChain
-export type WalletType = 'magic' | 'metamask' | 'web3modal' | null
+export type WalletType = 'magic' | 'metamask' | 'web3modal' | 'direct' | null
+
+// Direct connection storage keys
+const DIRECT_WALLET_ADDRESS_KEY = 'soundchain_direct_wallet_address'
+const DIRECT_WALLET_TYPE_KEY = 'soundchain_direct_wallet_type'
+const DIRECT_WALLET_CHAIN_KEY = 'soundchain_direct_wallet_chain'
 
 export interface UnifiedWalletState {
   activeWalletType: WalletType
@@ -29,6 +34,9 @@ export interface UnifiedWalletState {
   refetchBalance: () => void
   web3: Web3 | null
   isWeb3ModalReady: boolean
+  // Direct SDK connection support (for WalletConnectButton)
+  setDirectConnection: (address: string, walletType: string, chainId?: number) => void
+  directWalletSubtype: string | null  // e.g., 'metamask', 'walletconnect', 'coinbase'
 }
 
 const defaultState: UnifiedWalletState = {
@@ -48,6 +56,8 @@ const defaultState: UnifiedWalletState = {
   refetchBalance: () => {},
   web3: null,
   isWeb3ModalReady: false,
+  setDirectConnection: () => {},
+  directWalletSubtype: null,
 }
 
 const UnifiedWalletContext = createContext<UnifiedWalletState>(defaultState)
@@ -82,6 +92,11 @@ function UnifiedWalletInner({
   const [isConnecting, setIsConnecting] = useState(false)
   const [web3ModalOgunBalance, setWeb3ModalOgunBalance] = useState<string | null>(null)
   const web3ModalBalanceFetchRef = useRef<string | null>(null)
+
+  // Direct SDK connection state (for WalletConnectButton)
+  const [directAddress, setDirectAddress] = useState<string | null>(null)
+  const [directWalletSubtype, setDirectWalletSubtype] = useState<string | null>(null)
+  const [directChainId, setDirectChainId] = useState<number | null>(null)
 
   // Web3Modal hooks
   const { open } = web3ModalHooks.useWeb3Modal()
@@ -165,6 +180,15 @@ function UnifiedWalletInner({
       const savedType = localStorage.getItem(WALLET_STORAGE_KEY) as WalletType
       if (savedType) {
         setActiveWalletType(savedType)
+        // If direct connection, also load the address and subtype
+        if (savedType === 'direct') {
+          const savedAddress = localStorage.getItem(DIRECT_WALLET_ADDRESS_KEY)
+          const savedSubtype = localStorage.getItem(DIRECT_WALLET_TYPE_KEY)
+          const savedChain = localStorage.getItem(DIRECT_WALLET_CHAIN_KEY)
+          if (savedAddress) setDirectAddress(savedAddress)
+          if (savedSubtype) setDirectWalletSubtype(savedSubtype)
+          if (savedChain) setDirectChainId(parseInt(savedChain, 10))
+        }
       } else if (magicAccount) {
         setActiveWalletType('magic')
       }
@@ -203,6 +227,15 @@ function UnifiedWalletInner({
     if (activeWalletType === 'web3modal') {
       await disconnectWeb3Modal()
     }
+    // Clear direct connection state
+    if (activeWalletType === 'direct') {
+      setDirectAddress(null)
+      setDirectWalletSubtype(null)
+      setDirectChainId(null)
+      localStorage.removeItem(DIRECT_WALLET_ADDRESS_KEY)
+      localStorage.removeItem(DIRECT_WALLET_TYPE_KEY)
+      localStorage.removeItem(DIRECT_WALLET_CHAIN_KEY)
+    }
     persistWalletChoice(null)
     localStorage.removeItem('connectedWalletAddress')
     localStorage.removeItem('connectedWalletType')
@@ -227,6 +260,20 @@ function UnifiedWalletInner({
       connectWeb3Modal()
     }
   }, [isWeb3ModalConnected, web3ModalAddress, persistWalletChoice, connectWeb3Modal])
+
+  // Set direct connection (called from WalletConnectButton after SDK connection)
+  const setDirectConnection = useCallback((address: string, walletType: string, chainId?: number) => {
+    console.log('🔗 Direct wallet connection:', walletType, address, chainId)
+    setDirectAddress(address)
+    setDirectWalletSubtype(walletType)
+    setDirectChainId(chainId || 137)
+    setActiveWalletType('direct')
+    // Persist to localStorage
+    localStorage.setItem(WALLET_STORAGE_KEY, 'direct')
+    localStorage.setItem(DIRECT_WALLET_ADDRESS_KEY, address)
+    localStorage.setItem(DIRECT_WALLET_TYPE_KEY, walletType)
+    localStorage.setItem(DIRECT_WALLET_CHAIN_KEY, String(chainId || 137))
+  }, [])
 
   // Compute active wallet state
   let activeAddress: string | null = null
@@ -262,6 +309,13 @@ function UnifiedWalletInner({
       isConnected = isWeb3ModalConnected
       chainId = web3ModalChainId || null
       break
+    case 'direct':
+      // Direct SDK connection (from WalletConnectButton)
+      activeAddress = directAddress
+      isConnected = !!directAddress
+      chainId = directChainId
+      // Note: Balance fetching for direct connections would require additional setup
+      break
     default:
       if (magicAccount) {
         activeAddress = magicAccount
@@ -290,6 +344,8 @@ function UnifiedWalletInner({
     switchToMagic,
     switchToMetaMask,
     switchToWeb3Modal,
+    setDirectConnection,
+    directWalletSubtype,
     refetchBalance,
     web3,
     isWeb3ModalReady: true,
@@ -326,6 +382,8 @@ function UnifiedWalletFallback({ children }: { children: ReactNode }) {
     switchToMagic: () => {},
     switchToMetaMask: () => {},
     switchToWeb3Modal: () => console.warn('Web3Modal not ready yet'),
+    setDirectConnection: () => console.warn('Web3Modal not ready yet'),
+    directWalletSubtype: null,
     refetchBalance: magicRefetchBalance || (() => {}),
     web3: magicWeb3 || null,
     isWeb3ModalReady: false,
