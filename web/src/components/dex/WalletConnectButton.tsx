@@ -16,6 +16,10 @@ import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 // WalletConnect Project ID
 const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
 
+// Session persistence keys for mobile return flow
+const WC_PENDING_SESSION_KEY = 'soundchain_wc_pending_session'
+const WC_PENDING_WALLET_KEY = 'soundchain_wc_pending_wallet'
+
 // Detect mobile device
 const isMobile = () => {
   if (typeof window === 'undefined') return false
@@ -57,26 +61,31 @@ const isInAppBrowser = () => {
   return isWalletUA || isWalletProvider
 }
 
-// Get wallet deep links for mobile
+// Get wallet deep links for mobile - Using UNIVERSAL LINKS for reliability
 const getWalletDeepLink = (walletId: string, wcUri?: string) => {
   const encodedUri = wcUri ? encodeURIComponent(wcUri) : ''
 
   switch (walletId) {
     case 'metamask':
-      // MetaMask mobile deep link
+      // MetaMask universal link (more reliable than metamask://)
       return wcUri
-        ? `metamask://wc?uri=${encodedUri}`
+        ? `https://metamask.app.link/wc?uri=${encodedUri}`
         : `https://metamask.app.link/dapp/${typeof window !== 'undefined' ? window.location.host : 'soundchain.io'}`
     case 'trust':
+      // Trust Wallet universal link
       return wcUri
-        ? `trust://wc?uri=${encodedUri}`
+        ? `https://link.trustwallet.com/wc?uri=${encodedUri}`
         : `https://link.trustwallet.com/open_url?url=${encodeURIComponent('https://soundchain.io')}`
     case 'rainbow':
+      // Rainbow universal link
       return wcUri
-        ? `rainbow://wc?uri=${encodedUri}`
+        ? `https://rainbow.me/wc?uri=${encodedUri}`
         : `https://rainbow.me`
     case 'coinbase':
-      return `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent('https://soundchain.io')}`
+      // Coinbase Wallet - MUST pass WC URI for connection!
+      return wcUri
+        ? `https://go.cb-w.com/wc?uri=${encodedUri}`
+        : `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent('https://soundchain.io')}`
     default:
       return null
   }
@@ -160,11 +169,61 @@ export function WalletConnectButton({
     directWalletSubtype,
   } = useUnifiedWallet()
 
-  // Detect device type on mount
+  // Detect device type on mount and check for pending mobile sessions
   useEffect(() => {
     setIsMobileDevice(isMobile())
     setIsWalletBrowser(isInAppBrowser())
-  }, [])
+
+    // Check if returning from wallet app with a pending session
+    const checkPendingSession = async () => {
+      const pendingWallet = localStorage.getItem(WC_PENDING_WALLET_KEY)
+      if (!pendingWallet || !isMobile()) return
+
+      console.log('📱 Found pending mobile wallet session:', pendingWallet)
+
+      try {
+        const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
+
+        // Try to restore existing session
+        const provider = await EthereumProvider.init({
+          projectId: WALLETCONNECT_PROJECT_ID,
+          chains: [137],
+          optionalChains: [1, 8453, 42161, 7000],
+          showQrModal: false,
+          metadata: {
+            name: 'SoundChain',
+            description: 'Web3 Music Platform',
+            url: 'https://soundchain.io',
+            icons: ['https://soundchain.io/favicons/apple-touch-icon.png'],
+          },
+        })
+
+        // Check if already connected
+        if (provider.connected && provider.accounts.length > 0) {
+          console.log('✅ Mobile session restored:', provider.accounts[0])
+          const address = provider.accounts[0]
+          const chainId = provider.chainId
+          setDirectConnection(address, pendingWallet, chainId)
+
+          // Clean up pending session
+          localStorage.removeItem(WC_PENDING_SESSION_KEY)
+          localStorage.removeItem(WC_PENDING_WALLET_KEY)
+        } else {
+          // Session expired or not connected, clean up
+          console.log('⚠️ Pending session not connected, clearing...')
+          localStorage.removeItem(WC_PENDING_SESSION_KEY)
+          localStorage.removeItem(WC_PENDING_WALLET_KEY)
+        }
+      } catch (err) {
+        console.error('Failed to restore pending session:', err)
+        localStorage.removeItem(WC_PENDING_SESSION_KEY)
+        localStorage.removeItem(WC_PENDING_WALLET_KEY)
+      }
+    }
+
+    // Small delay to let page fully load after returning from wallet app
+    setTimeout(checkPendingSession, 500)
+  }, [setDirectConnection])
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -387,11 +446,25 @@ export function WalletConnectButton({
       wcProviderRef.current = provider
 
       provider.on('display_uri', (uri: string) => {
+        console.log('📱 Mobile WalletConnect URI generated')
         setWcUri(uri)
-        // Open the wallet app with the URI
+
+        // CRITICAL: Save pending session BEFORE opening wallet app
+        // This allows us to restore the connection when user returns
+        localStorage.setItem(WC_PENDING_WALLET_KEY, walletId)
+        localStorage.setItem(WC_PENDING_SESSION_KEY, Date.now().toString())
+
+        // Open the wallet app with the URI using universal link
         const deepLink = getWalletDeepLink(walletId, uri)
         if (deepLink) {
-          window.location.href = deepLink
+          console.log('📱 Opening wallet app:', deepLink.substring(0, 50) + '...')
+          // Use window.open for better iOS Safari compatibility
+          // This keeps the current page in background instead of replacing it
+          const opened = window.open(deepLink, '_blank')
+          if (!opened) {
+            // Fallback to location.href if popup blocked
+            window.location.href = deepLink
+          }
         }
         setStep('mobile-options')
       })
@@ -400,10 +473,14 @@ export function WalletConnectButton({
         const address = provider.accounts[0]
         const chainId = provider.chainId
         if (address) {
+          console.log('✅ Mobile wallet connected:', address)
+          // Clean up pending session
+          localStorage.removeItem(WC_PENDING_SESSION_KEY)
+          localStorage.removeItem(WC_PENDING_WALLET_KEY)
           // Update unified wallet context
-          setDirectConnection(address, 'walletconnect', chainId)
+          setDirectConnection(address, walletId, chainId)
           setStep('success')
-          onConnect?.('walletconnect', address)
+          onConnect?.(walletId, address)
           setTimeout(() => handleClose(), 1500)
         }
       })
@@ -412,6 +489,9 @@ export function WalletConnectButton({
 
     } catch (err: any) {
       console.error('Mobile WalletConnect error:', err)
+      // Clean up on error
+      localStorage.removeItem(WC_PENDING_SESSION_KEY)
+      localStorage.removeItem(WC_PENDING_WALLET_KEY)
       setError(err.message || 'Failed to connect')
       setStep('error')
     }
@@ -429,13 +509,10 @@ export function WalletConnectButton({
       return
     }
 
-    // On mobile, open Coinbase app
+    // On mobile, use WalletConnect flow with Coinbase deep link
     if (isMobileDevice) {
-      const deepLink = getWalletDeepLink('coinbase')
-      if (deepLink) {
-        window.location.href = deepLink
-      }
-      setStep('mobile-options')
+      // Use WalletConnect which will open Coinbase with the WC URI
+      await initWalletConnectForMobile('coinbase')
       return
     }
 
@@ -478,7 +555,7 @@ export function WalletConnectButton({
       setError(err.message || 'Failed to connect Coinbase')
       setStep('error')
     }
-  }, [isMobileDevice, connectInjected, onConnect, setDirectConnection])
+  }, [isMobileDevice, connectInjected, onConnect, setDirectConnection, initWalletConnectForMobile])
 
   // Handle wallet selection
   const handleWalletClick = (walletId: string) => {
