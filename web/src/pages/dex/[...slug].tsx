@@ -711,12 +711,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
 
+  // Track if user explicitly navigated to their own profile via /dex/me
+  // This ensures isViewingOwnProfile is true even before data loads
+  const isExplicitOwnProfileRoute = routeType === 'me'
+
   // Determine initial view based on URL slug
   const getInitialView = () => {
     switch (routeType) {
       case 'explore': return 'explore'
       case 'library': return 'library'
       case 'profile': return 'profile'
+      case 'me': return 'profile' // /dex/me -> own profile (forces isViewingOwnProfile = true)
       case 'track': return 'track'
       case 'post': return 'post' // /dex/post/:id -> single post view
       case 'playlist': return 'playlist'
@@ -1399,9 +1404,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // Merge profile data from either query source
   // IMPORTANT: This MUST be defined BEFORE isViewingOwnProfile which depends on it
-  const viewingProfile = profileDetailData?.profile || profileByHandleData?.profileByHandle
-  const viewingProfileLoading = profileDetailLoading || profileByHandleLoading
-  const viewingProfileError = profileDetailError || profileByHandleError
+  // PRIORITY: If /dex/me route, use current user's profile (no external query needed)
+  const viewingProfile = isExplicitOwnProfileRoute
+    ? (userData?.me?.profile || me?.profile)  // /dex/me -> own profile from user data
+    : (profileDetailData?.profile || profileByHandleData?.profileByHandle)  // /dex/users/handle -> queried profile
+  const viewingProfileLoading = isExplicitOwnProfileRoute
+    ? userLoading
+    : (profileDetailLoading || profileByHandleLoading)
+  const viewingProfileError = isExplicitOwnProfileRoute
+    ? userError
+    : (profileDetailError || profileByHandleError)
 
   // Query to get track count for viewed profile
   const { data: viewingProfileTracksData } = useGroupedTracksQuery({
@@ -1495,8 +1507,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const myUserHandle = me?.profile?.userHandle || userData?.me?.profile?.userHandle
 
   // Debug: Log comparison values (remove after debugging)
-  if (selectedView === 'profile' && viewingProfile?.id) {
+  if (selectedView === 'profile' && (viewingProfile?.id || isExplicitOwnProfileRoute)) {
     console.log('🔍 isViewingOwnProfile debug:', {
+      isExplicitOwnProfileRoute,
       myProfileId,
       viewingProfileId: viewingProfile?.id,
       idsMatch: String(viewingProfile?.id) === String(myProfileId),
@@ -1506,16 +1519,23 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     })
   }
 
-  // Check if viewing own profile - try multiple comparisons
-  const isViewingOwnProfile = selectedView === 'profile' && Boolean(viewingProfile?.id) && (
-    // Primary: Compare profile IDs (most reliable)
-    (Boolean(myProfileId) && String(viewingProfile?.id) === String(myProfileId)) ||
-    // Fallback 1: Compare wallet addresses (Profile only has magicWalletAddress)
-    (Boolean(myWalletAddress) && Boolean(viewingProfile?.magicWalletAddress) &&
-      myWalletAddress === viewingProfile.magicWalletAddress?.toLowerCase()) ||
-    // Fallback 2: Compare userHandles (very reliable)
-    (Boolean(myUserHandle) && Boolean(viewingProfile?.userHandle) &&
-      myUserHandle === viewingProfile.userHandle)
+  // Check if viewing own profile
+  // PRIORITY: If user navigated to /dex/me, they ARE viewing their own profile (no comparison needed)
+  // Otherwise, try multiple comparisons
+  const isViewingOwnProfile = selectedView === 'profile' && (
+    // EXPLICIT: User navigated to /dex/me - this IS their own profile
+    isExplicitOwnProfileRoute ||
+    // COMPARISON: Check if viewingProfile matches logged-in user
+    (Boolean(viewingProfile?.id) && (
+      // Primary: Compare profile IDs (most reliable)
+      (Boolean(myProfileId) && String(viewingProfile?.id) === String(myProfileId)) ||
+      // Fallback 1: Compare wallet addresses (Profile only has magicWalletAddress)
+      (Boolean(myWalletAddress) && Boolean(viewingProfile?.magicWalletAddress) &&
+        myWalletAddress === viewingProfile.magicWalletAddress?.toLowerCase()) ||
+      // Fallback 2: Compare userHandles (very reliable)
+      (Boolean(myUserHandle) && Boolean(viewingProfile?.userHandle) &&
+        myUserHandle === viewingProfile.userHandle)
+    ))
   )
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
