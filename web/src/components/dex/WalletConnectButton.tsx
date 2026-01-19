@@ -447,7 +447,8 @@ export function WalletConnectButton({
         } catch (e) {}
       }
 
-      const provider = await EthereumProvider.init({
+      // Add timeout for provider init (WalletConnect relay can be slow)
+      const initPromise = EthereumProvider.init({
         projectId: WALLETCONNECT_PROJECT_ID,
         chains: [137],
         optionalChains: [1, 8453, 42161, 7000],
@@ -460,9 +461,18 @@ export function WalletConnectButton({
         },
       })
 
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Connection timeout - please try again')), 15000)
+      )
+
+      const provider = await Promise.race([initPromise, timeoutPromise])
       wcProviderRef.current = provider
 
+      // Track if display_uri fired
+      let uriGenerated = false
+
       provider.on('display_uri', (uri: string) => {
+        uriGenerated = true
         console.log('📱 Mobile WalletConnect URI generated')
         setWcUri(uri)
 
@@ -475,13 +485,8 @@ export function WalletConnectButton({
         const deepLink = getWalletDeepLink(walletId, uri)
         if (deepLink) {
           console.log('📱 Opening wallet app:', deepLink.substring(0, 50) + '...')
-          // Use window.open for better iOS Safari compatibility
-          // This keeps the current page in background instead of replacing it
-          const opened = window.open(deepLink, '_blank')
-          if (!opened) {
-            // Fallback to location.href if popup blocked
-            window.location.href = deepLink
-          }
+          // Use window.location.href for mobile - window.open often blocked
+          window.location.href = deepLink
         }
         setStep('mobile-options')
       })
@@ -502,14 +507,25 @@ export function WalletConnectButton({
         }
       })
 
-      await provider.connect()
+      // Add timeout for connect() call too
+      const connectPromise = provider.connect()
+      const connectTimeout = new Promise<never>((_, reject) =>
+        setTimeout(() => {
+          // If URI was generated, don't show error (user is in wallet app)
+          if (!uriGenerated) {
+            reject(new Error('Connection timeout - WalletConnect relay may be slow'))
+          }
+        }, 20000)
+      )
+
+      await Promise.race([connectPromise, connectTimeout])
 
     } catch (err: any) {
       console.error('Mobile WalletConnect error:', err)
       // Clean up on error
       localStorage.removeItem(WC_PENDING_SESSION_KEY)
       localStorage.removeItem(WC_PENDING_WALLET_KEY)
-      setError(err.message || 'Failed to connect')
+      setError(err.message || 'Failed to connect. Please try again.')
       setStep('error')
     }
   }, [onConnect, setDirectConnection])
