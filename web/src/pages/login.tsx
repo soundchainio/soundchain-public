@@ -281,90 +281,25 @@ export default function LoginPage() {
     }
   }, [me, loadingMe, router]);
 
-  // Handle OAuth redirect callback (desktop flow)
+  // Clean up any stale OAuth state on page load (from failed redirect attempts)
   useEffect(() => {
-    const handleOAuthRedirect = async () => {
-      if (!isClient || !magic || !(magic as any).oauth2) return;
+    if (!isClient) return;
 
-      // Check if we're returning from OAuth redirect
-      const savedProvider = localStorage.getItem('oauth_provider');
-      if (!savedProvider) return;
-
-      // Check if redirect is stale (older than 5 minutes) - clear it
-      const redirectTimestamp = localStorage.getItem('oauth_timestamp');
-      if (redirectTimestamp) {
-        const elapsed = Date.now() - parseInt(redirectTimestamp, 10);
-        if (elapsed > 5 * 60 * 1000) {
-          console.log('[OAuth] Stale redirect detected, clearing...');
-          localStorage.removeItem('oauth_provider');
-          localStorage.removeItem('oauth_callback');
-          localStorage.removeItem('oauth_timestamp');
-          return;
-        }
-      }
-
-      console.log('[OAuth] Checking for redirect result from', savedProvider);
-      setLoggingIn(true);
-
-      try {
-        // Add timeout for getRedirectResult - it can hang indefinitely
-        const resultPromise = (magic as any).oauth2.getRedirectResult();
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('OAuth timeout - please try again')), 10000)
-        );
-
-        const result = await Promise.race([resultPromise, timeoutPromise]);
-        console.log('[OAuth] Redirect result:', result);
-
-        if (result?.magic?.idToken) {
-          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-          if (loginResult.data?.login.jwt) {
-            await setJwt(loginResult.data.login.jwt);
-            localStorage.setItem('didToken', result.magic.idToken);
-
-            // Clear OAuth state
-            const savedCallback = localStorage.getItem('oauth_callback') || config.redirectUrlPostLogin;
-            localStorage.removeItem('oauth_provider');
-            localStorage.removeItem('oauth_callback');
-            localStorage.removeItem('oauth_timestamp');
-
-            console.log('[OAuth] Login successful, redirecting to:', savedCallback);
-            router.push(savedCallback);
-            return;
-          }
-        }
-
-        // No result or failed - clear state and show error
-        console.log('[OAuth] No valid result, clearing state');
-        localStorage.removeItem('oauth_provider');
-        localStorage.removeItem('oauth_callback');
-        localStorage.removeItem('oauth_timestamp');
-        setError('OAuth login failed. Please try again.');
-        setLoggingIn(false);
-      } catch (error: any) {
-        console.error('[OAuth] Redirect handling error:', error);
-        localStorage.removeItem('oauth_provider');
-        localStorage.removeItem('oauth_callback');
-        localStorage.removeItem('oauth_timestamp');
-        setError(error.message || 'OAuth login failed. Please try again.');
-        setLoggingIn(false);
-      }
-    };
-
-    handleOAuthRedirect();
-  }, [isClient, magic, login, router]);
+    // Always clear OAuth redirect state - we use popup now
+    const hadOAuthState = localStorage.getItem('oauth_provider');
+    if (hadOAuthState) {
+      console.log('[OAuth] Clearing stale redirect state');
+      localStorage.removeItem('oauth_provider');
+      localStorage.removeItem('oauth_callback');
+      localStorage.removeItem('oauth_timestamp');
+    }
+  }, [isClient]);
 
   useEffect(() => {
     const validateToken = async () => {
       // Skip validation if user is already in login process or not client-side
       if (loggingIn || !isClient || !magic) {
         console.log('[validateToken] Skipping - login in progress or not ready');
-        return;
-      }
-
-      // Skip if we're handling OAuth redirect
-      if (localStorage.getItem('oauth_provider')) {
-        console.log('[validateToken] Skipping - OAuth redirect in progress');
         return;
       }
 
@@ -409,7 +344,7 @@ export default function LoginPage() {
     return /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
+  const handleSocialLogin = (provider: 'google' | 'discord' | 'twitch') => {
     console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
 
     // Check for in-app browser (Google blocks OAuth in these)
@@ -429,35 +364,24 @@ export default function LoginPage() {
       return;
     }
 
+    // CRITICAL: Call loginWithPopup IMMEDIATELY without any async work before it
+    // Chrome blocks popups if they're not triggered synchronously from user action
+    // Do NOT await, setState, or localStorage before this call!
+    console.log(`[OAuth] Opening popup for ${provider} IMMEDIATELY (no async before)`);
+
+    const popupPromise = (magic as any).oauth2.loginWithPopup({
+      provider,
+      scope: ['openid'],
+    });
+
+    // NOW we can do async work - popup is already opening
     setLoggingIn(true);
     setError(null);
     localStorage.removeItem('didToken');
 
-    try {
-      // Use redirect for desktop (popup blocked by Chrome), popup for mobile
-      const useRedirect = !isMobile();
-      console.log(`[OAuth] Using ${useRedirect ? 'REDIRECT' : 'POPUP'} for ${provider} (mobile: ${isMobile()})`);
-
-      if (useRedirect) {
-        // Desktop: Use redirect flow - Chrome blocks popups
-        // Store provider and timestamp for callback handling
-        localStorage.setItem('oauth_provider', provider);
-        localStorage.setItem('oauth_callback', router.query.callbackUrl?.toString() || config.redirectUrlPostLogin);
-        localStorage.setItem('oauth_timestamp', Date.now().toString());
-
-        await (magic as any).oauth2.loginWithRedirect({
-          provider,
-          redirectURI: `${window.location.origin}/login`,
-          scope: ['openid'],
-        });
-        // Page will redirect, no further code runs
-        return;
-      } else {
-        // Mobile: Popup works fine
-        const result = await (magic as any).oauth2.loginWithPopup({
-          provider,
-          scope: ['openid'],
-        });
+    // Handle the popup result
+    popupPromise
+      .then(async (result: any) => {
         console.log('[OAuth] Popup completed, result:', result);
 
         if (result?.magic?.idToken) {
@@ -471,18 +395,18 @@ export default function LoginPage() {
           }
         }
         throw new Error('OAuth login failed - no token received');
-      }
-    } catch (error: any) {
-      console.error('[OAuth] Login error:', error);
-      if (error.message?.includes('popup') || error.message?.includes('blocked')) {
-        setError('Popup was blocked. Please allow popups for soundchain.io');
-      } else if (error.message?.includes('closed')) {
-        setError('Login cancelled - popup was closed');
-      } else {
-        setError(error.message || `${provider} login failed. Please try again.`);
-      }
-      setLoggingIn(false);
-    }
+      })
+      .catch((error: any) => {
+        console.error('[OAuth] Login error:', error);
+        if (error.message?.includes('popup') || error.message?.includes('blocked')) {
+          setError('Popup was blocked. Please allow popups for soundchain.io and try again.');
+        } else if (error.message?.includes('closed') || error.message?.includes('cancelled')) {
+          setError('Login cancelled. Please try again.');
+        } else {
+          setError(error.message || `${provider} login failed. Please try again.`);
+        }
+        setLoggingIn(false);
+      });
   };
 
   const handleGoogleLogin = () => handleSocialLogin('google');
