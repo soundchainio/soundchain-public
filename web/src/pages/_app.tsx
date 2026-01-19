@@ -51,11 +51,12 @@ interface CustomAppProps extends Pick<AppProps, 'Component' | 'pageProps'> {
 function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
   return (
     <ApolloProvider pageProps={pageProps}>
-      <Web3ModalProvider>
-        <ModalProvider>
-          <StateProvider>
-            <PanelProvider>
-              <MagicProvider>
+      <MagicProvider>
+        {/* Web3Modal AFTER MagicProvider to avoid iframe race condition */}
+        <Web3ModalProvider>
+          <ModalProvider>
+            <StateProvider>
+              <PanelProvider>
                 <WalletProvider>
                   <UnifiedWalletProvider>
                     <AudioPlayerProvider>
@@ -72,11 +73,11 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                   </AudioPlayerProvider>
                   </UnifiedWalletProvider>
                 </WalletProvider>
-              </MagicProvider>
-            </PanelProvider>
-          </StateProvider>
-        </ModalProvider>
-      </Web3ModalProvider>
+              </PanelProvider>
+            </StateProvider>
+          </ModalProvider>
+        </Web3ModalProvider>
+      </MagicProvider>
     </ApolloProvider>
   )
 }

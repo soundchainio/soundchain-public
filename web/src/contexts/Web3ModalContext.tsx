@@ -112,8 +112,13 @@ export function Web3ModalProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    initializeWeb3Modal()
-    setIsReady(true)
+    // Delay Web3Modal init slightly to let Magic SDK iframes settle
+    // This helps avoid EIP-6963 cross-origin frame errors
+    const timer = setTimeout(() => {
+      initializeWeb3Modal()
+      setIsReady(true)
+    }, 100)
+    return () => clearTimeout(timer)
   }, [])
 
   return (
