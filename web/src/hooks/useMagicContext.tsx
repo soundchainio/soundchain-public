@@ -112,10 +112,19 @@ export function MagicProvider({ children }: MagicProviderProps) {
       if (sessionRestorationAttempted.current) return
       sessionRestorationAttempted.current = true
 
-      // Skip if not browser, Magic not ready, or already have user data
-      if (typeof window === 'undefined' || !magic || me) return
+      // Skip if not browser or Magic not ready
+      if (typeof window === 'undefined' || !magic) {
+        console.log('[SessionRestore] Skipping - not browser or magic not ready')
+        return
+      }
 
-      // Check if we already have a valid JWT
+      // Skip if already have user data (already logged in)
+      if (me) {
+        console.log('[SessionRestore] Already logged in (me exists), skipping')
+        return
+      }
+
+      // Check if we already have a valid JWT - this is the primary auth
       const existingJwt = getJwt()
       if (existingJwt) {
         console.log('[SessionRestore] JWT exists, skipping restoration')
@@ -134,12 +143,20 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
       try {
         // Validate the stored token with Magic SDK
+        // Extended timeout for mobile networks (can be slow)
         const isLoggedInPromise = magic.user.isLoggedIn()
         const timeoutPromise = new Promise<boolean>((_, reject) =>
-          setTimeout(() => reject(new Error('isLoggedIn timeout')), 5000)
+          setTimeout(() => reject(new Error('isLoggedIn timeout')), 10000) // 10s for mobile
         )
 
-        const isLoggedIn = await Promise.race([isLoggedInPromise, timeoutPromise])
+        let isLoggedIn: boolean
+        try {
+          isLoggedIn = await Promise.race([isLoggedInPromise, timeoutPromise])
+        } catch (timeoutErr) {
+          // On timeout, try to use token anyway - Magic session might still be valid
+          console.log('[SessionRestore] isLoggedIn timed out, trying token anyway...')
+          isLoggedIn = true // Assume valid, let server validate
+        }
 
         if (isLoggedIn) {
           console.log('[SessionRestore] Magic session valid, exchanging for JWT...')
@@ -150,6 +167,21 @@ export function MagicProvider({ children }: MagicProviderProps) {
             console.log('[SessionRestore] Session restored successfully!')
           } else {
             console.log('[SessionRestore] Login mutation succeeded but no JWT returned')
+            // Try getting a fresh token from Magic
+            try {
+              const freshToken = await magic.user.getIdToken()
+              if (freshToken) {
+                console.log('[SessionRestore] Got fresh token, retrying login...')
+                localStorage.setItem('didToken', freshToken)
+                const retryResult = await login({ variables: { input: { token: freshToken } } })
+                if (retryResult.data?.login.jwt) {
+                  await setJwt(retryResult.data.login.jwt)
+                  console.log('[SessionRestore] Session restored with fresh token!')
+                }
+              }
+            } catch (freshErr) {
+              console.log('[SessionRestore] Fresh token attempt failed:', freshErr)
+            }
           }
         } else {
           console.log('[SessionRestore] Magic session expired, clearing stored token')
@@ -157,8 +189,8 @@ export function MagicProvider({ children }: MagicProviderProps) {
         }
       } catch (error: any) {
         console.log('[SessionRestore] Restoration failed:', error.message)
-        // Don't clear token on timeout - Magic might be slow
-        if (!error.message?.includes('timeout')) {
+        // Don't clear token on network errors - might be temporary
+        if (!error.message?.includes('timeout') && !error.message?.includes('network')) {
           localStorage.removeItem('didToken')
         }
       } finally {
