@@ -26,39 +26,53 @@ const isMobile = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 }
 
+// Get specific wallet provider when multiple wallets are installed
+// This fixes the "wallet collision" where Coinbase hijacks window.ethereum
+const getSpecificProvider = (walletType: 'metamask' | 'coinbase' | 'trust' | 'any'): any => {
+  if (typeof window === 'undefined') return null
+
+  const ethereum = (window as any).ethereum
+  if (!ethereum) return null
+
+  // Check if multiple providers exist (EIP-5749)
+  const providers = ethereum.providers || []
+
+  if (walletType === 'metamask') {
+    const metamaskProvider = providers.find((p: any) => p.isMetaMask && !p.isCoinbaseWallet)
+    if (metamaskProvider) return metamaskProvider
+    if (ethereum.isMetaMask && !ethereum.isCoinbaseWallet) return ethereum
+    return null
+  }
+
+  if (walletType === 'coinbase') {
+    const coinbaseProvider = providers.find((p: any) => p.isCoinbaseWallet)
+    if (coinbaseProvider) return coinbaseProvider
+    if (ethereum.isCoinbaseWallet) return ethereum
+    return null
+  }
+
+  if (walletType === 'trust') {
+    const trustProvider = providers.find((p: any) => p.isTrust)
+    if (trustProvider) return trustProvider
+    if (ethereum.isTrust) return ethereum
+    return null
+  }
+
+  return ethereum
+}
+
 // Detect if in-app browser (MetaMask, Coinbase, Trust, etc.)
 const isInAppBrowser = () => {
   if (typeof window === 'undefined') return false
   const ua = navigator.userAgent.toLowerCase()
-  const eth = (window as any).ethereum
-  // Check user agent first
+  // Check user agent first (true in-app browser)
   const isWalletUA = ua.includes('metamask') ||
          ua.includes('coinbase') ||
          ua.includes('coinbasewallet') ||
          ua.includes('cbwallet') ||
          ua.includes('trust') ||
          ua.includes('rainbow')
-  // Check provider flags
-  const isWalletProvider = eth?.isMetaMask ||
-         eth?.isCoinbaseWallet ||
-         eth?.isCoinbaseBrowser ||
-         eth?.isTrust ||
-         eth?.isRainbow
-  // Log detection for debugging
-  if (typeof window !== 'undefined') {
-    console.log('🔍 Wallet browser detection:', {
-      userAgent: ua.substring(0, 100),
-      isWalletUA,
-      isWalletProvider,
-      ethereumFlags: eth ? {
-        isMetaMask: eth.isMetaMask,
-        isCoinbaseWallet: eth.isCoinbaseWallet,
-        isCoinbaseBrowser: eth.isCoinbaseBrowser,
-        isTrust: eth.isTrust,
-      } : 'no ethereum'
-    })
-  }
-  return isWalletUA || isWalletProvider
+  return isWalletUA
 }
 
 // Get wallet deep links for mobile - Using UNIVERSAL LINKS for reliability
@@ -258,9 +272,13 @@ export function WalletConnectButton({
   }
 
   // Connect via injected provider (works in wallet browsers)
-  const connectInjected = useCallback(async () => {
-    if (typeof window === 'undefined' || !window.ethereum) {
-      setError('No wallet detected')
+  // Uses specific provider to avoid wallet collision
+  const connectInjected = useCallback(async (walletType?: 'metamask' | 'coinbase' | 'trust') => {
+    // Get the specific provider based on wallet type
+    const provider = walletType ? getSpecificProvider(walletType) : (window as any).ethereum
+
+    if (!provider) {
+      setError(`${walletType || 'Wallet'} not detected`)
       setStep('error')
       return
     }
@@ -269,19 +287,20 @@ export function WalletConnectButton({
     setError(null)
 
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      console.log(`[WalletConnect] Connecting to ${walletType || 'injected'} provider...`)
+      const accounts = await provider.request({ method: 'eth_requestAccounts' })
       if (accounts && accounts[0]) {
         // Get chain ID
-        const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' })
+        const chainIdHex = await provider.request({ method: 'eth_chainId' })
         const chainId = parseInt(chainIdHex as string, 16)
-        // Determine wallet type from injected provider
-        const walletType = window.ethereum.isMetaMask ? 'metamask' :
-                          (window as any).ethereum?.isCoinbaseWallet ? 'coinbase' :
-                          (window as any).ethereum?.isTrust ? 'trust' : 'injected'
+        // Determine wallet type from the provider we used
+        const detectedType = provider.isMetaMask ? 'metamask' :
+                          provider.isCoinbaseWallet ? 'coinbase' :
+                          provider.isTrust ? 'trust' : 'injected'
         // Update unified wallet context
-        setDirectConnection(accounts[0], walletType, chainId)
+        setDirectConnection(accounts[0], walletType || detectedType, chainId)
         setStep('success')
-        onConnect?.('injected', accounts[0])
+        onConnect?.(walletType || 'injected', accounts[0])
         setTimeout(() => handleClose(), 1500)
       }
     } catch (err: any) {
@@ -291,32 +310,30 @@ export function WalletConnectButton({
     }
   }, [onConnect, setDirectConnection])
 
-  // Connect MetaMask
+  // Connect MetaMask - uses specific provider to avoid Coinbase collision
   const connectMetaMask = useCallback(async () => {
     setSelectedWallet('metamask')
 
-    // If we're in MetaMask browser, use injected
-    if ((window as any).ethereum?.isMetaMask) {
-      await connectInjected()
-      return
-    }
+    // Get the specific MetaMask provider
+    const metamaskProvider = getSpecificProvider('metamask')
 
     // On mobile, open MetaMask app via deep link
     if (isMobileDevice) {
-      // First get WalletConnect URI for deep link
       await initWalletConnectForMobile('metamask')
       return
     }
 
-    // Desktop without MetaMask extension
-    if (typeof window !== 'undefined' && !window.ethereum?.isMetaMask) {
-      window.open('https://metamask.io/download/', '_blank')
-      setError('MetaMask not installed')
-      setStep('error')
+    // Desktop: Check if MetaMask provider exists
+    if (metamaskProvider) {
+      console.log('[WalletConnect] Found MetaMask provider, connecting...')
+      await connectInjected('metamask')
       return
     }
 
-    await connectInjected()
+    // MetaMask not installed - show download link
+    window.open('https://metamask.io/download/', '_blank')
+    setError('MetaMask not installed. Please install the extension.')
+    setStep('error')
   }, [isMobileDevice, connectInjected])
 
   // Initialize WalletConnect v2 and get QR URI
@@ -497,42 +514,30 @@ export function WalletConnectButton({
     }
   }, [onConnect, setDirectConnection])
 
-  // Connect Coinbase Wallet
+  // Connect Coinbase Wallet - uses specific provider
   const connectCoinbase = useCallback(async () => {
     setSelectedWallet('coinbase')
     setStep('connecting')
     setError(null)
 
-    // If in Coinbase browser, use injected
-    if ((window as any).ethereum?.isCoinbaseWallet) {
-      await connectInjected()
-      return
-    }
+    // Get the specific Coinbase provider
+    const coinbaseProvider = getSpecificProvider('coinbase')
 
     // On mobile, use WalletConnect flow with Coinbase deep link
     if (isMobileDevice) {
-      // Use WalletConnect which will open Coinbase with the WC URI
       await initWalletConnectForMobile('coinbase')
       return
     }
 
-    // Desktop - use Coinbase SDK
-    try {
-      const coinbaseExtension = (window as any).coinbaseWalletExtension
-      if (coinbaseExtension) {
-        const accounts = await coinbaseExtension.request({ method: 'eth_requestAccounts' })
-        if (accounts && accounts[0]) {
-          const chainIdHex = await coinbaseExtension.request({ method: 'eth_chainId' })
-          const chainId = parseInt(chainIdHex as string, 16)
-          // Update unified wallet context
-          setDirectConnection(accounts[0], 'coinbase', chainId)
-          setStep('success')
-          onConnect?.('coinbase', accounts[0])
-          setTimeout(() => handleClose(), 1500)
-          return
-        }
-      }
+    // Desktop: Check if Coinbase provider exists (extension or injected)
+    if (coinbaseProvider) {
+      console.log('[WalletConnect] Found Coinbase provider, connecting...')
+      await connectInjected('coinbase')
+      return
+    }
 
+    // Desktop - fallback to Coinbase SDK (creates new connection)
+    try {
       const { CoinbaseWalletSDK } = await import('@coinbase/wallet-sdk')
       const sdk = new CoinbaseWalletSDK({
         appName: 'SoundChain',
@@ -544,7 +549,6 @@ export function WalletConnectButton({
       if (accounts && accounts[0]) {
         const chainIdHex = await provider.request({ method: 'eth_chainId' }) as string
         const chainId = parseInt(chainIdHex, 16)
-        // Update unified wallet context
         setDirectConnection(accounts[0], 'coinbase', chainId)
         setStep('success')
         onConnect?.('coinbase', accounts[0])
@@ -562,9 +566,19 @@ export function WalletConnectButton({
     setError(null)
     setSelectedWallet(walletId)
 
-    // If in a wallet's in-app browser, just connect directly
-    if (isWalletBrowser && window.ethereum) {
-      connectInjected()
+    // If in a wallet's in-app browser, connect to that specific wallet
+    if (isWalletBrowser) {
+      // Determine which wallet's browser we're in
+      const ua = navigator.userAgent.toLowerCase()
+      if (ua.includes('metamask')) {
+        connectInjected('metamask')
+      } else if (ua.includes('coinbase') || ua.includes('cbwallet')) {
+        connectInjected('coinbase')
+      } else if (ua.includes('trust')) {
+        connectInjected('trust')
+      } else {
+        connectInjected()
+      }
       return
     }
 

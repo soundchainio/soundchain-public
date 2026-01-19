@@ -85,28 +85,81 @@ function isInAppBrowser(): boolean {
   return inAppPatterns.some(pattern => pattern.test(ua));
 }
 
+// Get specific wallet provider when multiple wallets are installed
+// This fixes the "wallet collision" where Coinbase hijacks window.ethereum
+function getWalletProvider(walletType: 'metamask' | 'coinbase' | 'trust' | 'any'): any {
+  if (typeof window === 'undefined') return null;
+
+  const ethereum = (window as any).ethereum;
+  if (!ethereum) return null;
+
+  // Check if multiple providers exist (EIP-5749)
+  const providers = ethereum.providers || [];
+
+  if (walletType === 'metamask') {
+    // Find MetaMask specifically
+    const metamaskProvider = providers.find((p: any) => p.isMetaMask && !p.isCoinbaseWallet);
+    if (metamaskProvider) return metamaskProvider;
+    // Fallback: check if single provider is MetaMask
+    if (ethereum.isMetaMask && !ethereum.isCoinbaseWallet) return ethereum;
+    return null;
+  }
+
+  if (walletType === 'coinbase') {
+    const coinbaseProvider = providers.find((p: any) => p.isCoinbaseWallet);
+    if (coinbaseProvider) return coinbaseProvider;
+    if (ethereum.isCoinbaseWallet) return ethereum;
+    return null;
+  }
+
+  if (walletType === 'trust') {
+    const trustProvider = providers.find((p: any) => p.isTrust);
+    if (trustProvider) return trustProvider;
+    if (ethereum.isTrust) return ethereum;
+    return null;
+  }
+
+  // Return any available provider
+  return ethereum;
+}
+
 // Detect wallet in-app browsers (MetaMask, Coinbase, Trust, etc.)
 // These have issues with Magic OAuth popups and email OTP
-function isWalletBrowser(): { isWallet: boolean; walletName: string } {
-  if (typeof window === 'undefined') return { isWallet: false, walletName: '' };
+function isWalletBrowser(): { isWallet: boolean; walletName: string; provider: any } {
+  if (typeof window === 'undefined') return { isWallet: false, walletName: '', provider: null };
   const ua = navigator.userAgent.toLowerCase();
-  const ethereum = (window as any).ethereum;
 
-  // Check user agent and window.ethereum properties
-  if (ua.includes('metamask') || ethereum?.isMetaMask) {
-    return { isWallet: true, walletName: 'MetaMask' };
+  // Check user agent first (in-app browser detection)
+  if (ua.includes('metamask')) {
+    return { isWallet: true, walletName: 'MetaMask', provider: getWalletProvider('metamask') };
   }
-  if (ua.includes('coinbase') || ethereum?.isCoinbaseWallet) {
-    return { isWallet: true, walletName: 'Coinbase Wallet' };
+  if (ua.includes('coinbase')) {
+    return { isWallet: true, walletName: 'Coinbase Wallet', provider: getWalletProvider('coinbase') };
   }
-  if (ua.includes('trust') || ethereum?.isTrust) {
-    return { isWallet: true, walletName: 'Trust Wallet' };
+  if (ua.includes('trust')) {
+    return { isWallet: true, walletName: 'Trust Wallet', provider: getWalletProvider('trust') };
   }
   if (ua.includes('rainbow')) {
-    return { isWallet: true, walletName: 'Rainbow' };
+    return { isWallet: true, walletName: 'Rainbow', provider: getWalletProvider('any') };
   }
 
-  return { isWallet: false, walletName: '' };
+  // Check provider flags (for desktop extensions)
+  const metamaskProvider = getWalletProvider('metamask');
+  if (metamaskProvider) {
+    return { isWallet: true, walletName: 'MetaMask', provider: metamaskProvider };
+  }
+
+  const coinbaseProvider = getWalletProvider('coinbase');
+  if (coinbaseProvider) {
+    return { isWallet: true, walletName: 'Coinbase Wallet', provider: coinbaseProvider };
+  }
+
+  const trustProvider = getWalletProvider('trust');
+  if (trustProvider) {
+    return { isWallet: true, walletName: 'Trust Wallet', provider: trustProvider };
+  }
+
+  return { isWallet: false, walletName: '', provider: null };
 }
 
 export default function LoginPage() {
@@ -124,7 +177,7 @@ export default function LoginPage() {
   const { setDirectConnection } = useUnifiedWallet();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
-  const [walletBrowserInfo, setWalletBrowserInfo] = useState<{ isWallet: boolean; walletName: string }>({ isWallet: false, walletName: '' });
+  const [walletBrowserInfo, setWalletBrowserInfo] = useState<{ isWallet: boolean; walletName: string; provider: any }>({ isWallet: false, walletName: '', provider: null });
   const isProcessingCredential = useRef(false); // Prevent multiple OAuth processing
 
   // Wallet signature login state
@@ -286,9 +339,13 @@ export default function LoginPage() {
   const handleTwitchLogin = () => handleSocialLogin('twitch');
 
   // Wallet signature login - works natively in wallet browsers
+  // Uses specific provider to avoid wallet collision (MetaMask vs Coinbase)
   const handleWalletLogin = async () => {
-    if (typeof window === 'undefined' || !window.ethereum) {
-      setError('No wallet detected. Please use a wallet browser.');
+    // Use the specific provider from walletBrowserInfo to avoid collision
+    const provider = walletBrowserInfo.provider || (window as any).ethereum;
+
+    if (!provider) {
+      setError('No wallet detected. Please install MetaMask or another wallet.');
       return;
     }
 
@@ -296,9 +353,9 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Step 1: Request wallet connection
-      console.log('[WalletLogin] Requesting accounts...');
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      // Step 1: Request wallet connection using the SPECIFIC provider
+      console.log('[WalletLogin] Requesting accounts from', walletBrowserInfo.walletName || 'wallet', '...');
+      const accounts = await provider.request({ method: 'eth_requestAccounts' });
 
       if (!accounts || accounts.length === 0) {
         throw new Error('No accounts returned from wallet');
@@ -309,7 +366,7 @@ export default function LoginPage() {
       console.log('[WalletLogin] Connected:', address);
 
       // Step 2: Get chain ID
-      const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
+      const chainIdHex = await provider.request({ method: 'eth_chainId' });
       const chainId = parseInt(chainIdHex as string, 16);
       console.log('[WalletLogin] Chain ID:', chainId);
 
@@ -331,8 +388,8 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
 
       console.log('[WalletLogin] Requesting signature...');
 
-      // Request signature using personal_sign
-      const signature = await window.ethereum.request({
+      // Request signature using personal_sign with the SPECIFIC provider
+      const signature = await provider.request({
         method: 'personal_sign',
         params: [message, address],
       });
@@ -341,7 +398,7 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
 
       // Step 4: Verify signature client-side using Web3
       // This confirms the user actually controls the wallet
-      const web3 = new Web3(window.ethereum as any);
+      const web3 = new Web3(provider as any);
       const recoveredAddress = web3.eth.accounts.recover(message, signature as string);
 
       if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
@@ -353,10 +410,10 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
       // Step 5: Success! Store wallet session and update context
       setWalletLoginStep('success');
 
-      // Determine wallet type
-      const walletType = window.ethereum.isMetaMask ? 'metamask' :
-                        (window as any).ethereum?.isCoinbaseWallet ? 'coinbase' :
-                        (window as any).ethereum?.isTrust ? 'trust' : 'injected';
+      // Determine wallet type from the provider we used
+      const walletType = provider.isMetaMask ? 'metamask' :
+                        provider.isCoinbaseWallet ? 'coinbase' :
+                        provider.isTrust ? 'trust' : 'injected';
 
       // Update the unified wallet context
       setDirectConnection(address, walletType, chainId);
