@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { Button } from 'components/common/Buttons/Button'
 import { config } from 'config'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useWalletConnect } from 'hooks/useWalletConnect'
@@ -15,13 +14,14 @@ import { useMe } from 'hooks/useMe'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { toast } from 'react-toastify'
 import { formatToCompactNumber } from 'utils/format'
-import { TOKEN_ADDRESSES, QUICKSWAP_SWAP_URL } from 'constants/tokens'
+import { TOKEN_ADDRESSES, QUICKSWAP_SWAP_URL, QUICKSWAP_ROUTER, SWAP_CONFIG } from 'constants/tokens'
 import Web3 from 'web3'
 import { Contract } from 'web3-eth-contract'
 import { AbiItem } from 'web3-utils'
 import SoundchainOGUN20 from 'contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import StakingRewards from 'contract/StakingRewards.sol/StakingRewards.json'
-import { Coins, TrendingUp, Wallet, ArrowDownUp, Zap, Lock, Unlock, Gift, ExternalLink, Music, Headphones, Sparkles, Play, Award } from 'lucide-react'
+import UniswapV2Router from 'contract/UniswapV2Router/UniswapV2Router.json'
+import { Coins, TrendingUp, Wallet, ArrowDownUp, Lock, Unlock, Gift, ExternalLink, Headphones, Sparkles, Award } from 'lucide-react'
 
 // Query for user's streaming rewards
 const GET_USER_STREAMING_REWARDS = gql`
@@ -63,6 +63,9 @@ const tokenContract = (web3: Web3): Contract<AbiItem[]> => {
 const tokenStakeContract = (web3: Web3): Contract<AbiItem[]> => {
   return new web3.eth.Contract(StakingRewards.abi as AbiItem[], tokenStakeContractAddress)
 }
+const routerContract = (web3: Web3): Contract<AbiItem[]> => {
+  return new web3.eth.Contract(UniswapV2Router.abi as AbiItem[], QUICKSWAP_ROUTER)
+}
 
 // Chain explorers for staking transactions
 const CHAIN_EXPLORERS: Record<string, string> = {
@@ -98,6 +101,14 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   const [rewardBalance, setRewardBalance] = useState('0')
   const [totalStaked, setTotalStaked] = useState('0')
   const [apr, setApr] = useState('0')
+
+  // Swap state
+  const [swapFromToken, setSwapFromToken] = useState<'POL' | 'OGUN'>('POL')
+  const [swapAmount, setSwapAmount] = useState('')
+  const [swapQuote, setSwapQuote] = useState<string | null>(null)
+  const [swapQuoteLoading, setSwapQuoteLoading] = useState(false)
+  const [slippage, setSlippage] = useState<number>(SWAP_CONFIG.DEFAULT_SLIPPAGE)
+  const [polBalance, setPolBalance] = useState('0')
 
   // Fetch user's streaming rewards
   const { data: streamingData, loading: streamingLoading, refetch: refetchStreaming } = useQuery(
@@ -224,6 +235,14 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     if (!web3 || !account) return
 
     try {
+      // POL (native) Balance
+      try {
+        const polBal = await web3.eth.getBalance(account)
+        setPolBalance(web3.utils.fromWei(polBal, 'ether'))
+      } catch {
+        setPolBalance('0')
+      }
+
       // OGUN Balance - try to fetch, but use Magic context balance as fallback
       try {
         // Check chain ID first (OGUN only exists on Polygon)
@@ -233,13 +252,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
           setOgunBalance(web3.utils.fromWei(balance || '0', 'ether'))
         } else {
           // Not on Polygon - use Magic context balance if available
-          console.log('⚠️ StakingPanel: Not on Polygon, using Magic context balance')
+          console.log('StakingPanel: Not on Polygon, using Magic context balance')
           if (magicOgunBalance) {
             setOgunBalance(magicOgunBalance)
           }
         }
       } catch (balanceErr) {
-        console.error('⚠️ StakingPanel: OGUN balance fetch failed:', balanceErr)
+        console.error('StakingPanel: OGUN balance fetch failed:', balanceErr)
         // Fallback to Magic context balance
         if (magicOgunBalance) {
           setOgunBalance(magicOgunBalance)
@@ -383,6 +402,154 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     } else {
       setAmount(stakedBalance)
     }
+  }
+
+  // Set max for swap
+  const handleSwapSetMax = () => {
+    if (swapFromToken === 'POL') {
+      // Leave some POL for gas (0.01 POL minimum)
+      const maxPol = Math.max(0, parseFloat(polBalance) - 0.01)
+      setSwapAmount(maxPol.toString())
+    } else {
+      setSwapAmount(ogunBalance)
+    }
+  }
+
+  // Fetch swap quote with debounce
+  useEffect(() => {
+    if (!web3 || !swapAmount || parseFloat(swapAmount) <= 0) {
+      setSwapQuote(null)
+      return
+    }
+
+    const fetchQuote = async () => {
+      setSwapQuoteLoading(true)
+      try {
+        const amountIn = web3.utils.toWei(swapAmount, 'ether')
+        const path = swapFromToken === 'POL'
+          ? [TOKEN_ADDRESSES.WPOL, TOKEN_ADDRESSES.OGUN]
+          : [TOKEN_ADDRESSES.OGUN, TOKEN_ADDRESSES.WPOL]
+
+        const amounts = await routerContract(web3).methods.getAmountsOut(amountIn, path).call() as string[]
+        const amountOut = web3.utils.fromWei(amounts[1], 'ether')
+        setSwapQuote(amountOut)
+      } catch (err) {
+        console.error('Quote fetch error:', err)
+        setSwapQuote(null)
+      } finally {
+        setSwapQuoteLoading(false)
+      }
+    }
+
+    // Debounce quote fetching
+    const timeoutId = setTimeout(fetchQuote, 500)
+    return () => clearTimeout(timeoutId)
+  }, [web3, swapAmount, swapFromToken])
+
+  // Handle swap
+  const handleSwap = async () => {
+    if (!web3 || !account) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    if (!swapAmount || parseFloat(swapAmount) <= 0) {
+      toast.error('Enter a valid amount to swap')
+      return
+    }
+
+    if (!swapQuote) {
+      toast.error('Unable to get quote. Try again.')
+      return
+    }
+
+    // Check chain ID
+    const chainId = await web3.eth.getChainId()
+    if (Number(chainId) !== 137) {
+      toast.error('Please switch to Polygon network')
+      return
+    }
+
+    // Check balance
+    const balance = swapFromToken === 'POL' ? polBalance : ogunBalance
+    if (parseFloat(swapAmount) > parseFloat(balance)) {
+      toast.error(`Insufficient ${swapFromToken} balance`)
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const amountIn = web3.utils.toWei(swapAmount, 'ether')
+      const minAmountOut = web3.utils.toWei(
+        (parseFloat(swapQuote) * (1 - slippage / 100)).toFixed(18),
+        'ether'
+      )
+      const deadline = Math.floor(Date.now() / 1000) + (SWAP_CONFIG.DEADLINE_MINUTES * 60)
+      const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3), 'gwei').toString()
+
+      if (swapFromToken === 'POL') {
+        // POL -> OGUN: swapExactETHForTokens
+        const path = [TOKEN_ADDRESSES.WPOL, TOKEN_ADDRESSES.OGUN]
+        setTransactionState('Swapping POL for OGUN...')
+        const swapTx = routerContract(web3).methods.swapExactETHForTokens(
+          minAmountOut,
+          path,
+          account,
+          deadline
+        )
+        const gas = await swapTx.estimateGas({ from: account, value: amountIn })
+        await swapTx.send({ from: account, gas: gas.toString(), gasPrice, value: amountIn })
+      } else {
+        // OGUN -> POL: swapExactTokensForETH (requires approval)
+        const path = [TOKEN_ADDRESSES.OGUN, TOKEN_ADDRESSES.WPOL]
+
+        // Check allowance
+        setTransactionState('Checking allowance...')
+        const allowance = await tokenContract(web3).methods.allowance(account, QUICKSWAP_ROUTER).call() as string
+        if (BigInt(allowance) < BigInt(amountIn)) {
+          setTransactionState('Approving OGUN...')
+          const approveTx = tokenContract(web3).methods.approve(QUICKSWAP_ROUTER, amountIn)
+          const approveGas = await approveTx.estimateGas({ from: account })
+          await approveTx.send({ from: account, gas: approveGas.toString(), gasPrice })
+        }
+
+        setTransactionState('Swapping OGUN for POL...')
+        const swapTx = routerContract(web3).methods.swapExactTokensForETH(
+          amountIn,
+          minAmountOut,
+          path,
+          account,
+          deadline
+        )
+        const gas = await swapTx.estimateGas({ from: account })
+        await swapTx.send({ from: account, gas: gas.toString(), gasPrice })
+      }
+
+      const outToken = swapFromToken === 'POL' ? 'OGUN' : 'POL'
+      toast.success(`Swapped ${swapAmount} ${swapFromToken} for ${parseFloat(swapQuote).toFixed(4)} ${outToken}!`)
+      setSwapAmount('')
+      setSwapQuote(null)
+      fetchBalances()
+    } catch (error: any) {
+      console.error('Swap error:', error)
+      if (error.message?.includes('user rejected')) {
+        toast.error('Transaction rejected')
+      } else if (error.message?.includes('insufficient')) {
+        toast.error('Insufficient balance or liquidity')
+      } else {
+        toast.error('Swap failed: ' + (error.message || 'Unknown error'))
+      }
+    } finally {
+      setIsLoading(false)
+      setTransactionState('')
+    }
+  }
+
+  // Toggle swap direction
+  const toggleSwapDirection = () => {
+    setSwapFromToken(prev => prev === 'POL' ? 'OGUN' : 'POL')
+    setSwapAmount('')
+    setSwapQuote(null)
   }
 
   return (
@@ -765,30 +932,131 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       {/* Swap Tab */}
       {activeTab === 'swap' && (
         <div className="space-y-4">
-          <div className="bg-gray-800/50 rounded-xl p-4 text-center">
-            <ArrowDownUp className="w-12 h-12 mx-auto text-purple-400 mb-3" />
-            <h3 className="text-lg font-bold text-white mb-2">Swap Coming Soon</h3>
-            <p className="text-sm text-gray-400 mb-4">
-              Swap tokens directly on SoundChain with ZetaChain omnichain support
-            </p>
+          {/* From Token Input */}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-gray-400">From</span>
+              <span className="text-sm text-gray-400">
+                Balance: {formatToCompactNumber(parseFloat(swapFromToken === 'POL' ? polBalance : ogunBalance))} {swapFromToken}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={swapAmount}
+                onChange={(e) => setSwapAmount(e.target.value)}
+                placeholder="0.00"
+                className="flex-1 bg-transparent text-2xl font-bold text-white outline-none"
+              />
+              <button
+                onClick={handleSwapSetMax}
+                className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-500/30"
+              >
+                MAX
+              </button>
+              <span className="text-gray-300 font-medium min-w-[60px] text-right">{swapFromToken}</span>
+            </div>
+          </div>
+
+          {/* Swap Direction Toggle */}
+          <div className="flex justify-center">
+            <button
+              onClick={toggleSwapDirection}
+              className="p-2 bg-gray-700 hover:bg-gray-600 rounded-full transition-all hover:rotate-180 duration-300"
+            >
+              <ArrowDownUp className="w-5 h-5 text-purple-400" />
+            </button>
+          </div>
+
+          {/* To Token Output */}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-gray-400">To (estimated)</span>
+              <span className="text-sm text-gray-400">
+                Balance: {formatToCompactNumber(parseFloat(swapFromToken === 'POL' ? ogunBalance : polBalance))} {swapFromToken === 'POL' ? 'OGUN' : 'POL'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {swapQuoteLoading ? (
+                <div className="flex-1 flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-gray-400">Fetching quote...</span>
+                </div>
+              ) : (
+                <span className="flex-1 text-2xl font-bold text-white">
+                  {swapQuote ? parseFloat(swapQuote).toFixed(6) : '0.00'}
+                </span>
+              )}
+              <span className="text-gray-300 font-medium min-w-[60px] text-right">{swapFromToken === 'POL' ? 'OGUN' : 'POL'}</span>
+            </div>
+          </div>
+
+          {/* Slippage Settings */}
+          <div className="bg-gray-800/30 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-400">Slippage Tolerance</span>
+              <span className="text-sm text-cyan-400">{slippage}%</span>
+            </div>
+            <div className="flex gap-2">
+              {[0.5, 1, 2].map((val) => (
+                <button
+                  key={val}
+                  onClick={() => setSlippage(val)}
+                  className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    slippage === val
+                      ? 'bg-purple-500 text-white'
+                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                  }`}
+                >
+                  {val}%
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Swap Details */}
+          {swapQuote && swapAmount && (
+            <div className="bg-gray-800/30 rounded-xl p-3 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Rate</span>
+                <span className="text-white">
+                  1 {swapFromToken} = {(parseFloat(swapQuote) / parseFloat(swapAmount)).toFixed(6)} {swapFromToken === 'POL' ? 'OGUN' : 'POL'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Minimum received</span>
+                <span className="text-white">
+                  {(parseFloat(swapQuote) * (1 - slippage / 100)).toFixed(6)} {swapFromToken === 'POL' ? 'OGUN' : 'POL'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Route</span>
+                <span className="text-cyan-400">{swapFromToken} → {swapFromToken === 'POL' ? 'OGUN' : 'POL'}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Swap Button */}
+          <button
+            onClick={handleSwap}
+            disabled={isLoading || !swapAmount || parseFloat(swapAmount) <= 0 || !swapQuote}
+            className="w-full py-4 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+          >
+            <ArrowDownUp className="w-5 h-5" />
+            {isLoading ? transactionState || 'Processing...' : `Swap ${swapFromToken} for ${swapFromToken === 'POL' ? 'OGUN' : 'POL'}`}
+          </button>
+
+          {/* QuickSwap Fallback Link */}
+          <div className="text-center">
             <a
-              href={`https://app.uniswap.org/#/swap?outputCurrency=${TOKEN_ADDRESSES.OGUN}`}
+              href={QUICKSWAP_SWAP_URL(TOKEN_ADDRESSES.WPOL, TOKEN_ADDRESSES.OGUN)}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300"
+              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors"
             >
-              Swap on Uniswap <ExternalLink className="w-4 h-4" />
+              Or swap on QuickSwap <ExternalLink className="w-3 h-3" />
             </a>
           </div>
-          <a
-            href={QUICKSWAP_SWAP_URL(TOKEN_ADDRESSES.MATIC, TOKEN_ADDRESSES.OGUN)}
-            target="_blank"
-            rel="noreferrer"
-            className="w-full py-4 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
-          >
-            <Zap className="w-5 h-5" />
-            Buy OGUN on QuickSwap
-          </a>
         </div>
       )}
 

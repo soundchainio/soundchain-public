@@ -59,8 +59,23 @@ export const validateTokens = (tokens: string[]): Token[] => {
  * Single source of truth - use these instead of hardcoding addresses
  */
 export const TOKEN_ADDRESSES = {
-  MATIC: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', // Wrapped MATIC
+  MATIC: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', // Wrapped MATIC (legacy alias)
+  WPOL: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',  // Wrapped POL (MATIC renamed to POL)
   OGUN: '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c',  // OGUN Token
+} as const;
+
+/**
+ * QuickSwap Router for DEX swaps (Uniswap V2 compatible)
+ */
+export const QUICKSWAP_ROUTER = '0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff';
+
+/**
+ * Swap configuration defaults
+ */
+export const SWAP_CONFIG = {
+  DEFAULT_SLIPPAGE: 0.5,  // 0.5%
+  MAX_SLIPPAGE: 5,        // 5%
+  DEADLINE_MINUTES: 5,    // 5 minute deadline
 } as const;
 
 /**
@@ -70,7 +85,7 @@ export const QUICKSWAP_SWAP_URL = (inputToken: string, outputToken: string) =>
   `https://quickswap.exchange/#/swap?currency0=${inputToken}&currency1=${outputToken}`;
 
 export const TOKEN_INFO: Record<Token, { name: string; icon?: string }> = {
-  MATIC: { name: 'Polygon', icon: '⬡' },
+  MATIC: { name: 'POL (Polygon)', icon: '⬡' },
   OGUN: { name: 'SoundChain Token', icon: '🔊' },
   PENGU: { name: 'Pudgy Penguins', icon: '🐧' },
   ETH: { name: 'Ethereum', icon: '🔷' },
