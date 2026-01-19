@@ -814,120 +814,149 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
               </p>
             </div>
           )}
-          {/* Multi-Wallet Detection - SoundChain's unique feature! */}
-          {detectedWallets.length > 0 && (
-            <div className="mb-4 rounded-lg bg-gradient-to-br from-purple-500/30 to-cyan-500/20 border border-purple-500 p-5 text-center">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-2xl">{detectedWallets.length > 1 ? '🔗' : detectedWallets[0].icon}</span>
-                <p className="text-lg font-bold text-white">
-                  {detectedWallets.length > 1
-                    ? `${detectedWallets.length} Wallets Detected`
-                    : `${detectedWallets[0].name} Detected`}
-                </p>
-              </div>
+          {/* ═══════════════════════════════════════════════════════════════
+              SECTION 1: CONNECT WALLET (Guest Access)
+              - No account needed
+              - Browse marketplace, buy/sell NFTs
+              ═══════════════════════════════════════════════════════════════ */}
+          <div className="mb-6 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/10 border border-cyan-500/50 p-5">
+            <div className="text-center mb-4">
+              <h2 className="text-lg font-bold text-white flex items-center justify-center gap-2">
+                <span>🔗</span> Connect Wallet
+              </h2>
+              <p className="text-sm text-cyan-300 mt-1">Guest Access</p>
+              <p className="text-xs text-gray-400 mt-2">
+                Browse marketplace & buy/sell NFTs - no account needed
+              </p>
+            </div>
 
-              {walletLoginStep === 'idle' && (
-                <>
-                  <p className="text-sm text-purple-200 mb-4">
-                    {detectedWallets.length > 1
-                      ? 'Choose a wallet to sign in - no email needed!'
-                      : 'Sign in directly with your wallet - no email needed!'}
-                  </p>
-                  <div className="space-y-2">
-                    {detectedWallets.map((wallet) => (
-                      <button
-                        key={wallet.type}
-                        onClick={() => handleWalletLogin(wallet)}
-                        className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2"
-                      >
-                        <span className="text-xl">{wallet.icon}</span>
-                        Sign in with {wallet.name}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-400 mt-3">
-                    You'll sign a message to verify wallet ownership (no gas fees)
-                  </p>
-                  {detectedWallets.length > 1 && (
-                    <p className="text-xs text-cyan-400 mt-2">
-                      SoundChain supports multiple wallets!
-                    </p>
-                  )}
-                </>
-              )}
-
-              {walletLoginStep === 'connecting' && (
-                <div className="py-4">
-                  <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto mb-3"></div>
-                  <p className="text-purple-300 font-medium">Connecting wallet...</p>
-                  <p className="text-xs text-gray-400 mt-1">Please approve in {activeWalletLogin}</p>
-                </div>
-              )}
-
-              {walletLoginStep === 'signing' && (
-                <div className="py-4">
-                  <div className="animate-pulse text-4xl mb-3">✍️</div>
-                  <p className="text-cyan-300 font-medium">Sign the message</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Connected: {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
-                  </p>
-                  <p className="text-xs text-purple-300 mt-2">
-                    Check {activeWalletLogin} for the signature request
-                  </p>
-                </div>
-              )}
-
-              {walletLoginStep === 'success' && (
-                <div className="py-4">
-                  <div className="text-4xl mb-3">✅</div>
-                  <p className="text-green-400 font-bold">Verified!</p>
-                  <p className="text-sm text-white mt-1">
-                    {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">Redirecting to SoundChain...</p>
-                </div>
-              )}
-
-              {walletLoginStep === 'error' && (
-                <div className="py-2">
+            {walletLoginStep === 'idle' && (
+              <div className="space-y-2">
+                {/* Detected wallet extensions */}
+                {detectedWallets.map((wallet) => (
                   <button
-                    onClick={() => handleWalletLogin()}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all"
+                    key={wallet.type}
+                    onClick={() => handleWalletLogin(wallet)}
+                    className="w-full py-3 px-4 bg-gray-800/80 hover:bg-gray-700 border border-gray-600 hover:border-cyan-500/50 text-white text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-3"
                   >
-                    🔄 Try Again
+                    <span className="text-xl">{wallet.icon}</span>
+                    <span>{wallet.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 bg-green-500/20 text-green-400 rounded">DETECTED</span>
                   </button>
-                </div>
-              )}
+                ))}
 
-              <div className="mt-4 pt-3 border-t border-purple-500/30">
-                <p className="text-xs text-gray-500">
-                  Or use email/social login below
+                {/* WalletConnect - always show */}
+                <button
+                  onClick={() => {
+                    // Open WalletConnect modal via the DEX wallet page
+                    window.location.href = '/dex/wallet?connect=walletconnect';
+                  }}
+                  className="w-full py-3 px-4 bg-gray-800/80 hover:bg-gray-700 border border-gray-600 hover:border-cyan-500/50 text-white text-sm font-medium rounded-xl transition-all flex items-center justify-center gap-3"
+                >
+                  <span className="text-xl">🌐</span>
+                  <span>WalletConnect</span>
+                  <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">300+ WALLETS</span>
+                </button>
+
+                <p className="text-[11px] text-gray-500 text-center mt-3">
+                  Connect to browse, bid on auctions, and purchase NFTs
                 </p>
               </div>
-            </div>
-          )}
-          {waitingForOtp && (
-            <div className="mb-4 rounded-lg bg-cyan-500/20 border border-cyan-500 p-4 text-center animate-pulse">
-              <p className="text-sm font-semibold text-cyan-400">
-                Check your email for a 6-digit code
-              </p>
-              <p className="text-xs text-cyan-300 mt-1">
-                Magic's popup should appear. If not, check your spam folder.
-              </p>
-            </div>
-          )}
-          {error && (
-            <div className="py-4 text-center text-sm text-red-500 font-semibold drop-shadow-md">
-              {error}
-            </div>
-          )}
-          <div className="flex flex-col gap-3">
-            <GoogleButton />
-            <DiscordButton />
-            <TwitchButton />
+            )}
+
+            {walletLoginStep === 'connecting' && (
+              <div className="py-4 text-center">
+                <div className="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full mx-auto mb-3"></div>
+                <p className="text-cyan-300 font-medium">Connecting to {activeWalletLogin}...</p>
+                <p className="text-xs text-gray-400 mt-1">Please approve in your wallet</p>
+              </div>
+            )}
+
+            {walletLoginStep === 'signing' && (
+              <div className="py-4 text-center">
+                <div className="animate-pulse text-4xl mb-3">✍️</div>
+                <p className="text-cyan-300 font-medium">Sign to verify ownership</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                </p>
+                <p className="text-xs text-cyan-400 mt-2">No gas fees - just a signature</p>
+              </div>
+            )}
+
+            {walletLoginStep === 'success' && (
+              <div className="py-4 text-center">
+                <div className="text-4xl mb-3">✅</div>
+                <p className="text-green-400 font-bold">Wallet Connected!</p>
+                <p className="text-sm text-white mt-1 font-mono">
+                  {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                </p>
+                <p className="text-xs text-gray-400 mt-2">Redirecting to marketplace...</p>
+              </div>
+            )}
+
+            {walletLoginStep === 'error' && (
+              <div className="py-3 text-center">
+                <button
+                  onClick={() => { setWalletLoginStep('idle'); setError(null); }}
+                  className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition-all"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
           </div>
-          <div className="py-7 text-center text-sm font-bold text-gray-50 drop-shadow-md">OR</div>
-          <LoginForm handleMagicLogin={handleSubmit} disabled={waitingForOtp} />
+
+          {/* ═══════════════════════════════════════════════════════════════
+              DIVIDER
+              ═══════════════════════════════════════════════════════════════ */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+            <span className="text-xs text-gray-500 font-medium">OR</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════
+              SECTION 2: LOGIN / SIGN UP (Full Access)
+              - Create account or login to existing
+              - Social features, streaming rewards
+              ═══════════════════════════════════════════════════════════════ */}
+          <div className="rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/50 p-5">
+            <div className="text-center mb-4">
+              <h2 className="text-lg font-bold text-white flex items-center justify-center gap-2">
+                <span>👤</span> Login / Sign Up
+              </h2>
+              <p className="text-sm text-purple-300 mt-1">Full Access</p>
+              <p className="text-xs text-gray-400 mt-2">
+                Post, comment, follow artists & earn streaming rewards
+              </p>
+            </div>
+            {waitingForOtp && (
+              <div className="mb-4 rounded-lg bg-cyan-500/20 border border-cyan-500 p-4 text-center animate-pulse">
+                <p className="text-sm font-semibold text-cyan-400">
+                  Check your email for a 6-digit code
+                </p>
+                <p className="text-xs text-cyan-300 mt-1">
+                  Magic's popup should appear. If not, check your spam folder.
+                </p>
+              </div>
+            )}
+            {error && (
+              <div className="py-3 text-center text-sm text-red-500 font-semibold drop-shadow-md">
+                {error}
+              </div>
+            )}
+            <div className="flex flex-col gap-2">
+              <GoogleButton />
+              <DiscordButton />
+              <TwitchButton />
+            </div>
+            <div className="flex items-center gap-3 my-4">
+              <div className="flex-1 h-px bg-gray-700"></div>
+              <span className="text-xs text-gray-500">or use email</span>
+              <div className="flex-1 h-px bg-gray-700"></div>
+            </div>
+            <LoginForm handleMagicLogin={handleSubmit} disabled={waitingForOtp} />
+          </div>
         </ContentContainer>
       </div>
     </>
