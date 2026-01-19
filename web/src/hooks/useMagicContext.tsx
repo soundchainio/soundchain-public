@@ -286,6 +286,18 @@ export function MagicProvider({ children }: MagicProviderProps) {
     }
   }, [])
 
+  // Helper to get the user's wallet address from any OAuth method
+  const getUserWalletAddress = useCallback(() => {
+    // Check all possible OAuth wallet addresses
+    // Order: magic (email) > google > discord > twitch > email
+    return me?.magicWalletAddress ||
+           me?.googleWalletAddress ||
+           me?.discordWalletAddress ||
+           me?.twitchWalletAddress ||
+           me?.emailWalletAddress ||
+           null
+  }, [me?.magicWalletAddress, me?.googleWalletAddress, me?.discordWalletAddress, me?.twitchWalletAddress, me?.emailWalletAddress])
+
   const handleSetAccount = useCallback(async () => {
     try {
       if (web3) {
@@ -294,25 +306,28 @@ export function MagicProvider({ children }: MagicProviderProps) {
         if (accountFromWeb3) {
           console.log('💳 Magic: Got account from web3:', accountFromWeb3)
           setAccount(accountFromWeb3)
-        } else if (me?.magicWalletAddress) {
-          // FIX: Use magicWalletAddress (actual 0x address), NOT defaultWallet (which is an ENUM)
-          console.log('💳 Magic: Using fallback magicWalletAddress:', me.magicWalletAddress)
-          setAccount(me.magicWalletAddress)
         } else {
-          console.log('💳 Magic: No account available from web3 or user profile')
+          // Fallback: Try all OAuth wallet addresses
+          const fallbackWallet = getUserWalletAddress()
+          if (fallbackWallet) {
+            console.log('💳 Magic: Using fallback OAuth wallet:', fallbackWallet)
+            setAccount(fallbackWallet)
+          } else {
+            console.log('💳 Magic: No account available from web3 or user profile')
+          }
         }
       }
     } catch (error) {
       // Even on error, try to use fallback addresses
-      // FIX: Use magicWalletAddress (actual 0x address), NOT defaultWallet (which is an ENUM)
-      if (me?.magicWalletAddress) {
-        console.log('💳 Magic: Error getting account, using fallback magicWalletAddress:', me.magicWalletAddress)
-        setAccount(me.magicWalletAddress)
+      const fallbackWallet = getUserWalletAddress()
+      if (fallbackWallet) {
+        console.log('💳 Magic: Error getting account, using fallback OAuth wallet:', fallbackWallet)
+        setAccount(fallbackWallet)
       } else {
         handleError(error as Error | { code: number })
       }
     }
-  }, [handleError, web3, me?.magicWalletAddress])
+  }, [handleError, web3, getUserWalletAddress])
 
   const handleSetBalance = useCallback(async () => {
     try {
@@ -387,11 +402,13 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
     // Fallback: Set account from user profile even without web3
     // This ensures balances can be fetched using public RPC
-    if (me.magicWalletAddress && !account) {
-      console.log('💳 Magic: Setting account from profile (no web3):', me.magicWalletAddress)
-      setAccount(me.magicWalletAddress)
+    // Check ALL OAuth wallet addresses, not just magicWalletAddress
+    const fallbackWallet = getUserWalletAddress()
+    if (fallbackWallet && !account) {
+      console.log('💳 Magic: Setting account from profile (no web3):', fallbackWallet)
+      setAccount(fallbackWallet)
     }
-  }, [me, web3, handleSetAccount, me?.magicWalletAddress, account])
+  }, [me, web3, handleSetAccount, getUserWalletAddress, account])
 
   // Debounce ref to prevent rapid re-fetches
   const balanceFetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
