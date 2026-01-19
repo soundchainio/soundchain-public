@@ -327,49 +327,52 @@ export default function LoginPage() {
   const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
     console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
 
+    // CRITICAL: Check prerequisites BEFORE opening popup
+    // Chrome blocks popups that aren't opened immediately on user click
+
+    // Check for in-app browser (Google blocks OAuth in these)
+    if (isInAppBrowser() && provider === 'google') {
+      setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
+      return;
+    }
+
+    if (!magic) {
+      setError('Login not ready. Please refresh the page and try again.');
+      return;
+    }
+
+    // Check for oauth2 extension (from @magic-ext/oauth2)
+    if (!(magic as any).oauth2) {
+      setError('OAuth not available. Please refresh the page and try again.');
+      return;
+    }
+
+    // CRITICAL: Open popup IMMEDIATELY on user click - BEFORE any state updates
+    // Chrome's popup blocker considers async state updates as breaking the "direct user action" chain
+    console.log('[OAuth] Opening popup IMMEDIATELY for', provider, '...');
+
+    let popupPromise: Promise<any>;
     try {
-      // Check for in-app browser (Google blocks OAuth in these)
-      if (isInAppBrowser() && provider === 'google') {
-        setError('Google login is blocked in this browser. Please open in Safari or Chrome, or use Email login.');
-        return;
-      }
+      // Start the popup immediately - this must happen synchronously with the click
+      popupPromise = (magic as any).oauth2.loginWithPopup({
+        provider,
+        scope: ['openid'],
+      });
+    } catch (syncError: any) {
+      console.error('[OAuth] Sync error starting popup:', syncError);
+      setError('Failed to open login popup. Please try again.');
+      return;
+    }
 
-      if (!magic) {
-        setError('Login not ready. Please refresh the page and try again.');
-        return;
-      }
+    // NOW we can safely update state - popup is already opening
+    setLoggingIn(true);
+    setError(null);
+    localStorage.removeItem('didToken');
 
-      // Check for oauth2 extension (from @magic-ext/oauth2)
-      if (!(magic as any).oauth2) {
-        setError('OAuth not available. Please refresh the page and try again.');
-        return;
-      }
-
-      setLoggingIn(true);
-      setError(null);
-      localStorage.removeItem('didToken');
-
-      // Use popup instead of redirect - redirect not working with network config
-      console.log('[OAuth] Opening popup for', provider, '...');
-
-      let result;
-      try {
-        result = await (magic as any).oauth2.loginWithPopup({
-          provider,
-          scope: ['openid'],
-        });
-        console.log('[OAuth] Popup completed, result:', result);
-      } catch (popupError: any) {
-        console.error('[OAuth] Popup error:', popupError);
-        // Check for specific popup errors
-        if (popupError.message?.includes('popup') || popupError.message?.includes('blocked')) {
-          throw new Error('Popup was blocked. Please allow popups for soundchain.io');
-        }
-        if (popupError.message?.includes('closed')) {
-          throw new Error('Login cancelled - popup was closed');
-        }
-        throw popupError;
-      }
+    try {
+      // Await the already-started popup
+      const result = await popupPromise;
+      console.log('[OAuth] Popup completed, result:', result);
 
       if (result?.magic?.idToken) {
         const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
@@ -383,8 +386,15 @@ export default function LoginPage() {
       }
       throw new Error('OAuth login failed - no token received');
     } catch (error: any) {
-      console.error('[OAuth2] Error:', error);
-      setError(error.message || `${provider} login failed. Please try again.`);
+      console.error('[OAuth] Popup/login error:', error);
+      // Check for specific popup errors
+      if (error.message?.includes('popup') || error.message?.includes('blocked')) {
+        setError('Popup was blocked. Please allow popups for soundchain.io');
+      } else if (error.message?.includes('closed')) {
+        setError('Login cancelled - popup was closed');
+      } else {
+        setError(error.message || `${provider} login failed. Please try again.`);
+      }
       setLoggingIn(false);
     }
   };
