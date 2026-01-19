@@ -1480,7 +1480,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
   // NOTE: isViewingOwnProfile uses viewingProfile which is now defined above
   // Using String() for robust comparison - IDs may be ObjectId vs string
-  const isViewingOwnProfile = selectedView === 'profile' && Boolean(viewingProfile?.id) && Boolean(me?.profile?.id) && String(viewingProfile?.id) === String(me?.profile?.id)
+  // Also check userData?.me?.profile?.id as fallback since useMe() and useMeQuery() may have different loading states
+  const myProfileId = me?.profile?.id || userData?.me?.profile?.id
+  const isViewingOwnProfile = selectedView === 'profile' && Boolean(viewingProfile?.id) && Boolean(myProfileId) && String(viewingProfile?.id) === String(myProfileId)
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
