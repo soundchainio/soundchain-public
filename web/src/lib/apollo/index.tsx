@@ -48,14 +48,25 @@ export const apolloClient = createApolloClient()
 
 export function getJwt() {
   if (isBrowser) {
-    // Try cookie first, then localStorage fallback
+    // Try cookie first
     const cookieJwt = Cookies.get(jwtKey)
     if (cookieJwt) return cookieJwt
 
-    // Fallback to localStorage if cookie not available
+    // Fallback to localStorage (critical for mobile Safari/iOS)
     const localStorageJwt = localStorage.getItem('jwt_fallback')
     if (localStorageJwt) {
-      console.log('Using JWT from localStorage fallback')
+      console.log('[Auth] Using JWT from localStorage fallback (mobile)')
+      // Try to restore cookie from localStorage
+      try {
+        Cookies.set(jwtKey, localStorageJwt, {
+          sameSite: 'Lax',
+          secure: !isSafari,
+          expires: 30,
+          path: '/',
+        })
+      } catch (e) {
+        // Cookie restore failed, but localStorage JWT still valid
+      }
       return localStorageJwt
     }
 
@@ -68,47 +79,50 @@ export async function setJwt(newJwt?: string) {
   jwt = newJwt
   if (isBrowser) {
     if (jwt) {
-      // Set cookie with proper options for persistence
-      // Extended to 30 days for better UX during testing/live-prod era
-      Cookies.set(jwtKey, jwt, {
-        sameSite: 'Lax',
-        secure: !isSafari,
-        expires: 30,  // 30 days expiry for "stay logged in" feature
-        path: '/',    // Available on all paths
-      })
-
-      // Verify cookie was set
-      const savedJwt = Cookies.get(jwtKey)
-      if (savedJwt) {
-        console.log('JWT cookie set and verified:', savedJwt.substring(0, 20) + '...')
-      } else {
-        console.error('JWT cookie was NOT saved! Browser may be blocking cookies.')
-        // Try localStorage as fallback
-        try {
-          localStorage.setItem('jwt_fallback', jwt)
-          console.log('JWT saved to localStorage as fallback')
-        } catch (e) {
-          console.error('Failed to save JWT to localStorage:', e)
-        }
+      // ALWAYS save to localStorage first (most reliable on mobile)
+      // This ensures JWT survives even if cookies are blocked
+      try {
+        localStorage.setItem('jwt_fallback', jwt)
+        console.log('[Auth] JWT saved to localStorage')
+      } catch (e) {
+        console.error('[Auth] Failed to save JWT to localStorage:', e)
       }
 
-      // Small delay to ensure cookie is fully set before Apollo reset
+      // Also try to set cookie (better for SSR/cross-tab)
+      try {
+        Cookies.set(jwtKey, jwt, {
+          sameSite: 'Lax',
+          secure: !isSafari,
+          expires: 30,  // 30 days expiry
+          path: '/',
+        })
+
+        const savedJwt = Cookies.get(jwtKey)
+        if (savedJwt) {
+          console.log('[Auth] JWT cookie set:', savedJwt.substring(0, 20) + '...')
+        } else {
+          console.warn('[Auth] Cookie not saved (browser may be blocking)')
+        }
+      } catch (e) {
+        console.warn('[Auth] Cookie save failed:', e)
+      }
+
+      // Small delay to ensure storage is complete before Apollo reset
       await new Promise(resolve => setTimeout(resolve, 100))
 
       try {
-        // Only reset if we have a token (not on logout)
         await apolloClient.resetStore()
-        console.log('Apollo cache reset complete')
+        console.log('[Auth] Apollo cache reset complete')
       } catch (error) {
-        // Ignore errors from resetStore - queries will refetch naturally
-        console.warn('Apollo resetStore warning:', error)
+        console.warn('[Auth] Apollo resetStore warning:', error)
       }
     } else {
       // Logout flow - clear all auth tokens
       Cookies.remove(jwtKey, { path: '/' })
       localStorage.removeItem('jwt_fallback')
-      localStorage.removeItem('didToken') // Clear Magic session token to prevent auto-login
+      localStorage.removeItem('didToken')
       await apolloClient.clearStore()
+      console.log('[Auth] All tokens cleared (logout)')
     }
   }
 }
