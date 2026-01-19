@@ -316,14 +316,18 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetBalance = useCallback(async () => {
     try {
-      if (web3 && account) {
-        const maticBalance = await web3.eth.getBalance(account)
-        setMaticBalance(Number(web3.utils.fromWei(maticBalance, 'ether')).toFixed(6))
-      }
+      if (!account) return
+
+      // Use Magic's web3 or fallback to public RPC
+      const web3Instance = web3 || new Web3(network.rpc)
+
+      const maticBalance = await web3Instance.eth.getBalance(account)
+      setMaticBalance(Number(web3Instance.utils.fromWei(maticBalance, 'ether')).toFixed(6))
     } catch (error) {
-      handleError(error as Error | { code: number })
+      console.error('💰 Balance fetch error:', error)
+      // Don't propagate error - just log it
     }
-  }, [account, handleError, web3])
+  }, [account, web3])
 
   const handleSetOgunBalance = useCallback(async () => {
     try {
@@ -331,77 +335,72 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
       if (!ogunAddress) {
         console.log('💎 No OGUN token address in config, skipping balance fetch')
-        // Only set to 0 if we don't have a balance yet
         setOgunBalance(prev => prev || '0')
         return
       }
 
-      if (web3 && account) {
-        // Check if we're on Polygon (chain 137) - OGUN only exists there
-        // On mobile Magic SDK, the chain check may fail - try anyway since Magic defaults to Polygon
-        let chainId: bigint | number | undefined
-        try {
-          chainId = await web3.eth.getChainId()
-          console.log('💎 Chain ID:', chainId, 'type:', typeof chainId)
-          if (Number(chainId) !== 137) {
-            console.log('💎 Not on Polygon (chain', chainId, '), but trying OGUN fetch anyway for Magic wallet')
-            // Don't return - Magic wallets are always on Polygon, chain check may be unreliable on mobile
-          }
-        } catch (chainErr) {
-          console.log('💎 Chain ID fetch failed, trying OGUN balance anyway:', chainErr)
-          // Continue anyway - Magic SDK defaults to Polygon
+      if (!account) return
+
+      // Use Magic's web3 or fallback to public RPC (Polygon)
+      const web3Instance = web3 || new Web3(network.rpc)
+
+      console.log('💎 Fetching OGUN balance for account:', account)
+      const ogunContract = new web3Instance.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
+
+      try {
+        const tokenAmount = await ogunContract.methods.balanceOf(account).call()
+        console.log('💎 Raw OGUN balance:', tokenAmount, 'type:', typeof tokenAmount)
+
+        // Handle BigInt, string, or number from web3.js (v4 returns BigInt)
+        let validTokenAmount: string
+        if (typeof tokenAmount === 'bigint') {
+          validTokenAmount = tokenAmount.toString()
+        } else if (typeof tokenAmount === 'string' || typeof tokenAmount === 'number') {
+          validTokenAmount = String(tokenAmount)
+        } else {
+          console.log('💎 Unexpected token amount type:', typeof tokenAmount, tokenAmount)
+          validTokenAmount = '0'
         }
 
-        console.log('💎 Fetching OGUN balance for account:', account)
-        const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
-
-        try {
-          const tokenAmount = await ogunContract.methods.balanceOf(account).call()
-          console.log('💎 Raw OGUN balance:', tokenAmount, 'type:', typeof tokenAmount)
-
-          // Handle BigInt, string, or number from web3.js (v4 returns BigInt)
-          let validTokenAmount: string
-          if (typeof tokenAmount === 'bigint') {
-            validTokenAmount = tokenAmount.toString()
-          } else if (typeof tokenAmount === 'string' || typeof tokenAmount === 'number') {
-            validTokenAmount = String(tokenAmount)
-          } else {
-            console.log('💎 Unexpected token amount type:', typeof tokenAmount, tokenAmount)
-            validTokenAmount = '0'
-          }
-
-          const tokenAmountInEther = Number(web3.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
-          console.log('💎 OGUN balance in ether:', tokenAmountInEther)
-          setOgunBalance(tokenAmountInEther)
-        } catch (contractErr: any) {
-          // Contract call failed - keep existing balance, don't reset to 0
-          console.error('💎 OGUN contract call failed:', contractErr?.message || contractErr)
-          // Only set to 0 if we have no balance yet
-          setOgunBalance(prev => prev || '0')
-        }
+        const tokenAmountInEther = Number(web3Instance.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
+        console.log('💎 OGUN balance in ether:', tokenAmountInEther)
+        setOgunBalance(tokenAmountInEther)
+      } catch (contractErr: any) {
+        console.error('💎 OGUN contract call failed:', contractErr?.message || contractErr)
+        setOgunBalance(prev => prev || '0')
       }
     } catch (error: any) {
-      // Don't propagate OGUN balance errors - keep existing balance
       console.error('💎 OGUN balance fetch failed:', error?.message || error)
-      // Only set to 0 if we have no balance yet
       setOgunBalance(prev => prev || '0')
     }
   }, [account, web3])
 
   // Fetch account when web3 is ready (or when me changes with wallet info)
   useEffect(() => {
-    if (!me || !web3) return
-    // Also trigger when user's wallet addresses become available
-    handleSetAccount()
-  }, [me, web3, handleSetAccount, me?.magicWalletAddress])
+    if (!me) return
+
+    // If web3 is ready, use full flow
+    if (web3) {
+      handleSetAccount()
+      return
+    }
+
+    // Fallback: Set account from user profile even without web3
+    // This ensures balances can be fetched using public RPC
+    if (me.magicWalletAddress && !account) {
+      console.log('💳 Magic: Setting account from profile (no web3):', me.magicWalletAddress)
+      setAccount(me.magicWalletAddress)
+    }
+  }, [me, web3, handleSetAccount, me?.magicWalletAddress, account])
 
   // Debounce ref to prevent rapid re-fetches
   const balanceFetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastFetchedAccountRef = useRef<string | null>(null)
 
   // Fetch balances when account is set (separate effect to avoid stale closure)
+  // Note: web3 is no longer required - we fallback to public RPC
   useEffect(() => {
-    if (!account || !web3) return
+    if (!account) return
 
     // Skip if we just fetched for this account (prevents flickering)
     if (lastFetchedAccountRef.current === account && balanceFetchTimeoutRef.current) {
@@ -415,7 +414,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
     // Debounce the fetch to prevent rapid re-fetches
     balanceFetchTimeoutRef.current = setTimeout(() => {
-      console.log('💰 Fetching balances for account:', account)
+      console.log('💰 Fetching balances for account:', account, '(web3:', web3 ? 'available' : 'using public RPC', ')')
       lastFetchedAccountRef.current = account
       handleSetBalance()
       handleSetOgunBalance()
