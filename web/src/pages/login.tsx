@@ -375,15 +375,29 @@ export default function LoginPage() {
     setError(null);
     localStorage.removeItem('didToken');
 
+    // CRITICAL: Open popup IMMEDIATELY from click handler to avoid browser blocking
+    // Modern browsers only allow popups in the synchronous call stack from user gesture
+    console.log(`[OAuth] Opening popup for ${provider}...`);
+    const popup = window.open('about:blank', 'magic_oauth', 'width=500,height=600,scrollbars=yes');
+
+    if (!popup || popup.closed) {
+      console.error('[OAuth] Popup blocked by browser');
+      setError('Popup blocked. Please allow popups for soundchain.io and try again.');
+      setLoggingIn(false);
+      return;
+    }
+
     try {
-      // Call Magic's loginWithPopup - it handles popup creation internally
-      // Note: This must be called synchronously from user click to avoid popup blockers
+      // Now call Magic - popup is already open so it won't be blocked
       console.log(`[OAuth] Calling Magic loginWithPopup for ${provider}...`);
 
       const result = await (magic as any).oauth2.loginWithPopup({
         provider,
         scope: ['openid'],
       });
+
+      // Close our popup if it's still open (Magic may have used its own)
+      try { popup.close(); } catch (e) { /* ignore */ }
 
       console.log('[OAuth] Popup completed, result:', result);
 
@@ -427,6 +441,9 @@ export default function LoginPage() {
         router.push(redirectUrl);
         return;
       }
+
+      // Close popup on any error
+      try { popup.close(); } catch (e) { /* ignore */ }
 
       if (error.message?.includes('popup') || error.message?.includes('blocked')) {
         setError('Popup was blocked. Please allow popups for soundchain.io and try again.');
