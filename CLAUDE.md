@@ -144,12 +144,29 @@ These files have caused critical bugs when modified. Require extra caution:
 
 ### 14. Wallet Balances Show 0 (Jan 19, 2026)
 **Symptom:** OGUN and POL balances show 0 even when logged in with tokens
-**Root Cause:** Balance fetching required both `web3` (Magic) and `account` to be set, but Magic session might not be fully initialized
+**Root Cause:**
+1. Balance fetching required both `web3` (Magic) and `account` to be set
+2. Code only checked `magicWalletAddress` but Google OAuth users have wallet in `googleWalletAddress`
 **Fix:**
 - Set account from user profile even without web3 session
 - Use public Polygon RPC as fallback for balance fetching
-- Added debounce to prevent rapid re-fetches and flickering
+- **CRITICAL:** Check ALL OAuth wallet addresses, not just `magicWalletAddress`:
+  - `magicWalletAddress` (email login)
+  - `googleWalletAddress` (Google OAuth)
+  - `discordWalletAddress` (Discord OAuth)
+  - `twitchWalletAddress` (Twitch OAuth)
+  - `emailWalletAddress`
 **File:** useMagicContext.tsx (PROTECTED - required careful changes)
+**Key Code:**
+```typescript
+const getUserWalletAddress = () => {
+  return me?.magicWalletAddress ||
+         me?.googleWalletAddress ||
+         me?.discordWalletAddress ||
+         me?.twitchWalletAddress ||
+         me?.emailWalletAddress || null
+}
+```
 
 ---
 
