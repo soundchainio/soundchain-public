@@ -31,9 +31,23 @@ console.log('🔗 Apollo API URL:', apiUrl, '| env:', config.apiUrl)
 const httpLink = createHttpLink({ uri: apiUrl, fetch })
 
 export function createApolloClient(context?: GetServerSidePropsContext) {
-  const authLink = setContext(() => {
-    const currentJwt = context?.req.cookies[jwtKey] || getJwt()
-    return currentJwt ? { headers: { authorization: `Bearer ${currentJwt}` } } : {}
+  const authLink = setContext((_, { headers }) => {
+    // For SSR, use cookies from request context
+    // For browser, use getJwt() which checks cookie then localStorage
+    const currentJwt = context?.req?.cookies?.[jwtKey] || getJwt()
+
+    if (isBrowser && !currentJwt) {
+      console.log('[Apollo] No JWT found for request')
+    } else if (isBrowser && currentJwt) {
+      console.log('[Apollo] JWT attached to request:', currentJwt.substring(0, 20) + '...')
+    }
+
+    return {
+      headers: {
+        ...headers,
+        ...(currentJwt ? { authorization: `Bearer ${currentJwt}` } : {}),
+      },
+    }
   })
 
   return new ApolloClient({
@@ -50,26 +64,34 @@ export function getJwt() {
   if (isBrowser) {
     // Try cookie first
     const cookieJwt = Cookies.get(jwtKey)
-    if (cookieJwt) return cookieJwt
-
-    // Fallback to localStorage (critical for mobile Safari/iOS)
-    const localStorageJwt = localStorage.getItem('jwt_fallback')
-    if (localStorageJwt) {
-      console.log('[Auth] Using JWT from localStorage fallback (mobile)')
-      // Try to restore cookie from localStorage
-      try {
-        Cookies.set(jwtKey, localStorageJwt, {
-          sameSite: 'Lax',
-          secure: !isSafari,
-          expires: 30,
-          path: '/',
-        })
-      } catch (e) {
-        // Cookie restore failed, but localStorage JWT still valid
-      }
-      return localStorageJwt
+    if (cookieJwt) {
+      console.log('[Auth] getJwt() returning cookie JWT')
+      return cookieJwt
     }
 
+    // Fallback to localStorage (critical for mobile Safari/iOS)
+    try {
+      const localStorageJwt = localStorage.getItem('jwt_fallback')
+      if (localStorageJwt) {
+        console.log('[Auth] getJwt() using localStorage fallback (mobile/Safari)')
+        // Try to restore cookie from localStorage
+        try {
+          Cookies.set(jwtKey, localStorageJwt, {
+            sameSite: 'Lax',
+            secure: !isSafari,
+            expires: 30,
+            path: '/',
+          })
+        } catch (e) {
+          // Cookie restore failed, but localStorage JWT still valid
+        }
+        return localStorageJwt
+      }
+    } catch (e) {
+      console.warn('[Auth] localStorage access failed:', e)
+    }
+
+    console.log('[Auth] getJwt() no JWT found anywhere')
     return undefined
   }
   return jwt

@@ -1,11 +1,23 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import classNames from 'classnames'
 import { useUpload } from 'hooks/useUpload'
 import { Upload } from 'icons/Upload'
-import { imageMimeTypes } from 'lib/mimeTypes'
+import { imageMimeTypes, videoMimeTypes } from 'lib/mimeTypes'
 import Image from 'next/image'
 import Dropzone from 'react-dropzone'
+
+// Combined image and video mime types for profile/cover uploads
+export const mediaUploadMimeTypes = [
+  ...imageMimeTypes,
+  // Video types - mp4, mov, webm
+  'video/mp4',
+  'video/quicktime', // .mov
+  'video/webm',
+  'video/x-m4v',
+  // Animated images
+  'image/gif',
+]
 
 export interface ImageUploadProps extends Omit<React.ComponentPropsWithoutRef<'div'>, 'onChange'> {
   onChange(value: string): void
@@ -32,11 +44,29 @@ export function ImageUpload({
   rounded = 'rounded-lg',
   initialValue,
   artwork = false,
-  accept = imageMimeTypes,
+  accept = mediaUploadMimeTypes,
   ...rest
 }: ImageUploadProps) {
   const { preview, fileType, uploading, upload } = useUpload(value, onChange)
   const thumbnail = preview || value
+
+  // Convert accept array to Dropzone format
+  const dropzoneAccept = useMemo(() => {
+    const acceptObj: Record<string, string[]> = {}
+    for (const mime of accept) {
+      // Map common extensions
+      if (mime === 'image/jpeg') acceptObj[mime] = ['.jpg', '.jpeg']
+      else if (mime === 'image/png') acceptObj[mime] = ['.png']
+      else if (mime === 'image/gif') acceptObj[mime] = ['.gif']
+      else if (mime === 'image/webp') acceptObj[mime] = ['.webp']
+      else if (mime === 'video/mp4') acceptObj[mime] = ['.mp4']
+      else if (mime === 'video/quicktime') acceptObj[mime] = ['.mov']
+      else if (mime === 'video/webm') acceptObj[mime] = ['.webm']
+      else if (mime === 'video/x-m4v') acceptObj[mime] = ['.m4v']
+      else acceptObj[mime] = []
+    }
+    return acceptObj
+  }, [accept])
 
   useEffect(() => {
     onUpload && onUpload(uploading)
@@ -52,7 +82,7 @@ export function ImageUpload({
       maxFiles={maxNumberOfFiles}
       multiple={false}
       maxSize={maxFileSize}
-      accept={{ 'image/jpeg': ['.jpg', '.jpeg'], 'image/png': ['.png'] }}
+      accept={dropzoneAccept}
       onDrop={upload}
       disabled={uploading}
     >

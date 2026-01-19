@@ -303,36 +303,43 @@ export default function LoginPage() {
         return;
       }
 
-      const storedToken = localStorage.getItem('didToken');
-      if (storedToken) {
-        try {
-          // Use timeout to prevent hanging on isLoggedIn check
-          const isLoggedInPromise = magic.user.isLoggedIn();
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('isLoggedIn timeout')), 5000)
-          );
+      try {
+        // First check if user has an active Magic session (even without stored token)
+        const isLoggedInPromise = magic.user.isLoggedIn();
+        const timeoutPromise = new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(new Error('isLoggedIn timeout')), 5000)
+        );
 
-          const isLoggedIn = await Promise.race([isLoggedInPromise, timeoutPromise]);
-          if (isLoggedIn) {
-            console.log('[validateToken] User is logged in, using stored token');
-            const loginResult = await login({ variables: { input: { token: storedToken } } });
+        const isLoggedIn = await Promise.race([isLoggedInPromise, timeoutPromise]);
+
+        if (isLoggedIn) {
+          console.log('[validateToken] User has active Magic session');
+
+          // Try stored token first, then get fresh one
+          let token = localStorage.getItem('didToken');
+          if (!token) {
+            console.log('[validateToken] No stored token, getting fresh one from Magic');
+            token = await magic.user.getIdToken();
+            if (token) localStorage.setItem('didToken', token);
+          }
+
+          if (token) {
+            const loginResult = await login({ variables: { input: { token } } });
             if (loginResult.data?.login.jwt) {
               await setJwt(loginResult.data.login.jwt);
               await new Promise(resolve => setTimeout(resolve, 200));
               const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
               router.push(redirectUrl);
+              return;
             }
-          } else {
-            console.log('[validateToken] User not logged in, clearing token');
-            localStorage.removeItem('didToken');
           }
-        } catch (error: any) {
-          console.log('[validateToken] Check failed:', error.message);
-          // Don't clear token on timeout - just proceed with login flow
-          if (!error.message?.includes('timeout')) {
-            localStorage.removeItem('didToken');
-          }
+        } else {
+          console.log('[validateToken] No active Magic session');
+          localStorage.removeItem('didToken');
         }
+      } catch (error: any) {
+        console.log('[validateToken] Check failed:', error.message);
+        // Don't clear token on timeout - just proceed with login flow
       }
     };
     validateToken();
@@ -410,6 +417,34 @@ export default function LoginPage() {
       throw new Error('OAuth login failed - no token received');
     } catch (error: any) {
       console.error('[OAuth] Login error:', error);
+
+      // Handle "already logged in" case - user has existing Magic session
+      // Error code -32600: "Skipped remaining OAuth verification steps. User is already logged in."
+      if (error.message?.includes('already logged in') || error.code === -32600) {
+        console.log('[OAuth] User already logged in to Magic, attempting to get token...');
+        try {
+          // Get the existing session token
+          const idToken = await magic?.user.getIdToken();
+          if (idToken) {
+            console.log('[OAuth] Got existing Magic token, exchanging for JWT...');
+            localStorage.setItem('didToken', idToken);
+            const loginResult = await login({ variables: { input: { token: idToken } } });
+            if (loginResult.data?.login.jwt) {
+              await setJwt(loginResult.data.login.jwt);
+              const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+              router.push(redirectUrl);
+              return;
+            }
+          }
+        } catch (tokenError) {
+          console.error('[OAuth] Failed to get existing session:', tokenError);
+        }
+        // If we couldn't get the token, redirect anyway - they might already be logged in
+        const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+        router.push(redirectUrl);
+        return;
+      }
+
       if (error.message?.includes('popup') || error.message?.includes('blocked')) {
         setError('Popup was blocked. Please allow popups for soundchain.io and try again.');
       } else if (error.message?.includes('closed') || error.message?.includes('cancelled')) {
