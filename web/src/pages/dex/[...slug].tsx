@@ -54,11 +54,12 @@ import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { useOmnichain } from 'hooks/useOmnichain'
 import { ENABLED_CHAINS, getChainsByCategory } from 'constants/chains'
 import { SUPPORTED_TOKENS, TOKEN_INFO, Token, getDisplaySymbol } from 'constants/tokens'
-import { ToastContainer } from 'react-toastify'
+import { ToastContainer, toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { LeftSidebar, RightSidebar } from 'components/Sidebar'
 import { PlaylistCard, PlaylistDetail, CreatePlaylistModal } from 'components/Playlist'
+import { DMModal } from 'components/modals/DMModal'
 import { useGetUserPlaylistsQuery, GetUserPlaylistsQuery } from 'lib/graphql'
 import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
@@ -748,6 +749,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showGuestPostModal, setShowGuestPostModal] = useState(false)
   const [showWinWinStatsModal, setShowWinWinStatsModal] = useState(false)
+  const [showDMModal, setShowDMModal] = useState(false)
   const [showVibesModal, setShowVibesModal] = useState(false)
   const [winWinRewardsTab, setWinWinRewardsTab] = useState<'catalog' | 'listener'>('catalog')
   const [profileImageError, setProfileImageError] = useState(false)
@@ -5506,14 +5508,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               {!isViewingOwnProfile && (
                                 <Button
                                   variant="outline"
-                                  className="border-purple-500/50"
+                                  className="border-purple-500/50 hover:bg-purple-500/20"
                                   onClick={() => {
                                     if (!me) {
                                       router.push('/login')
                                       return
                                     }
-                                    // Navigate to messages with this user
-                                    router.push(`/dex/messages?user=${viewingProfile.userHandle}`)
+                                    // Open DM modal instead of navigating
+                                    setShowDMModal(true)
                                   }}
                                 >
                                   <MessageCircle className="w-4 h-4 mr-2" />Message
@@ -5521,11 +5523,31 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               )}
                               <Button
                                 variant="outline"
-                                className="border-cyan-500/50"
-                                onClick={() => {
-                                  const profileUrl = `${window.location.origin}/dex/users/${viewingProfile.userHandle}`
-                                  navigator.clipboard.writeText(profileUrl)
-                                  alert('Profile link copied!')
+                                className="border-cyan-500/50 hover:bg-cyan-500/20"
+                                onClick={async () => {
+                                  const profileUrl = `${window.location.origin}/profiles/${viewingProfile.userHandle}`
+                                  const shareData = {
+                                    title: `${viewingProfile.displayName || viewingProfile.userHandle} on SoundChain`,
+                                    text: `Check out ${viewingProfile.displayName || viewingProfile.userHandle}'s profile on SoundChain - Music NFTs, streaming rewards & more!`,
+                                    url: profileUrl
+                                  }
+                                  
+                                  // Use native share if available (mobile)
+                                  if (navigator.share && navigator.canShare?.(shareData)) {
+                                    try {
+                                      await navigator.share(shareData)
+                                    } catch (err) {
+                                      // User cancelled or share failed - fallback to copy
+                                      if ((err as Error).name !== 'AbortError') {
+                                        navigator.clipboard.writeText(profileUrl)
+                                        toast.success('Profile link copied!')
+                                      }
+                                    }
+                                  } else {
+                                    // Desktop fallback - copy to clipboard
+                                    navigator.clipboard.writeText(profileUrl)
+                                    toast.success('Profile link copied! Share it on social media.')
+                                  }
                                 }}
                               >
                                 <Share2 className="w-4 h-4" />
@@ -5908,6 +5930,20 @@ DEXDashboard.getLayout = (page: ReactElement) => {
                   <CommentModal />
                   {/* Audio Player Fullscreen Modal */}
                   <AudioPlayerModal />
+                  {/* DM Modal for profile messaging */}
+                  {viewingProfile && (
+                    <DMModal
+                      show={showDMModal}
+                      onClose={() => setShowDMModal(false)}
+                      recipientProfile={{
+                        id: viewingProfile.id,
+                        displayName: viewingProfile.displayName,
+                        userHandle: viewingProfile.userHandle,
+                        profilePicture: viewingProfile.profilePicture,
+                      }}
+                    />
+                  )}
+                  
                 </div>
               </TrackProvider>
             </AudioPlayerProvider>

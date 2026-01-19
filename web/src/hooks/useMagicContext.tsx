@@ -288,15 +288,28 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   // Helper to get the user's wallet address from any OAuth method
   const getUserWalletAddress = useCallback(() => {
+    // Debug: Log all available wallet addresses
+    console.log('💳 getUserWalletAddress - checking all OAuth wallets:', {
+      authMethod: me?.authMethod,
+      magicWalletAddress: me?.magicWalletAddress,
+      googleWalletAddress: me?.googleWalletAddress,
+      discordWalletAddress: me?.discordWalletAddress,
+      twitchWalletAddress: me?.twitchWalletAddress,
+      emailWalletAddress: me?.emailWalletAddress,
+    })
+
     // Check all possible OAuth wallet addresses
     // Order: magic (email) > google > discord > twitch > email
-    return me?.magicWalletAddress ||
-           me?.googleWalletAddress ||
-           me?.discordWalletAddress ||
-           me?.twitchWalletAddress ||
-           me?.emailWalletAddress ||
-           null
-  }, [me?.magicWalletAddress, me?.googleWalletAddress, me?.discordWalletAddress, me?.twitchWalletAddress, me?.emailWalletAddress])
+    const wallet = me?.magicWalletAddress ||
+                   me?.googleWalletAddress ||
+                   me?.discordWalletAddress ||
+                   me?.twitchWalletAddress ||
+                   me?.emailWalletAddress ||
+                   null
+
+    console.log('💳 getUserWalletAddress - selected wallet:', wallet)
+    return wallet
+  }, [me?.magicWalletAddress, me?.googleWalletAddress, me?.discordWalletAddress, me?.twitchWalletAddress, me?.emailWalletAddress, me?.authMethod])
 
   const handleSetAccount = useCallback(async () => {
     try {
