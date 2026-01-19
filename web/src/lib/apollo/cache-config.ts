@@ -50,7 +50,7 @@ export const cacheConfig: InMemoryCacheConfig = {
         },
         comments: {
           keyArgs: ['postId'],
-          merge(existing = { nodes: [] }, { pageInfo, nodes }, { args }) {
+          merge(existing = { nodes: [] }, { pageInfo, nodes }, { args, readField }) {
             if (!existing.pageInfo) {
               return {
                 nodes,
@@ -58,9 +58,25 @@ export const cacheConfig: InMemoryCacheConfig = {
               }
             }
 
+            // Deduplicate using ID as key (like posts/feed do)
+            const existingById = new Map<string, any>()
+            existing.nodes.forEach((node: any) => {
+              const id = readField('id', node) as string
+              if (id) existingById.set(id, node)
+            })
+
+            // Add incoming nodes, overwriting duplicates
+            nodes.forEach((node: any) => {
+              const id = readField('id', node) as string
+              if (id) existingById.set(id, node)
+            })
+
+            // Convert back to array, maintaining order based on direction
+            const mergedNodes = Array.from(existingById.values())
+
             if (args?.page.before) {
               return {
-                nodes: [...nodes, ...existing.nodes],
+                nodes: mergedNodes,
                 pageInfo: {
                   ...existing.pageInfo,
                   startCursor: pageInfo.startCursor,
@@ -70,7 +86,38 @@ export const cacheConfig: InMemoryCacheConfig = {
             }
 
             return {
-              nodes: [...existing.nodes, ...nodes],
+              nodes: mergedNodes,
+              pageInfo: {
+                ...existing.pageInfo,
+                endCursor: pageInfo.endCursor,
+                hasNextPage: pageInfo.hasNextPage,
+              },
+            }
+          },
+        },
+        trackComments: {
+          keyArgs: ['trackId'],
+          merge(existing = { nodes: [] }, { pageInfo, nodes }, { args, readField }) {
+            if (!existing.pageInfo) {
+              return { nodes, pageInfo }
+            }
+
+            // Deduplicate using ID as key
+            const existingById = new Map<string, any>()
+            existing.nodes.forEach((node: any) => {
+              const id = readField('id', node) as string
+              if (id) existingById.set(id, node)
+            })
+
+            nodes.forEach((node: any) => {
+              const id = readField('id', node) as string
+              if (id) existingById.set(id, node)
+            })
+
+            const mergedNodes = Array.from(existingById.values())
+
+            return {
+              nodes: mergedNodes,
               pageInfo: {
                 ...existing.pageInfo,
                 endCursor: pageInfo.endCursor,
