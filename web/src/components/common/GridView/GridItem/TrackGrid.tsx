@@ -10,6 +10,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { currency, limitTextToNumberOfCharacters } from 'utils/format';
+import { getDisplaySymbol, Token } from 'constants/tokens';
 import { Cards } from '../../../../icons/Cards';
 import { Logo } from 'icons/Logo';
 import { CurrencyType } from '../../../../types/CurrenctyType';
@@ -303,7 +304,7 @@ const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
                   <div className="metadata-label">BLOCKCHAIN_DATA</div>
                   <div className="space-y-1 text-xs">
                     <div className="flex justify-between"><span className="text-gray-400">CHAIN:</span><span className="metadata-value">{chainNames[chainId || 137] || 'Polygon'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">TOKEN:</span><span className="metadata-value">{tokenSymbol || 'MATIC'}</span></div>
+                    <div className="flex justify-between"><span className="text-gray-400">TOKEN:</span><span className="metadata-value">{tokenSymbol ? getDisplaySymbol(tokenSymbol as Token) : 'POL'}</span></div>
                     <div className="flex justify-between"><span className="text-gray-400">PRICE:</span><span className="metadata-value">{trackPrice} {selectedCurrency}</span></div>
                     {bundleId && <div className="flex justify-between"><span className="text-gray-400">BUNDLE:</span><span className="metadata-value">{bundleId.slice(0,8)}...</span></div>}
                   </div>
@@ -337,7 +338,7 @@ const TrackGrid = forwardRef<HTMLDivElement, TrackProps>(
   "title": "${title}",
   "artist": "${artist}",
   "chain": "${chainNames[chainId || 137]}",
-  "token": "${tokenSymbol || 'MATIC'}",
+  "token": "${tokenSymbol ? getDisplaySymbol(tokenSymbol as Token) : 'POL'}",
   "price": ${trackPrice},
   "plays": ${playbackCount || 0},
   "favorites": ${favoriteCount || 0}
