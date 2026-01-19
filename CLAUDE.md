@@ -22,6 +22,14 @@ These files have caused critical bugs when modified. Require extra caution:
 ### DO NOT Modify `useMe` Hook
 **Learned the hard way:** Changes to the global `useMe` hook break OAuth login flow. The hook is tightly coupled with Magic SDK session restoration.
 
+### NEVER Test on Localhost
+**CRITICAL:** We ONLY work in production and test in production. ALWAYS.
+- NEVER run curl/fetch against `localhost:3000` to test changes
+- NEVER use `yarn dev` for testing - push to prod and test via Cloudflare tunnel
+- All testing happens on the live production deployment
+- The user tests on mobile via Cloudflare tunnel to production
+- If you need to verify a fix works, push to production and wait for Vercel deploy
+
 ---
 
 ## BUGS FOUND & FIXED (Lessons Learned)
