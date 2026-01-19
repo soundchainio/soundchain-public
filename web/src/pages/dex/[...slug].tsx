@@ -722,6 +722,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       case 'staking': return 'staking'
       case 'marketplace': return 'marketplace'
       case 'feed': return 'feed'
+      case 'dashboard': return 'dashboard' // /dex/dashboard -> dashboard view with genres/leaderboards
       case 'announcements': return 'announcements'
       case 'wallet': return 'wallet'
       case 'settings': return 'settings'
@@ -2839,7 +2840,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   )}
                   {exploreUsersData?.exploreUsers?.nodes && (
                     <Badge className="bg-green-500/20 text-green-400">
-                      {exploreUsersData.exploreUsers.nodes.length} users{exploreUsersData.exploreUsers.pageInfo?.hasNextPage ? '+' : ''}
+                      {exploreUsersData.exploreUsers.pageInfo?.totalCount
+                        ? `${exploreUsersData.exploreUsers.nodes.length} of ${exploreUsersData.exploreUsers.pageInfo.totalCount} users`
+                        : `${exploreUsersData.exploreUsers.nodes.length} users${exploreUsersData.exploreUsers.pageInfo?.hasNextPage ? '+' : ''}`
+                      }
                     </Badge>
                   )}
                   {!exploreUsersLoading && !exploreUsersData?.exploreUsers?.nodes && !exploreUsersError && (
@@ -2948,6 +2952,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <>
                               <Users className="w-4 h-4 mr-2" />
                               Load More Users
+                              {exploreUsersData?.exploreUsers?.pageInfo?.totalCount && (
+                                <span className="ml-1 text-gray-400">
+                                  ({(exploreUsersData.exploreUsers.pageInfo.totalCount || 0) - (exploreUsersData?.exploreUsers?.nodes?.length || 0)} remaining)
+                                </span>
+                              )}
                             </>
                           )}
                         </Button>

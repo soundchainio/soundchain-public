@@ -376,33 +376,16 @@ export default function LoginPage() {
     localStorage.removeItem('didToken');
 
     try {
-      // WORKAROUND: Open a blank popup FIRST (synchronously from user click)
-      // This forces Chrome to allow it, then Magic redirects this window
-      console.log(`[OAuth] Pre-opening popup window for ${provider}...`);
-      const popup = window.open('about:blank', 'oauth_popup', 'width=500,height=600,scrollbars=yes');
+      // Call Magic's loginWithPopup - it handles popup creation internally
+      // Note: This must be called synchronously from user click to avoid popup blockers
+      console.log(`[OAuth] Calling Magic loginWithPopup for ${provider}...`);
 
-      if (!popup || popup.closed) {
-        console.error('[OAuth] Popup was blocked by browser');
-        setError('Popup was blocked. Please allow popups for soundchain.io in your browser settings, then try again.');
-        setLoggingIn(false);
-        return;
-      }
-
-      // Show loading message in popup
-      popup.document.write('<html><body style="display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:white;font-family:sans-serif;"><div style="text-align:center;"><h2>Connecting to ' + provider + '...</h2><p>Please wait...</p></div></body></html>');
-
-      console.log(`[OAuth] Popup opened, calling Magic loginWithPopup...`);
-
-      // Now call Magic with the popup already open - it should use/redirect the existing popup
       const result = await (magic as any).oauth2.loginWithPopup({
         provider,
         scope: ['openid'],
       });
 
       console.log('[OAuth] Popup completed, result:', result);
-
-      // Close our popup if Magic opened its own
-      try { popup.close(); } catch (e) { /* ignore */ }
 
       if (result?.magic?.idToken) {
         const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });

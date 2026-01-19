@@ -93,6 +93,29 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   // Transform IPFS URLs and handle fallbacks
   const displayImage = imageError ? defaultImage : getIpfsUrl(track.artworkUrl, defaultImage)
 
+  // Share track function - MUST be defined before any early returns to avoid hooks order issues
+  const handleShare = useCallback(async () => {
+    const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/tracks/${track.id}`
+    const shareData = {
+      title: `${track.title} by ${track.artist}`,
+      text: `Listen to "${track.title}" by ${track.artist} on SoundChain`,
+      url: shareUrl,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareUrl)
+        alert('Link copied to clipboard!')
+      }
+    } catch (err) {
+      // User cancelled or error
+      console.log('Share cancelled or failed')
+    }
+  }, [track.id, track.title, track.artist])
+
   // List view - simple row
   if (listView) {
     return (
@@ -131,29 +154,6 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
       </Card>
     )
   }
-
-  // Share track function
-  const handleShare = useCallback(async () => {
-    const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/tracks/${track.id}`
-    const shareData = {
-      title: `${track.title} by ${track.artist}`,
-      text: `Listen to "${track.title}" by ${track.artist} on SoundChain`,
-      url: shareUrl,
-    }
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData)
-      } else {
-        // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(shareUrl)
-        alert('Link copied to clipboard!')
-      }
-    } catch (err) {
-      // User cancelled or error
-      console.log('Share cancelled or failed')
-    }
-  }, [track.id, track.title, track.artist])
 
   // Fullscreen modal - render in portal for proper z-index
   if (isFullscreen) {
