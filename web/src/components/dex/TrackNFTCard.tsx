@@ -1,6 +1,7 @@
 import React, { useState, useCallback, memo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import { Card } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
@@ -59,6 +60,7 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   onArtistClick,
   onTrackClick
 }) => {
+  const router = useRouter()
   const [isFlipped, setIsFlipped] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -345,7 +347,13 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                     <Share2 className="w-4 h-4" />
                   </Button>
                   {hasListing && (
-                    <Button className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-black font-bold">
+                    <Button
+                      className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-black font-bold"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        router.push(`/tracks/${track.id}/buy-now${currency === 'OGUN' ? '?isPaymentOGUN=true' : ''}`)
+                      }}
+                    >
                       <ShoppingCart className="w-4 h-4 mr-2" /> {price} {currency}
                     </Button>
                   )}

@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Heart, RotateCcw, ShoppingCart, Palette, Star, Eye, Database, Maximize2, Expand } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { toast } from 'react-toastify';
 
 interface NFTCardProps {
   nft: {
@@ -28,6 +29,7 @@ interface NFTCardProps {
   listView?: boolean;
   onShowDetails?: (nft: any, type: 'nft' | 'token' | 'bundle') => void;
   onImageClick?: (src: string, alt: string, title?: string, metadata?: any) => void;
+  onFavorite?: (nftId: string) => void;
 }
 
 const chainNames: { [key: number]: string } = {
@@ -51,13 +53,14 @@ const chainNames: { [key: number]: string } = {
   1839: 'Bitcoin'
 };
 
-export const NFTCard: React.FC<NFTCardProps> = ({ 
-  nft, 
-  onPurchase, 
+export const NFTCard: React.FC<NFTCardProps> = ({
+  nft,
+  onPurchase,
   isWalletConnected,
   listView = false,
   onShowDetails,
-  onImageClick
+  onImageClick,
+  onFavorite
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -304,7 +307,13 @@ export const NFTCard: React.FC<NFTCardProps> = ({
                     variant="outline"
                     size="sm"
                     className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                    onClick={(e) => handleButtonClick(e, () => console.log('Added to favorites'))}
+                    onClick={(e) => handleButtonClick(e, () => {
+                      if (onFavorite) {
+                        onFavorite(nft.id)
+                      } else {
+                        toast.info('💜 NFT watchlist coming soon!')
+                      }
+                    })}
                   >
                     <Heart className="w-4 h-4" />
                   </Button>

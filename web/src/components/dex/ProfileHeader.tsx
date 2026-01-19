@@ -947,21 +947,7 @@ function WinWinStatsModal({
 
 function BlurAggregatorPanel() {
   const [activeTab, setActiveTab] = useState("overview")
-
-  const portfolioData = {
-    totalValue: "24,567.89",
-    change24h: "+1,234.56",
-    changePercent: "+5.24%",
-    nftsOwned: "47",
-    floorValue: "18,234.12",
-  }
-
-  const topCollections = [
-    { name: "Fidenza", floor: "12.5", volume: "456.7", change: "+12.4%" },
-    { name: "Art Blocks", floor: "8.2", volume: "234.1", change: "+8.7%" },
-    { name: "Chromie Squiggle", floor: "5.1", volume: "123.4", change: "-2.1%" },
-    { name: "Autoglyphs", floor: "45.6", volume: "789.2", change: "+15.2%" },
-  ]
+  const { magicOgunBalance, magicMaticBalance, magicBalance } = useMagicContext()
 
   return (
     <Card className="retro-card p-6 space-y-6">
@@ -990,58 +976,34 @@ function BlurAggregatorPanel() {
 
       {activeTab === "overview" && (
         <>
-          {/* Portfolio Value */}
+          {/* Portfolio Value - Real balances */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="metadata-section p-4">
-                <div className="metadata-label">Total Value</div>
+                <div className="metadata-label">OGUN Balance</div>
                 <div className="retro-text text-xl text-white">
-                  {portfolioData.totalValue} Ξ
+                  {magicOgunBalance ? parseFloat(magicOgunBalance).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'} OGUN
                 </div>
-                <div className="text-sm text-green-400 flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3" />
-                  {portfolioData.changePercent}
-                </div>
+                <div className="text-sm text-cyan-400">SoundChain Token</div>
               </div>
               <div className="metadata-section p-4">
-                <div className="metadata-label">NFTs Owned</div>
+                <div className="metadata-label">POL Balance</div>
                 <div className="retro-text text-xl text-white">
-                  {portfolioData.nftsOwned}
+                  {magicMaticBalance ? parseFloat(magicMaticBalance).toFixed(4) : magicBalance ? parseFloat(magicBalance).toFixed(4) : '0'} POL
                 </div>
-                <div className="text-sm text-cyan-400">Collections: 12</div>
+                <div className="text-sm text-purple-400">Polygon Native</div>
               </div>
             </div>
           </div>
 
-          {/* Activity Feed */}
+          {/* Activity - Coming Soon */}
           <div className="space-y-3">
             <h3 className="metadata-label">Recent Activity</h3>
-            <div className="space-y-2">
-              {[
-                { type: "buy", item: "Fidenza #234", price: "12.5 Ξ", time: "2m ago" },
-                { type: "sell", item: "CryptoPunk #1234", price: "45.6 Ξ", time: "1h ago" },
-                { type: "list", item: "Art Block #567", price: "8.2 Ξ", time: "3h ago" },
-              ].map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 rounded-lg bg-black/20 border border-cyan-500/10"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        activity.type === "buy"
-                          ? "bg-green-400"
-                          : activity.type === "sell"
-                            ? "bg-red-400"
-                            : "bg-yellow-400"
-                      } animate-pulse`}
-                    />
-                    <div>
-                      <div className="text-sm font-medium text-white">
-                        {activity.item}
-                      </div>
-                      <div className="retro-json text-xs">{activity.time}</div>
-                    </div>
+            <div className="text-center py-6 text-gray-500">
+              <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Transaction history coming soon</p>
+              <p className="text-xs text-gray-600 mt-1">Track your buys, sells, and listings</p>
+            </div>
                   </div>
                   <div className="retro-text text-sm">{activity.price}</div>
                 </div>
