@@ -1480,9 +1480,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Playlists Query - for Playlist view, Library view, AND profile playlists tab (uses JWT auth to determine user)
   // NOTE: isViewingOwnProfile uses viewingProfile which is now defined above
   // Using String() for robust comparison - IDs may be ObjectId vs string
-  // Also check userData?.me?.profile?.id as fallback since useMe() and useMeQuery() may have different loading states
+  // Multiple fallbacks: profile ID, wallet address, userHandle
   const myProfileId = me?.profile?.id || userData?.me?.profile?.id
-  const isViewingOwnProfile = selectedView === 'profile' && Boolean(viewingProfile?.id) && Boolean(myProfileId) && String(viewingProfile?.id) === String(myProfileId)
+  const myWalletAddress = userData?.me?.magicWalletAddress?.toLowerCase()
+  const myUserHandle = me?.profile?.userHandle || userData?.me?.profile?.userHandle
+
+  // Check if viewing own profile - try multiple comparisons
+  const isViewingOwnProfile = selectedView === 'profile' && Boolean(viewingProfile?.id) && (
+    // Primary: Compare profile IDs
+    (Boolean(myProfileId) && String(viewingProfile?.id) === String(myProfileId)) ||
+    // Fallback 1: Compare wallet addresses
+    (Boolean(myWalletAddress) && Boolean(viewingProfile?.magicWalletAddress) &&
+      myWalletAddress === viewingProfile.magicWalletAddress?.toLowerCase()) ||
+    // Fallback 2: Compare userHandles
+    (Boolean(myUserHandle) && Boolean(viewingProfile?.userHandle) &&
+      myUserHandle === viewingProfile.userHandle)
+  )
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
