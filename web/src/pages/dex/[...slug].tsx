@@ -2493,36 +2493,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </Button>
           </div>
 
-          {/* Stats - Only shown when logged in, all 6 boxes same size on one row */}
-          {selectedView === 'dashboard' && user && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-            <Card className="retro-card"><CardContent className="p-3 flex items-center gap-2">
-              <div className="p-1.5 bg-cyan-500/20 rounded-lg"><BarChart3 className="w-4 h-4 text-cyan-400" /></div>
-              <div><div className="text-lg font-bold">{userTracks.length + marketTracks.length}</div><div className="text-[10px] text-gray-400">Total Items</div></div>
-            </CardContent></Card>
-            <Card className="retro-card"><CardContent className="p-3 flex items-center gap-2">
-              <div className="p-1.5 bg-green-500/20 rounded-lg"><TrendingUp className="w-4 h-4 text-green-400" /></div>
-              <div><div className="text-lg font-bold">25+</div><div className="text-[10px] text-gray-400">Blockchains</div></div>
-            </CardContent></Card>
-            <Card className="retro-card"><CardContent className="p-3 flex items-center gap-2">
-              <div className="p-1.5 bg-purple-500/20 rounded-lg"><Coins className="w-4 h-4 text-purple-400" /></div>
-              <div><div className="text-lg font-bold">50+</div><div className="text-[10px] text-gray-400">Cryptocurrencies</div></div>
-            </CardContent></Card>
-            <Card className="retro-card"><CardContent className="p-3 flex items-center gap-2">
-              <div className="p-1.5 bg-orange-500/20 rounded-lg"><Zap className="w-4 h-4 text-orange-400" /></div>
-              <div><div className="text-lg font-bold">0.05%</div><div className="text-[10px] text-gray-400">Fee</div></div>
-            </CardContent></Card>
-            <Card className="retro-card"><CardContent className="p-3 flex items-center gap-2">
-              <div className="p-1.5 bg-yellow-500/20 rounded-lg"><Globe className="w-4 h-4 text-yellow-400" /></div>
-              <div><div className="text-lg font-bold">Polygon</div><div className="text-[10px] text-gray-400">Network</div></div>
-            </CardContent></Card>
-            <Card className="retro-card"><CardContent className="p-3 flex items-center gap-2">
-              <div className="p-1.5 bg-pink-500/20 rounded-lg"><Rocket className="w-4 h-4 text-pink-400" /></div>
-              <div><div className="text-lg font-bold">Live</div><div className="text-[10px] text-gray-400">Status</div></div>
-            </CardContent></Card>
-          </div>
-          )}
-
           {/* Dashboard View - Genres & Leaderboards Only */}
           {selectedView === 'dashboard' && (
           <>
