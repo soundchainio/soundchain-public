@@ -135,11 +135,14 @@ These files have caused critical bugs when modified. Require extra caution:
 
 ### 13. Profile Edit Button Shows Follow (Jan 19, 2026)
 **Symptom:** Own profile shows "Follow" instead of "Edit Profile"
-**Root Cause:** `isViewingOwnProfile` check failed because `myProfileId` was undefined
-**Fix:** Multiple fallback comparisons:
+**Root Cause:** `isViewingOwnProfile` check failed because:
+1. `myProfileId` was undefined or not matching
+2. Wallet comparison only checked `magicWalletAddress` but Google OAuth users have `googleWalletAddress`
+**Fix:** Multiple fallback comparisons + check ALL OAuth wallet addresses:
 1. Primary: Compare profile IDs
-2. Fallback 1: Compare wallet addresses (case-insensitive)
+2. Fallback 1: Compare wallet addresses from ALL OAuth methods (case-insensitive)
 3. Fallback 2: Compare userHandles
+**Debug:** Added console.log to track comparison values - check browser console
 **File:** pages/dex/[...slug].tsx
 
 ### 14. Wallet Balances Show 0 (Jan 19, 2026)
@@ -149,16 +152,19 @@ These files have caused critical bugs when modified. Require extra caution:
 2. Code only checked `magicWalletAddress` but Google OAuth users have wallet in `googleWalletAddress`
 **Fix:**
 - Set account from user profile even without web3 session
-- Use public Polygon RPC as fallback for balance fetching
+- Use public Polygon RPC (`https://polygon-rpc.com`) as fallback for balance fetching
 - **CRITICAL:** Check ALL OAuth wallet addresses, not just `magicWalletAddress`:
   - `magicWalletAddress` (email login)
   - `googleWalletAddress` (Google OAuth)
   - `discordWalletAddress` (Discord OAuth)
   - `twitchWalletAddress` (Twitch OAuth)
   - `emailWalletAddress`
-**File:** useMagicContext.tsx (PROTECTED - required careful changes)
+**Files:**
+- useMagicContext.tsx (PROTECTED - required careful changes)
+- StakingPanel.tsx - Added public RPC fallback for balance fetching
 **Key Code:**
 ```typescript
+// In useMagicContext.tsx
 const getUserWalletAddress = () => {
   return me?.magicWalletAddress ||
          me?.googleWalletAddress ||
@@ -166,6 +172,9 @@ const getUserWalletAddress = () => {
          me?.twitchWalletAddress ||
          me?.emailWalletAddress || null
 }
+
+// In StakingPanel.tsx
+const web3Instance = web3 || new Web3('https://polygon-rpc.com')
 ```
 
 ---
