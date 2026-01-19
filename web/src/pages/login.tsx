@@ -350,14 +350,26 @@ export default function LoginPage() {
       localStorage.removeItem('didToken');
 
       // Use popup instead of redirect - redirect not working with network config
-      console.log('[OAuth] Using popup for', provider);
+      console.log('[OAuth] Opening popup for', provider, '...');
 
-      const result = await (magic as any).oauth2.loginWithPopup({
-        provider,
-        scope: ['openid'],
-      });
-
-      console.log('[OAuth] Popup result:', result);
+      let result;
+      try {
+        result = await (magic as any).oauth2.loginWithPopup({
+          provider,
+          scope: ['openid'],
+        });
+        console.log('[OAuth] Popup completed, result:', result);
+      } catch (popupError: any) {
+        console.error('[OAuth] Popup error:', popupError);
+        // Check for specific popup errors
+        if (popupError.message?.includes('popup') || popupError.message?.includes('blocked')) {
+          throw new Error('Popup was blocked. Please allow popups for soundchain.io');
+        }
+        if (popupError.message?.includes('closed')) {
+          throw new Error('Login cancelled - popup was closed');
+        }
+        throw popupError;
+      }
 
       if (result?.magic?.idToken) {
         const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
@@ -778,7 +790,7 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
   return (
     <>
       <SEO title="Login | SoundChain" description="Log in to SoundChain" canonicalUrl="/login/" />
-      <div className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden">
+      <div className="relative flex min-h-screen w-full flex-col items-center justify-start overflow-y-auto py-8">
         {/* Background GIF with proper scaling - fixed to viewport */}
         <div className="fixed inset-0 z-0">
           <img
