@@ -217,68 +217,83 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
                      me?.emailWalletAddress
 
   // Load wallet - prefer connected wallets, fallback to user's stored wallet
+  // Now supports balance fetching via public RPC even without Magic web3
   useEffect(() => {
     if (walletconnectAccount && wcWeb3) {
       setAccount(walletconnectAccount)
       setWeb3(wcWeb3)
+      console.log('💳 Staking: Using WalletConnect:', walletconnectAccount)
     } else if (metamaskAccount && metamaskWeb3) {
       setAccount(metamaskAccount)
       setWeb3(metamaskWeb3)
+      console.log('💳 Staking: Using MetaMask:', metamaskAccount)
     } else if (magicLinkAccount && magicLinkWeb3) {
       setAccount(magicLinkAccount)
       setWeb3(magicLinkWeb3)
+      console.log('💳 Staking: Using Magic account:', magicLinkAccount)
     } else if (userWallet && magicLinkWeb3) {
-      // Fallback: use stored wallet address with Magic web3 for read-only balance fetching
-      console.log('💳 Staking: Using fallback wallet from user profile:', userWallet)
+      // Fallback: use stored wallet address with Magic web3
+      console.log('💳 Staking: Using fallback wallet with Magic web3:', userWallet)
       setAccount(userWallet)
       setWeb3(magicLinkWeb3)
+    } else if (userWallet) {
+      // NEW: Set account even without web3 - fetchBalances will use public RPC
+      console.log('💳 Staking: Using fallback wallet (public RPC for balances):', userWallet)
+      setAccount(userWallet)
+      // web3 stays null - fetchBalances will use public RPC
     }
   }, [walletconnectAccount, metamaskAccount, magicLinkAccount, wcWeb3, metamaskWeb3, magicLinkWeb3, userWallet])
 
-  // Fetch balances
+  // Fetch balances - uses public RPC as fallback when Magic web3 isn't available
   const fetchBalances = useCallback(async () => {
-    if (!web3 || !account) return
+    // Need account at minimum - can use public RPC for read-only calls
+    if (!account) {
+      console.log('StakingPanel: No account, skipping balance fetch')
+      return
+    }
+
+    // Use Magic web3 if available, otherwise fallback to public Polygon RPC
+    const web3Instance = web3 || new Web3('https://polygon-rpc.com')
 
     try {
       // POL (native) Balance
       try {
-        const polBal = await web3.eth.getBalance(account)
-        setPolBalance(web3.utils.fromWei(polBal, 'ether'))
-      } catch {
+        const polBal = await web3Instance.eth.getBalance(account)
+        setPolBalance(web3Instance.utils.fromWei(polBal, 'ether'))
+        console.log('StakingPanel: POL balance fetched:', web3Instance.utils.fromWei(polBal, 'ether'))
+      } catch (polErr) {
+        console.error('StakingPanel: POL balance fetch failed:', polErr)
         setPolBalance('0')
       }
 
-      // OGUN Balance - try to fetch, but use Magic context balance as fallback
+      // OGUN Balance - use public RPC, no chain check needed (we're always calling Polygon RPC)
       try {
-        // Check chain ID first (OGUN only exists on Polygon)
-        const chainId = await web3.eth.getChainId()
-        if (Number(chainId) === 137) {
-          const balance = await tokenContract(web3).methods.balanceOf(account).call() as string
-          setOgunBalance(web3.utils.fromWei(balance || '0', 'ether'))
-        } else {
-          // Not on Polygon - use Magic context balance if available
-          console.log('StakingPanel: Not on Polygon, using Magic context balance')
-          if (magicOgunBalance) {
-            setOgunBalance(magicOgunBalance)
-          }
-        }
+        const ogunContract = tokenContract(web3Instance)
+        const balance = await ogunContract.methods.balanceOf(account).call() as string
+        const ogunBal = web3Instance.utils.fromWei(balance || '0', 'ether')
+        setOgunBalance(ogunBal)
+        console.log('StakingPanel: OGUN balance fetched:', ogunBal)
       } catch (balanceErr) {
         console.error('StakingPanel: OGUN balance fetch failed:', balanceErr)
         // Fallback to Magic context balance
         if (magicOgunBalance) {
           setOgunBalance(magicOgunBalance)
+        } else {
+          setOgunBalance('0')
         }
       }
 
-      // Staked Balance & Rewards
+      // Staked Balance & Rewards (read-only, can use public RPC)
       try {
-        const balanceData = await tokenStakeContract(web3).methods.getBalanceOf(account).call() as [string, string, string]
+        const stakeContract = tokenStakeContract(web3Instance)
+        const balanceData = await stakeContract.methods.getBalanceOf(account).call() as [string, string, string]
         if (balanceData) {
-          setStakedBalance(web3.utils.fromWei(balanceData[0] || '0', 'ether'))
+          setStakedBalance(web3Instance.utils.fromWei(balanceData[0] || '0', 'ether'))
         }
-        const reward = await tokenStakeContract(web3).methods.getReward(account).call() as string
-        setRewardBalance(web3.utils.fromWei(reward || '0', 'ether'))
-      } catch {
+        const reward = await stakeContract.methods.getReward(account).call() as string
+        setRewardBalance(web3Instance.utils.fromWei(reward || '0', 'ether'))
+      } catch (stakeErr) {
+        console.error('StakingPanel: Staked balance fetch failed:', stakeErr)
         setStakedBalance('0')
         setRewardBalance('0')
       }
