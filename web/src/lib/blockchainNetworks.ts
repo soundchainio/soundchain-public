@@ -9,7 +9,8 @@ interface BlockchainNetwork {
 
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
-  rpc: 'https://polygon-rpc.com',  // Official Polygon RPC
+  // Use Ankr's free RPC - much higher rate limits than polygon-rpc.com
+  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon',
   id: 137,
   idHex: '0x89',
   symbol: 'POL',
