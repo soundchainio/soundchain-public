@@ -344,7 +344,7 @@ export default function LoginPage() {
     return /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   };
 
-  const handleSocialLogin = (provider: 'google' | 'discord' | 'twitch') => {
+  const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
     console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
 
     // Check for in-app browser (Google blocks OAuth in these)
@@ -364,49 +364,61 @@ export default function LoginPage() {
       return;
     }
 
-    // CRITICAL: Call loginWithPopup IMMEDIATELY without any async work before it
-    // Chrome blocks popups if they're not triggered synchronously from user action
-    // Do NOT await, setState, or localStorage before this call!
-    console.log(`[OAuth] Opening popup for ${provider} IMMEDIATELY (no async before)`);
-
-    const popupPromise = (magic as any).oauth2.loginWithPopup({
-      provider,
-      scope: ['openid'],
-    });
-
-    // NOW we can do async work - popup is already opening
     setLoggingIn(true);
     setError(null);
     localStorage.removeItem('didToken');
 
-    // Handle the popup result
-    popupPromise
-      .then(async (result: any) => {
-        console.log('[OAuth] Popup completed, result:', result);
+    try {
+      // WORKAROUND: Open a blank popup FIRST (synchronously from user click)
+      // This forces Chrome to allow it, then Magic redirects this window
+      console.log(`[OAuth] Pre-opening popup window for ${provider}...`);
+      const popup = window.open('about:blank', 'oauth_popup', 'width=500,height=600,scrollbars=yes');
 
-        if (result?.magic?.idToken) {
-          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-          if (loginResult.data?.login.jwt) {
-            await setJwt(loginResult.data.login.jwt);
-            localStorage.setItem('didToken', result.magic.idToken);
-            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-            router.push(redirectUrl);
-            return;
-          }
-        }
-        throw new Error('OAuth login failed - no token received');
-      })
-      .catch((error: any) => {
-        console.error('[OAuth] Login error:', error);
-        if (error.message?.includes('popup') || error.message?.includes('blocked')) {
-          setError('Popup was blocked. Please allow popups for soundchain.io and try again.');
-        } else if (error.message?.includes('closed') || error.message?.includes('cancelled')) {
-          setError('Login cancelled. Please try again.');
-        } else {
-          setError(error.message || `${provider} login failed. Please try again.`);
-        }
+      if (!popup || popup.closed) {
+        console.error('[OAuth] Popup was blocked by browser');
+        setError('Popup was blocked. Please allow popups for soundchain.io in your browser settings, then try again.');
         setLoggingIn(false);
+        return;
+      }
+
+      // Show loading message in popup
+      popup.document.write('<html><body style="display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:white;font-family:sans-serif;"><div style="text-align:center;"><h2>Connecting to ' + provider + '...</h2><p>Please wait...</p></div></body></html>');
+
+      console.log(`[OAuth] Popup opened, calling Magic loginWithPopup...`);
+
+      // Now call Magic with the popup already open - it should use/redirect the existing popup
+      const result = await (magic as any).oauth2.loginWithPopup({
+        provider,
+        scope: ['openid'],
       });
+
+      console.log('[OAuth] Popup completed, result:', result);
+
+      // Close our popup if Magic opened its own
+      try { popup.close(); } catch (e) { /* ignore */ }
+
+      if (result?.magic?.idToken) {
+        const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+        if (loginResult.data?.login.jwt) {
+          await setJwt(loginResult.data.login.jwt);
+          localStorage.setItem('didToken', result.magic.idToken);
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          router.push(redirectUrl);
+          return;
+        }
+      }
+      throw new Error('OAuth login failed - no token received');
+    } catch (error: any) {
+      console.error('[OAuth] Login error:', error);
+      if (error.message?.includes('popup') || error.message?.includes('blocked')) {
+        setError('Popup was blocked. Please allow popups for soundchain.io and try again.');
+      } else if (error.message?.includes('closed') || error.message?.includes('cancelled')) {
+        setError('Login cancelled. Please try again.');
+      } else {
+        setError(error.message || `${provider} login failed. Please try again.`);
+      }
+      setLoggingIn(false);
+    }
   };
 
   const handleGoogleLogin = () => handleSocialLogin('google');
