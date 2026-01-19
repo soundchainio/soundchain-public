@@ -53,7 +53,7 @@ import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
 import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { useOmnichain } from 'hooks/useOmnichain'
 import { ENABLED_CHAINS, getChainsByCategory } from 'constants/chains'
-import { SUPPORTED_TOKENS, TOKEN_INFO, Token } from 'constants/tokens'
+import { SUPPORTED_TOKENS, TOKEN_INFO, Token, getDisplaySymbol } from 'constants/tokens'
 import { ToastContainer } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
@@ -3939,7 +3939,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <div className="w-8 h-8 mx-auto mb-2 text-purple-400">
                       <svg viewBox="0 0 38 33" fill="currentColor"><path d="M29.7 16.5l-11.7 6.7-11.7-6.7 11.7-16.5 11.7 16.5zM18 25.2l-11.7-6.7 11.7 16.5 11.7-16.5-11.7 6.7z"/></svg>
                     </div>
-                    <p className="text-xs text-gray-400 mb-1">MATIC</p>
+                    <p className="text-xs text-gray-400 mb-1">POL</p>
                     <p className="text-xl font-bold text-purple-400">{maticBalance || '0.00'}</p>
                     <p className="text-xs text-gray-500">≈ ${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
                   </Card>
@@ -3984,7 +3984,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     onClick={() => {
                       if (userWallet) {
                         navigator.clipboard.writeText(userWallet)
-                        alert(`📥 Receive Crypto\n\nYour wallet address copied to clipboard:\n\n${userWallet}\n\nSend MATIC or OGUN to this address on Polygon network.`)
+                        alert(`📥 Receive Crypto\n\nYour wallet address copied to clipboard:\n\n${userWallet}\n\nSend POL or OGUN to this address on Polygon network.`)
                       } else {
                         alert('Please connect your wallet first.')
                       }
@@ -4021,7 +4021,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <Plus className="w-6 h-6 text-green-400" />
                   <h3 className="retro-title text-lg">Buy Crypto</h3>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">Purchase MATIC on Polygon to mint NFTs and pay gas fees.</p>
+                <p className="text-gray-400 text-sm mb-4">Purchase POL on Polygon to mint NFTs and pay gas fees.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <a href="https://ramp.network/" target="_blank" rel="noreferrer">
@@ -4136,7 +4136,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       </p>
                       <ul className="text-xs text-gray-500 space-y-1">
                         <li>• Bridge OGUN tokens across all major chains</li>
-                        <li>• Receive payments in BTC, ETH, BNB, or MATIC</li>
+                        <li>• Receive payments in BTC, ETH, BNB, or POL</li>
                         <li>• Single wallet address works on all chains</li>
                         <li>• Native Bitcoin NFT support</li>
                       </ul>
@@ -4185,7 +4185,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         >
                           {SUPPORTED_TOKENS.map((token) => (
                             <option key={token} value={token}>
-                              {TOKEN_INFO[token].icon || '🪙'} {token} - {TOKEN_INFO[token].name}
+                              {TOKEN_INFO[token].icon || '🪙'} {getDisplaySymbol(token)} - {TOKEN_INFO[token].name}
                             </option>
                           ))}
                         </select>
@@ -4201,11 +4201,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                           <Button variant="ghost" size="sm" className="text-green-400 text-xs h-7 px-2">MAX</Button>
                           <span className="text-gray-400 flex items-center gap-1">
-                            {TOKEN_INFO[swapFromToken]?.icon} {swapFromToken}
+                            {TOKEN_INFO[swapFromToken]?.icon} {getDisplaySymbol(swapFromToken)}
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">Balance: {swapFromToken === 'MATIC' ? (maticBalance || '0.00') : swapFromToken === 'OGUN' ? (ogunBalance || '0.00') : '0.00'} {swapFromToken}</p>
+                      <p className="text-xs text-gray-500 mt-2">Balance: {swapFromToken === 'MATIC' ? (maticBalance || '0.00') : swapFromToken === 'OGUN' ? (ogunBalance || '0.00') : '0.00'} {getDisplaySymbol(swapFromToken)}</p>
                     </Card>
 
                     {/* To Section */}
@@ -4219,7 +4219,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         >
                           {SUPPORTED_TOKENS.map((token) => (
                             <option key={token} value={token}>
-                              {TOKEN_INFO[token].icon || '🪙'} {token} - {TOKEN_INFO[token].name}
+                              {TOKEN_INFO[token].icon || '🪙'} {getDisplaySymbol(token)} - {TOKEN_INFO[token].name}
                             </option>
                           ))}
                         </select>
@@ -4234,11 +4234,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
                           <span className="text-gray-400 flex items-center gap-1">
-                            {TOKEN_INFO[swapToToken]?.icon} {swapToToken}
+                            {TOKEN_INFO[swapToToken]?.icon} {getDisplaySymbol(swapToToken)}
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">You will receive (after 0.05% fee)</p>
+                      <p className="text-xs text-yellow-500/80 mt-2">⚠️ Swap coming soon - ZetaChain integration in progress</p>
                     </Card>
                   </div>
 
@@ -4279,10 +4279,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                   {/* Swap Button */}
                   <Button
-                    className="w-full mt-6 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 text-black font-bold py-3 rounded-xl"
-                    disabled={!userWallet}
+                    className="w-full mt-6 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold py-3 rounded-xl cursor-not-allowed opacity-70"
+                    disabled={true}
                   >
-                    {userWallet ? '⚡ Swap via ZetaChain' : 'Connect Wallet to Swap'}
+                    🚧 Swap Coming Soon - ZetaChain Integration
                   </Button>
 
                   {/* Info Footer */}
@@ -4463,7 +4463,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <p className="text-sm text-white font-medium">
-                                {isIncoming ? 'Received' : 'Sent'} {valueInMatic} MATIC
+                                {isIncoming ? 'Received' : 'Sent'} {valueInMatic} POL
                               </p>
                               <Badge className={`text-xs ${isIncoming ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                                 ${usdValue}

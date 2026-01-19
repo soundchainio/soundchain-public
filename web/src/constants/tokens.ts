@@ -52,6 +52,14 @@ export const validateTokens = (tokens: string[]): Token[] => {
 };
 
 /**
+ * Get display symbol for a token (e.g., 'MATIC' → 'POL')
+ * Some tokens have been rebranded but we keep internal symbol for compatibility
+ */
+export const getDisplaySymbol = (token: Token): string => {
+  return TOKEN_INFO[token]?.displaySymbol || token;
+};
+
+/**
  * Token display information
  */
 /**
@@ -84,8 +92,8 @@ export const SWAP_CONFIG = {
 export const QUICKSWAP_SWAP_URL = (inputToken: string, outputToken: string) =>
   `https://quickswap.exchange/#/swap?currency0=${inputToken}&currency1=${outputToken}`;
 
-export const TOKEN_INFO: Record<Token, { name: string; icon?: string }> = {
-  MATIC: { name: 'POL (Polygon)', icon: '⬡' },
+export const TOKEN_INFO: Record<Token, { name: string; icon?: string; displaySymbol?: string }> = {
+  MATIC: { name: 'Polygon', icon: '⬡', displaySymbol: 'POL' }, // MATIC rebranded to POL Sept 2024
   OGUN: { name: 'SoundChain Token', icon: '🔊' },
   PENGU: { name: 'Pudgy Penguins', icon: '🐧' },
   ETH: { name: 'Ethereum', icon: '🔷' },
