@@ -5387,8 +5387,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </div>
           )}
 
-          {/* Profile View - /dex/profile/[handle] */}
-          {selectedView === 'profile' && routeId && router.isReady && (
+          {/* Profile View - /dex/profile/[handle] or /dex/me */}
+          {selectedView === 'profile' && (routeId || isExplicitOwnProfileRoute) && router.isReady && (
             <ProfileErrorBoundary>
             <div className="relative pb-32 overflow-y-auto min-h-screen" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
