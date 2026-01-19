@@ -5459,7 +5459,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             </div>
 
                             <div className="flex flex-wrap gap-3">
-                              {isViewingOwnProfile ? (
+                              {userLoading ? (
+                                // Show loading state while auth is being determined
+                                <Button className="retro-button opacity-50" disabled>
+                                  <span className="w-4 h-4 mr-2 animate-pulse">•</span>
+                                  Loading...
+                                </Button>
+                              ) : isViewingOwnProfile ? (
                                 <Button className="retro-button" onClick={() => setSelectedView('settings')}>
                                   <Settings className="w-4 h-4 mr-2" />
                                   Edit Profile
@@ -5484,8 +5490,33 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   {viewingProfile.isFollowed ? 'Following' : 'Follow'}
                                 </Button>
                               )}
-                              <Button variant="outline" className="border-purple-500/50"><MessageCircle className="w-4 h-4 mr-2" />Message</Button>
-                              <Button variant="outline" className="border-cyan-500/50"><Share2 className="w-4 h-4" /></Button>
+                              {!isViewingOwnProfile && (
+                                <Button
+                                  variant="outline"
+                                  className="border-purple-500/50"
+                                  onClick={() => {
+                                    if (!me) {
+                                      router.push('/login')
+                                      return
+                                    }
+                                    // Navigate to messages with this user
+                                    router.push(`/dex/messages?user=${viewingProfile.userHandle}`)
+                                  }}
+                                >
+                                  <MessageCircle className="w-4 h-4 mr-2" />Message
+                                </Button>
+                              )}
+                              <Button
+                                variant="outline"
+                                className="border-cyan-500/50"
+                                onClick={() => {
+                                  const profileUrl = `${window.location.origin}/dex/users/${viewingProfile.userHandle}`
+                                  navigator.clipboard.writeText(profileUrl)
+                                  alert('Profile link copied!')
+                                }}
+                              >
+                                <Share2 className="w-4 h-4" />
+                              </Button>
                             </div>
 
                             {viewingProfile.magicWalletAddress && (

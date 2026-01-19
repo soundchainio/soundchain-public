@@ -11,12 +11,14 @@ interface NewCommentParams {
   profileId: mongoose.Types.ObjectId;
   body: string;
   postId: mongoose.Types.ObjectId;
+  replyToId?: mongoose.Types.ObjectId;
 }
 
 interface NewGuestCommentParams {
   walletAddress: string;
   body: string;
   postId: mongoose.Types.ObjectId;
+  replyToId?: mongoose.Types.ObjectId;
 }
 
 interface DeleteCommentParams {
@@ -76,6 +78,7 @@ export class CommentService extends ModelService<typeof Comment> {
       body: params.body,
       isGuest: true,
       walletAddress: params.walletAddress,
+      replyToId: params.replyToId,
     });
     await newComment.save();
     // ⚠️ CRITICAL - .toObject() prevents mongoose scope errors - DO NOT REMOVE
@@ -141,9 +144,21 @@ export class CommentService extends ModelService<typeof Comment> {
 
   getComments(postId: string, page?: PageInput): Promise<PaginateResult<Comment>> {
     return this.paginate({
-      filter: { postId, deleted: false },
+      filter: { postId, deleted: false, replyToId: { $exists: false } },
       sort: { field: 'createdAt', order: SortOrder.DESC },
       page,
     });
+  }
+
+  getReplies(commentId: string, page?: PageInput): Promise<PaginateResult<Comment>> {
+    return this.paginate({
+      filter: { replyToId: new mongoose.Types.ObjectId(commentId), deleted: false },
+      sort: { field: 'createdAt', order: SortOrder.ASC },
+      page,
+    });
+  }
+
+  countReplies(commentId: string): Promise<number> {
+    return CommentModel.countDocuments({ replyToId: new mongoose.Types.ObjectId(commentId), deleted: false }).exec();
   }
 }

@@ -32,6 +32,10 @@ export class Comment extends Model {
   @prop({ default: false })
   deleted?: boolean;
 
+  @Field(() => ID, { nullable: true })
+  @prop({ required: false, type: mongoose.Types.ObjectId })
+  replyToId?: mongoose.Types.ObjectId;
+
   @Field(() => Date)
   createdAt: Date;
 

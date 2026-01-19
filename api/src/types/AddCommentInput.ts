@@ -7,4 +7,7 @@ export class AddCommentInput {
 
   @Field()
   body: string;
+
+  @Field({ nullable: true })
+  replyToId?: string;
 }

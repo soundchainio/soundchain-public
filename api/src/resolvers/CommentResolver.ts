@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { Arg, Authorized, Ctx, FieldResolver, Int, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Comment } from '../models/Comment';
 import { Post } from '../models/Post';
@@ -55,6 +55,48 @@ export class CommentResolver {
     }
   }
 
+  @FieldResolver(() => Comment, { nullable: true })
+  async replyTo(@Ctx() { commentService }: Context, @Root() comment: Comment): Promise<Comment | null> {
+    if (!comment || !comment.replyToId) {
+      return null;
+    }
+    try {
+      const replyToIdString = typeof comment.replyToId === 'string'
+        ? comment.replyToId
+        : comment.replyToId.toString();
+      return await commentService.getComment(replyToIdString);
+    } catch (err) {
+      console.error('[CommentResolver] Error fetching replyTo:', err);
+      return null;
+    }
+  }
+
+  @FieldResolver(() => CommentConnection)
+  async replies(
+    @Ctx() { commentService }: Context,
+    @Root() comment: Comment,
+    @Arg('page', { nullable: true }) page: PageInput,
+  ): Promise<CommentConnection> {
+    if (!comment || !comment._id) {
+      return { nodes: [], pageInfo: { totalCount: 0, hasNextPage: false, hasPreviousPage: false } };
+    }
+    const commentIdString = typeof comment._id === 'string'
+      ? comment._id
+      : comment._id.toString();
+    return commentService.getReplies(commentIdString, page);
+  }
+
+  @FieldResolver(() => Int)
+  async replyCount(@Ctx() { commentService }: Context, @Root() comment: Comment): Promise<number> {
+    if (!comment || !comment._id) {
+      return 0;
+    }
+    const commentIdString = typeof comment._id === 'string'
+      ? comment._id
+      : comment._id.toString();
+    return commentService.countReplies(commentIdString);
+  }
+
   @Query(() => Comment)
   comment(@Ctx() { commentService }: Context, @Arg('id') id: string): Promise<Comment> {
     return commentService.getComment(id);
@@ -76,6 +118,7 @@ export class CommentResolver {
       profileId: user.profileId,
       postId: new mongoose.Types.ObjectId(input.postId),
       body: input.body,
+      replyToId: input.replyToId ? new mongoose.Types.ObjectId(input.replyToId) : undefined,
     });
     return { comment };
   }
@@ -95,6 +138,7 @@ export class CommentResolver {
       walletAddress: walletAddress.toLowerCase(),
       postId: new mongoose.Types.ObjectId(input.postId),
       body: input.body,
+      replyToId: input.replyToId ? new mongoose.Types.ObjectId(input.replyToId) : undefined,
     });
     return { comment };
   }
