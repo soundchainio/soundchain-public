@@ -135,7 +135,14 @@ const CommentMarker = ({
   </div>
 )
 
+// Detect mobile once at module level for consistency
+const isMobileDevice = typeof window !== 'undefined' && (
+  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+  window.innerWidth < 768
+)
+
 // Single confetti comment that erupts outward
+// MOBILE: Simplified version without blur, heavy shadows, or sparkle animations to prevent crashes
 const ConfettiComment = ({
   comment,
   index,
@@ -151,6 +158,7 @@ const ConfettiComment = ({
   const [isFading, setIsFading] = useState(false)
 
   // Generate random trajectory for this comment
+  // MOBILE: Smaller distance and no rotation to reduce complexity
   const trajectory = useMemo(() => {
     // Spread comments in a fan pattern upward
     const baseAngle = -90 // Start pointing up
@@ -158,9 +166,9 @@ const ConfettiComment = ({
     const angleStep = total > 1 ? spreadAngle / (total - 1) : 0
     const angle = baseAngle - spreadAngle / 2 + angleStep * index
 
-    // Random variations
-    const distance = 150 + Math.random() * 100 // 150-250px
-    const rotation = (Math.random() - 0.5) * 30 // -15 to 15 degrees
+    // Mobile: smaller distance, no rotation
+    const distance = isMobileDevice ? (100 + Math.random() * 50) : (150 + Math.random() * 100)
+    const rotation = isMobileDevice ? 0 : (Math.random() - 0.5) * 30
     const delay = index * 50 // Stagger the eruption
 
     // Convert angle to x,y
@@ -177,10 +185,10 @@ const ConfettiComment = ({
       setIsVisible(true)
     }, trajectory.delay)
 
-    // Start fading after 4 seconds
+    // Start fading after 4 seconds (3s on mobile for faster cleanup)
     const fadeTimer = setTimeout(() => {
       setIsFading(true)
-    }, 4000 + trajectory.delay)
+    }, (isMobileDevice ? 3000 : 4000) + trajectory.delay)
 
     return () => {
       clearTimeout(showTimer)
@@ -196,8 +204,8 @@ const ConfettiComment = ({
     // 🎆 New Year's theme until Jan 5, 2026
     if (now < newYearsEnd) {
       return {
-        colors: ['#FFD700', '#FFF8DC', '#C0C0C0', '#FFFACD', '#F0E68C'], // Gold, Cornsilk, Silver, Lemon Chiffon, Khaki
-        sparkle: true,
+        colors: ['#FFD700', '#FFF8DC', '#C0C0C0', '#FFFACD', '#F0E68C'],
+        sparkle: !isMobileDevice, // NO sparkles on mobile - too expensive
       }
     }
 
@@ -213,12 +221,14 @@ const ConfettiComment = ({
 
   return (
     <div
-      className={`absolute pointer-events-auto cursor-pointer transition-all duration-700 ease-out ${
+      className={`absolute pointer-events-auto cursor-pointer transition-all ease-out ${
+        isMobileDevice ? 'duration-300' : 'duration-700'
+      } ${
         isFading ? 'opacity-0 scale-75' : isVisible ? 'opacity-100' : 'opacity-0 scale-50'
       }`}
       style={{
         transform: isVisible
-          ? `translate(${trajectory.x}px, ${trajectory.y}px) rotate(${trajectory.rotation}deg)`
+          ? `translate(${trajectory.x}px, ${trajectory.y}px)${trajectory.rotation ? ` rotate(${trajectory.rotation}deg)` : ''}`
           : 'translate(0, 0) scale(0.5)',
         transitionDelay: `${trajectory.delay}ms`,
         zIndex: 30 + index,
@@ -228,30 +238,39 @@ const ConfettiComment = ({
         onDismiss()
       }}
     >
+      {/* MOBILE: No backdrop-blur, simpler shadow, no glow effects */}
       <div
-        className="relative bg-neutral-900/95 backdrop-blur-xl rounded-2xl p-2.5 shadow-2xl min-w-[180px] max-w-[220px]"
+        className={`relative rounded-2xl p-2.5 min-w-[160px] max-w-[200px] ${
+          isMobileDevice
+            ? 'bg-neutral-900 shadow-lg'
+            : 'bg-neutral-900/95 backdrop-blur-xl shadow-2xl'
+        }`}
         style={{
           border: `2px solid ${borderColor}`,
-          boxShadow: seasonal.sparkle
-            ? `0 0 25px ${borderColor}, 0 0 50px ${borderColor}60, 0 0 75px ${borderColor}30`
-            : `0 0 20px ${borderColor}40, 0 0 40px ${borderColor}20`,
+          // Mobile: simple shadow only, Desktop: fancy glow
+          boxShadow: isMobileDevice
+            ? `0 4px 12px rgba(0,0,0,0.5)`
+            : seasonal.sparkle
+              ? `0 0 25px ${borderColor}, 0 0 50px ${borderColor}60, 0 0 75px ${borderColor}30`
+              : `0 0 20px ${borderColor}40, 0 0 40px ${borderColor}20`,
         }}
       >
-        {/* Glow effect */}
-        <div
-          className="absolute inset-0 rounded-2xl blur-xl -z-10 opacity-30"
-          style={{ background: borderColor }}
-        />
+        {/* Glow effect - DESKTOP ONLY */}
+        {!isMobileDevice && (
+          <div
+            className="absolute inset-0 rounded-2xl blur-xl -z-10 opacity-30"
+            style={{ background: borderColor }}
+          />
+        )}
 
-        {/* ✨ New Year's Sparkles */}
-        {seasonal.sparkle && (
+        {/* ✨ Sparkles - DESKTOP ONLY (causes mobile crashes) */}
+        {seasonal.sparkle && !isMobileDevice && (
           <>
             <div className="absolute -top-1 -left-1 w-2 h-2 bg-yellow-300 rounded-full animate-ping" style={{ animationDuration: '1s' }} />
             <div className="absolute -top-2 right-4 w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
             <div className="absolute top-3 -right-1 w-2 h-2 bg-yellow-200 rounded-full animate-ping" style={{ animationDuration: '1.5s', animationDelay: '0.5s' }} />
             <div className="absolute -bottom-1 left-6 w-1.5 h-1.5 bg-amber-300 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
             <div className="absolute bottom-4 -left-1 w-1 h-1 bg-white rounded-full animate-ping" style={{ animationDuration: '0.8s', animationDelay: '0.7s' }} />
-            {/* Star burst effect */}
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-yellow-400 animate-bounce text-sm" style={{ animationDuration: '2s' }}>✨</div>
           </>
         )}
@@ -260,7 +279,7 @@ const ConfettiComment = ({
         <div className="flex items-center gap-2 mb-1">
           <div
             className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
-            style={{ boxShadow: `0 0 10px ${borderColor}` }}
+            style={{ boxShadow: isMobileDevice ? 'none' : `0 0 10px ${borderColor}` }}
           >
             {comment.profile.profilePicture ? (
               <img src={comment.profile.profilePicture} alt="" className="w-full h-full object-cover" />
@@ -306,6 +325,7 @@ const isNewYearsSeason = () => {
 }
 
 // Container for confetti comments that erupt from a position
+// MOBILE: Simplified burst effect without heavy animations
 const ActiveCommentPopup = ({
   comments,
   position,
@@ -328,8 +348,13 @@ const ActiveCommentPopup = ({
         transform: 'translateX(-50%)',
       }}
     >
-      {/* 🎆 New Year's Firework Burst */}
-      {isNewYears ? (
+      {/* MOBILE: Simple colored dot, no animations */}
+      {isMobileDevice ? (
+        <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
+          <div className={`w-4 h-4 rounded-full ${isNewYears ? 'bg-yellow-400' : 'bg-cyan-400'}`} />
+        </div>
+      ) : isNewYears ? (
+        /* DESKTOP: Full New Year's Firework Burst */
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
           {/* Central gold burst */}
           <div className="w-6 h-6 rounded-full bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 animate-ping" style={{ animationDuration: '0.8s' }} />
@@ -365,7 +390,7 @@ const ActiveCommentPopup = ({
           </div>
         </div>
       ) : (
-        /* Default neon burst */
+        /* DESKTOP: Default neon burst */
         <div className="absolute left-1/2 bottom-0 -translate-x-1/2">
           <div className="w-4 h-4 rounded-full bg-cyan-400 animate-ping" />
           <div className="absolute inset-0 w-4 h-4 rounded-full bg-white animate-pulse" />

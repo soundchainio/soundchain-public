@@ -947,7 +947,8 @@ function WinWinStatsModal({
 
 function BlurAggregatorPanel() {
   const [activeTab, setActiveTab] = useState("overview")
-  const { magicOgunBalance, magicMaticBalance, magicBalance } = useMagicContext()
+  // Note: context exports 'ogunBalance' and 'balance', not magic-prefixed names
+  const { ogunBalance, balance } = useMagicContext()
 
   return (
     <Card className="retro-card p-6 space-y-6">
@@ -976,20 +977,20 @@ function BlurAggregatorPanel() {
 
       {activeTab === "overview" && (
         <>
-          {/* Portfolio Value - Real balances */}
+          {/* Portfolio Value - Real balances from MagicContext */}
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="metadata-section p-4">
                 <div className="metadata-label">OGUN Balance</div>
                 <div className="retro-text text-xl text-white">
-                  {magicOgunBalance ? parseFloat(magicOgunBalance).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'} OGUN
+                  {ogunBalance ? parseFloat(ogunBalance).toLocaleString(undefined, { maximumFractionDigits: 2 }) : '0'} OGUN
                 </div>
                 <div className="text-sm text-cyan-400">SoundChain Token</div>
               </div>
               <div className="metadata-section p-4">
                 <div className="metadata-label">POL Balance</div>
                 <div className="retro-text text-xl text-white">
-                  {magicMaticBalance ? parseFloat(magicMaticBalance).toFixed(4) : magicBalance ? parseFloat(magicBalance).toFixed(4) : '0'} POL
+                  {balance ? parseFloat(balance).toFixed(4) : '0'} POL
                 </div>
                 <div className="text-sm text-purple-400">Polygon Native</div>
               </div>
