@@ -1484,17 +1484,36 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Using String() for robust comparison - IDs may be ObjectId vs string
   // Multiple fallbacks: profile ID, wallet address, userHandle
   const myProfileId = me?.profile?.id || userData?.me?.profile?.id
-  const myWalletAddress = userData?.me?.magicWalletAddress?.toLowerCase()
+  // Get wallet from ANY OAuth method - not just magicWalletAddress
+  const myWalletAddress = (
+    userData?.me?.magicWalletAddress ||
+    userData?.me?.googleWalletAddress ||
+    userData?.me?.discordWalletAddress ||
+    userData?.me?.twitchWalletAddress ||
+    userData?.me?.emailWalletAddress
+  )?.toLowerCase()
   const myUserHandle = me?.profile?.userHandle || userData?.me?.profile?.userHandle
+
+  // Debug: Log comparison values (remove after debugging)
+  if (selectedView === 'profile' && viewingProfile?.id) {
+    console.log('🔍 isViewingOwnProfile debug:', {
+      myProfileId,
+      viewingProfileId: viewingProfile?.id,
+      idsMatch: String(viewingProfile?.id) === String(myProfileId),
+      myUserHandle,
+      viewingUserHandle: viewingProfile?.userHandle,
+      handlesMatch: myUserHandle === viewingProfile?.userHandle,
+    })
+  }
 
   // Check if viewing own profile - try multiple comparisons
   const isViewingOwnProfile = selectedView === 'profile' && Boolean(viewingProfile?.id) && (
-    // Primary: Compare profile IDs
+    // Primary: Compare profile IDs (most reliable)
     (Boolean(myProfileId) && String(viewingProfile?.id) === String(myProfileId)) ||
-    // Fallback 1: Compare wallet addresses
+    // Fallback 1: Compare wallet addresses (Profile only has magicWalletAddress)
     (Boolean(myWalletAddress) && Boolean(viewingProfile?.magicWalletAddress) &&
       myWalletAddress === viewingProfile.magicWalletAddress?.toLowerCase()) ||
-    // Fallback 2: Compare userHandles
+    // Fallback 2: Compare userHandles (very reliable)
     (Boolean(myUserHandle) && Boolean(viewingProfile?.userHandle) &&
       myUserHandle === viewingProfile.userHandle)
   )
