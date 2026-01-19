@@ -384,18 +384,31 @@ export const AudioEngine = () => {
   useEffect(() => {
     let wasPlayingBeforeHidden = false
     let backgroundResumeInterval: NodeJS.Timeout | null = null
+    let resumeTimeout: NodeJS.Timeout | null = null
+
+    // Capture audio element ref at effect setup time to avoid stale ref in cleanup
+    const audioElement = audioRef.current
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // Page is hidden (user switched apps) - remember if we were playing
         wasPlayingBeforeHidden = isPlaying
 
-        // Start aggressive background resume attempts for mobile
-        if (isPlaying && audioRef.current) {
-          // Try to keep playing in background - some browsers allow this
+        // Start background resume attempts for mobile (limited to 30 seconds to prevent leaks)
+        if (isPlaying && audioElement) {
+          let attempts = 0
+          const maxAttempts = 30 // Stop after 30 seconds
           backgroundResumeInterval = setInterval(() => {
-            if (audioRef.current?.paused && wasPlayingBeforeHidden) {
-              audioRef.current.play().catch(() => {})
+            attempts++
+            if (attempts > maxAttempts) {
+              if (backgroundResumeInterval) {
+                clearInterval(backgroundResumeInterval)
+                backgroundResumeInterval = null
+              }
+              return
+            }
+            if (audioElement?.paused && wasPlayingBeforeHidden) {
+              audioElement.play().catch(() => {})
             }
           }, 1000)
         }
@@ -407,11 +420,11 @@ export const AudioEngine = () => {
         }
 
         // Resume playback if we were playing before
-        if (wasPlayingBeforeHidden && audioRef.current) {
+        if (wasPlayingBeforeHidden && audioElement) {
           // Small delay to let the browser settle
-          setTimeout(() => {
-            if (audioRef.current?.paused && wasPlayingBeforeHidden) {
-              audioRef.current.play().catch(() => {})
+          resumeTimeout = setTimeout(() => {
+            if (audioElement?.paused && wasPlayingBeforeHidden) {
+              audioElement.play().catch(() => {})
             }
           }, 100)
         }
@@ -420,19 +433,19 @@ export const AudioEngine = () => {
 
     const handleOrientationChange = () => {
       // Device rotated - ensure playback continues
-      if (isPlaying && audioRef.current?.paused) {
-        audioRef.current.play().catch(() => {})
+      if (isPlaying && audioElement?.paused) {
+        audioElement.play().catch(() => {})
       }
     }
 
     // Handle unexpected pauses (browser pausing audio in background)
     const handleUnexpectedPause = () => {
       // If we're supposed to be playing but got paused, try to resume
-      if (isPlaying && audioRef.current?.paused) {
+      if (isPlaying && audioElement?.paused) {
         // Small delay before retrying
         setTimeout(() => {
-          if (isPlaying && audioRef.current?.paused) {
-            audioRef.current.play().catch(() => {})
+          if (isPlaying && audioElement?.paused) {
+            audioElement.play().catch(() => {})
           }
         }, 100)
       }
@@ -444,8 +457,8 @@ export const AudioEngine = () => {
     }
 
     const handleWindowFocus = () => {
-      if (wasPlayingBeforeHidden && audioRef.current?.paused) {
-        audioRef.current.play().catch(() => {})
+      if (wasPlayingBeforeHidden && audioElement?.paused) {
+        audioElement.play().catch(() => {})
       }
     }
 
@@ -456,21 +469,25 @@ export const AudioEngine = () => {
     window.addEventListener('focus', handleWindowFocus)
 
     // Listen for pause events on the audio element itself
-    if (audioRef.current) {
-      audioRef.current.addEventListener('pause', handleUnexpectedPause)
+    if (audioElement) {
+      audioElement.addEventListener('pause', handleUnexpectedPause)
     }
 
     return () => {
       if (backgroundResumeInterval) {
         clearInterval(backgroundResumeInterval)
       }
+      if (resumeTimeout) {
+        clearTimeout(resumeTimeout)
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('orientationchange', handleOrientationChange)
       window.removeEventListener('resize', handleOrientationChange)
       window.removeEventListener('blur', handleWindowBlur)
       window.removeEventListener('focus', handleWindowFocus)
-      if (audioRef.current) {
-        audioRef.current.removeEventListener('pause', handleUnexpectedPause)
+      // Use captured audioElement instead of stale ref
+      if (audioElement) {
+        audioElement.removeEventListener('pause', handleUnexpectedPause)
       }
     }
   }, [isPlaying])

@@ -76,33 +76,47 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
 
   // Cache for preloaded audio URLs to avoid duplicate preloads
   const preloadedUrls = useRef<Set<string>>(new Set())
+  // Track cleanup timeouts so we can cancel them on unmount
+  const preloadCleanupTimeouts = useRef<Set<NodeJS.Timeout>>(new Set())
+
+  // Detect if we're on mobile (used to reduce memory usage)
+  const isMobile = typeof window !== 'undefined' && (
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+    window.innerWidth < 768
+  )
 
   /**
-   * Aggressive IPFS preloading for both audio AND artwork
+   * IPFS preloading for both audio AND artwork
    * IPFS gateways have 5-10 second initial latency - this warms the cache
    *
+   * MOBILE OPTIMIZATION: On mobile, we use lighter preloading to prevent
+   * memory exhaustion and browser tab crashes.
+   *
    * Strategy for Audio:
-   * 1. Use fetch() to start downloading the first 1MB (range request)
-   * 2. Add <link rel="preload"> for browser-level caching
-   * 3. Use Audio element preload for full buffering
+   * - Desktop: fetch + link preload + Audio element
+   * - Mobile: fetch only (lighter memory footprint)
    *
    * Strategy for Artwork:
-   * 1. Use fetch() to warm IPFS gateway cache
-   * 2. Use Image element to preload into browser cache
-   *
-   * Call this when tracks become visible on screen (hover, scroll into view)
+   * - Desktop: fetch + Image + link preload
+   * - Mobile: Image only (browser handles caching)
    */
   const preloadTrack = useCallback((src: string, artworkUrl?: string | null) => {
     if (typeof window === 'undefined') return
+
+    // MOBILE: Limit total preloads to prevent memory exhaustion
+    if (isMobile && preloadedUrls.current.size >= 5) {
+      return // Don't preload more than 5 tracks on mobile
+    }
 
     // Preload audio
     if (src && !preloadedUrls.current.has(src)) {
       preloadedUrls.current.add(src)
 
-      // Strategy 1: Aggressive fetch to warm IPFS gateway cache
+      // Fetch to warm IPFS gateway cache (mobile uses smaller range)
+      const rangeSize = isMobile ? 262144 : 1048576 // 256KB mobile, 1MB desktop
       fetch(src, {
         method: 'GET',
-        headers: { 'Range': 'bytes=0-1048576' }, // First 1MB
+        headers: { 'Range': `bytes=0-${rangeSize}` },
         mode: 'cors',
         credentials: 'omit',
       }).then(response => {
@@ -111,31 +125,40 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
         }
       }).catch(() => {})
 
-      // Strategy 2: Link preload for browser optimization
-      const link = document.createElement('link')
-      link.rel = 'preload'
-      link.as = 'audio'
-      link.href = src
-      link.crossOrigin = 'anonymous'
-      document.head.appendChild(link)
+      // Desktop only: Link preload and Audio element (too heavy for mobile)
+      let link: HTMLLinkElement | null = null
+      let audio: HTMLAudioElement | null = null
 
-      // Strategy 3: Hidden audio element for full buffering
-      const audio = new Audio()
-      audio.preload = 'auto'
-      audio.crossOrigin = 'anonymous'
-      audio.src = src
-      audio.load()
+      if (!isMobile) {
+        // Link preload for browser optimization
+        link = document.createElement('link')
+        link.rel = 'preload'
+        link.as = 'audio'
+        link.href = src
+        link.crossOrigin = 'anonymous'
+        document.head.appendChild(link)
 
-      // Cleanup after 2 minutes
-      setTimeout(() => {
-        link.remove()
-        audio.src = ''
+        // Hidden audio element for full buffering
+        audio = new Audio()
+        audio.preload = 'auto'
+        audio.crossOrigin = 'anonymous'
+        audio.src = src
+        audio.load()
+      }
+
+      // Cleanup (shorter timeout on mobile: 30s vs 2min)
+      const cleanupTime = isMobile ? 30000 : 120000
+      const timeout = setTimeout(() => {
+        if (link) link.remove()
+        if (audio) audio.src = ''
         preloadedUrls.current.delete(src)
-      }, 120000)
+        preloadCleanupTimeouts.current.delete(timeout)
+      }, cleanupTime)
+      preloadCleanupTimeouts.current.add(timeout)
     }
 
-    // Preload artwork (8K images from IPFS)
-    if (artworkUrl && !preloadedUrls.current.has(artworkUrl)) {
+    // Preload artwork (skip entirely on mobile - let browser handle lazy loading)
+    if (!isMobile && artworkUrl && !preloadedUrls.current.has(artworkUrl)) {
       preloadedUrls.current.add(artworkUrl)
 
       // Fetch to warm IPFS gateway for artwork
@@ -163,12 +186,14 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
       document.head.appendChild(imgLink)
 
       // Cleanup after 2 minutes
-      setTimeout(() => {
+      const timeout = setTimeout(() => {
         imgLink.remove()
         preloadedUrls.current.delete(artworkUrl)
+        preloadCleanupTimeouts.current.delete(timeout)
       }, 120000)
+      preloadCleanupTimeouts.current.add(timeout)
     }
-  }, [])
+  }, [isMobile])
 
   useEffect(() => {
     const storedVolume = localStorage.getItem(localStorageVolumeKey)
@@ -223,13 +248,15 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   }, [])
 
   // Fetch all tracks and create a shuffled playlist
+  // MOBILE: Load fewer tracks to prevent memory exhaustion
   const loadAllTracksForShuffle = useCallback(async (currentTrack: Song) => {
     try {
+      const trackLimit = isMobile ? 50 : 200 // 50 tracks on mobile, 200 on desktop
       const { data } = await apolloClient.query<TracksQuery>({
         query: TracksDocument,
         variables: {
           sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
-          page: { first: 200 }, // Load up to 200 tracks for shuffle
+          page: { first: trackLimit },
         },
         fetchPolicy: 'cache-first',
       })
@@ -263,7 +290,7 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
     } catch (error) {
       console.error('Failed to load tracks for shuffle:', error)
     }
-  }, [apolloClient])
+  }, [apolloClient, isMobile])
 
   const play = useCallback(
     (song: Song, fromPlaylist: boolean = false) => {
@@ -332,17 +359,28 @@ export function AudioPlayerProvider({ children }: AudioPlayerProviderProps) {
   }, [currentPlaylistIndex, hasNext, play, playlist])
 
   // Auto-preload next tracks in queue for instant playback (audio + artwork)
+  // MOBILE: Only preload next 1 track (vs 2 on desktop) to reduce memory
   useEffect(() => {
     if (!playlist.length || currentPlaylistIndex < 0) return
 
-    // Preload next 2 tracks in the queue (both audio and artwork)
-    const nextTracks = playlist.slice(currentPlaylistIndex + 1, currentPlaylistIndex + 3)
+    // Mobile: preload 1 track, Desktop: preload 2 tracks
+    const preloadCount = isMobile ? 1 : 2
+    const nextTracks = playlist.slice(currentPlaylistIndex + 1, currentPlaylistIndex + 1 + preloadCount)
     nextTracks.forEach(track => {
       if (track?.src) {
-        preloadTrack(track.src, track.art)
+        preloadTrack(track.src, isMobile ? null : track.art) // Skip artwork preload on mobile
       }
     })
-  }, [currentPlaylistIndex, playlist, preloadTrack])
+  }, [currentPlaylistIndex, playlist, preloadTrack, isMobile])
+
+  // Cleanup preload timeouts on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      preloadCleanupTimeouts.current.forEach(timeout => clearTimeout(timeout))
+      preloadCleanupTimeouts.current.clear()
+      preloadedUrls.current.clear()
+    }
+  }, [])
 
   const jumpTo = useCallback(
     (index: number) => {

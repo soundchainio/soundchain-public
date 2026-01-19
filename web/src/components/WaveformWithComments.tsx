@@ -410,11 +410,18 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   const waveformRef = useRef<HTMLDivElement>(null)
   const me = useMe()
 
+  // Detect mobile for performance optimization
+  const isMobile = typeof window !== 'undefined' && (
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+    window.innerWidth < 768
+  )
+
   const [isReady, setIsReady] = useState(false)
   const [hoveredCommentId, setHoveredCommentId] = useState<string | null>(null)
   const [showCommentInput, setShowCommentInput] = useState(false)
   const [activePopupGroups, setActivePopupGroups] = useState<{ timestamp: number; comments: TrackComment[] }[]>([])
   const lastTriggeredRef = useRef<Set<string>>(new Set())
+  const lastProcessedTimeRef = useRef<number>(-1)
   const [commentTimestamp, setCommentTimestamp] = useState(0)
   const [commentText, setCommentText] = useState('')
   const [selectedStickers, setSelectedStickers] = useState<Array<{url: string, name: string}>>([])
@@ -427,9 +434,10 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
 
 
   // Generate vertical bar waveform data (amplitude for each bar)
+  // MOBILE: Use fewer bars (80) to reduce DOM complexity and memory usage
   const waveformBars = useMemo(() => {
     const bars: number[] = []
-    const numBars = 250 // Dense bars like real DAW
+    const numBars = isMobile ? 80 : 250 // 80 bars mobile, 250 desktop
     let seed = trackId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
 
     for (let i = 0; i < numBars; i++) {
@@ -456,7 +464,7 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
       bars.push(Math.min(1, Math.max(0.05, amplitude + transientBoost)))
     }
     return bars
-  }, [trackId])
+  }, [trackId, isMobile])
 
   // Mark as ready immediately since we're using static waveform
   useEffect(() => {
@@ -464,15 +472,19 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
   }, [])
 
   // Trigger comment popups when playhead crosses their timestamps
+  // Using wider window to compensate for integer second updates from AudioEngine
   useEffect(() => {
     if (!isPlaying || comments.length === 0) return
 
-    // Find comments within 0.5 second window of current time that haven't been triggered
-    const triggerWindow = 0.5
+    // Wider trigger window (1.5s) because currentTime updates as integer seconds
+    // This ensures comments at fractional timestamps aren't missed
+    const triggerWindow = 1.5
     const newlyTriggered = comments.filter(comment => {
-      const isInWindow = Math.abs(comment.timestamp - currentTime) < triggerWindow
+      // Check if comment is within the current second's window
+      const isInWindow = comment.timestamp >= currentTime - 0.5 && comment.timestamp < currentTime + triggerWindow
       const notTriggered = !lastTriggeredRef.current.has(comment.id)
-      const isAhead = comment.timestamp <= currentTime + 0.1 // Just passed or at
+      // Comment should be at or before playhead position (with some tolerance)
+      const isAhead = comment.timestamp <= currentTime + 1
       return isInWindow && notTriggered && isAhead
     })
 
@@ -509,8 +521,20 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
     if (!isPlaying) {
       lastTriggeredRef.current.clear()
       setActivePopupGroups([])
+      lastProcessedTimeRef.current = -1
     }
   }, [isPlaying])
+
+  // Detect seeking (large jumps in currentTime) and reset triggered comments
+  useEffect(() => {
+    const timeDiff = Math.abs(currentTime - lastProcessedTimeRef.current)
+    // If time jumped more than 3 seconds, user probably seeked
+    if (lastProcessedTimeRef.current >= 0 && timeDiff > 3) {
+      lastTriggeredRef.current.clear()
+      setActivePopupGroups([])
+    }
+    lastProcessedTimeRef.current = currentTime
+  }, [currentTime])
 
   // Calculate progress percentage
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0
@@ -629,6 +653,8 @@ export const WaveformWithComments: React.FC<WaveformWithCommentsProps> = ({
             style={{
               contain: 'layout style paint',
               transform: 'translateZ(0)',
+              // Mobile: larger gaps between bars for easier touch and less rendering
+              gap: isMobile ? '2px' : '1px',
             }}
           >
             {waveformBars.map((amplitude, idx) => {

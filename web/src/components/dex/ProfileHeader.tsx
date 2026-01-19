@@ -1004,11 +1004,6 @@ function BlurAggregatorPanel() {
               <p className="text-sm">Transaction history coming soon</p>
               <p className="text-xs text-gray-600 mt-1">Track your buys, sells, and listings</p>
             </div>
-                  </div>
-                  <div className="retro-text text-sm">{activity.price}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </>
       )}

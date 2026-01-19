@@ -1,6 +1,6 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 18, 2026
+**Last Updated:** January 19, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
@@ -104,6 +104,52 @@ These files have caused critical bugs when modified. Require extra caution:
 **Symptom:** Site crashes with "Cannot read properties of undefined"
 **Root Cause:** Referenced non-existent `SortUserField.FollowerCount` enum value
 **Fix:** Remove non-existent enum references, use correct field names
+
+### 11. Mobile Music Player Crash (Jan 19, 2026)
+**Symptom:** Browser tab crashes ("Can't open this page") ~30 seconds into playback on mobile
+**Root Cause:** Memory exhaustion from:
+- Aggressive IPFS preloading (1MB range requests + Audio elements + Image preloading)
+- Loading 200 tracks for shuffle on mobile
+- 250 waveform bars rendered in DOM
+- Uncapped background resume intervals
+**Fix:**
+- Mobile preload limit: max 5 tracks, 256KB range (vs 1MB desktop), no artwork preload
+- Mobile shuffle: 50 tracks (vs 200 desktop)
+- Mobile waveform: 80 bars (vs 250 desktop)
+- Background resume: capped at 30 attempts (30 seconds)
+- Added proper cleanup for preload timeouts on unmount
+**Don't Do This:** Never use unbounded setInterval without cleanup or cap
+**Files:** useAudioPlayer.tsx, WaveformWithComments.tsx, AudioEngine.tsx
+
+### 12. Waveform Comments Not Triggering (Jan 19, 2026)
+**Symptom:** Timestamped comments don't popup consistently during playback
+**Root Cause:**
+- currentTime updated as floored integer (once per second)
+- Trigger window too narrow (0.5s) for integer updates
+- Comments at fractional timestamps (e.g., 15.7s) missed
+**Fix:**
+- Widened trigger window to 1.5s
+- Track last processed time to detect seeking
+- Reset triggered comments when user seeks (time jump > 3s)
+**File:** WaveformWithComments.tsx
+
+### 13. Profile Edit Button Shows Follow (Jan 19, 2026)
+**Symptom:** Own profile shows "Follow" instead of "Edit Profile"
+**Root Cause:** `isViewingOwnProfile` check failed because `myProfileId` was undefined
+**Fix:** Multiple fallback comparisons:
+1. Primary: Compare profile IDs
+2. Fallback 1: Compare wallet addresses (case-insensitive)
+3. Fallback 2: Compare userHandles
+**File:** pages/dex/[...slug].tsx
+
+### 14. Wallet Balances Show 0 (Jan 19, 2026)
+**Symptom:** OGUN and POL balances show 0 even when logged in with tokens
+**Root Cause:** Balance fetching required both `web3` (Magic) and `account` to be set, but Magic session might not be fully initialized
+**Fix:**
+- Set account from user profile even without web3 session
+- Use public Polygon RPC as fallback for balance fetching
+- Added debounce to prevent rapid re-fetches and flickering
+**File:** useMagicContext.tsx (PROTECTED - required careful changes)
 
 ---
 
@@ -380,6 +426,7 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 10, 2026 | Share links, emote flurry | 62d6d85a0+ |
 | Jan 12, 2026 | NFT playlist playback, init script | a6f6db307+ |
 | Jan 18, 2026 | Mobile wallet connections | 777641a62 |
+| Jan 19, 2026 | Mobile player crash fix, waveform comments, profile/balance fixes | Multiple |
 
 ---
 
