@@ -290,11 +290,30 @@ export default function LoginPage() {
       const savedProvider = localStorage.getItem('oauth_provider');
       if (!savedProvider) return;
 
+      // Check if redirect is stale (older than 5 minutes) - clear it
+      const redirectTimestamp = localStorage.getItem('oauth_timestamp');
+      if (redirectTimestamp) {
+        const elapsed = Date.now() - parseInt(redirectTimestamp, 10);
+        if (elapsed > 5 * 60 * 1000) {
+          console.log('[OAuth] Stale redirect detected, clearing...');
+          localStorage.removeItem('oauth_provider');
+          localStorage.removeItem('oauth_callback');
+          localStorage.removeItem('oauth_timestamp');
+          return;
+        }
+      }
+
       console.log('[OAuth] Checking for redirect result from', savedProvider);
       setLoggingIn(true);
 
       try {
-        const result = await (magic as any).oauth2.getRedirectResult();
+        // Add timeout for getRedirectResult - it can hang indefinitely
+        const resultPromise = (magic as any).oauth2.getRedirectResult();
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('OAuth timeout - please try again')), 10000)
+        );
+
+        const result = await Promise.race([resultPromise, timeoutPromise]);
         console.log('[OAuth] Redirect result:', result);
 
         if (result?.magic?.idToken) {
@@ -307,6 +326,7 @@ export default function LoginPage() {
             const savedCallback = localStorage.getItem('oauth_callback') || config.redirectUrlPostLogin;
             localStorage.removeItem('oauth_provider');
             localStorage.removeItem('oauth_callback');
+            localStorage.removeItem('oauth_timestamp');
 
             console.log('[OAuth] Login successful, redirecting to:', savedCallback);
             router.push(savedCallback);
@@ -315,14 +335,17 @@ export default function LoginPage() {
         }
 
         // No result or failed - clear state and show error
+        console.log('[OAuth] No valid result, clearing state');
         localStorage.removeItem('oauth_provider');
         localStorage.removeItem('oauth_callback');
+        localStorage.removeItem('oauth_timestamp');
         setError('OAuth login failed. Please try again.');
         setLoggingIn(false);
       } catch (error: any) {
         console.error('[OAuth] Redirect handling error:', error);
         localStorage.removeItem('oauth_provider');
         localStorage.removeItem('oauth_callback');
+        localStorage.removeItem('oauth_timestamp');
         setError(error.message || 'OAuth login failed. Please try again.');
         setLoggingIn(false);
       }
@@ -417,9 +440,10 @@ export default function LoginPage() {
 
       if (useRedirect) {
         // Desktop: Use redirect flow - Chrome blocks popups
-        // Store provider for callback handling
+        // Store provider and timestamp for callback handling
         localStorage.setItem('oauth_provider', provider);
         localStorage.setItem('oauth_callback', router.query.callbackUrl?.toString() || config.redirectUrlPostLogin);
+        localStorage.setItem('oauth_timestamp', Date.now().toString());
 
         await (magic as any).oauth2.loginWithRedirect({
           provider,
