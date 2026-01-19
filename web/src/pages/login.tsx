@@ -123,43 +123,82 @@ function getWalletProvider(walletType: 'metamask' | 'coinbase' | 'trust' | 'any'
   return ethereum;
 }
 
-// Detect wallet in-app browsers (MetaMask, Coinbase, Trust, etc.)
-// These have issues with Magic OAuth popups and email OTP
-function isWalletBrowser(): { isWallet: boolean; walletName: string; provider: any } {
-  if (typeof window === 'undefined') return { isWallet: false, walletName: '', provider: null };
+// Detect ALL available wallet providers (for multi-wallet login options)
+// Returns array of all detected wallets - SoundChain supports multiple wallet connections!
+interface DetectedWallet {
+  name: string;
+  type: 'metamask' | 'coinbase' | 'trust' | 'rainbow';
+  provider: any;
+  icon: string;
+}
+
+function detectAllWallets(): DetectedWallet[] {
+  if (typeof window === 'undefined') return [];
+
+  const wallets: DetectedWallet[] = [];
   const ua = navigator.userAgent.toLowerCase();
 
-  // Check user agent first (in-app browser detection)
-  if (ua.includes('metamask')) {
-    return { isWallet: true, walletName: 'MetaMask', provider: getWalletProvider('metamask') };
-  }
-  if (ua.includes('coinbase')) {
-    return { isWallet: true, walletName: 'Coinbase Wallet', provider: getWalletProvider('coinbase') };
-  }
-  if (ua.includes('trust')) {
-    return { isWallet: true, walletName: 'Trust Wallet', provider: getWalletProvider('trust') };
-  }
-  if (ua.includes('rainbow')) {
-    return { isWallet: true, walletName: 'Rainbow', provider: getWalletProvider('any') };
-  }
+  // In-app browser detection (mobile wallet browsers)
+  const isInAppBrowser = ua.includes('metamask') || ua.includes('coinbase') ||
+                         ua.includes('trust') || ua.includes('rainbow');
 
-  // Check provider flags (for desktop extensions)
+  // Check for MetaMask
   const metamaskProvider = getWalletProvider('metamask');
   if (metamaskProvider) {
-    return { isWallet: true, walletName: 'MetaMask', provider: metamaskProvider };
+    wallets.push({
+      name: 'MetaMask',
+      type: 'metamask',
+      provider: metamaskProvider,
+      icon: '🦊'
+    });
   }
 
+  // Check for Coinbase Wallet
   const coinbaseProvider = getWalletProvider('coinbase');
   if (coinbaseProvider) {
-    return { isWallet: true, walletName: 'Coinbase Wallet', provider: coinbaseProvider };
+    wallets.push({
+      name: 'Coinbase Wallet',
+      type: 'coinbase',
+      provider: coinbaseProvider,
+      icon: '🔵'
+    });
   }
 
+  // Check for Trust Wallet
   const trustProvider = getWalletProvider('trust');
   if (trustProvider) {
-    return { isWallet: true, walletName: 'Trust Wallet', provider: trustProvider };
+    wallets.push({
+      name: 'Trust Wallet',
+      type: 'trust',
+      provider: trustProvider,
+      icon: '💙'
+    });
   }
 
-  return { isWallet: false, walletName: '', provider: null };
+  // If in a specific wallet's in-app browser but no provider detected,
+  // add fallback for that wallet
+  if (wallets.length === 0 && isInAppBrowser) {
+    const ethereum = (window as any).ethereum;
+    if (ethereum) {
+      if (ua.includes('metamask')) {
+        wallets.push({ name: 'MetaMask', type: 'metamask', provider: ethereum, icon: '🦊' });
+      } else if (ua.includes('coinbase')) {
+        wallets.push({ name: 'Coinbase Wallet', type: 'coinbase', provider: ethereum, icon: '🔵' });
+      } else if (ua.includes('trust')) {
+        wallets.push({ name: 'Trust Wallet', type: 'trust', provider: ethereum, icon: '💙' });
+      }
+    }
+  }
+
+  return wallets;
+}
+
+// Legacy function for backward compatibility
+function isWalletBrowser(): { isWallet: boolean; walletName: string; provider: any } {
+  const wallets = detectAllWallets();
+  if (wallets.length === 0) return { isWallet: false, walletName: '', provider: null };
+  // Return first wallet for backward compat
+  return { isWallet: true, walletName: wallets[0].name, provider: wallets[0].provider };
 }
 
 export default function LoginPage() {
@@ -178,11 +217,13 @@ export default function LoginPage() {
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
   const [walletBrowserInfo, setWalletBrowserInfo] = useState<{ isWallet: boolean; walletName: string; provider: any }>({ isWallet: false, walletName: '', provider: null });
+  const [detectedWallets, setDetectedWallets] = useState<DetectedWallet[]>([]);
   const isProcessingCredential = useRef(false); // Prevent multiple OAuth processing
 
   // Wallet signature login state
   const [walletLoginStep, setWalletLoginStep] = useState<'idle' | 'connecting' | 'signing' | 'success' | 'error'>('idle');
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [activeWalletLogin, setActiveWalletLogin] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -190,10 +231,12 @@ export default function LoginPage() {
     if (isInAppBrowser()) {
       setInAppBrowserWarning(true);
     }
-    // Detect wallet browser
-    const walletInfo = isWalletBrowser();
-    if (walletInfo.isWallet) {
-      setWalletBrowserInfo(walletInfo);
+    // Detect ALL available wallets (SoundChain multi-wallet support!)
+    const wallets = detectAllWallets();
+    setDetectedWallets(wallets);
+    // Keep legacy walletBrowserInfo for backward compat
+    if (wallets.length > 0) {
+      setWalletBrowserInfo({ isWallet: true, walletName: wallets[0].name, provider: wallets[0].provider });
     }
   }, []);
 
@@ -340,9 +383,12 @@ export default function LoginPage() {
 
   // Wallet signature login - works natively in wallet browsers
   // Uses specific provider to avoid wallet collision (MetaMask vs Coinbase)
-  const handleWalletLogin = async () => {
-    // Use the specific provider from walletBrowserInfo to avoid collision
-    const provider = walletBrowserInfo.provider || (window as any).ethereum;
+  // Accepts optional wallet parameter for multi-wallet support
+  const handleWalletLogin = async (wallet?: DetectedWallet) => {
+    // Use specific wallet if provided, otherwise fall back to first detected or walletBrowserInfo
+    const targetWallet = wallet || detectedWallets[0];
+    const provider = targetWallet?.provider || walletBrowserInfo.provider || (window as any).ethereum;
+    const walletName = targetWallet?.name || walletBrowserInfo.walletName || 'wallet';
 
     if (!provider) {
       setError('No wallet detected. Please install MetaMask or another wallet.');
@@ -350,11 +396,12 @@ export default function LoginPage() {
     }
 
     setWalletLoginStep('connecting');
+    setActiveWalletLogin(walletName);
     setError(null);
 
     try {
       // Step 1: Request wallet connection using the SPECIFIC provider
-      console.log('[WalletLogin] Requesting accounts from', walletBrowserInfo.walletName || 'wallet', '...');
+      console.log('[WalletLogin] Requesting accounts from', walletName, '...');
       const accounts = await provider.request({ method: 'eth_requestAccounts' });
 
       if (!accounts || accounts.length === 0) {
@@ -767,29 +814,45 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
               </p>
             </div>
           )}
-          {walletBrowserInfo.isWallet && (
+          {/* Multi-Wallet Detection - SoundChain's unique feature! */}
+          {detectedWallets.length > 0 && (
             <div className="mb-4 rounded-lg bg-gradient-to-br from-purple-500/30 to-cyan-500/20 border border-purple-500 p-5 text-center">
               <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-2xl">🦊</span>
+                <span className="text-2xl">{detectedWallets.length > 1 ? '🔗' : detectedWallets[0].icon}</span>
                 <p className="text-lg font-bold text-white">
-                  {walletBrowserInfo.walletName} Detected
+                  {detectedWallets.length > 1
+                    ? `${detectedWallets.length} Wallets Detected`
+                    : `${detectedWallets[0].name} Detected`}
                 </p>
               </div>
 
               {walletLoginStep === 'idle' && (
                 <>
                   <p className="text-sm text-purple-200 mb-4">
-                    Sign in directly with your wallet - no email needed!
+                    {detectedWallets.length > 1
+                      ? 'Choose a wallet to sign in - no email needed!'
+                      : 'Sign in directly with your wallet - no email needed!'}
                   </p>
-                  <button
-                    onClick={handleWalletLogin}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-500/25"
-                  >
-                    🔐 Sign in with {walletBrowserInfo.walletName}
-                  </button>
+                  <div className="space-y-2">
+                    {detectedWallets.map((wallet) => (
+                      <button
+                        key={wallet.type}
+                        onClick={() => handleWalletLogin(wallet)}
+                        className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2"
+                      >
+                        <span className="text-xl">{wallet.icon}</span>
+                        Sign in with {wallet.name}
+                      </button>
+                    ))}
+                  </div>
                   <p className="text-xs text-gray-400 mt-3">
                     You'll sign a message to verify wallet ownership (no gas fees)
                   </p>
+                  {detectedWallets.length > 1 && (
+                    <p className="text-xs text-cyan-400 mt-2">
+                      SoundChain supports multiple wallets!
+                    </p>
+                  )}
                 </>
               )}
 
@@ -797,7 +860,7 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
                 <div className="py-4">
                   <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto mb-3"></div>
                   <p className="text-purple-300 font-medium">Connecting wallet...</p>
-                  <p className="text-xs text-gray-400 mt-1">Please approve in {walletBrowserInfo.walletName}</p>
+                  <p className="text-xs text-gray-400 mt-1">Please approve in {activeWalletLogin}</p>
                 </div>
               )}
 
@@ -809,7 +872,7 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
                     Connected: {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
                   </p>
                   <p className="text-xs text-purple-300 mt-2">
-                    Check {walletBrowserInfo.walletName} for the signature request
+                    Check {activeWalletLogin} for the signature request
                   </p>
                 </div>
               )}
@@ -828,7 +891,7 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
               {walletLoginStep === 'error' && (
                 <div className="py-2">
                   <button
-                    onClick={handleWalletLogin}
+                    onClick={() => handleWalletLogin()}
                     className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all"
                   >
                     🔄 Try Again
@@ -838,7 +901,7 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
 
               <div className="mt-4 pt-3 border-t border-purple-500/30">
                 <p className="text-xs text-gray-500">
-                  Or open soundchain.io in Safari/Chrome for email login
+                  Or use email/social login below
                 </p>
               </div>
             </div>
