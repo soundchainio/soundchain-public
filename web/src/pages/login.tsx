@@ -281,11 +281,67 @@ export default function LoginPage() {
     }
   }, [me, loadingMe, router]);
 
+  // Handle OAuth redirect callback (desktop flow)
+  useEffect(() => {
+    const handleOAuthRedirect = async () => {
+      if (!isClient || !magic || !(magic as any).oauth2) return;
+
+      // Check if we're returning from OAuth redirect
+      const savedProvider = localStorage.getItem('oauth_provider');
+      if (!savedProvider) return;
+
+      console.log('[OAuth] Checking for redirect result from', savedProvider);
+      setLoggingIn(true);
+
+      try {
+        const result = await (magic as any).oauth2.getRedirectResult();
+        console.log('[OAuth] Redirect result:', result);
+
+        if (result?.magic?.idToken) {
+          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            localStorage.setItem('didToken', result.magic.idToken);
+
+            // Clear OAuth state
+            const savedCallback = localStorage.getItem('oauth_callback') || config.redirectUrlPostLogin;
+            localStorage.removeItem('oauth_provider');
+            localStorage.removeItem('oauth_callback');
+
+            console.log('[OAuth] Login successful, redirecting to:', savedCallback);
+            router.push(savedCallback);
+            return;
+          }
+        }
+
+        // No result or failed - clear state and show error
+        localStorage.removeItem('oauth_provider');
+        localStorage.removeItem('oauth_callback');
+        setError('OAuth login failed. Please try again.');
+        setLoggingIn(false);
+      } catch (error: any) {
+        console.error('[OAuth] Redirect handling error:', error);
+        localStorage.removeItem('oauth_provider');
+        localStorage.removeItem('oauth_callback');
+        setError(error.message || 'OAuth login failed. Please try again.');
+        setLoggingIn(false);
+      }
+    };
+
+    handleOAuthRedirect();
+  }, [isClient, magic, login, router]);
+
   useEffect(() => {
     const validateToken = async () => {
       // Skip validation if user is already in login process or not client-side
       if (loggingIn || !isClient || !magic) {
         console.log('[validateToken] Skipping - login in progress or not ready');
+        return;
+      }
+
+      // Skip if we're handling OAuth redirect
+      if (localStorage.getItem('oauth_provider')) {
+        console.log('[validateToken] Skipping - OAuth redirect in progress');
         return;
       }
 
@@ -324,11 +380,14 @@ export default function LoginPage() {
     validateToken();
   }, [isClient, login, router, loggingIn, magic]);
 
+  // Detect if we're on mobile
+  const isMobile = () => {
+    if (typeof window === 'undefined') return false;
+    return /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
   const handleSocialLogin = async (provider: 'google' | 'discord' | 'twitch') => {
     console.log(`[OAuth2] handleSocialLogin called for ${provider}`);
-
-    // CRITICAL: Check prerequisites BEFORE opening popup
-    // Chrome blocks popups that aren't opened immediately on user click
 
     // Check for in-app browser (Google blocks OAuth in these)
     if (isInAppBrowser() && provider === 'google') {
@@ -347,47 +406,50 @@ export default function LoginPage() {
       return;
     }
 
-    // CRITICAL: Open popup IMMEDIATELY on user click - BEFORE any state updates
-    // Chrome's popup blocker considers async state updates as breaking the "direct user action" chain
-    console.log('[OAuth] Opening popup IMMEDIATELY for', provider, '...');
-
-    let popupPromise: Promise<any>;
-    try {
-      // Start the popup immediately - this must happen synchronously with the click
-      popupPromise = (magic as any).oauth2.loginWithPopup({
-        provider,
-        scope: ['openid'],
-      });
-    } catch (syncError: any) {
-      console.error('[OAuth] Sync error starting popup:', syncError);
-      setError('Failed to open login popup. Please try again.');
-      return;
-    }
-
-    // NOW we can safely update state - popup is already opening
     setLoggingIn(true);
     setError(null);
     localStorage.removeItem('didToken');
 
     try {
-      // Await the already-started popup
-      const result = await popupPromise;
-      console.log('[OAuth] Popup completed, result:', result);
+      // Use redirect for desktop (popup blocked by Chrome), popup for mobile
+      const useRedirect = !isMobile();
+      console.log(`[OAuth] Using ${useRedirect ? 'REDIRECT' : 'POPUP'} for ${provider} (mobile: ${isMobile()})`);
 
-      if (result?.magic?.idToken) {
-        const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
-        if (loginResult.data?.login.jwt) {
-          await setJwt(loginResult.data.login.jwt);
-          localStorage.setItem('didToken', result.magic.idToken);
-          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
-          router.push(redirectUrl);
-          return;
+      if (useRedirect) {
+        // Desktop: Use redirect flow - Chrome blocks popups
+        // Store provider for callback handling
+        localStorage.setItem('oauth_provider', provider);
+        localStorage.setItem('oauth_callback', router.query.callbackUrl?.toString() || config.redirectUrlPostLogin);
+
+        await (magic as any).oauth2.loginWithRedirect({
+          provider,
+          redirectURI: `${window.location.origin}/login`,
+          scope: ['openid'],
+        });
+        // Page will redirect, no further code runs
+        return;
+      } else {
+        // Mobile: Popup works fine
+        const result = await (magic as any).oauth2.loginWithPopup({
+          provider,
+          scope: ['openid'],
+        });
+        console.log('[OAuth] Popup completed, result:', result);
+
+        if (result?.magic?.idToken) {
+          const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            localStorage.setItem('didToken', result.magic.idToken);
+            const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+            router.push(redirectUrl);
+            return;
+          }
         }
+        throw new Error('OAuth login failed - no token received');
       }
-      throw new Error('OAuth login failed - no token received');
     } catch (error: any) {
-      console.error('[OAuth] Popup/login error:', error);
-      // Check for specific popup errors
+      console.error('[OAuth] Login error:', error);
       if (error.message?.includes('popup') || error.message?.includes('blocked')) {
         setError('Popup was blocked. Please allow popups for soundchain.io');
       } else if (error.message?.includes('closed')) {
