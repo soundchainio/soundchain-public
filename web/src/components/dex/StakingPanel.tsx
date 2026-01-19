@@ -208,8 +208,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   ]
 
   // User's stored wallet address from profile (fallback for Magic session issues)
-  // FIX: defaultWallet is ENUM, use magicWalletAddress for actual 0x address
-  const userWallet = me?.magicWalletAddress
+  // Check ALL OAuth wallet addresses, not just magicWalletAddress
+  // Order: magic > google > discord > twitch > email
+  const userWallet = me?.magicWalletAddress ||
+                     me?.googleWalletAddress ||
+                     me?.discordWalletAddress ||
+                     me?.twitchWalletAddress ||
+                     me?.emailWalletAddress
 
   // Load wallet - prefer connected wallets, fallback to user's stored wallet
   useEffect(() => {
