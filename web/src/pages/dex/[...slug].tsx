@@ -43,7 +43,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -65,8 +65,8 @@ import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
-  Database, X, ChevronDown, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
-  AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones
+  Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
+  AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign
 } from 'lucide-react'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
@@ -88,6 +88,8 @@ const ProfilePictureForm = dynamic(() => import('components/forms/profile/Profil
 const CoverPictureForm = dynamic(() => import('components/forms/profile/CoverPictureForm').then(mod => ({ default: mod.CoverPictureForm })), { ssr: false })
 const SocialLinksForm = dynamic(() => import('components/forms/profile/SocialLinksForm').then(mod => ({ default: mod.SocialLinksForm })), { ssr: false })
 const SecurityForm = dynamic(() => import('components/forms/profile/SecurityForm').then(mod => ({ default: mod.SecurityForm })), { ssr: false })
+const HandleForm = dynamic(() => import('components/forms/profile/HandleForm').then(mod => ({ default: mod.HandleForm })), { ssr: false })
+const DisplayNameForm = dynamic(() => import('components/forms/profile/DisplayNameForm').then(mod => ({ default: mod.DisplayNameForm })), { ssr: false })
 const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr: false })
 
 // Staking contract helper for fetching staked OGUN balance
@@ -763,6 +765,54 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [exploreTab, setExploreTab] = useState<'tracks' | 'users'>('users')
   const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
   const [usersViewMode, setUsersViewMode] = useState<'browse' | 'leaderboard'>('browse')
+
+  // Account Settings inline edit state
+  const [showAccountSettings, setShowAccountSettings] = useState(false)
+  const [editDisplayName, setEditDisplayName] = useState('')
+  const [editHandle, setEditHandle] = useState('')
+  const [accountSettingsSaving, setAccountSettingsSaving] = useState(false)
+  const [accountSettingsSuccess, setAccountSettingsSuccess] = useState<string | null>(null)
+
+  // Account Settings mutations
+  const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
+  const [updateHandle] = useUpdateHandleMutation()
+
+  // Initialize account settings edit values from user data
+  useEffect(() => {
+    if (userData?.me) {
+      setEditDisplayName(userData.me.profile?.displayName || '')
+      setEditHandle(userData.me.handle || '')
+    }
+  }, [userData?.me?.profile?.displayName, userData?.me?.handle])
+
+  // Save account settings handlers
+  const handleSaveDisplayName = async () => {
+    if (!editDisplayName.trim()) return
+    setAccountSettingsSaving(true)
+    setAccountSettingsSuccess(null)
+    try {
+      await updateDisplayName({ variables: { input: { displayName: editDisplayName.trim() } } })
+      setAccountSettingsSuccess('Display name saved!')
+      setTimeout(() => setAccountSettingsSuccess(null), 2000)
+    } catch (error) {
+      console.error('Failed to update display name:', error)
+    }
+    setAccountSettingsSaving(false)
+  }
+
+  const handleSaveHandle = async () => {
+    if (!editHandle.trim()) return
+    setAccountSettingsSaving(true)
+    setAccountSettingsSuccess(null)
+    try {
+      await updateHandle({ variables: { input: { handle: editHandle.trim() } } })
+      setAccountSettingsSuccess('Username saved!')
+      setTimeout(() => setAccountSettingsSuccess(null), 2000)
+    } catch (error) {
+      console.error('Failed to update handle:', error)
+    }
+    setAccountSettingsSaving(false)
+  }
 
   // Users grid scroll position restoration
   useEffect(() => {
@@ -2299,12 +2349,95 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 </Button>
                               </Link>
                             )}
-                            <Link href="/dex/settings">
-                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10" onClick={() => {setShowUserMenu(false); setSelectedView('settings')}}>
+                            {/* Account Settings Accordion */}
+                            <div className="space-y-1">
+                              <Button
+                                variant="ghost"
+                                className="w-full justify-start text-sm hover:bg-cyan-500/10"
+                                onClick={() => setShowAccountSettings(!showAccountSettings)}
+                              >
                                 <SettingsIcon className="w-4 h-4 mr-3" />
                                 Account Settings
+                                {showAccountSettings ? (
+                                  <ChevronUp className="w-4 h-4 ml-auto" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4 ml-auto" />
+                                )}
                               </Button>
-                            </Link>
+
+                              {/* Expandable Account Settings Fields */}
+                              {showAccountSettings && (
+                                <div className="pl-4 pr-2 py-3 space-y-4 bg-black/20 rounded-lg border border-cyan-500/20">
+                                  {/* Success Message */}
+                                  {accountSettingsSuccess && (
+                                    <div className="flex items-center gap-2 text-green-400 text-xs bg-green-500/10 px-3 py-2 rounded">
+                                      <Check className="w-3 h-3" />
+                                      {accountSettingsSuccess}
+                                    </div>
+                                  )}
+
+                                  {/* Display Name Field */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs text-gray-400 flex items-center gap-2">
+                                      <User className="w-3 h-3" />
+                                      Display Name
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={editDisplayName}
+                                        onChange={(e) => setEditDisplayName(e.target.value)}
+                                        className="flex-1 bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                                        placeholder="Your display name"
+                                      />
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="px-3 border-cyan-500/50 hover:bg-cyan-500/20"
+                                        onClick={handleSaveDisplayName}
+                                        disabled={accountSettingsSaving || !editDisplayName.trim()}
+                                      >
+                                        {accountSettingsSaving ? '...' : 'Save'}
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  {/* Handle/Username Field */}
+                                  <div className="space-y-2">
+                                    <label className="text-xs text-gray-400 flex items-center gap-2">
+                                      <AtSign className="w-3 h-3" />
+                                      Username
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <input
+                                        type="text"
+                                        value={editHandle}
+                                        onChange={(e) => setEditHandle(e.target.value)}
+                                        className="flex-1 bg-black/50 border border-cyan-500/30 rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500"
+                                        placeholder="Your username"
+                                      />
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="px-3 border-cyan-500/50 hover:bg-cyan-500/20"
+                                        onClick={handleSaveHandle}
+                                        disabled={accountSettingsSaving || !editHandle.trim()}
+                                      >
+                                        {accountSettingsSaving ? '...' : 'Save'}
+                                      </Button>
+                                    </div>
+                                    <p className="text-xs text-gray-500">soundchain.io/dex/users/{editHandle || 'username'}</p>
+                                  </div>
+
+                                  {/* Link to full settings page */}
+                                  <Link href="/dex/settings" onClick={() => setShowUserMenu(false)}>
+                                    <p className="text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer">
+                                      More settings →
+                                    </p>
+                                  </Link>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           {/* Logout */}
@@ -4576,6 +4709,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <SecurityForm afterSubmit={() => router.push('/dex/settings')} />
                 </Card>
               )}
+              {routeId === 'username' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Edit Username</h2>
+                  </div>
+                  <HandleForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Username" />
+                </Card>
+              )}
+              {routeId === 'display-name' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Edit Display Name</h2>
+                  </div>
+                  <DisplayNameForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Name" />
+                </Card>
+              )}
               {/* Main settings menu - show when no sub-route */}
               {!routeId && (
                 <Card className="retro-card p-6">
@@ -4602,6 +4753,32 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
 
                   <div className="space-y-3">
+                    <Link href="/dex/settings/display-name">
+                      <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-white text-sm">Display Name</h3>
+                            <p className="text-xs text-gray-400 truncate mt-1">
+                              {userData?.me?.profile?.displayName || 'Set your name...'}
+                            </p>
+                          </div>
+                          <span className="text-cyan-400 ml-2">→</span>
+                        </div>
+                      </Card>
+                    </Link>
+                    <Link href="/dex/settings/username">
+                      <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-white text-sm">Username</h3>
+                            <p className="text-xs text-gray-400 truncate mt-1">
+                              @{userData?.me?.handle || 'Set your username...'}
+                            </p>
+                          </div>
+                          <span className="text-cyan-400 ml-2">→</span>
+                        </div>
+                      </Card>
+                    </Link>
                     <Link href="/dex/settings/bio">
                       <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
                         <div className="flex items-center justify-between">
