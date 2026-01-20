@@ -5928,6 +5928,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </div>
         </div>
       )}
+
+      {/* DM Modal for profile messaging - must be inside component for state access */}
+      {viewingProfile && (
+        <DMModal
+          show={showDMModal}
+          onClose={() => setShowDMModal(false)}
+          recipientProfile={{
+            id: viewingProfile.id,
+            displayName: viewingProfile.displayName,
+            userHandle: viewingProfile.userHandle,
+            profilePicture: viewingProfile.profilePicture,
+          }}
+        />
+      )}
     </div>
     </>
   )
@@ -5969,20 +5983,6 @@ DEXDashboard.getLayout = (page: ReactElement) => {
                   <CommentModal />
                   {/* Audio Player Fullscreen Modal */}
                   <AudioPlayerModal />
-                  {/* DM Modal for profile messaging */}
-                  {viewingProfile && (
-                    <DMModal
-                      show={showDMModal}
-                      onClose={() => setShowDMModal(false)}
-                      recipientProfile={{
-                        id: viewingProfile.id,
-                        displayName: viewingProfile.displayName,
-                        userHandle: viewingProfile.userHandle,
-                        profilePicture: viewingProfile.profilePicture,
-                      }}
-                    />
-                  )}
-                  
                 </div>
               </TrackProvider>
             </AudioPlayerProvider>
