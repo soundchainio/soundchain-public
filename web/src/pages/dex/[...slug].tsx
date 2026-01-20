@@ -777,14 +777,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
   const [updateHandle] = useUpdateHandleMutation()
 
-  // Initialize account settings edit values from user data
-  useEffect(() => {
-    if (userData?.me) {
-      setEditDisplayName(userData.me.profile?.displayName || '')
-      setEditHandle(userData.me.handle || '')
-    }
-  }, [userData?.me?.profile?.displayName, userData?.me?.handle])
-
   // Save account settings handlers
   const handleSaveDisplayName = async () => {
     if (!editDisplayName.trim()) return
@@ -1038,6 +1030,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     ssr: false,
     fetchPolicy: 'cache-first', // Speed: use cache, don't hit network unless stale
   })
+
+  // Initialize account settings edit values from user data
+  useEffect(() => {
+    if (userData?.me) {
+      setEditDisplayName(userData.me.profile?.displayName || '')
+      setEditHandle(userData.me.handle || '')
+    }
+  }, [userData?.me?.profile?.displayName, userData?.me?.handle])
 
   // Fetch user's streaming rewards data for PiggyBank accordion modal
   const { data: myStreamingRewardsData, loading: myStreamingRewardsLoading } = useQuery(PROFILE_STREAMING_REWARDS_QUERY, {
