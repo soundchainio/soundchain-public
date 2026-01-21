@@ -1149,6 +1149,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network', // Fresher data for owned NFTs
   })
 
+  // Fetch logged-in user's CREATED tracks (by profileId) for Tracks Collection modal
+  const myProfileIdForTracks = userData?.me?.profile?.id
+  const { data: myCreatedTracksData, loading: myCreatedTracksLoading } = useGroupedTracksQuery({
+    variables: {
+      filter: myProfileIdForTracks ? { profileId: myProfileIdForTracks } : {},
+      sort: { field: SortTrackField.CreatedAt, order: SortOrder.Desc },
+      page: { first: 100 },
+    },
+    skip: !myProfileIdForTracks, // Fetch when logged in (for modal on any view)
+    fetchPolicy: 'cache-first',
+  })
+  const myCreatedTracks = myCreatedTracksData?.groupedTracks?.nodes || []
+
   // Track if we're loading more
   const [loadingMore, setLoadingMore] = useState(false)
 
@@ -1401,12 +1414,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-first', // Speed: instant from cache
   })
 
-  // Favorite Tracks Query - for Library view
+  // Favorite Tracks Query - for Library view AND Tracks Collection modal
   const { data: favoriteTracksData, loading: favoriteTracksLoading } = useFavoriteTracksQuery({
     variables: {
       page: { first: 50 }
     },
-    skip: selectedView !== 'library' || !userData?.me,
+    skip: !userData?.me, // Always fetch when logged in (needed for modal on any view)
     fetchPolicy: 'cache-and-network',
   })
 
@@ -1541,6 +1554,48 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       name: f.followedProfile.displayName || f.followedProfile.userHandle,
       username: `@${f.followedProfile.userHandle}`,
       userHandle: f.followedProfile.userHandle, // For navigation
+      avatar: f.followedProfile.profilePicture || undefined,
+      isVerified: f.followedProfile.verified || f.followedProfile.teamMember || false,
+    })) || []
+
+  // Query for LOGGED-IN user's followers (for modal on feed view)
+  const myProfileIdForFollowers = userData?.me?.profile?.id
+  const { data: myFollowersData } = useFollowersQuery({
+    variables: {
+      profileId: myProfileIdForFollowers || '',
+      page: { first: 100 },
+    },
+    skip: !myProfileIdForFollowers,
+    fetchPolicy: 'cache-first',
+  })
+  const { data: myFollowingData } = useFollowingQuery({
+    variables: {
+      profileId: myProfileIdForFollowers || '',
+      page: { first: 100 },
+    },
+    skip: !myProfileIdForFollowers,
+    fetchPolicy: 'cache-first',
+  })
+
+  // Transform logged-in user's followers/following for modals
+  const myFollowersList = myFollowersData?.followers?.nodes
+    ?.filter(f => f?.followerProfile)
+    ?.map(f => ({
+      id: f.followerProfile.id,
+      name: f.followerProfile.displayName || f.followerProfile.userHandle,
+      username: `@${f.followerProfile.userHandle}`,
+      userHandle: f.followerProfile.userHandle,
+      avatar: f.followerProfile.profilePicture || undefined,
+      isVerified: f.followerProfile.verified || f.followerProfile.teamMember || false,
+    })) || []
+
+  const myFollowingList = myFollowingData?.following?.nodes
+    ?.filter(f => f?.followedProfile)
+    ?.map(f => ({
+      id: f.followedProfile.id,
+      name: f.followedProfile.displayName || f.followedProfile.userHandle,
+      username: `@${f.followedProfile.userHandle}`,
+      userHandle: f.followedProfile.userHandle,
       avatar: f.followedProfile.profilePicture || undefined,
       isVerified: f.followedProfile.verified || f.followedProfile.teamMember || false,
     })) || []
@@ -1808,34 +1863,60 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       )}
 
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Full-screen Cover Photo Background */}
+      {/* Full-screen Cover Photo Background - supports both images and videos */}
       <div className="fixed inset-0 z-0">
         {selectedView === 'profile' && viewingProfile?.coverPicture ? (
-          /* Viewing another user's profile - show their cover */
+          /* Viewing another user's profile - show their cover (image or video) */
           <>
-            <img
-              src={viewingProfile.coverPicture}
-              alt="Cover"
-              className="w-full h-full object-cover"
-            />
+            {/\.(mp4|mov|webm|avi|mkv)$/i.test(viewingProfile.coverPicture) ? (
+              <video
+                src={viewingProfile.coverPicture}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={viewingProfile.coverPicture}
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
           </>
         ) : selectedView === 'profile' ? (
           /* Viewing profile but no cover - show gradient */
           <div className="w-full h-full bg-gradient-to-br from-purple-900 via-cyan-900 to-black" />
         ) : user?.coverPicture && !coverImageError ? (
-          /* Own profile / other views - show logged-in user's cover */
+          /* Own profile / other views - show logged-in user's cover (image or video) */
           <>
-            <img
-              src={user.coverPicture}
-              alt="Cover"
-              className="w-full h-full object-cover"
-              onError={() => {
-                console.error('❌ Cover image failed to load:', user.coverPicture)
-                setCoverImageError(true)
-              }}
-              onLoad={() => console.log('✅ Cover image loaded successfully')}
-            />
+            {/\.(mp4|mov|webm|avi|mkv)$/i.test(user.coverPicture) ? (
+              <video
+                src={user.coverPicture}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+                onError={() => {
+                  console.error('❌ Cover video failed to load:', user.coverPicture)
+                  setCoverImageError(true)
+                }}
+              />
+            ) : (
+              <img
+                src={user.coverPicture}
+                alt="Cover"
+                className="w-full h-full object-cover"
+                onError={() => {
+                  console.error('❌ Cover image failed to load:', user.coverPicture)
+                  setCoverImageError(true)
+                }}
+                onLoad={() => console.log('✅ Cover image loaded successfully')}
+              />
+            )}
             {/* Subtle gradient only at bottom for content readability - let the cover art shine! */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-900/60" />
           </>
@@ -2545,11 +2626,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       className="metadata-section p-4 text-center cursor-pointer hover:bg-cyan-500/10 transition-colors group"
                     >
                       <div className="retro-text text-xl group-hover:text-cyan-400 transition-colors">
-                        {userTracks.length + (favoriteTracksData?.favoriteTracks?.nodes?.length || 0)}
+                        {myCreatedTracks.length + (favoriteTracksData?.favoriteTracks?.nodes?.length || 0)}
                       </div>
                       <div className="metadata-label text-xs group-hover:text-cyan-300">Tracks</div>
                       <div className="text-[10px] text-gray-500 mt-1">
-                        {userTracks.length} owned · {favoriteTracksData?.favoriteTracks?.nodes?.length || 0} ❤️
+                        {myCreatedTracks.length} owned · {favoriteTracksData?.favoriteTracks?.nodes?.length || 0} ❤️
                       </div>
                     </button>
                     {/* Followers - Clickable to show follower grid */}
@@ -4792,9 +4873,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {/* Main settings menu - show when no sub-route */}
               {!routeId && (
                 <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <SettingsIcon className="w-8 h-8 text-gray-400" />
-                    <h2 className="retro-title text-xl">Settings</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <SettingsIcon className="w-8 h-8 text-gray-400" />
+                      <h2 className="retro-title text-xl">Settings</h2>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedView('feed')} className="w-8 h-8 p-0 text-gray-400 hover:text-white hover:bg-cyan-500/20">
+                      <X className="w-5 h-5" />
+                    </Button>
                   </div>
                   <p className="text-gray-400 mb-6">Manage your account, profile, and preferences.</p>
 
@@ -6069,227 +6155,229 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         </div>
       )}
 
-      {/* MY TRACKS COLLECTION MODAL - NFT Collection + Favorites */}
+      {/* MY TRACKS COLLECTION DROPDOWN PANEL - Like notifications bell */}
       {showTracksCollectionModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/95" onClick={() => setShowTracksCollectionModal(false)} />
-          <div className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border-2 border-cyan-500 bg-gradient-to-br from-neutral-900 via-cyan-900/10 to-neutral-900 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-cyan-900 to-purple-900 px-4 py-3 flex items-center justify-between border-b border-cyan-500">
-              <div className="flex items-center gap-2">
-                <Music className="w-5 h-5 text-cyan-400" />
-                <div>
-                  <span className="font-bold text-cyan-100 text-sm">My Tracks Collection</span>
-                  <p className="text-xs text-cyan-200/60">{userTracks.length} owned · {favoriteTracksData?.favoriteTracks?.nodes?.length || 0} favorited</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setShowTracksCollectionModal(false)} className="w-8 h-8 p-0 text-cyan-300 hover:text-white hover:bg-cyan-500/20">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-[100]" onClick={() => setShowTracksCollectionModal(false)}>
+          <div className="absolute inset-0 bg-black/50" />
+          <Card className="absolute left-4 right-4 top-20 sm:left-auto sm:right-4 sm:w-96 retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden border-2 border-cyan-500" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-3 border-b border-cyan-500/30 bg-gradient-to-r from-cyan-900/50 to-purple-900/50">
+              <h3 className="retro-title text-sm flex items-center gap-2">
+                <Music className="w-4 h-4 text-cyan-400" />
+                My Tracks
+                <span className="text-xs text-gray-400">({myCreatedTracks.length} · {favoriteTracksData?.favoriteTracks?.nodes?.length || 0} ❤️)</span>
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowTracksCollectionModal(false)} className="w-8 h-8 p-0">
+                <X className="w-4 h-4" />
               </Button>
             </div>
-
             {/* Tabs */}
             <div className="flex border-b border-cyan-500/30">
               <button
                 onClick={() => setTracksCollectionTab('owned')}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  tracksCollectionTab === 'owned'
-                    ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/10'
-                    : 'text-gray-400 hover:text-white'
+                className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                  tracksCollectionTab === 'owned' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/10' : 'text-gray-400 hover:text-white'
                 }`}
               >
-                🎵 NFT Collection ({userTracks.length})
+                🎵 My Tracks ({myCreatedTracks.length})
               </button>
               <button
                 onClick={() => setTracksCollectionTab('favorites')}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  tracksCollectionTab === 'favorites'
-                    ? 'text-pink-400 border-b-2 border-pink-400 bg-pink-500/10'
-                    : 'text-gray-400 hover:text-white'
+                className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
+                  tracksCollectionTab === 'favorites' ? 'text-pink-400 border-b-2 border-pink-400 bg-pink-500/10' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 ❤️ Favorites ({favoriteTracksData?.favoriteTracks?.nodes?.length || 0})
               </button>
             </div>
-
-            {/* Content */}
-            <div className="overflow-y-auto max-h-[calc(85vh-120px)] p-4">
+            <div className="overflow-y-auto max-h-[calc(70vh-100px)] custom-scrollbar">
               {tracksCollectionTab === 'owned' ? (
-                // NFT Collection Tab
-                userTracks.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <Music className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400">No NFTs in your collection yet</p>
-                    <p className="text-gray-500 text-sm mt-1">Mint or purchase tracks to build your collection</p>
-                    <Button className="mt-4 retro-button" onClick={() => { setShowTracksCollectionModal(false); setSelectedView('marketplace') }}>
+                myCreatedTracks.length === 0 ? (
+                  <div className="py-8 text-center text-gray-400">
+                    <Music className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No tracks yet</p>
+                    <Button className="mt-3 retro-button text-xs" onClick={() => { setShowTracksCollectionModal(false); setSelectedView('marketplace') }}>
                       Browse Marketplace
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {userTracks.map((track: any, index: number) => (
+                  <div className="p-2 space-y-1">
+                    {myCreatedTracks.map((track: any, index: number) => (
                       <div
                         key={track.id}
-                        className="relative group cursor-pointer rounded-xl overflow-hidden bg-gradient-to-br from-cyan-900/30 to-purple-900/30 border border-cyan-500/20 hover:border-cyan-400/60 transition-all hover:scale-[1.02]"
-                        onClick={() => {
-                          handlePlayTrack(track, index, userTracks)
-                          setShowTracksCollectionModal(false)
-                        }}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-cyan-500/10 cursor-pointer transition-colors group"
+                        onClick={() => { handlePlayTrack(track, index, myCreatedTracks); setShowTracksCollectionModal(false) }}
                       >
-                        <div className="aspect-square relative">
-                          <img
-                            src={track.artworkUrl ?? '/images/default-artwork.png'}
-                            alt={track.title ?? 'Track'}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Play className="w-10 h-10 text-white" fill="white" />
-                          </div>
-                          {/* NFT Badge */}
-                          <div className="absolute top-2 right-2 px-2 py-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full text-[10px] font-bold text-white shadow-lg">
-                            NFT
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 relative">
+                          <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt={track.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Play className="w-4 h-4 text-white" fill="white" />
                           </div>
                         </div>
-                        <div className="p-2">
-                          <p className="text-white text-xs font-medium truncate">{track.title}</p>
-                          <p className="text-gray-500 text-[10px] truncate">{track.artist}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{track.title}</p>
+                          <p className="text-gray-500 text-xs truncate">{track.artist || track.profile?.displayName}</p>
                         </div>
+                        <div className="px-1.5 py-0.5 bg-gradient-to-r from-cyan-500 to-purple-500 rounded text-[9px] font-bold text-white">NFT</div>
                       </div>
                     ))}
                   </div>
                 )
               ) : (
-                // Favorites Tab
                 favoriteTracksLoading ? (
-                  <div className="py-12 text-center text-gray-400">
-                    <div className="animate-spin w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-2" />
-                    Loading favorites...
+                  <div className="py-8 text-center text-gray-400">
+                    <div className="animate-spin w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-2" />
+                    <p className="text-sm">Loading...</p>
                   </div>
                 ) : (favoriteTracksData?.favoriteTracks?.nodes?.length ?? 0) === 0 ? (
-                  <div className="py-12 text-center">
-                    <Heart className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400">No favorited tracks yet</p>
-                    <p className="text-gray-500 text-sm mt-1">Heart tracks while listening to add them here</p>
-                    <Button className="mt-4 retro-button" onClick={() => { setShowTracksCollectionModal(false); setSelectedView('explore') }}>
-                      Discover Tracks
-                    </Button>
+                  <div className="py-8 text-center text-gray-400">
+                    <Heart className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No favorites yet</p>
+                    <p className="text-xs text-gray-500 mt-1">Heart tracks to add them here</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="p-2 space-y-1">
                     {favoriteTracksData?.favoriteTracks?.nodes?.map((track: any, index: number) => (
                       <div
                         key={track.id}
-                        className="relative group cursor-pointer rounded-xl overflow-hidden bg-gradient-to-br from-pink-900/30 to-purple-900/30 border border-pink-500/20 hover:border-pink-400/60 transition-all hover:scale-[1.02]"
-                        onClick={() => {
-                          handlePlayTrack(track, index, favoriteTracksData?.favoriteTracks?.nodes || [])
-                          setShowTracksCollectionModal(false)
-                        }}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-pink-500/10 cursor-pointer transition-colors group"
+                        onClick={() => { handlePlayTrack(track, index, favoriteTracksData?.favoriteTracks?.nodes || []); setShowTracksCollectionModal(false) }}
                       >
-                        <div className="aspect-square relative">
-                          <img
-                            src={track.artworkUrl ?? '/images/default-artwork.png'}
-                            alt={track.title ?? 'Track'}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Play className="w-10 h-10 text-white" fill="white" />
-                          </div>
-                          {/* Heart Badge */}
-                          <div className="absolute top-2 right-2 w-7 h-7 bg-pink-500 rounded-full flex items-center justify-center shadow-lg">
-                            <Heart className="w-4 h-4 text-white" fill="white" />
+                        <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 relative">
+                          <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt={track.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Play className="w-4 h-4 text-white" fill="white" />
                           </div>
                         </div>
-                        <div className="p-2">
-                          <p className="text-white text-xs font-medium truncate">{track.title}</p>
-                          <p className="text-gray-500 text-[10px] truncate">{track.artist}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{track.title}</p>
+                          <p className="text-gray-500 text-xs truncate">{track.artist || track.profile?.displayName}</p>
                         </div>
+                        <Heart className="w-4 h-4 text-pink-500" fill="currentColor" />
                       </div>
                     ))}
                   </div>
                 )
               )}
             </div>
-
-            {/* Footer - Play All */}
-            {((tracksCollectionTab === 'owned' && userTracks.length > 0) ||
+            {/* Play All Footer */}
+            {((tracksCollectionTab === 'owned' && myCreatedTracks.length > 0) ||
               (tracksCollectionTab === 'favorites' && (favoriteTracksData?.favoriteTracks?.nodes?.length ?? 0) > 0)) && (
-              <div className="border-t border-cyan-500/30 p-3 bg-black/50">
+              <div className="border-t border-cyan-500/30 p-2">
                 <Button
-                  className="w-full retro-button"
+                  className="w-full retro-button text-xs py-2"
                   onClick={() => {
-                    const tracks = tracksCollectionTab === 'owned' ? userTracks : (favoriteTracksData?.favoriteTracks?.nodes || [])
-                    if (tracks.length > 0) {
-                      handlePlayTrack(tracks[0], 0, tracks)
-                      setShowTracksCollectionModal(false)
-                    }
+                    const tracks = tracksCollectionTab === 'owned' ? myCreatedTracks : (favoriteTracksData?.favoriteTracks?.nodes || [])
+                    if (tracks.length > 0) { handlePlayTrack(tracks[0], 0, tracks); setShowTracksCollectionModal(false) }
                   }}
                 >
-                  <Play className="w-4 h-4 mr-2" fill="currentColor" />
-                  Play All ({tracksCollectionTab === 'owned' ? userTracks.length : favoriteTracksData?.favoriteTracks?.nodes?.length || 0} tracks)
+                  <Play className="w-3 h-3 mr-1" fill="currentColor" />
+                  Play All
                 </Button>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       )}
 
-      {/* FOLLOWERS MODAL */}
+      {/* FOLLOWERS DROPDOWN PANEL */}
       {showFollowersModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/95" onClick={() => setShowFollowersModal(false)} />
-          <div className="relative z-10 w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl border-2 border-purple-500 bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-purple-900 to-pink-900 px-4 py-3 flex items-center justify-between border-b border-purple-500">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-purple-400" />
-                <div>
-                  <span className="font-bold text-purple-100 text-sm">Followers</span>
-                  <p className="text-xs text-purple-200/60">{user?.followerCount?.toLocaleString() || 0} people follow you</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setShowFollowersModal(false)} className="w-8 h-8 p-0 text-purple-300 hover:text-white hover:bg-purple-500/20">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-[100]" onClick={() => setShowFollowersModal(false)}>
+          <div className="absolute inset-0 bg-black/50" />
+          <Card className="absolute left-4 right-4 top-20 sm:left-auto sm:right-4 sm:w-80 retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden border-2 border-purple-500" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-pink-900/50">
+              <h3 className="retro-title text-sm flex items-center gap-2">
+                <Users className="w-4 h-4 text-purple-400" />
+                Followers
+                <span className="text-xs text-gray-400">({myFollowersList.length})</span>
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowFollowersModal(false)} className="w-8 h-8 p-0">
+                <X className="w-4 h-4" />
               </Button>
             </div>
-            {/* Content */}
-            <div className="overflow-y-auto max-h-[calc(85vh-60px)] p-4">
-              <div className="text-center py-12 text-gray-400">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Followers list coming soon</p>
-                <p className="text-sm text-gray-500 mt-1">We're building this feature</p>
-              </div>
+            <div className="overflow-y-auto max-h-[calc(70vh-60px)] custom-scrollbar">
+              {myFollowersList.length === 0 ? (
+                <div className="py-8 text-center text-gray-400">
+                  <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No followers yet</p>
+                  <p className="text-xs text-gray-500 mt-1">Share your profile to grow your audience</p>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {myFollowersList.map((follower: any) => (
+                    <Link
+                      key={follower.id}
+                      href={`/dex/users/${follower.userHandle}`}
+                      onClick={() => setShowFollowersModal(false)}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-purple-500/10 transition-colors"
+                    >
+                      <Avatar className="w-10 h-10">
+                        {follower.avatar ? <AvatarImage src={follower.avatar} /> : null}
+                        <AvatarFallback className="bg-purple-500/20 text-purple-300">{follower.name?.charAt(0) || 'U'}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium truncate flex items-center gap-1">
+                          {follower.name}
+                          {follower.isVerified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
+                        </p>
+                        <p className="text-gray-500 text-xs truncate">{follower.username}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
-      {/* FOLLOWING MODAL */}
+      {/* FOLLOWING DROPDOWN PANEL */}
       {showFollowingModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/95" onClick={() => setShowFollowingModal(false)} />
-          <div className="relative z-10 w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl border-2 border-green-500 bg-gradient-to-br from-neutral-900 via-green-900/10 to-neutral-900 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-green-900 to-teal-900 px-4 py-3 flex items-center justify-between border-b border-green-500">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-green-400" />
-                <div>
-                  <span className="font-bold text-green-100 text-sm">Following</span>
-                  <p className="text-xs text-green-200/60">You follow {user?.followingCount?.toLocaleString() || 0} people</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setShowFollowingModal(false)} className="w-8 h-8 p-0 text-green-300 hover:text-white hover:bg-green-500/20">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-[100]" onClick={() => setShowFollowingModal(false)}>
+          <div className="absolute inset-0 bg-black/50" />
+          <Card className="absolute left-4 right-4 top-20 sm:left-auto sm:right-4 sm:w-80 retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden border-2 border-green-500" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-teal-900/50">
+              <h3 className="retro-title text-sm flex items-center gap-2">
+                <Users className="w-4 h-4 text-green-400" />
+                Following
+                <span className="text-xs text-gray-400">({myFollowingList.length})</span>
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowFollowingModal(false)} className="w-8 h-8 p-0">
+                <X className="w-4 h-4" />
               </Button>
             </div>
-            {/* Content */}
-            <div className="overflow-y-auto max-h-[calc(85vh-60px)] p-4">
-              <div className="text-center py-12 text-gray-400">
-                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Following list coming soon</p>
-                <p className="text-sm text-gray-500 mt-1">We're building this feature</p>
-              </div>
+            <div className="overflow-y-auto max-h-[calc(70vh-60px)] custom-scrollbar">
+              {myFollowingList.length === 0 ? (
+                <div className="py-8 text-center text-gray-400">
+                  <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Not following anyone yet</p>
+                  <p className="text-xs text-gray-500 mt-1">Discover artists to follow</p>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {myFollowingList.map((following: any) => (
+                    <Link
+                      key={following.id}
+                      href={`/dex/users/${following.userHandle}`}
+                      onClick={() => setShowFollowingModal(false)}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-green-500/10 transition-colors"
+                    >
+                      <Avatar className="w-10 h-10">
+                        {following.avatar ? <AvatarImage src={following.avatar} /> : null}
+                        <AvatarFallback className="bg-green-500/20 text-green-300">{following.name?.charAt(0) || 'U'}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium truncate flex items-center gap-1">
+                          {following.name}
+                          {following.isVerified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
+                        </p>
+                        <p className="text-gray-500 text-xs truncate">{following.username}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
