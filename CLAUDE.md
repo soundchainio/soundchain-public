@@ -209,6 +209,22 @@ Resetting to earlier commits (like c186dd436) will break desktop login!
 **Don't Do This:** Leave blockchain contract calls without error handling
 **File:** `web/src/hooks/useMetaMask.ts`
 
+### 17. DM Causes Blank White Page (Jan 21, 2026)
+**Symptom:** Sending a DM in the messages view causes page to refresh to blank white screen
+**Root Cause:** Messages view used `chat.id` (the chat's ID) instead of `chat.profile.id` (recipient's profile ID)
+- `sendMessage` mutation expects `toId` to be a profile ID
+- `loadChatHistory` also expects `profileId`
+- Using chat ID caused API error which crashed the page
+**Fix:**
+- Change `setSelectedChatId(chat.id)` to `setSelectedChatId(chat.profile?.id || chat.id)`
+- Add `onError` handler to `useSendMessageMutation` to show toast instead of crashing
+**Don't Do This:** Confuse chat IDs with profile IDs - they are different!
+**Key Insight:** In the `Chat` GraphQL type:
+- `chat.id` = the conversation's unique ID
+- `chat.profile.id` = the other person's profile ID (what you need for toId)
+**File:** `web/src/pages/dex/[...slug].tsx`
+**Commit:** `81018584f`
+
 ---
 
 ## ARCHITECTURE PATTERNS
