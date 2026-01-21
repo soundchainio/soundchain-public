@@ -6369,7 +6369,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && quickDMMessage.trim() && !quickDMSending) {
                                   setQuickDMSending(true)
-                                  sendMessage({ variables: { recipientProfileId: follower.id, content: quickDMMessage.trim() } })
+                                  sendMessage({ variables: { input: { toId: follower.id, message: quickDMMessage.trim() } } })
                                     .then(() => {
                                       setQuickDMMessage('')
                                       setQuickDMUserId(null)
@@ -6389,7 +6389,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               onClick={() => {
                                 if (quickDMMessage.trim() && !quickDMSending) {
                                   setQuickDMSending(true)
-                                  sendMessage({ variables: { recipientProfileId: follower.id, content: quickDMMessage.trim() } })
+                                  sendMessage({ variables: { input: { toId: follower.id, message: quickDMMessage.trim() } } })
                                     .then(() => {
                                       setQuickDMMessage('')
                                       setQuickDMUserId(null)
@@ -6514,7 +6514,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter' && quickDMMessage.trim() && !quickDMSending) {
                                   setQuickDMSending(true)
-                                  sendMessage({ variables: { recipientProfileId: following.id, content: quickDMMessage.trim() } })
+                                  sendMessage({ variables: { input: { toId: following.id, message: quickDMMessage.trim() } } })
                                     .then(() => {
                                       setQuickDMMessage('')
                                       setQuickDMUserId(null)
@@ -6534,7 +6534,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               onClick={() => {
                                 if (quickDMMessage.trim() && !quickDMSending) {
                                   setQuickDMSending(true)
-                                  sendMessage({ variables: { recipientProfileId: following.id, content: quickDMMessage.trim() } })
+                                  sendMessage({ variables: { input: { toId: following.id, message: quickDMMessage.trim() } } })
                                     .then(() => {
                                       setQuickDMMessage('')
                                       setQuickDMUserId(null)
