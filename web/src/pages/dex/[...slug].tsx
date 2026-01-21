@@ -66,8 +66,10 @@ import {
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
-  AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign
+  AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
+  Radio, MapPin, Download, Smartphone
 } from 'lucide-react'
+import { ConcertChat } from 'components/dex/ConcertChat'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
@@ -739,12 +741,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       case 'feedback': return 'feedback'
       case 'admin': return 'admin'
       case 'users': return routeId ? 'profile' : 'users' // /dex/users/handle -> profile view
+      case 'nearby': return 'nearby' // /dex/nearby -> Location-based Bitchat integration
       case 'home': return 'feed' // Default /dex to feed
       default: return 'feed' // Feed is the default landing view
     }
   }
 
-  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'staking' | 'profile' | 'track' | 'post' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin' | 'announcements'>(getInitialView())
+  const [selectedView, setSelectedView] = useState<'marketplace' | 'feed' | 'dashboard' | 'explore' | 'library' | 'playlist' | 'staking' | 'profile' | 'track' | 'post' | 'wallet' | 'settings' | 'messages' | 'notifications' | 'users' | 'feedback' | 'admin' | 'announcements' | 'nearby'>(getInitialView())
   const [selectedPurchaseType, setSelectedPurchaseType] = useState<'tracks' | 'nft' | 'token' | 'bundle'>('tracks')
   const [isWalletConnected, setIsWalletConnected] = useState(false)
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null)
@@ -873,7 +876,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   useEffect(() => {
     if (!router.isReady) return
     const newView = getInitialView()
-    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'staking', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users', 'announcements'].includes(newView)) {
+    if (newView !== selectedView && ['explore', 'library', 'profile', 'track', 'playlist', 'staking', 'marketplace', 'feed', 'dashboard', 'wallet', 'settings', 'messages', 'notifications', 'users', 'announcements', 'nearby'].includes(newView)) {
       console.log('🔄 Syncing view:', { from: selectedView, to: newView, routeType, routeId, isReady: router.isReady })
       setSelectedView(newView as any)
     }
@@ -2335,9 +2338,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   )}
                 </Button>
 
-                {/* Notifications Dropdown - Right-aligned, proper width for mobile */}
+                {/* Notifications Dropdown - Mobile-optimized positioning */}
                 {showNotifications && (
-                  <Card className="absolute right-0 top-12 w-80 sm:w-96 retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden">
+                  <Card className="fixed sm:absolute right-2 sm:right-0 left-2 sm:left-auto top-16 sm:top-12 sm:w-96 retro-card z-50 shadow-2xl max-h-[70vh] overflow-hidden">
                     <div className="flex items-center justify-between p-3 border-b border-cyan-500/30">
                       <h3 className="retro-title text-sm flex items-center gap-2">
                         <Bell className="w-4 h-4 text-yellow-400" />
@@ -2413,6 +2416,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 {user.unreadMessageCount > 0 && (
                                   <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 min-w-[20px] justify-center">{user.unreadMessageCount}</Badge>
                                 )}
+                              </Button>
+                            </Link>
+                            <Link href="/dex/nearby">
+                              <Button variant="ghost" className="w-full justify-start text-sm hover:bg-cyan-500/10 relative" onClick={() => { setShowUserMenu(false); setSelectedView('nearby'); }}>
+                                <Radio className="w-4 h-4 mr-3 text-green-400" />
+                                <span className="flex-1 text-left">Nearby</span>
+                                <Badge className="bg-green-500/20 text-green-400 text-[10px] px-1.5">Bitchat</Badge>
                               </Button>
                             </Link>
                           </div>
@@ -5230,6 +5240,25 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <p className="text-xs text-gray-500">When you get likes, follows, or sales you'll see them here</p>
                   </div>
                 )}
+              </Card>
+            </div>
+          )}
+
+          {/* Nearby View - Location-based Bitchat Integration */}
+          {selectedView === 'nearby' && (
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Radio className="w-8 h-8 text-green-400" />
+                    <div>
+                      <h2 className="retro-title text-xl">Nearby</h2>
+                      <p className="text-xs text-gray-500">Chat with nearby users via Bitchat & Nostr</p>
+                    </div>
+                  </div>
+                  <Badge className="bg-green-500/20 text-green-400">Live</Badge>
+                </div>
+                <ConcertChat showBitchatPromo={true} />
               </Card>
             </div>
           )}

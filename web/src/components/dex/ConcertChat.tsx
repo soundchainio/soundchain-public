@@ -9,6 +9,7 @@
  * - Geohash-based channels (same as Bitchat)
  * - "Open in Bitchat" deep link for offline mesh support
  * - Auto-detect user location for nearby chat
+ * - Works at concerts, festivals, events, or anywhere!
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
@@ -39,7 +40,7 @@ import {
   type NostrMessage,
   type NostrIdentity,
   type VenueLocation,
-} from '@/lib/nostr/concertChat'
+} from 'lib/nostr/concertChat'
 
 interface ConcertChatProps {
   /** Optional fixed venue location. If not provided, uses user's current location */
@@ -59,6 +60,22 @@ interface ChatMessage extends NostrMessage {
   displayName: string
 }
 
+// Helper to detect mobile iOS devices
+const useIsMobileIOS = () => {
+  const [isMobileIOS, setIsMobileIOS] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera
+    const isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
+    setIsMobileIOS(isIOS)
+    setIsMobile(isMobileDevice)
+  }, [])
+
+  return { isMobileIOS, isMobile }
+}
+
 export function ConcertChat({
   venue,
   precision = GEOHASH_PRECISION.STAGE,
@@ -76,6 +93,9 @@ export function ConcertChat({
   const [userCount, setUserCount] = useState(0)
   const [showBitchatInfo, setShowBitchatInfo] = useState(false)
   const [locationName, setLocationName] = useState<string>('')
+  const [bitchatAppChecked, setBitchatAppChecked] = useState(false)
+
+  const { isMobileIOS, isMobile } = useIsMobileIOS()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const subscriptionRef = useRef<{ close: () => void } | null>(null)
@@ -203,7 +223,7 @@ export function ConcertChat({
     return (
       <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
         <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mb-4" />
-        <p className="text-gray-400 text-sm">Connecting to location chat...</p>
+        <p className="text-gray-400 text-sm">Finding nearby users...</p>
       </div>
     )
   }
@@ -254,8 +274,50 @@ export function ConcertChat({
         </div>
       </div>
 
-      {/* Bitchat Promo Banner */}
-      {showBitchatPromo && (
+      {/* Mobile iOS Bitchat Banner - Prominent */}
+      {showBitchatPromo && isMobileIOS && currentGeohash && (
+        <div className="bg-gradient-to-r from-purple-600 to-cyan-600 p-4 border-b border-cyan-400">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-black/20 flex items-center justify-center">
+              <span className="text-2xl">📡</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-white text-lg">Open in Bitchat</h3>
+              <p className="text-cyan-100 text-xs">Jack Dorsey's mesh network app</p>
+            </div>
+          </div>
+
+          <p className="text-white/90 text-sm mb-4">
+            Continue chatting with nearby users in Bitchat for offline Bluetooth mesh support!
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={openInBitchat}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white text-purple-700 font-bold rounded-xl hover:bg-gray-100 transition-colors"
+            >
+              <ExternalLink className="w-5 h-5" />
+              Open in Bitchat
+            </button>
+
+            <a
+              href={getBitchatAppStoreLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center px-4 py-3 bg-black/30 text-white rounded-xl hover:bg-black/40 transition-colors"
+            >
+              <Download className="w-5 h-5" />
+            </a>
+          </div>
+
+          <p className="text-xs text-white/60 mt-3 text-center">
+            Messages sync between SoundChain and Bitchat via Nostr protocol
+          </p>
+        </div>
+      )}
+
+      {/* Desktop/Android Bitchat Promo Banner - Collapsible */}
+      {showBitchatPromo && !isMobileIOS && (
         <div className="bg-gradient-to-r from-purple-900/50 to-cyan-900/50 border-b border-neutral-700">
           <button
             onClick={() => setShowBitchatInfo(!showBitchatInfo)}
@@ -283,13 +345,15 @@ export function ConcertChat({
               </p>
 
               <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={openInBitchat}
-                  className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Open in Bitchat
-                </button>
+                {isMobile && (
+                  <button
+                    onClick={openInBitchat}
+                    className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Open in Bitchat
+                  </button>
+                )}
 
                 <a
                   href={getBitchatAppStoreLink()}
@@ -298,13 +362,14 @@ export function ConcertChat({
                   className="flex items-center gap-2 px-3 py-2 bg-neutral-700 hover:bg-neutral-600 text-white text-sm rounded-lg transition-colors"
                 >
                   <Download className="w-4 h-4" />
-                  Get Bitchat App
+                  {isMobile ? 'Get Bitchat' : 'Get Bitchat (iOS)'}
                 </a>
               </div>
 
               <p className="text-xs text-gray-400">
-                Bitchat enables offline Bluetooth mesh networking at concerts,
-                festivals, and events. Even without internet!
+                {isMobile
+                  ? 'Bitchat enables offline Bluetooth mesh networking - chat with nearby users even without internet!'
+                  : 'Bitchat (iOS) enables offline Bluetooth mesh networking to chat with nearby users.'}
               </p>
             </div>
           )}
@@ -316,8 +381,8 @@ export function ConcertChat({
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500 text-sm">
             <MessageCircle className="w-8 h-8 mb-2 opacity-50" />
-            <p>No messages yet</p>
-            <p className="text-xs mt-1">Be the first to say hello!</p>
+            <p>No nearby users yet</p>
+            <p className="text-xs mt-1">Be the first to say hello to your area!</p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -366,7 +431,7 @@ export function ConcertChat({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Message this location..."
+            placeholder="Message nearby users..."
             className="flex-1 bg-neutral-700 text-white px-4 py-3 rounded-full placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500"
             disabled={!isConnected}
           />
@@ -380,7 +445,7 @@ export function ConcertChat({
         </div>
 
         <p className="text-xs text-gray-500 mt-2 text-center">
-          Messages visible to everyone at this location via Nostr
+          Messages visible to nearby users via Nostr &amp; Bitchat
         </p>
       </div>
     </div>
