@@ -44,3 +44,15 @@ export {
   type PrivateDMInput,
   type DecryptedDM,
 } from './privateDM'
+
+// Bridge Client (Web ↔ Native Bluetooth Mesh)
+export {
+  BridgeClient,
+  BridgeMessageType,
+  isBridgeAvailable,
+  type BridgeMessage,
+  type NearbyDevice,
+  type MeshStatus,
+  type ConnectionMode,
+  type BridgeClientConfig,
+} from './bridgeClient'
