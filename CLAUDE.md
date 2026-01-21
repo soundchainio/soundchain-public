@@ -1,6 +1,6 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 19, 2026
+**Last Updated:** January 21, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
@@ -184,6 +184,30 @@ const getUserWalletAddress = () => {
 // In StakingPanel.tsx
 const web3Instance = web3 || new Web3('https://polygon-rpc.com')
 ```
+
+### 15. Desktop Login OAuth Popup Blocked (Jan 20, 2026)
+**Symptom:** Desktop browsers show "Logging in..." but Google OAuth popup never opens. Mobile works fine.
+**Root Cause:** Cross-Origin headers in `next.config.js` were blocking Magic SDK's OAuth popup:
+- `Cross-Origin-Opener-Policy: same-origin-allow-popups`
+- `Cross-Origin-Embedder-Policy: credentialless`
+
+Desktop browsers enforce these policies more strictly than mobile browsers.
+**Fix:** Remove both COOP and COEP headers from `next.config.js`
+**Don't Do This:**
+- Don't add Cross-Origin-Opener-Policy headers without testing OAuth
+- Don't add Cross-Origin-Embedder-Policy headers - they break Magic SDK popups
+**File:** `web/next.config.js`
+**CRITICAL:** Never reset to a commit before `a183f7966` - that's when these headers were removed.
+Resetting to earlier commits (like c186dd436) will break desktop login!
+
+### 16. MetaMask Contract Calls Crash Login Page (Jan 21, 2026)
+**Symptom:** Login page shows unhandled promise rejection errors, page becomes unresponsive
+**Root Cause:** `useMetaMask.ts` had no error handling on contract calls:
+- `getOGUNBalance()` fails when on wrong chain or contract unavailable
+- Promise chains for balance, chainId fetching were unhandled
+**Fix:** Add try-catch and .catch() to all MetaMask promise chains in `useMetaMask.ts`
+**Don't Do This:** Leave blockchain contract calls without error handling
+**File:** `web/src/hooks/useMetaMask.ts`
 
 ---
 
