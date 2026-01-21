@@ -1401,6 +1401,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       if (selectedChatId) {
         loadChatHistory({ variables: { profileId: selectedChatId } })
       }
+    },
+    onError: (error) => {
+      console.error('Failed to send message:', error)
+      toast.error('Failed to send message. Please try again.')
     }
   })
 
@@ -5021,8 +5025,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {chatsData?.chats?.nodes?.map((chat: any) => (
                         <div
                           key={chat.id}
-                          onClick={() => setSelectedChatId(chat.id)}
-                          className={`p-4 cursor-pointer hover:bg-cyan-500/5 transition-colors ${selectedChatId === chat.id ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
+                          onClick={() => setSelectedChatId(chat.profile?.id || chat.id)}
+                          className={`p-4 cursor-pointer hover:bg-cyan-500/5 transition-colors ${selectedChatId === (chat.profile?.id || chat.id) ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
                         >
                           <div className="flex items-center gap-3">
                             <Avatar className="w-12 h-12">
