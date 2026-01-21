@@ -98,14 +98,8 @@ module.exports = {
             key: 'Permissions-Policy',
             value: 'publickey-credentials-get=*, publickey-credentials-create=*, identity-credentials-get=*',
           },
-          {
-            key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin-allow-popups',
-          },
-          {
-            key: 'Cross-Origin-Embedder-Policy',
-            value: 'credentialless',
-          },
+          // NOTE: Removed Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy
+          // These headers block Magic SDK OAuth popups on desktop browsers (Bug #15)
           {
             key: 'Cache-Control',
             value: 'no-store, must-revalidate',

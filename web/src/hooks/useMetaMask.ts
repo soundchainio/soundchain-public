@@ -56,6 +56,7 @@ export const useMetaMask = () => {
         window.ethereum
           .request({ method: 'eth_requestAccounts' })
           .then(([newAccount]: string[]) => onSetAccount(newAccount))
+          .catch(() => setLoadingAccount(false))
       }
       window.ethereum.on('accountsChanged', ([newAccount]: string[]) => onSetAccount(newAccount))
       window.ethereum.on('chainChanged', () => window.location.reload())
@@ -68,12 +69,12 @@ export const useMetaMask = () => {
         onboarding?.current?.stopOnboarding()
         web3.eth.getBalance(account).then(balance => {
           setBalance(web3.utils.fromWei(balance, 'ether'))
-        })
-        getOGUNBalance(web3)
+        }).catch(() => {})
+        getOGUNBalance(web3).catch(() => {})
         window.ethereum.request({ method: 'eth_chainId' }).then((chainId: string) => {
           setChainId(parseInt(chainId, 16))
           setLoadingChain(false)
-        })
+        }).catch(() => {})
       } else {
         setAccount(undefined)
         setBalance(undefined)
@@ -83,12 +84,16 @@ export const useMetaMask = () => {
   }, [account, web3])
 
   const getOGUNBalance = async (web3: Web3) => {
-    const currentBalance = await tokenContract(web3).methods.balanceOf(account).call() as string | undefined
-    const validBalance = currentBalance !== undefined && (typeof currentBalance === 'string' || typeof currentBalance === 'number')
-      ? currentBalance.toString()
-      : '0'
-    const formattedBalance = web3.utils.fromWei(validBalance, 'ether')
-    setOGUNBalance(formattedBalance)
+    try {
+      const currentBalance = await tokenContract(web3).methods.balanceOf(account).call() as string | undefined
+      const validBalance = currentBalance !== undefined && (typeof currentBalance === 'string' || typeof currentBalance === 'number')
+        ? currentBalance.toString()
+        : '0'
+      const formattedBalance = web3.utils.fromWei(validBalance, 'ether')
+      setOGUNBalance(formattedBalance)
+    } catch {
+      // Silent fail - wrong chain or contract unavailable
+    }
   }
 
   const refetchBalance = async () => {
@@ -137,6 +142,7 @@ export const useMetaMask = () => {
       window.ethereum
         .request({ method: 'eth_requestAccounts' })
         .then(([newAccount]: string[]) => onSetAccount(newAccount))
+        .catch(() => {})
     } else {
       onboarding?.current?.startOnboarding()
     }
