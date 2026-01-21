@@ -761,6 +761,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showWinWinStatsModal, setShowWinWinStatsModal] = useState(false)
   const [showDMModal, setShowDMModal] = useState(false)
   const [showVibesModal, setShowVibesModal] = useState(false)
+  const [showNearbyModal, setShowNearbyModal] = useState(false)
   const [showTracksCollectionModal, setShowTracksCollectionModal] = useState(false)
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showFollowingModal, setShowFollowingModal] = useState(false)
@@ -1961,14 +1962,50 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </span>
               </Link>
 
-              {/* Mobile WIN-WIN and Mint+ buttons - visible on small screens */}
+              {/* Mobile WIN-WIN, Vibes, and Nearby buttons - visible on small screens */}
               <div className="flex lg:hidden items-center space-x-1">
+                {/* Nearby (Bitchat) - Mobile */}
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setShowNearbyModal(!showNearbyModal); setShowWinWinStatsModal(false); setShowVibesModal(false); }}
+                    className="hover:bg-green-500/10 px-2"
+                    title="Nearby - Bitchat"
+                  >
+                    <Radio className="w-5 h-5 text-green-400" />
+                  </Button>
+
+                  {/* Nearby Dropdown - Mobile */}
+                  {showNearbyModal && (
+                    <Card className="fixed left-2 right-2 top-16 z-50 shadow-2xl border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900 max-h-[70vh] overflow-hidden">
+                      <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-cyan-900/50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
+                            <Radio className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400">Nearby</h3>
+                            <p className="text-[10px] text-green-300/80">Chat via Bitchat</p>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => setShowNearbyModal(false)} className="w-6 h-6 p-0 hover:bg-green-500/20">
+                          <X className="w-4 h-4 text-green-400" />
+                        </Button>
+                      </div>
+                      <div className="max-h-[calc(70vh-60px)] overflow-y-auto">
+                        <ConcertChat showBitchatPromo={true} compact={true} />
+                      </div>
+                    </Card>
+                  )}
+                </div>
+
                 {/* PiggyBank with dropdown accordion */}
                 <div className="relative">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setShowWinWinStatsModal(!showWinWinStatsModal)}
+                    onClick={() => { setShowWinWinStatsModal(!showWinWinStatsModal); setShowNearbyModal(false); setShowVibesModal(false); }}
                     className="hover:bg-pink-500/10 px-2"
                     title="WIN-WIN Streaming Rewards"
                   >
@@ -2151,7 +2188,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setShowVibesModal(!showVibesModal)}
+                    onClick={() => { setShowVibesModal(!showVibesModal); setShowNearbyModal(false); setShowWinWinStatsModal(false); }}
                     className="hover:bg-purple-500/10 px-2"
                     title="Follow Us"
                   >
@@ -2321,6 +2358,275 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <Server className="w-5 h-5 text-purple-400" />
                 <span className="hidden xl:inline ml-2 text-purple-400">Backend</span>
               </Button>
+
+              {/* Nearby (Bitchat) - Desktop accordion modal */}
+              <div className="relative hidden sm:block">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setShowNearbyModal(!showNearbyModal); setShowNotifications(false); setShowWinWinStatsModal(false); setShowVibesModal(false); setShowUserMenu(false); }}
+                  className="hover:bg-green-500/10"
+                  title="Nearby - Bitchat"
+                >
+                  <Radio className="w-5 h-5 text-green-400" />
+                </Button>
+
+                {/* Nearby Dropdown Modal */}
+                {showNearbyModal && (
+                  <Card className="absolute right-0 top-12 w-96 z-50 shadow-2xl border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900 max-h-[80vh] overflow-hidden">
+                    <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-cyan-900/50">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
+                          <Radio className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400">Nearby</h3>
+                          <p className="text-[10px] text-green-300/80">Chat with nearby users via Bitchat</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setShowNearbyModal(false)} className="w-6 h-6 p-0 hover:bg-green-500/20">
+                        <X className="w-4 h-4 text-green-400" />
+                      </Button>
+                    </div>
+                    <div className="max-h-[60vh] overflow-y-auto">
+                      <ConcertChat showBitchatPromo={true} compact={true} />
+                    </div>
+                  </Card>
+                )}
+              </div>
+
+              {/* PiggyBank (WIN-WIN Rewards) - Desktop accordion modal */}
+              <div className="relative hidden sm:block">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setShowWinWinStatsModal(!showWinWinStatsModal); setShowNotifications(false); setShowNearbyModal(false); setShowVibesModal(false); setShowUserMenu(false); }}
+                  className="hover:bg-pink-500/10"
+                  title="WIN-WIN Streaming Rewards"
+                >
+                  <PiggyBank className="w-5 h-5 text-pink-400" />
+                </Button>
+
+                {/* WIN-WIN Accordion Dropdown - Desktop */}
+                {showWinWinStatsModal && (
+                  <Card className="absolute right-0 top-12 w-80 z-50 shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-gradient-to-r from-orange-900/50 to-yellow-900/50">
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
+                            <PiggyBank className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full flex items-center justify-center animate-pulse">
+                            <Coins className="w-2 h-2 text-cyan-900" />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-yellow-400">WIN-WIN Rewards</h3>
+                          <p className="text-[10px] text-cyan-400/80">Stream to Earn OGUN</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setShowWinWinStatsModal(false)} className="w-6 h-6 p-0 hover:bg-orange-500/20">
+                        <X className="w-4 h-4 text-orange-400" />
+                      </Button>
+                    </div>
+
+                    {/* Tabs */}
+                    {me && (
+                      <div className="flex border-b border-orange-500/20">
+                        <button
+                          onClick={() => setWinWinRewardsTab('catalog')}
+                          className={`flex-1 py-2 px-3 text-xs font-bold flex items-center justify-center gap-1 transition-all ${
+                            winWinRewardsTab === 'catalog'
+                              ? 'bg-orange-500/20 text-orange-400 border-b-2 border-orange-500'
+                              : 'text-gray-400 hover:text-orange-300 hover:bg-orange-500/10'
+                          }`}
+                        >
+                          <Music className="w-3 h-3" />
+                          Catalog
+                        </button>
+                        <button
+                          onClick={() => setWinWinRewardsTab('listener')}
+                          className={`flex-1 py-2 px-3 text-xs font-bold flex items-center justify-center gap-1 transition-all ${
+                            winWinRewardsTab === 'listener'
+                              ? 'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-500'
+                              : 'text-gray-400 hover:text-cyan-300 hover:bg-cyan-500/10'
+                          }`}
+                        >
+                          <Headphones className="w-3 h-3" />
+                          Listener
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Catalog Tab */}
+                    {me && winWinRewardsTab === 'catalog' && (
+                      <div className="p-3 border-b border-orange-500/20">
+                        <div className="text-[10px] text-orange-400/80 uppercase tracking-wider mb-2 text-center">
+                          Your Catalog Earnings (70% Creator Share)
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="text-center p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                            <div className="text-[9px] text-yellow-500/70 uppercase">Catalog</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">
+                              {myStreamingRewardsLoading ? '...' : myTotalOgunEarned.toFixed(2)}
+                            </div>
+                            <div className="text-[9px] text-yellow-500/70">OGUN</div>
+                          </div>
+                          <div className="text-center p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                            <div className="text-[9px] text-cyan-500/70 uppercase">Streams</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                              {myStreamingRewardsLoading ? '...' : myTotalStreams.toLocaleString()}
+                            </div>
+                            <div className="text-[9px] text-cyan-500/70">plays</div>
+                          </div>
+                          <div className="text-center p-2 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                            <div className="text-[9px] text-orange-500/70 uppercase">Tracks</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-400">
+                              {myStreamingRewardsLoading ? '...' : (myStreamingRewardsData?.scidsByProfile?.length || 0)}
+                            </div>
+                            <div className="text-[9px] text-orange-500/70">active</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Listener Tab */}
+                    {me && winWinRewardsTab === 'listener' && (
+                      <div className="p-3 border-b border-cyan-500/20">
+                        <div className="text-[10px] text-cyan-400/80 uppercase tracking-wider mb-2 text-center">
+                          Your Listener Earnings (30% Listener Share)
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="text-center p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                            <div className="text-[9px] text-cyan-500/70 uppercase">Listener</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">0.00</div>
+                            <div className="text-[9px] text-cyan-500/70">OGUN</div>
+                          </div>
+                          <div className="text-center p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                            <div className="text-[9px] text-purple-500/70 uppercase">Streamed</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">0</div>
+                            <div className="text-[9px] text-purple-500/70">NFTs</div>
+                          </div>
+                          <div className="text-center p-2 bg-green-500/10 rounded-lg border border-green-500/20">
+                            <div className="text-[9px] text-green-500/70 uppercase">Rate</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">0.15</div>
+                            <div className="text-[9px] text-green-500/70">OGUN/NFT</div>
+                          </div>
+                        </div>
+                        <div className="mt-2 p-2 bg-cyan-500/5 rounded-lg border border-cyan-500/20">
+                          <p className="text-[9px] text-cyan-400 text-center">Coming Soon! Earn 30% when YOU stream NFT tracks</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reward Rates */}
+                    <div className="p-3 border-b border-orange-500/20">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="text-center p-2 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-lg border border-yellow-500/30">
+                          <div className="text-[10px] text-yellow-400/80">NFT Tracks</div>
+                          <div className="text-base font-bold text-yellow-400">0.5 OGUN</div>
+                          <div className="text-[9px] text-gray-500">per stream</div>
+                        </div>
+                        <div className="text-center p-2 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/30">
+                          <div className="text-[10px] text-cyan-400/80">Regular</div>
+                          <div className="text-base font-bold text-cyan-400">0.05 OGUN</div>
+                          <div className="text-[9px] text-gray-500">per stream</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="p-3 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                        className="py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold rounded-lg text-sm flex items-center justify-center gap-1"
+                      >
+                        <Wallet className="w-3 h-3" />
+                        Claim
+                      </button>
+                      <button
+                        onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
+                        className="py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-1"
+                      >
+                        <Zap className="w-3 h-3" />
+                        Stake
+                      </button>
+                    </div>
+                  </Card>
+                )}
+              </div>
+
+              {/* Vibes (Social Links) - Desktop accordion modal */}
+              <div className="relative hidden sm:block">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setShowVibesModal(!showVibesModal); setShowNotifications(false); setShowNearbyModal(false); setShowWinWinStatsModal(false); setShowUserMenu(false); }}
+                  className="hover:bg-purple-500/10"
+                  title="Vibes - Social Links"
+                >
+                  <Users className="w-5 h-5 text-purple-400" />
+                </Button>
+
+                {/* Vibes Dropdown Modal - Desktop */}
+                {showVibesModal && (
+                  <Card className="absolute right-0 top-12 w-72 z-50 shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900">
+                    <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-cyan-900/50">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center">
+                          <Users className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">Vibes</h3>
+                          <p className="text-[10px] text-purple-300/80">Connect with SoundChain</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={() => setShowVibesModal(false)} className="w-6 h-6 p-0 hover:bg-purple-500/20">
+                        <X className="w-4 h-4 text-purple-400" />
+                      </Button>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      <a href="https://twitter.com/soundchain_io" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                          <span className="text-white text-sm">𝕏</span>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-white text-xs">Twitter / X</div>
+                          <div className="text-[10px] text-blue-400">@soundchain_io</div>
+                        </div>
+                      </a>
+                      <a href="https://discord.gg/5yZG6BTTHV" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
+                          <span className="text-white text-sm">🎮</span>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-white text-xs">Discord</div>
+                          <div className="text-[10px] text-indigo-400">Join Community</div>
+                        </div>
+                      </a>
+                      <a href="https://t.me/+DbHfqlVpV644ZGMx" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
+                          <span className="text-white text-sm">✈️</span>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-white text-xs">Telegram</div>
+                          <div className="text-[10px] text-cyan-400">Join Chat</div>
+                        </div>
+                      </a>
+                      <a href="https://instagram.com/soundchain.io" target="_blank" rel="noreferrer" className="flex items-center gap-3 p-2 rounded-lg bg-pink-500/10 border border-pink-500/20 hover:bg-pink-500/20 transition-all">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center">
+                          <span className="text-white text-sm">📸</span>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-white text-xs">Instagram</div>
+                          <div className="text-[10px] text-pink-400">@soundchain.io</div>
+                        </div>
+                      </a>
+                    </div>
+                  </Card>
+                )}
+              </div>
 
               {/* Notifications Bell - Dropdown Modal */}
               <div className="relative">
@@ -5256,7 +5562,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <p className="text-xs text-gray-500">Chat with nearby users via Bitchat & Nostr</p>
                     </div>
                   </div>
-                  <Badge className="bg-green-500/20 text-green-400">Live</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-green-500/20 text-green-400">Live</Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setSelectedView('feed'); router.push('/dex/feed', undefined, { shallow: true }); }}
+                      className="w-8 h-8 p-0 hover:bg-red-500/20"
+                      title="Close"
+                    >
+                      <X className="w-5 h-5 text-gray-400 hover:text-red-400" />
+                    </Button>
+                  </div>
                 </div>
                 <ConcertChat showBitchatPromo={true} />
               </Card>
