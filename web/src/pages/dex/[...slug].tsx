@@ -2015,9 +2015,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <PiggyBank className="w-5 h-5 text-pink-400" />
                   </Button>
 
-                  {/* WIN-WIN Accordion Dropdown - SoundChain Colors (Mobile-optimized) */}
+                  {/* WIN-WIN Accordion Dropdown - Centered under button */}
                   {showWinWinStatsModal && (
-                    <Card className="fixed left-2 right-2 top-16 z-50 shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900">
+                    <Card className="absolute left-1/2 -translate-x-1/2 top-12 w-72 z-50 shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900">
                       {/* Header */}
                       <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-gradient-to-r from-orange-900/50 to-yellow-900/50">
                         <div className="flex items-center gap-2">
@@ -2198,9 +2198,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Users className="w-5 h-5 text-purple-400" />
                   </Button>
 
-                  {/* Vibes Dropdown Modal (Mobile-optimized) */}
+                  {/* Vibes Dropdown Modal - Centered under button */}
                   {showVibesModal && (
-                    <Card className="fixed left-2 right-2 top-16 z-50 shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900">
+                    <Card className="absolute left-1/2 -translate-x-1/2 top-12 w-64 z-50 shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900">
                       {/* Header */}
                       <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-cyan-900/50">
                         <div className="flex items-center gap-2">
