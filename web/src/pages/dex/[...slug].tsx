@@ -935,18 +935,21 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [stakedOgunBalance, setStakedOgunBalance] = useState<string>('0')
 
   // Fetch staked OGUN balance from staking contract
+  // Uses public RPC fallback when Magic web3 isn't available
   useEffect(() => {
     const fetchStakedBalance = async () => {
-      if (!magicWeb3 || !walletAccount || !tokenStakeContractAddress) return
+      if (!walletAccount || !tokenStakeContractAddress) return
       try {
-        const stakingContract = getStakingContract(magicWeb3)
+        // Use Magic web3 or fallback to public Polygon RPC
+        const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+        const stakingContract = getStakingContract(web3Instance)
         const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
         if (balanceData) {
           const [stakedAmount] = balanceData
           const validStaked = stakedAmount !== undefined && (typeof stakedAmount === 'string' || typeof stakedAmount === 'number')
             ? stakedAmount.toString()
             : '0'
-          const formattedStaked = magicWeb3.utils.fromWei(validStaked, 'ether')
+          const formattedStaked = web3Instance.utils.fromWei(validStaked, 'ether')
           setStakedOgunBalance(Number(formattedStaked).toFixed(6))
         }
       } catch (error: any) {
@@ -2012,9 +2015,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <PiggyBank className="w-5 h-5 text-pink-400" />
                   </Button>
 
-                  {/* WIN-WIN Accordion Dropdown - SoundChain Colors */}
+                  {/* WIN-WIN Accordion Dropdown - SoundChain Colors (Mobile-optimized) */}
                   {showWinWinStatsModal && (
-                    <Card className="absolute left-0 top-12 w-80 z-50 shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900">
+                    <Card className="fixed left-2 right-2 top-16 z-50 shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900">
                       {/* Header */}
                       <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-gradient-to-r from-orange-900/50 to-yellow-900/50">
                         <div className="flex items-center gap-2">
@@ -2195,9 +2198,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Users className="w-5 h-5 text-purple-400" />
                   </Button>
 
-                  {/* Vibes Dropdown Modal */}
+                  {/* Vibes Dropdown Modal (Mobile-optimized) */}
                   {showVibesModal && (
-                    <Card className="absolute left-0 top-12 w-72 z-50 shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900">
+                    <Card className="fixed left-2 right-2 top-16 z-50 shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900">
                       {/* Header */}
                       <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-cyan-900/50">
                         <div className="flex items-center gap-2">
