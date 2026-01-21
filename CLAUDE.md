@@ -1,6 +1,6 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 21, 2026
+**Last Updated:** January 21, 2026 (Bitchat/Nostr Integration)
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
@@ -249,6 +249,57 @@ git show origin/staging:web/src/components/GridView/GridView.tsx
 git diff production..origin/develop -- <file>
 ```
 
+### Nostr/Bitchat Integration (Jan 21, 2026)
+**Feature:** Decentralized location-based messaging using Nostr protocol
+**Interoperability:** Messages visible to both SoundChain web app AND Bitchat iOS app!
+
+**Architecture:**
+```
+┌─────────────────────┐     ┌───────────────────┐     ┌─────────────────────┐
+│  SoundChain User    │     │   Nostr Relays    │     │   Bitchat User      │
+│  (Web App)          │────▶│   (290+ public)   │◀────│   (iOS App)         │
+│                     │     │                   │     │                     │
+│  Posts to geohash:  │     │  relay.damus.io   │     │  Posts to geohash:  │
+│  "dr5r7" (NYC)      │     │  relay.snort.social│    │  "dr5r7" (NYC)      │
+└─────────────────────┘     └───────────────────┘     └─────────────────────┘
+```
+
+**Files:**
+- `web/src/lib/nostr/concertChat.ts` - Location-based chat via geohash
+- `web/src/lib/nostr/privateDM.ts` - NIP-17 encrypted private messages
+- `web/src/lib/nostr/index.ts` - Exports all Nostr utilities
+- `web/src/components/dex/ConcertChat.tsx` - React chat component
+
+**NPM Packages:**
+```bash
+nostr-tools@2.19.4    # Core Nostr protocol
+@noble/hashes@2.0.1   # Cryptographic primitives
+ngeohash@0.6.3        # Geohash encoding/decoding
+```
+
+**Protocols Used:**
+| Protocol | Purpose | Event Kind |
+|----------|---------|------------|
+| NIP-01 | Basic Nostr events | - |
+| NIP-44 | ChaCha20 encryption | - |
+| NIP-59 | Gift wrapping (metadata hiding) | 1059 |
+| NIP-17 | Private DMs | 14 |
+| Geohash | Location channels | 20000 (ephemeral) |
+
+**Use Cases:**
+- Festival/concert venue chat
+- Artist-fan encrypted DMs
+- Location-based discovery
+- Offline mesh via Bitchat app
+
+**Bitchat Deep Link:**
+```typescript
+// Open same channel in Bitchat app
+const deepLink = `bitchat://channel/${geohash}`
+```
+
+**App Store:** https://apps.apple.com/us/app/bitchat-mesh/id6748219622
+
 ---
 
 ## SMART CONTRACT ADDRESSES
@@ -485,6 +536,8 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 12, 2026 | NFT playlist playback, init script | a6f6db307+ |
 | Jan 18, 2026 | Mobile wallet connections | 777641a62 |
 | Jan 19, 2026 | Mobile player crash fix, waveform comments, profile/balance fixes | Multiple |
+| Jan 20, 2026 | Dropdown panel modals, Quick DM, Tip Jar placeholder | dd8886501 |
+| Jan 21, 2026 | **Bitchat/Nostr integration** - Location chat, encrypted DMs | Pending |
 
 ---
 
