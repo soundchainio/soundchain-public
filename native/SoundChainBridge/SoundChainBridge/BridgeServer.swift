@@ -23,6 +23,7 @@
 import Foundation
 import MultipeerConnectivity
 import Network
+import UIKit
 
 // MARK: - Bridge Protocol Types
 
