@@ -16,10 +16,28 @@ interface PostMediaUploaderProps {
 const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB - SoundChain supports large audio/video files
 
 // Accepted file types for posts (same as NFT minting)
+// Note: Use explicit MIME types instead of wildcards for better desktop browser support
 const acceptedTypes = {
-  'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'],
-  'video/*': ['.mp4', '.mov', '.webm', '.avi', '.mkv'],
-  'audio/*': ['.mp3', '.wav', '.flac', '.ogg', '.m4a', '.aiff'],
+  // Images
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/png': ['.png'],
+  'image/gif': ['.gif'],
+  'image/webp': ['.webp'],
+  'image/bmp': ['.bmp'],
+  // Videos - explicit MIME types for desktop browser compatibility
+  'video/mp4': ['.mp4'],
+  'video/quicktime': ['.mov'], // MOV files - important for iOS recordings
+  'video/webm': ['.webm'],
+  'video/x-msvideo': ['.avi'],
+  'video/x-matroska': ['.mkv'],
+  // Audio
+  'audio/mpeg': ['.mp3'],
+  'audio/wav': ['.wav'],
+  'audio/flac': ['.flac'],
+  'audio/ogg': ['.ogg'],
+  'audio/mp4': ['.m4a'],
+  'audio/aiff': ['.aiff'],
+  'audio/x-aiff': ['.aiff'],
 }
 
 export const PostMediaUploader = ({

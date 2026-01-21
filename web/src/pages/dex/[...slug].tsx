@@ -2550,17 +2550,54 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
 
                   <div className="flex flex-wrap gap-3">
-                    <Button className="retro-button"><Users className="w-4 h-4 mr-2" />Follow</Button>
-                    <Button variant="outline" className="border-purple-500/50"><MessageCircle className="w-4 h-4 mr-2" />Message</Button>
-                    <Button variant="outline" className="border-cyan-500/50"><Share2 className="w-4 h-4" /></Button>
+                    {/* This is the user's OWN profile on feed - show Edit Profile, not Follow */}
+                    <Button className="retro-button" onClick={() => setSelectedView('settings')}>
+                      <Settings className="w-4 h-4 mr-2" />Edit Profile
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="border-cyan-500/50 hover:bg-cyan-500/20"
+                      onClick={async () => {
+                        const profileUrl = `${window.location.origin}/profiles/${user?.userHandle}`
+                        if (navigator.share && navigator.canShare?.({ url: profileUrl })) {
+                          try {
+                            await navigator.share({
+                              title: `${user?.displayName || user?.userHandle} on SoundChain`,
+                              text: 'Check out my profile on SoundChain!',
+                              url: profileUrl
+                            })
+                          } catch (err) {
+                            if ((err as Error).name !== 'AbortError') {
+                              navigator.clipboard.writeText(profileUrl)
+                              toast.success('Profile link copied!')
+                            }
+                          }
+                        } else {
+                          navigator.clipboard.writeText(profileUrl)
+                          toast.success('Profile link copied! Share it on social media.')
+                        }
+                      }}
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />Share Profile
+                    </Button>
                   </div>
 
                   {userWallet && (
                     <Card className="retro-card p-3 w-fit">
                       <div className="flex items-center gap-3">
                         <Wallet className="w-4 h-4 text-orange-400" />
-                        <span className="retro-json text-sm">{userWallet.slice(0, 6)}...{userWallet.slice(-4)}</span>
-                        <Button variant="ghost" size="sm" onClick={copyAddress} className="p-1"><Copy className="w-3 h-3" /></Button>
+                        {/* Full address on desktop (lg+), truncated on mobile */}
+                        <span className="retro-json text-sm hidden lg:inline font-mono">{userWallet}</span>
+                        <span className="retro-json text-sm lg:hidden font-mono">{userWallet.slice(0, 6)}...{userWallet.slice(-4)}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={copyAddress}
+                          className="p-1 hover:bg-cyan-500/20"
+                          title="Copy address"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
                       </div>
                     </Card>
                   )}
