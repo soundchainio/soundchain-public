@@ -758,6 +758,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showWinWinStatsModal, setShowWinWinStatsModal] = useState(false)
   const [showDMModal, setShowDMModal] = useState(false)
   const [showVibesModal, setShowVibesModal] = useState(false)
+  const [showTracksCollectionModal, setShowTracksCollectionModal] = useState(false)
+  const [showFollowersModal, setShowFollowersModal] = useState(false)
+  const [showFollowingModal, setShowFollowingModal] = useState(false)
+  const [tracksCollectionTab, setTracksCollectionTab] = useState<'owned' | 'favorites'>('owned')
   const [winWinRewardsTab, setWinWinRewardsTab] = useState<'catalog' | 'listener'>('catalog')
   const [profileImageError, setProfileImageError] = useState(false)
   const [coverImageError, setCoverImageError] = useState(false)
@@ -2535,18 +2539,39 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="metadata-section p-4 text-center">
-                      <div className="retro-text text-xl">{userTracks.length}</div>
-                      <div className="metadata-label text-xs">Tracks</div>
-                    </div>
-                    <div className="metadata-section p-4 text-center">
-                      <div className="retro-text text-xl">{user?.followerCount?.toLocaleString() || 0}</div>
-                      <div className="metadata-label text-xs">Followers</div>
-                    </div>
-                    <div className="metadata-section p-4 text-center">
-                      <div className="retro-text text-xl">{user?.followingCount?.toLocaleString() || 0}</div>
-                      <div className="metadata-label text-xs">Following</div>
-                    </div>
+                    {/* Tracks - Clickable to show NFT collection + Favorites */}
+                    <button
+                      onClick={() => setShowTracksCollectionModal(true)}
+                      className="metadata-section p-4 text-center cursor-pointer hover:bg-cyan-500/10 transition-colors group"
+                    >
+                      <div className="retro-text text-xl group-hover:text-cyan-400 transition-colors">
+                        {userTracks.length + (favoriteTracksData?.favoriteTracks?.nodes?.length || 0)}
+                      </div>
+                      <div className="metadata-label text-xs group-hover:text-cyan-300">Tracks</div>
+                      <div className="text-[10px] text-gray-500 mt-1">
+                        {userTracks.length} owned · {favoriteTracksData?.favoriteTracks?.nodes?.length || 0} ❤️
+                      </div>
+                    </button>
+                    {/* Followers - Clickable to show follower grid */}
+                    <button
+                      onClick={() => setShowFollowersModal(true)}
+                      className="metadata-section p-4 text-center cursor-pointer hover:bg-purple-500/10 transition-colors group"
+                    >
+                      <div className="retro-text text-xl group-hover:text-purple-400 transition-colors">
+                        {user?.followerCount?.toLocaleString() || 0}
+                      </div>
+                      <div className="metadata-label text-xs group-hover:text-purple-300">Followers</div>
+                    </button>
+                    {/* Following - Clickable to show following grid */}
+                    <button
+                      onClick={() => setShowFollowingModal(true)}
+                      className="metadata-section p-4 text-center cursor-pointer hover:bg-green-500/10 transition-colors group"
+                    >
+                      <div className="retro-text text-xl group-hover:text-green-400 transition-colors">
+                        {user?.followingCount?.toLocaleString() || 0}
+                      </div>
+                      <div className="metadata-label text-xs group-hover:text-green-300">Following</div>
+                    </button>
                   </div>
 
                   <div className="flex flex-wrap gap-3">
@@ -6039,6 +6064,230 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MY TRACKS COLLECTION MODAL - NFT Collection + Favorites */}
+      {showTracksCollectionModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/95" onClick={() => setShowTracksCollectionModal(false)} />
+          <div className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border-2 border-cyan-500 bg-gradient-to-br from-neutral-900 via-cyan-900/10 to-neutral-900 shadow-[0_0_30px_rgba(6,182,212,0.3)]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-cyan-900 to-purple-900 px-4 py-3 flex items-center justify-between border-b border-cyan-500">
+              <div className="flex items-center gap-2">
+                <Music className="w-5 h-5 text-cyan-400" />
+                <div>
+                  <span className="font-bold text-cyan-100 text-sm">My Tracks Collection</span>
+                  <p className="text-xs text-cyan-200/60">{userTracks.length} owned · {favoriteTracksData?.favoriteTracks?.nodes?.length || 0} favorited</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowTracksCollectionModal(false)} className="w-8 h-8 p-0 text-cyan-300 hover:text-white hover:bg-cyan-500/20">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-cyan-500/30">
+              <button
+                onClick={() => setTracksCollectionTab('owned')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  tracksCollectionTab === 'owned'
+                    ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/10'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                🎵 NFT Collection ({userTracks.length})
+              </button>
+              <button
+                onClick={() => setTracksCollectionTab('favorites')}
+                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                  tracksCollectionTab === 'favorites'
+                    ? 'text-pink-400 border-b-2 border-pink-400 bg-pink-500/10'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                ❤️ Favorites ({favoriteTracksData?.favoriteTracks?.nodes?.length || 0})
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[calc(85vh-120px)] p-4">
+              {tracksCollectionTab === 'owned' ? (
+                // NFT Collection Tab
+                userTracks.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Music className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-400">No NFTs in your collection yet</p>
+                    <p className="text-gray-500 text-sm mt-1">Mint or purchase tracks to build your collection</p>
+                    <Button className="mt-4 retro-button" onClick={() => { setShowTracksCollectionModal(false); setSelectedView('marketplace') }}>
+                      Browse Marketplace
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {userTracks.map((track: any, index: number) => (
+                      <div
+                        key={track.id}
+                        className="relative group cursor-pointer rounded-xl overflow-hidden bg-gradient-to-br from-cyan-900/30 to-purple-900/30 border border-cyan-500/20 hover:border-cyan-400/60 transition-all hover:scale-[1.02]"
+                        onClick={() => {
+                          handlePlayTrack(track, index, userTracks)
+                          setShowTracksCollectionModal(false)
+                        }}
+                      >
+                        <div className="aspect-square relative">
+                          <img
+                            src={track.artworkUrl ?? '/images/default-artwork.png'}
+                            alt={track.title ?? 'Track'}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Play className="w-10 h-10 text-white" fill="white" />
+                          </div>
+                          {/* NFT Badge */}
+                          <div className="absolute top-2 right-2 px-2 py-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full text-[10px] font-bold text-white shadow-lg">
+                            NFT
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <p className="text-white text-xs font-medium truncate">{track.title}</p>
+                          <p className="text-gray-500 text-[10px] truncate">{track.artist}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                // Favorites Tab
+                favoriteTracksLoading ? (
+                  <div className="py-12 text-center text-gray-400">
+                    <div className="animate-spin w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full mx-auto mb-2" />
+                    Loading favorites...
+                  </div>
+                ) : (favoriteTracksData?.favoriteTracks?.nodes?.length ?? 0) === 0 ? (
+                  <div className="py-12 text-center">
+                    <Heart className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-400">No favorited tracks yet</p>
+                    <p className="text-gray-500 text-sm mt-1">Heart tracks while listening to add them here</p>
+                    <Button className="mt-4 retro-button" onClick={() => { setShowTracksCollectionModal(false); setSelectedView('explore') }}>
+                      Discover Tracks
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {favoriteTracksData?.favoriteTracks?.nodes?.map((track: any, index: number) => (
+                      <div
+                        key={track.id}
+                        className="relative group cursor-pointer rounded-xl overflow-hidden bg-gradient-to-br from-pink-900/30 to-purple-900/30 border border-pink-500/20 hover:border-pink-400/60 transition-all hover:scale-[1.02]"
+                        onClick={() => {
+                          handlePlayTrack(track, index, favoriteTracksData?.favoriteTracks?.nodes || [])
+                          setShowTracksCollectionModal(false)
+                        }}
+                      >
+                        <div className="aspect-square relative">
+                          <img
+                            src={track.artworkUrl ?? '/images/default-artwork.png'}
+                            alt={track.title ?? 'Track'}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Play className="w-10 h-10 text-white" fill="white" />
+                          </div>
+                          {/* Heart Badge */}
+                          <div className="absolute top-2 right-2 w-7 h-7 bg-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                            <Heart className="w-4 h-4 text-white" fill="white" />
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          <p className="text-white text-xs font-medium truncate">{track.title}</p>
+                          <p className="text-gray-500 text-[10px] truncate">{track.artist}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* Footer - Play All */}
+            {((tracksCollectionTab === 'owned' && userTracks.length > 0) ||
+              (tracksCollectionTab === 'favorites' && (favoriteTracksData?.favoriteTracks?.nodes?.length ?? 0) > 0)) && (
+              <div className="border-t border-cyan-500/30 p-3 bg-black/50">
+                <Button
+                  className="w-full retro-button"
+                  onClick={() => {
+                    const tracks = tracksCollectionTab === 'owned' ? userTracks : (favoriteTracksData?.favoriteTracks?.nodes || [])
+                    if (tracks.length > 0) {
+                      handlePlayTrack(tracks[0], 0, tracks)
+                      setShowTracksCollectionModal(false)
+                    }
+                  }}
+                >
+                  <Play className="w-4 h-4 mr-2" fill="currentColor" />
+                  Play All ({tracksCollectionTab === 'owned' ? userTracks.length : favoriteTracksData?.favoriteTracks?.nodes?.length || 0} tracks)
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* FOLLOWERS MODAL */}
+      {showFollowersModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/95" onClick={() => setShowFollowersModal(false)} />
+          <div className="relative z-10 w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl border-2 border-purple-500 bg-gradient-to-br from-neutral-900 via-purple-900/10 to-neutral-900 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-purple-900 to-pink-900 px-4 py-3 flex items-center justify-between border-b border-purple-500">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-purple-400" />
+                <div>
+                  <span className="font-bold text-purple-100 text-sm">Followers</span>
+                  <p className="text-xs text-purple-200/60">{user?.followerCount?.toLocaleString() || 0} people follow you</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowFollowersModal(false)} className="w-8 h-8 p-0 text-purple-300 hover:text-white hover:bg-purple-500/20">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[calc(85vh-60px)] p-4">
+              <div className="text-center py-12 text-gray-400">
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Followers list coming soon</p>
+                <p className="text-sm text-gray-500 mt-1">We're building this feature</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FOLLOWING MODAL */}
+      {showFollowingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/95" onClick={() => setShowFollowingModal(false)} />
+          <div className="relative z-10 w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl border-2 border-green-500 bg-gradient-to-br from-neutral-900 via-green-900/10 to-neutral-900 shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-green-900 to-teal-900 px-4 py-3 flex items-center justify-between border-b border-green-500">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-green-400" />
+                <div>
+                  <span className="font-bold text-green-100 text-sm">Following</span>
+                  <p className="text-xs text-green-200/60">You follow {user?.followingCount?.toLocaleString() || 0} people</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowFollowingModal(false)} className="w-8 h-8 p-0 text-green-300 hover:text-white hover:bg-green-500/20">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[calc(85vh-60px)] p-4">
+              <div className="text-center py-12 text-gray-400">
+                <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Following list coming soon</p>
+                <p className="text-sm text-gray-500 mt-1">We're building this feature</p>
+              </div>
             </div>
           </div>
         </div>
