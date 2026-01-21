@@ -775,6 +775,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [quickDMMessage, setQuickDMMessage] = useState('')
   const [quickDMSending, setQuickDMSending] = useState(false)
 
+  // Tip Jar coming soon accordion state
+  const [tipJarUserId, setTipJarUserId] = useState<string | null>(null)
+
   // Account Settings inline edit state
   const [showAccountSettings, setShowAccountSettings] = useState(false)
   const [editDisplayName, setEditDisplayName] = useState('')
@@ -6335,10 +6338,23 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           onClick={(e) => {
                             e.stopPropagation()
                             setQuickDMUserId(quickDMUserId === follower.id ? null : follower.id)
+                            setTipJarUserId(null)
                             setQuickDMMessage('')
                           }}
                         >
                           <MessageCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`w-8 h-8 p-0 flex-shrink-0 ${tipJarUserId === follower.id ? 'text-white bg-pink-500/30' : 'text-pink-400 hover:text-white hover:bg-pink-500/20'}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setTipJarUserId(tipJarUserId === follower.id ? null : follower.id)
+                            setQuickDMUserId(null)
+                          }}
+                        >
+                          <PiggyBank className="w-4 h-4" />
                         </Button>
                       </div>
                       {/* Quick DM Accordion */}
@@ -6386,6 +6402,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             >
                               {quickDMSending ? '...' : 'Send'}
                             </Button>
+                          </div>
+                        </div>
+                      )}
+                      {/* Tip Jar Coming Soon Accordion */}
+                      {tipJarUserId === follower.id && (
+                        <div className="px-2 pb-2 bg-gradient-to-r from-pink-500/10 to-orange-500/10 border-t border-pink-500/20">
+                          <div className="pt-3 pb-1 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <PiggyBank className="w-5 h-5 text-pink-400" />
+                              <span className="text-pink-400 font-bold text-sm">Tip Jar</span>
+                              <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-[10px] font-bold rounded-full">COMING SOON</span>
+                            </div>
+                            <p className="text-gray-400 text-xs leading-relaxed">
+                              Tip {follower.name} with <span className="text-cyan-400">NFTs</span> or <span className="text-green-400">Tokens</span> directly to their wallet!
+                            </p>
+                            <p className="text-gray-500 text-[10px] mt-2">
+                              Multi-chain support · ZetaChain sweep · 0.05 fee
+                            </p>
                           </div>
                         </div>
                       )}
@@ -6449,10 +6483,23 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           onClick={(e) => {
                             e.stopPropagation()
                             setQuickDMUserId(quickDMUserId === following.id ? null : following.id)
+                            setTipJarUserId(null)
                             setQuickDMMessage('')
                           }}
                         >
                           <MessageCircle className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`w-8 h-8 p-0 flex-shrink-0 ${tipJarUserId === following.id ? 'text-white bg-pink-500/30' : 'text-pink-400 hover:text-white hover:bg-pink-500/20'}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setTipJarUserId(tipJarUserId === following.id ? null : following.id)
+                            setQuickDMUserId(null)
+                          }}
+                        >
+                          <PiggyBank className="w-4 h-4" />
                         </Button>
                       </div>
                       {/* Quick DM Accordion */}
@@ -6500,6 +6547,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             >
                               {quickDMSending ? '...' : 'Send'}
                             </Button>
+                          </div>
+                        </div>
+                      )}
+                      {/* Tip Jar Coming Soon Accordion */}
+                      {tipJarUserId === following.id && (
+                        <div className="px-2 pb-2 bg-gradient-to-r from-pink-500/10 to-orange-500/10 border-t border-pink-500/20">
+                          <div className="pt-3 pb-1 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <PiggyBank className="w-5 h-5 text-pink-400" />
+                              <span className="text-pink-400 font-bold text-sm">Tip Jar</span>
+                              <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-[10px] font-bold rounded-full">COMING SOON</span>
+                            </div>
+                            <p className="text-gray-400 text-xs leading-relaxed">
+                              Tip {following.name} with <span className="text-cyan-400">NFTs</span> or <span className="text-green-400">Tokens</span> directly to their wallet!
+                            </p>
+                            <p className="text-gray-500 text-[10px] mt-2">
+                              Multi-chain support · ZetaChain sweep · 0.05 fee
+                            </p>
                           </div>
                         </div>
                       )}
