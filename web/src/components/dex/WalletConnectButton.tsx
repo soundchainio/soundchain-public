@@ -696,7 +696,7 @@ export function WalletConnectButton({
         `}
       >
         <Wallet className={`text-cyan-400 ${compact ? 'w-4 h-4' : 'w-5 h-5'}`} />
-        <span className={`text-cyan-400 font-mono font-bold ${compact ? 'text-xs' : 'text-sm'}`}>
+        <span className={`text-cyan-400 font-mono font-bold hidden sm:inline ${compact ? 'text-xs' : 'text-sm'}`}>
           CONNECT
         </span>
       </button>
