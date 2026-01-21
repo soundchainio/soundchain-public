@@ -142,6 +142,9 @@ export function subscribeToConcertChat(
 
   const seenIds = new Set<string>()
 
+  console.log(`📡 Subscribing to Nostr channels: ${geohashes.join(', ')}`)
+  console.log(`📡 Using relays: ${NOSTR_RELAYS.join(', ')}`)
+
   const sub = pool.subscribeMany(
     NOSTR_RELAYS,
     [{
@@ -151,6 +154,8 @@ export function subscribeToConcertChat(
     }],
     {
       onevent(event: Event) {
+        console.log(`📨 Received Nostr event from ${event.pubkey.substring(0, 8)}...`)
+
         // Dedupe messages
         if (seenIds.has(event.id)) return
         seenIds.add(event.id)
@@ -167,6 +172,9 @@ export function subscribeToConcertChat(
           geohash: eventGeohash,
           tags: event.tags
         })
+      },
+      oneose() {
+        console.log('📡 Nostr subscription: end of stored events')
       }
     }
   )
@@ -206,8 +214,24 @@ export async function sendConcertMessage(
     content: message
   }, identity.privateKey)
 
-  // Publish to all relays
-  await Promise.all(pool.publish(NOSTR_RELAYS, event))
+  // Publish to all relays with better error handling
+  // We only need ONE relay to succeed for the message to propagate
+  const publishPromises = pool.publish(NOSTR_RELAYS, event)
+
+  const results = await Promise.allSettled(publishPromises)
+  const successCount = results.filter(r => r.status === 'fulfilled').length
+
+  console.log(`📡 Nostr publish: ${successCount}/${NOSTR_RELAYS.length} relays succeeded`)
+
+  if (successCount === 0) {
+    // Log which relays failed for debugging
+    results.forEach((r, i) => {
+      if (r.status === 'rejected') {
+        console.warn(`Relay ${NOSTR_RELAYS[i]} failed:`, r.reason)
+      }
+    })
+    throw new Error('Failed to publish to any relay')
+  }
 
   return event
 }
