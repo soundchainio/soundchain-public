@@ -770,6 +770,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
   const [usersViewMode, setUsersViewMode] = useState<'browse' | 'leaderboard'>('browse')
 
+  // Quick DM accordion state for Followers/Following modals
+  const [quickDMUserId, setQuickDMUserId] = useState<string | null>(null)
+  const [quickDMMessage, setQuickDMMessage] = useState('')
+  const [quickDMSending, setQuickDMSending] = useState(false)
+
   // Account Settings inline edit state
   const [showAccountSettings, setShowAccountSettings] = useState(false)
   const [editDisplayName, setEditDisplayName] = useState('')
@@ -6304,24 +6309,87 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               ) : (
                 <div className="p-2 space-y-1">
                   {myFollowersList.map((follower: any) => (
-                    <Link
-                      key={follower.id}
-                      href={`/dex/users/${follower.userHandle}`}
-                      onClick={() => setShowFollowersModal(false)}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-purple-500/10 transition-colors"
-                    >
-                      <Avatar className="w-10 h-10">
-                        {follower.avatar ? <AvatarImage src={follower.avatar} /> : null}
-                        <AvatarFallback className="bg-purple-500/20 text-purple-300">{follower.name?.charAt(0) || 'U'}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate flex items-center gap-1">
-                          {follower.name}
-                          {follower.isVerified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
-                        </p>
-                        <p className="text-gray-500 text-xs truncate">{follower.username}</p>
+                    <div key={follower.id} className="rounded-lg overflow-hidden">
+                      <div className="flex items-center gap-3 p-2 hover:bg-purple-500/10 transition-colors">
+                        <Link
+                          href={`/dex/users/${follower.userHandle}`}
+                          onClick={() => setShowFollowersModal(false)}
+                          className="flex items-center gap-3 flex-1 min-w-0"
+                        >
+                          <Avatar className="w-10 h-10">
+                            {follower.avatar ? <AvatarImage src={follower.avatar} /> : null}
+                            <AvatarFallback className="bg-purple-500/20 text-purple-300">{follower.name?.charAt(0) || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate flex items-center gap-1">
+                              {follower.name}
+                              {follower.isVerified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
+                            </p>
+                            <p className="text-gray-500 text-xs truncate">{follower.username}</p>
+                          </div>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`w-8 h-8 p-0 flex-shrink-0 ${quickDMUserId === follower.id ? 'text-white bg-purple-500/30' : 'text-purple-400 hover:text-white hover:bg-purple-500/20'}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setQuickDMUserId(quickDMUserId === follower.id ? null : follower.id)
+                            setQuickDMMessage('')
+                          }}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
                       </div>
-                    </Link>
+                      {/* Quick DM Accordion */}
+                      {quickDMUserId === follower.id && (
+                        <div className="px-2 pb-2 bg-purple-500/10 border-t border-purple-500/20">
+                          <div className="flex gap-2 pt-2">
+                            <input
+                              type="text"
+                              placeholder={`Message ${follower.name}...`}
+                              value={quickDMMessage}
+                              onChange={(e) => setQuickDMMessage(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && quickDMMessage.trim() && !quickDMSending) {
+                                  setQuickDMSending(true)
+                                  sendMessage({ variables: { recipientProfileId: follower.id, content: quickDMMessage.trim() } })
+                                    .then(() => {
+                                      setQuickDMMessage('')
+                                      setQuickDMUserId(null)
+                                      toast.success(`Message sent to ${follower.name}!`)
+                                    })
+                                    .catch(() => toast.error('Failed to send message'))
+                                    .finally(() => setQuickDMSending(false))
+                                }
+                              }}
+                              className="flex-1 bg-black/50 border border-purple-500/30 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-400"
+                              autoFocus
+                            />
+                            <Button
+                              size="sm"
+                              disabled={!quickDMMessage.trim() || quickDMSending}
+                              className="bg-purple-500 hover:bg-purple-600 text-white px-3"
+                              onClick={() => {
+                                if (quickDMMessage.trim() && !quickDMSending) {
+                                  setQuickDMSending(true)
+                                  sendMessage({ variables: { recipientProfileId: follower.id, content: quickDMMessage.trim() } })
+                                    .then(() => {
+                                      setQuickDMMessage('')
+                                      setQuickDMUserId(null)
+                                      toast.success(`Message sent to ${follower.name}!`)
+                                    })
+                                    .catch(() => toast.error('Failed to send message'))
+                                    .finally(() => setQuickDMSending(false))
+                                }
+                              }}
+                            >
+                              {quickDMSending ? '...' : 'Send'}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
@@ -6355,24 +6423,87 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               ) : (
                 <div className="p-2 space-y-1">
                   {myFollowingList.map((following: any) => (
-                    <Link
-                      key={following.id}
-                      href={`/dex/users/${following.userHandle}`}
-                      onClick={() => setShowFollowingModal(false)}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-green-500/10 transition-colors"
-                    >
-                      <Avatar className="w-10 h-10">
-                        {following.avatar ? <AvatarImage src={following.avatar} /> : null}
-                        <AvatarFallback className="bg-green-500/20 text-green-300">{following.name?.charAt(0) || 'U'}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-medium truncate flex items-center gap-1">
-                          {following.name}
-                          {following.isVerified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
-                        </p>
-                        <p className="text-gray-500 text-xs truncate">{following.username}</p>
+                    <div key={following.id} className="rounded-lg overflow-hidden">
+                      <div className="flex items-center gap-3 p-2 hover:bg-green-500/10 transition-colors">
+                        <Link
+                          href={`/dex/users/${following.userHandle}`}
+                          onClick={() => setShowFollowingModal(false)}
+                          className="flex items-center gap-3 flex-1 min-w-0"
+                        >
+                          <Avatar className="w-10 h-10">
+                            {following.avatar ? <AvatarImage src={following.avatar} /> : null}
+                            <AvatarFallback className="bg-green-500/20 text-green-300">{following.name?.charAt(0) || 'U'}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate flex items-center gap-1">
+                              {following.name}
+                              {following.isVerified && <BadgeCheck className="w-3 h-3 text-cyan-400" />}
+                            </p>
+                            <p className="text-gray-500 text-xs truncate">{following.username}</p>
+                          </div>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`w-8 h-8 p-0 flex-shrink-0 ${quickDMUserId === following.id ? 'text-white bg-green-500/30' : 'text-green-400 hover:text-white hover:bg-green-500/20'}`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setQuickDMUserId(quickDMUserId === following.id ? null : following.id)
+                            setQuickDMMessage('')
+                          }}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </Button>
                       </div>
-                    </Link>
+                      {/* Quick DM Accordion */}
+                      {quickDMUserId === following.id && (
+                        <div className="px-2 pb-2 bg-green-500/10 border-t border-green-500/20">
+                          <div className="flex gap-2 pt-2">
+                            <input
+                              type="text"
+                              placeholder={`Message ${following.name}...`}
+                              value={quickDMMessage}
+                              onChange={(e) => setQuickDMMessage(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && quickDMMessage.trim() && !quickDMSending) {
+                                  setQuickDMSending(true)
+                                  sendMessage({ variables: { recipientProfileId: following.id, content: quickDMMessage.trim() } })
+                                    .then(() => {
+                                      setQuickDMMessage('')
+                                      setQuickDMUserId(null)
+                                      toast.success(`Message sent to ${following.name}!`)
+                                    })
+                                    .catch(() => toast.error('Failed to send message'))
+                                    .finally(() => setQuickDMSending(false))
+                                }
+                              }}
+                              className="flex-1 bg-black/50 border border-green-500/30 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-green-400"
+                              autoFocus
+                            />
+                            <Button
+                              size="sm"
+                              disabled={!quickDMMessage.trim() || quickDMSending}
+                              className="bg-green-500 hover:bg-green-600 text-white px-3"
+                              onClick={() => {
+                                if (quickDMMessage.trim() && !quickDMSending) {
+                                  setQuickDMSending(true)
+                                  sendMessage({ variables: { recipientProfileId: following.id, content: quickDMMessage.trim() } })
+                                    .then(() => {
+                                      setQuickDMMessage('')
+                                      setQuickDMUserId(null)
+                                      toast.success(`Message sent to ${following.name}!`)
+                                    })
+                                    .catch(() => toast.error('Failed to send message'))
+                                    .finally(() => setQuickDMSending(false))
+                                }
+                              }}
+                            >
+                              {quickDMSending ? '...' : 'Send'}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
