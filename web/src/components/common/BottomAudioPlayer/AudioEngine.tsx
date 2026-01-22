@@ -5,9 +5,16 @@ import { useLogStream } from 'hooks/useLogStream'
 import { useMe } from 'hooks/useMe'
 import { useMagicContext } from 'hooks/useMagicContext'
 import mux from 'mux-embed'
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { toast } from 'react-toastify'
 import { OgunRewardToast, DailyLimitToast } from '../OgunRewardToast'
+
+// Mobile detection for memory-optimized preloading
+const checkIsMobile = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth < 768
+}
 
 /**
  * Audio Normalization Settings
@@ -48,6 +55,12 @@ export const AudioEngine = () => {
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null)
   const gainNodeRef = useRef<GainNode | null>(null)
   const isAudioGraphConnected = useRef(false)
+
+  // Mobile detection for memory-optimized preloading
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    setIsMobile(checkIsMobile())
+  }, [])
 
   // Stream logging for OGUN rewards
   const { logStream, startTracking, stopTracking } = useLogStream({
@@ -570,7 +583,9 @@ export const AudioEngine = () => {
       onEnded={handleEndedSong}
       className="h-0 w-0 opacity-0"
       playsInline
-      preload="auto"
+      // MOBILE OPTIMIZATION: Use "metadata" on mobile to prevent memory exhaustion
+      // "auto" preloads the entire file which can crash mobile browsers
+      preload={isMobile ? "metadata" : "auto"}
       crossOrigin="anonymous"
       // iOS background playback attributes
       // @ts-ignore - webkit specific attributes
