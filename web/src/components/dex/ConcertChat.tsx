@@ -104,6 +104,7 @@ export function ConcertChat({
   const [connectionMode, setConnectionMode] = useState<ConnectionMode>('disconnected')
   const [nearbyDevices, setNearbyDevices] = useState<NearbyDevice[]>([])
   const [bridgeChecked, setBridgeChecked] = useState(false)
+  const [bridgePromoDismissed, setBridgePromoDismissed] = useState(false)
 
   const { isMobileIOS, isMobile } = useIsMobileIOS()
 
@@ -345,6 +346,62 @@ export function ConcertChat({
           <span>{locationName || currentGeohash}</span>
         </div>
       </div>
+
+      {/* Bridge App Promo - Shows when bridge not detected on mobile */}
+      {bridgeChecked && connectionMode !== 'bridge' && isMobile && !bridgePromoDismissed && (
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 border-b border-purple-400 relative">
+          <button
+            onClick={() => setBridgePromoDismissed(true)}
+            className="absolute top-2 right-2 p-1 text-white/60 hover:text-white transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-black/20 flex items-center justify-center">
+              <span className="text-2xl">🌉</span>
+            </div>
+            <div className="flex-1 pr-6">
+              <h3 className="font-bold text-white text-lg">Enable Bluetooth Mesh</h3>
+              <p className="text-purple-200 text-xs">True decentralized messaging</p>
+            </div>
+          </div>
+
+          <p className="text-white/90 text-sm mb-4">
+            Get the <strong>SoundChain Bridge</strong> app to chat with nearby users via Bluetooth - no internet required! Works with Bitchat users too.
+          </p>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-white/80 text-xs">
+              <span>✓</span>
+              <span>Chat without internet connection</span>
+            </div>
+            <div className="flex items-center gap-2 text-white/80 text-xs">
+              <span>✓</span>
+              <span>Connect with Bitchat mesh network</span>
+            </div>
+            <div className="flex items-center gap-2 text-white/80 text-xs">
+              <span>✓</span>
+              <span>Perfect for concerts, festivals, events</span>
+            </div>
+          </div>
+
+          <a
+            href="https://testflight.apple.com/join/soundchain-bridge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex items-center justify-center gap-2 px-4 py-3 bg-white text-purple-700 font-bold rounded-xl hover:bg-gray-100 transition-colors w-full"
+          >
+            <Download className="w-5 h-5" />
+            Get Bridge App (iOS)
+          </a>
+
+          <p className="text-xs text-white/50 mt-3 text-center">
+            Currently in beta via TestFlight
+          </p>
+        </div>
+      )}
 
       {/* Mobile iOS Bitchat Banner - Prominent */}
       {showBitchatPromo && isMobileIOS && currentGeohash && (
