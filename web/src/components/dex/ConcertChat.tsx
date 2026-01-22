@@ -52,7 +52,7 @@ import {
 interface ConcertChatProps {
   /** Optional fixed venue location. If not provided, uses user's current location */
   venue?: VenueLocation
-  /** Geohash precision level (default: STAGE ~150m) */
+  /** Geohash precision level (default: VENUE ~1.2km for better cross-device compatibility) */
   precision?: number
   /** Whether to show the Bitchat promotion banner */
   showBitchatPromo?: boolean
@@ -85,7 +85,7 @@ const useIsMobileIOS = () => {
 
 export function ConcertChat({
   venue,
-  precision = GEOHASH_PRECISION.STAGE,
+  precision = GEOHASH_PRECISION.VENUE,  // 6 chars (~1.2km) instead of 7 (~150m) for better device matching
   showBitchatPromo = true,
   className = '',
   compact = false,
