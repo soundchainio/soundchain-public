@@ -347,106 +347,53 @@ export function ConcertChat({
         </div>
       </div>
 
-      {/* Bridge App Promo - Shows when bridge not detected on mobile */}
-      {bridgeChecked && connectionMode !== 'bridge' && isMobile && !bridgePromoDismissed && (
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 border-b border-purple-400 relative">
-          <button
-            onClick={() => setBridgePromoDismissed(true)}
-            className="absolute top-2 right-2 p-1 text-white/60 hover:text-white transition-colors"
-            aria-label="Dismiss"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-black/20 flex items-center justify-center">
-              <span className="text-2xl">🌉</span>
-            </div>
-            <div className="flex-1 pr-6">
-              <h3 className="font-bold text-white text-lg">Enable Bluetooth Mesh</h3>
-              <p className="text-purple-200 text-xs">True decentralized messaging</p>
-            </div>
-          </div>
-
-          <p className="text-white/90 text-sm mb-4">
-            Get the <strong>SoundChain Bridge</strong> app to chat with nearby users via Bluetooth - no internet required! Works with Bitchat users too.
-          </p>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-white/80 text-xs">
-              <span>✓</span>
-              <span>Chat without internet connection</span>
-            </div>
-            <div className="flex items-center gap-2 text-white/80 text-xs">
-              <span>✓</span>
-              <span>Connect with Bitchat mesh network</span>
-            </div>
-            <div className="flex items-center gap-2 text-white/80 text-xs">
-              <span>✓</span>
-              <span>Perfect for concerts, festivals, events</span>
-            </div>
-          </div>
-
-          <a
-            href="https://testflight.apple.com/join/soundchain-bridge"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 flex items-center justify-center gap-2 px-4 py-3 bg-white text-purple-700 font-bold rounded-xl hover:bg-gray-100 transition-colors w-full"
-          >
-            <Download className="w-5 h-5" />
-            Get Bridge App (iOS)
-          </a>
-
-          <p className="text-xs text-white/50 mt-3 text-center">
-            Currently in beta via TestFlight
-          </p>
-        </div>
-      )}
-
-      {/* Mobile iOS Bitchat Banner - Prominent */}
-      {showBitchatPromo && isMobileIOS && currentGeohash && (
-        <div className="bg-gradient-to-r from-purple-600 to-cyan-600 p-4 border-b border-cyan-400">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-black/20 flex items-center justify-center">
-              <span className="text-2xl">📡</span>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-white text-lg">Open in Bitchat</h3>
-              <p className="text-cyan-100 text-xs">Jack Dorsey's mesh network app</p>
-            </div>
-          </div>
-
-          <p className="text-white/90 text-sm mb-4">
-            Continue chatting with nearby users in Bitchat for offline Bluetooth mesh support!
-          </p>
-
-          <div className="flex gap-2">
-            <button
-              onClick={openInBitchat}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white text-purple-700 font-bold rounded-xl hover:bg-gray-100 transition-colors"
-            >
-              <ExternalLink className="w-5 h-5" />
-              Open in Bitchat
-            </button>
-
+      {/* Compact App Promos - Slim bars that don't block chat */}
+      {isMobile && (
+        <div className="border-b border-neutral-700">
+          {/* Bridge App - Compact */}
+          {bridgeChecked && connectionMode !== 'bridge' && !bridgePromoDismissed && (
             <a
-              href={getBitchatAppStoreLink()}
+              href="https://testflight.apple.com/join/soundchain-bridge"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center px-4 py-3 bg-black/30 text-white rounded-xl hover:bg-black/40 transition-colors"
+              className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-indigo-600/80 to-purple-600/80 hover:from-indigo-600 hover:to-purple-600 transition-all"
             >
-              <Download className="w-5 h-5" />
+              <div className="flex items-center gap-2">
+                <span>🌉</span>
+                <span className="text-white text-sm font-medium">Get Bridge App</span>
+                <span className="text-purple-200 text-xs hidden sm:inline">- Bluetooth mesh chat</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Download className="w-4 h-4 text-white" />
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setBridgePromoDismissed(true); }}
+                  className="p-1 text-white/60 hover:text-white"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             </a>
-          </div>
+          )}
 
-          <p className="text-xs text-white/60 mt-3 text-center">
-            Messages sync between SoundChain and Bitchat via Nostr protocol
-          </p>
+          {/* Bitchat - Compact */}
+          {showBitchatPromo && isMobileIOS && currentGeohash && (
+            <button
+              onClick={openInBitchat}
+              className="w-full flex items-center justify-between px-3 py-2 bg-gradient-to-r from-purple-600/80 to-cyan-600/80 hover:from-purple-600 hover:to-cyan-600 transition-all"
+            >
+              <div className="flex items-center gap-2">
+                <span>📡</span>
+                <span className="text-white text-sm font-medium">Open in Bitchat</span>
+                <span className="text-cyan-200 text-xs hidden sm:inline">- Offline mesh</span>
+              </div>
+              <ExternalLink className="w-4 h-4 text-white" />
+            </button>
+          )}
         </div>
       )}
 
-      {/* Desktop/Android Bitchat Promo Banner - Collapsible */}
-      {showBitchatPromo && !isMobileIOS && (
+      {/* Desktop Bitchat Promo Banner - Collapsible */}
+      {showBitchatPromo && !isMobile && (
         <div className="bg-gradient-to-r from-purple-900/50 to-cyan-900/50 border-b border-neutral-700">
           <button
             onClick={() => setShowBitchatInfo(!showBitchatInfo)}
