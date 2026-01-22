@@ -41,6 +41,13 @@ import {
   type NostrIdentity,
   type VenueLocation,
 } from 'lib/nostr/concertChat'
+import {
+  BridgeClient,
+  isBridgeAvailable,
+  type ConnectionMode,
+  type MeshStatus,
+  type NearbyDevice,
+} from 'lib/nostr/bridgeClient'
 
 interface ConcertChatProps {
   /** Optional fixed venue location. If not provided, uses user's current location */
@@ -94,11 +101,15 @@ export function ConcertChat({
   const [showBitchatInfo, setShowBitchatInfo] = useState(false)
   const [locationName, setLocationName] = useState<string>('')
   const [bitchatAppChecked, setBitchatAppChecked] = useState(false)
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode>('disconnected')
+  const [nearbyDevices, setNearbyDevices] = useState<NearbyDevice[]>([])
+  const [bridgeChecked, setBridgeChecked] = useState(false)
 
   const { isMobileIOS, isMobile } = useIsMobileIOS()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const subscriptionRef = useRef<{ close: () => void } | null>(null)
+  const bridgeClientRef = useRef<BridgeClient | null>(null)
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = useCallback(() => {
@@ -147,8 +158,8 @@ export function ConcertChat({
         // Track unique pubkeys for user count
         const seenPubkeys = new Set<string>()
 
-        // Subscribe to chat
-        const sub = subscribeToConcertChat(geohash, (msg) => {
+        // Message handler for both bridge and nostr
+        const handleMessage = (msg: NostrMessage) => {
           if (!isMounted) return
 
           seenPubkeys.add(msg.pubkey)
@@ -161,14 +172,50 @@ export function ConcertChat({
           }
 
           setMessages((prev) => {
-            // Dedupe and sort by timestamp
             const existing = prev.find((m) => m.id === msg.id)
             if (existing) return prev
             return [...prev, chatMsg].sort((a, b) => a.timestamp - b.timestamp)
           })
+        }
+
+        // Try Bridge first (for Bluetooth mesh), fall back to Nostr relays
+        console.log('🌉 Checking for Bridge app...')
+        setBridgeChecked(false)
+
+        const bridgeClient = new BridgeClient({
+          geohash,
+          onMessage: handleMessage,
+          onConnectionModeChange: (mode) => {
+            console.log('🌉 Connection mode:', mode)
+            setConnectionMode(mode)
+          },
+          onDeviceFound: (device) => {
+            console.log('🌉 Device found:', device.name)
+            setNearbyDevices(prev => {
+              const exists = prev.find(d => d.id === device.id)
+              if (exists) return prev
+              return [...prev, device]
+            })
+          },
+          onMeshStatus: (status) => {
+            console.log('🌉 Mesh status:', status)
+            setNearbyDevices(status.devices || [])
+          }
         })
 
-        subscriptionRef.current = sub
+        bridgeClientRef.current = bridgeClient
+        const mode = await bridgeClient.connect()
+        setBridgeChecked(true)
+
+        if (mode === 'bridge') {
+          console.log('🌉 Connected via Bridge (Bluetooth mesh)!')
+        } else {
+          console.log('📡 Using Nostr relays (internet)')
+          // Also subscribe via Nostr as backup/supplement
+          const sub = subscribeToConcertChat(geohash, handleMessage)
+          subscriptionRef.current = sub
+        }
+
         setIsConnected(true)
         setIsConnecting(false)
       } catch (err) {
@@ -185,10 +232,12 @@ export function ConcertChat({
     return () => {
       isMounted = false
       subscriptionRef.current?.close()
+      // Cleanup bridge client on unmount
+      bridgeClientRef.current?.disconnect()
     }
   }, [venue, precision])
 
-  // Send message handler
+  // Send message handler - uses Bridge if connected, otherwise Nostr
   const handleSend = async () => {
     if (!input.trim() || !identity || !currentGeohash) return
 
@@ -196,7 +245,14 @@ export function ConcertChat({
     setInput('')
 
     try {
-      await sendConcertMessage(identity, currentGeohash, messageText)
+      // Use Bridge if connected, otherwise fall back to Nostr
+      if (bridgeClientRef.current && connectionMode === 'bridge') {
+        console.log('🌉 Sending via Bridge (Bluetooth mesh)')
+        await bridgeClientRef.current.sendMessage(messageText)
+      } else {
+        console.log('📡 Sending via Nostr relays')
+        await sendConcertMessage(identity, currentGeohash, messageText)
+      }
     } catch (err) {
       console.error('Failed to send message:', err)
       setError('Failed to send message. Please try again.')
@@ -223,7 +279,9 @@ export function ConcertChat({
     return (
       <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
         <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mb-4" />
-        <p className="text-gray-400 text-sm">Finding nearby users...</p>
+        <p className="text-gray-400 text-sm">
+          {!bridgeChecked ? '🌉 Checking for Bridge app...' : 'Finding nearby users...'}
+        </p>
       </div>
     )
   }
@@ -253,18 +311,32 @@ export function ConcertChat({
             <Radio className="w-5 h-5 text-cyan-400" />
             <span className="font-semibold text-white">Location Chat</span>
             {isConnected ? (
-              <span className="flex items-center gap-1 text-xs text-green-400">
-                <Wifi className="w-3 h-3" /> Live
-              </span>
+              connectionMode === 'bridge' ? (
+                <span className="flex items-center gap-1 text-xs text-purple-400" title="Connected via Bluetooth mesh">
+                  <span>🌉</span> Bridge
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-xs text-green-400" title="Connected via Internet">
+                  <Wifi className="w-3 h-3" /> Live
+                </span>
+              )
             ) : (
               <span className="flex items-center gap-1 text-xs text-yellow-400">
                 <WifiOff className="w-3 h-3" /> Offline
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <Users className="w-4 h-4" />
-            <span>{userCount}</span>
+          <div className="flex items-center gap-3 text-gray-400 text-sm">
+            {connectionMode === 'bridge' && nearbyDevices.length > 0 && (
+              <span className="flex items-center gap-1 text-purple-400" title="Nearby Bluetooth devices">
+                <span>📶</span>
+                <span>{nearbyDevices.length}</span>
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <Users className="w-4 h-4" />
+              <span>{userCount}</span>
+            </span>
           </div>
         </div>
 
@@ -445,7 +517,11 @@ export function ConcertChat({
         </div>
 
         <p className="text-xs text-gray-500 mt-2 text-center">
-          Messages visible to nearby users via Nostr &amp; Bitchat
+          {connectionMode === 'bridge' ? (
+            <>🌉 Bluetooth mesh active - synced with Bitchat</>
+          ) : (
+            <>Messages visible to nearby users via Nostr &amp; Bitchat</>
+          )}
         </p>
       </div>
     </div>
