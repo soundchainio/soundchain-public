@@ -2,13 +2,14 @@
  * SoundChain Bridge - Main UI
  *
  * SwiftUI interface showing:
- * - Bridge connection status
+ * - Bridge connection status (Nostr + Bluetooth)
  * - Nearby Bluetooth devices
- * - Recent chat messages
- * - Quick actions
+ * - Recent chat messages bridged
+ * - Location for geohash
  */
 
 import SwiftUI
+import CoreLocation
 
 struct ContentView: View {
     @EnvironmentObject var bridgeManager: BridgeManager
@@ -19,6 +20,9 @@ struct ContentView: View {
                 VStack(spacing: 20) {
                     // Header Card
                     headerCard
+
+                    // Location Card (NEW - for geohash)
+                    locationCard
 
                     // Status Card
                     statusCard
@@ -44,6 +48,9 @@ struct ContentView: View {
             .navigationBarHidden(true)
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            bridgeManager.requestLocation()
+        }
     }
 
     // MARK: - Header Card
@@ -78,12 +85,78 @@ struct ContentView: View {
                 }
             }
 
-            Text("Web ↔ Bluetooth Mesh")
+            Text("Nostr ↔ Bluetooth Mesh")
                 .font(.caption)
                 .foregroundColor(.gray)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
+    }
+
+    // MARK: - Location Card
+
+    private var locationCard: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "location.fill")
+                    .foregroundColor(.green)
+                Text("Your Location")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Spacer()
+
+                if bridgeManager.isLocating {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                }
+            }
+
+            if let geohash = bridgeManager.currentGeohash {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Geohash: \(geohash)")
+                            .font(.system(.body, design: .monospaced))
+                            .foregroundColor(.cyan)
+
+                        if let name = bridgeManager.locationName {
+                            Text(name)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    Spacer()
+
+                    Button(action: {
+                        bridgeManager.requestLocation()
+                    }) {
+                        Image(systemName: "arrow.clockwise")
+                            .foregroundColor(.cyan)
+                    }
+                }
+            } else {
+                HStack {
+                    Text(bridgeManager.locationError ?? "Detecting location...")
+                        .font(.caption)
+                        .foregroundColor(bridgeManager.locationError != nil ? .red : .gray)
+                    Spacer()
+
+                    Button(action: {
+                        bridgeManager.requestLocation()
+                    }) {
+                        Text("Retry")
+                            .font(.caption)
+                            .foregroundColor(.cyan)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.green.opacity(0.2), lineWidth: 1)
+        )
     }
 
     // MARK: - Status Card
@@ -100,7 +173,7 @@ struct ContentView: View {
                         .font(.headline)
                         .foregroundColor(.white)
 
-                    Text(bridgeManager.isRunning ? "Listening on ws://localhost:8765" : "Tap Start to begin")
+                    Text(bridgeManager.isRunning ? "Bridging Nostr ↔ Bluetooth" : "Tap Start to begin")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -111,35 +184,28 @@ struct ContentView: View {
                 Circle()
                     .fill(bridgeManager.isRunning ? Color.green : Color.gray)
                     .frame(width: 12, height: 12)
-                    .overlay(
-                        Circle()
-                            .stroke(bridgeManager.isRunning ? Color.green.opacity(0.5) : Color.clear, lineWidth: 4)
-                            .scaleEffect(bridgeManager.isRunning ? 1.5 : 1)
-                            .opacity(bridgeManager.isRunning ? 0 : 1)
-                            .animation(.easeOut(duration: 1).repeatForever(autoreverses: false), value: bridgeManager.isRunning)
-                    )
             }
 
             // Stats Row
             HStack(spacing: 20) {
                 StatBadge(
                     icon: "globe",
-                    value: "\(bridgeManager.connectedWebClients)",
-                    label: "Web Clients",
-                    color: .cyan
+                    value: bridgeManager.nostrConnected ? "✓" : "-",
+                    label: "Nostr",
+                    color: bridgeManager.nostrConnected ? .cyan : .gray
                 )
 
                 StatBadge(
                     icon: "dot.radiowaves.left.and.right",
                     value: "\(bridgeManager.nearbyDevices.count)",
-                    label: "Nearby",
+                    label: "Bluetooth",
                     color: .purple
                 )
 
                 StatBadge(
-                    icon: "message.fill",
-                    value: "\(bridgeManager.recentMessages.count)",
-                    label: "Messages",
+                    icon: "arrow.left.arrow.right",
+                    value: "\(bridgeManager.messagesRelayed)",
+                    label: "Relayed",
                     color: .orange
                 )
             }
@@ -169,6 +235,8 @@ struct ContentView: View {
                 .foregroundColor(.white)
                 .cornerRadius(12)
             }
+            .disabled(bridgeManager.currentGeohash == nil)
+            .opacity(bridgeManager.currentGeohash == nil ? 0.5 : 1)
         }
         .padding()
         .background(Color.white.opacity(0.05))
@@ -209,7 +277,7 @@ struct ContentView: View {
                         Text("No devices found")
                             .font(.caption)
                             .foregroundColor(.gray)
-                        Text("Make sure Bluetooth is enabled")
+                        Text("Nearby Bitchat users will appear here")
                             .font(.caption2)
                             .foregroundColor(.gray.opacity(0.7))
                     }
@@ -238,7 +306,7 @@ struct ContentView: View {
             HStack {
                 Image(systemName: "message.fill")
                     .foregroundColor(.orange)
-                Text("Recent Messages")
+                Text("Messages Bridged")
                     .font(.headline)
                     .foregroundColor(.white)
                 Spacer()
@@ -254,6 +322,9 @@ struct ContentView: View {
                         Text("No messages yet")
                             .font(.caption)
                             .foregroundColor(.gray)
+                        Text("Messages from Nostr & Bluetooth appear here")
+                            .font(.caption2)
+                            .foregroundColor(.gray.opacity(0.7))
                     }
                     .padding(.vertical, 20)
                     Spacer()
@@ -286,10 +357,32 @@ struct ContentView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                InstructionRow(number: 1, text: "Start the bridge (tap button above)")
-                InstructionRow(number: 2, text: "Open SoundChain web app on same WiFi")
-                InstructionRow(number: 3, text: "Go to Nearby chat - it auto-connects!")
-                InstructionRow(number: 4, text: "Messages bridge to Bitchat users nearby")
+                InstructionRow(number: 1, text: "Allow location access for geohash")
+                InstructionRow(number: 2, text: "Start the bridge (tap button above)")
+                InstructionRow(number: 3, text: "Bridge connects to Nostr + Bluetooth")
+                InstructionRow(number: 4, text: "Messages auto-relay between networks!")
+            }
+
+            Divider()
+                .background(Color.gray.opacity(0.3))
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "globe")
+                        .foregroundColor(.cyan)
+                        .font(.caption)
+                    Text("SoundChain web → Nostr → Bridge → Bluetooth → Bitchat")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
+                HStack {
+                    Image(systemName: "dot.radiowaves.left.and.right")
+                        .foregroundColor(.purple)
+                        .font(.caption)
+                    Text("Bitchat → Bluetooth → Bridge → Nostr → SoundChain web")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                }
             }
 
             Divider()
@@ -415,11 +508,19 @@ struct MessageRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Source indicator
-            Image(systemName: message.source == .web ? "globe" : "dot.radiowaves.left.and.right")
-                .font(.caption)
-                .foregroundColor(message.source == .web ? .cyan : .purple)
-                .frame(width: 20)
+            // Source indicator with direction
+            VStack(spacing: 2) {
+                Image(systemName: message.source == .nostr ? "globe" : "dot.radiowaves.left.and.right")
+                    .font(.caption)
+                    .foregroundColor(message.source == .nostr ? .cyan : .purple)
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 8))
+                    .foregroundColor(.gray)
+                Image(systemName: message.source == .nostr ? "dot.radiowaves.left.and.right" : "globe")
+                    .font(.caption)
+                    .foregroundColor(message.source == .nostr ? .purple : .cyan)
+            }
+            .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
