@@ -1,60 +1,74 @@
-import WalletConnectProvider from '@walletconnect/web3-provider'
 import { mainNetwork, testnetNetwork } from 'lib/blockchainNetworks'
-import { useEffect, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import Web3 from 'web3'
-// type IWeb3Provider = typeof IWeb3Provider;
+
+// WalletConnect v1 has been deprecated and the bridge servers are shut down.
+// This hook now uses lazy initialization and will warn users to use Web3Modal instead.
+// TODO: Migrate to WalletConnect v2 or use Web3Modal exclusively
 
 export const useWalletConnect = () => {
-  const [provider, setProvider] = useState<WalletConnectProvider>()
   const [web3, setWeb3] = useState<Web3>()
   const [account, setAccount] = useState<string>()
+  const providerRef = useRef<any>(null)
 
-  useEffect(() => {
-    if (!provider) {
-      //  Create WalletConnect Provider
+  // Lazy initialization - only create provider when connect() is called
+  const connect = useCallback(async () => {
+    console.warn('⚠️ WalletConnect v1 is deprecated. Please use Web3Modal or MetaMask instead.')
+
+    try {
+      // Dynamically import to avoid initialization on page load
+      const WalletConnectProvider = (await import('@walletconnect/web3-provider')).default
+
       const walletProvider = new WalletConnectProvider({
         rpc: {
           137: mainNetwork.rpc,
           80002: testnetNetwork.rpc,
-          8453: 'https://mainnet.base.org',     // Base (Coinbase L2)
-          1: 'https://eth.llamarpc.com',        // Ethereum mainnet
-          42161: 'https://arb1.arbitrum.io/rpc', // Arbitrum
-          10: 'https://mainnet.optimism.io',    // Optimism
+          8453: 'https://mainnet.base.org',
+          1: 'https://eth.llamarpc.com',
+          42161: 'https://arb1.arbitrum.io/rpc',
+          10: 'https://mainnet.optimism.io',
         },
       })
+
       walletProvider.updateRpcUrl(137)
-      setProvider(walletProvider)
-    }
-    if (provider) {
-      provider.on('accountsChanged', (accounts: string[]) => {
+      providerRef.current = walletProvider
+
+      // Set up event listeners
+      walletProvider.on('accountsChanged', (accounts: string[]) => {
         setAccount(accounts[0])
       })
-      provider.on('disconnect', (code: number, reason: string) => {
-        console.log('disconnect: ', code, reason)
+      walletProvider.on('disconnect', (code: number, reason: string) => {
+        console.log('WalletConnect disconnect:', code, reason)
+        setAccount(undefined)
+        setWeb3(undefined)
       })
-    }
-  }, [provider])
 
-  const connect = async () => {
-    if (provider) {
-      //  Enable session (triggers QR Code modal)
-      await provider.enable()
-      provider.updateRpcUrl(137)
+      // Enable session (triggers QR Code modal)
+      await walletProvider.enable()
+      walletProvider.updateRpcUrl(137)
 
-      //  eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const newWeb3 = new Web3(provider as any)
+      const newWeb3 = new Web3(walletProvider as any)
       setWeb3(newWeb3)
 
       const accounts = await newWeb3.eth.getAccounts()
       setAccount(accounts[0])
+    } catch (error: any) {
+      // WalletConnect v1 bridge is dead - log error but don't crash
+      console.error('WalletConnect v1 connection failed (bridge is deprecated):', error.message)
+      throw new Error('WalletConnect v1 is no longer supported. Please use MetaMask or another wallet.')
     }
-  }
+  }, [])
 
-  const disconnect = async () => {
-    if (provider) await provider.disconnect()
-  }
+  const disconnect = useCallback(async () => {
+    if (providerRef.current) {
+      await providerRef.current.disconnect()
+      providerRef.current = null
+    }
+    setAccount(undefined)
+    setWeb3(undefined)
+  }, [])
 
-  return { web3, connect, disconnect, provider, account }
+  return { web3, connect, disconnect, provider: providerRef.current, account }
 }
 
 export default useWalletConnect
