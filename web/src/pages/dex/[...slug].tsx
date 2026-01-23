@@ -3683,14 +3683,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </div>
           )}
 
-          {/* Feed View - 3-column desktop layout */}
+          {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className="flex justify-center gap-6 px-4">
+            <div className="flex justify-center gap-6 px-0 md:px-4">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
               {/* Main Feed - Posts only (announcements moved to dedicated tab) */}
-              <div className="flex-1 max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+              <div className="flex-1 max-w-full md:max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
                 <Posts />
               </div>
 
