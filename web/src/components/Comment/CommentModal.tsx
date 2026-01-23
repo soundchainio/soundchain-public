@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import { X } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { useCommentsQuery, PageInput } from 'lib/graphql'
 import { Comment } from './Comment'
@@ -13,17 +13,15 @@ export const CommentModal = () => {
   const { commentModalPostId } = useModalState()
   const { dispatchShowCommentModal } = useModalDispatch()
   const modalRef = useRef<HTMLDivElement>(null)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   const firstPage: PageInput = { first: pageSize }
 
   const { data, loading, error, refetch, fetchMore } = useCommentsQuery({
     variables: { postId: commentModalPostId || '', page: firstPage },
     skip: !commentModalPostId,
-    fetchPolicy: 'network-only', // Always fetch fresh data
+    fetchPolicy: 'network-only',
   })
-
-  // Debug logging
-  console.log('[CommentModal] postId:', commentModalPostId, 'loading:', loading, 'error:', error, 'data:', data?.comments?.nodes?.length)
 
   const handleClose = () => {
     dispatchShowCommentModal({ show: false, postId: undefined })
@@ -38,15 +36,11 @@ export const CommentModal = () => {
     return () => document.removeEventListener('keydown', handleEscape)
   }, [])
 
-  // Close on click outside
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) handleClose()
-  }
-
   if (!commentModalPostId) return null
 
   const comments = data?.comments.nodes || []
   const pageInfo = data?.comments.pageInfo
+  const commentCount = comments.length
 
   const loadMore = () => {
     if (pageInfo?.hasNextPage && fetchMore) {
@@ -64,71 +58,99 @@ export const CommentModal = () => {
 
   return (
     <ModalsPortal>
+      {/* Mini accordion popup - anchored to bottom right, no full-screen overlay */}
       <div
-        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm"
-        onClick={handleBackdropClick}
+        ref={modalRef}
+        className="fixed bottom-4 right-4 z-50 w-[340px] sm:w-[380px] bg-neutral-900 rounded-xl shadow-2xl border border-neutral-700 flex flex-col overflow-hidden transition-all duration-200"
+        style={{ maxHeight: isCollapsed ? '48px' : '400px' }}
       >
+        {/* Collapsible Header - click to toggle */}
         <div
-          ref={modalRef}
-          className="bg-neutral-900 w-full sm:w-[500px] max-h-[60vh] sm:max-h-[70vh] rounded-t-2xl sm:rounded-2xl flex flex-col overflow-hidden border border-neutral-800"
+          className="flex items-center justify-between px-3 py-2.5 border-b border-neutral-800 cursor-pointer hover:bg-neutral-800/50 transition-colors"
+          onClick={() => setIsCollapsed(!isCollapsed)}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
-            <h2 className="text-white font-semibold text-lg">Comments</h2>
-            <button
-              onClick={handleClose}
-              className="p-1.5 rounded-full hover:bg-neutral-800 transition-colors"
-            >
-              <X className="w-5 h-5 text-neutral-400" />
-            </button>
-          </div>
-
-          {/* Comments List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {error ? (
-              <div className="text-center py-8">
-                <p className="text-red-400">Error loading comments</p>
-                <p className="text-neutral-600 text-sm mt-1">{error.message}</p>
-                <button
-                  onClick={() => refetch()}
-                  className="mt-2 px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm"
-                >
-                  Try again
-                </button>
-              </div>
-            ) : loading && !data ? (
-              <>
-                <CommentSkeleton />
-                <CommentSkeleton />
-                <CommentSkeleton />
-              </>
-            ) : comments.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-neutral-500">No comments yet</p>
-                <p className="text-neutral-600 text-sm mt-1">Be the first to comment!</p>
-              </div>
-            ) : (
-              <>
-                {comments.map(({ id }) => (
-                  <Comment key={id} commentId={id} />
-                ))}
-                {pageInfo?.hasNextPage && (
-                  <button
-                    onClick={loadMore}
-                    className="w-full py-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
-                  >
-                    Load more comments
-                  </button>
-                )}
-              </>
+          <div className="flex items-center gap-2">
+            <span className="text-white font-medium text-sm">Comments</span>
+            {commentCount > 0 && (
+              <span className="text-xs text-neutral-400 bg-neutral-800 px-1.5 py-0.5 rounded-full">
+                {commentCount}
+              </span>
             )}
           </div>
-
-          {/* Comment Form */}
-          <div className="border-t border-neutral-800 p-3 bg-neutral-900/95">
-            <NewCommentForm postId={commentModalPostId} onSuccess={handleClose} compact />
+          <div className="flex items-center gap-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsCollapsed(!isCollapsed)
+              }}
+              className="p-1 rounded hover:bg-neutral-700 transition-colors"
+            >
+              {isCollapsed ? (
+                <ChevronUp className="w-4 h-4 text-neutral-400" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-neutral-400" />
+              )}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleClose()
+              }}
+              className="p-1 rounded hover:bg-neutral-700 transition-colors"
+            >
+              <X className="w-4 h-4 text-neutral-400" />
+            </button>
           </div>
         </div>
+
+        {/* Expandable Content */}
+        {!isCollapsed && (
+          <>
+            {/* Comments List */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 max-h-[260px]">
+              {error ? (
+                <div className="text-center py-4">
+                  <p className="text-red-400 text-sm">Error loading comments</p>
+                  <button
+                    onClick={() => refetch()}
+                    className="mt-1 px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded text-xs"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : loading && !data ? (
+                <>
+                  <CommentSkeleton />
+                  <CommentSkeleton />
+                </>
+              ) : comments.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-neutral-500 text-sm">No comments yet</p>
+                  <p className="text-neutral-600 text-xs mt-0.5">Be the first!</p>
+                </div>
+              ) : (
+                <>
+                  {comments.map(({ id }) => (
+                    <Comment key={id} commentId={id} />
+                  ))}
+                  {pageInfo?.hasNextPage && (
+                    <button
+                      onClick={loadMore}
+                      className="w-full py-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                    >
+                      Load more
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Comment Form */}
+            <div className="border-t border-neutral-800 p-2 bg-neutral-900/95">
+              <NewCommentForm postId={commentModalPostId} onSuccess={() => {}} compact />
+            </div>
+          </>
+        )}
       </div>
     </ModalsPortal>
   )
