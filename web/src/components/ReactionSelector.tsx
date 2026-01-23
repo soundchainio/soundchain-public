@@ -27,13 +27,13 @@ const reactionTypes = [
   ReactionType.Heart,
 ]
 
-// Emoji labels for tooltip
+// Music-themed emoji labels for SoundChain
 const reactionLabels: Record<ReactionType, string> = {
-  [ReactionType.Sad]: 'Fire',
-  [ReactionType.Happy]: '100',
-  [ReactionType.Horns]: 'Rocket',
-  [ReactionType.Sunglasses]: 'Cool',
-  [ReactionType.Heart]: 'Love',
+  [ReactionType.Sad]: 'Fire',        // 🔥 This is fire!
+  [ReactionType.Happy]: 'Vibes',     // 🎵 Good vibes
+  [ReactionType.Horns]: 'On Repeat', // 🎧 Can't stop listening
+  [ReactionType.Sunglasses]: 'Bars', // 🎤 Great vocals/lyrics
+  [ReactionType.Heart]: 'Classic',   // 💿 Timeless track
 }
 
 const baseListClasses =

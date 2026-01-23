@@ -1,25 +1,23 @@
 import { ReactionType } from 'lib/graphql'
 import { Fire } from './emoji/Fire'
-import { Heart } from './emoji/Heart'
-import { Hundred } from './emoji/Hundred'
-import { Rocket } from './emoji/Rocket'
-import { Sunglasses } from './emoji/Sunglasses'
+import { Headphones } from './emoji/Headphones'
+import { Microphone } from './emoji/Microphone'
+import { MusicalNote } from './emoji/MusicalNote'
+import { Vinyl } from './emoji/Vinyl'
 import { IconComponent } from './types/IconComponent'
 
 interface ReactionEmojiProps extends React.SVGProps<SVGSVGElement> {
   name: ReactionType
 }
 
-// We will need a bigger migration if we wanna change the key names
-// of the emojis, it should be something like first, second, third...
-// then we could always rewrite the entire history by changing only
-// the svg file, for now this solution will work
+// Music-themed reactions for SoundChain
+// Keys are legacy enum values, visuals are music-themed
 const emojiByName: Record<ReactionType, IconComponent> = {
-  HAPPY: Hundred,
-  HEART: Heart,
-  HORNS: Rocket,
-  SAD: Fire,
-  SUNGLASSES: Sunglasses,
+  SAD: Fire,           // 🔥 Fire - "This track is fire!"
+  HAPPY: MusicalNote,  // 🎵 Note - "Good vibes"
+  HORNS: Headphones,   // 🎧 Headphones - "On repeat"
+  SUNGLASSES: Microphone, // 🎤 Mic - "Bars/Great vocals"
+  HEART: Vinyl,        // 💿 Vinyl - "Classic"
 }
 
 export const ReactionEmoji = ({ name, ...props }: ReactionEmojiProps) => {
