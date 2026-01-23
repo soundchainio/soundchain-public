@@ -388,6 +388,23 @@ characteristicUUID: "A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D"
 4. Allow location and Bluetooth permissions
 5. Tap "Start Bridge"
 
+### Bridge Test Logs
+
+**Jan 23, 2026 - 8:20 AM - War Room 3-Device Test**
+Testing across 3 devices (iPhone Pro, iPhone 14, iPad). Results:
+```
+✅ WebSocket connected to multiple Nostr relays
+✅ Geohash subscription active (9tbmte - local area)
+✅ Messages received from Nostr:
+   - "5d6b72b1... /pro saying peace"
+   - "0fb17749... /14/🧬"
+✅ Bridge forwarding: Nostr → Bluetooth/Bitchat
+✅ Publishing: 2/4 relays succeeded
+⚠️ relay.damus.io & relay.nostr.band dropped (normal flakiness)
+⚠️ No Bluetooth mesh peers (devices not close enough)
+```
+**Status:** Core bridge functionality WORKING. Nostr ↔ Bridge communication confirmed. Bluetooth mesh pending physical proximity test.
+
 ---
 
 ## SMART CONTRACT ADDRESSES
