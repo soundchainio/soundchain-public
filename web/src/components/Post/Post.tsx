@@ -401,9 +401,10 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           isBookmarked={post.isBookmarked}
           commentCount={post.commentCount}
           repostCount={post.repostCount}
+          hasTrack={!!post.track}
           isEphemeral={isEphemeral}
           isOwner={isAuthor}
-          postData={isEphemeral ? {
+          postData={{
             id: post.id,
             body: post.body,
             createdAt: post.createdAt,
@@ -417,7 +418,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
               displayName: post.profile.displayName,
               userHandle: post.profile.userHandle,
             } : null,
-          } : undefined}
+          }}
         />
       </div>
     </article>

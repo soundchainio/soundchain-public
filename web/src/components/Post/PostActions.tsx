@@ -11,7 +11,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 
-import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
+import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import { Bookmark, Archive, Info } from 'lucide-react'
 
 // Detect if device supports hover (desktop)
@@ -27,7 +27,8 @@ interface PostActionsProps {
   // Count badges for icons
   commentCount?: number
   repostCount?: number
-  // Archive feature props
+  // Download/Archive feature props
+  hasTrack?: boolean  // If true, hide download (NFT protection)
   isEphemeral?: boolean
   isOwner?: boolean
   postData?: {
@@ -50,13 +51,14 @@ interface PostActionsProps {
 // Icon-only action button styles
 const commonClasses = 'text-neutral-400 flex-1 flex justify-center'
 
-export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, commentCount = 0, repostCount = 0, isEphemeral, isOwner, postData }: PostActionsProps) => {
+export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, commentCount = 0, repostCount = 0, hasTrack, isEphemeral, isOwner, postData }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
   const { dispatchSetRepostId, dispatchShowPostModal, dispatchShowCommentModal } = useModalDispatch()
   const [postLink, setPostLink] = useState('')
   const [guestWallet, setGuestWallet] = useState<string | null>(null)
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked ?? false)
   const [isArchiving, setIsArchiving] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const [showArchiveInfo, setShowArchiveInfo] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -176,7 +178,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
     }
   }
 
-  // Archive ephemeral post to device
+  // Archive ephemeral post to device (owner only)
   const handleArchiveClick = async () => {
     if (!postData || isArchiving) return
 
@@ -201,6 +203,34 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       toast.error('Failed to archive post')
     } finally {
       setIsArchiving(false)
+    }
+  }
+
+  // Download any post to device (not NFT posts)
+  const handleDownloadClick = async () => {
+    if (!postData || isDownloading) return
+
+    setIsDownloading(true)
+    try {
+      toast.info('Preparing download...', { autoClose: 2000 })
+
+      // Create the archive blob (reuse existing archive function)
+      const archiveBlob = await createPostArchive(postData)
+
+      // Generate filename with .soundchain extension
+      const filename = generateArchiveFilename(postData)
+
+      // Download to device
+      const success = await downloadArchive(archiveBlob, filename, isMobileDevice())
+
+      if (success) {
+        toast.success('Post downloaded to your device!')
+      }
+    } catch (err) {
+      console.error('Download error:', err)
+      toast.error('Failed to download post')
+    } finally {
+      setIsDownloading(false)
     }
   }
 
@@ -305,6 +335,19 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           <ShareIcon className="h-4 w-4" />
         </button>
       </div>
+      {/* Download button - all posts except NFTs (track posts) */}
+      {!hasTrack && postData && (
+        <div className={commonClasses}>
+          <button
+            className={`flex items-center justify-center p-2 rounded-lg hover:bg-neutral-800/50 transition-colors ${isDownloading ? 'opacity-50' : ''}`}
+            onClick={handleDownloadClick}
+            disabled={isDownloading}
+            title="Download"
+          >
+            <ArrowDownTrayIcon className={`h-4 w-4 ${isDownloading ? 'animate-pulse' : ''}`} />
+          </button>
+        </div>
+      )}
       {/* Bookmark button - only for logged-in users */}
       {me && (
         <div className={commonClasses}>
