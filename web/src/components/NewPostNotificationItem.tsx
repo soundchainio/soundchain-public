@@ -2,6 +2,7 @@ import React from 'react'
 
 import classNames from 'classnames'
 import { Avatar } from 'components/Avatar'
+import { EmoteRenderer } from 'components/EmoteRenderer'
 import { Timestamp } from 'components/Timestamp'
 import { NewPostNotification as NewPostIcon } from 'icons/NewPostNotification'
 import { NewPostNotification } from 'lib/graphql'
@@ -35,7 +36,7 @@ export const NewPostNotificationItem = ({
           </div>
           <div>
             <div className="flex  text-sm text-gray-100">
-              <div className="font-semibold">{authorName}</div>&nbsp;
+              <div className="font-semibold">{typeof authorName === 'object' ? (authorName as any)?.displayName || 'Someone' : authorName}</div>&nbsp;
               {track ? 'posted a new track:' : 'created a new post:'}
             </div>
             <Timestamp small datetime={createdAt} className="text-sm" />
@@ -59,7 +60,7 @@ export const NewPostNotificationItem = ({
                 }}
               />
             ) : (
-              previewBody
+              <EmoteRenderer text={previewBody || ''} />
             )}
           </div>
         </div>

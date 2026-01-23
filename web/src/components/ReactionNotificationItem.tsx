@@ -37,7 +37,7 @@ export const ReactionNotificationItem = ({
           <div>
             <div className="inline-block w-full items-center text-sm text-gray-100">
               <span className="flex flex-wrap">
-                <div className="font-semibold">{authorName}</div>
+                <div className="font-semibold">{typeof authorName === 'object' ? (authorName as any)?.displayName || 'Someone' : authorName}</div>
                 &nbsp;reacted
                 <ReactionEmoji key={reactionType} name={reactionType} className="ml-2 mr-2 h-6 w-6" />
                 to your post.
