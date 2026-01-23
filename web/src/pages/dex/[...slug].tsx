@@ -1979,9 +1979,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Radio className="w-5 h-5 text-green-400" />
                   </Button>
 
-                  {/* Nearby Dropdown - Mobile */}
+                  {/* Nearby Dropdown - Mobile (compact accordion style) */}
                   {showNearbyModal && (
-                    <Card className="fixed left-2 right-2 top-16 z-50 shadow-2xl border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900 max-h-[70vh] overflow-hidden">
+                    <Card className="absolute left-0 top-12 w-80 z-50 shadow-2xl border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900 max-h-[70vh] overflow-hidden">
                       <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-cyan-900/50">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
