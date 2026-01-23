@@ -21,6 +21,7 @@ import { FilterPostInput } from '../types/FilterPostInput';
 import { PageInput } from '../types/PageInput';
 import { PostConnection } from '../types/PostConnection';
 import { ReactionConnection } from '../types/ReactionConnection';
+import { ReactionCount } from '../types/ReactionCount';
 import { ReactionType } from '../types/ReactionType';
 import { ReactToPostInput } from '../types/ReactToPostInput';
 import { ReactToPostPayload } from '../types/ReactToPostPayload';
@@ -77,6 +78,15 @@ export class PostResolver {
       .sort((a, b) => b[1] - a[1])
       .slice(0, top)
       .map(pair => pair[0] as ReactionType);
+  }
+
+  @FieldResolver(() => [ReactionCount])
+  reactionTally(@Root() { reactionStats }: Post): ReactionCount[] {
+    if (!reactionStats) return [];
+    return toPairs(reactionStats)
+      .filter(([_, count]) => count > 0)
+      .sort(([, a], [, b]) => b - a)
+      .map(([type, count]) => ({ type: type as ReactionType, count }));
   }
 
   @FieldResolver(() => ReactionType, { nullable: true })

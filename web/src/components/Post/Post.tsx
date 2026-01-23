@@ -389,6 +389,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         <PostStats
           totalReactions={post.totalReactions}
           topReactions={post.topReactions}
+          reactionTally={post.reactionTally}
           commentCount={post.commentCount}
           repostCount={post.repostCount}
           postId={post.id}
