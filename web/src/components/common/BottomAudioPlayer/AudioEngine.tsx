@@ -573,6 +573,42 @@ export const AudioEngine = () => {
     }
   }
 
+  /**
+   * Handle audio errors (broken URLs, network issues, unsupported formats)
+   * Automatically skips to the next track to avoid getting stuck
+   */
+  function handleAudioError(e: React.SyntheticEvent<HTMLAudioElement, Event>) {
+    const audio = e.currentTarget
+    const error = audio.error
+
+    // Log the error for debugging
+    console.error('[AudioEngine] Playback error:', {
+      trackId: currentSong.trackId,
+      title: currentSong.title,
+      src: currentSong.src?.substring(0, 100) + '...',
+      errorCode: error?.code,
+      errorMessage: error?.message,
+    })
+
+    // Show toast notification
+    toast.error(`Skipping: ${currentSong.title || 'Track'} (audio unavailable)`, {
+      position: 'bottom-right',
+      autoClose: 3000,
+    })
+
+    // Skip to next track if available
+    if (hasNext) {
+      playNext()
+    } else if (loopMode === 'all' && playlist.length > 0) {
+      // If looping all and at end, restart from beginning
+      jumpTo(0)
+    } else {
+      // No next track - stop playback
+      setPlayingState(false)
+      setProgressState(0)
+    }
+  }
+
   return (
     <audio
       ref={audioRef}
@@ -581,6 +617,7 @@ export const AudioEngine = () => {
       onTimeUpdate={handleTimeUpdate}
       onDurationChange={handleDurationChange}
       onEnded={handleEndedSong}
+      onError={handleAudioError}
       className="h-0 w-0 opacity-0"
       playsInline
       // MOBILE OPTIMIZATION: Use "metadata" on mobile to prevent memory exhaustion
