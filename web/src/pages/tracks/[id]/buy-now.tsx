@@ -148,9 +148,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
           const hasEnoughAllowance = existingAllowance !== undefined && OGUNPrice !== undefined
             ? parseFloat(existingAllowance) >= parseFloat(OGUNPrice)
             : false // Default to false if either value is undefined
-          console.log(
-            `Your existing allowance for contract: ${marketplaceAddress} is ${existingAllowance} validating an amount of ${OGUNPrice}`,
-          )
           setHasAllowance(hasEnoughAllowance)
           setLoading(false)
         }
@@ -184,29 +181,24 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       const fixedAmount = Web3.utils.toWei((+OGUNItemPrice * 10 ** -18).toString(), 'wei')
       const amountBN = BigInt(fixedAmount)
       const gasPriceWei = await web3.eth.getGasPrice()
-      console.log(`Approving new allowance of ${amountBN} using a gas price: ${gasPriceWei}`)
       setLoading(true)
       await tokenContract(web3)
         .methods.approve(marketplaceAddress, amountBN)
         .send({ from: account, gasPrice: gasPriceWei.toString() })
-        .on('receipt', (receipt: Web3Receipt) => {
+        .on('receipt', (_receipt: Web3Receipt) => {
           toast.success('Successfully increased your allowance for the marketplace.')
           setHasAllowance(true)
           setLoading(false)
-          console.log('Your transaction receipt: ', receipt)
         })
-        .on('error', (error: Error) => {
+        .on('error', (_error: Error) => {
           setHasAllowance(false)
           setLoading(false)
           toast.error('We were unable to process the new allowance transaction at this moment.')
-          console.log(error)
         })
-        .catch((reason: unknown) => { // Updated to unknown type
-          const error = reason as Error; // Cast to Error if possible
+        .catch((_reason: unknown) => {
           setHasAllowance(false)
           setLoading(false)
           toast.error('We were unable to process the new allowance at this moment.')
-          console.log(error)
         })
     }
   }
