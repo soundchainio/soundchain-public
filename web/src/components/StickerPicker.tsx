@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import classNames from 'classnames'
+import { getSoundChainStickers, getStickersByCategory } from 'lib/soundchainStickers'
 
 // Types for emote APIs
 interface SevenTVEmote {
@@ -36,7 +37,7 @@ interface NormalizedEmote {
   source: 'twitch' | '7tv' | 'bttv' | 'ffz' | 'kick' | 'tenor' | 'soundchain'
 }
 
-type StickerCategory = '7tv' | 'bttv' | 'ffz' | 'trending' | 'reactions' | 'music' | 'twitch' | 'kick'
+type StickerCategory = '7tv' | 'bttv' | 'ffz' | 'trending' | 'reactions' | 'music' | 'twitch' | 'kick' | 'soundchain' | 'genres' | 'crypto'
 
 interface StickerPickerProps {
   onSelect: (stickerUrl: string, stickerName: string) => void
@@ -68,12 +69,15 @@ const filterSeasonalEmotes = (emotes: NormalizedEmote[]): NormalizedEmote[] => {
 }
 
 export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) => {
-  const [activeCategory, setActiveCategory] = useState<StickerCategory>('trending')
+  const [activeCategory, setActiveCategory] = useState<StickerCategory>('soundchain')
   const [emotes, setEmotes] = useState<NormalizedEmote[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
   const categories = [
+    { id: 'soundchain' as const, label: 'SC', icon: '🎧' },
+    { id: 'genres' as const, label: 'Genre', icon: '🎸' },
+    { id: 'crypto' as const, label: 'Web3', icon: '💎' },
     { id: 'trending' as const, label: 'Hot', icon: '🔥' },
     { id: 'reactions' as const, label: 'React', icon: '😂' },
     { id: 'music' as const, label: 'Music', icon: '🎵' },
@@ -418,6 +422,21 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
         let loadedEmotes: NormalizedEmote[] = []
 
         switch (activeCategory) {
+          case 'soundchain':
+            // SoundChain branded stickers (brand + badges)
+            loadedEmotes = [
+              ...getStickersByCategory('brand'),
+              ...getStickersByCategory('badge'),
+            ]
+            break
+          case 'genres':
+            // Genre-specific stickers
+            loadedEmotes = getStickersByCategory('genre')
+            break
+          case 'crypto':
+            // Web3/Crypto vibes
+            loadedEmotes = getStickersByCategory('crypto')
+            break
           case '7tv':
             loadedEmotes = await fetch7TVEmotes()
             break
@@ -610,7 +629,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
           )}
         </span>
         <span className="flex items-center gap-1">
-          💜 Twitch • 💚 Kick • 7TV • BTTV • FFZ
+          🎧 SC • 💜 Twitch • 💚 Kick • 7TV
         </span>
       </div>
     </div>
