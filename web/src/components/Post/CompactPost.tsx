@@ -1,4 +1,4 @@
-import { memo, useState, useRef } from 'react'
+import { memo, useState, useRef, useEffect } from 'react'
 import { FastAudioPlayer } from '../FastAudioPlayer'
 import { PostQuery, Track } from 'lib/graphql'
 import Link from 'next/link'
@@ -50,6 +50,30 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
   const [isHovered, setIsHovered] = useState(false)
   const [isMuted, setIsMuted] = useState(true) // Videos start muted for autoplay
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  // Stop video on scroll - Intersection Observer
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            // Video in view - play
+            video.play().catch(() => {})
+          } else {
+            // Video out of view - pause
+            video.pause()
+          }
+        })
+      },
+      { threshold: [0.5] }
+    )
+
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [])
 
   if (!post || post.deleted) return null
 
@@ -111,7 +135,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                 loop
                 autoPlay
               />
-              {/* Unmute button overlay - tap to unmute like IG/X */}
+              {/* Mute/Unmute button overlay */}
               <button
                 onClick={(e) => {
                   e.stopPropagation()
@@ -122,7 +146,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                   setIsMuted(newMuted)
                 }}
                 className="absolute bottom-2 right-2 z-10 w-8 h-8 rounded-full bg-black/70 backdrop-blur flex items-center justify-center hover:bg-black/90 transition-colors"
-                title={isMuted ? 'Tap to unmute' : 'Tap to mute'}
+                title={isMuted ? 'Unmute' : 'Mute'}
               >
                 {isMuted ? (
                   <VolumeX className="w-4 h-4 text-white" />
@@ -130,13 +154,6 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                   <Volume2 className="w-4 h-4 text-cyan-400" />
                 )}
               </button>
-              {/* Muted indicator hint */}
-              {isMuted && (
-                <div className="absolute bottom-2 left-2 z-10 px-2 py-1 bg-black/70 backdrop-blur rounded-full text-white text-[10px] flex items-center gap-1">
-                  <VolumeX className="w-3 h-3" />
-                  <span>Tap to unmute</span>
-                </div>
-              )}
             </div>
           )}
           {uploadedMediaType === 'audio' && (

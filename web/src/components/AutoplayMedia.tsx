@@ -23,7 +23,6 @@ export const AutoplayVideo = memo(({
 }: AutoplayVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isInView, setIsInView] = useState(false)
-  const [hasInteracted, setHasInteracted] = useState(false)
   const [isMuted, setIsMuted] = useState(muted)
 
   // Set up Intersection Observer
@@ -50,7 +49,7 @@ export const AutoplayVideo = memo(({
     }
   }, [])
 
-  // Handle autoplay based on visibility
+  // Handle autoplay based on visibility - always stop on scroll
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -68,28 +67,18 @@ export const AutoplayVideo = memo(({
             console.log('Autoplay prevented:', err.message)
           })
       }
-    } else if (!hasInteracted) {
-      // Only pause when out of view if user hasn't interacted yet
-      // Once they've tapped to unmute, keep the vibe going!
+    } else {
+      // Always pause when scrolled out of view
       video.pause()
       onPause?.()
     }
-    // If hasInteracted is true, don't pause - let it keep playing
-  }, [isInView, hasInteracted, onPlay, onPause])
+  }, [isInView, onPlay, onPause])
 
   const handleClick = () => {
     const video = videoRef.current
     if (!video) return
 
-    // First click unmutes the video (like IG/X behavior)
-    if (!hasInteracted && isMuted) {
-      video.muted = false
-      setIsMuted(false)
-      setHasInteracted(true)
-      return
-    }
-
-    // Subsequent clicks toggle play/pause
+    // Click toggles play/pause
     if (video.paused) {
       video.play()
     } else {
@@ -104,7 +93,6 @@ export const AutoplayVideo = memo(({
     const newMuted = !isMuted
     video.muted = newMuted
     setIsMuted(newMuted)
-    setHasInteracted(true)
   }
 
   return (
@@ -118,21 +106,14 @@ export const AutoplayVideo = memo(({
         loop={loop}
         onClick={handleClick}
       />
-      {/* Mute/Unmute button overlay */}
+      {/* Mute/Unmute button overlay - always visible on hover */}
       <button
         onClick={toggleMute}
         className="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-black/60 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-        title={isMuted ? 'Tap to unmute' : 'Tap to mute'}
+        title={isMuted ? 'Unmute' : 'Mute'}
       >
         <span className="text-lg">{isMuted ? '🔇' : '🔊'}</span>
       </button>
-      {/* Tap to unmute hint for muted videos */}
-      {isMuted && !hasInteracted && (
-        <div className="absolute bottom-4 left-4 px-3 py-1.5 bg-black/70 backdrop-blur rounded-full text-white text-xs flex items-center gap-1.5">
-          <span>🔇</span>
-          <span>Tap to unmute</span>
-        </div>
-      )}
       {/* Play/Pause indicator */}
       {!isInView && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30">
