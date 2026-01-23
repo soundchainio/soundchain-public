@@ -1,4 +1,5 @@
-import React, { useState, useCallback, memo } from 'react'
+import React, { useState, useCallback, memo, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
@@ -65,6 +66,12 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Track mount state for portal rendering (avoids SSR hydration issues)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const formatNumber = (num: number) => {
     if (num < 1000) return num.toString()
@@ -157,13 +164,13 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
     )
   }
 
-  // Fullscreen modal - render in portal for proper z-index
-  if (isFullscreen) {
-    return (
+  // Fullscreen modal - render in portal for proper z-index (fixes mobile stacking context issues)
+  if (isFullscreen && mounted) {
+    return createPortal(
       <>
         {/* Backdrop - click to close */}
         <div
-          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] bg-black backdrop-blur-sm"
           onClick={() => setIsFullscreen(false)}
         />
         {/* Modal content */}
@@ -362,7 +369,8 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
             </div>
           </div>
         </div>
-      </>
+      </>,
+      document.body
     )
   }
 
