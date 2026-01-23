@@ -9,6 +9,7 @@ import { Profile } from '../models/Profile';
 import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { ChangeReactionInput } from '../types/ChangeReactionInput';
+import { ReactionStats } from '../types/ReactionStats';
 import { ChangeReactionPayload } from '../types/ChangeReactionPayload';
 import { Context } from '../types/Context';
 import { CreatePostInput } from '../types/CreatePostInput';
@@ -77,6 +78,12 @@ export class PostResolver {
       .sort((a, b) => b[1] - a[1])
       .slice(0, top)
       .map(pair => pair[0] as ReactionType);
+  }
+
+  @FieldResolver(() => ReactionStats, { nullable: true })
+  reactionCounts(@Root() { reactionStats }: Post): ReactionStats | null {
+    if (!reactionStats) return null;
+    return reactionStats;
   }
 
   @FieldResolver(() => ReactionType, { nullable: true })

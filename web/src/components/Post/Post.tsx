@@ -2,7 +2,7 @@ import { memo, useState } from 'react'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
-import { PostQuery, Role, Track } from 'lib/graphql'
+import { PostQuery, ReactionType, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { Clock } from 'lucide-react'
@@ -392,6 +392,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           commentCount={post.commentCount}
           repostCount={post.repostCount}
           postId={post.id}
+          reactionCounts={(post as any).reactionCounts as Record<ReactionType, number> | undefined}
         />
       </div>
       <div className="px-2 pb-2">
