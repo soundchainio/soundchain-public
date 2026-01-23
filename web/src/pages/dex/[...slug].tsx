@@ -1103,7 +1103,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Fetch tracks grouped by genre for the new Spotify-style UI
   // Only fetch when on dashboard view with tracks tab selected for SPEED
   const { data: genreTracksData, loading: genreTracksLoading, error: genreTracksError, refetch: refetchGenreTracks } = useQuery(TRACKS_BY_GENRE_QUERY, {
-    variables: { limit: 8 }, // Reduced from 15 to 8 to prevent Lambda timeout
+    variables: { limit: 15 }, // Increased back to 15 for full genre playback
     fetchPolicy: 'cache-first', // Speed: use cache, skip network when possible
     errorPolicy: 'all', // Return partial data on error
     skip: selectedView !== 'dashboard', // SPEED: Only fetch when on dashboard
@@ -3685,12 +3685,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className="flex justify-center gap-6 px-0 md:px-4">
+            <div className="flex justify-center gap-6 px-0 md:px-4 bg-black md:bg-transparent">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
               {/* Main Feed - Posts only (announcements moved to dedicated tab) */}
-              <div className="flex-1 max-w-full md:max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+              <div className="flex-1 max-w-full md:max-w-[614px] bg-black md:bg-transparent" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
                 <Posts />
               </div>
 
