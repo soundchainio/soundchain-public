@@ -59,11 +59,12 @@ export const CommentModal = () => {
   return (
     <ModalsPortal>
       {/* Mini accordion popup - centered with feed on desktop, full-width bottom sheet on mobile */}
+      {/* Desktop: positioned higher to leave room for emote picker above */}
       <div
         ref={modalRef}
-        className="fixed z-50 bg-neutral-900 shadow-2xl border border-neutral-700 flex flex-col overflow-hidden transition-all duration-200
-          bottom-0 left-0 right-0 w-full rounded-t-xl
-          sm:bottom-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[420px] sm:rounded-xl sm:max-w-[calc(100%-2rem)]"
+        className="fixed z-50 bg-neutral-900 shadow-2xl border border-neutral-700 flex flex-col transition-all duration-200
+          bottom-0 left-0 right-0 w-full rounded-t-xl overflow-hidden
+          sm:bottom-[15vh] sm:left-1/2 sm:-translate-x-1/2 sm:w-[420px] sm:rounded-xl sm:max-w-[calc(100%-2rem)] sm:overflow-visible"
         style={{ maxHeight: isCollapsed ? '48px' : '70vh' }}
       >
         {/* Collapsible Header - click to toggle */}
