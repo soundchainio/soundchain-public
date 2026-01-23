@@ -229,12 +229,12 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
         >
           {myReaction ? (
             <span className="relative">
-              <ReactionEmoji name={myReaction} className="h-5 w-5" />
+              <ReactionEmoji name={myReaction} className="h-4 w-4" />
               {/* Sparkle effect on reacted emoji */}
               <span className="absolute -inset-1 bg-gradient-to-tr from-cyan-500/20 via-transparent to-purple-500/20 rounded-full animate-pulse" />
             </span>
           ) : (
-            <HandThumbUpIcon className="h-5 w-5" />
+            <HandThumbUpIcon className="h-4 w-4" />
           )}
         </button>
 
@@ -278,7 +278,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           onClick={() => dispatchShowCommentModal({ show: true, postId })}
           title="Reply"
         >
-          <ChatBubbleLeftIcon className="h-5 w-5" />
+          <ChatBubbleLeftIcon className="h-4 w-4" />
           {commentCount > 0 && (
             <span className="text-xs text-neutral-400">{commentCount}</span>
           )}
@@ -290,7 +290,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           onClick={onRepostClick}
           title="Repost"
         >
-          <ArrowPathIcon className="h-5 w-5" />
+          <ArrowPathIcon className="h-4 w-4" />
           {repostCount > 0 && (
             <span className="text-xs text-neutral-400">{repostCount}</span>
           )}
@@ -302,7 +302,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           onClick={onShareClick}
           title="Share"
         >
-          <ShareIcon className="h-5 w-5" />
+          <ShareIcon className="h-4 w-4" />
         </button>
       </div>
       {/* Bookmark button - only for logged-in users */}
@@ -315,9 +315,9 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
             title="Save"
           >
             {isBookmarked ? (
-              <Bookmark className="h-5 w-5 text-[#62AAFF] fill-[#62AAFF]" />
+              <Bookmark className="h-4 w-4 text-[#62AAFF] fill-[#62AAFF]" />
             ) : (
-              <Bookmark className="h-5 w-5" />
+              <Bookmark className="h-4 w-4" />
             )}
           </button>
         </div>
@@ -331,7 +331,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
             disabled={isArchiving}
             title={isArchiving ? 'Saving...' : 'Archive'}
           >
-            <Archive className={`h-5 w-5 ${isArchiving ? 'animate-pulse' : ''}`} />
+            <Archive className={`h-4 w-4 ${isArchiving ? 'animate-pulse' : ''}`} />
           </button>
           {/* Info icon with tooltip */}
           <button
@@ -343,7 +343,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
             onMouseEnter={() => setShowArchiveInfo(true)}
             onMouseLeave={() => setShowArchiveInfo(false)}
           >
-            <Info className="h-3.5 w-3.5" />
+            <Info className="h-4 w-4" />
           </button>
           {/* Archive info tooltip */}
           {showArchiveInfo && (
