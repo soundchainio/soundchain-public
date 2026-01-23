@@ -8,14 +8,14 @@ RUN dnf update -y && \
     dnf clean all && \
     ln -s /usr/bin/python3 /usr/local/bin/python
 
-# Copy package.json, yarn.lock, and other necessary files
-COPY package.json ${LAMBDA_TASK_ROOT}/
+# Copy package.json and yarn.lock for dependency installation
+COPY package.json yarn.lock ${LAMBDA_TASK_ROOT}/
 
 # Install Yarn
 RUN npm install -g yarn
 
 # Install dependencies using frozen lockfile
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 # Install TypeScript globally
 RUN npm install -g typescript
