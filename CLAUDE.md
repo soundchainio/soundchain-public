@@ -1,6 +1,6 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 22, 2026 (SoundChain Bridge App + Nostr Fixes)
+**Last Updated:** January 23, 2026 (Multi-Chain EVM Support)
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
@@ -274,6 +274,41 @@ Manages 4 wallet types:
 - `setDirectConnection(address, walletType, chainId)` - For mobile wallet returns
 - `refetchBalance()` - Force refresh balances
 - `disconnectWallet()` - Clean disconnect with localStorage cleanup
+
+### Multi-Chain EVM Support (Jan 23, 2026)
+**Feature:** View wallet balances across multiple EVM networks
+**Key Insight:** EVM addresses are IDENTICAL across all chains - we just switch RPC endpoints!
+
+**Architecture:**
+```
+┌─────────────────────┐     ┌───────────────────┐     ┌─────────────────────┐
+│   Magic Wallet      │     │  MultiChainContext │     │  Public RPCs        │
+│   (Polygon-based)   │────▶│  (Chain Switcher)  │────▶│  Ethereum, Base,    │
+│                     │     │                    │     │  Arbitrum, Optimism │
+│  Same 0x address    │     │  Read-only balance │     │  Same 0x address    │
+│  across all chains  │     │  viewing per chain │     │  works everywhere   │
+└─────────────────────┘     └───────────────────┘     └─────────────────────┘
+```
+
+**Supported Networks:**
+| Chain | ChainId | Native Token | OGUN Available |
+|-------|---------|--------------|----------------|
+| Polygon | 137 | POL | Yes |
+| Ethereum | 1 | ETH | No |
+| Base | 8453 | ETH | No |
+| Arbitrum | 42161 | ETH | No |
+| Optimism | 10 | ETH | No |
+
+**Files:**
+- `web/src/lib/blockchainNetworks.ts` - Network configs, `SUPPORTED_NETWORKS` map
+- `web/src/contexts/MultiChainContext.tsx` - Chain selection state, balance fetching
+- `web/src/components/dex/ChainSwitcher.tsx` - UI dropdown for network selection
+
+**Important Notes:**
+- Magic SDK stays fixed on Polygon (where OGUN lives)
+- MultiChainContext uses separate read-only Web3 providers for other chains
+- OGUN balance only available on Polygon - show warning on other chains
+- Selection persisted to localStorage
 
 ### Legacy Branch Reference
 When looking for "how it used to work", check legacy branches:
@@ -644,6 +679,42 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 20, 2026 | Dropdown panel modals, Quick DM, Tip Jar placeholder | dd8886501 |
 | Jan 21, 2026 | **Bitchat/Nostr integration** - Location chat, encrypted DMs | Multiple |
 | Jan 22, 2026 | **SoundChain Bridge app**, Mobile player crash fix, Geohash precision fix | fce2b1e5f+ |
+| Jan 23, 2026 | **Multi-Chain EVM Support** - Network switcher, balance viewing across chains | TBD |
+
+---
+
+## ROADMAP
+
+### Completed (Jan 23, 2026)
+- **Multi-Chain EVM Balance Viewing**: Users can now view balances across Polygon, Ethereum, Base, Arbitrum, and Optimism
+- ChainSwitcher UI component in wallet panel
+- MultiChainContext for state management
+- Extended blockchainNetworks.ts with all supported networks
+
+### Planned: Solana Integration (Future)
+**Status:** Roadmapped, not yet implemented
+
+When ready to implement:
+1. Install `@magic-ext/solana` package
+2. Update `useMagicContext.tsx` (PROTECTED - careful!)
+   - Add SolanaExtension to Magic SDK
+   - Fetch Solana public key after login
+3. Add `solanaWalletAddress` field to API User model
+4. Update GraphQL schema for Solana address
+5. Create `useSolanaBalance.ts` hook
+6. Update MultiWalletAggregator to show Solana wallet card
+
+**Key Insight:** Solana uses different address derivation - users get a SEPARATE Solana address from their EVM address.
+
+**Package to install:**
+```bash
+yarn add @magic-ext/solana @solana/web3.js
+```
+
+**Env vars to add:**
+```
+NEXT_PUBLIC_SOLANA_RPC=https://api.mainnet-beta.solana.com
+```
 
 ---
 

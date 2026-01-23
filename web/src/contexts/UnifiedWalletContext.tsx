@@ -37,6 +37,8 @@ export interface UnifiedWalletState {
   // Direct SDK connection support (for WalletConnectButton)
   setDirectConnection: (address: string, walletType: string, chainId?: number) => void
   directWalletSubtype: string | null  // e.g., 'metamask', 'walletconnect', 'coinbase'
+  // Multi-chain viewing support (EVM networks share the same address)
+  nativeTokenSymbol: string  // POL, ETH, etc. based on selected chain
 }
 
 const defaultState: UnifiedWalletState = {
@@ -58,6 +60,7 @@ const defaultState: UnifiedWalletState = {
   isWeb3ModalReady: false,
   setDirectConnection: () => {},
   directWalletSubtype: null,
+  nativeTokenSymbol: 'POL',
 }
 
 const UnifiedWalletContext = createContext<UnifiedWalletState>(defaultState)
@@ -74,6 +77,19 @@ const chainNames: Record<number, string> = {
   56: 'BNB Chain',
   7000: 'ZetaChain',
   80002: 'Polygon Amoy',
+}
+
+// Native token symbols per chain
+const chainSymbols: Record<number, string> = {
+  1: 'ETH',
+  137: 'POL',
+  8453: 'ETH',
+  42161: 'ETH',
+  10: 'ETH',
+  43114: 'AVAX',
+  56: 'BNB',
+  7000: 'ZETA',
+  80002: 'POL',
 }
 
 // Inner provider that uses Web3Modal hooks (only rendered when ready)
@@ -329,6 +345,7 @@ function UnifiedWalletInner({
   }
 
   const chainName = chainId ? chainNames[chainId] || `Chain ${chainId}` : null
+  const nativeTokenSymbol = chainId ? chainSymbols[chainId] || 'ETH' : 'POL'
 
   const value: UnifiedWalletState = {
     activeWalletType,
@@ -349,6 +366,7 @@ function UnifiedWalletInner({
     refetchBalance,
     web3,
     isWeb3ModalReady: true,
+    nativeTokenSymbol,
   }
 
   return (
@@ -387,6 +405,7 @@ function UnifiedWalletFallback({ children }: { children: ReactNode }) {
     refetchBalance: magicRefetchBalance || (() => {}),
     web3: magicWeb3 || null,
     isWeb3ModalReady: false,
+    nativeTokenSymbol: 'POL',
   }
 
   return (

@@ -29,6 +29,8 @@ import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
+import { ChainSwitcher } from 'components/dex/ChainSwitcher'
+import { MultiChainProvider, useMultiChain } from 'contexts/MultiChainContext'
 import { WalletConnectButton } from 'components/dex/WalletConnectButton'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
@@ -4405,7 +4407,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Wallet View - Multi-Wallet Aggregator */}
           {selectedView === 'wallet' && (
+            <MultiChainProvider walletAddress={userWallet}>
             <div className="space-y-6">
+              {/* EVM Network Switcher */}
+              <Card className="retro-card p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-cyan-400" />
+                    VIEW BALANCES ON
+                  </h3>
+                  <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Multi-Chain</Badge>
+                </div>
+                <ChainSwitcher showBalance={true} />
+              </Card>
+
               {/* Multi-Wallet Aggregator - Connect & View All Wallets */}
               <MultiWalletAggregator
                 userWallet={userWallet}
@@ -5146,6 +5161,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 )}
               </Card>
             </div>
+            </MultiChainProvider>
           )}
 
           {/* Settings View */}
