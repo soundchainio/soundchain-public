@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 import { ReactionSelector } from 'components/ReactionSelector'
 import { useModalDispatch } from 'contexts/ModalContext'
@@ -13,6 +13,12 @@ import { toast } from 'react-toastify'
 
 import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { Bookmark, Archive, Info } from 'lucide-react'
+
+// Detect if device supports hover (desktop)
+const checkIsDesktop = () => {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(hover: hover)').matches
+}
 
 interface PostActionsProps {
   postId: string
@@ -38,7 +44,8 @@ interface PostActionsProps {
   }
 }
 
-const commonClasses = 'text-white text-sm text-gray-80 text-center flex-1 flex justify-center px-1'
+// Polished action button styles - slightly smaller than before
+const commonClasses = 'text-neutral-400 text-[13px] text-center flex-1 flex justify-center px-1'
 
 export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, isEphemeral, isOwner, postData }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
@@ -48,8 +55,16 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   const [isBookmarked, setIsBookmarked] = useState(initialIsBookmarked ?? false)
   const [isArchiving, setIsArchiving] = useState(false)
   const [showArchiveInfo, setShowArchiveInfo] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const likeButtonRef = useRef<HTMLDivElement>(null)
   const me = useMe()
   const router = useRouter()
+
+  // Detect desktop for hover behavior
+  useEffect(() => {
+    setIsDesktop(checkIsDesktop())
+  }, [])
 
   // Bookmark mutations
   const [bookmarkPost, { loading: bookmarking }] = useBookmarkPostMutation()
@@ -78,10 +93,45 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
     dispatchShowPostModal({ show: true })
   }
 
+  // Desktop: hover to open, Mobile: tap to open
   const handleLikeButton = () => {
-    // Allow likes for everyone - logged-in users, guests with wallet, or anonymous
-    // Anonymous users will have a wallet generated in the ReactionSelector
-    setReactionSelectorOpened(!reactionSelectorOpened)
+    // On mobile, toggle on tap
+    if (!isDesktop) {
+      setReactionSelectorOpened(!reactionSelectorOpened)
+    }
+    // On desktop, clicking selects the default reaction (heart) if no reaction exists
+    // Or removes reaction if one exists
+    else if (!reactionSelectorOpened) {
+      setReactionSelectorOpened(true)
+    }
+  }
+
+  // Desktop hover handlers
+  const handleLikeMouseEnter = () => {
+    if (!isDesktop) return
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
+    setReactionSelectorOpened(true)
+  }
+
+  const handleLikeMouseLeave = () => {
+    if (!isDesktop) return
+    // Small delay before closing to allow moving to the selector
+    hoverTimeoutRef.current = setTimeout(() => {
+      setReactionSelectorOpened(false)
+    }, 300)
+  }
+
+  // Keep selector open when hovering over it
+  const handleSelectorMouseEnter = () => {
+    if (!isDesktop) return
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current)
+  }
+
+  const handleSelectorMouseLeave = () => {
+    if (!isDesktop) return
+    hoverTimeoutRef.current = setTimeout(() => {
+      setReactionSelectorOpened(false)
+    }, 200)
   }
 
   const onShareClick = () => {
@@ -161,39 +211,82 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   }, [postId, router.asPath])
 
   return (
-    <div className="relative flex items-center bg-gray-25 px-0 py-2">
-      <div className={commonClasses}>
-        <button className="flex items-center space-x-1 font-bold" onClick={handleLikeButton}>
-          {myReaction ? <ReactionEmoji name={myReaction} className="h-4 w-4" /> : <HandThumbUpIcon className="h-4 w-4" />}
-          <span className={myReaction ? 'text-[#62AAFF]' : ''}>Like</span>
+    <div className="relative flex items-center bg-neutral-900/50 rounded-lg px-1 py-1.5">
+      {/* Like button with hover zone */}
+      <div
+        ref={likeButtonRef}
+        className={`${commonClasses} relative`}
+        onMouseEnter={handleLikeMouseEnter}
+        onMouseLeave={handleLikeMouseLeave}
+      >
+        <button
+          className="flex items-center space-x-1.5 font-medium hover:text-white transition-colors py-1.5 px-2 rounded-lg hover:bg-neutral-800/50"
+          onClick={handleLikeButton}
+        >
+          {myReaction ? (
+            <span className="relative">
+              <ReactionEmoji name={myReaction} className="h-4 w-4" />
+              {/* Sparkle effect on reacted emoji */}
+              <span className="absolute -inset-1 bg-gradient-to-tr from-cyan-500/20 via-transparent to-purple-500/20 rounded-full animate-pulse" />
+            </span>
+          ) : (
+            <HandThumbUpIcon className="h-4 w-4" />
+          )}
+          <span className={myReaction ? 'text-cyan-400' : ''}>Like</span>
         </button>
+
+        {/* Hover emoji picker - positioned above on desktop */}
+        {reactionSelectorOpened && isDesktop && (
+          <div
+            className="absolute bottom-full left-0 mb-2 z-50"
+            onMouseEnter={handleSelectorMouseEnter}
+            onMouseLeave={handleSelectorMouseLeave}
+          >
+            <div className="bg-neutral-800 border border-neutral-700 rounded-xl p-2 shadow-xl shadow-black/50 flex items-center gap-1">
+              <ReactionSelector
+                postId={postId}
+                myReaction={myReaction}
+                opened={true}
+                setOpened={setReactionSelectorOpened}
+                isGuest={isGuest}
+                guestWallet={guestWallet}
+                inline
+              />
+            </div>
+          </div>
+        )}
       </div>
-      <ReactionSelector
-        postId={postId}
-        myReaction={myReaction}
-        opened={reactionSelectorOpened}
-        setOpened={setReactionSelectorOpened}
-        isGuest={isGuest}
-        guestWallet={guestWallet}
-      />
+
+      {/* Mobile reaction selector - slides in */}
+      {!isDesktop && (
+        <ReactionSelector
+          postId={postId}
+          myReaction={myReaction}
+          opened={reactionSelectorOpened}
+          setOpened={setReactionSelectorOpened}
+          isGuest={isGuest}
+          guestWallet={guestWallet}
+        />
+      )}
+
       <div className={commonClasses}>
         <button
-          className="flex items-center font-bold"
+          className="flex items-center font-medium hover:text-white transition-colors py-1.5 px-2 rounded-lg hover:bg-neutral-800/50"
           onClick={() => dispatchShowCommentModal({ show: true, postId })}
         >
-          <ChatBubbleLeftIcon className="mr-1 h-4 w-4" />
+          <ChatBubbleLeftIcon className="mr-1.5 h-4 w-4" />
           Reply
         </button>
       </div>
       <div className={commonClasses}>
-        <button className="flex items-center font-bold" onClick={onRepostClick}>
-          <ArrowPathIcon className="mr-1 h-4 w-4" />
+        <button className="flex items-center font-medium hover:text-white transition-colors py-1.5 px-2 rounded-lg hover:bg-neutral-800/50" onClick={onRepostClick}>
+          <ArrowPathIcon className="mr-1.5 h-4 w-4" />
           Repost
         </button>
       </div>
       <div className={commonClasses}>
-        <button className="flex items-center font-bold" onClick={onShareClick}>
-          <ShareIcon className="mr-1 h-4 w-4" />
+        <button className="flex items-center font-medium hover:text-white transition-colors py-1.5 px-2 rounded-lg hover:bg-neutral-800/50" onClick={onShareClick}>
+          <ShareIcon className="mr-1.5 h-4 w-4" />
           Share
         </button>
       </div>
