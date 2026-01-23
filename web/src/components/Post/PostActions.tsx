@@ -44,8 +44,8 @@ interface PostActionsProps {
   }
 }
 
-// Polished action button styles - slightly smaller than before
-const commonClasses = 'text-neutral-400 text-[13px] text-center flex-1 flex justify-center px-1'
+// Icon-only action button styles
+const commonClasses = 'text-neutral-400 flex-1 flex justify-center'
 
 export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, isEphemeral, isOwner, postData }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
@@ -220,19 +220,19 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
         onMouseLeave={handleLikeMouseLeave}
       >
         <button
-          className="flex items-center space-x-1.5 font-medium hover:text-white transition-colors py-1.5 px-2 rounded-lg hover:bg-neutral-800/50"
+          className="flex items-center justify-center font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
           onClick={handleLikeButton}
+          title="Like"
         >
           {myReaction ? (
             <span className="relative">
-              <ReactionEmoji name={myReaction} className="h-4 w-4" />
+              <ReactionEmoji name={myReaction} className="h-5 w-5" />
               {/* Sparkle effect on reacted emoji */}
               <span className="absolute -inset-1 bg-gradient-to-tr from-cyan-500/20 via-transparent to-purple-500/20 rounded-full animate-pulse" />
             </span>
           ) : (
-            <HandThumbUpIcon className="h-4 w-4" />
+            <HandThumbUpIcon className="h-5 w-5" />
           )}
-          <span className={myReaction ? 'text-cyan-400' : ''}>Like</span>
         </button>
 
         {/* Hover emoji picker - positioned above on desktop */}
@@ -271,39 +271,45 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
 
       <div className={commonClasses}>
         <button
-          className="flex items-center font-medium hover:text-white transition-colors py-1.5 px-2 rounded-lg hover:bg-neutral-800/50"
+          className="flex items-center justify-center font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
           onClick={() => dispatchShowCommentModal({ show: true, postId })}
+          title="Reply"
         >
-          <ChatBubbleLeftIcon className="mr-1.5 h-4 w-4" />
-          Reply
+          <ChatBubbleLeftIcon className="h-5 w-5" />
         </button>
       </div>
       <div className={commonClasses}>
-        <button className="flex items-center font-medium hover:text-white transition-colors py-1.5 px-2 rounded-lg hover:bg-neutral-800/50" onClick={onRepostClick}>
-          <ArrowPathIcon className="mr-1.5 h-4 w-4" />
-          Repost
+        <button
+          className="flex items-center justify-center font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
+          onClick={onRepostClick}
+          title="Repost"
+        >
+          <ArrowPathIcon className="h-5 w-5" />
         </button>
       </div>
       <div className={commonClasses}>
-        <button className="flex items-center font-medium hover:text-white transition-colors py-1.5 px-2 rounded-lg hover:bg-neutral-800/50" onClick={onShareClick}>
-          <ShareIcon className="mr-1.5 h-4 w-4" />
-          Share
+        <button
+          className="flex items-center justify-center font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
+          onClick={onShareClick}
+          title="Share"
+        >
+          <ShareIcon className="h-5 w-5" />
         </button>
       </div>
       {/* Bookmark button - only for logged-in users */}
       {me && (
         <div className={commonClasses}>
           <button
-            className={`flex items-center font-bold ${bookmarking || unbookmarking ? 'opacity-50' : ''}`}
+            className={`flex items-center justify-center p-2 rounded-lg hover:bg-neutral-800/50 transition-colors ${bookmarking || unbookmarking ? 'opacity-50' : ''}`}
             onClick={handleBookmarkClick}
             disabled={bookmarking || unbookmarking}
+            title="Save"
           >
             {isBookmarked ? (
-              <Bookmark className="mr-1 h-4 w-4 text-[#62AAFF] fill-[#62AAFF]" />
+              <Bookmark className="h-5 w-5 text-[#62AAFF] fill-[#62AAFF]" />
             ) : (
-              <Bookmark className="mr-1 h-4 w-4" />
+              <Bookmark className="h-5 w-5" />
             )}
-            <span className={isBookmarked ? 'text-[#62AAFF]' : ''}>Save</span>
           </button>
         </div>
       )}
@@ -311,12 +317,12 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       {isEphemeral && isOwner && postData && (
         <div className={`${commonClasses} relative`}>
           <button
-            className={`flex items-center font-bold ${isArchiving ? 'opacity-50' : ''}`}
+            className={`flex items-center justify-center p-2 rounded-lg hover:bg-neutral-800/50 transition-colors ${isArchiving ? 'opacity-50' : ''}`}
             onClick={handleArchiveClick}
             disabled={isArchiving}
+            title={isArchiving ? 'Saving...' : 'Archive'}
           >
-            <Archive className={`mr-1 h-4 w-4 ${isArchiving ? 'animate-pulse' : ''}`} />
-            <span>{isArchiving ? 'Saving...' : 'Archive'}</span>
+            <Archive className={`h-5 w-5 ${isArchiving ? 'animate-pulse' : ''}`} />
           </button>
           {/* Info icon with tooltip */}
           <button

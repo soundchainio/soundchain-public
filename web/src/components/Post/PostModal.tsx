@@ -15,8 +15,18 @@ export const maxLength = 1000
 
 const splitter = new GraphemeSplitter()
 
+// Regex to match emote markdown: ![emote:name](url)
+const emoteMarkdownRegex = /!\[emote:[^\]]+\]\([^)]+\)/g
+
 export const getBodyCharacterCount = (body?: string) => {
-  return splitter.splitGraphemes(body || '').length
+  if (!body) return 0
+
+  // Count each emote as 1 character instead of full markdown length
+  const emoteMatches = body.match(emoteMarkdownRegex) || []
+  const textWithoutEmotes = body.replace(emoteMarkdownRegex, '')
+
+  // Grapheme count of text + number of emotes (each emote = 1)
+  return splitter.splitGraphemes(textWithoutEmotes).length + emoteMatches.length
 }
 
 // When we get string.length, emojis are counted as 2 characters

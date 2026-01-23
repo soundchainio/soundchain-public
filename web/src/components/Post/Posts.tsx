@@ -289,11 +289,13 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
 
     return (
       <>
-        {/* Simple mapped posts - no virtualization */}
-        <div className="space-y-0 md:space-y-4">
-          {(simpleNodes as PostType[]).map((post) => (
+        {/* Simple mapped posts - no virtualization, stacked on mobile */}
+        <div className="md:space-y-4">
+          {(simpleNodes as PostType[]).map((post, index) => (
             <div key={post.id} className="flex justify-center px-0 md:px-4">
               <div className="w-full max-w-full md:max-w-[614px]">
+                {/* Thin separator between posts on mobile */}
+                {index > 0 && <div className="h-px bg-neutral-800 md:hidden" />}
                 <Post post={post} handleOnPlayClicked={handleOnPlayClicked} />
               </div>
             </div>
@@ -551,6 +553,8 @@ const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
   return (
     <div ref={rowRef} className="flex justify-center px-0 md:px-4">
       <div className="w-full max-w-full md:max-w-[614px]">
+        {/* Thin separator between posts on mobile */}
+        {index > 0 && <div className="h-px bg-neutral-800 md:hidden" />}
         <Post key={data[index].id} post={data[index]} handleOnPlayClicked={handleOnPlayClicked} />
       </div>
     </div>
