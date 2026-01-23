@@ -1965,8 +1965,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </span>
               </Link>
 
-              {/* Mobile WIN-WIN, Vibes, and Nearby buttons - visible on small screens */}
-              <div className="flex lg:hidden items-center space-x-1">
+              {/* Mobile WIN-WIN, Vibes, and Nearby buttons - visible on small screens only */}
+              <div className="flex sm:hidden items-center space-x-1">
                 {/* Nearby (Bitchat) - Mobile */}
                 <div className="relative">
                   <Button
