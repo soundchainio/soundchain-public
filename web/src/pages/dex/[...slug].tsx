@@ -1922,6 +1922,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         ) : user?.coverPicture && !coverImageError ? (
           /* Own profile / other views - show logged-in user's cover (image or video) */
           <>
+            {console.log('🎬 Rendering user cover:', user.coverPicture, 'isVideo:', /\.(mp4|mov|webm|avi|mkv)$/i.test(user.coverPicture))}
             {/\.(mp4|mov|webm|avi|mkv)$/i.test(user.coverPicture) ? (
               <video
                 src={user.coverPicture}
@@ -1930,6 +1931,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 muted
                 playsInline
                 className="w-full h-full object-cover"
+                onLoadedData={() => console.log('✅ User cover VIDEO loaded successfully')}
                 onError={() => {
                   console.error('❌ Cover video failed to load:', user.coverPicture)
                   setCoverImageError(true)
@@ -1952,6 +1954,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </>
         ) : (
           <>
+            {console.log('⚠️ Fallback gradient shown. user?.coverPicture:', user?.coverPicture, 'coverImageError:', coverImageError, 'selectedView:', selectedView)}
             <div className="w-full h-full bg-gradient-to-b from-gray-900 via-black to-gray-900" />
             {user?.coverPicture && coverImageError && (
               <div className="absolute inset-0 flex items-center justify-center text-red-400 text-xs">
