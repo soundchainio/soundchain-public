@@ -142,7 +142,9 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
   const gridRef = useRef<any>(null)
   // Track scroll position to preserve when switching views
   const scrollPositionRef = useRef<{ list: number; grid: number }>({ list: 0, grid: 0 })
-  const getSize = (index: number) => sizeMap[index] || 289
+  // Default height increased from 289 to 550 to prevent video posts from being cropped
+  // Video posts need ~500px for content + action bar (emoji pills, like/comment/share)
+  const getSize = (index: number) => sizeMap[index] || 550
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
     (index: number, height?: number | undefined) => { // Updated to match RowProps
