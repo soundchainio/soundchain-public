@@ -24,6 +24,9 @@ interface PostActionsProps {
   postId: string
   myReaction: ReactionType | null
   isBookmarked?: boolean
+  // Count badges for icons
+  commentCount?: number
+  repostCount?: number
   // Archive feature props
   isEphemeral?: boolean
   isOwner?: boolean
@@ -47,7 +50,7 @@ interface PostActionsProps {
 // Icon-only action button styles
 const commonClasses = 'text-neutral-400 flex-1 flex justify-center'
 
-export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, isEphemeral, isOwner, postData }: PostActionsProps) => {
+export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, commentCount = 0, repostCount = 0, isEphemeral, isOwner, postData }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
   const { dispatchSetRepostId, dispatchShowPostModal, dispatchShowCommentModal } = useModalDispatch()
   const [postLink, setPostLink] = useState('')
@@ -271,20 +274,26 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
 
       <div className={commonClasses}>
         <button
-          className="flex items-center justify-center font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
+          className="flex items-center justify-center gap-1 font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
           onClick={() => dispatchShowCommentModal({ show: true, postId })}
           title="Reply"
         >
           <ChatBubbleLeftIcon className="h-5 w-5" />
+          {commentCount > 0 && (
+            <span className="text-xs text-neutral-400">{commentCount}</span>
+          )}
         </button>
       </div>
       <div className={commonClasses}>
         <button
-          className="flex items-center justify-center font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
+          className="flex items-center justify-center gap-1 font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
           onClick={onRepostClick}
           title="Repost"
         >
           <ArrowPathIcon className="h-5 w-5" />
+          {repostCount > 0 && (
+            <span className="text-xs text-neutral-400">{repostCount}</span>
+          )}
         </button>
       </div>
       <div className={commonClasses}>

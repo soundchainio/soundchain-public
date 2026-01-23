@@ -384,22 +384,23 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
         </div>
       )}
 
-      {/* Stats & Actions - Instagram style */}
-      <div className="px-4 py-2">
+      {/* Emoji Tally Dashboard */}
+      <div className="px-4 py-1">
         <PostStats
           totalReactions={post.totalReactions}
           topReactions={post.topReactions}
           reactionTally={post.reactionTally}
-          commentCount={post.commentCount}
-          repostCount={post.repostCount}
           postId={post.id}
         />
       </div>
+      {/* Action Buttons with Count Badges */}
       <div className="px-2 pb-2">
         <PostActions
           postId={post.id}
           myReaction={post.myReaction}
           isBookmarked={post.isBookmarked}
+          commentCount={post.commentCount}
+          repostCount={post.repostCount}
           isEphemeral={isEphemeral}
           isOwner={isAuthor}
           postData={isEphemeral ? {
