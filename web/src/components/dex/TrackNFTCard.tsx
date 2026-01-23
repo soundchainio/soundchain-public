@@ -1,12 +1,12 @@
 import React, { useState, useCallback, memo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { Card } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Play, Pause, Heart, RotateCcw, X, Maximize2, Share2, ShoppingCart, ExternalLink, Music2 } from 'lucide-react'
+import { toast } from 'react-toastify'
 import { config } from 'config'
 import { getIpfsUrl } from 'utils/ipfs'
 
@@ -104,7 +104,8 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
 
   // Share track function - MUST be defined before any early returns to avoid hooks order issues
   const handleShare = useCallback(async () => {
-    const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/tracks/${track.id}`
+    // Use /dex/track/ for consistent routing
+    const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/dex/track/${track.id}`
     const shareData = {
       title: `${track.title} by ${track.artist}`,
       text: `Listen to "${track.title}" by ${track.artist} on SoundChain`,
@@ -117,11 +118,10 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
       } else {
         // Fallback: copy to clipboard
         await navigator.clipboard.writeText(shareUrl)
-        alert('Link copied to clipboard!')
+        toast.success('Link copied to clipboard!')
       }
-    } catch (err) {
-      // User cancelled or error
-      console.log('Share cancelled or failed')
+    } catch {
+      // User cancelled share - silent fail is expected behavior
     }
   }, [track.id, track.title, track.artist])
 
@@ -146,7 +146,7 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                   <h3 className="retro-text text-white truncate">{track.title}</h3>
                   <Badge className={rarity.color}>{rarity.label}</Badge>
                 </div>
-                <div className="text-sm text-gray-400 truncate">{track.artist}</div>
+                <div className="text-sm text-gray-300 truncate">{track.artist}</div>
                 <div className="text-xs text-cyan-400">{track.playbackCountFormatted || '0'} plays</div>
               </div>
             </div>
@@ -155,8 +155,13 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                 <div className="retro-text text-white">{price} {currency}</div>
               </div>
             )}
-            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onFavorite?.() }}>
-              <Heart className={`w-4 h-4 ${track.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+            <Button
+              variant="ghost"
+              onClick={(e) => { e.stopPropagation(); onFavorite?.() }}
+              className="min-w-[44px] min-h-[44px] p-2"
+              aria-label={track.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Heart className={`w-5 h-5 ${track.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
             </Button>
           </div>
         </div>
@@ -214,7 +219,7 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                 <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
                   {/* Title & Artist */}
                   <div>
-                    <Link href={`/tracks/${track.id}`} onClick={() => setIsFullscreen(false)}>
+                    <Link href={`/dex/track/${track.id}`} onClick={() => setIsFullscreen(false)}>
                       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 hover:text-cyan-400 transition-colors cursor-pointer">{track.title}</h1>
                     </Link>
                     {track.artist ? (
@@ -334,7 +339,7 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                   <Button onClick={(e) => { e.stopPropagation(); onPlay() }} className="flex-1 bg-cyan-500 hover:bg-cyan-600 active:bg-cyan-700 text-black font-bold">
                     {isPlaying && isCurrentTrack ? <><Pause className="w-4 h-4 mr-2" /> Pause</> : <><Play className="w-4 h-4 mr-2" /> Play</>}
                   </Button>
-                  <Link href={`/tracks/${track.id}`} onClick={() => setIsFullscreen(false)}>
+                  <Link href={`/dex/track/${track.id}`} onClick={() => setIsFullscreen(false)}>
                     <Button variant="outline" className="border-purple-500/50 hover:bg-purple-500/10 active:bg-purple-500/20 text-purple-400">
                       <ExternalLink className="w-4 h-4 mr-2" /> Details
                     </Button>
@@ -358,7 +363,7 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                       className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-black font-bold"
                       onClick={(e) => {
                         e.stopPropagation()
-                        router.push(`/tracks/${track.id}/buy-now${currency === 'OGUN' ? '?isPaymentOGUN=true' : ''}`)
+                        router.push(`/dex/track/${track.id}/buy-now${currency === 'OGUN' ? '?isPaymentOGUN=true' : ''}`)
                       }}
                     >
                       <ShoppingCart className="w-4 h-4 mr-2" /> {price} {currency}
@@ -386,9 +391,15 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
 
             {/* Album art - square aspect ratio with enhanced rendering */}
             <div className="aspect-square bg-gray-800 overflow-hidden relative group">
-              {/* Skeleton placeholder with shimmer */}
-              {!imageLoaded && (
+              {/* Skeleton placeholder with shimmer - hide when loaded OR errored */}
+              {!imageLoaded && !imageError && (
                 <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 animate-pulse" />
+              )}
+              {/* Fallback icon when image fails to load */}
+              {imageError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+                  <Music2 className="w-12 h-12 text-gray-600" />
+                </div>
               )}
               <img
                 src={displayImage}
@@ -419,38 +430,39 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                 </Badge>
               )}
 
-              {/* Fullscreen button */}
+              {/* Fullscreen button - larger touch target for mobile */}
               <Button
                 onClick={(e) => { e.stopPropagation(); setIsFullscreen(true) }}
-                className="absolute bottom-1.5 right-1.5 w-6 h-6 p-0 bg-black/60 hover:bg-black/80 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute bottom-1 right-1 w-8 h-8 p-0 bg-black/70 hover:bg-black/90 rounded-lg opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity"
+                aria-label="View fullscreen"
               >
-                <Maximize2 className="w-3 h-3" />
+                <Maximize2 className="w-4 h-4" />
               </Button>
             </div>
 
-            {/* Compact info section - polished */}
+            {/* Compact info section - polished with better contrast */}
             <div className="p-2.5 space-y-1 bg-gradient-to-t from-black/40 to-transparent">
               <h3 className="text-white text-xs font-semibold truncate leading-tight drop-shadow-sm">{track.title}</h3>
-              <p className="text-gray-400 text-[10px] truncate font-medium">{track.artist}</p>
+              <p className="text-gray-300 text-[11px] truncate font-medium">{track.artist}</p>
               <div className="flex items-center justify-between pt-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] text-cyan-400 font-medium tabular-nums">{track.playbackCountFormatted || '0'} plays</span>
+                  <span className="text-[10px] text-cyan-400 font-medium tabular-nums">{track.playbackCountFormatted || '0'} plays</span>
                   {(track.favoriteCount ?? 0) > 0 && (
-                    <span className="text-[9px] text-red-400 flex items-center gap-0.5 font-medium">
-                      <Heart className="w-2.5 h-2.5 fill-current" /> {track.favoriteCount}
+                    <span className="text-[10px] text-red-400 flex items-center gap-0.5 font-medium">
+                      <Heart className="w-3 h-3 fill-current" /> {track.favoriteCount}
                     </span>
                   )}
                 </div>
                 {hasListing ? (
-                  <div className="text-[10px] font-bold text-green-400 drop-shadow-sm">{price} {currency}</div>
+                  <div className="text-[11px] font-bold text-green-400 drop-shadow-sm">{price} {currency}</div>
                 ) : (
                   <Button
                     onClick={(e) => { e.stopPropagation(); onFavorite?.() }}
                     variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 p-0 hover:bg-red-500/20 transition-colors"
+                    className="h-8 w-8 p-0 hover:bg-red-500/20 active:bg-red-500/30 transition-colors"
+                    aria-label={track.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                   >
-                    <Heart className={`w-3 h-3 transition-all ${track.isFavorite ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-400'}`} />
+                    <Heart className={`w-4 h-4 transition-all ${track.isFavorite ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-400'}`} />
                   </Button>
                 )}
               </div>
@@ -497,21 +509,20 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
               )}
             </div>
 
-            {/* Action buttons */}
-            <div className="flex gap-1 mt-1">
+            {/* Action buttons - larger touch targets */}
+            <div className="flex gap-1.5 mt-2">
               <Button
                 onClick={(e) => { e.stopPropagation(); onPlay() }}
-                size="sm"
-                className="flex-1 h-6 text-[9px] bg-cyan-500 hover:bg-cyan-600 text-black font-bold"
+                className="flex-1 h-9 text-[11px] bg-cyan-500 hover:bg-cyan-400 active:bg-cyan-600 text-black font-bold rounded-lg transition-colors"
               >
                 {isPlaying && isCurrentTrack ? 'PAUSE' : 'PLAY'}
               </Button>
               <Button
                 onClick={(e) => { e.stopPropagation(); setIsFullscreen(true) }}
-                size="sm"
-                className="h-6 px-2 text-[9px] bg-gray-700 hover:bg-gray-600"
+                className="h-9 w-9 p-0 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-lg transition-colors"
+                aria-label="View fullscreen"
               >
-                <Maximize2 className="w-3 h-3" />
+                <Maximize2 className="w-4 h-4" />
               </Button>
             </div>
           </div>
