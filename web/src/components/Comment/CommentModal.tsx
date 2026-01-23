@@ -58,11 +58,13 @@ export const CommentModal = () => {
 
   return (
     <ModalsPortal>
-      {/* Mini accordion popup - anchored to bottom right, no full-screen overlay */}
+      {/* Mini accordion popup - centered with feed on desktop, full-width bottom sheet on mobile */}
       <div
         ref={modalRef}
-        className="fixed bottom-4 right-4 z-50 w-[340px] sm:w-[380px] bg-neutral-900 rounded-xl shadow-2xl border border-neutral-700 flex flex-col overflow-hidden transition-all duration-200"
-        style={{ maxHeight: isCollapsed ? '48px' : '400px' }}
+        className="fixed z-50 bg-neutral-900 shadow-2xl border border-neutral-700 flex flex-col overflow-hidden transition-all duration-200
+          bottom-0 left-0 right-0 w-full rounded-t-xl
+          sm:bottom-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-[420px] sm:rounded-xl sm:max-w-[calc(100%-2rem)]"
+        style={{ maxHeight: isCollapsed ? '48px' : '70vh' }}
       >
         {/* Collapsible Header - click to toggle */}
         <div
@@ -107,7 +109,7 @@ export const CommentModal = () => {
         {!isCollapsed && (
           <>
             {/* Comments List */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 max-h-[260px]">
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 max-h-[50vh] sm:max-h-[300px]">
               {error ? (
                 <div className="text-center py-4">
                   <p className="text-red-400 text-sm">Error loading comments</p>

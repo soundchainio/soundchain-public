@@ -94,7 +94,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   }
 
   return (
-    <article className="bg-black md:border md:border-neutral-800 md:rounded-lg overflow-hidden">
+    <article className="bg-black border-b border-neutral-800 md:border md:rounded-lg overflow-hidden">
       {/* Header - Instagram style */}
       <header className="flex items-center justify-between px-3 py-2.5">
         {isGuest ? (
