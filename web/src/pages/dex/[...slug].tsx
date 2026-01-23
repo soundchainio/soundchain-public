@@ -3685,7 +3685,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className="flex justify-center gap-6 px-0 md:px-4 bg-black md:bg-transparent">
+            <div className="flex justify-center gap-0 xl:gap-6 -mx-4 md:mx-0 bg-black md:bg-transparent">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
