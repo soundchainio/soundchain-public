@@ -84,9 +84,10 @@ export class PostResolver {
   @FieldResolver(() => [ReactionCount])
   reactionTally(@Root() { reactionStats }: Post): ReactionCount[] {
     if (!reactionStats) return [];
+    // Sort alphabetically by type for stable UI (pills don't jump around)
     return toPairs(reactionStats)
       .filter(([_, count]) => count > 0)
-      .sort(([, a], [, b]) => b - a)
+      .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
       .map(([type, count]) => ({ type: type as ReactionType, count }));
   }
 

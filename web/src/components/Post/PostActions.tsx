@@ -388,9 +388,9 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           >
             <Info className="h-4 w-4" />
           </button>
-          {/* Archive info tooltip */}
+          {/* Archive info tooltip - positioned right on mobile to prevent cropping */}
           {showArchiveInfo && (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 p-3 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 text-left">
+            <div className="fixed bottom-20 left-4 right-4 sm:absolute sm:bottom-full sm:left-auto sm:right-0 sm:mb-2 sm:w-72 p-3 bg-neutral-800 border border-neutral-700 rounded-lg shadow-xl z-50 text-left">
               <div className="flex items-center gap-2 mb-2">
                 <Archive className="h-4 w-4 text-amber-500" />
                 <span className="font-semibold text-white text-sm">Web3 Archive</span>
@@ -404,8 +404,8 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
               <p className="text-xs text-neutral-400 leading-relaxed">
                 Re-upload anytime at <span className="text-cyan-400">/dex/archive-import</span> to repost your content. True digital ownership, the Web3 way.
               </p>
-              {/* Arrow */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-neutral-800" />
+              {/* Arrow - only show on desktop */}
+              <div className="hidden sm:block absolute top-full right-4 border-8 border-transparent border-t-neutral-800" />
             </div>
           )}
         </div>
