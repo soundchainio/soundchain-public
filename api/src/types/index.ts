@@ -1,5 +1,6 @@
 // src/types/index.ts
 
+export * from './ReactionCount';
 export * from './NotificationType';
 export * from './CommentNotificationMetadata';
 export * from './DeletedCommentNotificationMetadata';
