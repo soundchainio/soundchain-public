@@ -370,41 +370,43 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
   return (
     <div className="track-nft-card-container cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
       <div className={`nft-flip-card ${isFlipped ? 'flipped' : ''}`}>
-        {/* Front Side - Rarible-style compact */}
+        {/* Front Side - High-res polished card */}
         <div className="nft-flip-card-front">
-          <Card className={`retro-card transition-all duration-200 hover:scale-[1.02] h-full border-0 bg-gray-900/80 rounded-xl overflow-hidden ${isCurrentTrack ? 'ring-2 ring-cyan-400' : ''}`}>
+          <Card className={`retro-card transition-all duration-300 ease-out hover:scale-[1.03] hover:shadow-xl hover:shadow-cyan-500/20 h-full border border-gray-700/50 bg-gradient-to-b from-gray-900 to-gray-950 rounded-xl overflow-hidden backdrop-blur-sm ${isCurrentTrack ? 'ring-2 ring-cyan-400 shadow-lg shadow-cyan-500/30' : ''}`}
+            style={{ willChange: 'transform' }}>
             <div className="flip-hint"><RotateCcw className="w-2.5 h-2.5" /></div>
 
-            {/* Album art - square aspect ratio */}
+            {/* Album art - square aspect ratio with enhanced rendering */}
             <div className="aspect-square bg-gray-800 overflow-hidden relative group">
-              {/* Skeleton placeholder */}
+              {/* Skeleton placeholder with shimmer */}
               {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-700 animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 animate-pulse" />
               )}
               <img
                 src={displayImage}
                 alt={track.title}
-                className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`w-full h-full object-cover transition-all duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                 loading="lazy"
                 onLoad={() => setImageLoaded(true)}
                 onError={() => setImageError(true)}
+                style={{ imageRendering: 'auto', WebkitBackfaceVisibility: 'hidden' }}
               />
 
-              {/* Play overlay */}
-              <div className={`absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity ${isCurrentTrack ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+              {/* Play overlay - polished with glow */}
+              <div className={`absolute inset-0 flex items-center justify-center bg-gradient-to-t from-black/70 via-black/30 to-transparent transition-all duration-300 ${isCurrentTrack ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
                 <Button
                   onClick={(e) => { e.stopPropagation(); onPlay() }}
-                  className="w-10 h-10 rounded-full bg-cyan-500 hover:bg-cyan-400 flex items-center justify-center p-0"
+                  className="w-11 h-11 rounded-full bg-cyan-500 hover:bg-cyan-400 hover:scale-110 flex items-center justify-center p-0 shadow-lg shadow-cyan-500/50 transition-all duration-200"
                 >
                   {isPlaying && isCurrentTrack ? <Pause className="w-5 h-5 text-black" /> : <Play className="w-5 h-5 text-black ml-0.5" />}
                 </Button>
               </div>
 
-              {/* Badges */}
-              <Badge className={`${rarity.color} absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0.5`}>{rarity.label}</Badge>
+              {/* Badges - polished with backdrop blur */}
+              <Badge className={`${rarity.color} absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 uppercase font-bold tracking-wide backdrop-blur-sm shadow-sm`}>{rarity.label}</Badge>
 
               {hasListing && (
-                <Badge className="bg-green-500/80 text-white absolute top-1.5 left-1.5 text-[9px] px-1 py-0.5">
+                <Badge className="bg-green-500/90 text-white absolute top-1.5 left-1.5 text-[8px] px-1.5 py-0.5 uppercase font-bold tracking-wide backdrop-blur-sm shadow-sm">
                   FOR SALE
                 </Badge>
               )}
@@ -418,29 +420,29 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
               </Button>
             </div>
 
-            {/* Compact info section */}
-            <div className="p-2 space-y-0.5">
-              <h3 className="text-white text-xs font-semibold truncate leading-tight">{track.title}</h3>
-              <p className="text-gray-400 text-[10px] truncate">{track.artist}</p>
-              <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[9px] text-cyan-400">{track.playbackCountFormatted || '0'} plays</span>
+            {/* Compact info section - polished */}
+            <div className="p-2.5 space-y-1 bg-gradient-to-t from-black/40 to-transparent">
+              <h3 className="text-white text-xs font-semibold truncate leading-tight drop-shadow-sm">{track.title}</h3>
+              <p className="text-gray-400 text-[10px] truncate font-medium">{track.artist}</p>
+              <div className="flex items-center justify-between pt-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] text-cyan-400 font-medium tabular-nums">{track.playbackCountFormatted || '0'} plays</span>
                   {(track.favoriteCount ?? 0) > 0 && (
-                    <span className="text-[9px] text-red-400 flex items-center gap-0.5">
-                      <Heart className="w-2 h-2 fill-current" /> {track.favoriteCount}
+                    <span className="text-[9px] text-red-400 flex items-center gap-0.5 font-medium">
+                      <Heart className="w-2.5 h-2.5 fill-current" /> {track.favoriteCount}
                     </span>
                   )}
                 </div>
                 {hasListing ? (
-                  <div className="text-[10px] font-bold text-green-400">{price} {currency}</div>
+                  <div className="text-[10px] font-bold text-green-400 drop-shadow-sm">{price} {currency}</div>
                 ) : (
                   <Button
                     onClick={(e) => { e.stopPropagation(); onFavorite?.() }}
                     variant="ghost"
                     size="sm"
-                    className="h-5 w-5 p-0 hover:bg-red-500/20"
+                    className="h-5 w-5 p-0 hover:bg-red-500/20 transition-colors"
                   >
-                    <Heart className={`w-3 h-3 ${track.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+                    <Heart className={`w-3 h-3 transition-all ${track.isFavorite ? 'fill-red-500 text-red-500 scale-110' : 'text-gray-400'}`} />
                   </Button>
                 )}
               </div>

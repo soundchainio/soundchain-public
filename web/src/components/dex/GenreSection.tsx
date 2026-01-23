@@ -112,38 +112,34 @@ export function GenreSection({ genre, tracks, onPlayTrack, isPlaying, currentTra
   if (tracks.length === 0) return null
 
   return (
-    <div className="mb-8">
-      {/* Genre Header */}
-      <div className={`flex items-center justify-between mb-4 p-3 rounded-lg bg-gradient-to-r ${colorClass} border`}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-black/30 flex items-center justify-center">
-            <Music className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="retro-title text-lg">{displayName}</h2>
-            <p className="text-xs text-gray-400">{tracks.length} track{tracks.length !== 1 ? 's' : ''}</p>
-          </div>
+    <div className="mb-6">
+      {/* Genre Header - Ultra slim bar */}
+      <div className={`flex items-center justify-between mb-2 py-1 px-3 rounded-md bg-gradient-to-r ${colorClass} border`}>
+        <div className="flex items-center gap-2">
+          <Music className="w-3.5 h-3.5 text-white/80" />
+          <span className="retro-title text-xs font-bold tracking-wide uppercase">{displayName}</span>
+          <span className="text-[10px] text-gray-400/80">{tracks.length}</span>
         </div>
 
-        {/* Scroll Controls */}
-        <div className="flex items-center gap-2">
+        {/* Scroll Controls - Compact */}
+        <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => scroll('left')}
             disabled={!canScrollLeft}
-            className="rounded-full w-8 h-8 p-0 hover:bg-white/10 disabled:opacity-30"
+            className="rounded-full w-5 h-5 p-0 hover:bg-white/10 disabled:opacity-30"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3 h-3" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => scroll('right')}
             disabled={!canScrollRight}
-            className="rounded-full w-8 h-8 p-0 hover:bg-white/10 disabled:opacity-30"
+            className="rounded-full w-5 h-5 p-0 hover:bg-white/10 disabled:opacity-30"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3 h-3" />
           </Button>
         </div>
       </div>
