@@ -679,7 +679,7 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 20, 2026 | Dropdown panel modals, Quick DM, Tip Jar placeholder | dd8886501 |
 | Jan 21, 2026 | **Bitchat/Nostr integration** - Location chat, encrypted DMs | Multiple |
 | Jan 22, 2026 | **SoundChain Bridge app**, Mobile player crash fix, Geohash precision fix | fce2b1e5f+ |
-| Jan 23, 2026 | **Multi-Chain EVM Support** - Network switcher, balance viewing across chains | TBD |
+| Jan 23, 2026 | **Multi-Chain EVM Support** - Network switcher, balance viewing across chains | PR #1179, d6bc95ee2 |
 
 ---
 
@@ -690,6 +690,25 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 - ChainSwitcher UI component in wallet panel
 - MultiChainContext for state management
 - Extended blockchainNetworks.ts with all supported networks
+- **PR #1179** merged, deployed to production
+
+### Next Session Priority
+- Test all OAuth wallet providers (Google, Discord, Twitch, Email)
+- Verify wallet addresses created correctly per provider
+- Verify POL/OGUN balance callbacks working
+- Document any OAuth → blockchain callback issues
+
+### Planned: Multi-Chain OGUN Liquidity (Needs Funding/Partners)
+**Status:** Roadmapped, requires liquidity funding
+
+| Chain | Minimum LP | Gas Cost |
+|-------|-----------|----------|
+| Base | $5,000 | ~$0.01 |
+| Arbitrum | $10,000 | ~$0.10 |
+| Optimism | $10,000 | ~$0.10 |
+| Ethereum | $50,000+ | ~$5-50 |
+
+**Cheapest path:** Bridge-only approach (~$500) or Base-only LP (~$5,000)
 
 ### Planned: Solana Integration (Future)
 **Status:** Roadmapped, not yet implemented
