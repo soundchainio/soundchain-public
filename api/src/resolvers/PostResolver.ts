@@ -1,3 +1,4 @@
+// Force deploy: Jan 23 2026 - reactionTally field resolver
 import mongoose from 'mongoose';
 import { toPairs } from 'lodash';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
