@@ -10,13 +10,6 @@ fragment PostComponentFields on Post {
   repostCount
   totalReactions
   topReactions(top: 2)
-  reactionCounts {
-    SAD
-    HAPPY
-    HORNS
-    SUNGLASSES
-    HEART
-  }
   myReaction
   deleted
   isGuest
