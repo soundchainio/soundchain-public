@@ -1895,19 +1895,30 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 muted
                 playsInline
                 className="w-full h-full object-cover"
+                onError={(e) => console.error('❌ ViewingProfile cover video failed:', viewingProfile.coverPicture, e)}
+                onLoadedData={() => console.log('✅ ViewingProfile cover video loaded:', viewingProfile.coverPicture)}
               />
             ) : (
               <img
                 src={viewingProfile.coverPicture}
                 alt="Cover"
                 className="w-full h-full object-cover"
+                onError={(e) => console.error('❌ ViewingProfile cover image failed:', viewingProfile.coverPicture, e)}
+                onLoad={() => console.log('✅ ViewingProfile cover image loaded')}
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
           </>
-        ) : selectedView === 'profile' ? (
-          /* Viewing profile but no cover - show gradient */
-          <div className="w-full h-full bg-gradient-to-br from-purple-900 via-cyan-900 to-black" />
+        ) : selectedView === 'profile' && !viewingProfile?.coverPicture ? (
+          /* Viewing profile but no cover - show gradient + debug */
+          <>
+            <div className="w-full h-full bg-gradient-to-br from-purple-900 via-cyan-900 to-black" />
+            {process.env.NODE_ENV === 'development' && (
+              <div className="absolute top-4 left-4 text-xs text-yellow-400 bg-black/50 p-2 rounded">
+                Debug: No coverPicture for viewingProfile
+              </div>
+            )}
+          </>
         ) : user?.coverPicture && !coverImageError ? (
           /* Own profile / other views - show logged-in user's cover (image or video) */
           <>
