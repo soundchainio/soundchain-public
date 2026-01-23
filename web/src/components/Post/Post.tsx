@@ -391,6 +391,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           topReactions={post.topReactions}
           reactionTally={post.reactionTally}
           postId={post.id}
+          myReaction={post.myReaction}
         />
       </div>
       {/* Action Buttons with Count Badges */}

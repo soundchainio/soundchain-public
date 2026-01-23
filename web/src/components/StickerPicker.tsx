@@ -519,7 +519,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
 
   return (
     <div
-      className={classNames('w-full max-w-full sm:max-w-[384px] rounded-xl shadow-2xl border', {
+      className={classNames('w-[320px] sm:w-[420px] md:w-[480px] rounded-xl shadow-2xl border', {
         'bg-neutral-900 text-white border-neutral-700': theme === 'dark',
         'bg-white text-gray-900 border-gray-200': theme === 'light',
       })}
@@ -569,8 +569,8 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
         <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-neutral-900 to-transparent pointer-events-none" />
       </div>
 
-      {/* Emotes Grid - shorter on mobile for better fit */}
-      <div className="h-48 sm:h-80 overflow-y-auto overflow-x-hidden p-2">
+      {/* Emotes Grid - responsive height */}
+      <div className="h-56 sm:h-72 md:h-80 overflow-y-auto overflow-x-hidden p-2">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-2">
