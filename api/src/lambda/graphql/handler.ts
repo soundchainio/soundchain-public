@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-// Trigger deploy - restore env vars - Dec 17 2025
+// Trigger deploy - fix reactionCounts crash - Jan 23 2026
 import { ApolloServer } from 'apollo-server-lambda';
 import type { APIGatewayProxyHandler, APIGatewayProxyEvent, Context as LambdaContext } from 'aws-lambda';
 import express from 'express';
