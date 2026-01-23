@@ -96,15 +96,19 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
       const response = await fetch('https://7tv.io/v3/emote-sets/global')
       const data = await response.json()
 
-      const normalized: NormalizedEmote[] = (data.emotes || []).map((emote: SevenTVEmote) => ({
-        id: emote.id,
-        name: emote.name,
-        // Use default URL (no extension) - CDN serves best format for browser
-        // Fallback chain in onError: default -> webp -> png
-        url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
-        animated: emote.data?.animated || false,
-        source: '7tv' as const,
-      }))
+      const normalized: NormalizedEmote[] = (data.emotes || []).map((emote: SevenTVEmote) => {
+        const isAnimated = emote.data?.animated || false
+        // 7TV CDN requires explicit file extension
+        // Use .gif for animated emotes, .webp for static (better compression)
+        const ext = isAnimated ? 'gif' : 'webp'
+        return {
+          id: emote.id,
+          name: emote.name,
+          url: `https://cdn.7tv.app/emote/${emote.id}/2x.${ext}`,
+          animated: isAnimated,
+          source: '7tv' as const,
+        }
+      })
 
       emoteCache['7tv'] = normalized
       return normalized
@@ -250,11 +254,13 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
 
           if (data.emotes) {
             for (const emote of data.emotes.slice(0, 25)) {
+              const isAnimated = emote.data?.animated || false
+              const ext = isAnimated ? 'gif' : 'webp'
               allEmotes.push({
                 id: `kick-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
-                animated: emote.data?.animated || false,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x.${ext}`,
+                animated: isAnimated,
                 source: 'kick' as const,
               })
             }
@@ -264,7 +270,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
         }
       }
 
-      // Add some curated popular streaming emotes
+      // Add some curated popular streaming emotes (all animated)
       const curatedKickEmotes = [
         { id: '60ae958e229664e8667aea38', name: 'KEKW' },
         { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
@@ -276,7 +282,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
       const curated = curatedKickEmotes.map(e => ({
         id: `kick-curated-${e.id}`,
         name: e.name,
-        url: `https://cdn.7tv.app/emote/${e.id}/2x`,
+        url: `https://cdn.7tv.app/emote/${e.id}/2x.gif`,
         animated: true,
         source: 'kick' as const,
       }))
@@ -311,11 +317,13 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
 
           if (data.emotes) {
             for (const emote of data.emotes.slice(0, 30)) {
+              const isAnimated = emote.data?.animated || false
+              const ext = isAnimated ? 'gif' : 'webp'
               allEmotes.push({
                 id: `trend-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
-                animated: emote.data?.animated || false,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x.${ext}`,
+                animated: isAnimated,
                 source: '7tv' as const,
               })
             }
@@ -335,7 +343,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
 
   // Popular reaction emotes (curated from 7TV)
   const getReactionEmotes = (): NormalizedEmote[] => {
-    // Popular reaction emote IDs from 7TV
+    // Popular reaction emote IDs from 7TV (all animated)
     const reactions = [
       { id: '60ae958e229664e8667aea38', name: 'KEKW' },
       { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
@@ -372,7 +380,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return reactions.map(r => ({
       id: `react-${r.id}`,
       name: r.name,
-      url: `https://cdn.7tv.app/emote/${r.id}/2x`,
+      url: `https://cdn.7tv.app/emote/${r.id}/2x.gif`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -380,7 +388,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
 
   // Music-themed emotes
   const getMusicEmotes = (): NormalizedEmote[] => {
-    // Popular music/vibe emote IDs from 7TV
+    // Popular music/vibe emote IDs from 7TV (all animated)
     const musicEmotes = [
       { id: '60aec9186d0b8c60ac0be7c0', name: 'catJAM' },
       { id: '60ae8cac229664e8667ae5a8', name: 'pepeD' },
@@ -407,7 +415,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return musicEmotes.map(e => ({
       id: `music-${e.id}`,
       name: e.name,
-      url: `https://cdn.7tv.app/emote/${e.id}/2x`,
+      url: `https://cdn.7tv.app/emote/${e.id}/2x.gif`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -530,26 +538,39 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
         />
       </div>
 
-      {/* Category Tabs - scrollable on mobile */}
-      <div className="flex border-b border-neutral-700 overflow-x-auto scrollbar-hide">
-        {categories.map((category) => (
-          <button
-            key={category.id}
-            onClick={() => setActiveCategory(category.id)}
-            className={classNames('flex-shrink-0 px-2 sm:px-3 py-2.5 text-[10px] sm:text-xs font-medium transition-all whitespace-nowrap', {
-              'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-400': activeCategory === category.id,
-              'text-neutral-400 hover:bg-neutral-800 hover:text-white': activeCategory !== category.id && theme === 'dark',
-              'text-gray-500 hover:bg-gray-50 hover:text-gray-900': activeCategory !== category.id && theme === 'light',
-            })}
-          >
-            <span className="mr-0.5 sm:mr-1">{category.icon}</span>
-            {category.label}
-          </button>
-        ))}
+      {/* Category Tabs - horizontally scrollable */}
+      <div className="relative border-b border-neutral-700">
+        <div
+          className="flex overflow-x-auto scrollbar-hide"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
+              className={classNames('flex-shrink-0 px-2.5 sm:px-3 py-2.5 text-[10px] sm:text-xs font-medium transition-all whitespace-nowrap', {
+                'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-400': activeCategory === category.id,
+                'text-neutral-400 hover:bg-neutral-800 hover:text-white': activeCategory !== category.id && theme === 'dark',
+                'text-gray-500 hover:bg-gray-50 hover:text-gray-900': activeCategory !== category.id && theme === 'light',
+              })}
+            >
+              <span className="mr-0.5 sm:mr-1">{category.icon}</span>
+              {category.label}
+            </button>
+          ))}
+          {/* Spacer to ensure last tab is fully visible when scrolled */}
+          <div className="flex-shrink-0 w-4" />
+        </div>
+        {/* Fade indicator for more content */}
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-neutral-900 to-transparent pointer-events-none" />
       </div>
 
       {/* Emotes Grid - shorter on mobile for better fit */}
-      <div className="h-48 sm:h-80 overflow-y-auto p-2">
+      <div className="h-48 sm:h-80 overflow-y-auto overflow-x-hidden p-2">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-2">
@@ -562,7 +583,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
             {searchQuery ? 'No emotes found' : 'No emotes available'}
           </div>
         ) : (
-          <div className="grid grid-cols-8 gap-0.5">
+          <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
             {filteredEmotes.map((emote) => (
               <button
                 key={`${emote.source}-${emote.id}`}
@@ -582,25 +603,29 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
                   className="w-7 h-7 object-contain"
                   loading="lazy"
                   onError={(e) => {
-                    // Fallback chain: default -> webp -> gif -> png -> text
+                    // Fallback chain: gif -> webp -> png -> text
                     const img = e.target as HTMLImageElement
                     const url = img.src
-                    if (!url.includes('.webp') && !url.includes('.gif') && !url.includes('.png')) {
-                      // Default URL failed, try webp
-                      img.src = url + '.webp'
+                    if (url.includes('.gif')) {
+                      // gif failed, try webp
+                      img.src = url.replace('.gif', '.webp')
                     } else if (url.includes('.webp')) {
-                      // webp failed, try gif
-                      img.src = url.replace('.webp', '.gif')
-                    } else if (url.includes('.gif')) {
-                      // gif failed, try png
-                      img.src = url.replace('.gif', '.png')
-                    } else {
-                      // All formats failed - show text fallback
+                      // webp failed, try png
+                      img.src = url.replace('.webp', '.png')
+                    } else if (url.includes('.png')) {
+                      // All formats failed - show emoji as text fallback
                       img.style.display = 'none'
-                      img.parentElement?.classList.add('bg-neutral-700', 'text-[8px]', 'text-cyan-400')
-                      if (img.parentElement) {
-                        img.parentElement.textContent = emote.name.slice(0, 4)
+                      const parent = img.parentElement
+                      if (parent) {
+                        parent.classList.add('bg-neutral-700/50')
+                        const span = document.createElement('span')
+                        span.className = 'text-[8px] text-cyan-400 font-medium'
+                        span.textContent = emote.name.slice(0, 5)
+                        parent.appendChild(span)
                       }
+                    } else {
+                      // Unknown format, try webp
+                      img.src = url + '.webp'
                     }
                   }}
                 />
