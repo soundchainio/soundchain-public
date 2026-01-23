@@ -48,6 +48,10 @@
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
 
+    <!-- CRITICAL: Location Permission -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>SoundChain Bridge needs your location to find nearby users and sync with the same geographic channel as SoundChain web users.</string>
+
     <!-- CRITICAL: Bluetooth Permissions -->
     <key>NSBluetoothAlwaysUsageDescription</key>
     <string>SoundChain Bridge uses Bluetooth to discover and communicate with nearby Bitchat users for mesh networking.</string>

@@ -99,8 +99,8 @@ class BridgeManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
 
-        // Calculate geohash from coordinates
-        let geohash = calculateGeohash(lat: location.coordinate.latitude, lng: location.coordinate.longitude, precision: 7)
+        // Calculate geohash from coordinates (precision 6 = ~1.2km for better device matching)
+        let geohash = calculateGeohash(lat: location.coordinate.latitude, lng: location.coordinate.longitude, precision: 6)
         currentGeohash = geohash
         isLocating = false
 
@@ -210,6 +210,31 @@ class BridgeManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         nearbyDevices = []
 
         print("🌉 BridgeManager: Stopped")
+    }
+
+    // MARK: - Send Message
+
+    func sendMessage(_ content: String) {
+        guard let geohash = currentGeohash, let bridge = bridge else {
+            print("🌉 BridgeManager: Cannot send - bridge not running")
+            return
+        }
+
+        // Publish to Nostr relays
+        bridge.nostr.publishMessage(content: content, geohash: geohash)
+
+        // Also broadcast to Bluetooth mesh
+        let pubkey = "bridge-user"  // Simplified - in production use proper identity
+        bridge.mesh.broadcastToMesh(content: content, pubkey: pubkey, geohash: geohash)
+
+        // Also send to Bitchat devices
+        bridge.sendToBitchatDevices(content: content, pubkey: pubkey, geohash: geohash)
+
+        // Add to local messages
+        addMessage(content: content, sender: "You", source: .nostr)
+        messagesRelayed += 1
+
+        print("🌉 BridgeManager: Sent message to all networks")
     }
 
     private func addMessage(content: String, sender: String, source: MessageSource) {

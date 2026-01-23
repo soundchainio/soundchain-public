@@ -19,6 +19,15 @@ import MultipeerConnectivity
 import Network
 import UIKit
 import CryptoKit
+import CoreBluetooth
+
+// MARK: - Bitchat BLE Constants
+/// UUIDs from Bitchat's open source code - enables direct communication with Bitchat users!
+struct BitchatBLE {
+    static let serviceUUID = CBUUID(string: "F47B5E2D-4A9E-4C5A-9B3F-8E1D2C3A4B5A")  // Testnet
+    static let mainnetServiceUUID = CBUUID(string: "F47B5E2D-4A9E-4C5A-9B3F-8E1D2C3A4B5C")  // Mainnet
+    static let characteristicUUID = CBUUID(string: "A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D")
+}
 
 // MARK: - Nostr Protocol Types
 
@@ -42,7 +51,8 @@ enum NostrEventKind: Int {
     case reaction = 7
     case channelCreate = 40
     case channelMetadata = 41
-    case channelMessage = 42      // Used for location chat
+    case channelMessage = 42
+    case ephemeral = 20000        // SoundChain/Bitchat location chat
 }
 
 /// Nostr event structure
@@ -147,14 +157,19 @@ class NostrRelayManager: NSObject {
 
     private func subscribeToGeohash(webSocket: URLSessionWebSocketTask) {
         // Nostr subscription filter for location-based messages
-        // Matches the web app's filter in concertChat.ts
+        // Matches the web app's filter in concertChat.ts - uses kind 20000 (ephemeral)
+        // Use geohash prefix (6 chars) to catch nearby users with slightly different positions
+        let geohashPrefix = String(currentGeohash.prefix(6))
+
+        // Subscribe to multiple geohash variations to catch nearby users
         let filter: [String: Any] = [
-            "kinds": [NostrEventKind.channelMessage.rawValue],
-            "#g": [currentGeohash],  // Geohash tag
+            "kinds": [NostrEventKind.ephemeral.rawValue],  // 20000 - same as web app!
+            "#g": [currentGeohash, geohashPrefix],  // Both exact and prefix match
             "since": Int64(Date().timeIntervalSince1970) - 3600  // Last hour
         ]
 
         let subscription: [Any] = ["REQ", subscriptionId, filter]
+        print("📡 Nostr: Subscribing to geohash \(currentGeohash) and prefix \(geohashPrefix)")
 
         guard let data = try? JSONSerialization.data(withJSONObject: subscription),
               let jsonString = String(data: data, encoding: .utf8) else { return }
@@ -241,7 +256,8 @@ class NostrRelayManager: NSObject {
         // Don't echo our own messages
         if pubkey == identity?.publicKey { return }
 
-        print("📡 Nostr: Received message from \(pubkey.prefix(8))...")
+        print("📡 Nostr: Received message from \(pubkey.prefix(8))... geohash=\(geohash)")
+        print("📡 Nostr: Content: \(content)")
 
         // Forward to delegate (which will broadcast to Bluetooth)
         delegate?.didReceiveMessage(content: content, pubkey: pubkey, geohash: geohash, timestamp: createdAt)
@@ -256,11 +272,11 @@ class NostrRelayManager: NSObject {
             ["client", "soundchain-bridge"]
         ]
 
-        // Create event
+        // Create event - use kind 20000 (ephemeral) to match web app
         var event = NostrEvent(
             pubkey: identity.publicKey,
             created_at: Int64(Date().timeIntervalSince1970),
-            kind: NostrEventKind.channelMessage.rawValue,
+            kind: NostrEventKind.ephemeral.rawValue,  // 20000 - same as web!
             tags: tags,
             content: content
         )
@@ -541,19 +557,276 @@ extension BluetoothMeshManager: MCNearbyServiceBrowserDelegate {
     }
 }
 
+// MARK: - Bitchat BLE Manager (CoreBluetooth - communicates directly with Bitchat!)
+
+protocol BitchatBLEDelegate: AnyObject {
+    func didDiscoverBitchatDevice(id: String, name: String, rssi: Int)
+    func didReceiveBitchatMessage(data: Data, from deviceId: String)
+    func didConnectToBitchat(deviceId: String)
+    func didDisconnectFromBitchat(deviceId: String)
+}
+
+class BitchatBLEManager: NSObject {
+    private var centralManager: CBCentralManager!
+    private var peripheralManager: CBPeripheralManager!
+    private var discoveredPeripherals: [UUID: CBPeripheral] = [:]
+    private var connectedPeripherals: [UUID: CBPeripheral] = [:]
+    private var characteristics: [UUID: CBCharacteristic] = [:]
+
+    weak var delegate: BitchatBLEDelegate?
+    private(set) var isScanning = false
+    private var shouldStartScanning = false
+    private var shouldStartAdvertising = false
+
+    override init() {
+        super.init()
+        centralManager = CBCentralManager(delegate: self, queue: DispatchQueue.main)
+        peripheralManager = CBPeripheralManager(delegate: self, queue: DispatchQueue.main)
+    }
+
+    func startScanning() {
+        shouldStartScanning = true
+
+        guard centralManager.state == .poweredOn else {
+            print("🔵 Bitchat BLE: Central not ready yet, will start when powered on")
+            return
+        }
+
+        isScanning = true
+        // Scan for both testnet and mainnet Bitchat devices
+        centralManager.scanForPeripherals(
+            withServices: [BitchatBLE.serviceUUID, BitchatBLE.mainnetServiceUUID],
+            options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
+        )
+        print("🔵 Bitchat BLE: Started scanning for Bitchat devices...")
+    }
+
+    func stopScanning() {
+        shouldStartScanning = false
+        isScanning = false
+        if centralManager.state == .poweredOn {
+            centralManager.stopScan()
+        }
+        print("🔵 Bitchat BLE: Stopped scanning")
+    }
+
+    func startAdvertising() {
+        shouldStartAdvertising = true
+
+        guard peripheralManager.state == .poweredOn else {
+            print("🔵 Bitchat BLE: Peripheral not ready yet, will start when powered on")
+            return
+        }
+
+        // Create the characteristic
+        let characteristic = CBMutableCharacteristic(
+            type: BitchatBLE.characteristicUUID,
+            properties: [.read, .write, .writeWithoutResponse, .notify],
+            value: nil,
+            permissions: [.readable, .writeable]
+        )
+
+        // Create the service
+        let service = CBMutableService(type: BitchatBLE.serviceUUID, primary: true)
+        service.characteristics = [characteristic]
+
+        peripheralManager.add(service)
+
+        // Start advertising
+        peripheralManager.startAdvertising([
+            CBAdvertisementDataServiceUUIDsKey: [BitchatBLE.serviceUUID],
+            CBAdvertisementDataLocalNameKey: "SoundChain-Bridge"
+        ])
+        print("🔵 Bitchat BLE: Started advertising as Bitchat-compatible device")
+    }
+
+    func stopAdvertising() {
+        shouldStartAdvertising = false
+        if peripheralManager.state == .poweredOn {
+            peripheralManager.stopAdvertising()
+            peripheralManager.removeAllServices()
+        }
+    }
+
+    func sendToBitchat(data: Data) {
+        for (_, peripheral) in connectedPeripherals {
+            if let characteristic = characteristics[peripheral.identifier] {
+                peripheral.writeValue(data, for: characteristic, type: .withoutResponse)
+                print("🔵 Bitchat BLE: Sent \(data.count) bytes to \(peripheral.name ?? "unknown")")
+            }
+        }
+    }
+
+    func disconnect() {
+        stopScanning()
+        stopAdvertising()
+        for (_, peripheral) in connectedPeripherals {
+            centralManager.cancelPeripheralConnection(peripheral)
+        }
+        connectedPeripherals.removeAll()
+        discoveredPeripherals.removeAll()
+    }
+}
+
+// MARK: - CBCentralManager Delegate (scanning for Bitchat devices)
+
+extension BitchatBLEManager: CBCentralManagerDelegate {
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        switch central.state {
+        case .poweredOn:
+            print("🔵 Bitchat BLE: Central powered on")
+            if shouldStartScanning {
+                startScanning()
+            }
+        case .poweredOff:
+            print("🔵 Bitchat BLE: Bluetooth is off")
+        case .unauthorized:
+            print("🔵 Bitchat BLE: Bluetooth unauthorized")
+        default:
+            print("🔵 Bitchat BLE: Central state: \(central.state.rawValue)")
+        }
+    }
+
+    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        let deviceId = peripheral.identifier.uuidString
+        let name = peripheral.name ?? advertisementData[CBAdvertisementDataLocalNameKey] as? String ?? "Bitchat Device"
+
+        print("🔵 Bitchat BLE: Discovered \(name) (RSSI: \(RSSI))")
+
+        discoveredPeripherals[peripheral.identifier] = peripheral
+        delegate?.didDiscoverBitchatDevice(id: deviceId, name: name, rssi: RSSI.intValue)
+
+        // Auto-connect to discovered Bitchat devices
+        peripheral.delegate = self
+        centralManager.connect(peripheral, options: nil)
+    }
+
+    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        print("🔵 Bitchat BLE: Connected to \(peripheral.name ?? "unknown")")
+        connectedPeripherals[peripheral.identifier] = peripheral
+        delegate?.didConnectToBitchat(deviceId: peripheral.identifier.uuidString)
+
+        // Discover services
+        peripheral.discoverServices([BitchatBLE.serviceUUID, BitchatBLE.mainnetServiceUUID])
+    }
+
+    func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        print("🔵 Bitchat BLE: Disconnected from \(peripheral.name ?? "unknown")")
+        connectedPeripherals.removeValue(forKey: peripheral.identifier)
+        characteristics.removeValue(forKey: peripheral.identifier)
+        delegate?.didDisconnectFromBitchat(deviceId: peripheral.identifier.uuidString)
+
+        // Try to reconnect
+        if isScanning {
+            centralManager.connect(peripheral, options: nil)
+        }
+    }
+
+    func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        print("🔵 Bitchat BLE: Failed to connect to \(peripheral.name ?? "unknown"): \(error?.localizedDescription ?? "unknown")")
+    }
+}
+
+// MARK: - CBPeripheral Delegate (communicating with Bitchat)
+
+extension BitchatBLEManager: CBPeripheralDelegate {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        guard error == nil else {
+            print("🔵 Bitchat BLE: Service discovery error: \(error!)")
+            return
+        }
+
+        for service in peripheral.services ?? [] {
+            print("🔵 Bitchat BLE: Found service: \(service.uuid)")
+            peripheral.discoverCharacteristics([BitchatBLE.characteristicUUID], for: service)
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        guard error == nil else {
+            print("🔵 Bitchat BLE: Characteristic discovery error: \(error!)")
+            return
+        }
+
+        for characteristic in service.characteristics ?? [] {
+            if characteristic.uuid == BitchatBLE.characteristicUUID {
+                print("🔵 Bitchat BLE: Found Bitchat characteristic!")
+                characteristics[peripheral.identifier] = characteristic
+
+                // Subscribe to notifications
+                peripheral.setNotifyValue(true, for: characteristic)
+            }
+        }
+    }
+
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard error == nil, let data = characteristic.value else {
+            return
+        }
+
+        print("🔵 Bitchat BLE: Received \(data.count) bytes from \(peripheral.name ?? "unknown")")
+        delegate?.didReceiveBitchatMessage(data: data, from: peripheral.identifier.uuidString)
+    }
+}
+
+// MARK: - CBPeripheralManager Delegate (advertising as Bitchat-compatible)
+
+extension BitchatBLEManager: CBPeripheralManagerDelegate {
+    func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
+        switch peripheral.state {
+        case .poweredOn:
+            print("🔵 Bitchat BLE: Peripheral powered on")
+            if shouldStartAdvertising {
+                startAdvertising()
+            }
+        default:
+            print("🔵 Bitchat BLE: Peripheral state: \(peripheral.state.rawValue)")
+        }
+    }
+
+    func peripheralManager(_ peripheral: CBPeripheralManager, didReceiveWrite requests: [CBATTRequest]) {
+        for request in requests {
+            if let data = request.value {
+                print("🔵 Bitchat BLE: Received write: \(data.count) bytes")
+                delegate?.didReceiveBitchatMessage(data: data, from: request.central.identifier.uuidString)
+            }
+            peripheral.respond(to: request, withResult: .success)
+        }
+    }
+
+    func peripheralManager(_ peripheral: CBPeripheralManager, didAdd service: CBService, error: Error?) {
+        if let error = error {
+            print("🔵 Bitchat BLE: Failed to add service: \(error)")
+        } else {
+            print("🔵 Bitchat BLE: Service added successfully")
+        }
+    }
+
+    func peripheralManagerDidStartAdvertising(_ peripheral: CBPeripheralManager, error: Error?) {
+        if let error = error {
+            print("🔵 Bitchat BLE: Advertising failed: \(error)")
+        } else {
+            print("🔵 Bitchat BLE: Advertising started successfully")
+        }
+    }
+}
+
 // MARK: - Main Bridge Controller
 
-class SoundChainBridge: NostrRelayDelegate, BluetoothMeshDelegate {
+class SoundChainBridge: NostrRelayDelegate, BluetoothMeshDelegate, BitchatBLEDelegate {
     let nostr = NostrRelayManager()
     let mesh = BluetoothMeshManager()
+    let bitchat = BitchatBLEManager()  // NEW: Direct Bitchat BLE communication!
 
     private var currentGeohash: String = ""
     private(set) var isRunning = false
+    private(set) var bitchatDevices: [String: String] = [:]  // id -> name
 
     // Callbacks for UI updates
     var onNostrMessage: ((String, String) -> Void)?
     var onBluetoothMessage: ((String, String) -> Void)?
     var onDevicesUpdated: (([NearbyDevice]) -> Void)?
+    var onBitchatDeviceFound: ((String, String) -> Void)?  // NEW
 
     func start(geohash: String) {
         guard !isRunning else { return }
@@ -564,34 +837,44 @@ class SoundChainBridge: NostrRelayDelegate, BluetoothMeshDelegate {
         // Set up delegates
         nostr.delegate = self
         mesh.delegate = self
+        bitchat.delegate = self  // NEW
 
-        // Start both connections
+        // Start all connections
         nostr.connect(geohash: geohash)
         mesh.startMesh(geohash: geohash)
 
+        // NEW: Start Bitchat BLE scanning and advertising
+        bitchat.startScanning()
+        bitchat.startAdvertising()
+
         print("🌉 SoundChain Bridge: Started")
-        print("🌉 Bridging Nostr ↔ Bluetooth for geohash: \(geohash)")
+        print("🌉 Bridging Nostr ↔ Bluetooth ↔ Bitchat for geohash: \(geohash)")
     }
 
     func stop() {
         isRunning = false
         nostr.disconnect()
         mesh.stopMesh()
+        bitchat.disconnect()  // NEW
+        bitchatDevices.removeAll()
         print("🌉 SoundChain Bridge: Stopped")
     }
 
     // MARK: - NostrRelayDelegate
 
     /// Called when we receive a message from Nostr relays
-    /// Forward it to Bluetooth mesh
+    /// Forward it to Bluetooth mesh AND Bitchat devices
     func didReceiveMessage(content: String, pubkey: String, geohash: String, timestamp: Int64) {
-        print("🌉 Bridge: Nostr → Bluetooth: \(content.prefix(30))...")
+        print("🌉 Bridge: Nostr → Bluetooth/Bitchat: \(content.prefix(30))...")
 
         // Notify UI
         onNostrMessage?(content, pubkey)
 
-        // Forward to Bluetooth mesh
+        // Forward to Multipeer Bluetooth mesh
         mesh.broadcastToMesh(content: content, pubkey: pubkey, geohash: geohash)
+
+        // Forward to Bitchat devices via BLE
+        sendToBitchatDevices(content: content, pubkey: pubkey, geohash: geohash)
     }
 
     // MARK: - BluetoothMeshDelegate
@@ -612,6 +895,86 @@ class SoundChainBridge: NostrRelayDelegate, BluetoothMeshDelegate {
         onDevicesUpdated?(devices)
     }
 
+    // MARK: - BitchatBLEDelegate
+
+    /// Called when a Bitchat device is discovered via BLE
+    func didDiscoverBitchatDevice(id: String, name: String, rssi: Int) {
+        print("🌉 Bridge: Discovered Bitchat device: \(name) (RSSI: \(rssi))")
+        bitchatDevices[id] = name
+
+        // Notify UI
+        onBitchatDeviceFound?(id, name)
+
+        // Add to nearby devices list
+        let device = NearbyDevice(
+            id: id,
+            name: name,
+            rssi: rssi,
+            lastSeen: Int64(Date().timeIntervalSince1970 * 1000),
+            isBitchat: true
+        )
+        var devices = mesh.nearbyDevices
+        if !devices.contains(where: { $0.id == id }) {
+            devices.append(device)
+            onDevicesUpdated?(devices)
+        }
+    }
+
+    /// Called when we receive a message from a Bitchat device via BLE
+    func didReceiveBitchatMessage(data: Data, from deviceId: String) {
+        // Parse Bitchat message format
+        // Bitchat uses a simple JSON format: {"type":"chat","content":"...","pubkey":"..."}
+        guard let message = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let content = message["content"] as? String ?? String(data: data, encoding: .utf8) else {
+            print("🌉 Bridge: Received non-text Bitchat data: \(data.count) bytes")
+            return
+        }
+
+        let pubkey = message["pubkey"] as? String ?? "bitchat-\(deviceId.prefix(8))"
+        let deviceName = bitchatDevices[deviceId] ?? "Bitchat"
+
+        print("🌉 Bridge: Bitchat → Nostr: \(content.prefix(30))... from \(deviceName)")
+
+        // Notify UI
+        onBluetoothMessage?(content, pubkey)
+
+        // Forward to Nostr relays (and other SoundChain web users!)
+        nostr.publishMessage(content: content, geohash: currentGeohash)
+
+        // Also forward to Multipeer mesh
+        mesh.broadcastToMesh(content: content, pubkey: pubkey, geohash: currentGeohash)
+    }
+
+    /// Called when connected to a Bitchat device
+    func didConnectToBitchat(deviceId: String) {
+        let deviceName = bitchatDevices[deviceId] ?? "Bitchat"
+        print("🌉 Bridge: Connected to Bitchat device: \(deviceName)")
+    }
+
+    /// Called when disconnected from a Bitchat device
+    func didDisconnectFromBitchat(deviceId: String) {
+        let deviceName = bitchatDevices[deviceId] ?? "Bitchat"
+        print("🌉 Bridge: Disconnected from Bitchat device: \(deviceName)")
+        bitchatDevices.removeValue(forKey: deviceId)
+    }
+
+    // MARK: - Send to Bitchat
+
+    /// Forward a message to all connected Bitchat devices
+    func sendToBitchatDevices(content: String, pubkey: String, geohash: String) {
+        let message: [String: Any] = [
+            "type": "chat",
+            "content": content,
+            "pubkey": pubkey,
+            "geohash": geohash,
+            "timestamp": Int64(Date().timeIntervalSince1970),
+            "source": "soundchain"
+        ]
+
+        guard let data = try? JSONSerialization.data(withJSONObject: message) else { return }
+        bitchat.sendToBitchat(data: data)
+    }
+
     // MARK: - Stats
 
     var bluetoothPeerCount: Int {
@@ -620,6 +983,10 @@ class SoundChainBridge: NostrRelayDelegate, BluetoothMeshDelegate {
 
     var nearbyDevices: [NearbyDevice] {
         return mesh.nearbyDevices
+    }
+
+    var bitchatDeviceCount: Int {
+        return bitchatDevices.count
     }
 }
 

@@ -13,30 +13,39 @@ import CoreLocation
 
 struct ContentView: View {
     @EnvironmentObject var bridgeManager: BridgeManager
+    @State private var messageText: String = ""
+    @FocusState private var isMessageFieldFocused: Bool
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Header Card
-                    headerCard
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Header Card
+                        headerCard
 
-                    // Location Card (NEW - for geohash)
-                    locationCard
+                        // Location Card (NEW - for geohash)
+                        locationCard
 
-                    // Status Card
-                    statusCard
+                        // Status Card
+                        statusCard
 
-                    // Nearby Devices
-                    nearbyDevicesCard
+                        // Send Message Card (NEW)
+                        if bridgeManager.isRunning {
+                            sendMessageCard
+                        }
 
-                    // Recent Messages
-                    recentMessagesCard
+                        // Nearby Devices
+                        nearbyDevicesCard
 
-                    // Instructions
-                    instructionsCard
+                        // Recent Messages
+                        recentMessagesCard
+
+                        // Instructions
+                        instructionsCard
+                    }
+                    .padding()
                 }
-                .padding()
             }
             .background(
                 LinearGradient(
@@ -344,6 +353,67 @@ struct ContentView: View {
         )
     }
 
+    // MARK: - Send Message Card
+
+    private var sendMessageCard: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "paperplane.fill")
+                    .foregroundColor(.green)
+                Text("Send Message")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Spacer()
+            }
+
+            HStack(spacing: 8) {
+                TextField("Type a message...", text: $messageText)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.1))
+                    .cornerRadius(20)
+                    .foregroundColor(.white)
+                    .focused($isMessageFieldFocused)
+                    .submitLabel(.send)
+                    .onSubmit {
+                        sendMessage()
+                    }
+
+                Button(action: sendMessage) {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: messageText.isEmpty ? [.gray] : [.green, .cyan],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                .disabled(messageText.isEmpty)
+            }
+
+            Text("Messages sent here go to Nostr relays & nearby Bluetooth devices")
+                .font(.caption2)
+                .foregroundColor(.gray)
+        }
+        .padding()
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.green.opacity(0.2), lineWidth: 1)
+        )
+    }
+
+    private func sendMessage() {
+        guard !messageText.isEmpty else { return }
+        bridgeManager.sendMessage(messageText)
+        messageText = ""
+        isMessageFieldFocused = false
+    }
+
     // MARK: - Instructions Card
 
     private var instructionsCard: some View {
@@ -506,6 +576,16 @@ struct SignalStrength: View {
 struct MessageRow: View {
     let message: BridgeManager.ChatMessage
 
+    // Extract URL from content if present
+    private var extractedURL: URL? {
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let matches = detector?.matches(in: message.content, options: [], range: NSRange(location: 0, length: message.content.utf16.count))
+        if let match = matches?.first, let range = Range(match.range, in: message.content) {
+            return URL(string: String(message.content[range]))
+        }
+        return nil
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Source indicator with direction
@@ -535,10 +615,35 @@ struct MessageRow: View {
                         .foregroundColor(.gray.opacity(0.7))
                 }
 
-                Text(message.content)
-                    .font(.subheadline)
-                    .foregroundColor(.white)
-                    .lineLimit(2)
+                // Content with tappable links
+                if let url = extractedURL {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(message.content)
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+
+                        // Tappable link button
+                        Link(destination: url) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "link")
+                                    .font(.caption)
+                                Text("Open Link")
+                                    .font(.caption)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.cyan.opacity(0.2))
+                            .foregroundColor(.cyan)
+                            .cornerRadius(6)
+                        }
+                    }
+                } else {
+                    Text(message.content)
+                        .font(.subheadline)
+                        .foregroundColor(.white)
+                        .lineLimit(2)
+                }
             }
         }
         .padding(.vertical, 4)

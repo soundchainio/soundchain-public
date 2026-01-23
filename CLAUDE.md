@@ -1,6 +1,6 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 21, 2026 (Bitchat/Nostr Integration)
+**Last Updated:** January 22, 2026 (SoundChain Bridge App + Nostr Fixes)
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
@@ -225,6 +225,27 @@ Resetting to earlier commits (like c186dd436) will break desktop login!
 **File:** `web/src/pages/dex/[...slug].tsx`
 **Commit:** `81018584f`
 
+### 18. Mobile Music Player Crash on Tracks Tab (Jan 22, 2026)
+**Symptom:** Mobile browser crashes ~30 seconds into playback when playing from Tracks tab
+**Root Cause:** `<audio>` element had `preload="auto"` which tells mobile browsers to preload entire audio file into memory, causing memory exhaustion
+**Fix:** Changed to `preload={isMobile ? "metadata" : "auto"}` - only load metadata on mobile
+**Don't Do This:** Use `preload="auto"` on mobile for large audio files (IPFS-hosted tracks can be very large)
+**File:** `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx`
+**Commit:** `fce2b1e5f`
+
+### 19. Nostr Geohash Mismatch Between Devices (Jan 22, 2026)
+**Symptom:** Devices in same location couldn't see each other's Nearby chat messages
+**Root Cause:** Geohash precision was 7 (~150m) which is too precise - slight GPS differences gave different geohashes:
+- Pro Chrome: `9tbmte1`
+- iPhone 14: `9tbmte3`
+- Bridge app: `9tbmte3`
+**Fix:** Changed default geohash precision from 7 (STAGE) to 6 (VENUE ~1.2km)
+**Don't Do This:** Use geohash precision 7+ for location matching between devices
+**Files:**
+- `web/src/components/dex/ConcertChat.tsx` - Changed default to `GEOHASH_PRECISION.VENUE`
+- `native/SoundChainBridge/SoundChainBridgeApp.swift` - Changed precision to 6
+**Commit:** `e7882c008`
+
 ---
 
 ## ARCHITECTURE PATTERNS
@@ -315,6 +336,57 @@ const deepLink = `bitchat://channel/${geohash}`
 ```
 
 **App Store:** https://apps.apple.com/us/app/bitchat-mesh/id6748219622
+
+### SoundChain Bridge App (Jan 22, 2026)
+**Purpose:** Native iOS app that bridges Nostr (internet) ↔ Bluetooth mesh (Bitchat)
+**Status:** Development/Testing (not on App Store yet)
+
+**Architecture:**
+```
+┌──────────────────┐     ┌───────────────────┐     ┌──────────────────┐
+│  SoundChain Web  │     │  SoundChain       │     │  Bitchat App     │
+│  (Browser)       │────▶│  Bridge (iOS)     │◀────│  (Bluetooth)     │
+│                  │     │                   │     │                  │
+│  Nostr relays    │     │  Nostr + BLE      │     │  CoreBluetooth   │
+└──────────────────┘     └───────────────────┘     └──────────────────┘
+```
+
+**Files:**
+- `native/SoundChainBridge/SoundChainBridge/BridgeServer.swift` - Core relay logic (Nostr + Bluetooth + Bitchat BLE)
+- `native/SoundChainBridge/SoundChainBridge/ContentView.swift` - SwiftUI interface
+- `native/SoundChainBridge/SoundChainBridge/SoundChainBridgeApp.swift` - App entry point + BridgeManager
+
+**Key Components:**
+| Class | Purpose |
+|-------|---------|
+| `NostrRelayManager` | Connects to Nostr relays, subscribes to geohash channels |
+| `BluetoothMeshManager` | Multipeer Connectivity for iOS-to-iOS mesh |
+| `BitchatBLEManager` | CoreBluetooth for direct Bitchat device communication |
+| `SoundChainBridge` | Orchestrates all three networks |
+| `BridgeManager` | SwiftUI state management + location/geohash |
+
+**Bitchat BLE UUIDs (from their GitHub):**
+```swift
+// Testnet
+serviceUUID: "F47B5E2D-4A9E-4C5A-9B3F-8E1D2C3A4B5A"
+// Mainnet
+serviceUUID: "F47B5E2D-4A9E-4C5A-9B3F-8E1D2C3A4B5C"
+// Characteristic
+characteristicUUID: "A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D"
+```
+
+**Message Flow:**
+1. Web → Nostr relays → Bridge receives → Forwards to Bluetooth mesh + Bitchat BLE
+2. Bitchat → BLE → Bridge receives → Forwards to Nostr relays → Web receives
+
+**Important:** Bridge uses simplified Nostr signing (not proper Schnorr). Messages FROM Bridge may be rejected by clients that verify signatures. Messages TO Bridge work fine.
+
+**Testing via Xcode:**
+1. Open `native/SoundChainBridge/SoundChainBridge.xcodeproj`
+2. Select iPhone target
+3. Build and run (`Cmd+R`)
+4. Allow location and Bluetooth permissions
+5. Tap "Start Bridge"
 
 ---
 
@@ -553,7 +625,8 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 18, 2026 | Mobile wallet connections | 777641a62 |
 | Jan 19, 2026 | Mobile player crash fix, waveform comments, profile/balance fixes | Multiple |
 | Jan 20, 2026 | Dropdown panel modals, Quick DM, Tip Jar placeholder | dd8886501 |
-| Jan 21, 2026 | **Bitchat/Nostr integration** - Location chat, encrypted DMs | Pending |
+| Jan 21, 2026 | **Bitchat/Nostr integration** - Location chat, encrypted DMs | Multiple |
+| Jan 22, 2026 | **SoundChain Bridge app**, Mobile player crash fix, Geohash precision fix | fce2b1e5f+ |
 
 ---
 
