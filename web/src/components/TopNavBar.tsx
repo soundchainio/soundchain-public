@@ -15,7 +15,6 @@ import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
 import { NavBar } from './NavBar'
 import { NotificationBadge } from './NotificationBadge'
 import { Notifications } from './Notifications'
-import { NearbyChatDropdown, NearbyChatIcon } from './NearbyChatDropdown'
 import { SocialLinksPanel } from './SocialLinksPanel'
 import { Title } from './Title'
 import { TopNavBarButton } from './TopNavBarButton'
@@ -160,12 +159,6 @@ export const TopNavBar = ({
             {me && (
               <>
                 <MagicWalletButton />
-                {/* Nearby Chat */}
-                <div className="pr-1 pt-2">
-                  <SoundChainPopOver icon={NearbyChatIcon}>
-                    <NearbyChatDropdown />
-                  </SoundChainPopOver>
-                </div>
                 {/* Notifications */}
                 <div className="pr-1 pt-2">
                   <SoundChainPopOver icon={Bell} badge={NotificationBadge}>
