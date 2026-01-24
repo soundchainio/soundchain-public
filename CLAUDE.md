@@ -1,6 +1,6 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 23, 2026 (Multi-Chain EVM Support)
+**Last Updated:** January 24, 2026 (Video Thumbnail OG Previews)
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
@@ -245,6 +245,38 @@ Resetting to earlier commits (like c186dd436) will break desktop login!
 - `web/src/components/dex/ConcertChat.tsx` - Changed default to `GEOHASH_PRECISION.VENUE`
 - `native/SoundChainBridge/SoundChainBridgeApp.swift` - Changed precision to 6
 **Commit:** `e7882c008`
+
+### 20. Video Post Share Previews Show Profile Picture (Jan 24, 2026)
+**Symptom:** Sharing a video post link shows profile picture instead of video content in iMessage/social previews
+**Root Cause:** Videos can't be used directly as og:image - social crawlers expect static images
+**Fix:** Client-side video thumbnail capture:
+1. When video is uploaded, capture frame via canvas at 1 second mark
+2. Convert canvas to JPEG blob and upload as separate file
+3. Store thumbnail URL in `mediaThumbnail` field
+4. Use `mediaThumbnail` for og:image in video posts
+**Files:**
+- `api/src/types/CreatePostInput.ts` - Added `uploadedMediaThumbnail` field
+- `api/src/services/PostService.ts` - Use thumbnail if provided
+- `web/src/components/Post/PostMediaUploader.tsx` - Capture video frame on upload
+- `web/src/components/Post/PostFormTimeline.tsx` - Pass thumbnail to mutation
+- `web/src/pages/posts/[id].tsx` - Use mediaThumbnail for video post OG images
+**Key Code:**
+```typescript
+// PostMediaUploader.tsx - capture video thumbnail
+const captureVideoThumbnail = (videoFile: File): Promise<Blob | null> => {
+  const video = document.createElement('video')
+  video.src = URL.createObjectURL(videoFile)
+  video.onloadeddata = () => { video.currentTime = Math.min(1, video.duration * 0.1) }
+  video.onseeked = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    canvas.getContext('2d').drawImage(video, 0, 0)
+    canvas.toBlob(resolve, 'image/jpeg', 0.85)
+  }
+}
+```
+**Commit:** `0f264563d`
 
 ---
 
@@ -680,6 +712,7 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 21, 2026 | **Bitchat/Nostr integration** - Location chat, encrypted DMs | Multiple |
 | Jan 22, 2026 | **SoundChain Bridge app**, Mobile player crash fix, Geohash precision fix | fce2b1e5f+ |
 | Jan 23, 2026 | **Multi-Chain EVM Support** - Network switcher, balance viewing across chains | PR #1179, d6bc95ee2 |
+| Jan 24, 2026 | **Video Thumbnail OG Previews** - Canvas frame capture for share link images | 0f264563d |
 
 ---
 
