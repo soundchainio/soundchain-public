@@ -19,30 +19,56 @@ const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB - SoundChain supports large audi
 const captureVideoThumbnail = (videoFile: File): Promise<Blob | null> => {
   return new Promise((resolve) => {
     const video = document.createElement('video')
-    video.preload = 'metadata'
+    // Use 'auto' preload to ensure video data loads for frame capture
+    video.preload = 'auto'
     video.muted = true
     video.playsInline = true
+    // Cross-origin for blob URLs
+    video.crossOrigin = 'anonymous'
 
     const objectUrl = URL.createObjectURL(videoFile)
     video.src = objectUrl
 
-    video.onloadeddata = () => {
+    let resolved = false
+    const cleanup = () => {
+      if (!resolved) {
+        resolved = true
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+
+    // Wait for enough data to seek - use canplaythrough for large files
+    video.oncanplaythrough = () => {
+      if (resolved) return
       // Seek to 1 second or 10% of duration, whichever is smaller
       const seekTime = Math.min(1, video.duration * 0.1)
       video.currentTime = seekTime
     }
 
+    // Fallback for browsers that fire loadeddata before canplaythrough
+    video.onloadeddata = () => {
+      if (resolved) return
+      // Give it a moment to buffer more data
+      setTimeout(() => {
+        if (resolved) return
+        const seekTime = Math.min(1, video.duration * 0.1)
+        video.currentTime = seekTime
+      }, 500)
+    }
+
     video.onseeked = () => {
+      if (resolved) return
       try {
         const canvas = document.createElement('canvas')
         // Use video dimensions, max 1280px wide for reasonable thumbnail size
         const scale = Math.min(1, 1280 / video.videoWidth)
-        canvas.width = video.videoWidth * scale
-        canvas.height = video.videoHeight * scale
+        canvas.width = Math.max(1, video.videoWidth * scale)
+        canvas.height = Math.max(1, video.videoHeight * scale)
 
         const ctx = canvas.getContext('2d')
-        if (!ctx) {
-          URL.revokeObjectURL(objectUrl)
+        if (!ctx || video.videoWidth === 0) {
+          console.warn('Canvas context or video dimensions unavailable')
+          cleanup()
           resolve(null)
           return
         }
@@ -50,27 +76,30 @@ const captureVideoThumbnail = (videoFile: File): Promise<Blob | null> => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
         canvas.toBlob((blob) => {
-          URL.revokeObjectURL(objectUrl)
+          cleanup()
           resolve(blob)
         }, 'image/jpeg', 0.85)
       } catch (err) {
         console.error('Failed to capture video thumbnail:', err)
-        URL.revokeObjectURL(objectUrl)
+        cleanup()
         resolve(null)
       }
     }
 
-    video.onerror = () => {
-      console.error('Video load error for thumbnail capture')
-      URL.revokeObjectURL(objectUrl)
+    video.onerror = (e) => {
+      console.error('Video load error for thumbnail capture:', e)
+      cleanup()
       resolve(null)
     }
 
-    // Timeout fallback
+    // Increased timeout to 30 seconds for large files
     setTimeout(() => {
-      URL.revokeObjectURL(objectUrl)
-      resolve(null)
-    }, 10000)
+      if (!resolved) {
+        console.warn('Thumbnail capture timed out after 30s')
+        cleanup()
+        resolve(null)
+      }
+    }, 30000)
   })
 }
 
