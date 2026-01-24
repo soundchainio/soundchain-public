@@ -6,7 +6,8 @@ module.exports = {
       // Main routes → DEX feed
       { source: '/', destination: '/dex/feed', permanent: false },
       { source: '/home', destination: '/dex/feed', permanent: false },
-      { source: '/posts/:id', destination: '/dex/post/:id', permanent: false },
+      // NOTE: /posts/:id redirect removed - posts/[id].tsx handles bot detection for OG tags
+      // and redirects non-bots to /dex/post/:id via getServerSideProps
 
       // Tracks → DEX track view
       { source: '/tracks/:id', destination: '/dex/track/:id', permanent: false },
