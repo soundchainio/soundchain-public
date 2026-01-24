@@ -1,4 +1,3 @@
-import classNames from 'classnames'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import {
@@ -10,12 +9,8 @@ import {
 } from 'lib/graphql'
 import { useRouter } from 'next/router'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { Delete as DeleteButton } from '../common/Buttons/Delete'
-import { Edit as EditButton } from '../common/Buttons/Edit'
 import { ModalsPortal } from '../ModalsPortal'
-
-const baseClasses =
-  'fixed w-screen h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
+import { Pencil, Trash2, X } from 'lucide-react'
 
 export const AuthorActionsModal = () => {
   const me = useMe()
@@ -110,25 +105,75 @@ export const AuthorActionsModal = () => {
     onOutsideClick()
   }
 
+  // Don't render anything if not showing - prevents click interception
+  if (!showAuthorActions) return null
+
+  const actionLabel = authorActionsType === AuthorActionsType.POST ? 'Post'
+    : authorActionsType === AuthorActionsType.COMMENT ? 'Comment'
+    : authorActionsType === AuthorActionsType.NFT ? 'NFT'
+    : 'Edition'
+
   return (
     <ModalsPortal>
+      {/* Backdrop */}
       <div
-        className={classNames(baseClasses, {
-          'translate-y-0 opacity-100': showAuthorActions,
-          'translate-y-full opacity-0': !showAuthorActions,
-        })}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex-1" onClick={onOutsideClick}></div>
-          <div className="p-4 text-white">
+        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={onOutsideClick}
+      />
+
+      {/* Modal - centered on desktop, bottom sheet on mobile */}
+      <div className="fixed z-50 bottom-0 left-0 right-0 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-xs sm:w-full animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+        <div className="bg-neutral-900 border border-neutral-700 rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
+            <span className="text-white font-medium text-sm">{actionLabel} Options</span>
+            <button
+              onClick={onOutsideClick}
+              className="p-1 rounded-full hover:bg-neutral-800 transition-colors"
+            >
+              <X className="w-4 h-4 text-neutral-400" />
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="p-2">
             {!showOnlyDeleteOption && (
-              <EditButton className="mb-4 p-4" onClick={onEdit}>
-                Edit {authorActionsType}
-              </EditButton>
+              <button
+                onClick={onEdit}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-neutral-800 transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                  <Pencil className="w-5 h-5 text-cyan-400" />
+                </div>
+                <div className="text-left">
+                  <p className="text-white font-medium">Edit {actionLabel}</p>
+                  <p className="text-neutral-500 text-xs">Modify content</p>
+                </div>
+              </button>
             )}
-            <DeleteButton className="p-4" onClick={onDelete}>
-              Delete {authorActionsType}
-            </DeleteButton>
+
+            <button
+              onClick={onDelete}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 transition-colors group"
+            >
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <div className="text-left">
+                <p className="text-red-400 font-medium">Delete {actionLabel}</p>
+                <p className="text-neutral-500 text-xs">Permanently remove</p>
+              </div>
+            </button>
+          </div>
+
+          {/* Cancel button for mobile */}
+          <div className="p-2 pt-0 sm:hidden">
+            <button
+              onClick={onOutsideClick}
+              className="w-full py-3 rounded-xl bg-neutral-800 text-neutral-300 font-medium hover:bg-neutral-700 transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
