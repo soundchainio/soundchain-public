@@ -142,9 +142,10 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
   const gridRef = useRef<any>(null)
   // Track scroll position to preserve when switching views
   const scrollPositionRef = useRef<{ list: number; grid: number }>({ list: 0, grid: 0 })
-  // Default height increased from 289 to 550 to prevent video posts from being cropped
-  // Video posts need ~500px for content + action bar (emoji pills, like/comment/share)
-  const getSize = (index: number) => sizeMap[index] || 550
+  // Default height increased to 700 to prevent video posts from being cropped
+  // Video posts need: ~400px video + 60px header + 80px text + 40px emoji tally + 60px action bar
+  // Better to overestimate and let measurement shrink it than to crop content
+  const getSize = (index: number) => sizeMap[index] || 700
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
     (index: number, height?: number | undefined) => { // Updated to match RowProps
@@ -536,12 +537,13 @@ const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
       const gapHeight = rowRef?.current?.getBoundingClientRect().height || 0
 
       // Only update if height changed significantly OR if this is the first measurement
-      if (!hasSetInitialSize.current || Math.abs(gapHeight - lastHeightRef.current) > 50) {
+      // Reduced threshold from 50 to 20px to be more responsive to video post heights
+      if (!hasSetInitialSize.current || Math.abs(gapHeight - lastHeightRef.current) > 20) {
         hasSetInitialSize.current = true
         lastHeightRef.current = gapHeight
         setSize(index, gapHeight)
       }
-    }, hasSetInitialSize.current ? 500 : 50) // Fast initial, slow subsequent
+    }, hasSetInitialSize.current ? 300 : 50) // Fast initial, moderate subsequent
 
     return () => clearTimeout(timeoutId)
   }, [setSize, index])
