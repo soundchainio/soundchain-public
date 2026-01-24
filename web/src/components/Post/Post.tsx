@@ -184,14 +184,6 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           {/* Uploaded ephemeral media (24h stories) */}
           {hasUploadedMedia && !isExpired && (
             <div className="relative">
-              {/* Ephemeral badge */}
-              {isEphemeral && (
-                <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-1 bg-amber-500/90 rounded-full text-xs font-medium text-black">
-                  <Clock className="w-3 h-3" />
-                  <span>{getTimeRemaining()}</span>
-                </div>
-              )}
-
               {/* Image - full width, natural height like Instagram */}
               {uploadedMediaType === 'image' && uploadedMediaUrl && (
                 <img
@@ -227,6 +219,14 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                   loop={true}
                   className="m-3"
                 />
+              )}
+
+              {/* Ephemeral badge - rendered AFTER media so it appears on top */}
+              {isEphemeral && (
+                <div className="absolute top-2 left-2 z-20 flex items-center gap-1 px-2 py-1 bg-amber-500/90 rounded-full text-xs font-medium text-black shadow-lg">
+                  <Clock className="w-3 h-3" />
+                  <span>{getTimeRemaining()}</span>
+                </div>
               )}
 
               {/* Fallback for unknown media type - try to render as image */}
