@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import classNames from 'classnames'
-import { getSoundChainStickers, getStickersByCategory } from 'lib/soundchainStickers'
+// Note: Custom SC stickers with data URLs removed - they broke when inserted as text
+// Using 7TV CDN emotes instead which work reliably
 
 // Types for emote APIs
 interface SevenTVEmote {
@@ -37,7 +38,7 @@ interface NormalizedEmote {
   source: 'twitch' | '7tv' | 'bttv' | 'ffz' | 'kick' | 'tenor' | 'soundchain'
 }
 
-type StickerCategory = '7tv' | 'bttv' | 'ffz' | 'trending' | 'reactions' | 'music' | 'twitch' | 'kick' | 'soundchain' | 'genres' | 'crypto'
+type StickerCategory = 'sc' | '7tv' | 'bttv' | 'ffz' | 'trending' | 'reactions' | 'twitch' | 'kick'
 
 interface StickerPickerProps {
   onSelect: (stickerUrl: string, stickerName: string) => void
@@ -69,18 +70,16 @@ const filterSeasonalEmotes = (emotes: NormalizedEmote[]): NormalizedEmote[] => {
 }
 
 export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) => {
-  const [activeCategory, setActiveCategory] = useState<StickerCategory>('soundchain')
+  const [activeCategory, setActiveCategory] = useState<StickerCategory>('sc')
   const [emotes, setEmotes] = useState<NormalizedEmote[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
+  // Simplified categories - SC has ALL our custom emotes, then platform sources
   const categories = [
-    { id: 'soundchain' as const, label: 'SC', icon: '🎧' },
-    { id: 'genres' as const, label: 'Genre', icon: '🎸' },
-    { id: 'crypto' as const, label: 'Web3', icon: '💎' },
+    { id: 'sc' as const, label: 'SC', icon: '🎧' },
     { id: 'trending' as const, label: 'Hot', icon: '🔥' },
     { id: 'reactions' as const, label: 'React', icon: '😂' },
-    { id: 'music' as const, label: 'Music', icon: '🎵' },
     { id: 'twitch' as const, label: 'Twitch', icon: '💜' },
     { id: 'kick' as const, label: 'Kick', icon: '💚' },
     { id: '7tv' as const, label: '7TV', icon: '7️⃣' },
@@ -430,20 +429,45 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
         let loadedEmotes: NormalizedEmote[] = []
 
         switch (activeCategory) {
-          case 'soundchain':
-            // SoundChain branded stickers (brand + badges)
-            loadedEmotes = [
-              ...getStickersByCategory('brand'),
-              ...getStickersByCategory('badge'),
+          case 'sc':
+            // ALL SoundChain stickers combined + popular music emotes from 7TV
+            // Use 7TV emotes instead of data URLs (which break when inserted)
+            const scEmotes: NormalizedEmote[] = [
+              // Music vibes from 7TV (working URLs)
+              { id: 'sc-catjam', name: 'catJAM', url: 'https://cdn.7tv.app/emote/60aec9186d0b8c60ac0be7c0/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peped', name: 'pepeD', url: 'https://cdn.7tv.app/emote/60ae8cac229664e8667ae5a8/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-nodders', name: 'NODDERS', url: 'https://cdn.7tv.app/emote/60afe3c580df1e6b58fd7f3f/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-clap', name: 'Clap', url: 'https://cdn.7tv.app/emote/60af2c40aa0d72dc39f1c3e4/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoClap', name: 'peepoClap', url: 'https://cdn.7tv.app/emote/60b11aab6a76e2db2da56f59/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-hypers', name: 'HYPERS', url: 'https://cdn.7tv.app/emote/60ae4aa5229664e8667ab8ef/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-prayge', name: 'Prayge', url: 'https://cdn.7tv.app/emote/60af3c7e229664e8667ac2eb/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-kekw', name: 'KEKW', url: 'https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-lulw', name: 'LULW', url: 'https://cdn.7tv.app/emote/60b04b4a77ccd81f2b77d67d/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-omegalul', name: 'OMEGALUL', url: 'https://cdn.7tv.app/emote/60b0d3ec8ed8b373e421e7a7/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-ez', name: 'EZ', url: 'https://cdn.7tv.app/emote/60b0d3f1daa8fb57cd62c5e6/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-pogu', name: 'PogU', url: 'https://cdn.7tv.app/emote/60b0d3d4a5de6cf21b5ea84e/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-sadge', name: 'Sadge', url: 'https://cdn.7tv.app/emote/60ae3fd1229664e8667ab074/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-copium', name: 'Copium', url: 'https://cdn.7tv.app/emote/60af9fdde5e3c23f8a6dea93/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-pepelaugh', name: 'PepeLaugh', url: 'https://cdn.7tv.app/emote/60aefc43ff8a9a15a6de5847/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-monkas', name: 'monkaS', url: 'https://cdn.7tv.app/emote/60b0d3c3daa8fb57cd62c5db/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-feelsgoodman', name: 'FeelsGoodMan', url: 'https://cdn.7tv.app/emote/60b0d3a7a5de6cf21b5ea83b/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-feelsbadman', name: 'FeelsBadMan', url: 'https://cdn.7tv.app/emote/60b0d3b5a5de6cf21b5ea842/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoHappy', name: 'peepoHappy', url: 'https://cdn.7tv.app/emote/60b0d53e77ccd81f2b78c1c0/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoSad', name: 'peepoSad', url: 'https://cdn.7tv.app/emote/60b0d577f0e6f5574632aad8/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-pepehands', name: 'PepeHands', url: 'https://cdn.7tv.app/emote/60ae4dc1229664e8667ab9d9/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-widehard', name: 'WideHard', url: 'https://cdn.7tv.app/emote/60af14f4e5e3c23f8a6dd802/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-hackermans', name: 'HACKERMANS', url: 'https://cdn.7tv.app/emote/60af3d5ee5e3c23f8a6ddc9e/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-waytoodank', name: 'WAYTOODANK', url: 'https://cdn.7tv.app/emote/60b04bc4daa8fb57cd61b38c/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-pepega', name: 'Pepega', url: 'https://cdn.7tv.app/emote/60af69b37e08e07de9d40f04/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-aware', name: 'Aware', url: 'https://cdn.7tv.app/emote/60af1b9eaa0d72dc39f1ea0f/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-booba', name: 'BOOBA', url: 'https://cdn.7tv.app/emote/60b076aea64e9d892a82d9f1/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-trihard', name: 'TriHard', url: 'https://cdn.7tv.app/emote/60b0d3df77ccd81f2b78b963/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-monkaw', name: 'monkaW', url: 'https://cdn.7tv.app/emote/60b0d42e77ccd81f2b78ba2d/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-forsencd', name: 'forsenCD', url: 'https://cdn.7tv.app/emote/60b0d43b77ccd81f2b78ba37/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-pausechamp', name: 'PauseChamp', url: 'https://cdn.7tv.app/emote/60af3bfc77ccd81f2b76a2c3/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-coolcat', name: 'CoolCat', url: 'https://cdn.7tv.app/emote/60af2d01aa0d72dc39f1c470/2x.gif', animated: true, source: 'soundchain' },
             ]
-            break
-          case 'genres':
-            // Genre-specific stickers
-            loadedEmotes = getStickersByCategory('genre')
-            break
-          case 'crypto':
-            // Web3/Crypto vibes
-            loadedEmotes = getStickersByCategory('crypto')
+            loadedEmotes = scEmotes
             break
           case '7tv':
             loadedEmotes = await fetch7TVEmotes()
@@ -463,11 +487,8 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
           case 'reactions':
             loadedEmotes = getReactionEmotes()
             break
-          case 'music':
-            loadedEmotes = getMusicEmotes()
-            break
           case 'trending':
-            // Load a massive mix of popular animated emotes from all sources
+            // GO BIG! Load a MASSIVE mix of popular animated emotes from all sources
             const [sevenTV, bttv, ffz, trending, twitchGlobal, kickEmotesData] = await Promise.all([
               fetch7TVEmotes(),
               fetchBTTVEmotes(),
@@ -477,18 +498,18 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
               fetchKickEmotes(),
             ])
 
-            // Prioritize animated emotes and mix from all sources
-            const animated7tv = sevenTV.filter(e => e.animated).slice(0, 20)
-            const animatedBttv = bttv.filter(e => e.animated).slice(0, 20)
-            const animatedFfz = ffz.filter(e => e.animated).slice(0, 10)
-            const trendingEmotes = trending.filter(e => e.animated).slice(0, 20)
-            const animatedKick = kickEmotesData.filter(e => e.animated).slice(0, 10)
+            // Maximize emotes - get as many as possible!
+            const animated7tv = sevenTV.filter(e => e.animated).slice(0, 50)
+            const animatedBttv = bttv.filter(e => e.animated).slice(0, 40)
+            const animatedFfz = ffz.filter(e => e.animated).slice(0, 20)
+            const trendingEmotes = trending.filter(e => e.animated).slice(0, 50)
+            const animatedKick = kickEmotesData.filter(e => e.animated).slice(0, 30)
 
-            // Also get some popular static ones including Twitch classics
-            const static7tv = sevenTV.filter(e => !e.animated).slice(0, 8)
-            const staticBttv = bttv.filter(e => !e.animated).slice(0, 8)
-            const twitchClassics = twitchGlobal.slice(0, 15) // Kappa, LUL, PogChamp etc.
-            const staticKick = kickEmotesData.filter(e => !e.animated).slice(0, 5)
+            // Also get popular static ones including Twitch classics
+            const static7tv = sevenTV.filter(e => !e.animated).slice(0, 20)
+            const staticBttv = bttv.filter(e => !e.animated).slice(0, 15)
+            const twitchClassics = twitchGlobal.slice(0, 30) // All Twitch classics
+            const staticKick = kickEmotesData.filter(e => !e.animated).slice(0, 10)
 
             loadedEmotes = [...trendingEmotes, ...animated7tv, ...animatedBttv, ...animatedFfz, ...animatedKick, ...twitchClassics, ...static7tv, ...staticBttv, ...staticKick]
             break
@@ -653,9 +674,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
             </span>
           )}
         </span>
-        <span className="flex items-center gap-1">
-          🎧 SC • 💜 Twitch • 💚 Kick • 7TV
-        </span>
+        <span className="text-cyan-400">🚀 Go Big!</span>
       </div>
     </div>
   )
