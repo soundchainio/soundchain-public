@@ -182,14 +182,26 @@ export default function PostPage({ post, postId, isBot: isBotRequest }: PostPage
       ? `${post.profile.displayName} on SoundChain`
       : 'Post | SoundChain'
 
+  // Check if this is a video post
+  const postWithMedia = post as typeof post & {
+    uploadedMediaUrl?: string | null
+    uploadedMediaType?: string | null
+  }
+  const isVideoPost = postWithMedia?.uploadedMediaType === 'video'
+  const isAudioPost = postWithMedia?.uploadedMediaType === 'audio'
+
   // Build description for sharing
   const description = track
     ? `${!post?.body ? '' : `${post.body} - `}Listen to ${track.title} on SoundChain. ${track.artist}. ${
         track.album || 'Song'
       }. ${!track.releaseYear ? '' : `${track.releaseYear}.`}`
-    : post?.body
-      ? post.body.substring(0, 200) + (post.body.length > 200 ? '...' : '')
-      : `Check out this post on SoundChain`
+    : isVideoPost
+      ? `${post?.profile?.displayName || 'Someone'} shared a video${post?.body ? `: ${post.body.substring(0, 150)}` : ''}`
+      : isAudioPost
+        ? `${post?.profile?.displayName || 'Someone'} shared audio${post?.body ? `: ${post.body.substring(0, 150)}` : ''}`
+        : post?.body
+          ? post.body.substring(0, 200) + (post.body.length > 200 ? '...' : '')
+          : `Check out this post on SoundChain`
 
   // Get best image for sharing - prioritize track artwork, then YouTube thumbnail, then profile picture
   // All URLs are converted to HTTP gateway URLs for social media crawlers
@@ -206,9 +218,11 @@ export default function PostPage({ post, postId, isBot: isBotRequest }: PostPage
       if (vimeoThumb) return vimeoThumb
     }
 
-    // Priority 3: Uploaded media (for ephemeral posts)
-    const postWithMedia = post as typeof post & { uploadedMediaUrl?: string | null }
-    if (postWithMedia?.uploadedMediaUrl) return getHttpImageUrl(postWithMedia.uploadedMediaUrl)
+    // Priority 3: Uploaded media (for ephemeral posts) - images only, not videos
+    // (postWithMedia is defined earlier in the component)
+    if (postWithMedia?.uploadedMediaUrl && postWithMedia?.uploadedMediaType === 'image') {
+      return getHttpImageUrl(postWithMedia.uploadedMediaUrl)
+    }
 
     // Priority 4: Profile picture
     if (post?.profile?.profilePicture) return getHttpImageUrl(post.profile.profilePicture)
