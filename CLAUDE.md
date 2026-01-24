@@ -703,15 +703,32 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 **Root Cause:** No thumbnail generated on video upload
 **Current Behavior:** Falls back to profile picture (shows WHO posted, not WHAT)
 
-**Proper Fix (API work needed):**
-1. Generate thumbnail on video upload (ffmpeg or cloud service like Mux)
-2. Store thumbnail URL in `mediaThumbnail` field (exists in Post model)
-3. Expose `mediaThumbnail` in GraphQL Post type
-4. Use for OG image in posts/[id].tsx
+**Proper Fix (IPFS/Pinata approach):**
+1. **Client-side (preferred):** Capture video frame in browser canvas before upload
+2. Upload both video + thumbnail to Pinata IPFS
+3. Store thumbnail CID in `mediaThumbnail` field (exists in Post model)
+4. Expose `mediaThumbnail` in GraphQL Post type
+5. Use for OG image in posts/[id].tsx
+
+**Implementation:**
+```javascript
+// Client-side thumbnail extraction before upload
+const video = document.createElement('video')
+video.src = URL.createObjectURL(videoFile)
+video.currentTime = 1 // grab frame at 1 second
+video.onloadeddata = () => {
+  const canvas = document.createElement('canvas')
+  canvas.width = video.videoWidth
+  canvas.height = video.videoHeight
+  canvas.getContext('2d').drawImage(video, 0, 0)
+  canvas.toBlob(blob => uploadToPinata(blob)) // upload thumbnail
+}
+```
 
 **Files involved:**
-- `api/src/services/PostService.ts` - Add thumbnail generation
+- `web/src/components/Post/PostFormTimeline.tsx` - Add thumbnail capture
 - `api/src/models/Post.ts` - mediaThumbnail field exists
+- `api/src/resolvers/PostResolver.ts` - Accept mediaThumbnail in mutation
 - `web/src/pages/posts/[id].tsx` - OG image logic
 
 ### Planned: Multi-Chain OGUN Liquidity (Needs Funding/Partners)
