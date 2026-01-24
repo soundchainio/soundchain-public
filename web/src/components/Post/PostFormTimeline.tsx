@@ -52,6 +52,7 @@ export const PostFormTimeline = () => {
   const [isStickerPickerOpen, setStickerPickerOpen] = useState(false)
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | undefined>()
   const [uploadedMediaType, setUploadedMediaType] = useState<'image' | 'video' | 'audio' | undefined>()
+  const [uploadedMediaThumbnail, setUploadedMediaThumbnail] = useState<string | undefined>()
   const postMaxLength = 1000
   const soundProviders = [MediaProvider.BANDCAMP, MediaProvider.SPOTIFY, MediaProvider.SOUNDCLOUD]
   const videoProviders = [
@@ -84,6 +85,9 @@ export const PostFormTimeline = () => {
     if (uploadedMediaUrl && uploadedMediaType) {
       (newPostParams as any).uploadedMediaUrl = uploadedMediaUrl;
       (newPostParams as any).uploadedMediaType = uploadedMediaType;
+      if (uploadedMediaThumbnail) {
+        (newPostParams as any).uploadedMediaThumbnail = uploadedMediaThumbnail;
+      }
     }
 
     try {
@@ -114,6 +118,7 @@ export const PostFormTimeline = () => {
       // Reset uploaded media
       setUploadedMediaUrl(undefined)
       setUploadedMediaType(undefined)
+      setUploadedMediaThumbnail(undefined)
     } catch (error: any) {
       // Log detailed error for debugging
       console.error('Post creation error:', error)
@@ -293,13 +298,15 @@ export const PostFormTimeline = () => {
       {/* Ephemeral Media Uploader (24h stories) */}
       {(showMediaUploader || uploadedMediaUrl) && (
         <PostMediaUploader
-          onMediaSelected={(url, type) => {
+          onMediaSelected={(url, type, thumbnailUrl) => {
             setUploadedMediaUrl(url)
             setUploadedMediaType(type)
+            setUploadedMediaThumbnail(thumbnailUrl)
           }}
           onMediaRemoved={() => {
             setUploadedMediaUrl(undefined)
             setUploadedMediaType(undefined)
+            setUploadedMediaThumbnail(undefined)
           }}
           currentUrl={uploadedMediaUrl}
           currentType={uploadedMediaType}

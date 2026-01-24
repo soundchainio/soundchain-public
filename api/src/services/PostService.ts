@@ -21,6 +21,7 @@ interface NewPostParams {
   // Ephemeral media (24h stories)
   uploadedMediaUrl?: string;
   uploadedMediaType?: string;
+  uploadedMediaThumbnail?: string;
 }
 
 interface GuestPostParams {
@@ -31,6 +32,7 @@ interface GuestPostParams {
   // Ephemeral media (24h stories)
   uploadedMediaUrl?: string;
   uploadedMediaType?: string;
+  uploadedMediaThumbnail?: string;
 }
 
 interface RepostParams {
@@ -59,8 +61,9 @@ export class PostService extends ModelService<typeof Post> {
   async createPost(params: NewPostParams): Promise<Post> {
     // Fetch thumbnail for media embeds (Spotify, SoundCloud, Bandcamp, etc.)
     // Use originalMediaLink for oEmbed lookups if available (better for platforms like SoundCloud)
-    let mediaThumbnail: string | null = null;
-    if (params.mediaLink) {
+    // If uploadedMediaThumbnail is provided (for video uploads), use that instead
+    let mediaThumbnail: string | null = params.uploadedMediaThumbnail || null;
+    if (!mediaThumbnail && params.mediaLink) {
       mediaThumbnail = await fetchMediaThumbnail(params.mediaLink, params.originalMediaLink);
     }
 
@@ -239,8 +242,9 @@ export class PostService extends ModelService<typeof Post> {
   async createGuestPost(params: GuestPostParams): Promise<Post> {
     // Fetch thumbnail for media embeds (Spotify, SoundCloud, Bandcamp, etc.)
     // Use originalMediaLink for oEmbed lookups if available (better for platforms like SoundCloud)
-    let mediaThumbnail: string | null = null;
-    if (params.mediaLink) {
+    // If uploadedMediaThumbnail is provided (for video uploads), use that instead
+    let mediaThumbnail: string | null = params.uploadedMediaThumbnail || null;
+    if (!mediaThumbnail && params.mediaLink) {
       mediaThumbnail = await fetchMediaThumbnail(params.mediaLink, params.originalMediaLink);
     }
 

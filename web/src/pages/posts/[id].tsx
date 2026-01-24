@@ -133,6 +133,7 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
       const postWithMedia = post as typeof post & {
         uploadedMediaUrl?: string | null
         uploadedMediaType?: string | null
+        mediaThumbnail?: string | null
       }
 
       // Build title
@@ -164,6 +165,9 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
         if (ytThumb) image = ytThumb
       } else if (postWithMedia?.uploadedMediaUrl && postWithMedia?.uploadedMediaType === 'image') {
         image = getHttpImageUrl(postWithMedia.uploadedMediaUrl)
+      } else if (postWithMedia?.uploadedMediaType === 'video' && postWithMedia?.mediaThumbnail) {
+        // For video posts, use the captured thumbnail
+        image = getHttpImageUrl(postWithMedia.mediaThumbnail)
       } else if (post?.profile?.profilePicture) {
         image = getHttpImageUrl(post.profile.profilePicture)
       }
@@ -277,6 +281,7 @@ export default function PostPage({ post, postId, isBot: isBotRequest, ogData }: 
   const postWithMedia = post as typeof post & {
     uploadedMediaUrl?: string | null
     uploadedMediaType?: string | null
+    mediaThumbnail?: string | null
   }
   const isVideoPost = postWithMedia?.uploadedMediaType === 'video'
   const isAudioPost = postWithMedia?.uploadedMediaType === 'audio'
@@ -313,6 +318,11 @@ export default function PostPage({ post, postId, isBot: isBotRequest, ogData }: 
     // (postWithMedia is defined earlier in the component)
     if (postWithMedia?.uploadedMediaUrl && postWithMedia?.uploadedMediaType === 'image') {
       return getHttpImageUrl(postWithMedia.uploadedMediaUrl)
+    }
+
+    // Priority 3b: Video thumbnail (captured from video frame)
+    if (postWithMedia?.uploadedMediaType === 'video' && postWithMedia?.mediaThumbnail) {
+      return getHttpImageUrl(postWithMedia.mediaThumbnail)
     }
 
     // Priority 4: Profile picture

@@ -6,7 +6,7 @@ import { imageMimeTypes, videoMimeTypes, audioMimeTypes } from 'lib/mimeTypes'
 import Image from 'next/image'
 
 interface PostMediaUploaderProps {
-  onMediaSelected: (url: string, type: 'image' | 'video' | 'audio') => void
+  onMediaSelected: (url: string, type: 'image' | 'video' | 'audio', thumbnailUrl?: string) => void
   onMediaRemoved: () => void
   currentUrl?: string
   currentType?: string
@@ -14,6 +14,65 @@ interface PostMediaUploaderProps {
 }
 
 const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB - SoundChain supports large audio/video files
+
+// Helper to capture a frame from video file and return as Blob
+const captureVideoThumbnail = (videoFile: File): Promise<Blob | null> => {
+  return new Promise((resolve) => {
+    const video = document.createElement('video')
+    video.preload = 'metadata'
+    video.muted = true
+    video.playsInline = true
+
+    const objectUrl = URL.createObjectURL(videoFile)
+    video.src = objectUrl
+
+    video.onloadeddata = () => {
+      // Seek to 1 second or 10% of duration, whichever is smaller
+      const seekTime = Math.min(1, video.duration * 0.1)
+      video.currentTime = seekTime
+    }
+
+    video.onseeked = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        // Use video dimensions, max 1280px wide for reasonable thumbnail size
+        const scale = Math.min(1, 1280 / video.videoWidth)
+        canvas.width = video.videoWidth * scale
+        canvas.height = video.videoHeight * scale
+
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          URL.revokeObjectURL(objectUrl)
+          resolve(null)
+          return
+        }
+
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(objectUrl)
+          resolve(blob)
+        }, 'image/jpeg', 0.85)
+      } catch (err) {
+        console.error('Failed to capture video thumbnail:', err)
+        URL.revokeObjectURL(objectUrl)
+        resolve(null)
+      }
+    }
+
+    video.onerror = () => {
+      console.error('Video load error for thumbnail capture')
+      URL.revokeObjectURL(objectUrl)
+      resolve(null)
+    }
+
+    // Timeout fallback
+    setTimeout(() => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(null)
+    }, 10000)
+  })
+}
 
 // Accepted file types for posts (same as NFT minting)
 // Note: Use explicit MIME types instead of wildcards for better desktop browser support
@@ -60,11 +119,18 @@ export const PostMediaUploader = ({
     setMediaType((currentType as 'image' | 'video' | 'audio') || null)
   }, [currentUrl, currentType])
 
+  // Track pending thumbnail URL for video uploads
+  const [pendingThumbnailUrl, setPendingThumbnailUrl] = useState<string | undefined>()
+
   const { upload } = useUpload(undefined, (url) => {
     if (url && mediaType) {
-      onMediaSelected(url, mediaType)
+      onMediaSelected(url, mediaType, pendingThumbnailUrl)
+      setPendingThumbnailUrl(undefined)
     }
   }, isGuest)
+
+  // Separate upload hook for thumbnail (always use regular endpoint, thumbnails are small images)
+  const { upload: uploadThumbnail } = useUpload(undefined, () => {}, false)
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -95,21 +161,38 @@ export const PostMediaUploader = ({
       setPreview(objectUrl)
 
       try {
-        // Upload to S3
+        // For videos, capture and upload thumbnail first
+        let thumbnailUrl: string | undefined
+        if (type === 'video') {
+          const thumbnailBlob = await captureVideoThumbnail(file)
+          if (thumbnailBlob) {
+            // Convert blob to File for upload
+            const thumbnailFile = new File(
+              [thumbnailBlob],
+              `thumbnail-${Date.now()}.jpg`,
+              { type: 'image/jpeg' }
+            )
+            thumbnailUrl = await uploadThumbnail([thumbnailFile])
+            setPendingThumbnailUrl(thumbnailUrl || undefined)
+          }
+        }
+
+        // Upload main media to S3
         const url = await upload([file])
         if (url) {
-          onMediaSelected(url, type)
+          onMediaSelected(url, type, thumbnailUrl)
         }
       } catch (err: any) {
         console.error('Upload failed:', err)
         setError(err.message || 'Upload failed')
         setPreview(null)
         setMediaType(null)
+        setPendingThumbnailUrl(undefined)
       } finally {
         setUploading(false)
       }
     },
-    [upload, onMediaSelected]
+    [upload, uploadThumbnail, onMediaSelected]
   )
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

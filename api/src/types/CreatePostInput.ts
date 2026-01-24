@@ -35,4 +35,9 @@ export class CreatePostInput {
   @Field(() => String, { nullable: true })
   @IsOptional()
   uploadedMediaType?: string; // 'image' | 'video' | 'audio'
+
+  // Thumbnail for uploaded video (captured from first frame)
+  @Field(() => String, { nullable: true })
+  @IsOptional()
+  uploadedMediaThumbnail?: string;
 }
