@@ -698,6 +698,22 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 - Verify POL/OGUN balance callbacks working
 - Document any OAuth → blockchain callback issues
 
+### Known Limitation: Video Post Thumbnails (Jan 24, 2026)
+**Issue:** Video posts show profile picture in link previews instead of video frame
+**Root Cause:** No thumbnail generated on video upload
+**Current Behavior:** Falls back to profile picture (shows WHO posted, not WHAT)
+
+**Proper Fix (API work needed):**
+1. Generate thumbnail on video upload (ffmpeg or cloud service like Mux)
+2. Store thumbnail URL in `mediaThumbnail` field (exists in Post model)
+3. Expose `mediaThumbnail` in GraphQL Post type
+4. Use for OG image in posts/[id].tsx
+
+**Files involved:**
+- `api/src/services/PostService.ts` - Add thumbnail generation
+- `api/src/models/Post.ts` - mediaThumbnail field exists
+- `web/src/pages/posts/[id].tsx` - OG image logic
+
 ### Planned: Multi-Chain OGUN Liquidity (Needs Funding/Partners)
 **Status:** Roadmapped, requires liquidity funding
 
