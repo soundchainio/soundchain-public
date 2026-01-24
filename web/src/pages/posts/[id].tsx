@@ -85,10 +85,19 @@ function getHttpImageUrl(url: string | null | undefined): string {
   return url
 }
 
+// OG metadata computed server-side for bots
+interface OgMetadata {
+  title: string
+  description: string
+  image: string
+  url: string
+}
+
 export interface PostPageProps {
   post: PostQuery['post'] | null
   postId: string
   isBot: boolean
+  ogData?: OgMetadata // Pre-computed for bots
 }
 
 interface PostPageParams extends ParsedUrlQuery {
@@ -117,13 +126,59 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
       return { notFound: true }
     }
 
-    // For bots, return minimal props for fast OG tag rendering
+    // For bots, compute OG data server-side and return minimal props
     if (isBotRequest) {
+      const post = data.post
+      const track = post?.track
+      const postWithMedia = post as typeof post & {
+        uploadedMediaUrl?: string | null
+        uploadedMediaType?: string | null
+      }
+
+      // Build title
+      const title = track
+        ? `${track.title} - song by ${track.artist} | SoundChain`
+        : post?.profile?.displayName
+          ? `${post.profile.displayName} on SoundChain`
+          : 'Post | SoundChain'
+
+      // Build description
+      const isVideoPost = postWithMedia?.uploadedMediaType === 'video'
+      const isAudioPost = postWithMedia?.uploadedMediaType === 'audio'
+      const description = track
+        ? `Listen to ${track.title} on SoundChain. ${track.artist}.`
+        : isVideoPost
+          ? `${post?.profile?.displayName || 'Someone'} shared a video on SoundChain`
+          : isAudioPost
+            ? `${post?.profile?.displayName || 'Someone'} shared audio on SoundChain`
+            : post?.body
+              ? post.body.substring(0, 200)
+              : 'Check out this post on SoundChain'
+
+      // Get share image
+      let image = `${config.domainUrl}/soundchain-meta-logo.png`
+      if (track?.artworkUrl) {
+        image = getHttpImageUrl(track.artworkUrl)
+      } else if (post?.mediaLink) {
+        const ytThumb = getYouTubeThumbnail(post.mediaLink)
+        if (ytThumb) image = ytThumb
+      } else if (postWithMedia?.uploadedMediaUrl && postWithMedia?.uploadedMediaType === 'image') {
+        image = getHttpImageUrl(postWithMedia.uploadedMediaUrl)
+      } else if (post?.profile?.profilePicture) {
+        image = getHttpImageUrl(post.profile.profilePicture)
+      }
+
       return {
         props: {
-          post: data.post,
+          post: null, // Don't send full post to bots - they just need OG tags
           postId,
           isBot: true,
+          ogData: {
+            title,
+            description,
+            image,
+            url: `${config.domainUrl}/posts/${postId}`,
+          },
         },
       }
     }
@@ -146,6 +201,12 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
           post: null,
           postId,
           isBot: true,
+          ogData: {
+            title: 'Post | SoundChain',
+            description: 'Check out this post on SoundChain',
+            image: `${config.domainUrl}/soundchain-meta-logo.png`,
+            url: `${config.domainUrl}/posts/${postId}`,
+          },
         },
       }
     }
@@ -154,10 +215,40 @@ export const getServerSideProps: GetServerSideProps<PostPageProps, PostPageParam
   }
 }
 
-export default function PostPage({ post, postId, isBot: isBotRequest }: PostPageProps) {
+export default function PostPage({ post, postId, isBot: isBotRequest, ogData }: PostPageProps) {
+  // For bots, render minimal page with OG tags immediately - no hooks needed
+  if (isBotRequest && ogData) {
+    return (
+      <>
+        <Head>
+          <title>{ogData.title}</title>
+          <meta name="description" content={ogData.description} />
+          <meta property="og:title" content={ogData.title} />
+          <meta property="og:description" content={ogData.description} />
+          <meta property="og:image" content={ogData.image} />
+          <meta property="og:url" content={ogData.url} />
+          <meta property="og:type" content="article" />
+          <meta property="og:site_name" content="SoundChain" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={ogData.title} />
+          <meta name="twitter:description" content={ogData.description} />
+          <meta name="twitter:image" content={ogData.image} />
+          <link rel="canonical" href={ogData.url} />
+        </Head>
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="text-center p-8">
+            <h1 className="text-xl text-white">{ogData.title}</h1>
+            <p className="text-gray-400">{ogData.description}</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Regular user flow with hooks
   const { data: repostData } = usePostQuery({
     variables: { id: post?.repostId || '' },
-    skip: !post?.repostId || isBotRequest
+    skip: !post?.repostId
   })
   const { setTopNavBarProps } = useLayoutContext()
   const { playlistState } = useAudioPlayerContext()
