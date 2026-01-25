@@ -142,10 +142,10 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
   const gridRef = useRef<any>(null)
   // Track scroll position to preserve when switching views
   const scrollPositionRef = useRef<{ list: number; grid: number }>({ list: 0, grid: 0 })
-  // Default height increased to 700 to prevent video posts from being cropped
-  // Video posts need: ~400px video + 60px header + 80px text + 40px emoji tally + 60px action bar
-  // Better to overestimate and let measurement shrink it than to crop content
-  const getSize = (index: number) => sizeMap[index] || 700
+  // Default height increased to 900 to prevent video posts from being cropped
+  // Large video posts need: ~500px video + 60px header + 150px text + 60px emoji tally + 80px action bar
+  // Better to overestimate initially - ResizeObserver will shrink to actual size
+  const getSize = (index: number) => sizeMap[index] || 900
   const sizeMap = useMemo<{ [key: number]: number }>(() => ({}), [])
   const setSize = useCallback(
     (index: number, height?: number | undefined) => { // Updated to match RowProps
@@ -529,24 +529,44 @@ interface RowProps {
 const Row = ({ data, index, setSize, handleOnPlayClicked }: RowProps) => {
   const rowRef = useRef<HTMLDivElement>(null)
   const lastHeightRef = useRef<number>(0)
-  const hasSetInitialSize = useRef(false)
+
+  // Measure and update height
+  const measureHeight = useCallback(() => {
+    if (!rowRef.current) return
+    const height = rowRef.current.getBoundingClientRect().height
+    // Only update if height changed by more than 10px to prevent jitter
+    if (height > 0 && Math.abs(height - lastHeightRef.current) > 10) {
+      lastHeightRef.current = height
+      setSize(index, height)
+    }
+  }, [setSize, index])
 
   useEffect(() => {
-    // Debounce height measurements to prevent re-render cascade from iframe loading
-    const timeoutId = setTimeout(() => {
-      const gapHeight = rowRef?.current?.getBoundingClientRect().height || 0
+    // Initial measurement - fast
+    const initialTimeout = setTimeout(measureHeight, 50)
 
-      // Only update if height changed significantly OR if this is the first measurement
-      // Reduced threshold from 50 to 20px to be more responsive to video post heights
-      if (!hasSetInitialSize.current || Math.abs(gapHeight - lastHeightRef.current) > 20) {
-        hasSetInitialSize.current = true
-        lastHeightRef.current = gapHeight
-        setSize(index, gapHeight)
-      }
-    }, hasSetInitialSize.current ? 300 : 50) // Fast initial, moderate subsequent
+    // Second pass for video/media content that loads async
+    const secondPass = setTimeout(measureHeight, 300)
 
-    return () => clearTimeout(timeoutId)
-  }, [setSize, index])
+    // Third pass for slow-loading content (videos, embeds)
+    const thirdPass = setTimeout(measureHeight, 800)
+
+    // Use ResizeObserver for dynamic content changes
+    let resizeObserver: ResizeObserver | null = null
+    if (rowRef.current && typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        measureHeight()
+      })
+      resizeObserver.observe(rowRef.current)
+    }
+
+    return () => {
+      clearTimeout(initialTimeout)
+      clearTimeout(secondPass)
+      clearTimeout(thirdPass)
+      resizeObserver?.disconnect()
+    }
+  }, [measureHeight])
 
   if (!data[index]) {
     return null
