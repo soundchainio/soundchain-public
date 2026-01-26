@@ -25,8 +25,8 @@ export const config = {
   soundchainFee: parseFloat(process.env.NEXT_PUBLIC_SOUNDCHAIN_FEE || '0.0005'),
   // Flat fee per NFT minted (in POL) - 0.01 POL per NFT
   mintFeePerNft: parseFloat(process.env.NEXT_PUBLIC_MINT_FEE_PER_NFT || '0.01'),
-  // SoundChain treasury address for collecting platform fees
-  treasuryAddress: process.env.NEXT_PUBLIC_SOUNDCHAIN_TREASURY || '0x45f1af89486aeec2da0b06340cd9cd3bd741a15c',
+  // SoundChain Safe treasury address for collecting platform fees
+  treasuryAddress: process.env.NEXT_PUBLIC_SOUNDCHAIN_TREASURY || '0x519BD3fE32272Fa8f1AECaf86DbFbd674Ee703B',
   tokenStakeContractAddress: process.env.NEXT_PUBLIC_OGUN_STAKE_CONTRACT_ADDRESS,
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '2.1.1',
   airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true',
