@@ -12,7 +12,7 @@ const polygon = {
   name: 'Polygon',
   currency: 'POL', // Formerly MATIC, rebranded Sept 2024
   explorerUrl: 'https://polygonscan.com',
-  rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com'
+  rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon'
 }
 
 const ethereum = {

@@ -943,7 +943,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       if (!walletAccount || !tokenStakeContractAddress) return
       try {
         // Use Magic web3 or fallback to Alchemy Polygon RPC
-        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com')
+        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon')
         const stakingContract = getStakingContract(web3Instance)
         const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
         if (balanceData) {
