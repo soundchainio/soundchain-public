@@ -38,37 +38,75 @@ interface ConnectedWalletInfo {
   chainName: string
 }
 
+// Mobile detection
+const isMobile = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
+// Deep links for mobile wallet apps
+const getWalletDeepLink = (walletId: string, wcUri?: string) => {
+  const encodedUri = wcUri ? encodeURIComponent(wcUri) : ''
+  switch (walletId) {
+    case 'metamask':
+      return wcUri
+        ? `https://metamask.app.link/wc?uri=${encodedUri}`
+        : `https://metamask.app.link/dapp/${typeof window !== 'undefined' ? window.location.host : 'soundchain.fm'}`
+    case 'coinbase':
+      return wcUri
+        ? `https://go.cb-w.com/wc?uri=${encodedUri}`
+        : `https://go.cb-w.com/dapp?cb_url=${encodeURIComponent('https://soundchain.fm')}`
+    case 'rainbow':
+      return wcUri
+        ? `https://rainbow.me/wc?uri=${encodedUri}`
+        : `https://rainbow.me`
+    case 'trust':
+      return wcUri
+        ? `https://link.trustwallet.com/wc?uri=${encodedUri}`
+        : `https://link.trustwallet.com/open_url?url=${encodeURIComponent('https://soundchain.fm')}`
+    case 'phantom':
+      return `https://phantom.app/ul/browse/${encodeURIComponent('https://soundchain.fm')}`
+    default:
+      return null
+  }
+}
+
 // Wallet configurations
-const WALLET_CONFIG: Record<WalletType, { name: string; icon: string; color: string; description: string }> = {
+const WALLET_CONFIG: Record<WalletType, { name: string; icon: string; color: string; description: string; mobileDescription: string }> = {
   soundchain: {
     name: 'SoundChain',
     icon: '✨',
     color: 'from-cyan-500 to-purple-500',
     description: 'No extension needed',
+    mobileDescription: 'Built-in wallet',
   },
   metamask: {
     name: 'MetaMask',
     icon: '🦊',
     color: 'from-orange-500 to-orange-600',
-    description: 'Browser extension',
+    description: 'Extension or mobile app',
+    mobileDescription: 'Open MetaMask app',
   },
   coinbase: {
     name: 'Coinbase',
     icon: '🔵',
     color: 'from-blue-500 to-blue-600',
-    description: 'Extension or mobile',
+    description: 'Extension or mobile app',
+    mobileDescription: 'Open Coinbase app',
   },
   walletconnect: {
     name: 'WalletConnect',
     icon: '🔗',
     color: 'from-blue-400 to-purple-500',
     description: '300+ mobile wallets',
+    mobileDescription: 'Rainbow, Trust & more',
   },
   phantom: {
     name: 'Phantom',
     icon: '👻',
     color: 'from-purple-500 to-purple-600',
-    description: 'Solana wallet',
+    description: 'Extension or mobile app',
+    mobileDescription: 'Open Phantom app',
   },
 }
 
@@ -192,10 +230,84 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     }
   }, [magicAccount, externalWallets, updateDefaultWallet, onWalletChange, switchToMagic, setDirectConnection])
 
-  // Connect MetaMask
+  // Connect MetaMask (Desktop extension OR Mobile via WalletConnect deep link)
   const connectMetaMask = useCallback(async () => {
+    const mobile = isMobile()
+    const hasExtension = typeof window !== 'undefined' && window.ethereum?.isMetaMask
+
+    // MOBILE: Use WalletConnect with MetaMask deep link
+    if (mobile && !hasExtension) {
+      setIsConnecting('metamask')
+      setError(null)
+
+      try {
+        const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
+        const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
+
+        const provider = await EthereumProvider.init({
+          projectId,
+          chains: [137],
+          optionalChains: [1, 8453, 42161],
+          showQrModal: false, // Don't show QR - we'll use deep link
+          metadata: {
+            name: 'SoundChain',
+            description: 'Web3 Music Platform',
+            url: 'https://soundchain.fm',
+            icons: ['https://soundchain.fm/logo.png'],
+          },
+        })
+
+        // Get URI and open MetaMask mobile app
+        provider.on('display_uri', (uri: string) => {
+          const deepLink = getWalletDeepLink('metamask', uri)
+          if (deepLink) {
+            window.location.href = deepLink
+          }
+        })
+
+        await provider.connect()
+
+        const accounts = provider.accounts
+        if (!accounts?.[0]) throw new Error('No account')
+
+        const chainId = provider.chainId
+        const web3 = new Web3(provider as any)
+        const balance = await web3.eth.getBalance(accounts[0])
+
+        const newWallet: ConnectedWalletInfo = {
+          type: 'metamask',
+          address: accounts[0],
+          balance: Number(web3.utils.fromWei(balance, 'ether')).toFixed(4),
+          chainId,
+          chainName: CHAIN_NAMES[chainId] || `Chain ${chainId}`,
+        }
+
+        setExternalWallets(prev => {
+          const filtered = prev.filter(w => w.type !== 'metamask')
+          return [...filtered, newWallet]
+        })
+        setSelectedWallet('metamask')
+        setShowConnectMenu(false)
+        setDirectConnection(accounts[0], 'metamask', chainId)
+
+        provider.on('disconnect', () => {
+          setExternalWallets(prev => prev.filter(w => w.type !== 'metamask'))
+          setSelectedWallet('soundchain')
+          switchToMagic()
+        })
+      } catch (err: any) {
+        if (!err.message?.includes('User rejected')) {
+          setError(err.message || 'Failed to connect MetaMask mobile')
+        }
+      } finally {
+        setIsConnecting(null)
+      }
+      return
+    }
+
+    // DESKTOP: Use browser extension
     if (!window.ethereum) {
-      setError('MetaMask not installed')
+      setError('MetaMask not installed - get it at metamask.io')
       return
     }
 
@@ -383,15 +495,27 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     }
   }, [setDirectConnection, switchToMagic])
 
-  // Connect Phantom (Solana)
+  // Connect Phantom (Solana) - Desktop extension OR Mobile deep link
   const connectPhantom = useCallback(async () => {
+    const mobile = isMobile()
+    const hasExtension = typeof window !== 'undefined' && (window as any).solana?.isPhantom
+
+    // MOBILE: Open Phantom app via deep link
+    if (mobile && !hasExtension) {
+      const deepLink = getWalletDeepLink('phantom')
+      if (deepLink) {
+        window.location.href = deepLink
+      }
+      return
+    }
+
     setIsConnecting('phantom')
     setError(null)
 
     try {
       const phantom = (window as any).solana
       if (!phantom?.isPhantom) {
-        setError('Phantom not installed')
+        setError('Phantom not installed - get it at phantom.app')
         return
       }
 
@@ -627,7 +751,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
                     </div>
                     <div className="text-left">
                       <span className="text-white font-bold block">MetaMask</span>
-                      <span className="text-xs text-gray-500">Browser extension</span>
+                      <span className="text-xs text-gray-500">{isMobile() ? 'Open MetaMask app' : 'Extension or mobile app'}</span>
                     </div>
                   </div>
                   {isConnecting === 'metamask' ? (
@@ -651,7 +775,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
                     </div>
                     <div className="text-left">
                       <span className="text-white font-bold block">Coinbase Wallet</span>
-                      <span className="text-xs text-gray-500">Extension or mobile app</span>
+                      <span className="text-xs text-gray-500">{isMobile() ? 'Open Coinbase app' : 'Extension or mobile app'}</span>
                     </div>
                   </div>
                   {isConnecting === 'coinbase' ? (
@@ -675,7 +799,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
                     </div>
                     <div className="text-left">
                       <span className="text-white font-bold block">WalletConnect</span>
-                      <span className="text-xs text-gray-500">Rainbow, Trust, & 300+ wallets</span>
+                      <span className="text-xs text-gray-500">{isMobile() ? 'Rainbow, Trust & more' : '300+ mobile wallets'}</span>
                     </div>
                   </div>
                   {isConnecting === 'walletconnect' ? (
@@ -699,7 +823,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
                     </div>
                     <div className="text-left">
                       <span className="text-white font-bold block">Phantom</span>
-                      <span className="text-xs text-gray-500">Solana wallet</span>
+                      <span className="text-xs text-gray-500">{isMobile() ? 'Open Phantom app' : 'Solana wallet'}</span>
                     </div>
                   </div>
                   {isConnecting === 'phantom' ? (
