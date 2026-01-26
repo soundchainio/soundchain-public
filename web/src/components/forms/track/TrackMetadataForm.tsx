@@ -366,8 +366,8 @@ function InnerForm(props: InnerFormProps) {
                     value={collaborator.royaltyPercentage}
                     onChange={e => updateCollaborator(index, 'royaltyPercentage', Number(e.target.value))}
                     placeholder="%"
-                    className="w-16 p-2 border border-gray-30 rounded bg-gray-25 text-white text-xs text-center"
-                    style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+                    className="w-16 p-2 border border-gray-30 rounded bg-gray-25 text-xs text-center collaborator-input"
+                    style={{ color: 'white', WebkitTextFillColor: 'white', colorScheme: 'dark' }}
                     min={0}
                     max={100}
                   />
@@ -384,7 +384,8 @@ function InnerForm(props: InnerFormProps) {
                   value={collaborator.walletAddress}
                   onChange={e => updateCollaborator(index, 'walletAddress', e.target.value)}
                   placeholder="Wallet address (0x...)"
-                  className="w-full p-2 border border-gray-30 rounded bg-gray-25 text-white text-xs"
+                  className="w-full p-2 border border-gray-30 rounded bg-gray-25 text-xs font-mono"
+                  style={{ color: '#22d3ee', WebkitTextFillColor: '#22d3ee' }}
                 />
               </div>
             ))}
