@@ -29,7 +29,7 @@ import soundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceE
 export const gas = 1200000;
 
 const claimOgunAddress = config.claimOgunAddress as string;
-export const gasPriceMultiplier = 1.5;
+export const gasPriceMultiplier = 1.2; // 20% safety buffer (was 1.5)
 
 const nftAddress = config.web3.contractsV2.contractAddress as string;
 const marketplaceAddress = config.web3.contractsV1.marketplaceAddress as string;

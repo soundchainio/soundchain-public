@@ -16,11 +16,12 @@ const nftAddress = config.web3.contractsV2.contractAddress as string
 const marketplaceEditionsAddress = config.web3.contractsV2.marketplaceAddress as string
 const auctionV2Address = config.web3.contractsV2.auctionAddress as string
 
-const createEditionGasCost = 130000
-const baseMintGasCost = 63538
-const mintUnitGasCost = 117000
-const listBatchUnitGasCost = 98900
-const cancelListBatchUnitGasCost = 30800
+// Realistic gas costs for Polygon (much lower than Ethereum)
+const createEditionGasCost = 65000      // Was 130000 - reduced for Polygon
+const baseMintGasCost = 32000           // Was 63538 - reduced for Polygon
+const mintUnitGasCost = 55000           // Was 117000 - reduced for Polygon
+const listBatchUnitGasCost = 45000      // Was 98900 - reduced for Polygon
+const cancelListBatchUnitGasCost = 25000 // Was 30800 - slightly reduced
 
 export const gas = 1200000
 export const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed()
