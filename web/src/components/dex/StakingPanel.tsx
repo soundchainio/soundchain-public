@@ -252,8 +252,8 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       return
     }
 
-    // Use Magic web3 if available, otherwise fallback to public Polygon RPC
-    const web3Instance = web3 || new Web3('https://polygon-rpc.com')
+    // Use Magic web3 if available, otherwise fallback to Alchemy Polygon RPC
+    const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-mainnet.g.alchemy.com/v2/hjUDQMyFJcZP2cTLKW2iy')
 
     try {
       // POL (native) Balance

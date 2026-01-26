@@ -11,9 +11,8 @@ export interface BlockchainNetwork {
 
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
-  // Use Polygon's official public RPC - most reliable for free tier
-  // Ankr requires API key for consistent performance
-  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com',
+  // Use Alchemy RPC for better rate limits
+  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-mainnet.g.alchemy.com/v2/hjUDQMyFJcZP2cTLKW2iy',
   id: 137,
   idHex: '0x89',
   symbol: 'POL',

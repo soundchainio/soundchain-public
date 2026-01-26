@@ -942,8 +942,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const fetchStakedBalance = async () => {
       if (!walletAccount || !tokenStakeContractAddress) return
       try {
-        // Use Magic web3 or fallback to public Polygon RPC
-        const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+        // Use Magic web3 or fallback to Alchemy Polygon RPC
+        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-mainnet.g.alchemy.com/v2/hjUDQMyFJcZP2cTLKW2iy')
         const stakingContract = getStakingContract(web3Instance)
         const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
         if (balanceData) {

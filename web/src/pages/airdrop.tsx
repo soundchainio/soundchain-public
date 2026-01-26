@@ -75,7 +75,7 @@ import { useEffect, useState } from 'react'
       const provider: any = new WalletConnectProvider({
         rpc: {
           1: 'https://cloudflare-eth.com/',
-          137: 'https://polygon-rpc.com/',
+          137: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-mainnet.g.alchemy.com/v2/hjUDQMyFJcZP2cTLKW2iy',
         },
       })
 
