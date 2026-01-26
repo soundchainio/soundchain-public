@@ -24,11 +24,33 @@
 - Working remotely on iPhone - use code-server URL for best experience
 - **NFT Minting Flow Overhaul:**
   - Fixed gas estimates (1.5 POL → ~0.1 POL)
-  - Fixed RPC rate limiting (polygon-rpc.com → polygon.llamarpc.com)
+  - Fixed RPC rate limiting (reverted to polygon-rpc.com, added retry logic)
   - Fixed collaborator form styling (dropdown contrast, % text color, wallet cyan)
   - Added auto-fill for collaborator wallet address
   - Added full wallet address display with copy button
+  - **Added 0.05% platform fee on minting** (0.01 POL per NFT)
   - **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
+
+### Platform Fee Implementation (Jan 26, 2026)
+**Why:** Users receive OGUN rewards for minting via SCid system. Platform fee (0.01 POL/NFT) is much lower than traditional DSPs (15-30%).
+
+**Files Modified:**
+- `web/src/config.ts` - Added `mintFeePerNft` and `treasuryAddress` config
+- `web/src/components/forms/track/TrackMetadataForm.tsx` - Shows fee breakdown in UI
+- `web/src/components/modals/CreateModal.tsx` - Collects fee before minting
+- `web/.env.local` - Added `NEXT_PUBLIC_MINT_FEE_PER_NFT` and `NEXT_PUBLIC_SOUNDCHAIN_TREASURY`
+
+**Fee Flow:**
+1. User sees total cost (Gas + Platform Fee) in mint form
+2. Before minting, platform fee sent to treasury address
+3. If fee rejected, minting stops (user must approve)
+4. Fee supports OGUN rewards distribution
+
+**Environment Variables:**
+```env
+NEXT_PUBLIC_MINT_FEE_PER_NFT="0.01"  # 0.01 POL per NFT
+NEXT_PUBLIC_SOUNDCHAIN_TREASURY="0x..."  # Treasury/Gnosis Safe address
+```
 
 ---
 

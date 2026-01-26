@@ -4,6 +4,7 @@ import { InputField } from 'components/InputField'
 import { Matic } from 'components/Matic'
 import { TextareaField } from 'components/TextareaField'
 import { WalletSelector } from 'components/waveform/WalletSelector'
+import { config } from 'config'
 import { Field, Form, Formik, FormikErrors } from 'formik'
 import { useMaxMintGasFee } from 'hooks/useMaxMintGasFee'
 import { useWalletContext } from 'hooks/useWalletContext'
@@ -172,9 +173,12 @@ function InnerForm(props: InnerFormProps) {
 
   useEffect(() => {
     if (balance && maxMintGasFee) {
-      setEnoughFunds(Number(balance) > Number(maxMintGasFee))
+      // Include platform fee in funds check
+      const platformFee = values.editionQuantity * config.mintFeePerNft
+      const totalCost = Number(maxMintGasFee) + platformFee
+      setEnoughFunds(Number(balance) > totalCost)
     }
-  }, [maxMintGasFee, balance])
+  }, [maxMintGasFee, balance, values.editionQuantity])
 
   const addCollaborator = () => {
     setFieldValue('collaborators', [...values.collaborators, { walletAddress: '', royaltyPercentage: 0, role: '' }])
@@ -404,24 +408,40 @@ function InnerForm(props: InnerFormProps) {
       {/* Wallet Selector */}
       <WalletSelector />
 
-      {/* Mint Section - Compact */}
+      {/* Mint Section - Shows Gas + Platform Fee */}
       <div className="px-4 pb-4 mt-2">
-        <div className="flex items-center gap-3">
-          <div className="flex-1">
+        <div className="flex flex-col gap-2 mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-400">Est. Gas Fee</span>
             <Matic value={maxMintGasFee || '0'} variant="currency" />
           </div>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-gray-400">Platform Fee ({values.editionQuantity} NFT{values.editionQuantity > 1 ? 's' : ''} × {config.mintFeePerNft} POL)</span>
+            <span className="text-cyan-400 font-mono">{(values.editionQuantity * config.mintFeePerNft).toFixed(4)} POL</span>
+          </div>
+          <div className="border-t border-gray-700 pt-2 flex justify-between items-center text-xs">
+            <span className="text-white font-bold">Total Est. Cost</span>
+            <span className="text-green-400 font-bold font-mono">
+              {(parseFloat(maxMintGasFee || '0') + (values.editionQuantity * config.mintFeePerNft)).toFixed(4)} POL
+            </span>
+          </div>
+          <p className="text-xxs text-gray-500 mt-1">
+            Platform fee supports OGUN rewards you receive for minting
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
           <Button
             type="submit"
             variant="outline"
             borderColor="bg-purple-gradient"
-            className="px-6 py-2 text-sm"
+            className="w-full px-6 py-2 text-sm"
             disabled={!enoughFunds}
           >
             MINT NFT
           </Button>
         </div>
         {!enoughFunds && balance !== undefined && (
-          <p className="text-xs text-red-400 mt-2">Insufficient funds for gas</p>
+          <p className="text-xs text-red-400 mt-2">Insufficient funds for gas + platform fee</p>
         )}
       </div>
 

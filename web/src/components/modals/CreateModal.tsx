@@ -5,6 +5,7 @@ import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/t
 import { TrackUploader } from 'components/forms/track/TrackUploader'
 import { SimpleTrackUploadForm } from 'components/forms/track/SimpleTrackUploadForm'
 import { Modal } from 'components/Modal'
+import { config } from 'config'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
@@ -512,6 +513,36 @@ export const CreateModal = () => {
         // Brief pause to let RPC rate limits recover after IPFS pinning
         setMintingState('Preparing blockchain transaction...')
         await sleep(3000)
+
+        // Collect platform fee before minting (supports OGUN rewards)
+        const platformFee = values.editionQuantity * config.mintFeePerNft
+        if (platformFee > 0 && config.treasuryAddress) {
+          setMintingState(`Collecting platform fee (${platformFee.toFixed(4)} POL)...`)
+          try {
+            const feeInWei = web3.utils.toWei(platformFee.toString(), 'ether')
+            const gasPriceWei = await web3.eth.getGasPrice()
+            const gasPrice = Math.floor(Number(gasPriceWei) * 1.2) // 20% buffer
+
+            await web3.eth.sendTransaction({
+              from: account,
+              to: config.treasuryAddress,
+              value: feeInWei,
+              gas: 21000, // Standard ETH transfer gas
+              gasPrice: gasPrice.toString(),
+            })
+            console.log(`Platform fee of ${platformFee} POL sent to treasury`)
+          } catch (feeError: any) {
+            console.error('Platform fee collection failed:', feeError)
+            // If fee collection fails, we still proceed with minting
+            // This prevents blocking users but logs the issue
+            if (feeError?.code === 4001 || feeError?.message?.includes('User denied')) {
+              // User rejected the fee transaction
+              setMintingState('Platform fee rejected. Please approve to continue.')
+              setMintError(true)
+              return
+            }
+          }
+        }
 
         setMintingState('Minting Edition')
 
