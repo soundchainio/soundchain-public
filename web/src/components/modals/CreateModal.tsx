@@ -545,7 +545,7 @@ export const CreateModal = () => {
               from: account,
               to: treasuryAddress,
               value: feeInWei,
-              gas: 21000, // Standard ETH/POL transfer gas
+              gas: 50000, // Increased for Magic SDK RPC infrastructure overhead
               gasPrice: gasPrice.toString(),
             })
 
