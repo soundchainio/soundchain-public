@@ -333,7 +333,7 @@ function InnerForm(props: InnerFormProps) {
               className="p-2 border border-gray-30 rounded bg-gray-20 text-white text-sm w-full"
             >
               {Object.keys(collaboratorCategories).map(category => (
-                <option key={category} value={category}>{category}</option>
+                <option key={category} value={category} className="bg-gray-900 text-white">{category}</option>
               ))}
             </select>
 
@@ -345,9 +345,9 @@ function InnerForm(props: InnerFormProps) {
                     onChange={e => updateCollaborator(index, 'role', e.target.value)}
                     className="flex-1 p-2 border border-gray-30 rounded bg-gray-25 text-white text-xs"
                   >
-                    <option value="">Select Role</option>
+                    <option value="" className="bg-gray-900 text-white">Select Role</option>
                     {collaboratorCategories[selectedCategory].map(role => (
-                      <option key={role} value={role}>{role}</option>
+                      <option key={role} value={role} className="bg-gray-900 text-white">{role}</option>
                     ))}
                   </select>
                   <input

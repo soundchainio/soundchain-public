@@ -489,6 +489,25 @@ select:focus {
   -webkit-text-fill-color: inherit !important;
 }
 
+/* Style native dropdown options for better contrast */
+select option {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 8px 12px !important;
+}
+
+select option:hover,
+select option:checked {
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+/* Ensure select dropdowns have visible text */
+select {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 .social-links div,
 .social-links div input {
   width: 100%;
