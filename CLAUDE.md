@@ -33,18 +33,23 @@
 
 ### Platform Fee Structure (Jan 26, 2026)
 
-**SoundChain charges 0.05% on ALL transactions:**
+**SoundChain charges 0.05% on ALL costs:**
 
 | Action | Fee Calculation | Example |
 |--------|-----------------|---------|
-| NFT Minting | 0.05% × Estimated Gas Cost | Gas: 0.1 POL → Fee: 0.00005 POL |
-| Marketplace Sales | 0.05% × Sale Price | Sale: 100 POL → Fee: 0.05 POL |
+| NFT Minting | 0.05% × Gas Cost | Gas: 0.1 POL → Fee: 0.00005 POL |
+| Marketplace Sales | 0.05% × Sale Price + 0.05% × Gas Cost | Sale: 100 POL + Gas: 0.05 POL → Fee: 0.05 + 0.000025 POL |
 | SCid-only Upload | FREE | $0 (no wallet needed) |
 
-**Why 0.05% of gas cost for minting?**
-- Consistent percentage model across all transactions (VC-friendly)
-- Fee scales with actual cost (more editions = higher gas = proportional fee)
-- Transparent calculation shown in UI: "Platform Fee (0.05% of gas)"
+**Fee Model Summary:**
+- **Minting:** 0.05% of gas cost only (no sale price yet)
+- **Selling:** 0.05% of sale price + 0.05% of gas cost
+- **SCid:** Free (users save certificate to device, still earn OGUN rewards)
+
+**Why this model?**
+- Consistent 0.05% across ALL costs (VC-friendly revenue model)
+- Fee scales with transaction value AND complexity
+- Transparent calculation shown in UI
 - Much lower than traditional DSPs (15-30%)
 
 ### Upload Tiers & OGUN Rewards
