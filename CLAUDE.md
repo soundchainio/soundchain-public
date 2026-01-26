@@ -465,6 +465,29 @@ input, textarea, select {
 - Don't assume Alchemy API keys work across all networks - they're project/network specific
 **Commits:** `97f392cd9` (Alchemy - broken), `c610c6f7d` (LlamaNodes - fixed)
 
+#### 24a-2. Magic SDK Rate Limits for Large Drops (IMPORTANT)
+**Magic's Internal Rate Limit:** 500 requests/minute (regardless of RPC provider)
+**Impact:** Each NFT mint requires multiple API calls (wallet, signing, tx). You can exhaust the limit with just 50-100 NFTs.
+
+**For Large Edition Mints (300-1000 NFTs):**
+| Requirement | Details |
+|-------------|---------|
+| Custom Rate Limit | Contact Magic sales 2-4 weeks before large drop |
+| Gas Limits | 100k-200k+ per transaction (currently using 100k) |
+| Batch Minting | Reduce total API calls by batching |
+| Queue System | Spread requests over time to stay under limits |
+
+**Error Signatures:**
+- `Too many requests, reason: call rate limit exhausted, retry in 10s`
+- `Magic RPC Error: [-32603] out of gas`
+
+**Current Mitigations (in CreateModal.tsx):**
+- Exponential backoff retry: 15s → 30s → 60s
+- Gas limit: 100,000 (bumped from 21k standard)
+- Fee collection fails gracefully, mint proceeds anyway
+
+**Before Big Drops:** Contact Magic at https://magic.link/contact to request custom rate limits.
+
 #### 24b. Gas Fee Estimates Way Too High
 **Symptom:** Gas estimate shows 1.521 POL for 2 NFTs (should be ~0.05-0.10 POL)
 **Root Cause:** Gas constants were set too high for Polygon (copied from Ethereum estimates)
