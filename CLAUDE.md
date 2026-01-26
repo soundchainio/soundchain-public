@@ -22,6 +22,13 @@
 - Set up code-server for better mobile dev experience (paste works!)
 - Fixed form input styling, Polygon icon sizing, profile header contrast
 - Working remotely on iPhone - use code-server URL for best experience
+- **NFT Minting Flow Overhaul:**
+  - Fixed gas estimates (1.5 POL → ~0.1 POL)
+  - Fixed RPC rate limiting (polygon-rpc.com → polygon.llamarpc.com)
+  - Fixed collaborator form styling (dropdown contrast, % text color, wallet cyan)
+  - Added auto-fill for collaborator wallet address
+  - Added full wallet address display with copy button
+  - **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
 
 ---
 
@@ -351,6 +358,86 @@ input, textarea, select {
 **File:** `web/src/pages/dex/[...slug].tsx` (profile view section ~line 6162)
 **Don't Do This:** Place text directly over user-uploaded images without contrast protection
 **Commit:** `57caa5790`
+
+### 24. NFT Mint Flow Issues (Jan 26, 2026)
+**Multiple issues discovered during mint testing:**
+
+#### 24a. RPC Rate Limiting Breaks Minting
+**Symptom:** Mint fails with "429 Too Many Requests" and "call rate limit exhausted"
+**Root Cause:** Using public `polygon-rpc.com` which has aggressive rate limits
+**Initial Fix Attempt:** Switched to Alchemy RPC using ZetaChain API key
+**Problem:** Alchemy API key was ZetaChain-specific, caused balances to show 0
+**Final Fix:** Switched to LlamaNodes RPC (`polygon.llamarpc.com`) - better rate limits, no API key needed
+**Files Changed:**
+- `web/src/contexts/Web3ModalContext.tsx`
+- `web/src/components/dex/StakingPanel.tsx`
+- `web/src/lib/blockchainNetworks.ts`
+- `web/src/pages/airdrop.tsx`
+- `web/src/pages/ogun.tsx`
+- `web/src/pages/dex/[...slug].tsx`
+**Don't Do This:**
+- Don't use `polygon-rpc.com` - too aggressive rate limiting
+- Don't assume Alchemy API keys work across all networks - they're project/network specific
+**Commits:** `97f392cd9` (Alchemy - broken), `c610c6f7d` (LlamaNodes - fixed)
+
+#### 24b. Gas Fee Estimates Way Too High
+**Symptom:** Gas estimate shows 1.521 POL for 2 NFTs (should be ~0.05-0.10 POL)
+**Root Cause:** Gas constants were set too high for Polygon (copied from Ethereum estimates)
+**Fix:** Reduced gas constants to realistic Polygon values:
+```javascript
+// Before (Ethereum-level estimates)
+createEditionGasCost = 130000
+baseMintGasCost = 63538
+mintUnitGasCost = 117000
+gasPriceMultiplier = 1.5
+
+// After (Polygon-realistic)
+createEditionGasCost = 65000
+baseMintGasCost = 32000
+mintUnitGasCost = 55000
+gasPriceMultiplier = 1.2  // 20% buffer instead of 50%
+```
+**Files:** `web/src/hooks/useBlockchain.ts`, `web/src/hooks/useBlockchainV2.ts`
+**Commit:** `e598cbf38`
+
+#### 24c. Collaborator Form Styling Issues
+**Symptoms:**
+- Dropdown options unreadable (dark gray on dark background)
+- Percentage input text is gray instead of white
+- Wallet address should be cyan to match wallet selector
+**Fixes:**
+- Added `bg-gray-900 text-white` classes to dropdown options
+- Added `color-scheme: dark` and inline styles for number input
+- Changed wallet address to cyan (#22d3ee) via inline style
+**Files:**
+- `web/src/components/forms/track/TrackMetadataForm.tsx`
+- `web/src/styles/globals.css`
+**Commits:** `997dd7b1a`, `00e12d28b`, `880193ca4`
+
+#### 24d. Collaborator Wallet Not Auto-Filled
+**Symptom:** User has to manually paste their wallet address into collaborator field
+**Root Cause:** Form didn't check for existing OAuth wallet on mount
+**Fix:** Added useEffect to auto-fill first collaborator's wallet with user's OAuth wallet address
+**File:** `web/src/components/forms/track/TrackMetadataForm.tsx`
+**Key Code:**
+```typescript
+const { account: magicWalletAddress } = useMagicContext()
+
+useEffect(() => {
+  if (magicWalletAddress && values.collaborators.length > 0 && !values.collaborators[0].walletAddress) {
+    const newCollaborators = [...values.collaborators]
+    newCollaborators[0] = { ...newCollaborators[0], walletAddress: magicWalletAddress }
+    setFieldValue('collaborators', newCollaborators)
+  }
+}, [magicWalletAddress])
+```
+**Commit:** `00e12d28b`
+
+#### 24e. Wallet Address Truncated in Selector
+**Symptom:** Wallet shows as `0x8f93...5df6` - hard to verify full address
+**Fix:** Show full wallet address with copy button next to it
+**File:** `web/src/components/waveform/WalletSelector.tsx`
+**Commit:** `00e12d28b`
 
 ---
 
