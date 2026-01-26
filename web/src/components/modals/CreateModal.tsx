@@ -516,7 +516,9 @@ export const CreateModal = () => {
 
         // Calculate platform fee: 0.05% of estimated gas cost
         const gasPriceWei = await web3.eth.getGasPrice()
-        const gasPrice = Math.floor(Number(gasPriceWei) * 1.2) // 20% buffer
+        // Use 50% buffer for faster confirmation (Polygon can be congested)
+        const gasPrice = Math.floor(Number(gasPriceWei) * 1.5)
+        console.log(`📊 Gas price: ${web3.utils.fromWei(gasPriceWei.toString(), 'gwei')} gwei, with 50% buffer: ${web3.utils.fromWei(gasPrice.toString(), 'gwei')} gwei`)
 
         // Estimate gas for edition creation + minting
         const estimatedGas = 65000 + (values.editionQuantity * 55000) // createEdition + mint per NFT
@@ -528,31 +530,39 @@ export const CreateModal = () => {
         const MINIMUM_PLATFORM_FEE = 0.001 // 0.001 POL minimum (~$0.001)
         const calculatedFee = estimatedGasCostPol * config.soundchainFee
         const platformFee = Math.max(calculatedFee, MINIMUM_PLATFORM_FEE)
-        console.log(`Gas: ${estimatedGasCostPol.toFixed(4)} POL, Calculated fee: ${calculatedFee.toFixed(6)}, Platform fee: ${platformFee.toFixed(6)} POL (min: ${MINIMUM_PLATFORM_FEE})`)
+        console.log(`💰 Gas cost: ${estimatedGasCostPol.toFixed(4)} POL, Calculated fee: ${calculatedFee.toFixed(6)}, Platform fee: ${platformFee.toFixed(6)} POL (min: ${MINIMUM_PLATFORM_FEE})`)
 
         if (platformFee > 0 && config.treasuryAddress) {
-          setMintingState(`Collecting 0.05% platform fee (${platformFee.toFixed(6)} POL)...`)
+          setMintingState(`Collecting platform fee (${platformFee.toFixed(4)} POL)...`)
           try {
-            const feeInWei = web3.utils.toWei(platformFee.toString(), 'ether')
+            // Convert to wei with proper precision (avoid floating point issues)
+            const feeInWei = web3.utils.toWei(platformFee.toFixed(18), 'ether')
+            console.log(`📤 Sending ${platformFee.toFixed(6)} POL (${feeInWei} wei) to treasury: ${config.treasuryAddress}`)
 
-            await web3.eth.sendTransaction({
+            const txReceipt = await web3.eth.sendTransaction({
               from: account,
               to: config.treasuryAddress,
               value: feeInWei,
-              gas: 21000, // Standard ETH transfer gas
+              gas: 21000, // Standard ETH/POL transfer gas
               gasPrice: gasPrice.toString(),
             })
-            console.log(`Platform fee of ${platformFee.toFixed(6)} POL (0.05% of ${estimatedGasCostPol.toFixed(4)} gas) sent to treasury`)
+
+            console.log(`✅ Platform fee sent! TX: ${txReceipt.transactionHash}`)
+            setMintingState('Platform fee collected! Proceeding to mint...')
+            await sleep(1000) // Brief pause to show success
           } catch (feeError: any) {
-            console.error('Platform fee collection failed:', feeError)
-            // If fee collection fails, we still proceed with minting
-            // This prevents blocking users but logs the issue
-            if (feeError?.code === 4001 || feeError?.message?.includes('User denied')) {
-              // User rejected the fee transaction
+            console.error('❌ Platform fee collection failed:', feeError)
+            // If user rejected, stop the flow
+            if (feeError?.code === 4001 || feeError?.message?.includes('User denied') || feeError?.message?.includes('rejected')) {
               setMintingState('Platform fee rejected. Please approve to continue.')
               setMintError(true)
               return
             }
+            // For other errors (network issues, etc.), log but continue with minting
+            // This prevents blocking users due to fee issues
+            console.warn('⚠️ Fee collection failed, proceeding with mint anyway')
+            setMintingState('Fee skipped due to network issue. Proceeding to mint...')
+            await sleep(1000)
           }
         }
 
