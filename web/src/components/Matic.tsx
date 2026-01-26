@@ -20,8 +20,8 @@ export const Matic = ({ value = '', truncate, className, variant }: Props) => {
     case 'currency':
       return (
         <div className={classNames('font-bold', className)}>
-          <p className="text-white">
-            <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">POL</span>
+          <p className="text-white inline-flex items-center gap-1">
+            <MaticIcon className="w-4 h-4 inline-block flex-shrink-0" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">POL</span>
           </p>
           <p className="text-sm text-gray-60">{`${currencyValue}`}</p>
         </div>
@@ -30,13 +30,13 @@ export const Matic = ({ value = '', truncate, className, variant }: Props) => {
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
           <span className={truncate}>{value}</span>
-          <MaticIcon className="inline" />
+          <MaticIcon className="w-4 h-4 inline-block flex-shrink-0" />
         </p>
       )
     case 'listing-inline':
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          <MaticIcon className="inline" />
+          <MaticIcon className="w-4 h-4 inline-block flex-shrink-0" />
           <span className={`${truncate}`}>{fixedDecimals(value)}</span>
           <span className="hidden text-xs text-gray-80 xs:inline">POL</span>
         </p>
@@ -44,7 +44,7 @@ export const Matic = ({ value = '', truncate, className, variant }: Props) => {
     default:
       return (
         <p className={classNames('inline-flex items-center gap-1 font-bold text-white', className)}>
-          <MaticIcon className="inline" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">POL</span>
+          <MaticIcon className="w-4 h-4 inline-block flex-shrink-0" /> {fixedDecimals(value)} <span className="text-xs text-gray-80">POL</span>
         </p>
       )
   }
