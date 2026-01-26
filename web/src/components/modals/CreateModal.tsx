@@ -54,7 +54,7 @@ const isRateLimitError = (error: any): boolean => {
 const withRetry = async <T>(
   fn: () => Promise<T>,
   maxRetries = 3,
-  initialDelayMs = 10000
+  initialDelayMs = 15000 // 15s initial delay for Magic RPC rate limits
 ): Promise<T> => {
   let lastError: any
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -537,8 +537,8 @@ export const CreateModal = () => {
           try {
             // Convert to wei with proper precision (avoid floating point issues)
             const feeInWei = web3.utils.toWei(platformFee.toFixed(18), 'ether')
-            // Normalize treasury address to proper checksum format
-            const treasuryAddress = web3.utils.toChecksumAddress(config.treasuryAddress)
+            // Clean treasury address (trim whitespace, ensure lowercase for compatibility)
+            const treasuryAddress = config.treasuryAddress.trim().toLowerCase()
             console.log(`📤 Sending ${platformFee.toFixed(6)} POL (${feeInWei} wei) to treasury: ${treasuryAddress}`)
 
             const txReceipt = await web3.eth.sendTransaction({
@@ -570,11 +570,11 @@ export const CreateModal = () => {
 
         setMintingState('Minting Edition')
 
-        // Wrap with retry for RPC rate limiting
+        // Wrap with retry for RPC rate limiting (15s initial, doubles each retry)
         const [editionNumber, trackEditionId, trackEditionTransactionHash] = await withRetry(
           () => createAndMintEdition(),
           3,
-          10000
+          15000
         )
 
         let quantityLeft = values.editionQuantity
@@ -582,8 +582,8 @@ export const CreateModal = () => {
         for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
           nonce = BigInt(await web3?.eth.getTransactionCount(account)) // Update nonce for each batch
           const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE
-          // Wrap with retry for RPC rate limiting
-          promises.push(withRetry(() => createAndMintTracks(quantity, editionNumber, index === 0), 3, 10000))
+          // Wrap with retry for RPC rate limiting (15s initial delay)
+          promises.push(withRetry(() => createAndMintTracks(quantity, editionNumber, index === 0), 3, 15000))
           setMintingState('Minting NFT')
 
           quantityLeft = quantityLeft - BATCH_SIZE
