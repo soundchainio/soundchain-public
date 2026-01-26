@@ -27,6 +27,7 @@ export interface UnifiedWalletState {
   chainId: number | null
   chainName: string | null
   connectWeb3Modal: () => void
+  connectMetaMask: () => void  // Added explicit MetaMask connection
   disconnectWallet: () => void
   switchToMagic: () => void
   switchToMetaMask: () => void
@@ -51,6 +52,7 @@ const defaultState: UnifiedWalletState = {
   chainId: null,
   chainName: null,
   connectWeb3Modal: () => {},
+  connectMetaMask: () => {},
   disconnectWallet: () => {},
   switchToMagic: () => {},
   switchToMetaMask: () => {},
@@ -136,6 +138,7 @@ function UnifiedWalletInner({
     web3: metamaskWeb3,
     refetchBalance: metamaskRefetchBalance,
     chainId: metamaskChainId,
+    connect: connectMetaMaskHook,  // Added connect function
   } = useMetaMask()
 
   // Fetch OGUN balance for Web3Modal when connected on Polygon
@@ -219,6 +222,16 @@ function UnifiedWalletInner({
     }
   }, [isWeb3ModalConnected, web3ModalAddress, activeWalletType])
 
+  // Auto-detect MetaMask connection (for when user connects via switchToMetaMask)
+  useEffect(() => {
+    if (metamaskAccount && activeWalletType !== 'metamask' && activeWalletType !== 'magic') {
+      // MetaMask just connected and we're not on magic - switch to it
+      console.log('🦊 MetaMask connected, switching wallet type')
+      setActiveWalletType('metamask')
+      localStorage.setItem(WALLET_STORAGE_KEY, 'metamask')
+    }
+  }, [metamaskAccount, activeWalletType])
+
   const persistWalletChoice = useCallback((type: WalletType) => {
     setActiveWalletType(type)
     if (type) {
@@ -265,9 +278,15 @@ function UnifiedWalletInner({
 
   const switchToMetaMask = useCallback(() => {
     if (metamaskAccount) {
+      // Already connected - just switch
       persistWalletChoice('metamask')
+    } else {
+      // Not connected - initiate connection then switch
+      console.log('🦊 Initiating MetaMask connection...')
+      connectMetaMaskHook()
+      // Will auto-switch when account becomes available via useEffect below
     }
-  }, [metamaskAccount, persistWalletChoice])
+  }, [metamaskAccount, persistWalletChoice, connectMetaMaskHook])
 
   const switchToWeb3Modal = useCallback(() => {
     if (isWeb3ModalConnected && web3ModalAddress) {
@@ -357,6 +376,7 @@ function UnifiedWalletInner({
     chainId,
     chainName,
     connectWeb3Modal,
+    connectMetaMask: connectMetaMaskHook,
     disconnectWallet,
     switchToMagic,
     switchToMetaMask,
@@ -396,6 +416,7 @@ function UnifiedWalletFallback({ children }: { children: ReactNode }) {
     chainId: magicAccount ? 137 : null,
     chainName: magicAccount ? 'Polygon' : null,
     connectWeb3Modal: () => console.warn('Web3Modal not ready yet'),
+    connectMetaMask: () => console.warn('MetaMask context not ready yet'),
     disconnectWallet: () => {},
     switchToMagic: () => {},
     switchToMetaMask: () => {},
