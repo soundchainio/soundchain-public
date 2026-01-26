@@ -793,6 +793,36 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 26, 2026 | **Form Input Inner Box Fix** - Reverted to legacy bg-gray-1A styling | 9db9413e2 |
 | Jan 26, 2026 | **Polygon Icon Scale Fix** - Added w-4 h-4 constraints to MaticIcon | d26409621 |
 | Jan 26, 2026 | **Profile Header Contrast** - Dark backdrop + text shadows for cover images | 57caa5790 |
+| Jan 26, 2026 | **View Tabs Contrast** - Dark backdrop for Feed/Dashboard/etc tabs | 3f5a71697 |
+| Jan 26, 2026 | **Textarea Full Width Fix** - Force 100% width to override @tailwindcss/forms | 752358923 |
+| Jan 26, 2026 | **GitBook: SCid Registry Docs** - Full technical docs for SCid system | soundchain-docs |
+
+---
+
+## DOCUMENTATION
+
+### GitBook Docs Location
+```
+/Users/soundchain/soundchain-docs/
+```
+
+### Key Documentation Pages
+
+| Page | Path | Description |
+|------|------|-------------|
+| **SCid Registry** | `developers/scid-registry.md` | Full SCid technical reference - format, schema, API, rewards |
+| Smart Contracts | `developers/contracts.md` | Contract addresses, ABIs, functions |
+| WIN-WIN Rewards | `platform/streaming-rewards.md` | Streaming rewards explanation |
+| API Reference | `developers/api.md` | GraphQL API documentation |
+
+### SCid Documentation Highlights
+The `scid-registry.md` page includes:
+- **SCid Format**: `SC-POL-XXXX-XXXXXX` breakdown
+- **Full Schema**: All 20+ fields in SCid MongoDB record
+- **Flow Diagrams**: IPFS → Token ID → SCid linking
+- **WIN-WIN Rewards**: Calculation tables and rates
+- **GraphQL Examples**: Query examples for SCid data
+- **Smart Contract Integration**: JavaScript code samples
 
 ---
 
