@@ -545,7 +545,7 @@ export const CreateModal = () => {
               from: account,
               to: treasuryAddress,
               value: feeInWei,
-              gas: 50000, // Increased for Magic SDK RPC infrastructure overhead
+              gas: 100000, // High buffer for Magic SDK RPC infrastructure overhead
               gasPrice: gasPrice.toString(),
             })
 
