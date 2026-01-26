@@ -21,7 +21,7 @@ import { Logo } from 'icons/Logo'
 import { MetaMask } from 'icons/MetaMask'
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
 import { Ogun } from '../Ogun'
-import { ChevronDown, Check, Loader2, Plus, X, Wallet, ExternalLink } from 'lucide-react'
+import { ChevronDown, Check, Loader2, Plus, X, Wallet, ExternalLink, Copy } from 'lucide-react'
 import Web3 from 'web3'
 
 // Wallet type definitions
@@ -97,6 +97,15 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
   const [showConnectMenu, setShowConnectMenu] = useState(false)
   const [isConnecting, setIsConnecting] = useState<WalletType | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  // Copy wallet address to clipboard
+  const copyAddress = useCallback((address: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(address)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }, [])
 
   // Load saved wallet preference
   useEffect(() => {
@@ -420,12 +429,21 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
                 )}
               </div>
 
-              <div className="text-left">
+              <div className="text-left flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-white font-bold text-sm">{WALLET_CONFIG[currentWallet.type].name}</span>
                   <span className="text-[10px] text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded">{currentWallet.chainName}</span>
                 </div>
-                <code className="text-xs text-cyan-400 font-mono">{formatAddress(currentWallet.address)}</code>
+                <div className="flex items-center gap-1">
+                  <code className="text-xs text-cyan-400 font-mono truncate max-w-[180px] sm:max-w-none">{currentWallet.address}</code>
+                  <button
+                    onClick={(e) => copyAddress(currentWallet.address, e)}
+                    className="p-1 text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded transition-colors flex-shrink-0"
+                    title="Copy address"
+                  >
+                    {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
+                  </button>
+                </div>
               </div>
             </div>
 

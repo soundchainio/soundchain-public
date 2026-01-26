@@ -7,6 +7,7 @@ import { WalletSelector } from 'components/waveform/WalletSelector'
 import { Field, Form, Formik, FormikErrors } from 'formik'
 import { useMaxMintGasFee } from 'hooks/useMaxMintGasFee'
 import { useWalletContext } from 'hooks/useWalletContext'
+import { useMagicContext } from 'hooks/useMagicContext'
 import { Genre } from 'lib/graphql'
 import { useEffect, useState } from 'react'
 import { GenreLabel, genres } from 'utils/Genres'
@@ -140,8 +141,18 @@ function InnerForm(props: InnerFormProps) {
     }
   }, [])
   const { balance } = useWalletContext()
+  const { account: magicWalletAddress } = useMagicContext()
   const [isCollaboratorExpanded, setIsCollaboratorExpanded] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<keyof typeof collaboratorCategories>('Music')
+
+  // Auto-fill first collaborator with user's OAuth wallet address
+  useEffect(() => {
+    if (magicWalletAddress && values.collaborators.length > 0 && !values.collaborators[0].walletAddress) {
+      const newCollaborators = [...values.collaborators]
+      newCollaborators[0] = { ...newCollaborators[0], walletAddress: magicWalletAddress }
+      setFieldValue('collaborators', newCollaborators)
+    }
+  }, [magicWalletAddress])
 
   const handleGenreClick = (
     setFieldValue: (field: string, value: Genre[]) => void,
@@ -356,6 +367,7 @@ function InnerForm(props: InnerFormProps) {
                     onChange={e => updateCollaborator(index, 'royaltyPercentage', Number(e.target.value))}
                     placeholder="%"
                     className="w-16 p-2 border border-gray-30 rounded bg-gray-25 text-white text-xs text-center"
+                    style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
                     min={0}
                     max={100}
                   />
