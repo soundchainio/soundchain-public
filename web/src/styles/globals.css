@@ -459,6 +459,22 @@ select {
   -webkit-text-fill-color: inherit !important;
 }
 
+/* Force textareas to be full width and borderless inside containers */
+textarea {
+  width: 100% !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+textarea:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: none !important;
+  ring: none !important;
+}
+
 input::placeholder,
 textarea::placeholder {
   color: #6b7280 !important;

@@ -26,7 +26,8 @@ export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props
         )}
         <textarea
           maxLength={maxLength}
-          className="placeholder-semibold w-full min-w-full resize-none border-none bg-transparent p-0 text-xs font-bold text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent"
+          className="placeholder-semibold resize-none bg-transparent p-0 text-xs font-bold text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-0 focus:ring-transparent"
+          style={{ width: '100%', border: 'none', outline: 'none' }}
           id={props.name}
           {...field}
           {...props}
