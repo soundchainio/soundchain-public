@@ -573,20 +573,20 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6 bg-black/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-xl">
-            <Coins className="w-6 h-6 text-white" />
+          <div className="p-3 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-xl shadow-lg shadow-purple-500/30">
+            <Coins className="w-6 h-6 text-white drop-shadow-lg" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">OGUN Staking</h2>
-            <p className="text-sm text-gray-400">Earn rewards by staking OGUN</p>
+            <h2 className="text-xl font-bold text-white drop-shadow-md">OGUN Staking</h2>
+            <p className="text-sm text-gray-300">Earn rewards by staking OGUN</p>
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <span className="text-2xl">&times;</span>
           </button>
         )}
@@ -788,12 +788,12 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       )}
 
       {/* Chain Selector */}
-      <div className="flex items-center gap-2 p-3 bg-gray-800/50 rounded-lg">
-        <span className="text-sm text-gray-400">Chain:</span>
+      <div className="flex items-center gap-2 p-3 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10">
+        <span className="text-sm text-gray-300">Chain:</span>
         <select
           value={selectedChain}
           onChange={(e) => setSelectedChain(e.target.value)}
-          className="bg-gray-700 text-white text-sm rounded px-3 py-1 border-none"
+          className="bg-gray-900/80 text-white text-sm rounded-lg px-3 py-1.5 border border-white/10 focus:border-purple-500/50 focus:outline-none transition-colors"
         >
           <option value="Polygon">Polygon (Live - OGUN Native)</option>
           <option value="ZetaChain">ZetaChain (Omnichain)</option>
@@ -804,7 +804,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
           href={CHAIN_EXPLORERS[selectedChain]}
           target="_blank"
           rel="noreferrer"
-          className="text-cyan-400 hover:text-cyan-300 ml-auto"
+          className="text-cyan-400 hover:text-cyan-300 ml-auto transition-colors"
         >
           <ExternalLink className="w-4 h-4" />
         </a>
@@ -812,33 +812,33 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-gradient-to-br from-purple-900/50 to-purple-800/30 p-4 rounded-xl border border-purple-500/20">
-          <div className="flex items-center gap-2 text-purple-400 mb-1">
+        <div className="bg-gradient-to-br from-purple-900/60 to-purple-800/40 backdrop-blur-sm p-4 rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/10 hover:border-purple-500/50 transition-all">
+          <div className="flex items-center gap-2 text-purple-300 mb-1">
             <Wallet className="w-4 h-4" />
-            <span className="text-xs">Balance</span>
+            <span className="text-xs font-medium">Balance</span>
           </div>
-          <p className="text-lg font-bold text-white">{formatToCompactNumber(parseFloat(ogunBalance))} OGUN</p>
+          <p className="text-lg font-bold text-white drop-shadow-sm">{formatToCompactNumber(parseFloat(ogunBalance))} OGUN</p>
         </div>
-        <div className="bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 p-4 rounded-xl border border-cyan-500/20">
-          <div className="flex items-center gap-2 text-cyan-400 mb-1">
+        <div className="bg-gradient-to-br from-cyan-900/60 to-cyan-800/40 backdrop-blur-sm p-4 rounded-xl border border-cyan-500/30 shadow-lg shadow-cyan-500/10 hover:border-cyan-500/50 transition-all">
+          <div className="flex items-center gap-2 text-cyan-300 mb-1">
             <Lock className="w-4 h-4" />
-            <span className="text-xs">Staked</span>
+            <span className="text-xs font-medium">Staked</span>
           </div>
-          <p className="text-lg font-bold text-white">{formatToCompactNumber(parseFloat(stakedBalance))} OGUN</p>
+          <p className="text-lg font-bold text-white drop-shadow-sm">{formatToCompactNumber(parseFloat(stakedBalance))} OGUN</p>
         </div>
-        <div className="bg-gradient-to-br from-green-900/50 to-green-800/30 p-4 rounded-xl border border-green-500/20">
-          <div className="flex items-center gap-2 text-green-400 mb-1">
+        <div className="bg-gradient-to-br from-green-900/60 to-green-800/40 backdrop-blur-sm p-4 rounded-xl border border-green-500/30 shadow-lg shadow-green-500/10 hover:border-green-500/50 transition-all">
+          <div className="flex items-center gap-2 text-green-300 mb-1">
             <Gift className="w-4 h-4" />
-            <span className="text-xs">Rewards</span>
+            <span className="text-xs font-medium">Rewards</span>
           </div>
-          <p className="text-lg font-bold text-white">{formatToCompactNumber(parseFloat(rewardBalance))} OGUN</p>
+          <p className="text-lg font-bold text-white drop-shadow-sm">{formatToCompactNumber(parseFloat(rewardBalance))} OGUN</p>
         </div>
-        <div className="bg-gradient-to-br from-yellow-900/50 to-yellow-800/30 p-4 rounded-xl border border-yellow-500/20">
-          <div className="flex items-center gap-2 text-yellow-400 mb-1">
+        <div className="bg-gradient-to-br from-yellow-900/60 to-yellow-800/40 backdrop-blur-sm p-4 rounded-xl border border-yellow-500/30 shadow-lg shadow-yellow-500/10 hover:border-yellow-500/50 transition-all">
+          <div className="flex items-center gap-2 text-yellow-300 mb-1">
             <TrendingUp className="w-4 h-4" />
-            <span className="text-xs">APR</span>
+            <span className="text-xs font-medium">APR</span>
           </div>
-          <p className="text-lg font-bold text-white">{apr}%</p>
+          <p className="text-lg font-bold text-white drop-shadow-sm">{apr}%</p>
         </div>
       </div>
 
@@ -855,7 +855,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1 bg-gray-800/50 rounded-xl">
+      <div className="flex gap-2 p-1 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10">
         <button
           onClick={() => setActiveTab('stake')}
           className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
@@ -902,7 +902,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       {/* Stake/Unstake Form */}
       {(activeTab === 'stake' || activeTab === 'unstake') && (
         <div className="space-y-4">
-          <div className="bg-gray-800/50 rounded-xl p-4">
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-white/10">
             <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-400">
                 {activeTab === 'stake' ? 'Amount to Stake' : 'Amount to Unstake'}
@@ -953,7 +953,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       {activeTab === 'swap' && (
         <div className="space-y-4">
           {/* From Token Input */}
-          <div className="bg-gray-800/50 rounded-xl p-4">
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-white/10">
             <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-400">From</span>
               <span className="text-sm text-gray-400">
@@ -989,7 +989,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
           </div>
 
           {/* To Token Output */}
-          <div className="bg-gray-800/50 rounded-xl p-4">
+          <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-white/10">
             <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-400">To (estimated)</span>
               <span className="text-sm text-gray-400">
@@ -1012,7 +1012,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
           </div>
 
           {/* Slippage Settings */}
-          <div className="bg-gray-800/30 rounded-xl p-3">
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 border border-white/5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-400">Slippage Tolerance</span>
               <span className="text-sm text-cyan-400">{slippage}%</span>
@@ -1036,7 +1036,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
           {/* Swap Details */}
           {swapQuote && swapAmount && (
-            <div className="bg-gray-800/30 rounded-xl p-3 space-y-2">
+            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 space-y-2 border border-white/5">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Rate</span>
                 <span className="text-white">
@@ -1081,16 +1081,16 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       )}
 
       {/* Staking Phases */}
-      <div className="bg-gray-800/30 rounded-xl p-4">
-        <h3 className="text-sm font-bold text-gray-400 mb-3">REWARD PHASES</h3>
+      <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/5">
+        <h3 className="text-sm font-bold text-gray-300 mb-3 drop-shadow-sm">REWARD PHASES</h3>
         <div className="space-y-2">
           {phases.map((phase) => (
             <div
               key={phase.phase}
-              className={`flex items-center justify-between p-3 rounded-lg ${
+              className={`flex items-center justify-between p-3 rounded-lg transition-all ${
                 phase.status === 'active'
-                  ? 'bg-gradient-to-r from-green-500/20 to-green-500/10 border border-green-500/30'
-                  : 'bg-gray-800/50'
+                  ? 'bg-gradient-to-r from-green-500/30 to-green-500/10 border border-green-500/40 shadow-lg shadow-green-500/10'
+                  : 'bg-black/30 border border-white/5 hover:border-white/10'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -1111,10 +1111,10 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       </div>
 
       {/* Total Staked */}
-      <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl p-4 border border-purple-500/20">
+      <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/30 shadow-lg shadow-purple-500/10">
         <div className="flex items-center justify-between">
-          <span className="text-gray-400">Total Value Locked</span>
-          <span className="text-xl font-bold text-white">{totalStaked} OGUN</span>
+          <span className="text-gray-300">Total Value Locked</span>
+          <span className="text-xl font-bold text-white drop-shadow-sm">{totalStaked} OGUN</span>
         </div>
       </div>
     </div>
