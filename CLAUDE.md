@@ -524,6 +524,21 @@ useEffect(() => {
 **File:** `web/src/components/waveform/WalletSelector.tsx`
 **Commit:** `00e12d28b`
 
+#### 24f. Gas-Based Fee Calculation Breaks Wallet Balances (Jan 26, 2026)
+**Symptom:** After implementing gas-based platform fee (0.05% of gas), wallet balances show 0 POL and 0 OGUN
+**Root Cause:** Unknown - possibly related to config changes or component re-render loops. The gas-based fee calculation added complexity that somehow broke balance fetching.
+**Fix:** Reverted to simple flat fee approach (0.01 POL per NFT)
+**Don't Do This:**
+- Don't calculate fees dynamically from gas estimates in component render cycle
+- Keep platform fee calculation simple - flat fees are more reliable
+- Test wallet balance display after ANY changes to config.ts or fee calculation
+**Files:** `web/src/config.ts`, `web/src/components/forms/track/TrackMetadataForm.tsx`, `web/src/components/modals/CreateModal.tsx`
+**Commit:** `a607d9aa1`
+
+**Final Fee Structure:**
+- Minting: 0.01 POL per NFT (flat fee)
+- Marketplace Sales: 0.05% of sale price + 0.05% of gas
+
 ---
 
 ## ARCHITECTURE PATTERNS

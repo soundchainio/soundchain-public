@@ -171,16 +171,17 @@ function InnerForm(props: InnerFormProps) {
     }
   }
 
-  // Calculate platform fee: flat fee per NFT
-  const platformFee = values.editionQuantity * config.mintFeePerNft
+  // Calculate platform fee: 0.05% of estimated gas cost
+  const gasCost = maxMintGasFee ? parseFloat(maxMintGasFee) : 0
+  const platformFee = gasCost * config.soundchainFee
 
   useEffect(() => {
     if (balance && maxMintGasFee) {
       // Include platform fee in funds check
-      const totalCost = Number(maxMintGasFee) + platformFee
+      const totalCost = gasCost + platformFee
       setEnoughFunds(Number(balance) > totalCost)
     }
-  }, [maxMintGasFee, balance, values.editionQuantity, platformFee])
+  }, [maxMintGasFee, balance, gasCost, platformFee])
 
   const addCollaborator = () => {
     setFieldValue('collaborators', [...values.collaborators, { walletAddress: '', royaltyPercentage: 0, role: '' }])
@@ -410,28 +411,28 @@ function InnerForm(props: InnerFormProps) {
       {/* Wallet Selector */}
       <WalletSelector />
 
-      {/* Mint Section - Shows Gas + Platform Fee */}
+      {/* Mint Section - Shows Gas + Platform Fee (0.05% of gas) */}
       <div className="px-4 pb-4 mt-2">
         <div className="flex flex-col gap-2 mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-400">Est. Gas Fee</span>
+            <span className="text-gray-400">Est. Gas Fee ({values.editionQuantity} NFT{values.editionQuantity > 1 ? 's' : ''})</span>
             <Matic value={maxMintGasFee || '0'} variant="currency" />
           </div>
           <div className="flex justify-between items-center text-xs">
             <span className="text-gray-400">
-              Platform Fee ({values.editionQuantity} × {config.mintFeePerNft} POL)
+              Platform Fee (0.05% of gas)
             </span>
-            <span className="text-cyan-400 font-mono">{platformFee.toFixed(4)} POL</span>
+            <span className="text-cyan-400 font-mono">{platformFee.toFixed(6)} POL</span>
           </div>
           <div className="border-t border-gray-700 pt-2 flex justify-between items-center text-xs">
             <span className="text-white font-bold">Total Est. Cost</span>
             <span className="text-green-400 font-bold font-mono">
-              {(parseFloat(maxMintGasFee || '0') + platformFee).toFixed(4)} POL
+              {(gasCost + platformFee).toFixed(4)} POL
             </span>
           </div>
           <div className="flex items-center justify-between mt-1">
             <p className="text-xxs text-gray-500">
-              Fee supports OGUN rewards
+              0.05% fee supports OGUN rewards
             </p>
             <span className="text-xxs text-yellow-400 font-bold">
               2x OGUN vs SCid-only
