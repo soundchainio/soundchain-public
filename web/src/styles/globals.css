@@ -450,19 +450,13 @@ input[type='number'] {
   -moz-appearance: textfield; /* Firefox */
 }
 
-/* Override @tailwindcss/forms white backgrounds */
+/* Override @tailwindcss/forms white backgrounds - use inherit to respect component styles */
 input,
+textarea,
 select {
-  background-color: #111827 !important;
-  color: white !important;
-  -webkit-text-fill-color: white !important;
-}
-
-/* Textarea should be transparent - container has the background */
-textarea {
-  background-color: transparent !important;
-  color: white !important;
-  -webkit-text-fill-color: white !important;
+  background-color: inherit !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
 }
 
 input::placeholder,
@@ -472,16 +466,11 @@ textarea::placeholder {
 }
 
 input:focus,
+textarea:focus,
 select:focus {
-  background-color: #111827 !important;
-  color: white !important;
-  -webkit-text-fill-color: white !important;
-}
-
-textarea:focus {
-  background-color: transparent !important;
-  color: white !important;
-  -webkit-text-fill-color: white !important;
+  background-color: inherit !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
 }
 
 .social-links div,
