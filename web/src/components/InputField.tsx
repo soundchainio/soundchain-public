@@ -12,7 +12,7 @@ interface InputFieldProps extends React.ComponentPropsWithoutRef<'input'> {
   alignTextCenter?: boolean
 }
 
-const commonInputClasses = `relative appearance-none block w-full p-3 rounded border bg-black/30 backdrop-blur-sm border-white/20 text-gray-200 cursor-text`
+const commonInputClasses = `relative appearance-none block w-full p-3 rounded border bg-gray-900 border-white/20 text-gray-200 cursor-text`
 const validInputClasses = `${commonInputClasses} border-white/20`
 const errorInputClasses = `${commonInputClasses} border-red-500`
 

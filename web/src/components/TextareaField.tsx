@@ -10,7 +10,7 @@ interface TextareaFieldProps {
   rows?: number
 }
 
-const commonInputClasses = `relative appearance-none block w-full p-3 rounded-md border bg-black/30 backdrop-blur-sm border-white/20 text-white cursor-text`
+const commonInputClasses = `relative appearance-none block w-full p-3 rounded-md border bg-gray-900 border-white/20 text-white cursor-text`
 const validInputClasses = `${commonInputClasses} border-white/20`
 const errorInputClasses = `${commonInputClasses} border-red-500`
 
