@@ -17,7 +17,7 @@ const errorInputClasses = `${commonInputClasses} border-red-500`
 export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props }: TextareaFieldProps) => {
   const [field, meta] = useField(props)
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 w-full">
       <div className={meta.touched && meta.error ? errorInputClasses : validInputClasses}>
         {label && (
           <Label className="block cursor-text font-bold uppercase" htmlFor={props.name} textSize="xxs">
@@ -26,7 +26,7 @@ export const TextareaField = ({ label, icon: Icon, maxLength, rows = 4, ...props
         )}
         <textarea
           maxLength={maxLength}
-          className="placeholder-semibold w-full resize-none border-none bg-gray-1A p-0 text-xs font-bold text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent"
+          className="placeholder-semibold w-full min-w-full resize-none border-none bg-transparent p-0 text-xs font-bold text-gray-200 placeholder-gray-50 focus:outline-none focus:ring-transparent"
           id={props.name}
           {...field}
           {...props}
