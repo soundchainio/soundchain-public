@@ -62,7 +62,7 @@ export const Modal = ({ show, children, title, leftButton, rightButton, onClose,
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-15 bg-opacity-75" />
+          <div className="fixed inset-0 bg-gray-15 bg-opacity-50" />
         </Transition.Child>
         <div className="h-16 flex-shrink-0" aria-hidden="true" ref={ref}></div>
         <Transition.Child
