@@ -3066,10 +3066,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         )}
 
         {/* Main Content */}
-        <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8">
+        <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8 relative">
           {/* View Tabs - LEGACY UI PATTERN WITH GRADIENT TEXT */}
           {/* Order: Feed, Dashboard, Users first, then rest */}
-          <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+          {/* Added backdrop-blur and bg-black/50 for readability on any cover image */}
+          <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide py-3 px-4 backdrop-blur-md bg-black/60 rounded-xl shadow-lg border border-white/10">
             <Button
               variant="ghost"
               onClick={() => router.push('/dex/feed', undefined, { shallow: false })}
