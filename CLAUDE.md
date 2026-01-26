@@ -1,8 +1,23 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 24, 2026 (Video Thumbnail OG Previews)
+**Last Updated:** January 25, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
+
+---
+
+## CURRENT SESSION (Jan 25, 2026)
+
+**Environment:** Remote ttyd terminal via Cloudflare tunnel
+**Device:** iPhone 14 Pro Max
+**Working Dir:** `/Users/soundchain/soundchain`
+**Branch:** production (clean)
+
+**Session Notes:**
+- Connected via ttyd - sessions may drop, save work frequently
+- Working remotely on iPhone 14 Pro Max - expect typos, keep responses concise
+- Completed NFT minting flow diagnostic - Polygon works, ZetaChain needs deployment
+- Next: Test Polygon mint, then deploy ZetaChain contracts when ready
 
 ---
 
@@ -277,6 +292,28 @@ const captureVideoThumbnail = (videoFile: File): Promise<Blob | null> => {
 }
 ```
 **Commit:** `0f264563d`
+
+### 21. Form Inputs White Box/White Text (Jan 25, 2026)
+**Symptom:** Description and Utility textareas in TrackMetadataForm show white boxes with white text on both iOS and desktop
+**Root Cause:** `@tailwindcss/forms` plugin in tailwind.config.js sets default white backgrounds on form elements with high specificity, overriding component styles
+**Fix:**
+- Changed component bg from `bg-black/30 backdrop-blur-sm` to `bg-gray-900` (solid dark)
+- Added global CSS override in globals.css with `!important` to force dark backgrounds
+**Files:**
+- `web/src/components/TextareaField.tsx` - Solid bg-gray-900
+- `web/src/components/InputField.tsx` - Solid bg-gray-900
+- `web/src/styles/globals.css` - Global override for input/textarea/select
+**Key Code:**
+```css
+/* Override @tailwindcss/forms white backgrounds */
+input, textarea, select {
+  background-color: #111827 !important;
+  color: white !important;
+  -webkit-text-fill-color: white !important;
+}
+```
+**Don't Do This:** Use translucent backgrounds (`bg-black/30`) with `@tailwindcss/forms` plugin - it will show white through
+**Commits:** `c1d132bb2`, `3800eca84`
 
 ---
 
@@ -713,6 +750,8 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 22, 2026 | **SoundChain Bridge app**, Mobile player crash fix, Geohash precision fix | fce2b1e5f+ |
 | Jan 23, 2026 | **Multi-Chain EVM Support** - Network switcher, balance viewing across chains | PR #1179, d6bc95ee2 |
 | Jan 24, 2026 | **Video Thumbnail OG Previews** - Canvas frame capture for share link images | 0f264563d |
+| Jan 25, 2026 | **NFT Minting Flow Diagnostic** - Full audit of mint/marketplace/ZetaChain status | - |
+| Jan 25, 2026 | **Form Input White Box Fix** - Override @tailwindcss/forms for dark backgrounds | c1d132bb2, 3800eca84 |
 
 ---
 
@@ -800,6 +839,120 @@ yarn add @magic-ext/solana @solana/web3.js
 ```
 NEXT_PUBLIC_SOLANA_RPC=https://api.mainnet-beta.solana.com
 ```
+
+---
+
+## NFT MINTING FLOW DIAGNOSTIC (Jan 25, 2026)
+
+### Status: FUNCTIONAL on Polygon
+
+**Full minting flow works:**
+```
+Upload → IPFS Pin → createEdition() → mintNftTokensToEdition() → MongoDB sync
+           ↓              ↓                    ↓
+        Pinata      Polygon TX          BlockchainWatcher
+```
+
+### Key Files
+
+| Layer | File | Status |
+|-------|------|--------|
+| **Frontend** | `web/src/components/modals/CreateModal.tsx` | ✅ Working |
+| **Blockchain Hook** | `web/src/hooks/useBlockchainV2.ts` | ✅ Working |
+| **Magic Wallet** | `web/src/hooks/useMagicContext.tsx` | ✅ PROTECTED |
+| **API Service** | `api/src/services/TrackService.ts` | ✅ Working |
+| **Edition Service** | `api/src/services/TrackEditionService.ts` | ✅ Working |
+| **SCid Rewards** | `api/src/services/SCidService.ts` | ✅ PROTECTED |
+| **Contract** | `Soundchain721Editions.sol` | ✅ Deployed |
+
+### Magic Wallet Sync: WORKING
+
+- OAuth login → Magic creates wallet automatically
+- `magicWalletAddress` stored in MongoDB user profile
+- Also checks: `googleWalletAddress`, `discordWalletAddress`, `twitchWalletAddress`
+- Web3 provider from Magic SDK signs all NFT transactions
+
+### Marketplace Purchase Flow: WORKING (Polygon Only)
+
+```
+buy-now.tsx → useBlockchainV2.buyItem() → Polygon TX → BlockchainWatcher → MongoDB sync
+```
+
+**Supported payments:** MATIC + OGUN (2 of 24 tokens - others pending wallet addresses)
+
+### ZetaChain Contracts: WRITTEN, NOT DEPLOYED
+
+| Contract | Lines | Location | Ready |
+|----------|-------|----------|-------|
+| `SoundchainOmnichain.sol` | 416 | soundchain-contracts/ | ✅ Compiled |
+| `SoundchainFeeCollector.sol` | 354 | soundchain-contracts/ | ✅ Compiled |
+| `SoundchainNFTBridge.sol` | 424 | soundchain-contracts/ | ✅ Compiled |
+| `OmnichainRouter.sol` | 651 | soundchain-contracts/ | ✅ Compiled |
+
+**Deployment blocker:** Need real Gnosis Safe address in `.env`:
+```bash
+# In soundchain-contracts/.env
+GNOSIS_SAFE=0x0000000000000000000000000000000000000000  # ⚠️ PLACEHOLDER - REPLACE!
+```
+
+### ZetaChain Deployment Steps
+
+**1. Set env vars:**
+```bash
+cd /Users/soundchain/soundchain/soundchain-contracts
+# Edit .env:
+PRIVATE_KEY=<deployer_key_with_gas>
+GNOSIS_SAFE=0xa117469560089210e2d298780a95ace536c59ae9  # Your vault
+```
+
+**2. Deploy order:**
+```bash
+# Test on testnet first
+npx hardhat run scripts/deployOmnichain.ts --network amoy
+
+# Then mainnet
+npx hardhat run scripts/deployOmnichain.ts --network polygon
+npx hardhat run scripts/deployOmnichain.ts --network zetachain
+npx hardhat run scripts/deployOmnichain.ts --network ethereum
+```
+
+**3. After deploy, add to web/.env:**
+```bash
+NEXT_PUBLIC_FEE_COLLECTOR_137=0x...
+NEXT_PUBLIC_OMNICHAIN_7000=0x...
+NEXT_PUBLIC_NFT_BRIDGE_137=0x...
+```
+
+### Marketplace Gaps
+
+| Gap | Impact | Fix |
+|-----|--------|-----|
+| CrossChainPurchase returns `null` | No omnichain buys | Deploy ZetaChain contracts |
+| Only 2/24 tokens work | Limited payment options | Add token addresses to Gnosis vault |
+| No escrow contracts | Race condition risk | Future improvement |
+
+### Supported Networks (23 chains declared)
+
+| Category | Networks |
+|----------|----------|
+| Layer 1 | Ethereum, Polygon, Avalanche |
+| Layer 2 | Arbitrum, Optimism, Base, Blast |
+| Omnichain | ZetaChain (7000) |
+| Specialized | Abstract, ApeChain, Berachain, Flow, Ronin, Sei, Zora, + more |
+
+### Token Support Status
+
+**Working (2):** MATIC, OGUN
+**Declared (22 more):** PENGU, ETH, USDC, USDT, SOL, BNB, DOGE, BONK, MEATEOR, PEPE, BASE, XTZ, AVAX, SHIB, XRP, SUI, HBAR, LINK, LTC, ZETA, BTC, YZY
+
+**Blocker:** Need wallet addresses for remaining 22 tokens in Gnosis vault
+
+### Quick Wins
+
+1. ✅ Test Polygon mint now - flow is complete
+2. Add Gnosis Safe address to deployment config
+3. Deploy to Amoy testnet first before mainnet
+4. Add remaining 22 token addresses as gathered
 
 ---
 
