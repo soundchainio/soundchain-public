@@ -509,6 +509,10 @@ export const CreateModal = () => {
           })
         }
 
+        // Brief pause to let RPC rate limits recover after IPFS pinning
+        setMintingState('Preparing blockchain transaction...')
+        await sleep(3000)
+
         setMintingState('Minting Edition')
 
         // Wrap with retry for RPC rate limiting
