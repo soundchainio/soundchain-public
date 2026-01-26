@@ -33,15 +33,19 @@
 
 ### Platform Fee Structure (Jan 26, 2026)
 
-SoundChain uses two different fee structures:
+**SoundChain charges 0.05% on ALL transactions:**
 
-| Action | Fee Type | Amount | Notes |
-|--------|----------|--------|-------|
-| NFT Minting | Flat fee | 0.01 POL per NFT | No sale price to calculate % from |
-| Marketplace Sales | Percentage | 0.05% of sale price | Applied when NFT is sold |
-| SCid-only Upload | FREE | $0 | No wallet needed |
+| Action | Fee Calculation | Example |
+|--------|-----------------|---------|
+| NFT Minting | 0.05% × Estimated Gas Cost | Gas: 0.1 POL → Fee: 0.00005 POL |
+| Marketplace Sales | 0.05% × Sale Price | Sale: 100 POL → Fee: 0.05 POL |
+| SCid-only Upload | FREE | $0 (no wallet needed) |
 
-**Why 0.01 POL for minting?** Since minting has no purchase price, we can't calculate 0.05%. The flat fee (≈$0.01 USD) is reasonable for Polygon and much lower than traditional DSPs (15-30%).
+**Why 0.05% of gas cost for minting?**
+- Consistent percentage model across all transactions (VC-friendly)
+- Fee scales with actual cost (more editions = higher gas = proportional fee)
+- Transparent calculation shown in UI: "Platform Fee (0.05% of gas)"
+- Much lower than traditional DSPs (15-30%)
 
 ### Upload Tiers & OGUN Rewards
 
@@ -69,9 +73,23 @@ SoundChain uses two different fee structures:
 
 **Environment Variables:**
 ```env
-NEXT_PUBLIC_SOUNDCHAIN_FEE="0.0005"        # 0.05% for marketplace sales
-NEXT_PUBLIC_MINT_FEE_PER_NFT="0.01"        # 0.01 POL flat fee per NFT mint
+NEXT_PUBLIC_SOUNDCHAIN_FEE="0.0005"        # 0.05% platform fee rate
 NEXT_PUBLIC_SOUNDCHAIN_TREASURY="0x..."    # Treasury/Gnosis Safe address
+```
+
+**Fee Calculation (Minting):**
+```typescript
+// In CreateModal.tsx
+const estimatedGas = 65000 + (editionQuantity * 55000)  // createEdition + mint per NFT
+const gasCostPol = estimatedGas * gasPrice  // in POL
+const platformFee = gasCostPol * 0.0005     // 0.05% of gas cost
+```
+
+**Fee Display (TrackMetadataForm.tsx):**
+```
+Est. Gas Fee (2 NFTs):     0.1234 POL
+Platform Fee (0.05% of gas): 0.000062 POL
+Total Est. Cost:           0.1235 POL
 ```
 
 **Commits:**
