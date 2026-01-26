@@ -1,23 +1,27 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 25, 2026
+**Last Updated:** January 26, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
 ---
 
-## CURRENT SESSION (Jan 25, 2026)
+## CURRENT SESSION (Jan 26, 2026)
 
-**Environment:** Remote ttyd terminal via Cloudflare tunnel
-**Device:** iPhone 14 Pro Max
+**Environment:** Remote code-server (VSCode in browser) via Cloudflare tunnel
+**Device:** iPhone 14 Pro Max (mobile remote dev)
 **Working Dir:** `/Users/soundchain/soundchain`
 **Branch:** production (clean)
 
+**Remote Access URLs:**
+- **VSCode (code-server):** Cloudflare tunnel to port 8080 (full paste support!)
+- **Terminal (ttyd):** Cloudflare tunnel to port 7681 (backup, no paste)
+- Keep-alive script: `/tmp/keep-tunnel-alive.sh` - auto-restarts if anything dies
+
 **Session Notes:**
-- Connected via ttyd - sessions may drop, save work frequently
-- Working remotely on iPhone 14 Pro Max - expect typos, keep responses concise
-- Completed NFT minting flow diagnostic - Polygon works, ZetaChain needs deployment
-- Next: Test Polygon mint, then deploy ZetaChain contracts when ready
+- Set up code-server for better mobile dev experience (paste works!)
+- Fixed form input styling, Polygon icon sizing, profile header contrast
+- Working remotely on iPhone - use code-server URL for best experience
 
 ---
 
@@ -293,27 +297,60 @@ const captureVideoThumbnail = (videoFile: File): Promise<Blob | null> => {
 ```
 **Commit:** `0f264563d`
 
-### 21. Form Inputs White Box/White Text (Jan 25, 2026)
-**Symptom:** Description and Utility textareas in TrackMetadataForm show white boxes with white text on both iOS and desktop
-**Root Cause:** `@tailwindcss/forms` plugin in tailwind.config.js sets default white backgrounds on form elements with high specificity, overriding component styles
-**Fix:**
-- Changed component bg from `bg-black/30 backdrop-blur-sm` to `bg-gray-900` (solid dark)
-- Added global CSS override in globals.css with `!important` to force dark backgrounds
+### 21. Form Inputs White Box/White Text (Jan 25-26, 2026)
+**Symptom:** Description and Utility textareas show white boxes with white text, AND inner box-within-box effect
+**Root Cause:**
+1. `@tailwindcss/forms` plugin overrides dark backgrounds with high specificity
+2. Container and input had different background colors creating nested box effect
+**Fix (Jan 26 - Final):**
+- Reverted to legacy `bg-gray-1A` styling (defined in tailwind.config.js as `#1A1A1A`)
+- Both container AND input use same `bg-gray-1A` for seamless appearance
+- Updated globals.css to use `inherit` instead of fixed colors
 **Files:**
-- `web/src/components/TextareaField.tsx` - Solid bg-gray-900
-- `web/src/components/InputField.tsx` - Solid bg-gray-900
-- `web/src/styles/globals.css` - Global override for input/textarea/select
+- `web/src/components/TextareaField.tsx` - Use `bg-gray-1A` for container and textarea
+- `web/src/components/InputField.tsx` - Use `bg-gray-1A` for container and input
+- `web/src/styles/globals.css` - Use `inherit` for form element backgrounds
 **Key Code:**
 ```css
-/* Override @tailwindcss/forms white backgrounds */
+/* Override @tailwindcss/forms - use inherit to respect component styles */
 input, textarea, select {
-  background-color: #111827 !important;
-  color: white !important;
-  -webkit-text-fill-color: white !important;
+  background-color: inherit !important;
+  color: inherit !important;
 }
 ```
-**Don't Do This:** Use translucent backgrounds (`bg-black/30`) with `@tailwindcss/forms` plugin - it will show white through
-**Commits:** `c1d132bb2`, `3800eca84`
+**Don't Do This:**
+- Don't use different bg colors for container vs input (causes inner box effect)
+- Don't use translucent backgrounds (`bg-black/30`) with `@tailwindcss/forms`
+**Commits:** `c1d132bb2`, `3800eca84`, `9db9413e2`
+
+### 22. Oversized Polygon Icon in Mint Section (Jan 26, 2026)
+**Symptom:** Huge Polygon logo fills half the screen in mint gas fee section
+**Root Cause:** `MaticIcon` SVG had no size constraints - just `className="inline"` with no width/height
+**Fix:** Added explicit `w-4 h-4` (16px) size constraints to all MaticIcon usages
+**File:** `web/src/components/Matic.tsx`
+**Key Code:**
+```tsx
+// Before - no size constraint, SVG fills container
+<MaticIcon className="inline" />
+
+// After - explicit 16px size
+<MaticIcon className="w-4 h-4 inline-block flex-shrink-0" />
+```
+**Don't Do This:** Use SVG icons without explicit size constraints - they'll fill their container
+**Commit:** `d26409621`
+
+### 23. Profile Header Text Unreadable on Cover Images (Jan 26, 2026)
+**Symptom:** Username, bio, and stats text blends into light/colorful cover images
+**Root Cause:** Profile content overlays cover image without sufficient contrast
+**Fix:** Added multiple layers of contrast protection:
+1. Dark gradient overlay `bg-gradient-to-b from-black/60 via-black/40 to-transparent`
+2. Backdrop blur + `bg-black/30` on profile info container
+3. Text shadows on username, handle, bio (`textShadow: '0 2px 4px rgba(0,0,0,0.8)'`)
+4. Backdrop blur + `bg-black/40` on stat boxes
+5. Back button gets `backdrop-blur-sm bg-black/30`
+**File:** `web/src/pages/dex/[...slug].tsx` (profile view section ~line 6162)
+**Don't Do This:** Place text directly over user-uploaded images without contrast protection
+**Commit:** `57caa5790`
 
 ---
 
@@ -752,6 +789,10 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 24, 2026 | **Video Thumbnail OG Previews** - Canvas frame capture for share link images | 0f264563d |
 | Jan 25, 2026 | **NFT Minting Flow Diagnostic** - Full audit of mint/marketplace/ZetaChain status | - |
 | Jan 25, 2026 | **Form Input White Box Fix** - Override @tailwindcss/forms for dark backgrounds | c1d132bb2, 3800eca84 |
+| Jan 26, 2026 | **Remote Dev Setup** - code-server (VSCode in browser) via Cloudflare tunnel | - |
+| Jan 26, 2026 | **Form Input Inner Box Fix** - Reverted to legacy bg-gray-1A styling | 9db9413e2 |
+| Jan 26, 2026 | **Polygon Icon Scale Fix** - Added w-4 h-4 constraints to MaticIcon | d26409621 |
+| Jan 26, 2026 | **Profile Header Contrast** - Dark backdrop + text shadows for cover images | 57caa5790 |
 
 ---
 
