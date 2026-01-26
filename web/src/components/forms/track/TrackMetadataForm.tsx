@@ -425,9 +425,14 @@ function InnerForm(props: InnerFormProps) {
               {(parseFloat(maxMintGasFee || '0') + (values.editionQuantity * config.mintFeePerNft)).toFixed(4)} POL
             </span>
           </div>
-          <p className="text-xxs text-gray-500 mt-1">
-            Platform fee supports OGUN rewards you receive for minting
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-xxs text-gray-500">
+              Platform fee supports OGUN rewards
+            </p>
+            <span className="text-xxs text-yellow-400 font-bold">
+              2x OGUN vs SCid-only
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Button

@@ -659,9 +659,17 @@ export const CreateModal = () => {
           </div>
         ) : (
           <div className="p-4">
-            <p className="mb-4 text-center text-sm text-gray-400">
-              Upload music without a wallet. Get an SCid certificate as proof of ownership.
-            </p>
+            <div className="mb-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+              <p className="text-center text-sm text-green-400 font-bold mb-1">
+                FREE Upload
+              </p>
+              <p className="text-center text-xs text-gray-400">
+                No wallet needed. Get an SCid certificate as proof of ownership.
+              </p>
+              <p className="text-center text-xs text-gray-500 mt-2">
+                Earns OGUN rewards • NFT mints earn 2x rewards
+              </p>
+            </div>
             <SimpleTrackUploadForm
               onUploadAudio={handleScidUploadAudio}
               onUploadArtwork={handleScidUploadArtwork}
