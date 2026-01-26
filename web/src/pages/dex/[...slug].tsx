@@ -30,6 +30,7 @@ import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
 import { ChainSwitcher } from 'components/dex/ChainSwitcher'
+import { WalletSelector } from 'components/waveform/WalletSelector'
 import { MultiChainProvider, useMultiChain } from 'contexts/MultiChainContext'
 import { WalletConnectButton } from 'components/dex/WalletConnectButton'
 import { GenreSection } from 'components/dex/GenreSection'
@@ -4423,6 +4424,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {selectedView === 'wallet' && (
             <MultiChainProvider walletAddress={userWallet}>
             <div className="space-y-6">
+              {/* Wallet Selector - Legacy-style dropdown to switch wallets */}
+              <WalletSelector
+                className="mb-2"
+                showOgun={true}
+                onWalletChange={(address, walletType) => {
+                  console.log('🔄 Wallet changed:', { address, walletType })
+                  // Wallet change is handled internally by WalletSelector + GraphQL mutation
+                }}
+              />
+
               {/* EVM Network Switcher */}
               <Card className="retro-card p-4">
                 <div className="flex items-center justify-between mb-3">

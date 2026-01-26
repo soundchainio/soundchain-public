@@ -10,6 +10,8 @@
  * - Coinbase Wallet - Extension + Mobile
  * - WalletConnect - 300+ mobile wallets (Rainbow, Trust, etc.)
  * - Phantom - Solana (coming soon)
+ *
+ * Integrates with UnifiedWalletContext for global state management.
  */
 
 import { useState, useCallback, useEffect } from 'react'
@@ -23,6 +25,7 @@ import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
 import { Ogun } from '../Ogun'
 import { ChevronDown, Check, Loader2, Plus, X, Wallet, ExternalLink, Copy } from 'lucide-react'
 import Web3 from 'web3'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 
 // Wallet type definitions
 type WalletType = 'soundchain' | 'metamask' | 'coinbase' | 'walletconnect' | 'phantom'
@@ -90,6 +93,14 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
   const { account: magicAccount, balance: magicBalance, ogunBalance: magicOgunBalance } = useMagicContext()
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation()
 
+  // Unified wallet context for global state sync
+  const {
+    setDirectConnection,
+    switchToMagic,
+    activeWalletType: unifiedActiveType,
+    activeAddress: unifiedActiveAddress,
+  } = useUnifiedWallet()
+
   // Connected external wallets
   const [externalWallets, setExternalWallets] = useState<ConnectedWalletInfo[]>([])
   const [selectedWallet, setSelectedWallet] = useState<WalletType>('soundchain')
@@ -98,6 +109,21 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
   const [isConnecting, setIsConnecting] = useState<WalletType | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Sync with UnifiedWalletContext
+  useEffect(() => {
+    if (unifiedActiveType === 'magic') {
+      setSelectedWallet('soundchain')
+    } else if (unifiedActiveType === 'metamask') {
+      setSelectedWallet('metamask')
+    } else if (unifiedActiveType === 'direct' && unifiedActiveAddress) {
+      // External wallet connected via WalletConnectButton
+      const existingWallet = externalWallets.find(w => w.address.toLowerCase() === unifiedActiveAddress.toLowerCase())
+      if (existingWallet) {
+        setSelectedWallet(existingWallet.type)
+      }
+    }
+  }, [unifiedActiveType, unifiedActiveAddress, externalWallets])
 
   // Copy wallet address to clipboard
   const copyAddress = useCallback((address: string, e: React.MouseEvent) => {
@@ -140,8 +166,21 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     // Update backend preference
     if (type === 'soundchain') {
       updateDefaultWallet({ variables: { input: { defaultWallet: DefaultWallet.Soundchain } } })
+      // Sync with UnifiedWalletContext
+      switchToMagic()
     } else if (type === 'metamask') {
       updateDefaultWallet({ variables: { input: { defaultWallet: DefaultWallet.MetaMask } } })
+      // Sync with UnifiedWalletContext - find the MetaMask wallet info
+      const mmWallet = externalWallets.find(w => w.type === 'metamask')
+      if (mmWallet) {
+        setDirectConnection(mmWallet.address, 'metamask', mmWallet.chainId)
+      }
+    } else {
+      // For other wallets (Coinbase, WalletConnect, Phantom), sync to context
+      const extWallet = externalWallets.find(w => w.type === type)
+      if (extWallet) {
+        setDirectConnection(extWallet.address, type, extWallet.chainId)
+      }
     }
 
     // Notify parent
@@ -151,7 +190,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     if (wallet && onWalletChange) {
       onWalletChange(wallet.address, type)
     }
-  }, [magicAccount, externalWallets, updateDefaultWallet, onWalletChange])
+  }, [magicAccount, externalWallets, updateDefaultWallet, onWalletChange, switchToMagic, setDirectConnection])
 
   // Connect MetaMask
   const connectMetaMask = useCallback(async () => {
@@ -187,11 +226,18 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       setSelectedWallet('metamask')
       setShowConnectMenu(false)
 
+      // Sync with UnifiedWalletContext for global state
+      setDirectConnection(accounts[0], 'metamask', chainId)
+
       // Listen for changes
       window.ethereum.on('accountsChanged', (newAccounts: string[]) => {
         if (newAccounts.length === 0) {
           setExternalWallets(prev => prev.filter(w => w.type !== 'metamask'))
           setSelectedWallet('soundchain')
+          switchToMagic() // Switch back to Magic wallet
+        } else {
+          // Update with new account
+          setDirectConnection(newAccounts[0], 'metamask', chainId)
         }
       })
     } catch (err: any) {
@@ -199,7 +245,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     } finally {
       setIsConnecting(null)
     }
-  }, [])
+  }, [setDirectConnection, switchToMagic])
 
   // Connect Coinbase Wallet
   const connectCoinbase = useCallback(async () => {
@@ -233,6 +279,8 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
         })
         setSelectedWallet('coinbase')
         setShowConnectMenu(false)
+        // Sync with UnifiedWalletContext
+        setDirectConnection(accounts[0], 'coinbase', chainId)
       } else {
         // Use Coinbase Wallet SDK for mobile
         const { CoinbaseWalletSDK } = await import('@coinbase/wallet-sdk')
@@ -261,15 +309,17 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
         })
         setSelectedWallet('coinbase')
         setShowConnectMenu(false)
+        // Sync with UnifiedWalletContext
+        setDirectConnection(accounts[0], 'coinbase', chainId)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to connect Coinbase')
     } finally {
       setIsConnecting(null)
     }
-  }, [])
+  }, [setDirectConnection])
 
-  // Connect WalletConnect
+  // Connect WalletConnect (Rainbow, Trust, 300+ wallets)
   const connectWalletConnect = useCallback(async () => {
     setIsConnecting('walletconnect')
     setError(null)
@@ -282,7 +332,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       const provider = await EthereumProvider.init({
         projectId,
         chains: [137],
-        optionalChains: [1, 8453, 42161, 7000],
+        optionalChains: [1, 8453, 42161, 7000], // Polygon, Ethereum, Base, Arbitrum, ZetaChain
         showQrModal: true,
         metadata: {
           name: 'SoundChain',
@@ -316,9 +366,13 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       setSelectedWallet('walletconnect')
       setShowConnectMenu(false)
 
+      // Sync with UnifiedWalletContext
+      setDirectConnection(accounts[0], 'walletconnect', chainId)
+
       provider.on('disconnect', () => {
         setExternalWallets(prev => prev.filter(w => w.type !== 'walletconnect'))
         setSelectedWallet('soundchain')
+        switchToMagic() // Switch back to Magic wallet
       })
     } catch (err: any) {
       if (!err.message?.includes('User rejected')) {
@@ -327,7 +381,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     } finally {
       setIsConnecting(null)
     }
-  }, [])
+  }, [setDirectConnection, switchToMagic])
 
   // Connect Phantom (Solana)
   const connectPhantom = useCallback(async () => {
@@ -359,24 +413,29 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       setSelectedWallet('phantom')
       setShowConnectMenu(false)
 
+      // Sync with UnifiedWalletContext (Solana uses chainId -1)
+      setDirectConnection(address, 'phantom', -1)
+
       phantom.on('disconnect', () => {
         setExternalWallets(prev => prev.filter(w => w.type !== 'phantom'))
         setSelectedWallet('soundchain')
+        switchToMagic() // Switch back to Magic wallet
       })
     } catch (err: any) {
       setError(err.message || 'Failed to connect Phantom')
     } finally {
       setIsConnecting(null)
     }
-  }, [])
+  }, [setDirectConnection, switchToMagic])
 
   // Disconnect a wallet
   const disconnectWallet = useCallback((type: WalletType) => {
     setExternalWallets(prev => prev.filter(w => w.type !== type))
     if (selectedWallet === type) {
       setSelectedWallet('soundchain')
+      switchToMagic() // Switch back to Magic wallet in context
     }
-  }, [selectedWallet])
+  }, [selectedWallet, switchToMagic])
 
   // Format address
   const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
