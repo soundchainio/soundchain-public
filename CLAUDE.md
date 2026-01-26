@@ -50,7 +50,21 @@
 - Consistent 0.05% across ALL costs (VC-friendly revenue model)
 - Fee scales with transaction value AND complexity
 - Transparent calculation shown in UI
-- Much lower than traditional DSPs (15-30%)
+
+**Competitive Comparison (Marketplace Fees):**
+
+| Platform | Fee | vs SoundChain |
+|----------|-----|---------------|
+| **SoundChain** | **0.10%** (0.05% sale + 0.05% gas) | — |
+| OpenSea | 2.5% | 25x higher |
+| Rarible | 2.5% | 25x higher |
+| Foundation | 5% | 50x higher |
+| SuperRare | 3% + 15% (first sale) | 30-180x higher |
+| LooksRare | 2% | 20x higher |
+| Blur | 0.5% | 5x higher |
+| Spotify/Apple | 15-30% | 150-300x higher |
+
+**SoundChain is the lowest-fee music NFT marketplace in Web3.**
 
 ### Upload Tiers & OGUN Rewards
 
