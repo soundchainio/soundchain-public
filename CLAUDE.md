@@ -31,26 +31,52 @@
   - **Added 0.05% platform fee on minting** (0.01 POL per NFT)
   - **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
 
-### Platform Fee Implementation (Jan 26, 2026)
-**Why:** Users receive OGUN rewards for minting via SCid system. Platform fee (0.01 POL/NFT) is much lower than traditional DSPs (15-30%).
+### Platform Fee Structure (Jan 26, 2026)
+
+SoundChain uses two different fee structures:
+
+| Action | Fee Type | Amount | Notes |
+|--------|----------|--------|-------|
+| NFT Minting | Flat fee | 0.01 POL per NFT | No sale price to calculate % from |
+| Marketplace Sales | Percentage | 0.05% of sale price | Applied when NFT is sold |
+| SCid-only Upload | FREE | $0 | No wallet needed |
+
+**Why 0.01 POL for minting?** Since minting has no purchase price, we can't calculate 0.05%. The flat fee (≈$0.01 USD) is reasonable for Polygon and much lower than traditional DSPs (15-30%).
+
+### Upload Tiers & OGUN Rewards
+
+| Tier | Cost | What You Get | OGUN Rewards |
+|------|------|--------------|--------------|
+| **SCid-only** | FREE | SCid certificate (save to device) | 1x streaming rewards |
+| **NFT Mint** | 0.01 POL/NFT + gas | NFT + SCid certificate | **2x streaming rewards** |
+
+**Win-Win Model:** Both tiers earn OGUN rewards from streams. NFT mints cost more but earn double rewards.
+
+### Implementation Details
 
 **Files Modified:**
-- `web/src/config.ts` - Added `mintFeePerNft` and `treasuryAddress` config
-- `web/src/components/forms/track/TrackMetadataForm.tsx` - Shows fee breakdown in UI
-- `web/src/components/modals/CreateModal.tsx` - Collects fee before minting
-- `web/.env.local` - Added `NEXT_PUBLIC_MINT_FEE_PER_NFT` and `NEXT_PUBLIC_SOUNDCHAIN_TREASURY`
+- `web/src/config.ts` - Added `mintFeePerNft`, `treasuryAddress`, `soundchainFee`
+- `web/src/components/forms/track/TrackMetadataForm.tsx` - Shows fee breakdown + reward multiplier
+- `web/src/components/modals/CreateModal.tsx` - Collects fee before minting, SCid tab shows "FREE"
+- `web/.env.local` - Environment variables
 
-**Fee Flow:**
+**Fee Collection Flow (NFT Mint):**
 1. User sees total cost (Gas + Platform Fee) in mint form
-2. Before minting, platform fee sent to treasury address
-3. If fee rejected, minting stops (user must approve)
-4. Fee supports OGUN rewards distribution
+2. User sees "2x OGUN vs SCid-only" indicator
+3. Before minting, platform fee sent to treasury address
+4. If fee rejected, minting stops (user must approve)
+5. Fee supports OGUN rewards distribution
 
 **Environment Variables:**
 ```env
-NEXT_PUBLIC_MINT_FEE_PER_NFT="0.01"  # 0.01 POL per NFT
-NEXT_PUBLIC_SOUNDCHAIN_TREASURY="0x..."  # Treasury/Gnosis Safe address
+NEXT_PUBLIC_SOUNDCHAIN_FEE="0.0005"        # 0.05% for marketplace sales
+NEXT_PUBLIC_MINT_FEE_PER_NFT="0.01"        # 0.01 POL flat fee per NFT mint
+NEXT_PUBLIC_SOUNDCHAIN_TREASURY="0x..."    # Treasury/Gnosis Safe address
 ```
+
+**Commits:**
+- `0e9be0008` - Platform fee implementation
+- `ed2619078` - SCid-free vs NFT-paid reward tier UI
 
 ---
 
