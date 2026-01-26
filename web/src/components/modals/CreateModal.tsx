@@ -39,6 +39,40 @@ import { MintingDone } from './MintingDone'
 
 export const BATCH_SIZE = 120
 
+// Retry utility for RPC rate limiting
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+const isRateLimitError = (error: any): boolean => {
+  const errorStr = error?.message || error?.toString() || ''
+  return errorStr.includes('rate limit') ||
+         errorStr.includes('Too many requests') ||
+         errorStr.includes('429') ||
+         errorStr.includes('-32603')
+}
+
+const withRetry = async <T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  initialDelayMs = 10000
+): Promise<T> => {
+  let lastError: any
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error
+      if (isRateLimitError(error) && attempt < maxRetries) {
+        const delay = initialDelayMs * Math.pow(2, attempt) // Exponential backoff
+        console.log(`Rate limited, retrying in ${delay/1000}s (attempt ${attempt + 1}/${maxRetries})`)
+        await sleep(delay)
+      } else {
+        throw error
+      }
+    }
+  }
+  throw lastError
+}
+
 enum Tabs {
   NFT = 'NFT',
   SCID = 'SCid',
@@ -335,7 +369,13 @@ export const CreateModal = () => {
         const onError = (cause: Error) => {
           console.error('Error on minting', cause)
           setTransactionHash(undefined)
-          setMintingState('There was an error while minting your NFT')
+          // Check if it's a rate limit error
+          const errorStr = cause?.message || cause?.toString() || ''
+          if (errorStr.includes('rate limit') || errorStr.includes('Too many requests')) {
+            setMintingState('Rate limited by RPC. Please wait 30 seconds and try again.')
+          } else {
+            setMintingState('There was an error while minting your NFT')
+          }
           setMintError(true)
         }
 
@@ -471,14 +511,20 @@ export const CreateModal = () => {
 
         setMintingState('Minting Edition')
 
-        const [editionNumber, trackEditionId, trackEditionTransactionHash] = await createAndMintEdition()
+        // Wrap with retry for RPC rate limiting
+        const [editionNumber, trackEditionId, trackEditionTransactionHash] = await withRetry(
+          () => createAndMintEdition(),
+          3,
+          10000
+        )
 
         let quantityLeft = values.editionQuantity
         const promises = []
         for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
           nonce = BigInt(await web3?.eth.getTransactionCount(account)) // Update nonce for each batch
           const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE
-          promises.push(createAndMintTracks(quantity, editionNumber, index === 0))
+          // Wrap with retry for RPC rate limiting
+          promises.push(withRetry(() => createAndMintTracks(quantity, editionNumber, index === 0), 3, 10000))
           setMintingState('Minting NFT')
 
           quantityLeft = quantityLeft - BATCH_SIZE
