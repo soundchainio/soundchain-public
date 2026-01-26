@@ -514,22 +514,12 @@ export const CreateModal = () => {
         setMintingState('Preparing blockchain transaction...')
         await sleep(3000)
 
-        // Estimate gas cost for minting, then calculate 0.05% platform fee
-        setMintingState('Calculating platform fee...')
-        const gasPriceWei = await web3.eth.getGasPrice()
-        const gasPrice = Math.floor(Number(gasPriceWei) * 1.2) // 20% buffer
-
-        // Estimate gas for edition creation + minting
-        const estimatedGas = 65000 + (values.editionQuantity * 55000) // createEdition + mint per NFT
-        const estimatedGasCostWei = BigInt(estimatedGas) * BigInt(gasPrice)
-        const estimatedGasCostPol = Number(web3.utils.fromWei(estimatedGasCostWei.toString(), 'ether'))
-
-        // Platform fee = 0.05% of estimated gas cost
-        const platformFee = estimatedGasCostPol * config.soundchainFee
-        console.log(`Gas cost: ${estimatedGasCostPol.toFixed(6)} POL, Platform fee (0.05%): ${platformFee.toFixed(6)} POL`)
+        // Calculate platform fee: flat fee per NFT
+        const platformFee = values.editionQuantity * config.mintFeePerNft
+        console.log(`Platform fee: ${platformFee.toFixed(4)} POL (${values.editionQuantity} NFTs × ${config.mintFeePerNft} POL)`)
 
         if (platformFee > 0 && config.treasuryAddress) {
-          setMintingState(`Collecting 0.05% platform fee (${platformFee.toFixed(6)} POL)...`)
+          setMintingState(`Collecting platform fee (${platformFee.toFixed(4)} POL)...`)
           try {
             const feeInWei = web3.utils.toWei(platformFee.toString(), 'ether')
             const gasPriceWei = await web3.eth.getGasPrice()
@@ -542,7 +532,7 @@ export const CreateModal = () => {
               gas: 21000, // Standard ETH transfer gas
               gasPrice: gasPrice.toString(),
             })
-            console.log(`Platform fee of ${platformFee.toFixed(6)} POL (0.05% of ${estimatedGasCostPol.toFixed(4)} gas) sent to treasury`)
+            console.log(`Platform fee of ${platformFee.toFixed(4)} POL sent to treasury`)
           } catch (feeError: any) {
             console.error('Platform fee collection failed:', feeError)
             // If fee collection fails, we still proceed with minting
