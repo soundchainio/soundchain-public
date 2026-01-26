@@ -1148,11 +1148,11 @@ export function ProfileHeader({
               </div>
             </div>
 
-            {/* Profile info */}
-            <div className="flex-1 space-y-4">
+            {/* Profile info - with glassmorphism for readability over cover art */}
+            <div className="flex-1 space-y-4 bg-black/60 backdrop-blur-md rounded-2xl p-4 lg:p-6 border border-white/10 shadow-xl">
               <div className="space-y-2">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="retro-title text-2xl lg:text-3xl">{userData.name}</h1>
+                  <h1 className="retro-title text-2xl lg:text-3xl drop-shadow-lg">{userData.name}</h1>
                   {userData.isVerified && (
                     <div className="w-6 h-6 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full flex items-center justify-center analog-glow">
                       <div className="w-3 h-3 bg-white rounded-full" />
@@ -1160,7 +1160,7 @@ export function ProfileHeader({
                   )}
                 </div>
                 <p className="retro-json text-sm">{userData.username}</p>
-                <p className="text-gray-300 text-sm lg:text-base max-w-md leading-relaxed">
+                <p className="text-gray-200 text-sm lg:text-base max-w-md leading-relaxed drop-shadow-md">
                   {userData.bio}
                 </p>
               </div>
