@@ -450,6 +450,29 @@ input[type='number'] {
   -moz-appearance: textfield; /* Firefox */
 }
 
+/* Override @tailwindcss/forms white backgrounds */
+input,
+textarea,
+select {
+  background-color: #111827 !important;
+  color: white !important;
+  -webkit-text-fill-color: white !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  background-color: #111827 !important;
+  color: white !important;
+  -webkit-text-fill-color: white !important;
+}
+
 .social-links div,
 .social-links div input {
   width: 100%;
