@@ -6160,12 +6160,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <>
                   {/* Profile Header - Same layout as logged-in user */}
                   <div className="relative z-10 pt-8 pb-6">
-                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
+                    {/* Dark gradient overlay for text readability on any cover image */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-transparent pointer-events-none" />
+                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 relative">
                       {/* Back Button */}
                       <Button
                         variant="ghost"
                         onClick={() => router.back()}
-                        className="mb-4 hover:bg-cyan-500/10"
+                        className="mb-4 hover:bg-cyan-500/10 backdrop-blur-sm bg-black/30"
                       >
                         <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
                         Back
@@ -6175,7 +6177,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         {/* User Profile */}
                         <div className="flex flex-col lg:flex-row gap-6 items-start">
                           <div className="relative">
-                            <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900">
+                            <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900 shadow-2xl">
                               {viewingProfile.profilePicture ? (
                                 <img
                                   src={viewingProfile.profilePicture}
@@ -6193,11 +6195,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             </div>
                           </div>
 
-                          <div className="flex-1 space-y-4">
+                          <div className="flex-1 space-y-4 backdrop-blur-sm bg-black/30 rounded-2xl p-4 -ml-2 lg:ml-0">
                             <div className="space-y-2">
                               {/* Username with inline badges */}
                               <div className="flex items-center gap-2">
-                                <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace" }}>
+                                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-lg" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace", textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                   {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
                                 </h1>
                                 {/* Team Member Badge */}
@@ -6209,22 +6211,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   <VerifiedIcon className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="Verified user" />
                                 )}
                               </div>
-                              <p className="retro-json text-sm">@{viewingProfile.userHandle || 'user'}</p>
-                              <p className="text-gray-300 text-sm max-w-md">{viewingProfile.bio || ''}</p>
+                              <p className="retro-json text-sm drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>@{viewingProfile.userHandle || 'user'}</p>
+                              <p className="text-gray-300 text-sm max-w-md drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{viewingProfile.bio || ''}</p>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
-                              <div className="metadata-section p-4 text-center">
-                                <div className="retro-text text-xl">{viewingProfileTrackCount}</div>
-                                <div className="metadata-label text-xs">Tracks</div>
+                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
+                                <div className="retro-text text-xl drop-shadow-md">{viewingProfileTrackCount}</div>
+                                <div className="metadata-label text-xs drop-shadow-sm">Tracks</div>
                               </div>
-                              <div className="metadata-section p-4 text-center">
-                                <div className="retro-text text-xl">{viewingProfile.followerCount?.toLocaleString() || 0}</div>
-                                <div className="metadata-label text-xs">Followers</div>
+                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
+                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followerCount?.toLocaleString() || 0}</div>
+                                <div className="metadata-label text-xs drop-shadow-sm">Followers</div>
                               </div>
-                              <div className="metadata-section p-4 text-center">
-                                <div className="retro-text text-xl">{viewingProfile.followingCount?.toLocaleString() || 0}</div>
-                                <div className="metadata-label text-xs">Following</div>
+                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
+                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followingCount?.toLocaleString() || 0}</div>
+                                <div className="metadata-label text-xs drop-shadow-sm">Following</div>
                               </div>
                             </div>
 
