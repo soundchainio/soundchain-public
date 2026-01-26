@@ -53,7 +53,7 @@ export default function OgunPage() {
   const provider: any = new WalletConnectProvider({
     rpc: {
       1: 'https://cloudflare-eth.com/', // https://ethereumnodes.com/
-      137: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon',
+      137: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com',
     },
   })
 
