@@ -739,10 +739,26 @@ Testing across 3 devices (iPhone Pro, iPhone 14, iPad). Results:
 
 | Contract | Address | Network | Status |
 |----------|---------|---------|--------|
+| **SoundChain Safe (Treasury)** | `0x519BED3fE32272Fa8f1AECaf86DbFbd674Ee703B` | Polygon | **FEE COLLECTION** |
 | OGUN Token | `0x45f1af89486aeec2da0b06340cd9cd3bd741a15c` | Polygon | LIVE |
 | StreamingRewardsDistributor | `0xcf9416c49D525f7a50299c71f33606A158F28546` | Polygon | Funded (5M OGUN) |
 | StakingRewards | Config address | Polygon | LIVE |
 | SCidRegistry | Deployed | Polygon | LIVE |
+
+### SoundChain Safe Treasury (Fee Collection)
+**Address:** `0x519BED3fE32272Fa8f1AECaf86DbFbd674Ee703B`
+**Polygonscan:** https://polygonscan.com/address/0x519BED3fE32272Fa8f1AECaf86DbFbd674Ee703B
+
+This is where ALL platform fees are collected from:
+- NFT Minting (0.05% of gas cost, min 0.001 POL)
+- Marketplace Sales (0.05% sale + 0.05% gas = 0.10% total)
+- Token Swaps (0.05%)
+- Staking/Unstaking (0.05%)
+- Cross-chain swaps via ZetaChain (0.05%)
+
+**24 Token Support** - Fees collected in POL from all 24 supported tokens!
+
+**CRITICAL:** Address is `519BED3fE...` NOT `519BD3fE...` (note the 'E' after 'B')
 
 ---
 
