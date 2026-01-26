@@ -69,7 +69,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone
+  Radio, MapPin, Download, Smartphone, Rss
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 
@@ -856,7 +856,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showTop100Modal, setShowTop100Modal] = useState(false)
 
   // Profile tab state (Feed | Music | Playlists)
-  const [profileTab, setProfileTab] = useState<'feed' | 'music' | 'playlists'>('feed')
+  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'playlists'>('myfeed')
 
   // Announcements state (from /v1/feed API)
   const [announcements, setAnnouncements] = useState<any[]>([])
@@ -1668,6 +1668,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     ))
   )
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
+
+  // Set default profile tab based on whether viewing own profile
+  // Own profile: default to 'myfeed', Others: default to 'posts'
+  useEffect(() => {
+    if (selectedView === 'profile') {
+      if (isViewingOwnProfile) {
+        setProfileTab('myfeed')
+      } else {
+        setProfileTab('posts')
+      }
+    }
+  }, [selectedView, isViewingOwnProfile])
+
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
     skip: shouldSkipPlaylists,
@@ -6349,16 +6362,29 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                   {/* Main Content */}
                   <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
-                    {/* Profile Tabs - Feed | Dashboard | Stake - Same as logged-in user */}
+                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Playlists */}
                     <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
+                      {/* My Feed tab - ONLY shown when viewing own profile */}
+                      {isViewingOwnProfile && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => setProfileTab('myfeed')}
+                          className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${profileTab === 'myfeed' ? 'bg-cyan-500/10' : ''}`}
+                        >
+                          <Rss className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'myfeed' ? 'text-cyan-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'myfeed' ? 'cyan-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                            My Feed
+                          </span>
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
-                        onClick={() => setProfileTab('feed')}
-                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'feed' ? 'bg-green-500/10' : ''}`}
+                        onClick={() => setProfileTab('posts')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'posts' ? 'bg-green-500/10' : ''}`}
                       >
-                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'feed' ? 'text-green-400' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'feed' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                          Feed
+                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'posts' ? 'text-green-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'posts' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Posts
                         </span>
                       </Button>
                       <Button
@@ -6385,7 +6411,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                     {/* Tab Content */}
                     <div className="min-h-[400px]">
-                      {profileTab === 'feed' && (
+                      {/* My Feed - Full social feed (posts from people you follow + your own) */}
+                      {profileTab === 'myfeed' && isViewingOwnProfile && (
+                        <Posts disableVirtualization />
+                      )}
+                      {/* Posts - Only this user's posts */}
+                      {profileTab === 'posts' && (
                         <Posts profileId={viewingProfile.id} disableVirtualization />
                       )}
                       {profileTab === 'music' && (
