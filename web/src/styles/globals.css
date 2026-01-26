@@ -452,9 +452,15 @@ input[type='number'] {
 
 /* Override @tailwindcss/forms white backgrounds */
 input,
-textarea,
 select {
   background-color: #111827 !important;
+  color: white !important;
+  -webkit-text-fill-color: white !important;
+}
+
+/* Textarea should be transparent - container has the background */
+textarea {
+  background-color: transparent !important;
   color: white !important;
   -webkit-text-fill-color: white !important;
 }
@@ -466,9 +472,14 @@ textarea::placeholder {
 }
 
 input:focus,
-textarea:focus,
 select:focus {
   background-color: #111827 !important;
+  color: white !important;
+  -webkit-text-fill-color: white !important;
+}
+
+textarea:focus {
+  background-color: transparent !important;
   color: white !important;
   -webkit-text-fill-color: white !important;
 }
