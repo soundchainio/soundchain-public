@@ -12,7 +12,7 @@ export interface BlockchainNetwork {
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
   // Use Alchemy RPC for better rate limits
-  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-mainnet.g.alchemy.com/v2/hjUDQMyFJcZP2cTLKW2iy',
+  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com',
   id: 137,
   idHex: '0x89',
   symbol: 'POL',
