@@ -171,9 +171,11 @@ function InnerForm(props: InnerFormProps) {
     }
   }
 
-  // Calculate platform fee: 0.05% of estimated gas cost
+  // Calculate platform fee: 0.05% of estimated gas cost, with minimum threshold
+  const MINIMUM_PLATFORM_FEE = 0.001 // 0.001 POL minimum (~$0.001)
   const gasCost = maxMintGasFee ? parseFloat(maxMintGasFee) : 0
-  const platformFee = gasCost * config.soundchainFee
+  const calculatedFee = gasCost * config.soundchainFee
+  const platformFee = Math.max(calculatedFee, MINIMUM_PLATFORM_FEE)
 
   useEffect(() => {
     if (balance && maxMintGasFee) {
@@ -420,9 +422,9 @@ function InnerForm(props: InnerFormProps) {
           </div>
           <div className="flex justify-between items-center text-xs">
             <span className="text-gray-400">
-              Platform Fee (0.05% of gas)
+              Platform Fee {calculatedFee < MINIMUM_PLATFORM_FEE ? '(min)' : '(0.05%)'}
             </span>
-            <span className="text-cyan-400 font-mono">{platformFee.toFixed(6)} POL</span>
+            <span className="text-cyan-400 font-mono">{platformFee.toFixed(4)} POL</span>
           </div>
           <div className="border-t border-gray-700 pt-2 flex justify-between items-center text-xs">
             <span className="text-white font-bold">Total Est. Cost</span>

@@ -523,9 +523,12 @@ export const CreateModal = () => {
         const estimatedGasCostWei = BigInt(estimatedGas) * BigInt(gasPrice)
         const estimatedGasCostPol = Number(web3.utils.fromWei(estimatedGasCostWei.toString(), 'ether'))
 
-        // Platform fee = 0.05% of estimated gas cost
-        const platformFee = estimatedGasCostPol * config.soundchainFee
-        console.log(`Gas: ${estimatedGasCostPol.toFixed(4)} POL, Platform fee (0.05%): ${platformFee.toFixed(6)} POL`)
+        // Platform fee = 0.05% of estimated gas cost, with minimum threshold
+        // Minimum fee ensures meaningful revenue even for small gas costs
+        const MINIMUM_PLATFORM_FEE = 0.001 // 0.001 POL minimum (~$0.001)
+        const calculatedFee = estimatedGasCostPol * config.soundchainFee
+        const platformFee = Math.max(calculatedFee, MINIMUM_PLATFORM_FEE)
+        console.log(`Gas: ${estimatedGasCostPol.toFixed(4)} POL, Calculated fee: ${calculatedFee.toFixed(6)}, Platform fee: ${platformFee.toFixed(6)} POL (min: ${MINIMUM_PLATFORM_FEE})`)
 
         if (platformFee > 0 && config.treasuryAddress) {
           setMintingState(`Collecting 0.05% platform fee (${platformFee.toFixed(6)} POL)...`)
