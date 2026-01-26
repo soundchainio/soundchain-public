@@ -537,11 +537,13 @@ export const CreateModal = () => {
           try {
             // Convert to wei with proper precision (avoid floating point issues)
             const feeInWei = web3.utils.toWei(platformFee.toFixed(18), 'ether')
-            console.log(`📤 Sending ${platformFee.toFixed(6)} POL (${feeInWei} wei) to treasury: ${config.treasuryAddress}`)
+            // Normalize treasury address to proper checksum format
+            const treasuryAddress = web3.utils.toChecksumAddress(config.treasuryAddress)
+            console.log(`📤 Sending ${platformFee.toFixed(6)} POL (${feeInWei} wei) to treasury: ${treasuryAddress}`)
 
             const txReceipt = await web3.eth.sendTransaction({
               from: account,
-              to: config.treasuryAddress,
+              to: treasuryAddress,
               value: feeInWei,
               gas: 21000, // Standard ETH/POL transfer gas
               gasPrice: gasPrice.toString(),
