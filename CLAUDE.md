@@ -604,7 +604,27 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 - `api/src/models/SCid.ts` - Added `streamCountCalibratedAt` field
 - `api/src/services/SCidService.ts` - Stamps calibration date on first post-fix stream
 **Don't Do This:** Log streams only on song end - users who listen 5 minutes then skip get zero credit
-**Commits:** `0ba475f9f` (frontend), pending (API)
+**Commits:** `0ba475f9f` (frontend), `edcb4bb76` (API)
+
+### 27. External Wallet Connections - Zero Balances (Jan 27, 2026)
+**Symptom:** Connecting MetaMask, Coinbase, WalletConnect, Trust, Rainbow via WalletConnectButton shows address but zero balances. Web3Modal also missing native token balance.
+**Root Cause:** UnifiedWalletContext had NO balance fetching for `direct` and `web3modal` wallet types:
+- `case 'direct':` had a comment "would require additional setup" - never implemented
+- `case 'web3modal':` only fetched OGUN, not native token (POL/ETH)
+- MetaMask `chainChanged` event did full `window.location.reload()` killing audio
+**Fix:**
+- Added public RPC map for Polygon, Ethereum, Base, Arbitrum, Optimism, ZetaChain
+- Both `direct` and `web3modal` now fetch native + OGUN balances via public RPCs
+- MetaMask chain switch now updates state in-place instead of page reload
+- WalletConnect timeout increased 15s→25s, retries 3→4 with exponential backoff
+- Connected wallet dropdown shows balance + chain name
+- Disconnect properly clears all balance state
+**Files:**
+- `web/src/contexts/UnifiedWalletContext.tsx` - Balance fetching for all wallet types
+- `web/src/components/dex/WalletConnectButton.tsx` - Balance display, timeout/retry
+- `web/src/hooks/useMetaMask.ts` - Chain switch without reload
+**Don't Do This:** Leave wallet types without balance fetching. All connected wallets must show balances.
+**Commit:** `6ad2a061e`
 
 ---
 
