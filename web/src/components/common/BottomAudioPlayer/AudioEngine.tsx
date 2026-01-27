@@ -87,6 +87,8 @@ export const AudioEngine = () => {
   })
   // Track previous song to log streams when song changes
   const previousSongRef = useRef<{ trackId: string; playStartTime: number } | null>(null)
+  // Track whether we already logged a stream for the current play session (resets on track change/loop)
+  const streamLoggedForCurrentPlay = useRef(false)
 
   const {
     currentSong,
@@ -343,28 +345,17 @@ export const AudioEngine = () => {
     }
   }, [])
 
-  // OGUN Stream Logging - Track song changes and log streams
+  // OGUN Stream Logging - Track song changes, reset stream-logged flag
   useEffect(() => {
     if (!currentSong.trackId) return
 
-    // When song changes, log the previous song's stream if played for 30+ seconds
-    if (previousSongRef.current && previousSongRef.current.trackId !== currentSong.trackId) {
-      const prevTrackId = previousSongRef.current.trackId
-      const playDuration = Math.floor((Date.now() - previousSongRef.current.playStartTime) / 1000)
-
-      if (playDuration >= 30) {
-        logStream(prevTrackId, playDuration, walletAddress || undefined)
-          .catch(err => console.warn('[OGUN] Failed to log stream:', err))
-      }
-    }
+    // Reset stream-logged flag for new track
+    streamLoggedForCurrentPlay.current = false
 
     // Start tracking new song
     previousSongRef.current = { trackId: currentSong.trackId, playStartTime: Date.now() }
     startTracking(currentSong.trackId)
-
-    // No cleanup needed - we manage state via previousSongRef
-    // and the hook's internal Map clears on unmount
-  }, [currentSong.trackId, logStream, startTracking, walletAddress])
+  }, [currentSong.trackId, startTracking])
 
   // Setup Media Session action handlers for CarPlay controls
   useEffect(() => {
@@ -509,6 +500,18 @@ export const AudioEngine = () => {
     if (audioRef.current?.currentTime) {
       setProgressState(Math.floor(audioRef.current.currentTime))
 
+      // Log stream at 30-second mark of play time
+      if (
+        !streamLoggedForCurrentPlay.current &&
+        previousSongRef.current &&
+        audioRef.current.currentTime >= 30
+      ) {
+        streamLoggedForCurrentPlay.current = true
+        const playDuration = Math.floor(audioRef.current.currentTime)
+        logStream(previousSongRef.current.trackId, playDuration, walletAddress || undefined)
+          .catch(err => console.warn('[OGUN] Failed to log stream at 30s mark:', err))
+      }
+
       // Update Media Session position state for CarPlay progress bar
       if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
         try {
@@ -531,18 +534,7 @@ export const AudioEngine = () => {
   }
 
   function handleEndedSong() {
-    // Log stream when track ends naturally (user listened to the end)
-    if (previousSongRef.current) {
-      const playDuration = Math.floor((Date.now() - previousSongRef.current.playStartTime) / 1000)
-      if (playDuration >= 30) {
-        logStream(previousSongRef.current.trackId, playDuration, walletAddress || undefined)
-          .catch(err => console.warn('[OGUN] Failed to log stream on track end:', err))
-      }
-      // Only reset if not looping one - we want to continue tracking for repeat
-      if (loopMode !== 'one') {
-        previousSongRef.current = null
-      }
-    }
+    // Stream logging happens at 30s mark in handleTimeUpdate, not here
 
     // Handle loop modes
     if (loopMode === 'one') {
@@ -550,7 +542,8 @@ export const AudioEngine = () => {
       if (audioRef.current) {
         audioRef.current.currentTime = 0
         audioRef.current.play().catch(() => {})
-        // Reset tracking for the repeat
+        // Reset stream-logged flag so the next loop iteration can log at 30s
+        streamLoggedForCurrentPlay.current = false
         previousSongRef.current = { trackId: currentSong.trackId, playStartTime: Date.now() }
       }
     } else if (loopMode === 'all') {
