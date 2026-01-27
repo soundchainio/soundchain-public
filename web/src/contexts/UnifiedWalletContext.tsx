@@ -458,6 +458,10 @@ function UnifiedWalletInner({
       activeOgunBalance = web3ModalOgunBalance
       isConnected = isWeb3ModalConnected
       chainId = web3ModalChainId || null
+      // Use injected provider for signing transactions
+      if (typeof window !== 'undefined' && (window as any).ethereum) {
+        try { web3 = new Web3((window as any).ethereum) } catch {}
+      }
       refetchBalance = () => {
         web3ModalBalanceFetchRef.current = null
       }
@@ -468,6 +472,10 @@ function UnifiedWalletInner({
       activeOgunBalance = directOgunBalance
       isConnected = !!directAddress
       chainId = directChainId
+      // Use injected provider for signing transactions
+      if (typeof window !== 'undefined' && (window as any).ethereum) {
+        try { web3 = new Web3((window as any).ethereum) } catch {}
+      }
       refetchBalance = () => {
         directBalanceFetchRef.current = null
       }
