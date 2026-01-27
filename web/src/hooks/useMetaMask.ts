@@ -64,7 +64,16 @@ export const useMetaMask = () => {
         setLoadingChain(false)
       }
       window.ethereum.on('accountsChanged', ([newAccount]: string[]) => onSetAccount(newAccount))
-      window.ethereum.on('chainChanged', () => window.location.reload())
+      window.ethereum.on('chainChanged', (newChainId: string) => {
+        setChainId(parseInt(newChainId, 16))
+        // Refetch balances on new chain instead of full reload (preserves audio playback)
+        if (account && web3) {
+          web3.eth.getBalance(account).then(bal => {
+            setBalance(web3.utils.fromWei(bal, 'ether'))
+          }).catch(() => {})
+          getOGUNBalance(web3).catch(() => {})
+        }
+      })
     } else {
       // MetaMask not installed - mark as ready
       setLoadingAccount(false)

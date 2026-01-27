@@ -176,11 +176,15 @@ export function WalletConnectButton({
   // Unified wallet context
   const {
     activeAddress,
+    activeBalance,
+    activeOgunBalance,
     isConnected,
     activeWalletType,
     disconnectWallet,
     setDirectConnection,
     directWalletSubtype,
+    nativeTokenSymbol,
+    chainName,
   } = useUnifiedWallet()
 
   // Detect device type on mount and check for pending mobile sessions
@@ -367,7 +371,7 @@ export function WalletConnectButton({
       })
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Connection timeout')), 15000)
+        setTimeout(() => reject(new Error('Connection timeout')), 25000)
       )
 
       const provider = await Promise.race([initPromise, timeoutPromise]) as any
@@ -408,14 +412,16 @@ export function WalletConnectButton({
     } catch (err: any) {
       console.error('WalletConnect error:', err)
 
-      // Retry up to 2 times for relay failures
-      if (retryCount < 2 && (
+      // Retry up to 3 times with exponential backoff for relay failures
+      if (retryCount < 3 && (
         err.message?.includes('publish') ||
         err.message?.includes('timeout') ||
-        err.message?.includes('relay')
+        err.message?.includes('relay') ||
+        err.message?.includes('WebSocket')
       )) {
-        console.log(`Retrying WalletConnect (attempt ${retryCount + 2}/3)...`)
-        setTimeout(() => initWalletConnect(retryCount + 1), 1000)
+        const delay = 1000 * Math.pow(2, retryCount) // 1s, 2s, 4s
+        console.log(`Retrying WalletConnect (attempt ${retryCount + 2}/4) in ${delay}ms...`)
+        setTimeout(() => initWalletConnect(retryCount + 1), delay)
         return
       }
 
@@ -462,7 +468,7 @@ export function WalletConnectButton({
       })
 
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Connection timeout - please try again')), 15000)
+        setTimeout(() => reject(new Error('Connection timeout - please try again')), 25000)
       )
 
       const provider = await Promise.race([initPromise, timeoutPromise])
@@ -667,7 +673,18 @@ export function WalletConnectButton({
               <div className="text-white font-mono text-sm truncate">{activeAddress}</div>
               <div className="text-gray-500 text-xs mt-1">
                 via {(activeWalletType === 'direct' ? directWalletSubtype : activeWalletType)?.toUpperCase() || 'WALLET'}
+                {chainName && <span> · {chainName}</span>}
               </div>
+              {(activeBalance || activeOgunBalance) && (
+                <div className="mt-2 flex gap-3 text-xs font-mono">
+                  {activeBalance && (
+                    <span className="text-green-400">{Number(activeBalance).toFixed(4)} {nativeTokenSymbol}</span>
+                  )}
+                  {activeOgunBalance && (
+                    <span className="text-yellow-400">{Number(activeOgunBalance).toFixed(2)} OGUN</span>
+                  )}
+                </div>
+              )}
             </div>
             <button
               onClick={() => { disconnectWallet(); handleClose(); }}
