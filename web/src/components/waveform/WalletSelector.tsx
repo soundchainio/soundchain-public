@@ -137,6 +137,9 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     switchToMagic,
     activeWalletType: unifiedActiveType,
     activeAddress: unifiedActiveAddress,
+    activeBalance: unifiedActiveBalance,
+    directWalletSubtype,
+    chainId: unifiedChainId,
   } = useUnifiedWallet()
 
   // Connected external wallets
@@ -148,20 +151,41 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  // Sync with UnifiedWalletContext
+  // Sync with UnifiedWalletContext - detect external wallet connections
   useEffect(() => {
     if (unifiedActiveType === 'magic') {
       setSelectedWallet('soundchain')
     } else if (unifiedActiveType === 'metamask') {
       setSelectedWallet('metamask')
     } else if (unifiedActiveType === 'direct' && unifiedActiveAddress) {
-      // External wallet connected via WalletConnectButton
+      // External wallet connected via WalletConnectButton or other external source
+      // Map directWalletSubtype to our WalletType
+      const walletType: WalletType = (directWalletSubtype === 'metamask' || directWalletSubtype === 'coinbase' ||
+        directWalletSubtype === 'walletconnect' || directWalletSubtype === 'phantom')
+        ? directWalletSubtype as WalletType
+        : 'walletconnect' // fallback for unknown subtypes
+
+      const chainId = unifiedChainId || 137
       const existingWallet = externalWallets.find(w => w.address.toLowerCase() === unifiedActiveAddress.toLowerCase())
-      if (existingWallet) {
-        setSelectedWallet(existingWallet.type)
+
+      if (!existingWallet) {
+        // Auto-add the externally connected wallet so it shows in our UI
+        const newWallet: ConnectedWalletInfo = {
+          type: walletType,
+          address: unifiedActiveAddress,
+          balance: unifiedActiveBalance || '0',
+          chainId,
+          chainName: CHAIN_NAMES[chainId] || `Chain ${chainId}`,
+        }
+        setExternalWallets(prev => {
+          const filtered = prev.filter(w => w.type !== walletType)
+          return [...filtered, newWallet]
+        })
       }
+
+      setSelectedWallet(walletType)
     }
-  }, [unifiedActiveType, unifiedActiveAddress, externalWallets])
+  }, [unifiedActiveType, unifiedActiveAddress, unifiedActiveBalance, directWalletSubtype, unifiedChainId, externalWallets])
 
   // Copy wallet address to clipboard
   const copyAddress = useCallback((address: string, e: React.MouseEvent) => {
