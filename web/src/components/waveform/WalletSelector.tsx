@@ -818,7 +818,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       {showWalletMenu && (
         <>
           <div className="fixed inset-0 bg-black/50 z-40 [touch-action:none]" onClick={() => setShowWalletMenu(false)} />
-          <div className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[70dvh] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-action-pan-y">
+          <div className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[80dvh] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-action-pan-y pb-8 sm:pb-0">
             <div className="p-2 border-b border-gray-800 sm:hidden">
               <div className="w-12 h-1 bg-gray-700 rounded-full mx-auto" />
             </div>
@@ -902,7 +902,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
         <>
           <div className="fixed inset-0 bg-black/50 z-40 [touch-action:none]" onClick={() => setShowConnectMenu(false)} />
           <div
-            className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[70dvh] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-action-pan-y"
+            className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[80dvh] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-action-pan-y pb-8 sm:pb-0"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
           >
