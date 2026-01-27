@@ -2,10 +2,59 @@
 
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 
-// Get your projectId from https://cloud.reown.com
+// Get your projectId from https://cloud.reown.com (migrate from cloud.walletconnect.com)
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID'
 
-// Reown AppKit metadata
+// Chain configurations
+const polygon = {
+  chainId: 137,
+  name: 'Polygon',
+  currency: 'POL',
+  explorerUrl: 'https://polygonscan.com',
+  rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com'
+}
+
+const ethereum = {
+  chainId: 1,
+  name: 'Ethereum',
+  currency: 'ETH',
+  explorerUrl: 'https://etherscan.io',
+  rpcUrl: 'https://eth.llamarpc.com'
+}
+
+const base = {
+  chainId: 8453,
+  name: 'Base',
+  currency: 'ETH',
+  explorerUrl: 'https://basescan.org',
+  rpcUrl: 'https://mainnet.base.org'
+}
+
+const arbitrum = {
+  chainId: 42161,
+  name: 'Arbitrum',
+  currency: 'ETH',
+  explorerUrl: 'https://arbiscan.io',
+  rpcUrl: 'https://arb1.arbitrum.io/rpc'
+}
+
+const optimism = {
+  chainId: 10,
+  name: 'Optimism',
+  currency: 'ETH',
+  explorerUrl: 'https://optimistic.etherscan.io',
+  rpcUrl: 'https://mainnet.optimism.io'
+}
+
+const zetachain = {
+  chainId: 7000,
+  name: 'ZetaChain',
+  currency: 'ZETA',
+  explorerUrl: 'https://explorer.zetachain.com',
+  rpcUrl: 'https://zetachain-evm.blockpi.network/v1/rpc/public'
+}
+
+// Metadata
 const metadata = {
   name: 'SoundChain',
   description: 'Music NFT Marketplace',
@@ -13,27 +62,22 @@ const metadata = {
   icons: ['https://soundchain.io/favicons/apple-touch-icon.png']
 }
 
-// Track if AppKit has been initialized
+// Track if Web3Modal has been initialized
 let isInitialized = false
 
-async function initializeAppKit() {
+async function initializeWeb3Modal() {
   if (typeof window === 'undefined' || isInitialized) return
 
   try {
-    const { createAppKit } = await import('@reown/appkit/react')
-    const { Ethers5Adapter } = await import('@reown/appkit-adapter-ethers5')
-    const networks = await import('@reown/appkit/networks')
+    // Dynamic import to avoid SSR crashes
+    const { createWeb3Modal, defaultConfig } = await import('@web3modal/ethers5/react')
 
-    createAppKit({
-      adapters: [new Ethers5Adapter()],
-      networks: [networks.polygon, networks.mainnet, networks.base, networks.arbitrum, networks.optimism, networks.zetachain],
-      defaultNetwork: networks.polygon,
+    createWeb3Modal({
+      ethersConfig: defaultConfig({ metadata }),
+      chains: [polygon, ethereum, base, arbitrum, optimism, zetachain],
       projectId,
-      metadata,
-      features: {
-        analytics: false,
-        onramp: false,
-      },
+      enableAnalytics: false,
+      enableOnramp: false,
       themeMode: 'dark',
       themeVariables: {
         '--w3m-accent': '#8B5CF6',
@@ -45,11 +89,12 @@ async function initializeAppKit() {
         'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase Wallet
         '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet
       ],
+      enableExplorer: false,
     })
     isInitialized = true
-    console.log('Reown AppKit initialized successfully')
+    console.log('Web3Modal initialized successfully')
   } catch (error) {
-    console.error('Failed to initialize Reown AppKit:', error)
+    console.error('Failed to initialize Web3Modal:', error)
   }
 }
 
@@ -68,9 +113,9 @@ export function Web3ModalProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    // Delay AppKit init slightly to let Magic SDK iframes settle
+    // Delay init slightly to let Magic SDK iframes settle
     const timer = setTimeout(async () => {
-      await initializeAppKit()
+      await initializeWeb3Modal()
       setIsReady(true)
     }, 100)
     return () => clearTimeout(timer)
