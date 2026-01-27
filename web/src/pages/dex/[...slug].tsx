@@ -868,6 +868,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [selectedNftId, setSelectedNftId] = useState('')
   const [transferring, setTransferring] = useState(false)
 
+  // Sweep state
+  const [showSweepPanel, setShowSweepPanel] = useState(false)
+  const [sweepSelectedIds, setSweepSelectedIds] = useState<Set<string>>(new Set())
+  const [sweepRecipient, setSweepRecipient] = useState('')
+  const [sweeping, setSweeping] = useState(false)
+  const [sweepProgress, setSweepProgress] = useState({ current: 0, total: 0 })
+
   // Swap state - track selected tokens for dynamic labels
   const [swapFromToken, setSwapFromToken] = useState<Token>('MATIC')
   const [swapToToken, setSwapToToken] = useState<Token>('OGUN')
@@ -1786,6 +1793,100 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const userTracks = tracksData?.groupedTracks?.nodes || []
   const ownedTracks = ownedTracksData?.groupedTracks?.nodes || [] // User-owned NFTs for wallet page
   const marketTracks = listingData?.listingItems?.nodes || []
+
+  // Sweep toggle helpers
+  const toggleSweepSelect = (trackId: string) => {
+    setSweepSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(trackId)) next.delete(trackId)
+      else next.add(trackId)
+      return next
+    })
+  }
+  const selectAllForSweep = () => {
+    const allIds = ownedTracks.filter((t: any) => t.nftData?.tokenId || t.tokenId).map((t: any) => t.id)
+    setSweepSelectedIds(new Set(allIds))
+  }
+  const deselectAllForSweep = () => setSweepSelectedIds(new Set())
+
+  // Handle Sweep - batch transfer NFTs via individual transferFrom calls
+  const handleSweep = async () => {
+    if (!sweepRecipient || sweepSelectedIds.size === 0 || !userWallet) {
+      toast.error('Please select NFTs and enter a recipient address')
+      return
+    }
+    if (!/^0x[a-fA-F0-9]{40}$/.test(sweepRecipient)) {
+      toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
+      return
+    }
+    if (sweepRecipient.toLowerCase() === userWallet.toLowerCase()) {
+      toast.error('Cannot sweep to yourself')
+      return
+    }
+
+    const tracksToSweep = ownedTracks.filter((t: any) => sweepSelectedIds.has(t.id) && (t.nftData?.tokenId || t.tokenId))
+    if (tracksToSweep.length === 0) {
+      toast.error('Selected NFTs have no on-chain token IDs')
+      return
+    }
+
+    setSweeping(true)
+    setSweepProgress({ current: 0, total: tracksToSweep.length })
+
+    // Get web3 instance - prefer Magic, fallback to public RPC
+    const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+
+    // Minimal ERC-721 ABI for transferFrom
+    const erc721TransferAbi: AbiItem[] = [
+      {
+        inputs: [
+          { name: 'from', type: 'address' },
+          { name: 'to', type: 'address' },
+          { name: 'tokenId', type: 'uint256' },
+        ],
+        name: 'transferFrom',
+        outputs: [],
+        stateMutability: 'nonpayable',
+        type: 'function',
+      },
+    ]
+
+    let succeeded = 0
+    let failed = 0
+
+    for (let i = 0; i < tracksToSweep.length; i++) {
+      const track = tracksToSweep[i]
+      const tokenId = track.nftData?.tokenId || track.tokenId
+      const contractAddr = track.nftData?.contract || config.web3.contractsV2.contractAddress
+
+      try {
+        setSweepProgress({ current: i + 1, total: tracksToSweep.length })
+        const contract = new web3Instance.eth.Contract(erc721TransferAbi, contractAddr)
+        const tx = contract.methods.transferFrom(userWallet, sweepRecipient, tokenId)
+        const gas = await tx.estimateGas({ from: userWallet })
+        await tx.send({ from: userWallet, gas })
+        succeeded++
+        toast.success(`Transferred ${track.title || `Token #${tokenId}`} (${i + 1}/${tracksToSweep.length})`)
+      } catch (err: any) {
+        failed++
+        console.error(`Sweep transfer failed for token ${tokenId}:`, err)
+        toast.error(`Failed: ${track.title || `Token #${tokenId}`} - ${err.message?.slice(0, 80) || 'Unknown error'}`)
+      }
+    }
+
+    setSweeping(false)
+    setSweepProgress({ current: 0, total: 0 })
+
+    if (succeeded > 0) {
+      toast.success(`Sweep complete! ${succeeded} NFT${succeeded > 1 ? 's' : ''} transferred${failed > 0 ? `, ${failed} failed` : ''}`)
+      setSweepSelectedIds(new Set())
+      setSweepRecipient('')
+      setShowSweepPanel(false)
+      refetchBalance?.()
+    } else {
+      toast.error('All transfers failed. Check wallet connection and gas balance.')
+    }
+  }
 
   // Debug badge display
   if (typeof window !== 'undefined' && user) {
@@ -4698,17 +4799,130 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-orange-500/30 hover:bg-orange-500/5 flex-col h-auto py-4 relative opacity-60 cursor-not-allowed"
-                    onClick={() => toast.info('🧹 Sweep Tool Coming Soon! Batch transfer NFTs with a single transaction.')}
+                    className="border-orange-500/50 hover:bg-orange-500/10 flex-col h-auto py-4 relative"
+                    onClick={() => setShowSweepPanel(!showSweepPanel)}
                   >
                     <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                     </svg>
                     <span className="text-xs">Sweep</span>
-                    <Badge className="absolute -top-2 -right-2 bg-orange-500/20 text-orange-400 text-[8px] px-1">Soon</Badge>
                   </Button>
                 </div>
               </Card>
+
+              {/* Sweep Panel */}
+              {showSweepPanel && (
+                <Card id="sweep-section" className="retro-card p-6 border-orange-500/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      </svg>
+                      <h3 className="retro-title text-lg">Sweep NFTs</h3>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setShowSweepPanel(false)} className="text-gray-400 hover:text-white">
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-4">Select NFTs to batch transfer to another wallet.</p>
+
+                  {/* Recipient Address */}
+                  <div className="mb-4">
+                    <label className="text-gray-400 text-xs mb-1 block">Recipient Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x..."
+                      value={sweepRecipient}
+                      onChange={(e) => setSweepRecipient(e.target.value)}
+                      className="w-full bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-orange-500/50 focus:outline-none"
+                      disabled={sweeping}
+                    />
+                  </div>
+
+                  {/* Select All / Deselect All */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-gray-400 text-xs">{sweepSelectedIds.size} NFT{sweepSelectedIds.size !== 1 ? 's' : ''} selected</span>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={selectAllForSweep} disabled={sweeping} className="text-orange-400 text-xs">
+                        Select All
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={deselectAllForSweep} disabled={sweeping} className="text-gray-400 text-xs">
+                        Deselect All
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* NFT Grid with Checkboxes */}
+                  <div className="max-h-64 overflow-y-auto mb-4 space-y-1">
+                    {ownedTracks.filter((t: any) => t.nftData?.tokenId || t.tokenId).length === 0 ? (
+                      <p className="text-gray-500 text-sm text-center py-4">No NFTs with on-chain token IDs found</p>
+                    ) : (
+                      ownedTracks
+                        .filter((t: any) => t.nftData?.tokenId || t.tokenId)
+                        .map((track: any) => (
+                          <div
+                            key={track.id}
+                            onClick={() => !sweeping && toggleSweepSelect(track.id)}
+                            className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all ${
+                              sweepSelectedIds.has(track.id)
+                                ? 'bg-orange-500/15 border border-orange-500/40'
+                                : 'bg-black/20 border border-transparent hover:border-gray-700'
+                            } ${sweeping ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                              sweepSelectedIds.has(track.id)
+                                ? 'border-orange-400 bg-orange-500/30'
+                                : 'border-gray-600'
+                            }`}>
+                              {sweepSelectedIds.has(track.id) && (
+                                <svg className="w-3 h-3 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </div>
+                            {track.artworkUrl ? (
+                              <img src={track.artworkUrl} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-10 h-10 rounded bg-gray-800 flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm truncate">{track.title || 'Untitled'}</p>
+                              <p className="text-gray-500 text-xs truncate">Token #{track.nftData?.tokenId || track.tokenId}</p>
+                            </div>
+                          </div>
+                        ))
+                    )}
+                  </div>
+
+                  {/* Sweep Progress */}
+                  {sweeping && sweepProgress.total > 0 && (
+                    <div className="mb-4">
+                      <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Transferring...</span>
+                        <span>{sweepProgress.current}/{sweepProgress.total}</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-2">
+                        <div
+                          className="bg-orange-500 h-2 rounded-full transition-all"
+                          style={{ width: `${(sweepProgress.current / sweepProgress.total) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sweep Action Button */}
+                  <Button
+                    className="w-full retro-button bg-orange-500/20 hover:bg-orange-500/30 border-orange-500/50 text-orange-300"
+                    disabled={sweeping || sweepSelectedIds.size === 0 || !sweepRecipient || !userWallet}
+                    onClick={handleSweep}
+                  >
+                    {sweeping
+                      ? `Sweeping ${sweepProgress.current}/${sweepProgress.total}...`
+                      : `Sweep ${sweepSelectedIds.size} NFT${sweepSelectedIds.size !== 1 ? 's' : ''}`
+                    }
+                  </Button>
+                </Card>
+              )}
 
               {/* Buy Crypto Section */}
               <Card id="buy-crypto-section" className="retro-card p-6">
@@ -4841,9 +5055,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </Card>
 
               {/* ZetaChain Omnichain Swap Portal */}
-              <Card id="swap-section" className="retro-card p-6 border-green-500/30 relative overflow-hidden">
+              <Card id="swap-section" className="retro-card p-6 border-yellow-500/30 relative overflow-hidden">
                 {/* Animated background glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-cyan-500/5 animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-cyan-500/5" />
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-6">
@@ -4854,7 +5068,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <div>
                         <h3 className="retro-title text-lg flex items-center gap-2">
                           Omnichain Swap Portal
-                          <Badge className="bg-green-500/20 text-green-400 text-xs">LIVE</Badge>
+                          <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">COMING SOON</Badge>
                         </h3>
                         <p className="text-gray-400 text-sm">Swap tokens across 23+ blockchains</p>
                       </div>
@@ -4923,6 +5137,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <input
                           type="number"
                           placeholder="0.0"
+                          {/* TODO: Replace placeholder quote with real ZetaChain cross-chain quote API */}
                           value={swapFromAmount ? (parseFloat(swapFromAmount) * 0.9995).toFixed(4) : ''}
                           readOnly
                           className="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-3 text-xl text-white cursor-not-allowed"
