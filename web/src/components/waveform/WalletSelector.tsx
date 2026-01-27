@@ -14,7 +14,7 @@
  * Integrates with UnifiedWalletContext for global state management.
  */
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import classNames from 'classnames'
 import { Matic } from 'components/Matic'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -179,6 +179,21 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
   const [isConnecting, setIsConnecting] = useState<WalletType | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Scroll guard: prevent accidental wallet connect on mobile scroll release
+  const touchStartY = useRef(0)
+  const isScrolling = useRef(false)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY
+    isScrolling.current = false
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (Math.abs(e.touches[0].clientY - touchStartY.current) > 10) {
+      isScrolling.current = true
+    }
+  }
 
   // Sync with UnifiedWalletContext - detect external wallet connections
   useEffect(() => {
@@ -358,6 +373,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
 
   // Connect MetaMask (Desktop extension OR Mobile via WalletConnect deep link)
   const connectMetaMask = useCallback(async () => {
+    if (isScrolling.current) return
     const mobile = isMobile()
     const mmProvider = getMetaMaskProvider()
 
@@ -387,7 +403,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
         provider.on('display_uri', (uri: string) => {
           const deepLink = getWalletDeepLink('metamask', uri)
           if (deepLink) {
-            window.location.href = deepLink
+            window.open(deepLink, '_blank')
           }
         })
 
@@ -486,6 +502,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
 
   // Connect Coinbase Wallet
   const connectCoinbase = useCallback(async () => {
+    if (isScrolling.current) return
     setIsConnecting('coinbase')
     setError(null)
 
@@ -558,6 +575,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
 
   // Connect WalletConnect (Rainbow, Trust, 300+ wallets)
   const connectWalletConnect = useCallback(async () => {
+    if (isScrolling.current) return
     setIsConnecting('walletconnect')
     setError(null)
 
@@ -626,6 +644,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
 
   // Connect Phantom (Solana) - Desktop extension OR Mobile deep link
   const connectPhantom = useCallback(async () => {
+    if (isScrolling.current) return
     const mobile = isMobile()
     const hasExtension = typeof window !== 'undefined' && (window as any).solana?.isPhantom
 
@@ -633,7 +652,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     if (mobile && !hasExtension) {
       const deepLink = getWalletDeepLink('phantom')
       if (deepLink) {
-        window.location.href = deepLink
+        window.open(deepLink, '_blank')
       }
       return
     }
@@ -798,8 +817,8 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       {/* Wallet Selection Menu - Mobile Bottom Sheet */}
       {showWalletMenu && (
         <>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowWalletMenu(false)} />
-          <div className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50 z-40 [touch-action:none]" onClick={() => setShowWalletMenu(false)} />
+          <div className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[70dvh] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-action-pan-y">
             <div className="p-2 border-b border-gray-800 sm:hidden">
               <div className="w-12 h-1 bg-gray-700 rounded-full mx-auto" />
             </div>
@@ -881,8 +900,12 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       {/* Connect Wallet Menu - Mobile Bottom Sheet */}
       {showConnectMenu && (
         <>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowConnectMenu(false)} />
-          <div className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50 z-40 [touch-action:none]" onClick={() => setShowConnectMenu(false)} />
+          <div
+            className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[70dvh] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-action-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+          >
             <div className="p-2 border-b border-gray-800 sm:hidden">
               <div className="w-12 h-1 bg-gray-700 rounded-full mx-auto" />
             </div>

@@ -107,8 +107,14 @@ pre {
   font-family: 'Metropolis';
 }
 
-body,
 html {
+  height: 100%;
+  background-color: rgba(16, 16, 16);
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+body {
   height: 100%;
   background-color: rgba(16, 16, 16);
 
@@ -120,33 +126,16 @@ html {
   scrollbar-width: thin;
 
   overscroll-behavior-y: contain;
-}
-
-/* iOS Capacitor WebView scroll fix */
-html, body, #__next {
-  -webkit-overflow-scrolling: touch;
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
 }
 
 /* Ensure main content areas are scrollable on iOS */
 .ios-scroll-fix {
   -webkit-overflow-scrolling: touch;
   overflow-y: scroll;
-}
-
-/* Fix for iOS touch scrolling in Capacitor */
-@supports (-webkit-touch-callout: none) {
-  body {
-    -webkit-overflow-scrolling: touch;
-    overflow-y: scroll;
-  }
-
-  #__next {
-    -webkit-overflow-scrolling: touch;
-    overflow-y: scroll;
-    height: 100%;
-  }
 }
 
 /* Vendor prefix for other browsers */
@@ -176,6 +165,7 @@ html, body, #__next {
 
 #__next {
   height: 100%;
+  overflow: visible;
 }
 
 :root {
