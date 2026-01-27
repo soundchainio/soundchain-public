@@ -14,7 +14,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 
 // WalletConnect Project ID
-const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
+const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
 
 // Session persistence keys for mobile return flow
 const WC_PENDING_SESSION_KEY = 'soundchain_wc_pending_session'

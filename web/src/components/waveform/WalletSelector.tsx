@@ -242,7 +242,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
 
       try {
         const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
-        const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
+        const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
 
         const provider = await EthereumProvider.init({
           projectId,

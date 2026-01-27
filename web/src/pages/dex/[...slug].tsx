@@ -218,9 +218,8 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
     { name: 'Coinbase Wallet', icon: '🔵', popular: false, id: 'coinbase', description: isMobile ? 'Open Coinbase app' : 'Browser extension' },
   ]
 
-  // WalletConnect v2 Project ID - use env var or fallback
-  // Get your own at https://cloud.walletconnect.com/
-  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
+  // WalletConnect v2 Project ID - registered at cloud.reown.com
+  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
 
   // Auto-connect if in-app browser detected
   useEffect(() => {

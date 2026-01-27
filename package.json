@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@sentry/serverless": "^7.10.0",
+    "@web3modal/ethers5": "5.1.11",
     "react-linkify-it": "^1.0.7",
     "web3": "^1.2.11"
   }
