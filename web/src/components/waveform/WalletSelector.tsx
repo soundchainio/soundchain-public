@@ -262,13 +262,28 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     }
   }, [magicAccount, externalWallets, updateDefaultWallet, onWalletChange, switchToMagic, setDirectConnection])
 
+  // Find the MetaMask provider (handles multiple wallet extensions via EIP-5749)
+  const getMetaMaskProvider = () => {
+    if (typeof window === 'undefined' || !window.ethereum) return null
+    // Multiple extensions: check providers array
+    if (window.ethereum.providers?.length) {
+      const mm = window.ethereum.providers.find((p: any) => p.isMetaMask && !p.isCoinbaseWallet)
+      if (mm) return mm
+    }
+    // Single extension: check directly
+    if (window.ethereum.isMetaMask && !(window.ethereum as any).isCoinbaseWallet) {
+      return window.ethereum
+    }
+    return null
+  }
+
   // Connect MetaMask (Desktop extension OR Mobile via WalletConnect deep link)
   const connectMetaMask = useCallback(async () => {
     const mobile = isMobile()
-    const hasExtension = typeof window !== 'undefined' && window.ethereum?.isMetaMask
+    const mmProvider = getMetaMaskProvider()
 
     // MOBILE: Use WalletConnect with MetaMask deep link
-    if (mobile && !hasExtension) {
+    if (mobile && !mmProvider) {
       setIsConnecting('metamask')
       setError(null)
 
@@ -337,9 +352,9 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       return
     }
 
-    // DESKTOP: Use browser extension
-    if (!window.ethereum) {
-      setError('MetaMask not installed - get it at metamask.io')
+    // DESKTOP: Use browser extension (find MetaMask specifically among multiple wallets)
+    if (!mmProvider) {
+      setError('MetaMask not detected - get it at metamask.io')
       return
     }
 
@@ -347,12 +362,12 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     setError(null)
 
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
+      const accounts = await mmProvider.request({ method: 'eth_requestAccounts' })
       if (!accounts?.[0]) throw new Error('No account')
 
-      const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' })
-      const chainId = parseInt(chainIdHex, 16)
-      const web3 = new Web3(window.ethereum as any)
+      const chainIdHex = await mmProvider.request({ method: 'eth_chainId' })
+      const chainId = parseInt(chainIdHex as string, 16)
+      const web3 = new Web3(mmProvider as any)
       const balance = await web3.eth.getBalance(accounts[0])
 
       const newWallet: ConnectedWalletInfo = {
@@ -373,14 +388,13 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       // Sync with UnifiedWalletContext for global state
       setDirectConnection(accounts[0], 'metamask', chainId)
 
-      // Listen for changes
-      window.ethereum.on('accountsChanged', (newAccounts: string[]) => {
+      // Listen for changes on MetaMask provider specifically
+      mmProvider.on('accountsChanged', (newAccounts: string[]) => {
         if (newAccounts.length === 0) {
           setExternalWallets(prev => prev.filter(w => w.type !== 'metamask'))
           setSelectedWallet('soundchain')
-          switchToMagic() // Switch back to Magic wallet
+          switchToMagic()
         } else {
-          // Update with new account
           setDirectConnection(newAccounts[0], 'metamask', chainId)
         }
       })
