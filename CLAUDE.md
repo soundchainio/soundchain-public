@@ -641,6 +641,40 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 **Files:** `web/src/contexts/Web3ModalContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
 **Commits:** `882b1be64` (migration), `3b15a1915` (SSR fix), `8c688ed69` (full revert)
 
+### 30. NFT Mint Fails With External Wallet - Magic Gate (Jan 27, 2026)
+**Symptom:** User connected MetaMask on mobile, minted NFT. Platform fee (0.001 POL) sent to Gnosis Safe successfully, but NFT mint itself failed with "There was an error while minting your NFT". No failed tx on Polygonscan - mint never reached the blockchain.
+**Root Cause:** Three layers of Magic-only assumptions:
+1. `BlockchainFunction._execute()` in `useBlockchainV2.ts` line 111: `if (!me?.magicWalletAddress)` - only checked Magic address
+2. Line 115-116: `await this.magic?.user.isLoggedIn()` → returns false for external wallets → `if (!isLoggedIn) return` silently aborts
+3. `useWalletContext.tsx` only supported `DefaultWallet.Soundchain` and `DefaultWallet.MetaMask` enum values - Coinbase/WalletConnect/Phantom had no path
+4. `UnifiedWalletContext.tsx` didn't set `web3` for `web3modal` and `direct` wallet types - no signing provider available
+**Fix (3 commits):**
+1. `useBlockchainV2.ts`: Check all OAuth addresses (`googleWalletAddress`, `discordWalletAddress`, etc.), only do Magic login check when `provider.isMagic` is true
+2. `useWalletContext.tsx`: Added `useUnifiedWallet()` integration - when active wallet is external, use its address and create Web3 from `window.ethereum`
+3. `UnifiedWalletContext.tsx`: Added `new Web3(window.ethereum)` for `web3modal` and `direct` switch cases
+**Don't Do This:**
+- Don't assume `magicWalletAddress` is the only user wallet
+- Don't gate blockchain operations behind `magic.user.isLoggedIn()` without checking provider type
+- Don't silently `return` on auth failure - throw or call `onErrorFunction`
+**Key Insight:** Platform fee uses raw `web3.eth.sendTransaction()` (works with any wallet), but mint goes through `BlockchainFunction._execute()` which had Magic-only validation
+**Files:** `useBlockchainV2.ts`, `useWalletContext.tsx`, `UnifiedWalletContext.tsx`
+**Commits:** `f7fc29aca`, `811e32db9`
+
+### 31. Collaborator Wallet Address Dark Text (Jan 27, 2026)
+**Symptom:** Wallet address in collaborator form unreadable - dark text on dark background
+**Root Cause:** Input had `color: '#22d3ee'` (cyan) which rendered too dark on some mobile displays
+**Fix:** Changed to `color: '#ffffff'` (white) with `text-white` class and `WebkitTextFillColor: '#ffffff'`
+**File:** `web/src/components/forms/track/TrackMetadataForm.tsx` (line 396)
+**Commit:** `3ad6de4cf`
+
+### 32. JSX Comment Inside Element Props (Jan 27, 2026)
+**Symptom:** All Vercel deploys fail with SWC parser error at line 5263
+**Root Cause:** A subagent placed `{/* TODO */}` JSX comment inside an `<input>` element's attribute list. JSX comments cannot go inside HTML element props.
+**Fix:** Changed to `// TODO` JavaScript comment
+**Don't Do This:** Never place `{/* */}` comments inside JSX element attribute lists
+**File:** `web/src/pages/dex/[...slug].tsx`
+**Commit:** `f213db131`
+
 ---
 
 ## ARCHITECTURE PATTERNS
@@ -1146,6 +1180,11 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 27, 2026 | **WalletConnect Retry** - Auto-retry with exponential backoff for mobile relay timeouts | 67482b734 |
 | Jan 27, 2026 | **Reown Migration (REVERTED)** - Attempted @reown/appkit, reverted due to project ID 403 | 882b1be64→8c688ed69 |
 | Jan 27, 2026 | **RoyaltySplitter Contract** - Post-mint collaborator royalty splits via EIP-2981 | soundchain-contracts 038e95b |
+| Jan 27, 2026 | **Multi-Wallet Mint Fix** - External wallets now work for NFT minting, all tx signing | f7fc29aca, 811e32db9 |
+| Jan 27, 2026 | **Wallet Page Features** - Sweep NFTs, real transfers, POL/OGUN send, activity aggregation | b86029edd, 81fde0286 |
+| Jan 27, 2026 | **Mobile Scroll Fixes** - Pull-to-refresh guard, bottom sheet dvh, scroll containers | cfa03470e, d74e10a73 |
+| Jan 27, 2026 | **Build Fix** - JSX comment syntax in element props broke Vercel | f213db131 |
+| Jan 27, 2026 | **Collaborator Text Fix** - White text for wallet addresses in dark forms | 3ad6de4cf |
 
 ---
 
