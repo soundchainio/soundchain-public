@@ -335,8 +335,8 @@ function InnerForm(props: InnerFormProps) {
         {/* Always show collaborator summary */}
         <div className="mt-2 space-y-1">
           {values.collaborators.map((collaborator, index) => (
-            <div key={index} className="flex items-center justify-between text-xs text-gray-60 py-1">
-              <span className="text-white">
+            <div key={index} className="flex items-center justify-between text-xs text-gray-300 py-1">
+              <span className="text-white font-mono">
                 {collaborator.role || 'Select role'} - {collaborator.walletAddress ? `${collaborator.walletAddress.slice(0, 8)}...` : 'Add wallet'} ({collaborator.royaltyPercentage}%)
               </span>
             </div>
@@ -393,8 +393,8 @@ function InnerForm(props: InnerFormProps) {
                   value={collaborator.walletAddress}
                   onChange={e => updateCollaborator(index, 'walletAddress', e.target.value)}
                   placeholder="Wallet address (0x...)"
-                  className="w-full p-2 border border-gray-30 rounded bg-gray-25 text-xs font-mono"
-                  style={{ color: '#22d3ee', WebkitTextFillColor: '#22d3ee' }}
+                  className="w-full p-2 border border-gray-30 rounded bg-gray-25 text-xs font-mono text-white"
+                  style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
                 />
               </div>
             ))}
