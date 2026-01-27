@@ -25,7 +25,10 @@ import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
 import { Ogun } from '../Ogun'
 import { ChevronDown, Check, Loader2, Plus, X, Wallet, ExternalLink, Copy } from 'lucide-react'
 import Web3 from 'web3'
+import { AbiItem } from 'web3-utils'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
+import { config } from 'config'
+import SoundchainOGUN20 from '../../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 
 // Wallet type definitions
 type WalletType = 'soundchain' | 'metamask' | 'coinbase' | 'walletconnect' | 'phantom'
@@ -34,6 +37,7 @@ interface ConnectedWalletInfo {
   type: WalletType
   address: string
   balance: string
+  ogunBalance?: string
   chainId: number
   chainName: string
 }
@@ -194,6 +198,42 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       setSelectedWallet(walletType)
     }
   }, [unifiedActiveType, unifiedActiveAddress, unifiedActiveBalance, directWalletSubtype, unifiedChainId])
+
+  // Fetch OGUN balance for external wallets on Polygon
+  const fetchOgunBalance = useCallback(async (address: string): Promise<string> => {
+    try {
+      const web3 = new Web3('https://polygon-rpc.com')
+      const contract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], config.ogunTokenAddress as string)
+      const rawBalance = await contract.methods.balanceOf(address).call() as string | undefined
+      const valid = rawBalance !== undefined && (typeof rawBalance === 'string' || typeof rawBalance === 'number')
+        ? rawBalance.toString()
+        : '0'
+      return web3.utils.fromWei(valid, 'ether')
+    } catch {
+      return '0'
+    }
+  }, [])
+
+  // Auto-fetch OGUN balance for all external EVM wallets
+  // OGUN is on Polygon, but EVM addresses are the same across chains - fetch via public RPC
+  useEffect(() => {
+    const fetchAll = async () => {
+      const updated = await Promise.all(
+        externalWallets.map(async (w) => {
+          if (w.ogunBalance !== undefined) return w // already fetched
+          if (w.type === 'phantom') return w // Solana - different address
+          const ogunBalance = await fetchOgunBalance(w.address)
+          return { ...w, ogunBalance }
+        })
+      )
+      if (updated.some((w, i) => w.ogunBalance !== externalWallets[i].ogunBalance)) {
+        setExternalWallets(updated)
+      }
+    }
+    if (externalWallets.length > 0) {
+      fetchAll()
+    }
+  }, [externalWallets.length, fetchOgunBalance])
 
   // Copy wallet address to clipboard
   const copyAddress = useCallback((address: string, e: React.MouseEvent) => {
@@ -682,6 +722,12 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
                 {showOgun && currentWallet.type === 'soundchain' && (
                   <Ogun value={magicOgunBalance} className="text-xs" />
                 )}
+                {showOgun && currentWallet.type !== 'soundchain' && currentWallet.ogunBalance && Number(currentWallet.ogunBalance) > 0 && (
+                  <Ogun value={currentWallet.ogunBalance} className="text-xs" />
+                )}
+                {showOgun && currentWallet.type !== 'soundchain' && (!currentWallet.ogunBalance || Number(currentWallet.ogunBalance) === 0) && currentWallet.chainId === 137 && (
+                  <span className="text-[10px] text-gray-600">0 OGUN</span>
+                )}
               </div>
               <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showWalletMenu ? 'rotate-180' : ''}`} />
             </div>
@@ -746,7 +792,19 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-xs text-white font-medium">
+                        {Number(info.balance).toFixed(4)} {info.chainId === 137 ? 'POL' : info.chainId === 1 ? 'ETH' : 'POL'}
+                      </div>
+                      {type === 'soundchain' && magicOgunBalance ? (
+                        <div className="text-[10px] text-cyan-400">{Number(magicOgunBalance).toFixed(2)} OGUN</div>
+                      ) : info.ogunBalance && Number(info.ogunBalance) > 0 ? (
+                        <div className="text-[10px] text-cyan-400">{Number(info.ogunBalance).toFixed(2)} OGUN</div>
+                      ) : info.chainId === 137 ? (
+                        <div className="text-[10px] text-gray-600">0 OGUN</div>
+                      ) : null}
+                    </div>
                     {selectedWallet === type && <Check className="w-4 h-4 text-cyan-400" />}
                     {type !== 'soundchain' && (
                       <button
