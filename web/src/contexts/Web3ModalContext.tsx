@@ -1,8 +1,5 @@
 'use client'
 
-import { createAppKit } from '@reown/appkit/react'
-import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5'
-import { polygon, mainnet, base, arbitrum, optimism, zetachain } from '@reown/appkit/networks'
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 
 // Get your projectId from https://cloud.reown.com
@@ -19,14 +16,18 @@ const metadata = {
 // Track if AppKit has been initialized
 let isInitialized = false
 
-function initializeAppKit() {
+async function initializeAppKit() {
   if (typeof window === 'undefined' || isInitialized) return
 
   try {
+    const { createAppKit } = await import('@reown/appkit/react')
+    const { Ethers5Adapter } = await import('@reown/appkit-adapter-ethers5')
+    const networks = await import('@reown/appkit/networks')
+
     createAppKit({
       adapters: [new Ethers5Adapter()],
-      networks: [polygon, mainnet, base, arbitrum, optimism, zetachain],
-      defaultNetwork: polygon,
+      networks: [networks.polygon, networks.mainnet, networks.base, networks.arbitrum, networks.optimism, networks.zetachain],
+      defaultNetwork: networks.polygon,
       projectId,
       metadata,
       features: {
@@ -68,8 +69,8 @@ export function Web3ModalProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Delay AppKit init slightly to let Magic SDK iframes settle
-    const timer = setTimeout(() => {
-      initializeAppKit()
+    const timer = setTimeout(async () => {
+      await initializeAppKit()
       setIsReady(true)
     }, 100)
     return () => clearTimeout(timer)
