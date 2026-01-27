@@ -17,6 +17,16 @@ const DIRECT_WALLET_ADDRESS_KEY = 'soundchain_direct_wallet_address'
 const DIRECT_WALLET_TYPE_KEY = 'soundchain_direct_wallet_type'
 const DIRECT_WALLET_CHAIN_KEY = 'soundchain_direct_wallet_chain'
 
+// External wallet info stored in context for multi-wallet portfolio display
+export interface ExternalWalletInfo {
+  address: string
+  walletType: string // 'metamask' | 'coinbase' | 'walletconnect' | 'phantom'
+  chainId: number
+  chainName: string
+  balance: string
+  ogunBalance: string
+}
+
 export interface UnifiedWalletState {
   activeWalletType: WalletType
   activeAddress: string | null
@@ -40,6 +50,10 @@ export interface UnifiedWalletState {
   directWalletSubtype: string | null  // e.g., 'metamask', 'walletconnect', 'coinbase'
   // Multi-chain viewing support (EVM networks share the same address)
   nativeTokenSymbol: string  // POL, ETH, etc. based on selected chain
+  // All connected external wallets (for multi-wallet portfolio)
+  connectedExternalWallets: ExternalWalletInfo[]
+  registerExternalWallet: (wallet: ExternalWalletInfo) => void
+  removeExternalWallet: (walletType: string) => void
 }
 
 const defaultState: UnifiedWalletState = {
@@ -63,6 +77,9 @@ const defaultState: UnifiedWalletState = {
   setDirectConnection: () => {},
   directWalletSubtype: null,
   nativeTokenSymbol: 'POL',
+  connectedExternalWallets: [],
+  registerExternalWallet: () => {},
+  removeExternalWallet: () => {},
 }
 
 const UnifiedWalletContext = createContext<UnifiedWalletState>(defaultState)
@@ -133,6 +150,33 @@ function UnifiedWalletInner({
   const [directAddress, setDirectAddress] = useState<string | null>(null)
   const [directWalletSubtype, setDirectWalletSubtype] = useState<string | null>(null)
   const [directChainId, setDirectChainId] = useState<number | null>(null)
+
+  // Multi-wallet portfolio: all connected external wallets
+  const [connectedExternalWallets, setConnectedExternalWallets] = useState<ExternalWalletInfo[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const saved = localStorage.getItem('soundchain_external_wallets')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
+
+  const registerExternalWallet = useCallback((wallet: ExternalWalletInfo) => {
+    setConnectedExternalWallets(prev => {
+      // Replace if same walletType, otherwise add
+      const filtered = prev.filter(w => w.walletType !== wallet.walletType)
+      const next = [...filtered, wallet]
+      localStorage.setItem('soundchain_external_wallets', JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  const removeExternalWallet = useCallback((walletType: string) => {
+    setConnectedExternalWallets(prev => {
+      const next = prev.filter(w => w.walletType !== walletType)
+      localStorage.setItem('soundchain_external_wallets', JSON.stringify(next))
+      return next
+    })
+  }, [])
 
   // Web3Modal hooks
   const { open } = web3ModalHooks.useWeb3Modal()
@@ -464,6 +508,9 @@ function UnifiedWalletInner({
     web3,
     isWeb3ModalReady: true,
     nativeTokenSymbol,
+    connectedExternalWallets,
+    registerExternalWallet,
+    removeExternalWallet,
   }
 
   return (
@@ -504,6 +551,9 @@ function UnifiedWalletFallback({ children }: { children: ReactNode }) {
     web3: magicWeb3 || null,
     isWeb3ModalReady: false,
     nativeTokenSymbol: 'POL',
+    connectedExternalWallets: [],
+    registerExternalWallet: () => {},
+    removeExternalWallet: () => {},
   }
 
   return (

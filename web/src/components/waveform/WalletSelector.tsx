@@ -168,6 +168,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     activeBalance: unifiedActiveBalance,
     directWalletSubtype,
     chainId: unifiedChainId,
+    registerExternalWallet,
   } = useUnifiedWallet()
 
   // Connected external wallets
@@ -222,6 +223,20 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       setSelectedWallet(walletType)
     }
   }, [unifiedActiveType, unifiedActiveAddress, unifiedActiveBalance, directWalletSubtype, unifiedChainId])
+
+  // Sync external wallets to UnifiedWalletContext registry (for MultiWalletAggregator)
+  useEffect(() => {
+    for (const w of externalWallets) {
+      registerExternalWallet({
+        address: w.address,
+        walletType: w.type,
+        chainId: w.chainId || 137,
+        chainName: w.chainName || 'Polygon',
+        balance: w.balance || '0',
+        ogunBalance: w.ogunBalance || '0',
+      })
+    }
+  }, [externalWallets, registerExternalWallet])
 
   // Fetch OGUN balance for external wallets on Polygon
   const fetchOgunBalance = useCallback(async (address: string): Promise<string> => {
