@@ -108,22 +108,37 @@ class BlockchainFunction<Type> {
 
   protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
     const { me } = this;
-    if (!me?.magicWalletAddress) {
+    // Resolve wallet address from any OAuth method or external wallet
+    const userAddress = me?.magicWalletAddress
+      || me?.googleWalletAddress
+      || me?.discordWalletAddress
+      || me?.twitchWalletAddress
+      || me?.emailWalletAddress;
+    if (!userAddress) {
       throw new Error('User address not found');
     }
-    await this.validateAddress(me.magicWalletAddress);
-    const isLoggedIn = await this.magic?.user.isLoggedIn() || false; // Added login check
-    if (!isLoggedIn) return; // Prevent execution if not logged in
-    if (this.web3?.currentProvider && (this.web3.currentProvider as unknown as SDKBase['rpcProvider']).isMagic && !isLoggedIn && me.email) {
-      try {
-        await this.magic?.auth.loginWithMagicLink({ email: me.email, showUI: false });
-      } catch (e) {
+    await this.validateAddress(userAddress);
+    // Only check Magic login if the provider is actually Magic SDK
+    const isMagicProvider = this.web3?.currentProvider && (this.web3.currentProvider as unknown as SDKBase['rpcProvider']).isMagic;
+    if (isMagicProvider) {
+      const isLoggedIn = await this.magic?.user.isLoggedIn() || false;
+      if (!isLoggedIn && me?.email) {
+        try {
+          await this.magic?.auth.loginWithMagicLink({ email: me.email, showUI: false });
+        } catch (e) {
+          if (this.onErrorFunction) {
+            this.onErrorFunction(new Error('Failed to refresh login session'));
+          }
+          return;
+        }
+      } else if (!isLoggedIn) {
         if (this.onErrorFunction) {
-          this.onErrorFunction(new Error('Failed to refresh login session'));
+          this.onErrorFunction(new Error('Magic session expired. Please log in again.'));
         }
         return;
       }
     }
+    // For external wallets (MetaMask, WalletConnect, etc.), skip Magic checks entirely
     const gasPriceString = await this.web3?.eth.getGasPrice();
     const gasPrice = Math.floor(Number(gasPriceString) * gasPriceMultiplier) ?? fallbackGasPrice;
     lambda(gasPrice)
