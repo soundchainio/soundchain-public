@@ -5260,7 +5260,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <input
                           type="number"
                           placeholder="0.0"
-                          {/* TODO: Replace placeholder quote with real ZetaChain cross-chain quote API */}
+                          // TODO: Replace placeholder quote with real ZetaChain cross-chain quote API
                           value={swapFromAmount ? (parseFloat(swapFromAmount) * 0.9995).toFixed(4) : ''}
                           readOnly
                           className="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-3 text-xl text-white cursor-not-allowed"
