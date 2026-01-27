@@ -562,6 +562,50 @@ useEffect(() => {
 - Minting: 0.01 POL per NFT (flat fee)
 - Marketplace Sales: 0.05% of sale price + 0.05% of gas
 
+### 25. Stream Count Dedup Bug - Loops Not Counting (Jan 27, 2026)
+**Symptom:** NFT "Ashtray" (SC-POL-D038-2600003) only showed 2 stream counts despite being played on repeat/loop at work. Long-standing bug from 2023-2024 never addressed.
+**Root Cause:** Per-minute dedup window in `useLogStream.tsx` was too aggressive:
+```typescript
+// OLD (BROKEN): Key per minute - blocks ALL logs for same track within same minute
+const sessionKey = `${trackId}-${Math.floor(Date.now() / 60000)}`
+if (loggedTracks.current.has(sessionKey)) return null  // BLOCKED!
+```
+- If track loops and finishes within the same 60-second window → blocked
+- Short tracks (under 2 min) could only ever count once per minute
+- `loggedTracks` Set accumulated keys forever during session (never cleared per-track)
+**Fix:** Replaced per-minute Set with per-track timestamp Map:
+```typescript
+// NEW (FIXED): Allow stream every 30 seconds of actual play time per track
+const now = Date.now()
+const lastLog = lastLogTime.current.get(trackId)
+if (lastLog && (now - lastLog) < (minDuration * 1000)) return null  // Only block rapid-fire
+lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
+```
+**How it works now:**
+- Every 30 seconds of play time → stream counts
+- Loop/repeat mode → each full play counts as separate stream
+- Anti-spam: Can't log same track faster than every 30 seconds
+- Backend still validates 30-second minimum duration
+**File:** `web/src/hooks/useLogStream.tsx`
+**Don't Do This:** Use accumulating Sets for dedup - they grow forever and block legitimate plays
+**Commit:** `c6e10857b`
+
+### 26. Stream Count Logged on Song End Instead of 30s Mark (Jan 27, 2026)
+**Symptom:** Streams only counted when a song finished playing or when user skipped to next track. Partial plays over 30 seconds were missed entirely. Looped tracks only logged once per full play-through.
+**Root Cause:** `AudioEngine.tsx` called `logStream()` in `handleEndedSong()` and in the `currentSong.trackId` useEffect (on track change). Neither logged during active playback.
+**Fix:** Moved stream logging into `handleTimeUpdate()` which fires continuously during playback:
+- Added `streamLoggedForCurrentPlay` ref (boolean flag)
+- When `audioRef.current.currentTime >= 30` and flag is false → log stream immediately
+- Flag resets on track change (useEffect) and loop restart (handleEndedSong)
+- Removed all `logStream()` calls from `handleEndedSong()` and song-change useEffect
+**Calibration:** Added `streamCountCalibratedAt` field to SCid model. First stream logged after this fix stamps the date, so users/admins can distinguish pre-fix (potentially undercounted) from post-fix (accurate) stream counts.
+**Files:**
+- `web/src/components/common/BottomAudioPlayer/AudioEngine.tsx` - 30s mark logging
+- `api/src/models/SCid.ts` - Added `streamCountCalibratedAt` field
+- `api/src/services/SCidService.ts` - Stamps calibration date on first post-fix stream
+**Don't Do This:** Log streams only on song end - users who listen 5 minutes then skip get zero credit
+**Commits:** `0ba475f9f` (frontend), pending (API)
+
 ---
 
 ## ARCHITECTURE PATTERNS

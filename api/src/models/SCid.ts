@@ -203,6 +203,15 @@ export class SCid extends Model {
   lastClaimedAt?: Date;
 
   /**
+   * Stream count calibration date - streams counted from this date forward
+   * are accurate after the 30s-mark logging fix (Jan 27, 2026).
+   * Pre-calibration counts may be undercounted due to legacy dedup bugs.
+   */
+  @Field(() => Date, { nullable: true })
+  @prop()
+  streamCountCalibratedAt?: Date;
+
+  /**
    * Previous owner (for transfers)
    */
   @Field(() => String, { nullable: true })

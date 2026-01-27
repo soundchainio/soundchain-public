@@ -413,6 +413,10 @@ export class SCidService extends Service {
       scidRecord.dailyOgunEarned = todayCreatorRewards + creatorReward;
     }
     scidRecord.lastStreamAt = timestamp;
+    // Stamp calibration date on first accurate stream count (post-fix Jan 27, 2026)
+    if (!scidRecord.streamCountCalibratedAt) {
+      scidRecord.streamCountCalibratedAt = timestamp;
+    }
     await scidRecord.save();
 
     // Get creator wallet
