@@ -46,60 +46,25 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
     }
   }
 
-  let Content
-
+  // MetaMask wallet - no longer blocks UI for wrong network (multi-chain era)
   if (!loading && me?.defaultWallet === DefaultWallet.MetaMask) {
-    if (!account) {
-      Content = (
-        <>
-          <div>Oops! It seems you may not be connected to MetaMask</div>
-          <Button variant="rainbow-xs" className="max-w-xs" onClick={() => connect()}>
-            Connect to MetaMask Wallet
-          </Button>
-        </>
-      )
-    } else if (chainId !== network.id) {
-      Content = (
-        <>
-          <div>Oops! It seems you may be connected to another network</div>
-          <Button variant="rainbow-xs" onClick={() => addMumbaiTestnet()}>
-            Connect to Mumbai Testnet
-          </Button>
-        </>
-      )
+    if (account) {
+      context = {
+        account,
+        balance,
+        web3,
+        refetchBalance,
+      }
     }
-
-    context = {
-      account,
-      balance,
-      web3,
-      refetchBalance,
+    // Log network mismatch instead of blocking UI
+    if (account && chainId && chainId !== network.id) {
+      console.log(`⚠️ MetaMask on chain ${chainId}, expected ${network.id}. OGUN features require Polygon.`)
     }
   }
 
   return (
     <WalletContext.Provider value={context}>
       {children}
-      {Content && (
-        <div className="fixed top-0 left-0 z-50 flex h-full w-full flex-col items-center justify-center gap-4 bg-gray-30 bg-opacity-95 text-center font-bold text-white">
-          {Content}
-          <div>or you can select your SoundChain Wallet</div>
-          <Button
-            variant="rainbow-xs"
-            onClick={() => {
-              updateDefaultWallet({
-                variables: {
-                  input: {
-                    defaultWallet: DefaultWallet.Soundchain,
-                  },
-                },
-              })
-            }}
-          >
-            Select SoundChain Wallet
-          </Button>
-        </div>
-      )}
     </WalletContext.Provider>
   )
 }

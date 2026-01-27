@@ -30,6 +30,30 @@ import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { config } from 'config'
 import SoundchainOGUN20 from '../../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 
+// Pre-load WalletConnect SDK in background so it's instant when user clicks
+let wcProviderModule: any = null
+if (typeof window !== 'undefined') {
+  // Start loading immediately on page load (non-blocking)
+  import('@walletconnect/ethereum-provider').then(mod => {
+    wcProviderModule = mod
+    console.log('⚡ WalletConnect SDK pre-loaded')
+  }).catch(() => {})
+}
+
+const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
+
+// WalletConnect modal config for faster loading
+const WC_MODAL_CONFIG = {
+  // Featured wallets shown immediately without API fetch
+  explorerRecommendedWalletIds: [
+    'c57ca95b47569778a828d19178114f4db188b89b763c899ba0be274e97267d96', // MetaMask
+    '1ae92b26df02f0abca6304df07debccd18262fdf5fe82daa81593582dac9a369', // Rainbow
+    '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet
+  ],
+  // Disable extra features for faster modal render
+  explorerExcludedWalletIds: 'ALL' as const, // Only show featured + installed
+}
+
 // Wallet type definitions
 type WalletType = 'soundchain' | 'metamask' | 'coinbase' | 'walletconnect' | 'phantom'
 
@@ -328,11 +352,11 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
       setError(null)
 
       try {
-        const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
-        const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
+        const mod = wcProviderModule || await import('@walletconnect/ethereum-provider')
+        const { EthereumProvider } = mod
 
         const provider = await EthereumProvider.init({
-          projectId,
+          projectId: WALLETCONNECT_PROJECT_ID,
           chains: [137],
           optionalChains: [1, 8453, 42161],
           showQrModal: false, // Don't show QR - we'll use deep link
@@ -523,20 +547,24 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
     setError(null)
 
     try {
-      const { EthereumProvider } = await import('@walletconnect/ethereum-provider')
-
-      const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id'
+      // Use pre-loaded module or dynamic import as fallback
+      const mod = wcProviderModule || await import('@walletconnect/ethereum-provider')
+      const { EthereumProvider } = mod
 
       const provider = await EthereumProvider.init({
-        projectId,
+        projectId: WALLETCONNECT_PROJECT_ID,
         chains: [137],
         optionalChains: [1, 8453, 42161, 7000], // Polygon, Ethereum, Base, Arbitrum, ZetaChain
         showQrModal: true,
+        qrModalOptions: {
+          explorerRecommendedWalletIds: WC_MODAL_CONFIG.explorerRecommendedWalletIds,
+          explorerExcludedWalletIds: WC_MODAL_CONFIG.explorerExcludedWalletIds,
+        },
         metadata: {
           name: 'SoundChain',
           description: 'Web3 Music Platform',
-          url: 'https://soundchain.io',
-          icons: ['https://soundchain.io/logo.png'],
+          url: 'https://soundchain.fm',
+          icons: ['https://soundchain.fm/logo.png'],
         },
       })
 
