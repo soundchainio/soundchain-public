@@ -863,6 +863,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [announcementsLoading, setAnnouncementsLoading] = useState(true)
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<any>(null)
 
+  // Token Transfer state
+  const [tokenTransferType, setTokenTransferType] = useState<'POL' | 'OGUN'>('POL')
+  const [tokenRecipient, setTokenRecipient] = useState('')
+  const [transferAmount, setTransferAmount] = useState('')
+  const [isTransferringToken, setIsTransferringToken] = useState(false)
+
   // NFT Transfer state
   const [transferRecipient, setTransferRecipient] = useState('')
   const [selectedNftId, setSelectedNftId] = useState('')
@@ -981,14 +987,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }, [selectedView, refetchBalance])
 
   // Transaction history query for wallet activity
+  // Use active unified wallet address (covers Magic, MetaMask, Web3Modal) with Magic fallback
+  const effectiveWalletForActivity = activeAddress || walletAccount || ''
   const { data: maticUsdData } = useMaticUsdQuery()
   const { data: transactionData, loading: transactionsLoading } = usePolygonscanQuery({
     variables: {
-      wallet: walletAccount || '',
+      wallet: effectiveWalletForActivity,
       page: { first: 10 },
     },
-    skip: !walletAccount, // Only fetch when wallet is connected
+    skip: !effectiveWalletForActivity, // Fetch when ANY wallet is connected
   })
+
+  // All known wallet addresses for direction detection
+  const allMyAddresses = useMemo(() => {
+    const addresses = [walletAccount, activeAddress].filter(Boolean).map(a => a!.toLowerCase())
+    return new Set(addresses)
+  }, [walletAccount, activeAddress])
 
   // Unified Wallet Context - synced across all pages (includes Web3Modal)
   const {
@@ -1706,35 +1720,139 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     await mutation({ variables: { input: { followedId: profileId } } })
   }
 
-  // Handle NFT Transfer - calls smart contract
+  // Handle NFT Transfer - calls ERC-721 transferFrom on-chain
   const handleTransferNFT = async () => {
     if (!transferRecipient || !selectedNftId || !userWallet) {
-      alert('Please enter a recipient address and select an NFT')
+      toast.error('Please enter a recipient address and select an NFT')
       return
     }
     // Validate Ethereum address
     if (!/^0x[a-fA-F0-9]{40}$/.test(transferRecipient)) {
-      alert('Invalid wallet address. Please enter a valid Ethereum address.')
+      toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
       return
     }
     if (transferRecipient.toLowerCase() === userWallet.toLowerCase()) {
-      alert('Cannot transfer to yourself')
+      toast.error('Cannot transfer to yourself')
       return
     }
+
+    // Find the selected track to get tokenId and contract address
+    const selectedTrack = ownedTracks.find((t: any) => t.id === selectedNftId)
+    if (!selectedTrack) {
+      toast.error('Selected NFT not found')
+      return
+    }
+    const tokenId = selectedTrack.nftData?.tokenId || selectedTrack.tokenId
+    if (!tokenId) {
+      toast.error('This track has no on-chain token ID')
+      return
+    }
+
+    // Get web3 instance - prefer Magic, fallback to public RPC
+    const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
+
     setTransferring(true)
     try {
-      // TODO: Implement actual NFT transfer via smart contract
-      // This will call the Soundchain721 or Soundchain1155 contract
-      console.log('🔄 Transferring NFT:', { nftId: selectedNftId, to: transferRecipient })
-      alert(`NFT transfer initiated!\n\nNFT: ${selectedNftId}\nTo: ${transferRecipient}\n\nThis feature requires wallet signing - coming soon!`)
-      // Reset form on success
+      // Minimal ERC-721 ABI for transferFrom
+      const erc721TransferAbi: AbiItem[] = [
+        {
+          inputs: [
+            { name: 'from', type: 'address' },
+            { name: 'to', type: 'address' },
+            { name: 'tokenId', type: 'uint256' },
+          ],
+          name: 'transferFrom',
+          outputs: [],
+          stateMutability: 'nonpayable',
+          type: 'function',
+        },
+      ]
+
+      const nftContractAddress = selectedTrack.nftData?.contract || config.web3.contractsV2.contractAddress
+      const contract = new web3Instance.eth.Contract(erc721TransferAbi, nftContractAddress)
+
+      const tx = contract.methods.transferFrom(userWallet, transferRecipient, tokenId)
+      const gas = await tx.estimateGas({ from: userWallet })
+      await tx.send({ from: userWallet, gas: Math.ceil(Number(gas) * 1.2) })
+
+      toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)}`)
       setTransferRecipient('')
       setSelectedNftId('')
     } catch (err: any) {
-      console.error('❌ NFT Transfer error:', err)
-      alert(`Transfer failed: ${err.message || 'Unknown error'}`)
+      console.error('NFT Transfer error:', err)
+      if (err.message?.includes('User denied') || err.message?.includes('user rejected')) {
+        toast.error('Transaction rejected by user')
+      } else {
+        toast.error(err.message?.slice(0, 120) || 'Transfer failed')
+      }
     } finally {
       setTransferring(false)
+    }
+  }
+
+  // Handle Token Transfer (POL or OGUN)
+  const handleTransferToken = async () => {
+    if (!tokenRecipient || !transferAmount || !userWallet) {
+      toast.error('Please fill in recipient address and amount')
+      return
+    }
+    if (!Web3.utils.isAddress(tokenRecipient)) {
+      toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
+      return
+    }
+    if (tokenRecipient.toLowerCase() === userWallet.toLowerCase()) {
+      toast.error('Cannot transfer to yourself')
+      return
+    }
+    const amount = parseFloat(transferAmount)
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount greater than 0')
+      return
+    }
+    const currentBalance = tokenTransferType === 'POL'
+      ? parseFloat(maticBalance || '0')
+      : parseFloat(ogunBalance || '0')
+    if (amount > currentBalance) {
+      toast.error(`Insufficient ${tokenTransferType} balance`)
+      return
+    }
+
+    setIsTransferringToken(true)
+    try {
+      const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+      const amountWei = web3Instance.utils.toWei(transferAmount, 'ether')
+
+      if (tokenTransferType === 'POL') {
+        const gasPrice = await web3Instance.eth.getGasPrice()
+        await web3Instance.eth.sendTransaction({
+          from: userWallet,
+          to: tokenRecipient,
+          value: amountWei,
+          gas: 21000,
+          gasPrice,
+        })
+      } else {
+        const SoundchainOGUN20 = (await import('contract/SoundchainOGUN20.sol/SoundchainOGUN20.json')).default
+        const contract = new web3Instance.eth.Contract(
+          SoundchainOGUN20.abi as AbiItem[],
+          config.ogunTokenAddress
+        )
+        const gasEstimate = await contract.methods.transfer(tokenRecipient, amountWei).estimateGas({ from: userWallet })
+        await contract.methods.transfer(tokenRecipient, amountWei).send({
+          from: userWallet,
+          gas: Math.ceil(Number(gasEstimate) * 1.2),
+        })
+      }
+
+      toast.success(`${transferAmount} ${tokenTransferType} sent to ${tokenRecipient.slice(0, 6)}...${tokenRecipient.slice(-4)}`)
+      setTokenRecipient('')
+      setTransferAmount('')
+      if (refetchBalance) refetchBalance()
+    } catch (err: any) {
+      console.error('Token transfer error:', err)
+      toast.error(`Transfer failed: ${err.message || 'Unknown error'}`)
+    } finally {
+      setIsTransferringToken(false)
     }
   }
 
@@ -1788,8 +1906,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // User profile from GraphQL - REAL DATA
   const user = userData?.me?.profile
-  // FIX: defaultWallet is ENUM, use magicWalletAddress for actual 0x address
+  // FIX: defaultWallet is ENUM, check ALL OAuth wallet addresses + external wallets
   const userWallet = userData?.me?.magicWalletAddress
+    || userData?.me?.googleWalletAddress
+    || userData?.me?.discordWalletAddress
+    || userData?.me?.twitchWalletAddress
+    || userData?.me?.emailWalletAddress
+    || activeAddress // fallback to UnifiedWallet (MetaMask/Web3Modal)
   const userTracks = tracksData?.groupedTracks?.nodes || []
   const ownedTracks = ownedTracksData?.groupedTracks?.nodes || [] // User-owned NFTs for wallet page
   const marketTracks = listingData?.listingItems?.nodes || []
@@ -5269,6 +5392,112 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </Card>
               )}
 
+              {/* Transfer Tokens Section */}
+              <Card className="retro-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <Coins className="w-6 h-6 text-cyan-400" />
+                  <h3 className="retro-title text-lg">Transfer Tokens</h3>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">Send POL or OGUN tokens to another wallet address.</p>
+
+                {/* Token Type Toggle */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setTokenTransferType('POL')}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${
+                      tokenTransferType === 'POL'
+                        ? 'bg-cyan-500/20 border border-cyan-500 text-cyan-400'
+                        : 'bg-black/30 border border-gray-700 text-gray-400 hover:border-gray-500'
+                    }`}
+                  >
+                    POL
+                  </button>
+                  <button
+                    onClick={() => setTokenTransferType('OGUN')}
+                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${
+                      tokenTransferType === 'OGUN'
+                        ? 'bg-purple-500/20 border border-purple-500 text-purple-400'
+                        : 'bg-black/30 border border-gray-700 text-gray-400 hover:border-gray-500'
+                    }`}
+                  >
+                    OGUN
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Recipient */}
+                  <div>
+                    <label className="text-xs text-gray-400 mb-2 block">Recipient Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x..."
+                      value={tokenRecipient}
+                      onChange={(e) => setTokenRecipient(e.target.value)}
+                      className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none font-mono"
+                    />
+                  </div>
+
+                  {/* Amount */}
+                  <div>
+                    <label className="text-xs text-gray-400 mb-2 block">
+                      Amount ({tokenTransferType})
+                      <span className="ml-2 text-gray-500">
+                        Balance: {tokenTransferType === 'POL'
+                          ? parseFloat(maticBalance || '0').toFixed(4)
+                          : parseFloat(ogunBalance || '0').toFixed(2)
+                        }
+                      </span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={transferAmount}
+                        onChange={(e) => setTransferAmount(e.target.value)}
+                        className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none pr-16"
+                        min="0"
+                        step="any"
+                      />
+                      <button
+                        onClick={() => {
+                          const bal = tokenTransferType === 'POL'
+                            ? (parseFloat(maticBalance || '0') - 0.01).toFixed(6)
+                            : parseFloat(ogunBalance || '0').toString()
+                          setTransferAmount(parseFloat(bal) > 0 ? bal : '0')
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 rounded hover:bg-cyan-500/20 transition-all"
+                      >
+                        MAX
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Send Button */}
+                  <Button
+                    variant="outline"
+                    className={`w-full ${
+                      tokenTransferType === 'POL'
+                        ? 'border-cyan-500/50 hover:bg-cyan-500/10 text-cyan-400'
+                        : 'border-purple-500/50 hover:bg-purple-500/10 text-purple-400'
+                    }`}
+                    disabled={!userWallet || !tokenRecipient || !transferAmount || isTransferringToken}
+                    onClick={handleTransferToken}
+                  >
+                    {isTransferringToken ? (
+                      <>
+                        <div className={`animate-spin w-4 h-4 border-2 ${tokenTransferType === 'POL' ? 'border-cyan-400' : 'border-purple-400'} border-t-transparent rounded-full mr-2`} />
+                        Sending {tokenTransferType}...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4 mr-2" />
+                        Send {transferAmount || '0'} {tokenTransferType}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+
               {/* Transfer NFTs Section */}
               <Card id="transfer-section" className="retro-card p-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -5328,8 +5557,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <BarChart3 className="w-6 h-6 text-cyan-400" />
                     <h3 className="retro-title text-lg">Recent Activity</h3>
                   </div>
-                  {walletAccount && (
-                    <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
+                  {effectiveWalletForActivity && (
+                    <a href={`https://polygonscan.com/address/${effectiveWalletForActivity}`} target="_blank" rel="noreferrer">
                       <Button variant="ghost" size="sm" className="text-xs text-cyan-400 hover:bg-cyan-500/10">
                         View All <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
@@ -5352,7 +5581,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 ) : transactionData?.getTransactionHistory?.result?.length ? (
                   <div className="space-y-2 max-h-80 overflow-y-auto">
                     {transactionData.getTransactionHistory.result.slice(0, 10).map((tx: any) => {
-                      const isIncoming = tx.to?.toLowerCase() === walletAccount?.toLowerCase()
+                      const isIncoming = allMyAddresses.has(tx.to?.toLowerCase() || '')
                       const valueInMatic = tx.value ? (parseFloat(tx.value) / 1e18).toFixed(4) : '0'
                       const usdValue = maticUsdData?.maticUsd ? (parseFloat(valueInMatic) * parseFloat(maticUsdData.maticUsd)).toFixed(2) : '0.00'
                       const date = tx.timeStamp ? new Date(parseInt(tx.timeStamp) * 1000).toLocaleDateString() : ''
