@@ -92,8 +92,8 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
   const [lastCreatorReward, setLastCreatorReward] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Track which tracks we've already logged this session (prevent duplicates)
-  const loggedTracks = useRef<Set<string>>(new Set())
+  // Track last log timestamp per track (prevent rapid-fire duplicates, allow legitimate loops)
+  const lastLogTime = useRef<Map<string, number>>(new Map())
   const playStartTimes = useRef<Map<string, number>>(new Map())
 
   const [logStreamMutation] = useMutation(LOG_STREAM_MUTATION)
@@ -156,10 +156,11 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
       return null
     }
 
-    // Prevent duplicate logs for same track in same session
-    const sessionKey = `${trackId}-${Math.floor(Date.now() / 60000)}` // Key per minute
-    if (loggedTracks.current.has(sessionKey)) {
-      console.log('[useLogStream] Already logged this track recently, skipping')
+    // Allow stream every 30 seconds of play time per track (not per-minute window)
+    const now = Date.now()
+    const lastLog = lastLogTime.current.get(trackId)
+    if (lastLog && (now - lastLog) < (minDuration * 1000)) {
+      console.log(`[useLogStream] Track logged ${Math.floor((now - lastLog) / 1000)}s ago, need ${minDuration}s between logs`)
       return null
     }
 
@@ -189,8 +190,8 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
       const result = data?.logStream as LogStreamResult
 
       if (result?.success) {
-        // Mark as logged
-        loggedTracks.current.add(sessionKey)
+        // Mark log timestamp for this track
+        lastLogTime.current.set(trackId, Date.now())
 
         // WIN-WIN: Update rewards for BOTH listener and creator
         const listenerReward = result.listenerReward || 0
@@ -250,7 +251,7 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
    * Reset session (clear logged tracks cache)
    */
   const resetSession = useCallback(() => {
-    loggedTracks.current.clear()
+    lastLogTime.current.clear()
     playStartTimes.current.clear()
   }, [])
 
