@@ -12,7 +12,8 @@ import Image from 'next/image'
 import Web3 from 'web3'
 import * as yup from 'yup'
 
-import WalletConnectProvider from '@walletconnect/web3-provider'
+// WalletConnect v1 removed - bridge is shut down. Use Reown AppKit.
+// import WalletConnectProvider from '@walletconnect/web3-provider'
 
 interface ProductCharacteristicsProps {
   title: string
@@ -49,13 +50,8 @@ export default function OgunPage() {
   const [added, setAdded] = useState(false)
   const [closeModal, setCloseModal] = useState<boolean>(true)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const provider: any = new WalletConnectProvider({
-    rpc: {
-      1: 'https://cloudflare-eth.com/', // https://ethereumnodes.com/
-      137: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com',
-    },
-  })
+  // WalletConnect v1 removed - provider stubbed out
+  const provider: any = null
 
   const connectWC = async () => {
     try {

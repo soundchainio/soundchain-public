@@ -134,10 +134,12 @@ function UnifiedWalletInner({
   const [directWalletSubtype, setDirectWalletSubtype] = useState<string | null>(null)
   const [directChainId, setDirectChainId] = useState<number | null>(null)
 
-  // Web3Modal hooks
+  // Reown AppKit hooks
   const { open } = web3ModalHooks.useWeb3Modal()
-  const { address: web3ModalAddress, isConnected: isWeb3ModalConnected, chainId: web3ModalChainId } = web3ModalHooks.useWeb3ModalAccount()
+  const { address: web3ModalAddress, isConnected: isWeb3ModalConnected } = web3ModalHooks.useWeb3ModalAccount()
   const { disconnect: disconnectWeb3Modal } = web3ModalHooks.useDisconnect()
+  const appKitNetwork = web3ModalHooks.useAppKitNetwork?.() || {}
+  const web3ModalChainId = appKitNetwork.chainId ? Number(appKitNetwork.chainId) : null
 
   // Magic wallet (OAuth) hooks
   const {
@@ -519,15 +521,16 @@ export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isReady && typeof window !== 'undefined') {
-      // Dynamically import hooks after Web3Modal is initialized
-      import('@web3modal/ethers5/react').then((module) => {
+      // Dynamically import Reown AppKit hooks
+      import('@reown/appkit/react').then((module) => {
         setWeb3ModalHooks({
-          useWeb3Modal: module.useWeb3Modal,
-          useWeb3ModalAccount: module.useWeb3ModalAccount,
+          useWeb3Modal: module.useAppKit,
+          useWeb3ModalAccount: module.useAppKitAccount,
           useDisconnect: module.useDisconnect,
+          useAppKitNetwork: module.useAppKitNetwork,
         })
       }).catch((e) => {
-        console.error('Failed to load Web3Modal hooks:', e)
+        console.error('Failed to load Reown AppKit hooks:', e)
       })
     }
   }, [isReady])

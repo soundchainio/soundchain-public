@@ -1,61 +1,14 @@
 'use client'
 
-import { createWeb3Modal, defaultConfig } from '@web3modal/ethers5/react'
+import { createAppKit } from '@reown/appkit/react'
+import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5'
+import { polygon, mainnet, base, arbitrum, optimism, zetachain } from '@reown/appkit/networks'
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 
-// Get your projectId from https://cloud.walletconnect.com
+// Get your projectId from https://cloud.reown.com
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID'
 
-// Chain configurations
-const polygon = {
-  chainId: 137,
-  name: 'Polygon',
-  currency: 'POL', // Formerly MATIC, rebranded Sept 2024
-  explorerUrl: 'https://polygonscan.com',
-  rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com'
-}
-
-const ethereum = {
-  chainId: 1,
-  name: 'Ethereum',
-  currency: 'ETH',
-  explorerUrl: 'https://etherscan.io',
-  rpcUrl: 'https://eth.llamarpc.com'
-}
-
-const base = {
-  chainId: 8453,
-  name: 'Base',
-  currency: 'ETH',
-  explorerUrl: 'https://basescan.org',
-  rpcUrl: 'https://mainnet.base.org'
-}
-
-const arbitrum = {
-  chainId: 42161,
-  name: 'Arbitrum',
-  currency: 'ETH',
-  explorerUrl: 'https://arbiscan.io',
-  rpcUrl: 'https://arb1.arbitrum.io/rpc'
-}
-
-const optimism = {
-  chainId: 10,
-  name: 'Optimism',
-  currency: 'ETH',
-  explorerUrl: 'https://optimistic.etherscan.io',
-  rpcUrl: 'https://mainnet.optimism.io'
-}
-
-const zetachain = {
-  chainId: 7000,
-  name: 'ZetaChain',
-  currency: 'ZETA',
-  explorerUrl: 'https://explorer.zetachain.com',
-  rpcUrl: 'https://zetachain-evm.blockpi.network/v1/rpc/public'
-}
-
-// Web3Modal metadata - use soundchain.io (without www) to match production
+// Reown AppKit metadata
 const metadata = {
   name: 'SoundChain',
   description: 'Music NFT Marketplace',
@@ -63,19 +16,23 @@ const metadata = {
   icons: ['https://soundchain.io/favicons/apple-touch-icon.png']
 }
 
-// Track if Web3Modal has been initialized
+// Track if AppKit has been initialized
 let isInitialized = false
 
-function initializeWeb3Modal() {
+function initializeAppKit() {
   if (typeof window === 'undefined' || isInitialized) return
 
   try {
-    createWeb3Modal({
-      ethersConfig: defaultConfig({ metadata }),
-      chains: [polygon, ethereum, base, arbitrum, optimism, zetachain],
+    createAppKit({
+      adapters: [new Ethers5Adapter()],
+      networks: [polygon, mainnet, base, arbitrum, optimism, zetachain],
+      defaultNetwork: polygon,
       projectId,
-      enableAnalytics: false,
-      enableOnramp: false, // Disable fiat onramp to prevent external redirects
+      metadata,
+      features: {
+        analytics: false,
+        onramp: false,
+      },
       themeMode: 'dark',
       themeVariables: {
         '--w3m-accent': '#8B5CF6',
@@ -87,13 +44,11 @@ function initializeWeb3Modal() {
         'fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa', // Coinbase Wallet
         '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0', // Trust Wallet
       ],
-      // Keep users on site - use modal only
-      enableExplorer: false, // Disable wallet explorer to prevent external navigation
     })
     isInitialized = true
-    console.log('Web3Modal initialized successfully')
+    console.log('Reown AppKit initialized successfully')
   } catch (error) {
-    console.error('Failed to initialize Web3Modal:', error)
+    console.error('Failed to initialize Reown AppKit:', error)
   }
 }
 
@@ -112,10 +67,9 @@ export function Web3ModalProvider({ children }: { children: ReactNode }) {
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    // Delay Web3Modal init slightly to let Magic SDK iframes settle
-    // This helps avoid EIP-6963 cross-origin frame errors
+    // Delay AppKit init slightly to let Magic SDK iframes settle
     const timer = setTimeout(() => {
-      initializeWeb3Modal()
+      initializeAppKit()
       setIsReady(true)
     }, 100)
     return () => clearTimeout(timer)

@@ -26,7 +26,8 @@ import { useEffect, useState } from 'react'
     import Web3 from 'web3'
 
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    import WalletConnectProvider from '@walletconnect/web3-provider'
+    // WalletConnect v1 removed - bridge is shut down. Use Reown AppKit.
+    // import WalletConnectProvider from '@walletconnect/web3-provider'
 
     import { CustomModal } from '../components/CustomModal'
     import useBlockchainV2 from '../hooks/useBlockchainV2'
@@ -72,12 +73,8 @@ import { useEffect, useState } from 'react'
         }
       }, [setIsLandingLayout])
 
-      const provider: any = new WalletConnectProvider({
-        rpc: {
-          1: 'https://cloudflare-eth.com/',
-          137: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com',
-        },
-      })
+      // WalletConnect v1 removed - provider stubbed out
+      const provider: any = null
 
       const connectWC = async () => {
         setLoading(true)
