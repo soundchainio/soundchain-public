@@ -438,8 +438,8 @@ export function WalletConnectButton({
     }
   }, [onConnect, isMobileDevice, selectedWallet, setDirectConnection])
 
-  // Initialize WalletConnect for mobile deep link
-  const initWalletConnectForMobile = useCallback(async (walletId: string) => {
+  // Initialize WalletConnect for mobile deep link (with auto-retry)
+  const initWalletConnectForMobile = useCallback(async (walletId: string, retryCount = 0) => {
     setSelectedWallet(walletId)
     setStep('connecting')
     setError(null)
@@ -453,7 +453,7 @@ export function WalletConnectButton({
         } catch (e) {}
       }
 
-      // Add timeout for provider init (WalletConnect relay can be slow)
+      // Longer timeout for mobile - relay is often slow on cellular
       const initPromise = EthereumProvider.init({
         projectId: WALLETCONNECT_PROJECT_ID,
         chains: [137],
@@ -468,7 +468,7 @@ export function WalletConnectButton({
       })
 
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Connection timeout - please try again')), 25000)
+        setTimeout(() => reject(new Error('Connection timeout')), 30000)
       )
 
       const provider = await Promise.race([initPromise, timeoutPromise])
@@ -513,25 +513,40 @@ export function WalletConnectButton({
         }
       })
 
-      // Add timeout for connect() call too
+      // Longer timeout for connect() on mobile
       const connectPromise = provider.connect()
       const connectTimeout = new Promise<never>((_, reject) =>
         setTimeout(() => {
           // If URI was generated, don't show error (user is in wallet app)
           if (!uriGenerated) {
-            reject(new Error('Connection timeout - WalletConnect relay may be slow'))
+            reject(new Error('Connection timeout'))
           }
-        }, 20000)
+        }, 30000)
       )
 
       await Promise.race([connectPromise, connectTimeout])
 
     } catch (err: any) {
       console.error('Mobile WalletConnect error:', err)
-      // Clean up on error
+
+      // Auto-retry up to 2 times with exponential backoff
+      if (retryCount < 2 && (
+        err.message?.includes('timeout') ||
+        err.message?.includes('relay') ||
+        err.message?.includes('publish') ||
+        err.message?.includes('WebSocket')
+      )) {
+        const delay = 1500 * Math.pow(2, retryCount) // 1.5s, 3s
+        console.log(`📱 Auto-retrying mobile WalletConnect (attempt ${retryCount + 2}/3) in ${delay}ms...`)
+        setError(`Relay slow, retrying... (${retryCount + 2}/3)`)
+        setTimeout(() => initWalletConnectForMobile(walletId, retryCount + 1), delay)
+        return
+      }
+
+      // All retries exhausted
       localStorage.removeItem(WC_PENDING_SESSION_KEY)
       localStorage.removeItem(WC_PENDING_WALLET_KEY)
-      setError(err.message || 'Failed to connect. Please try again.')
+      setError('Relay timed out. Tap Try Again or try Wi-Fi instead of cellular.')
       setStep('error')
     }
   }, [onConnect, setDirectConnection])
@@ -918,12 +933,27 @@ export function WalletConnectButton({
               </div>
               <div className="text-white font-mono text-sm mb-2">Connection Failed</div>
               <div className="text-red-400 text-xs text-center font-mono mb-4">{error}</div>
-              <button
-                onClick={() => setStep('select')}
-                className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs font-mono text-white transition-colors"
-              >
-                Try Again
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (selectedWallet) {
+                      handleWalletClick(selectedWallet)
+                    } else {
+                      setStep('select')
+                    }
+                  }}
+                  className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 rounded-lg text-xs font-mono text-cyan-400 transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3 inline mr-1" />
+                  Try Again
+                </button>
+                <button
+                  onClick={() => setStep('select')}
+                  className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-xs font-mono text-white transition-colors"
+                >
+                  Other Wallet
+                </button>
+              </div>
             </div>
           )}
         </div>
