@@ -1,33 +1,26 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 26, 2026
+**Last Updated:** January 27, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
 ---
 
-## CURRENT SESSION (Jan 26, 2026)
+## CURRENT SESSION (Jan 27, 2026)
 
-**Environment:** Remote code-server (VSCode in browser) via Cloudflare tunnel
-**Device:** iPhone 14 Pro Max (mobile remote dev)
+**Environment:** War Room (back on desktop)
+**Device:** Desktop + iPhone 14 Pro Max (testing)
 **Working Dir:** `/Users/soundchain/soundchain`
-**Branch:** production (clean)
-
-**Remote Access URLs:**
-- **VSCode (code-server):** Cloudflare tunnel to port 8080 (full paste support!)
-- **Terminal (ttyd):** Cloudflare tunnel to port 7681 (backup, no paste)
-- Keep-alive script: `/tmp/keep-tunnel-alive.sh` - auto-restarts if anything dies
+**Branch:** production
 
 **Session Notes:**
-- Set up code-server for better mobile dev experience (paste works!)
-- Fixed form input styling, Polygon icon sizing, profile header contrast
-- Working remotely on iPhone - use code-server URL for best experience
-- **NFT Minting Flow Overhaul:**
-  - Fixed gas estimates (1.5 POL → ~0.1 POL)
-  - Fixed RPC rate limiting (reverted to polygon-rpc.com, added retry logic)
-  - Fixed collaborator form styling (dropdown contrast, % text color, wallet cyan)
-  - Added auto-fill for collaborator wallet address
-  - Added full wallet address display with copy button
+- Fixed stream count dedup bug (loops now count properly)
+- Stream logging moved to 30-second mark (not song end)
+- Added streamCountCalibratedAt audit field
+- Fixed external wallet balance fetching (MetaMask, WalletConnect, Coinbase, Trust)
+- Attempted Reown AppKit migration → reverted (project ID needs migration at cloud.reown.com)
+- Created RoyaltySplitter contract for post-mint collaborator royalty splits
+- **BLOCKER:** WalletConnect project ID `8e33134dfeea545054faa3493a504b8d` returns 403 from Reown API. Must register at `cloud.reown.com` before re-attempting Reown migration.
   - **Added 0.05% platform fee on minting** (0.01 POL per NFT)
   - **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
 
@@ -626,6 +619,28 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 **Don't Do This:** Leave wallet types without balance fetching. All connected wallets must show balances.
 **Commit:** `6ad2a061e`
 
+### 28. Mobile WalletConnect Relay Timeout (Jan 27, 2026)
+**Symptom:** Chrome mobile MetaMask connection times out with "relay too slow"
+**Root Cause:** WalletConnect relay on cellular networks needs longer timeouts
+**Fix:** Auto-retry up to 2 times with exponential backoff, timeout 15s→30s, better error UI with "Try Again" and "Other Wallet" buttons
+**File:** `web/src/components/dex/WalletConnectButton.tsx`
+**Commit:** `67482b734`
+
+### 29. Reown AppKit Migration - REVERTED (Jan 27, 2026)
+**Symptom:** After migrating from `@web3modal/ethers5` to `@reown/appkit`, site crashed with 500 (SSR), then showed spinning wheel (403 from API)
+**Root Cause:** Two issues:
+1. Reown packages access `window` globals → SSR crash on Vercel serverless functions
+2. WalletConnect project ID `8e33134dfeea545054faa3493a504b8d` returns 403 from `api.web3modal.org` (Reown's new API). Old `@web3modal/ethers5` used `api.web3modal.com` which still accepts it.
+**Attempted Fix:** Dynamic imports for SSR safety (commit `3b15a1915`), but 403 project ID was unsolvable without cloud.reown.com migration.
+**Final Fix:** Reverted entire Reown migration, restored `@web3modal/ethers5@5.1.11` with dynamic imports for SSR safety.
+**BLOCKER:** Must register project at `cloud.reown.com` before re-attempting Reown migration.
+**Don't Do This:**
+- Don't import `@reown/appkit` at top level - always use dynamic `import()` inside useEffect
+- Don't assume WalletConnect project IDs work across old/new APIs
+- Don't use `npm` - only `yarn` (caused node_modules corruption during install/uninstall)
+**Files:** `web/src/contexts/Web3ModalContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
+**Commits:** `882b1be64` (migration), `3b15a1915` (SSR fix), `8c688ed69` (full revert)
+
 ---
 
 ## ARCHITECTURE PATTERNS
@@ -689,6 +704,44 @@ Manages 4 wallet types:
 - MultiChainContext uses separate read-only Web3 providers for other chains
 - OGUN balance only available on Polygon - show warning on other chains
 - Selection persisted to localStorage
+
+### RoyaltySplitter - Post-Mint Collaborator Splits (Jan 27, 2026)
+**Feature:** Creators can add royalty-splitting smart contracts to EXISTING minted NFTs
+**Game-Changer:** No other platform lets you retroactively add collaborators to already-minted NFTs!
+
+**How it Works:**
+1. Creator deploys a `RoyaltySplitter` via `RoyaltySplitterFactory`
+2. Creator updates their NFT edition's `royaltyReceiver` to the splitter address
+3. Marketplace pays royalties to splitter (via EIP-2981 dynamic `royaltyInfo()` reads)
+4. Anyone can call `distribute()` to push funds to all collaborators
+5. Supports both native POL and ERC-20 (OGUN) royalty payments
+
+**Architecture:**
+```
+┌──────────────────┐     ┌───────────────────┐     ┌──────────────────┐
+│  Marketplace     │     │  RoyaltySplitter  │     │  Collaborators   │
+│  (OpenSea, etc)  │────▶│  (per-edition)    │────▶│  Artist A: 60%   │
+│                  │     │                   │     │  Artist B: 25%   │
+│  Pays royalties  │     │  Splits by bps    │     │  Producer: 15%   │
+│  via EIP-2981    │     │  (basis points)   │     │                  │
+└──────────────────┘     └───────────────────┘     └──────────────────┘
+```
+
+**Key Features:**
+- Up to 10 collaborators per splitter
+- 48-hour timelock on split updates (prevents creator front-running)
+- Auto-distributes existing balance before applying new splits
+- Factory tracks all splitters per creator and per SCid
+
+**Contract:** `soundchain-contracts/contracts/RoyaltySplitter.sol`
+**Status:** Contract written, pushed to `soundchain-contracts` repo. NOT yet deployed on-chain.
+
+**Next Steps to Deploy:**
+1. Compile with Hardhat: `npx hardhat compile`
+2. Write deployment script for `RoyaltySplitterFactory`
+3. Deploy factory to Polygon mainnet
+4. Add factory address to `web/src/config.ts`
+5. Build UI for creators to deploy splitters from their edition page
 
 ### Legacy Branch Reference
 When looking for "how it used to work", check legacy branches:
@@ -831,6 +884,8 @@ Testing across 3 devices (iPhone Pro, iPhone 14, iPad). Results:
 | StreamingRewardsDistributor | `0xcf9416c49D525f7a50299c71f33606A158F28546` | Polygon | Funded (5M OGUN) |
 | StakingRewards | Config address | Polygon | LIVE |
 | SCidRegistry | Deployed | Polygon | LIVE |
+| RoyaltySplitter | Not deployed yet | Polygon | CONTRACT READY |
+| RoyaltySplitterFactory | Not deployed yet | Polygon | CONTRACT READY |
 
 ### SoundChain Safe Treasury (Fee Collection)
 **Address:** `0x519BED3fE32272Fa8f1AECaf86DbFbd674Ee703B`
@@ -1086,6 +1141,11 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 26, 2026 | **View Tabs Contrast** - Dark backdrop for Feed/Dashboard/etc tabs | 3f5a71697 |
 | Jan 26, 2026 | **Textarea Full Width Fix** - Force 100% width to override @tailwindcss/forms | 752358923 |
 | Jan 26, 2026 | **GitBook: SCid Registry Docs** - Full technical docs for SCid system | soundchain-docs |
+| Jan 27, 2026 | **Stream Count Fix** - Dedup bug fix + 30s mark logging + calibration field | c6e10857b, 0ba475f9f, edcb4bb76 |
+| Jan 27, 2026 | **External Wallet Balances** - Balance fetching for all wallet types via public RPCs | 6ad2a061e |
+| Jan 27, 2026 | **WalletConnect Retry** - Auto-retry with exponential backoff for mobile relay timeouts | 67482b734 |
+| Jan 27, 2026 | **Reown Migration (REVERTED)** - Attempted @reown/appkit, reverted due to project ID 403 | 882b1be64→8c688ed69 |
+| Jan 27, 2026 | **RoyaltySplitter Contract** - Post-mint collaborator royalty splits via EIP-2981 | soundchain-contracts 038e95b |
 
 ---
 
