@@ -57,8 +57,8 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
           <ModalProvider>
             <StateProvider>
               <PanelProvider>
-                <WalletProvider>
-                  <UnifiedWalletProvider>
+                <UnifiedWalletProvider>
+                  <WalletProvider>
                     <AudioPlayerProvider>
                     <TrackProvider>
                       <HideBottomNavBarProvider>
@@ -71,8 +71,8 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                       </HideBottomNavBarProvider>
                     </TrackProvider>
                   </AudioPlayerProvider>
-                  </UnifiedWalletProvider>
-                </WalletProvider>
+                  </WalletProvider>
+                </UnifiedWalletProvider>
               </PanelProvider>
             </StateProvider>
           </ModalProvider>
@@ -87,9 +87,11 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   return (
     <ApolloProvider pageProps={pageProps}>
       <MagicProvider>
-        <WalletProvider>
-          {Component.getLayout(<Component {...pageProps} />)}
-        </WalletProvider>
+        <UnifiedWalletProvider>
+          <WalletProvider>
+            {Component.getLayout(<Component {...pageProps} />)}
+          </WalletProvider>
+        </UnifiedWalletProvider>
       </MagicProvider>
     </ApolloProvider>
   )
