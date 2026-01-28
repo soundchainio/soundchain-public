@@ -70,7 +70,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone
+  Radio, MapPin, Download, Smartphone, Rss
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 
@@ -218,9 +218,8 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
     { name: 'Coinbase Wallet', icon: '🔵', popular: false, id: 'coinbase', description: isMobile ? 'Open Coinbase app' : 'Browser extension' },
   ]
 
-  // WalletConnect v2 Project ID - use env var or fallback
-  // Get your own at https://cloud.walletconnect.com/
-  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
+  // WalletConnect v2 Project ID - registered at cloud.reown.com
+  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
 
   // Auto-connect if in-app browser detected
   useEffect(() => {
@@ -857,17 +856,30 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showTop100Modal, setShowTop100Modal] = useState(false)
 
   // Profile tab state (Feed | Music | Playlists)
-  const [profileTab, setProfileTab] = useState<'feed' | 'music' | 'playlists'>('feed')
+  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'playlists'>('myfeed')
 
   // Announcements state (from /v1/feed API)
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [announcementsLoading, setAnnouncementsLoading] = useState(true)
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<any>(null)
 
+  // Token Transfer state
+  const [tokenTransferType, setTokenTransferType] = useState<'POL' | 'OGUN'>('POL')
+  const [tokenRecipient, setTokenRecipient] = useState('')
+  const [transferAmount, setTransferAmount] = useState('')
+  const [isTransferringToken, setIsTransferringToken] = useState(false)
+
   // NFT Transfer state
   const [transferRecipient, setTransferRecipient] = useState('')
   const [selectedNftId, setSelectedNftId] = useState('')
   const [transferring, setTransferring] = useState(false)
+
+  // Sweep state
+  const [showSweepPanel, setShowSweepPanel] = useState(false)
+  const [sweepSelectedIds, setSweepSelectedIds] = useState<Set<string>>(new Set())
+  const [sweepRecipient, setSweepRecipient] = useState('')
+  const [sweeping, setSweeping] = useState(false)
+  const [sweepProgress, setSweepProgress] = useState({ current: 0, total: 0 })
 
   // Swap state - track selected tokens for dynamic labels
   const [swapFromToken, setSwapFromToken] = useState<Token>('MATIC')
@@ -943,8 +955,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const fetchStakedBalance = async () => {
       if (!walletAccount || !tokenStakeContractAddress) return
       try {
-        // Use Magic web3 or fallback to public Polygon RPC
-        const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+        // Use Magic web3 or fallback to Alchemy Polygon RPC
+        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
         const stakingContract = getStakingContract(web3Instance)
         const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
         if (balanceData) {
@@ -975,14 +987,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }, [selectedView, refetchBalance])
 
   // Transaction history query for wallet activity
+  // Use active unified wallet address (covers Magic, MetaMask, Web3Modal) with Magic fallback
+  const effectiveWalletForActivity = activeAddress || walletAccount || ''
   const { data: maticUsdData } = useMaticUsdQuery()
   const { data: transactionData, loading: transactionsLoading } = usePolygonscanQuery({
     variables: {
-      wallet: walletAccount || '',
+      wallet: effectiveWalletForActivity,
       page: { first: 10 },
     },
-    skip: !walletAccount, // Only fetch when wallet is connected
+    skip: !effectiveWalletForActivity, // Fetch when ANY wallet is connected
   })
+
+  // All known wallet addresses for direction detection
+  const allMyAddresses = useMemo(() => {
+    const addresses = [walletAccount, activeAddress].filter(Boolean).map(a => a!.toLowerCase())
+    return new Set(addresses)
+  }, [walletAccount, activeAddress])
 
   // Unified Wallet Context - synced across all pages (includes Web3Modal)
   const {
@@ -1669,6 +1689,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     ))
   )
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
+
+  // Set default profile tab based on whether viewing own profile
+  // Own profile: default to 'myfeed', Others: default to 'posts'
+  useEffect(() => {
+    if (selectedView === 'profile') {
+      if (isViewingOwnProfile) {
+        setProfileTab('myfeed')
+      } else {
+        setProfileTab('posts')
+      }
+    }
+  }, [selectedView, isViewingOwnProfile])
+
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
     skip: shouldSkipPlaylists,
@@ -1687,35 +1720,139 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     await mutation({ variables: { input: { followedId: profileId } } })
   }
 
-  // Handle NFT Transfer - calls smart contract
+  // Handle NFT Transfer - calls ERC-721 transferFrom on-chain
   const handleTransferNFT = async () => {
     if (!transferRecipient || !selectedNftId || !userWallet) {
-      alert('Please enter a recipient address and select an NFT')
+      toast.error('Please enter a recipient address and select an NFT')
       return
     }
     // Validate Ethereum address
     if (!/^0x[a-fA-F0-9]{40}$/.test(transferRecipient)) {
-      alert('Invalid wallet address. Please enter a valid Ethereum address.')
+      toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
       return
     }
     if (transferRecipient.toLowerCase() === userWallet.toLowerCase()) {
-      alert('Cannot transfer to yourself')
+      toast.error('Cannot transfer to yourself')
       return
     }
+
+    // Find the selected track to get tokenId and contract address
+    const selectedTrack = ownedTracks.find((t: any) => t.id === selectedNftId)
+    if (!selectedTrack) {
+      toast.error('Selected NFT not found')
+      return
+    }
+    const tokenId = selectedTrack.nftData?.tokenId || selectedTrack.tokenId
+    if (!tokenId) {
+      toast.error('This track has no on-chain token ID')
+      return
+    }
+
+    // Get web3 instance - prefer Magic, fallback to public RPC
+    const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
+
     setTransferring(true)
     try {
-      // TODO: Implement actual NFT transfer via smart contract
-      // This will call the Soundchain721 or Soundchain1155 contract
-      console.log('🔄 Transferring NFT:', { nftId: selectedNftId, to: transferRecipient })
-      alert(`NFT transfer initiated!\n\nNFT: ${selectedNftId}\nTo: ${transferRecipient}\n\nThis feature requires wallet signing - coming soon!`)
-      // Reset form on success
+      // Minimal ERC-721 ABI for transferFrom
+      const erc721TransferAbi: AbiItem[] = [
+        {
+          inputs: [
+            { name: 'from', type: 'address' },
+            { name: 'to', type: 'address' },
+            { name: 'tokenId', type: 'uint256' },
+          ],
+          name: 'transferFrom',
+          outputs: [],
+          stateMutability: 'nonpayable',
+          type: 'function',
+        },
+      ]
+
+      const nftContractAddress = selectedTrack.nftData?.contract || config.web3.contractsV2.contractAddress
+      const contract = new web3Instance.eth.Contract(erc721TransferAbi, nftContractAddress)
+
+      const tx = contract.methods.transferFrom(userWallet, transferRecipient, tokenId)
+      const gas = await tx.estimateGas({ from: userWallet })
+      await tx.send({ from: userWallet, gas: Math.ceil(Number(gas) * 1.2) })
+
+      toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)}`)
       setTransferRecipient('')
       setSelectedNftId('')
     } catch (err: any) {
-      console.error('❌ NFT Transfer error:', err)
-      alert(`Transfer failed: ${err.message || 'Unknown error'}`)
+      console.error('NFT Transfer error:', err)
+      if (err.message?.includes('User denied') || err.message?.includes('user rejected')) {
+        toast.error('Transaction rejected by user')
+      } else {
+        toast.error(err.message?.slice(0, 120) || 'Transfer failed')
+      }
     } finally {
       setTransferring(false)
+    }
+  }
+
+  // Handle Token Transfer (POL or OGUN)
+  const handleTransferToken = async () => {
+    if (!tokenRecipient || !transferAmount || !userWallet) {
+      toast.error('Please fill in recipient address and amount')
+      return
+    }
+    if (!Web3.utils.isAddress(tokenRecipient)) {
+      toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
+      return
+    }
+    if (tokenRecipient.toLowerCase() === userWallet.toLowerCase()) {
+      toast.error('Cannot transfer to yourself')
+      return
+    }
+    const amount = parseFloat(transferAmount)
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Please enter a valid amount greater than 0')
+      return
+    }
+    const currentBalance = tokenTransferType === 'POL'
+      ? parseFloat(maticBalance || '0')
+      : parseFloat(ogunBalance || '0')
+    if (amount > currentBalance) {
+      toast.error(`Insufficient ${tokenTransferType} balance`)
+      return
+    }
+
+    setIsTransferringToken(true)
+    try {
+      const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+      const amountWei = web3Instance.utils.toWei(transferAmount, 'ether')
+
+      if (tokenTransferType === 'POL') {
+        const gasPrice = await web3Instance.eth.getGasPrice()
+        await web3Instance.eth.sendTransaction({
+          from: userWallet,
+          to: tokenRecipient,
+          value: amountWei,
+          gas: 21000,
+          gasPrice,
+        })
+      } else {
+        const SoundchainOGUN20 = (await import('contract/SoundchainOGUN20.sol/SoundchainOGUN20.json')).default
+        const contract = new web3Instance.eth.Contract(
+          SoundchainOGUN20.abi as AbiItem[],
+          config.ogunTokenAddress
+        )
+        const gasEstimate = await contract.methods.transfer(tokenRecipient, amountWei).estimateGas({ from: userWallet })
+        await contract.methods.transfer(tokenRecipient, amountWei).send({
+          from: userWallet,
+          gas: Math.ceil(Number(gasEstimate) * 1.2),
+        })
+      }
+
+      toast.success(`${transferAmount} ${tokenTransferType} sent to ${tokenRecipient.slice(0, 6)}...${tokenRecipient.slice(-4)}`)
+      setTokenRecipient('')
+      setTransferAmount('')
+      if (refetchBalance) refetchBalance()
+    } catch (err: any) {
+      console.error('Token transfer error:', err)
+      toast.error(`Transfer failed: ${err.message || 'Unknown error'}`)
+    } finally {
+      setIsTransferringToken(false)
     }
   }
 
