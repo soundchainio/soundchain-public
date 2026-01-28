@@ -5401,6 +5401,28 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </div>
                 <p className="text-gray-400 text-sm mb-4">Send POL or OGUN tokens to another wallet address.</p>
 
+                {/* From Address - Transparency */}
+                <div className="mb-4 p-3 bg-black/30 rounded-lg border border-gray-700">
+                  <label className="text-xs text-gray-500 mb-1 block">From</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-cyan-400 font-mono text-sm break-all">
+                      {userWallet || 'Connect wallet'}
+                    </span>
+                    {userWallet && (
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(userWallet)
+                          toast.success('Address copied!')
+                        }}
+                        className="text-gray-500 hover:text-cyan-400 transition-colors flex-shrink-0"
+                        title="Copy address"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Token Type Toggle */}
                 <div className="flex gap-2 mb-4">
                   <button
