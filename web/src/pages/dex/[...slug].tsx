@@ -6835,7 +6835,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {/* Profile Header - Same layout as logged-in user */}
                   <div className="relative z-10 pt-8 pb-6">
                     {/* Dark gradient overlay for text readability on any cover image */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/30 pointer-events-none" />
                     <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 relative">
                       {/* Back Button */}
                       <Button
@@ -6869,7 +6869,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             </div>
                           </div>
 
-                          <div className="flex-1 space-y-4 backdrop-blur-md bg-black/80 rounded-2xl p-4 -ml-2 lg:ml-0">
+                          <div className="flex-1 space-y-4 backdrop-blur-xl bg-black/90 rounded-2xl p-4 -ml-2 lg:ml-0 border border-white/10">
                             <div className="space-y-2">
                               {/* Username with inline badges */}
                               <div className="flex items-center gap-2">
