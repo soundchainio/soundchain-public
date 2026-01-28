@@ -5609,7 +5609,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 )}
               </Card>
             </div>
-            {/* </MultiChainProvider> removed — bisect */}
           )}
 
           {/* Settings View */}
