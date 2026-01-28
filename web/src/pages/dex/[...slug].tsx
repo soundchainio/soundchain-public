@@ -1721,7 +1721,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     await mutation({ variables: { input: { followedId: profileId } } })
   }
 
-  // Handle NFT Transfer - calls ERC-721 transferFrom on-chain (with 0.01 POL platform fee)
+  // Handle NFT Transfer - calls ERC-721 transferFrom on-chain (with 0.05% of gas cost as platform fee)
   const handleTransferNFT = async () => {
     if (!transferRecipient || !selectedNftId || !userWallet) {
       toast.error('Please enter a recipient address and select an NFT')
@@ -1752,32 +1752,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     // Get web3 instance - prefer Magic, fallback to public RPC
     const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
 
-    // Check POL balance for platform fee (0.01 POL per NFT transfer)
-    const nftTransferFee = config.mintFeePerNft || 0.01
-    const polBalance = parseFloat(maticBalance || '0')
-    if (polBalance < nftTransferFee + 0.01) { // fee + gas buffer
-      toast.error(`Insufficient POL for transfer fee. Need at least ${(nftTransferFee + 0.01).toFixed(3)} POL`)
-      return
-    }
-
     setTransferring(true)
     try {
       const treasuryAddress = config.treasuryAddress
-      const feeWei = web3Instance.utils.toWei(nftTransferFee.toString(), 'ether')
       const gasPrice = await web3Instance.eth.getGasPrice()
 
-      // Step 1: Send platform fee to treasury
-      console.log(`📤 Sending ${nftTransferFee} POL fee to treasury: ${treasuryAddress}`)
-      await web3Instance.eth.sendTransaction({
-        from: userWallet,
-        to: treasuryAddress,
-        value: feeWei,
-        gas: 21000,
-        gasPrice,
-      })
-      console.log('✅ Platform fee sent to treasury')
-
-      // Step 2: Transfer NFT
       // Minimal ERC-721 ABI for transferFrom
       const erc721TransferAbi: AbiItem[] = [
         {
@@ -1796,11 +1775,33 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       const nftContractAddress = selectedTrack.nftData?.contract || config.web3.contractsV2.contractAddress
       const contract = new web3Instance.eth.Contract(erc721TransferAbi, nftContractAddress)
 
+      // Estimate gas for the transfer
       const tx = contract.methods.transferFrom(userWallet, transferRecipient, tokenId)
-      const gas = await tx.estimateGas({ from: userWallet })
-      await tx.send({ from: userWallet, gas: Math.ceil(Number(gas) * 1.2) })
+      const gasEstimate = await tx.estimateGas({ from: userWallet })
+      const gasWithBuffer = Math.ceil(Number(gasEstimate) * 1.2)
 
-      toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)} (fee: ${nftTransferFee} POL)`)
+      // Calculate 0.05% of gas cost as platform fee
+      const platformFeeRate = config.soundchainFee || 0.0005
+      const gasCostWei = BigInt(gasWithBuffer) * BigInt(gasPrice)
+      const gasCostPol = parseFloat(web3Instance.utils.fromWei(gasCostWei.toString(), 'ether'))
+      const platformFee = gasCostPol * platformFeeRate
+      const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
+
+      // Step 1: Send platform fee to treasury (0.05% of gas cost)
+      console.log(`📤 Sending ${platformFee.toFixed(8)} POL fee (0.05% of ${gasCostPol.toFixed(6)} gas) to treasury: ${treasuryAddress}`)
+      await web3Instance.eth.sendTransaction({
+        from: userWallet,
+        to: treasuryAddress,
+        value: feeWei,
+        gas: 21000,
+        gasPrice,
+      })
+      console.log('✅ Platform fee sent to treasury')
+
+      // Step 2: Transfer NFT
+      await tx.send({ from: userWallet, gas: gasWithBuffer })
+
+      toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)} (fee: ${platformFee.toFixed(8)} POL)`)
       setTransferRecipient('')
       setSelectedNftId('')
     } catch (err: any) {
@@ -1990,7 +1991,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }
   const deselectAllForSweep = () => setSweepSelectedIds(new Set())
 
-  // Handle Sweep - batch transfer NFTs via individual transferFrom calls (with 0.01 POL fee per NFT)
+  // Handle Sweep - batch transfer NFTs via individual transferFrom calls (with 0.05% of gas cost as platform fee)
   const handleSweep = async () => {
     if (!sweepRecipient || sweepSelectedIds.size === 0 || !userWallet) {
       toast.error('Please select NFTs and enter a recipient address')
@@ -2011,44 +2012,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       return
     }
 
-    // Calculate total platform fee (0.01 POL per NFT)
-    const feePerNft = config.mintFeePerNft || 0.01
-    const totalFee = feePerNft * tracksToSweep.length
-    const polBalance = parseFloat(maticBalance || '0')
-    const gasBuffer = 0.05 * tracksToSweep.length // rough gas estimate
-    if (polBalance < totalFee + gasBuffer) {
-      toast.error(`Insufficient POL for sweep. Need ~${(totalFee + gasBuffer).toFixed(3)} POL (${totalFee.toFixed(3)} fee + gas)`)
-      return
-    }
-
     setSweeping(true)
     setSweepProgress({ current: 0, total: tracksToSweep.length })
 
     // Get web3 instance - prefer Magic, fallback to public RPC
     const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
     const treasuryAddress = config.treasuryAddress
-
-    try {
-      // Step 1: Collect total platform fee upfront
-      const feeWei = web3Instance.utils.toWei(totalFee.toString(), 'ether')
-      const gasPrice = await web3Instance.eth.getGasPrice()
-      console.log(`📤 Sending ${totalFee} POL sweep fee (${tracksToSweep.length} NFTs × ${feePerNft} POL) to treasury: ${treasuryAddress}`)
-      await web3Instance.eth.sendTransaction({
-        from: userWallet,
-        to: treasuryAddress,
-        value: feeWei,
-        gas: 21000,
-        gasPrice,
-      })
-      console.log('✅ Sweep platform fee sent to treasury')
-      toast.success(`Platform fee collected: ${totalFee} POL`)
-    } catch (err: any) {
-      console.error('Sweep fee collection failed:', err)
-      toast.error(`Fee collection failed: ${err.message || 'Unknown error'}`)
-      setSweeping(false)
-      setSweepProgress({ current: 0, total: 0 })
-      return
-    }
+    const platformFeeRate = config.soundchainFee || 0.0005
 
     // Minimal ERC-721 ABI for transferFrom
     const erc721TransferAbi: AbiItem[] = [
@@ -2065,41 +2035,79 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       },
     ]
 
-    let succeeded = 0
-    let failed = 0
+    try {
+      const gasPrice = await web3Instance.eth.getGasPrice()
 
-    // Step 2: Transfer each NFT
-    for (let i = 0; i < tracksToSweep.length; i++) {
-      const track = tracksToSweep[i]
-      const tokenId = track.nftData?.tokenId || track.tokenId
-      const contractAddr = track.nftData?.contract || config.web3.contractsV2.contractAddress
+      // Step 1: Estimate total gas for all transfers
+      let totalGasEstimate = BigInt(0)
+      const gasEstimates: { track: any; gas: number; contract: any; tx: any }[] = []
 
-      try {
-        setSweepProgress({ current: i + 1, total: tracksToSweep.length })
+      for (const track of tracksToSweep) {
+        const tokenId = track.nftData?.tokenId || track.tokenId
+        const contractAddr = track.nftData?.contract || config.web3.contractsV2.contractAddress
         const contract = new web3Instance.eth.Contract(erc721TransferAbi, contractAddr)
         const tx = contract.methods.transferFrom(userWallet, sweepRecipient, tokenId)
         const gas = await tx.estimateGas({ from: userWallet })
-        await tx.send({ from: userWallet, gas })
-        succeeded++
-        toast.success(`Transferred ${track.title || `Token #${tokenId}`} (${i + 1}/${tracksToSweep.length})`)
-      } catch (err: any) {
-        failed++
-        console.error(`Sweep transfer failed for token ${tokenId}:`, err)
-        toast.error(`Failed: ${track.title || `Token #${tokenId}`} - ${err.message?.slice(0, 80) || 'Unknown error'}`)
+        const gasWithBuffer = Math.ceil(Number(gas) * 1.2)
+        totalGasEstimate += BigInt(gasWithBuffer)
+        gasEstimates.push({ track, gas: gasWithBuffer, contract, tx })
       }
-    }
 
-    setSweeping(false)
-    setSweepProgress({ current: 0, total: 0 })
+      // Calculate 0.05% of total gas cost as platform fee
+      const totalGasCostWei = totalGasEstimate * BigInt(gasPrice)
+      const totalGasCostPol = parseFloat(web3Instance.utils.fromWei(totalGasCostWei.toString(), 'ether'))
+      const platformFee = totalGasCostPol * platformFeeRate
+      const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
 
-    if (succeeded > 0) {
-      toast.success(`Sweep complete! ${succeeded} NFT${succeeded > 1 ? 's' : ''} transferred${failed > 0 ? `, ${failed} failed` : ''} (fee: ${totalFee} POL)`)
-      setSweepSelectedIds(new Set())
-      setSweepRecipient('')
-      setShowSweepPanel(false)
-      refetchBalance?.()
-    } else {
-      toast.error('All transfers failed. Check wallet connection and gas balance.')
+      // Step 2: Collect platform fee (0.05% of total gas cost)
+      console.log(`📤 Sending ${platformFee.toFixed(8)} POL sweep fee (0.05% of ${totalGasCostPol.toFixed(6)} gas) to treasury: ${treasuryAddress}`)
+      await web3Instance.eth.sendTransaction({
+        from: userWallet,
+        to: treasuryAddress,
+        value: feeWei,
+        gas: 21000,
+        gasPrice,
+      })
+      console.log('✅ Sweep platform fee sent to treasury')
+      toast.success(`Platform fee collected: ${platformFee.toFixed(8)} POL`)
+
+      // Step 3: Transfer each NFT
+      let succeeded = 0
+      let failed = 0
+
+      for (let i = 0; i < gasEstimates.length; i++) {
+        const { track, gas, tx } = gasEstimates[i]
+        const tokenId = track.nftData?.tokenId || track.tokenId
+
+        try {
+          setSweepProgress({ current: i + 1, total: tracksToSweep.length })
+          await tx.send({ from: userWallet, gas })
+          succeeded++
+          toast.success(`Transferred ${track.title || `Token #${tokenId}`} (${i + 1}/${tracksToSweep.length})`)
+        } catch (err: any) {
+          failed++
+          console.error(`Sweep transfer failed for token ${tokenId}:`, err)
+          toast.error(`Failed: ${track.title || `Token #${tokenId}`} - ${err.message?.slice(0, 80) || 'Unknown error'}`)
+        }
+      }
+
+      setSweeping(false)
+      setSweepProgress({ current: 0, total: 0 })
+
+      if (succeeded > 0) {
+        toast.success(`Sweep complete! ${succeeded} NFT${succeeded > 1 ? 's' : ''} transferred${failed > 0 ? `, ${failed} failed` : ''} (fee: ${platformFee.toFixed(8)} POL)`)
+        setSweepSelectedIds(new Set())
+        setSweepRecipient('')
+        setShowSweepPanel(false)
+        refetchBalance?.()
+      } else {
+        toast.error('All transfers failed. Check wallet connection and gas balance.')
+      }
+    } catch (err: any) {
+      console.error('Sweep error:', err)
+      toast.error(`Sweep failed: ${err.message || 'Unknown error'}`)
+      setSweeping(false)
+      setSweepProgress({ current: 0, total: 0 })
     }
   }
 
