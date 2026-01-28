@@ -641,23 +641,35 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 **Files:** `web/src/contexts/Web3ModalContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
 **Commits:** `882b1be64` (migration), `3b15a1915` (SSR fix), `8c688ed69` (full revert)
 
-### 30. Circular Import TDZ Crash - SITE DOWN (Jan 28, 2026)
-**Symptom:** Entire site crashes with `ReferenceError: Cannot access 'iy' before initialization` in webpack chunk `1600-55783cb0f78151f2.js`. Application error page renders with legacy header.
-**Root Cause:** Commit `811e32db9` added `import { useUnifiedWallet } from '../contexts/UnifiedWalletContext'` to `useWalletContext.tsx`, creating a **circular module dependency**. Both modules live in the same webpack chunk, and the Temporal Dead Zone (TDZ) error fires when one module references a variable from the other before initialization completes.
+### 30. Dual-Version WalletConnect TDZ Crash - SITE DOWN (Jan 28, 2026)
+**Symptom:** Entire site crashes with `ReferenceError: Cannot access 'iy' before initialization` in webpack chunk `1600`. Application error page renders with legacy header.
+**Root Cause:** `yarn.lock` contained TWO versions of `@walletconnect/ethereum-provider`:
+- `2.16.1` — required internally by `@web3modal/ethers5@5.1.11` (added during Reown migration/revert)
+- `2.23.0` — resolved from direct `^2.21.6` dep in `package.json`
+Webpack bundled both into chunk `1600`. One version's module referenced a variable from the other before initialization, triggering the TDZ error.
+**Why reverts didn't fix it:** The stale `2.16.1` entry survived in `yarn.lock` through all git reverts because `yarn install` was never re-run to clean the lockfile. The problem was invisible at the source code level.
+**Contributing factor:** Commit `811e32db9` added a circular import between `useWalletContext` and `UnifiedWalletContext` which compounded the chunk initialization issue.
 **Timeline:**
-- `f7fc29aca` (1:33 PM) - Last working commit (external wallet _execute fix)
-- `811e32db9` (1:47 PM) - Broke the site (circular import added)
-- 4+ fix attempts failed (provider swap, localStorage approach, revert Web3 injection, remove WC dep)
-- Another Claude session made 3 additional commits trying to fix it (also failed)
-- `ca14c8fe2` - Full batch revert of 10 commits restored working state
-**Fix:** `git revert --no-commit HEAD~10..HEAD` to roll back to `f7fc29aca`
+- `8c688ed69` (Jan 27 AM) - Reown revert introduced dual-version in yarn.lock (latent)
+- `811e32db9` (1:47 PM) - Circular import triggered the latent TDZ
+- 7+ fix attempts across 2 Claude sessions failed (all source-level, none touched yarn.lock)
+- `ca14c8fe2` - Batch revert of 10 commits (didn't fix - yarn.lock still dirty)
+- `74e7557a6` - **ACTUAL FIX**: Removed direct `@walletconnect/ethereum-provider` dep + ran `yarn install` to clean lockfile
+**Fix:** Removed direct `@walletconnect/ethereum-provider` from `package.json`. Ran `yarn install` to regenerate `yarn.lock` with single version (2.16.1 from `@web3modal/ethers5`).
 **Don't Do This:**
-- **NEVER import `useUnifiedWallet` into `useWalletContext.tsx`** - these modules are in the same webpack chunk and create a circular dependency
+- **NEVER import `useUnifiedWallet` into `useWalletContext.tsx`** - circular dependency within same webpack chunk
 - **NEVER import between context providers that wrap each other** in `_app.tsx` without checking the dependency graph
-- Don't try incremental fixes when the site is down - revert first, fix later
+- Don't try incremental source-level fixes when yarn.lock is the problem
+- Don't add direct deps that duplicate transitive deps from other packages
+**CRITICAL RULE — ALWAYS run `yarn install` after:**
+- Reverting commits that touched `package.json`
+- Adding or removing dependencies
+- Any `git revert` that spans dependency changes
+- Multiple sessions making package changes
+- **If in doubt, run `yarn install` — stale yarn.lock entries are invisible killers**
 **Lesson:** When adding cross-context dependencies, use localStorage, events, or a shared non-context module instead of direct imports between provider files.
-**Files:** `web/src/hooks/useWalletContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
-**Commits:** `811e32db9` (broke), `ca14c8fe2` (reverted)
+**Files:** `web/package.json`, `web/yarn.lock`, `web/src/hooks/useWalletContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
+**Commits:** `8c688ed69` (latent), `811e32db9` (triggered), `ca14c8fe2` (partial revert), `74e7557a6` (actual fix)
 
 ### 31. NFT Mint Silently Fails with External Wallets (Jan 28, 2026)
 **Symptom:** Platform fee sends to Gnosis Safe successfully, but NFT mint never reaches blockchain. Toast shows "There was an error while minting your NFT."
