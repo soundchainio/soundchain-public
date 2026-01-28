@@ -29,10 +29,6 @@ import { TrackNFTCard } from 'components/dex/TrackNFTCard'
 import { CoinbaseNFTCard } from 'components/dex/CoinbaseNFTCard'
 import { WalletNFTCollection, WalletNFTGrid } from 'components/dex/WalletNFTCollection'
 import { MultiWalletAggregator } from 'components/dex/MultiWalletAggregator'
-// BISECT: These 3 imports suspected of causing TDZ crash — testing without them
-// import { ChainSwitcher } from 'components/dex/ChainSwitcher'
-// import { WalletSelector } from 'components/waveform/WalletSelector'
-// import { MultiChainProvider, useMultiChain } from 'contexts/MultiChainContext'
 import { WalletConnectButton } from 'components/dex/WalletConnectButton'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
@@ -71,7 +67,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss
+  Radio, MapPin, Download, Smartphone
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 
@@ -219,8 +215,9 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
     { name: 'Coinbase Wallet', icon: '🔵', popular: false, id: 'coinbase', description: isMobile ? 'Open Coinbase app' : 'Browser extension' },
   ]
 
-  // WalletConnect v2 Project ID - registered at cloud.reown.com
-  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
+  // WalletConnect v2 Project ID - use env var or fallback
+  // Get your own at https://cloud.walletconnect.com/
+  const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '8e33134dfeea545054faa3493a504b8d'
 
   // Auto-connect if in-app browser detected
   useEffect(() => {
@@ -857,30 +854,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showTop100Modal, setShowTop100Modal] = useState(false)
 
   // Profile tab state (Feed | Music | Playlists)
-  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'playlists'>('myfeed')
+  const [profileTab, setProfileTab] = useState<'feed' | 'music' | 'playlists'>('feed')
 
   // Announcements state (from /v1/feed API)
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [announcementsLoading, setAnnouncementsLoading] = useState(true)
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<any>(null)
 
-  // Token Transfer state
-  const [tokenTransferType, setTokenTransferType] = useState<'POL' | 'OGUN'>('POL')
-  const [tokenRecipient, setTokenRecipient] = useState('')
-  const [transferAmount, setTransferAmount] = useState('')
-  const [isTransferringToken, setIsTransferringToken] = useState(false)
-
   // NFT Transfer state
   const [transferRecipient, setTransferRecipient] = useState('')
   const [selectedNftId, setSelectedNftId] = useState('')
   const [transferring, setTransferring] = useState(false)
-
-  // Sweep state
-  const [showSweepPanel, setShowSweepPanel] = useState(false)
-  const [sweepSelectedIds, setSweepSelectedIds] = useState<Set<string>>(new Set())
-  const [sweepRecipient, setSweepRecipient] = useState('')
-  const [sweeping, setSweeping] = useState(false)
-  const [sweepProgress, setSweepProgress] = useState({ current: 0, total: 0 })
 
   // Swap state - track selected tokens for dynamic labels
   const [swapFromToken, setSwapFromToken] = useState<Token>('MATIC')
@@ -956,8 +940,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const fetchStakedBalance = async () => {
       if (!walletAccount || !tokenStakeContractAddress) return
       try {
-        // Use Magic web3 or fallback to Alchemy Polygon RPC
-        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
+        // Use Magic web3 or fallback to public Polygon RPC
+        const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
         const stakingContract = getStakingContract(web3Instance)
         const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
         if (balanceData) {
@@ -988,22 +972,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }, [selectedView, refetchBalance])
 
   // Transaction history query for wallet activity
-  // Use active unified wallet address (covers Magic, MetaMask, Web3Modal) with Magic fallback
-  const effectiveWalletForActivity = activeAddress || walletAccount || ''
   const { data: maticUsdData } = useMaticUsdQuery()
   const { data: transactionData, loading: transactionsLoading } = usePolygonscanQuery({
     variables: {
-      wallet: effectiveWalletForActivity,
+      wallet: walletAccount || '',
       page: { first: 10 },
     },
-    skip: !effectiveWalletForActivity, // Fetch when ANY wallet is connected
+    skip: !walletAccount, // Only fetch when wallet is connected
   })
-
-  // All known wallet addresses for direction detection
-  const allMyAddresses = useMemo(() => {
-    const addresses = [walletAccount, activeAddress].filter(Boolean).map(a => a!.toLowerCase())
-    return new Set(addresses)
-  }, [walletAccount, activeAddress])
 
   // Unified Wallet Context - synced across all pages (includes Web3Modal)
   const {
@@ -1690,19 +1666,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     ))
   )
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
-
-  // Set default profile tab based on whether viewing own profile
-  // Own profile: default to 'myfeed', Others: default to 'posts'
-  useEffect(() => {
-    if (selectedView === 'profile') {
-      if (isViewingOwnProfile) {
-        setProfileTab('myfeed')
-      } else {
-        setProfileTab('posts')
-      }
-    }
-  }, [selectedView, isViewingOwnProfile])
-
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
     skip: shouldSkipPlaylists,
@@ -1721,139 +1684,35 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     await mutation({ variables: { input: { followedId: profileId } } })
   }
 
-  // Handle NFT Transfer - calls ERC-721 transferFrom on-chain
+  // Handle NFT Transfer - calls smart contract
   const handleTransferNFT = async () => {
     if (!transferRecipient || !selectedNftId || !userWallet) {
-      toast.error('Please enter a recipient address and select an NFT')
+      alert('Please enter a recipient address and select an NFT')
       return
     }
     // Validate Ethereum address
     if (!/^0x[a-fA-F0-9]{40}$/.test(transferRecipient)) {
-      toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
+      alert('Invalid wallet address. Please enter a valid Ethereum address.')
       return
     }
     if (transferRecipient.toLowerCase() === userWallet.toLowerCase()) {
-      toast.error('Cannot transfer to yourself')
+      alert('Cannot transfer to yourself')
       return
     }
-
-    // Find the selected track to get tokenId and contract address
-    const selectedTrack = ownedTracks.find((t: any) => t.id === selectedNftId)
-    if (!selectedTrack) {
-      toast.error('Selected NFT not found')
-      return
-    }
-    const tokenId = selectedTrack.nftData?.tokenId || selectedTrack.tokenId
-    if (!tokenId) {
-      toast.error('This track has no on-chain token ID')
-      return
-    }
-
-    // Get web3 instance - prefer Magic, fallback to public RPC
-    const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
-
     setTransferring(true)
     try {
-      // Minimal ERC-721 ABI for transferFrom
-      const erc721TransferAbi: AbiItem[] = [
-        {
-          inputs: [
-            { name: 'from', type: 'address' },
-            { name: 'to', type: 'address' },
-            { name: 'tokenId', type: 'uint256' },
-          ],
-          name: 'transferFrom',
-          outputs: [],
-          stateMutability: 'nonpayable',
-          type: 'function',
-        },
-      ]
-
-      const nftContractAddress = selectedTrack.nftData?.contract || config.web3.contractsV2.contractAddress
-      const contract = new web3Instance.eth.Contract(erc721TransferAbi, nftContractAddress)
-
-      const tx = contract.methods.transferFrom(userWallet, transferRecipient, tokenId)
-      const gas = await tx.estimateGas({ from: userWallet })
-      await tx.send({ from: userWallet, gas: Math.ceil(Number(gas) * 1.2) })
-
-      toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)}`)
+      // TODO: Implement actual NFT transfer via smart contract
+      // This will call the Soundchain721 or Soundchain1155 contract
+      console.log('🔄 Transferring NFT:', { nftId: selectedNftId, to: transferRecipient })
+      alert(`NFT transfer initiated!\n\nNFT: ${selectedNftId}\nTo: ${transferRecipient}\n\nThis feature requires wallet signing - coming soon!`)
+      // Reset form on success
       setTransferRecipient('')
       setSelectedNftId('')
     } catch (err: any) {
-      console.error('NFT Transfer error:', err)
-      if (err.message?.includes('User denied') || err.message?.includes('user rejected')) {
-        toast.error('Transaction rejected by user')
-      } else {
-        toast.error(err.message?.slice(0, 120) || 'Transfer failed')
-      }
+      console.error('❌ NFT Transfer error:', err)
+      alert(`Transfer failed: ${err.message || 'Unknown error'}`)
     } finally {
       setTransferring(false)
-    }
-  }
-
-  // Handle Token Transfer (POL or OGUN)
-  const handleTransferToken = async () => {
-    if (!tokenRecipient || !transferAmount || !userWallet) {
-      toast.error('Please fill in recipient address and amount')
-      return
-    }
-    if (!Web3.utils.isAddress(tokenRecipient)) {
-      toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
-      return
-    }
-    if (tokenRecipient.toLowerCase() === userWallet.toLowerCase()) {
-      toast.error('Cannot transfer to yourself')
-      return
-    }
-    const amount = parseFloat(transferAmount)
-    if (isNaN(amount) || amount <= 0) {
-      toast.error('Please enter a valid amount greater than 0')
-      return
-    }
-    const currentBalance = tokenTransferType === 'POL'
-      ? parseFloat(maticBalance || '0')
-      : parseFloat(ogunBalance || '0')
-    if (amount > currentBalance) {
-      toast.error(`Insufficient ${tokenTransferType} balance`)
-      return
-    }
-
-    setIsTransferringToken(true)
-    try {
-      const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
-      const amountWei = web3Instance.utils.toWei(transferAmount, 'ether')
-
-      if (tokenTransferType === 'POL') {
-        const gasPrice = await web3Instance.eth.getGasPrice()
-        await web3Instance.eth.sendTransaction({
-          from: userWallet,
-          to: tokenRecipient,
-          value: amountWei,
-          gas: 21000,
-          gasPrice,
-        })
-      } else {
-        const SoundchainOGUN20 = (await import('contract/SoundchainOGUN20.sol/SoundchainOGUN20.json')).default
-        const contract = new web3Instance.eth.Contract(
-          SoundchainOGUN20.abi as AbiItem[],
-          config.ogunTokenAddress
-        )
-        const gasEstimate = await contract.methods.transfer(tokenRecipient, amountWei).estimateGas({ from: userWallet })
-        await contract.methods.transfer(tokenRecipient, amountWei).send({
-          from: userWallet,
-          gas: Math.ceil(Number(gasEstimate) * 1.2),
-        })
-      }
-
-      toast.success(`${transferAmount} ${tokenTransferType} sent to ${tokenRecipient.slice(0, 6)}...${tokenRecipient.slice(-4)}`)
-      setTokenRecipient('')
-      setTransferAmount('')
-      if (refetchBalance) refetchBalance()
-    } catch (err: any) {
-      console.error('Token transfer error:', err)
-      toast.error(`Transfer failed: ${err.message || 'Unknown error'}`)
-    } finally {
-      setIsTransferringToken(false)
     }
   }
 
@@ -1907,110 +1766,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // User profile from GraphQL - REAL DATA
   const user = userData?.me?.profile
-  // FIX: defaultWallet is ENUM, check ALL OAuth wallet addresses + external wallets
+  // FIX: defaultWallet is ENUM, use magicWalletAddress for actual 0x address
   const userWallet = userData?.me?.magicWalletAddress
-    || userData?.me?.googleWalletAddress
-    || userData?.me?.discordWalletAddress
-    || userData?.me?.twitchWalletAddress
-    || userData?.me?.emailWalletAddress
-    || activeAddress // fallback to UnifiedWallet (MetaMask/Web3Modal)
   const userTracks = tracksData?.groupedTracks?.nodes || []
   const ownedTracks = ownedTracksData?.groupedTracks?.nodes || [] // User-owned NFTs for wallet page
   const marketTracks = listingData?.listingItems?.nodes || []
-
-  // Sweep toggle helpers
-  const toggleSweepSelect = (trackId: string) => {
-    setSweepSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(trackId)) next.delete(trackId)
-      else next.add(trackId)
-      return next
-    })
-  }
-  const selectAllForSweep = () => {
-    const allIds = ownedTracks.filter((t: any) => t.nftData?.tokenId || t.tokenId).map((t: any) => t.id)
-    setSweepSelectedIds(new Set(allIds))
-  }
-  const deselectAllForSweep = () => setSweepSelectedIds(new Set())
-
-  // Handle Sweep - batch transfer NFTs via individual transferFrom calls
-  const handleSweep = async () => {
-    if (!sweepRecipient || sweepSelectedIds.size === 0 || !userWallet) {
-      toast.error('Please select NFTs and enter a recipient address')
-      return
-    }
-    if (!/^0x[a-fA-F0-9]{40}$/.test(sweepRecipient)) {
-      toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
-      return
-    }
-    if (sweepRecipient.toLowerCase() === userWallet.toLowerCase()) {
-      toast.error('Cannot sweep to yourself')
-      return
-    }
-
-    const tracksToSweep = ownedTracks.filter((t: any) => sweepSelectedIds.has(t.id) && (t.nftData?.tokenId || t.tokenId))
-    if (tracksToSweep.length === 0) {
-      toast.error('Selected NFTs have no on-chain token IDs')
-      return
-    }
-
-    setSweeping(true)
-    setSweepProgress({ current: 0, total: tracksToSweep.length })
-
-    // Get web3 instance - prefer Magic, fallback to public RPC
-    const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
-
-    // Minimal ERC-721 ABI for transferFrom
-    const erc721TransferAbi: AbiItem[] = [
-      {
-        inputs: [
-          { name: 'from', type: 'address' },
-          { name: 'to', type: 'address' },
-          { name: 'tokenId', type: 'uint256' },
-        ],
-        name: 'transferFrom',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
-    ]
-
-    let succeeded = 0
-    let failed = 0
-
-    for (let i = 0; i < tracksToSweep.length; i++) {
-      const track = tracksToSweep[i]
-      const tokenId = track.nftData?.tokenId || track.tokenId
-      const contractAddr = track.nftData?.contract || config.web3.contractsV2.contractAddress
-
-      try {
-        setSweepProgress({ current: i + 1, total: tracksToSweep.length })
-        const contract = new web3Instance.eth.Contract(erc721TransferAbi, contractAddr)
-        const tx = contract.methods.transferFrom(userWallet, sweepRecipient, tokenId)
-        const gas = await tx.estimateGas({ from: userWallet })
-        await tx.send({ from: userWallet, gas })
-        succeeded++
-        toast.success(`Transferred ${track.title || `Token #${tokenId}`} (${i + 1}/${tracksToSweep.length})`)
-      } catch (err: any) {
-        failed++
-        console.error(`Sweep transfer failed for token ${tokenId}:`, err)
-        toast.error(`Failed: ${track.title || `Token #${tokenId}`} - ${err.message?.slice(0, 80) || 'Unknown error'}`)
-      }
-    }
-
-    setSweeping(false)
-    setSweepProgress({ current: 0, total: 0 })
-
-    if (succeeded > 0) {
-      toast.success(`Sweep complete! ${succeeded} NFT${succeeded > 1 ? 's' : ''} transferred${failed > 0 ? `, ${failed} failed` : ''}`)
-      setSweepSelectedIds(new Set())
-      setSweepRecipient('')
-      setShowSweepPanel(false)
-      refetchBalance?.()
-    } else {
-      toast.error('All transfers failed. Check wallet connection and gas balance.')
-    }
-  }
 
   // Debug badge display
   if (typeof window !== 'undefined' && user) {
@@ -3304,11 +3064,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         )}
 
         {/* Main Content */}
-        <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8 relative">
+        <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8">
           {/* View Tabs - LEGACY UI PATTERN WITH GRADIENT TEXT */}
           {/* Order: Feed, Dashboard, Users first, then rest */}
-          {/* Added backdrop-blur and bg-black/50 for readability on any cover image */}
-          <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide py-3 px-4 backdrop-blur-md bg-black/60 rounded-xl shadow-lg border border-white/10">
+          <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 bg-black/50 backdrop-blur-sm rounded-xl py-2">
             <Button
               variant="ghost"
               onClick={() => router.push('/dex/feed', undefined, { shallow: false })}
@@ -4647,8 +4406,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Wallet View - Multi-Wallet Aggregator */}
           {selectedView === 'wallet' && (
             <div className="space-y-6">
-              {/* BISECT: WalletSelector, MultiChainProvider, ChainSwitcher removed — suspected TDZ source */}
-
               {/* Multi-Wallet Aggregator - Connect & View All Wallets */}
               <MultiWalletAggregator
                 userWallet={userWallet}
@@ -4902,130 +4659,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-orange-500/50 hover:bg-orange-500/10 flex-col h-auto py-4 relative"
-                    onClick={() => setShowSweepPanel(!showSweepPanel)}
+                    className="border-orange-500/30 hover:bg-orange-500/5 flex-col h-auto py-4 relative opacity-60 cursor-not-allowed"
+                    onClick={() => toast.info('🧹 Sweep Tool Coming Soon! Batch transfer NFTs with a single transaction.')}
                   >
                     <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                     </svg>
                     <span className="text-xs">Sweep</span>
+                    <Badge className="absolute -top-2 -right-2 bg-orange-500/20 text-orange-400 text-[8px] px-1">Soon</Badge>
                   </Button>
                 </div>
               </Card>
-
-              {/* Sweep Panel */}
-              {showSweepPanel && (
-                <Card id="sweep-section" className="retro-card p-6 border-orange-500/30">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                      </svg>
-                      <h3 className="retro-title text-lg">Sweep NFTs</h3>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setShowSweepPanel(false)} className="text-gray-400 hover:text-white">
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <p className="text-gray-400 text-sm mb-4">Select NFTs to batch transfer to another wallet.</p>
-
-                  {/* Recipient Address */}
-                  <div className="mb-4">
-                    <label className="text-gray-400 text-xs mb-1 block">Recipient Address</label>
-                    <input
-                      type="text"
-                      placeholder="0x..."
-                      value={sweepRecipient}
-                      onChange={(e) => setSweepRecipient(e.target.value)}
-                      className="w-full bg-black/40 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-orange-500/50 focus:outline-none"
-                      disabled={sweeping}
-                    />
-                  </div>
-
-                  {/* Select All / Deselect All */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-gray-400 text-xs">{sweepSelectedIds.size} NFT{sweepSelectedIds.size !== 1 ? 's' : ''} selected</span>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={selectAllForSweep} disabled={sweeping} className="text-orange-400 text-xs">
-                        Select All
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={deselectAllForSweep} disabled={sweeping} className="text-gray-400 text-xs">
-                        Deselect All
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* NFT Grid with Checkboxes */}
-                  <div className="max-h-64 overflow-y-auto mb-4 space-y-1">
-                    {ownedTracks.filter((t: any) => t.nftData?.tokenId || t.tokenId).length === 0 ? (
-                      <p className="text-gray-500 text-sm text-center py-4">No NFTs with on-chain token IDs found</p>
-                    ) : (
-                      ownedTracks
-                        .filter((t: any) => t.nftData?.tokenId || t.tokenId)
-                        .map((track: any) => (
-                          <div
-                            key={track.id}
-                            onClick={() => !sweeping && toggleSweepSelect(track.id)}
-                            className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all ${
-                              sweepSelectedIds.has(track.id)
-                                ? 'bg-orange-500/15 border border-orange-500/40'
-                                : 'bg-black/20 border border-transparent hover:border-gray-700'
-                            } ${sweeping ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
-                              sweepSelectedIds.has(track.id)
-                                ? 'border-orange-400 bg-orange-500/30'
-                                : 'border-gray-600'
-                            }`}>
-                              {sweepSelectedIds.has(track.id) && (
-                                <svg className="w-3 h-3 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </div>
-                            {track.artworkUrl ? (
-                              <img src={track.artworkUrl} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
-                            ) : (
-                              <div className="w-10 h-10 rounded bg-gray-800 flex-shrink-0" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-sm truncate">{track.title || 'Untitled'}</p>
-                              <p className="text-gray-500 text-xs truncate">Token #{track.nftData?.tokenId || track.tokenId}</p>
-                            </div>
-                          </div>
-                        ))
-                    )}
-                  </div>
-
-                  {/* Sweep Progress */}
-                  {sweeping && sweepProgress.total > 0 && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-xs text-gray-400 mb-1">
-                        <span>Transferring...</span>
-                        <span>{sweepProgress.current}/{sweepProgress.total}</span>
-                      </div>
-                      <div className="w-full bg-gray-800 rounded-full h-2">
-                        <div
-                          className="bg-orange-500 h-2 rounded-full transition-all"
-                          style={{ width: `${(sweepProgress.current / sweepProgress.total) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sweep Action Button */}
-                  <Button
-                    className="w-full retro-button bg-orange-500/20 hover:bg-orange-500/30 border-orange-500/50 text-orange-300"
-                    disabled={sweeping || sweepSelectedIds.size === 0 || !sweepRecipient || !userWallet}
-                    onClick={handleSweep}
-                  >
-                    {sweeping
-                      ? `Sweeping ${sweepProgress.current}/${sweepProgress.total}...`
-                      : `Sweep ${sweepSelectedIds.size} NFT${sweepSelectedIds.size !== 1 ? 's' : ''}`
-                    }
-                  </Button>
-                </Card>
-              )}
 
               {/* Buy Crypto Section */}
               <Card id="buy-crypto-section" className="retro-card p-6">
@@ -5158,9 +4802,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </Card>
 
               {/* ZetaChain Omnichain Swap Portal */}
-              <Card id="swap-section" className="retro-card p-6 border-yellow-500/30 relative overflow-hidden">
+              <Card id="swap-section" className="retro-card p-6 border-green-500/30 relative overflow-hidden">
                 {/* Animated background glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-cyan-500/5" />
+                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-cyan-500/5 animate-pulse" />
 
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-6">
@@ -5171,7 +4815,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <div>
                         <h3 className="retro-title text-lg flex items-center gap-2">
                           Omnichain Swap Portal
-                          <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">COMING SOON</Badge>
+                          <Badge className="bg-green-500/20 text-green-400 text-xs">LIVE</Badge>
                         </h3>
                         <p className="text-gray-400 text-sm">Swap tokens across 23+ blockchains</p>
                       </div>
@@ -5240,7 +4884,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <input
                           type="number"
                           placeholder="0.0"
-                          // TODO: Replace placeholder quote with real ZetaChain cross-chain quote API
                           value={swapFromAmount ? (parseFloat(swapFromAmount) * 0.9995).toFixed(4) : ''}
                           readOnly
                           className="w-full bg-black/30 border border-gray-700 rounded-lg px-4 py-3 text-xl text-white cursor-not-allowed"
@@ -5372,112 +5015,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </Card>
               )}
 
-              {/* Transfer Tokens Section */}
-              <Card className="retro-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Coins className="w-6 h-6 text-cyan-400" />
-                  <h3 className="retro-title text-lg">Transfer Tokens</h3>
-                </div>
-                <p className="text-gray-400 text-sm mb-4">Send POL or OGUN tokens to another wallet address.</p>
-
-                {/* Token Type Toggle */}
-                <div className="flex gap-2 mb-4">
-                  <button
-                    onClick={() => setTokenTransferType('POL')}
-                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${
-                      tokenTransferType === 'POL'
-                        ? 'bg-cyan-500/20 border border-cyan-500 text-cyan-400'
-                        : 'bg-black/30 border border-gray-700 text-gray-400 hover:border-gray-500'
-                    }`}
-                  >
-                    POL
-                  </button>
-                  <button
-                    onClick={() => setTokenTransferType('OGUN')}
-                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-all ${
-                      tokenTransferType === 'OGUN'
-                        ? 'bg-purple-500/20 border border-purple-500 text-purple-400'
-                        : 'bg-black/30 border border-gray-700 text-gray-400 hover:border-gray-500'
-                    }`}
-                  >
-                    OGUN
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  {/* Recipient */}
-                  <div>
-                    <label className="text-xs text-gray-400 mb-2 block">Recipient Address</label>
-                    <input
-                      type="text"
-                      placeholder="0x..."
-                      value={tokenRecipient}
-                      onChange={(e) => setTokenRecipient(e.target.value)}
-                      className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none font-mono"
-                    />
-                  </div>
-
-                  {/* Amount */}
-                  <div>
-                    <label className="text-xs text-gray-400 mb-2 block">
-                      Amount ({tokenTransferType})
-                      <span className="ml-2 text-gray-500">
-                        Balance: {tokenTransferType === 'POL'
-                          ? parseFloat(maticBalance || '0').toFixed(4)
-                          : parseFloat(ogunBalance || '0').toFixed(2)
-                        }
-                      </span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        placeholder="0.00"
-                        value={transferAmount}
-                        onChange={(e) => setTransferAmount(e.target.value)}
-                        className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-cyan-500 focus:outline-none pr-16"
-                        min="0"
-                        step="any"
-                      />
-                      <button
-                        onClick={() => {
-                          const bal = tokenTransferType === 'POL'
-                            ? (parseFloat(maticBalance || '0') - 0.01).toFixed(6)
-                            : parseFloat(ogunBalance || '0').toString()
-                          setTransferAmount(parseFloat(bal) > 0 ? bal : '0')
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 rounded hover:bg-cyan-500/20 transition-all"
-                      >
-                        MAX
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Send Button */}
-                  <Button
-                    variant="outline"
-                    className={`w-full ${
-                      tokenTransferType === 'POL'
-                        ? 'border-cyan-500/50 hover:bg-cyan-500/10 text-cyan-400'
-                        : 'border-purple-500/50 hover:bg-purple-500/10 text-purple-400'
-                    }`}
-                    disabled={!userWallet || !tokenRecipient || !transferAmount || isTransferringToken}
-                    onClick={handleTransferToken}
-                  >
-                    {isTransferringToken ? (
-                      <>
-                        <div className={`animate-spin w-4 h-4 border-2 ${tokenTransferType === 'POL' ? 'border-cyan-400' : 'border-purple-400'} border-t-transparent rounded-full mr-2`} />
-                        Sending {tokenTransferType}...
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4 mr-2" />
-                        Send {transferAmount || '0'} {tokenTransferType}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </Card>
-
               {/* Transfer NFTs Section */}
               <Card id="transfer-section" className="retro-card p-6">
                 <div className="flex items-center gap-3 mb-4">
@@ -5537,8 +5074,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <BarChart3 className="w-6 h-6 text-cyan-400" />
                     <h3 className="retro-title text-lg">Recent Activity</h3>
                   </div>
-                  {effectiveWalletForActivity && (
-                    <a href={`https://polygonscan.com/address/${effectiveWalletForActivity}`} target="_blank" rel="noreferrer">
+                  {walletAccount && (
+                    <a href={`https://polygonscan.com/address/${walletAccount}`} target="_blank" rel="noreferrer">
                       <Button variant="ghost" size="sm" className="text-xs text-cyan-400 hover:bg-cyan-500/10">
                         View All <ExternalLink className="w-3 h-3 ml-1" />
                       </Button>
@@ -5561,7 +5098,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 ) : transactionData?.getTransactionHistory?.result?.length ? (
                   <div className="space-y-2 max-h-80 overflow-y-auto">
                     {transactionData.getTransactionHistory.result.slice(0, 10).map((tx: any) => {
-                      const isIncoming = allMyAddresses.has(tx.to?.toLowerCase() || '')
+                      const isIncoming = tx.to?.toLowerCase() === walletAccount?.toLowerCase()
                       const valueInMatic = tx.value ? (parseFloat(tx.value) / 1e18).toFixed(4) : '0'
                       const usdValue = maticUsdData?.maticUsd ? (parseFloat(valueInMatic) * parseFloat(maticUsdData.maticUsd)).toFixed(2) : '0.00'
                       const date = tx.timeStamp ? new Date(parseInt(tx.timeStamp) * 1000).toLocaleDateString() : ''
@@ -6607,14 +6144,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <>
                   {/* Profile Header - Same layout as logged-in user */}
                   <div className="relative z-10 pt-8 pb-6">
-                    {/* Dark gradient overlay for text readability on any cover image */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-transparent pointer-events-none" />
-                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 relative">
+                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
                       {/* Back Button */}
                       <Button
                         variant="ghost"
                         onClick={() => router.back()}
-                        className="mb-4 hover:bg-cyan-500/10 backdrop-blur-sm bg-black/30"
+                        className="mb-4 hover:bg-cyan-500/10"
                       >
                         <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
                         Back
@@ -6624,7 +6159,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         {/* User Profile */}
                         <div className="flex flex-col lg:flex-row gap-6 items-start">
                           <div className="relative">
-                            <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900 shadow-2xl">
+                            <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900">
                               {viewingProfile.profilePicture ? (
                                 <img
                                   src={viewingProfile.profilePicture}
@@ -6642,11 +6177,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             </div>
                           </div>
 
-                          <div className="flex-1 space-y-4 backdrop-blur-md bg-black/60 rounded-2xl p-4 -ml-2 lg:ml-0">
+                          <div className="flex-1 space-y-4">
                             <div className="space-y-2">
                               {/* Username with inline badges */}
                               <div className="flex items-center gap-2">
-                                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-lg" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace", textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace" }}>
                                   {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
                                 </h1>
                                 {/* Team Member Badge */}
@@ -6658,22 +6193,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   <VerifiedIcon className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="Verified user" />
                                 )}
                               </div>
-                              <p className="retro-json text-sm drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>@{viewingProfile.userHandle || 'user'}</p>
-                              <p className="text-gray-300 text-sm max-w-md drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{viewingProfile.bio || ''}</p>
+                              <p className="retro-json text-sm">@{viewingProfile.userHandle || 'user'}</p>
+                              <p className="text-gray-300 text-sm max-w-md">{viewingProfile.bio || ''}</p>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfileTrackCount}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Tracks</div>
+                              <div className="metadata-section p-4 text-center">
+                                <div className="retro-text text-xl">{viewingProfileTrackCount}</div>
+                                <div className="metadata-label text-xs">Tracks</div>
                               </div>
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followerCount?.toLocaleString() || 0}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Followers</div>
+                              <div className="metadata-section p-4 text-center">
+                                <div className="retro-text text-xl">{viewingProfile.followerCount?.toLocaleString() || 0}</div>
+                                <div className="metadata-label text-xs">Followers</div>
                               </div>
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followingCount?.toLocaleString() || 0}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Following</div>
+                              <div className="metadata-section p-4 text-center">
+                                <div className="retro-text text-xl">{viewingProfile.followingCount?.toLocaleString() || 0}</div>
+                                <div className="metadata-label text-xs">Following</div>
                               </div>
                             </div>
 
@@ -6795,29 +6330,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                   {/* Main Content */}
                   <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
-                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Playlists */}
+                    {/* Profile Tabs - Feed | Dashboard | Stake - Same as logged-in user */}
                     <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
-                      {/* My Feed tab - ONLY shown when viewing own profile */}
-                      {isViewingOwnProfile && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => setProfileTab('myfeed')}
-                          className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${profileTab === 'myfeed' ? 'bg-cyan-500/10' : ''}`}
-                        >
-                          <Rss className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'myfeed' ? 'text-cyan-400' : 'text-gray-400'}`} />
-                          <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'myfeed' ? 'cyan-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                            My Feed
-                          </span>
-                        </Button>
-                      )}
                       <Button
                         variant="ghost"
-                        onClick={() => setProfileTab('posts')}
-                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'posts' ? 'bg-green-500/10' : ''}`}
+                        onClick={() => setProfileTab('feed')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'feed' ? 'bg-green-500/10' : ''}`}
                       >
-                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'posts' ? 'text-green-400' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'posts' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                          Posts
+                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'feed' ? 'text-green-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'feed' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Feed
                         </span>
                       </Button>
                       <Button
@@ -6844,12 +6366,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                     {/* Tab Content */}
                     <div className="min-h-[400px]">
-                      {/* My Feed - Full social feed (posts from people you follow + your own) */}
-                      {profileTab === 'myfeed' && isViewingOwnProfile && (
-                        <Posts disableVirtualization />
-                      )}
-                      {/* Posts - Only this user's posts */}
-                      {profileTab === 'posts' && (
+                      {profileTab === 'feed' && (
                         <Posts profileId={viewingProfile.id} disableVirtualization />
                       )}
                       {profileTab === 'music' && (
