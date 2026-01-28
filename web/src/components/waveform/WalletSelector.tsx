@@ -30,15 +30,9 @@ import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { config } from 'config'
 import SoundchainOGUN20 from '../../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 
-// Pre-load WalletConnect SDK in background so it's instant when user clicks
+// Pre-load WalletConnect SDK — MUST be lazy (not top-level) to avoid webpack TDZ crash
 let wcProviderModule: any = null
-if (typeof window !== 'undefined') {
-  // Start loading immediately on page load (non-blocking)
-  import('@walletconnect/ethereum-provider').then(mod => {
-    wcProviderModule = mod
-    console.log('⚡ WalletConnect SDK pre-loaded')
-  }).catch(() => {})
-}
+let wcPreloadStarted = false
 
 const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
 
@@ -155,6 +149,17 @@ interface WalletSelectorProps {
 }
 
 export const WalletSelector = ({ className, ownerAddressAccount, showOgun = false, onWalletChange }: WalletSelectorProps) => {
+  // Pre-load WalletConnect SDK on first mount (moved from module scope to avoid TDZ)
+  useEffect(() => {
+    if (!wcPreloadStarted && typeof window !== 'undefined') {
+      wcPreloadStarted = true
+      import('@walletconnect/ethereum-provider').then(mod => {
+        wcProviderModule = mod
+        console.log('⚡ WalletConnect SDK pre-loaded')
+      }).catch(() => {})
+    }
+  }, [])
+
   const me = useMe()
   const { account: magicAccount, balance: magicBalance, ogunBalance: magicOgunBalance } = useMagicContext()
   const [updateDefaultWallet] = useUpdateDefaultWalletMutation()
