@@ -117,6 +117,8 @@ export function MultiWalletAggregator({
     connectWeb3Modal,
     disconnectWallet: disconnectWeb3Modal,
     directWalletSubtype,
+    connectedExternalWallets,
+    removeExternalWallet,
   } = useUnifiedWallet()
 
   const [connectedWallets, setConnectedWallets] = useState<ConnectedWallet[]>([])
@@ -327,8 +329,34 @@ export function MultiWalletAggregator({
       })
     }
 
+    // Add all registered external wallets from WalletSelector (persisted in context)
+    const existingAddresses = new Set(wallets.map(w => w.address.toLowerCase()))
+    for (const extWallet of connectedExternalWallets) {
+      if (existingAddresses.has(extWallet.address.toLowerCase())) continue
+      const walletIcon = extWallet.walletType === 'metamask' ? '🦊' :
+                        extWallet.walletType === 'coinbase' ? '🔵' :
+                        extWallet.walletType === 'phantom' ? '👻' :
+                        extWallet.walletType === 'walletconnect' ? '🔗' : '💳'
+      wallets.push({
+        id: `ext-${extWallet.walletType}`,
+        type: (extWallet.walletType as any) || 'walletconnect',
+        address: extWallet.address,
+        chainName: extWallet.chainName || 'Polygon',
+        chainId: extWallet.chainId || 137,
+        balance: extWallet.balance || '0',
+        ogunBalance: extWallet.ogunBalance || '0',
+        nfts: externalWalletNfts[extWallet.address] || [],
+        isActive: false,
+        icon: walletIcon
+      })
+      // Auto-fetch NFTs for this wallet
+      if (!externalWalletNfts[extWallet.address] && !loadingNfts[extWallet.address]) {
+        fetchNftsForAddress(extWallet.address)
+      }
+    }
+
     setConnectedWallets(wallets)
-  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType, directWalletSubtype, externalWalletNfts])
+  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType, directWalletSubtype, externalWalletNfts, connectedExternalWallets])
 
   const toggleExpanded = (walletId: string) => {
     setExpandedWallets(prev => {
@@ -524,6 +552,18 @@ export function MultiWalletAggregator({
                           }}
                           className="text-gray-500 hover:text-red-400 transition-colors"
                           title="Disconnect wallet"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                      {wallet.id.startsWith('ext-') && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeExternalWallet(wallet.type)
+                          }}
+                          className="text-gray-500 hover:text-red-400 transition-colors"
+                          title="Remove wallet"
                         >
                           <X className="w-3 h-3" />
                         </button>
