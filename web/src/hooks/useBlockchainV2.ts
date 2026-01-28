@@ -268,6 +268,37 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
     const { contractAddresses, owner, value, tokenId, isPaymentOGUN, from } = this.params;
     this.web3 = web3;
 
+    // Calculate 0.05% platform fee on purchase price
+    const platformFeeRate = config.soundchainFee || 0.0005;
+    const purchaseValue = parseFloat(web3.utils.fromWei(value || '0', 'ether'));
+    const platformFee = purchaseValue * platformFeeRate;
+    const feeWei = web3.utils.toWei(platformFee.toFixed(18), 'ether');
+    const treasuryAddress = config.treasuryAddress;
+    const gasPrice = await web3.eth.getGasPrice();
+
+    // Step 1: Collect platform fee before purchase
+    if (platformFee > 0 && treasuryAddress) {
+      console.log(`📤 Sending ${platformFee.toFixed(6)} ${isPaymentOGUN ? 'OGUN' : 'POL'} marketplace fee to treasury: ${treasuryAddress}`);
+      if (isPaymentOGUN) {
+        // Fee in OGUN
+        const ogunContract = new web3.eth.Contract(ogunAbi as AbiItem[], ogunAddress);
+        const feeTx = ogunContract.methods.transfer(treasuryAddress, feeWei);
+        const feeGas = await feeTx.estimateGas({ from });
+        await feeTx.send({ from, gas: feeGas, gasPrice });
+      } else {
+        // Fee in POL
+        await web3.eth.sendTransaction({
+          from,
+          to: treasuryAddress,
+          value: feeWei,
+          gas: '21000',
+          gasPrice,
+        });
+      }
+      console.log('✅ Platform fee sent to treasury');
+    }
+
+    // Step 2: Execute the purchase
     const marketplaceContractAddress = contractAddresses?.marketplace || marketplaceEditionsAddress;
 
     let transactionObject: PayableTransactionObject<void>;
