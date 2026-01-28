@@ -667,11 +667,12 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 - `dex/[...slug].tsx` reverted to `69bd51c20` (pre-Jan-27) — missing Jan 27 features
 - yarn.lock cleaned (single WC version 2.16.1)
 - `@walletconnect/ethereum-provider` removed as direct dep
-**Next Step:** Surgically re-add the 559 lines in smaller batches to find the exact poison import/code block
+**ROOT CAUSE FOUND (Jan 28):** `activeAddress` was referenced at line 991 (`effectiveWalletForActivity`) and line 1002 (`allMyAddresses` useMemo) BEFORE `const { activeAddress } = useUnifiedWallet()` was declared at line 1008. Classic JavaScript Temporal Dead Zone — webpack minified the variable to `ih`/`ik`/`iy`, producing `ReferenceError: Cannot access 'ih' before initialization`.
+**Fix:** Moved `useUnifiedWallet()` destructuring ABOVE the lines that depend on `activeAddress`. All 540 lines of Jan 27 features restored.
 **Don't Do This:**
+- **NEVER reference a `const` variable before its declaration** — even in the same scope, JS enforces TDZ
 - **NEVER do a nuclear rollback without communicating first** — the user needs those features ASAP
 - **NEVER import `useUnifiedWallet` into `useWalletContext.tsx`** — circular dependency within same webpack chunk
-- **NEVER import between context providers that wrap each other** in `_app.tsx` without checking the dependency graph
 - Don't add direct deps that duplicate transitive deps from other packages
 **CRITICAL RULE — ALWAYS run `yarn install` after:**
 - Reverting commits that touched `package.json`
@@ -679,9 +680,9 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 - Any `git revert` that spans dependency changes
 - Multiple sessions making package changes
 - **If in doubt, run `yarn install` — stale yarn.lock entries are invisible killers**
-**Lesson:** When the site is down, bisect via production deploys — it's methodical and conclusive. Don't guess at the cause.
+**Lesson:** When the site is down, bisect via production deploys — it's methodical and conclusive. Don't guess at the cause. TDZ errors in minified webpack output are unreadable — binary search the diff hunks.
 **Files:** `web/src/pages/dex/[...slug].tsx` (poison pill), `web/package.json`, `web/yarn.lock`
-**Commits:** `7013a20c8` (nuclear rollback), `908806d93`→`5912b3a3d` (safe bisects), `80c52ee63` (crash confirmed), `35428e848` (reverted culprit)
+**Commits:** `7013a20c8` (nuclear rollback), `908806d93`→`5912b3a3d` (safe bisects), `80c52ee63` (crash confirmed), `35428e848` (reverted culprit), **`99d55bd99` (FIXED — all features restored)**
 
 ### 31. NFT Mint Silently Fails with External Wallets (Jan 28, 2026)
 **Symptom:** Platform fee sends to Gnosis Safe successfully, but NFT mint never reaches blockchain. Toast shows "There was an error while minting your NFT."
