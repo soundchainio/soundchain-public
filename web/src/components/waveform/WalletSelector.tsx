@@ -902,135 +902,114 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
         </>
       )}
 
-      {/* Connect Wallet Menu - Mobile Bottom Sheet */}
+      {/* Connect Wallet Menu - Inline Accordion Dropdown (not fullscreen) */}
       {showConnectMenu && (
-        <>
-          <div className="fixed inset-0 bg-black/50 z-40 [touch-action:none]" onClick={() => setShowConnectMenu(false)} />
-          <div
-            className="fixed bottom-0 left-0 right-0 sm:fixed sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[400px] sm:max-w-[90vw] bg-gray-900 border-t sm:border border-gray-700 rounded-t-2xl sm:rounded-2xl shadow-2xl z-50 max-h-[80dvh] overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch] touch-action-pan-y pb-8 sm:pb-0"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-          >
-            <div className="p-2 border-b border-gray-800 sm:hidden">
-              <div className="w-12 h-1 bg-gray-700 rounded-full mx-auto" />
-            </div>
-
-            <div className="p-2">
-              <div className="flex items-center justify-between px-3 py-2">
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Connect Wallet</p>
-                <button onClick={() => setShowConnectMenu(false)} className="text-gray-500 hover:text-white transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* MetaMask */}
-              {availableWallets.includes('metamask') && (
-                <button
-                  onClick={connectMetaMask}
-                  disabled={isConnecting !== null}
-                  className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors disabled:opacity-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-2xl">
-                      🦊
-                    </div>
-                    <div className="text-left">
-                      <span className="text-white font-bold block">MetaMask</span>
-                      <span className="text-xs text-gray-500">{isMobile() ? 'Open MetaMask app' : 'Extension or mobile app'}</span>
-                    </div>
-                  </div>
-                  {isConnecting === 'metamask' ? (
-                    <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
-                  ) : (
-                    <ExternalLink className="w-4 h-4 text-gray-500" />
-                  )}
-                </button>
-              )}
-
-              {/* Coinbase */}
-              {availableWallets.includes('coinbase') && (
-                <button
-                  onClick={connectCoinbase}
-                  disabled={isConnecting !== null}
-                  className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors disabled:opacity-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-2xl">
-                      🔵
-                    </div>
-                    <div className="text-left">
-                      <span className="text-white font-bold block">Coinbase Wallet</span>
-                      <span className="text-xs text-gray-500">{isMobile() ? 'Open Coinbase app' : 'Extension or mobile app'}</span>
-                    </div>
-                  </div>
-                  {isConnecting === 'coinbase' ? (
-                    <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
-                  ) : (
-                    <ExternalLink className="w-4 h-4 text-gray-500" />
-                  )}
-                </button>
-              )}
-
-              {/* WalletConnect */}
-              {availableWallets.includes('walletconnect') && (
-                <button
-                  onClick={connectWalletConnect}
-                  disabled={isConnecting !== null}
-                  className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors disabled:opacity-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-2xl">
-                      🔗
-                    </div>
-                    <div className="text-left">
-                      <span className="text-white font-bold block">WalletConnect</span>
-                      <span className="text-xs text-gray-500">{isMobile() ? 'Rainbow, Trust & more' : '300+ mobile wallets'}</span>
-                    </div>
-                  </div>
-                  {isConnecting === 'walletconnect' ? (
-                    <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
-                  ) : (
-                    <ExternalLink className="w-4 h-4 text-gray-500" />
-                  )}
-                </button>
-              )}
-
-              {/* Phantom */}
-              {availableWallets.includes('phantom') && (
-                <button
-                  onClick={connectPhantom}
-                  disabled={isConnecting !== null}
-                  className="w-full flex items-center justify-between p-4 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors disabled:opacity-50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-2xl">
-                      👻
-                    </div>
-                    <div className="text-left">
-                      <span className="text-white font-bold block">Phantom</span>
-                      <span className="text-xs text-gray-500">{isMobile() ? 'Open Phantom app' : 'Solana wallet'}</span>
-                    </div>
-                  </div>
-                  {isConnecting === 'phantom' ? (
-                    <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
-                  ) : (
-                    <ExternalLink className="w-4 h-4 text-gray-500" />
-                  )}
-                </button>
-              )}
-            </div>
-
-            {/* Cancel Button - Mobile */}
-            <div className="p-3 border-t border-gray-800 sm:hidden">
-              <button
-                onClick={() => setShowConnectMenu(false)}
-                className="w-full p-3 text-gray-400 hover:text-white text-center rounded-xl"
-              >
-                Cancel
-              </button>
-            </div>
+        <div className="mt-3 bg-gray-900/95 backdrop-blur-sm border border-cyan-500/30 rounded-xl overflow-hidden shadow-xl animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+            <p className="text-xs text-cyan-400 uppercase tracking-wider font-bold">+ Add Wallet</p>
+            <button onClick={() => setShowConnectMenu(false)} className="text-gray-500 hover:text-white transition-colors">
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        </>
+
+          <div className="p-2 space-y-1">
+            {/* MetaMask */}
+            {availableWallets.includes('metamask') && (
+              <button
+                onClick={connectMetaMask}
+                disabled={isConnecting !== null}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-cyan-500/10 active:bg-cyan-500/20 transition-colors disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500/20 to-orange-600/20 border border-orange-500/30 flex items-center justify-center text-lg">
+                    🦊
+                  </div>
+                  <div className="text-left">
+                    <span className="text-white font-medium text-sm block">MetaMask</span>
+                    <span className="text-[10px] text-gray-500">{isMobile() ? 'Open app' : 'Extension'}</span>
+                  </div>
+                </div>
+                {isConnecting === 'metamask' ? (
+                  <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-3 h-3 text-gray-600" />
+                )}
+              </button>
+            )}
+
+            {/* Coinbase */}
+            {availableWallets.includes('coinbase') && (
+              <button
+                onClick={connectCoinbase}
+                disabled={isConnecting !== null}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-cyan-500/10 active:bg-cyan-500/20 transition-colors disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 flex items-center justify-center text-lg">
+                    🔵
+                  </div>
+                  <div className="text-left">
+                    <span className="text-white font-medium text-sm block">Coinbase</span>
+                    <span className="text-[10px] text-gray-500">{isMobile() ? 'Open app' : 'Extension'}</span>
+                  </div>
+                </div>
+                {isConnecting === 'coinbase' ? (
+                  <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-3 h-3 text-gray-600" />
+                )}
+              </button>
+            )}
+
+            {/* WalletConnect */}
+            {availableWallets.includes('walletconnect') && (
+              <button
+                onClick={connectWalletConnect}
+                disabled={isConnecting !== null}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-cyan-500/10 active:bg-cyan-500/20 transition-colors disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-400/20 to-purple-500/20 border border-purple-500/30 flex items-center justify-center text-lg">
+                    🔗
+                  </div>
+                  <div className="text-left">
+                    <span className="text-white font-medium text-sm block">WalletConnect</span>
+                    <span className="text-[10px] text-gray-500">{isMobile() ? 'Rainbow, Trust' : '300+ wallets'}</span>
+                  </div>
+                </div>
+                {isConnecting === 'walletconnect' ? (
+                  <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-3 h-3 text-gray-600" />
+                )}
+              </button>
+            )}
+
+            {/* Phantom */}
+            {availableWallets.includes('phantom') && (
+              <button
+                onClick={connectPhantom}
+                disabled={isConnecting !== null}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-cyan-500/10 active:bg-cyan-500/20 transition-colors disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30 flex items-center justify-center text-lg">
+                    👻
+                  </div>
+                  <div className="text-left">
+                    <span className="text-white font-medium text-sm block">Phantom</span>
+                    <span className="text-[10px] text-gray-500">{isMobile() ? 'Open app' : 'Solana'}</span>
+                  </div>
+                </div>
+                {isConnecting === 'phantom' ? (
+                  <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-3 h-3 text-gray-600" />
+                )}
+              </button>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )
