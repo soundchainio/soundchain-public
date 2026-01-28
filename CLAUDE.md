@@ -17,11 +17,37 @@
 - **SITE DOWN → RECOVERED** — TDZ crash from Jan 27 changes. Nuclear rollback + production bisect identified `dex/[...slug].tsx` as the poison pill
 - Restored 8 of 9 wallet files safely via incremental bisect deploys
 - `dex/[...slug].tsx` reverted to `69bd51c20` (pre-Jan-27) — the 559 added lines cause TDZ when bundled
-- Added dark overlay backgrounds behind bio text and nav tabs for readability
+- Added dark overlay backgrounds behind bio text and nav tabs for readability (increased to 80% opacity)
 - Fixed track detail page play counts to use SCid `streamCount` instead of stale `playbackCount`
-- **TODO (next session):** Surgically re-add the safe parts of the 559 lines from `dex/[...slug].tsx` (ConnectedWalletsPanel, multi-wallet portfolio, wallet activity, NFT transfer UI, POL/OGUN send)
 - **RESOLVED:** WalletConnect project ID set to `53a9f7ff48d78a81624b5333d52b9123` (fallback in Web3ModalContext.tsx + Vercel env var)
-- **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
+
+### 💰 Platform Fee Collection (Jan 28, 2026) - INVESTOR READY
+**Added 0.05% fee to ALL blockchain transactions:**
+
+| Feature | Fee | File |
+|---------|-----|------|
+| POL Transfer | 0.05% of amount | dex/[...slug].tsx |
+| OGUN Transfer | 0.05% of amount | dex/[...slug].tsx |
+| NFT Transfer | 0.05% of gas cost | dex/[...slug].tsx |
+| NFT Sweep (batch) | 0.05% of total gas | dex/[...slug].tsx |
+| OGUN Stake | 0.05% of amount | StakingPanel.tsx |
+| OGUN Unstake | 0.05% of amount | StakingPanel.tsx |
+| POL↔OGUN Swap | 0.05% of swap amount | StakingPanel.tsx |
+| Marketplace Buy | 0.05% of price | useBlockchainV2.ts |
+| NFT Mint | 0.05% of gas cost | CreateModal.tsx |
+| **Tips (NEW)** | 0.05% of tip amount | dex/[...slug].tsx |
+
+**All fees sent to Gnosis Safe Treasury:** `0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b`
+
+### 🎁 Profile Tip Jar (Jan 28, 2026)
+- Gift icon on other users' profiles (next to wallet address)
+- Mini accordion dropdown (matches WIN-WIN style)
+- **Wallet selector tabs:** OAuth Wallet | External Wallet
+- Shows balance for selected wallet
+- Quick tip presets: 1, 5, 10, 25 OGUN
+- 0.05% fee collected before tip sent
+
+**WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
 
 ### Previous Session (Jan 27, 2026)
 - Fixed stream count dedup bug (loops now count properly)
