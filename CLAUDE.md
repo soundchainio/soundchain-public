@@ -641,6 +641,38 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 **Files:** `web/src/contexts/Web3ModalContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
 **Commits:** `882b1be64` (migration), `3b15a1915` (SSR fix), `8c688ed69` (full revert)
 
+### 30. Circular Import TDZ Crash - SITE DOWN (Jan 28, 2026)
+**Symptom:** Entire site crashes with `ReferenceError: Cannot access 'iy' before initialization` in webpack chunk `1600-55783cb0f78151f2.js`. Application error page renders with legacy header.
+**Root Cause:** Commit `811e32db9` added `import { useUnifiedWallet } from '../contexts/UnifiedWalletContext'` to `useWalletContext.tsx`, creating a **circular module dependency**. Both modules live in the same webpack chunk, and the Temporal Dead Zone (TDZ) error fires when one module references a variable from the other before initialization completes.
+**Timeline:**
+- `f7fc29aca` (1:33 PM) - Last working commit (external wallet _execute fix)
+- `811e32db9` (1:47 PM) - Broke the site (circular import added)
+- 4+ fix attempts failed (provider swap, localStorage approach, revert Web3 injection, remove WC dep)
+- Another Claude session made 3 additional commits trying to fix it (also failed)
+- `ca14c8fe2` - Full batch revert of 10 commits restored working state
+**Fix:** `git revert --no-commit HEAD~10..HEAD` to roll back to `f7fc29aca`
+**Don't Do This:**
+- **NEVER import `useUnifiedWallet` into `useWalletContext.tsx`** - these modules are in the same webpack chunk and create a circular dependency
+- **NEVER import between context providers that wrap each other** in `_app.tsx` without checking the dependency graph
+- Don't try incremental fixes when the site is down - revert first, fix later
+**Lesson:** When adding cross-context dependencies, use localStorage, events, or a shared non-context module instead of direct imports between provider files.
+**Files:** `web/src/hooks/useWalletContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
+**Commits:** `811e32db9` (broke), `ca14c8fe2` (reverted)
+
+### 31. NFT Mint Silently Fails with External Wallets (Jan 28, 2026)
+**Symptom:** Platform fee sends to Gnosis Safe successfully, but NFT mint never reaches blockchain. Toast shows "There was an error while minting your NFT."
+**Root Cause:** `BlockchainFunction._execute()` in `useBlockchainV2.ts` hardcoded Magic SDK validation:
+1. Line 111: `if (!me?.magicWalletAddress)` - only checked Magic address, not Google/Discord/Twitch OAuth addresses
+2. Lines 115-116: `magic.user.isLoggedIn()` - returns false for external wallets (MetaMask, Coinbase, WalletConnect)
+3. External wallet mints silently returned without executing
+**Evidence:** Polygonscan showed NO failed mint tx for wallet `0x8f93...5df6` - confirming mint was killed client-side before reaching blockchain
+**Fix:** Updated `_execute()` to:
+- Check ALL OAuth wallet addresses (magic, google, discord, twitch, email)
+- Only validate Magic login when `provider.isMagic` is true
+- Skip Magic checks entirely for external wallets
+**File:** `web/src/hooks/useBlockchainV2.ts`
+**Commit:** `f7fc29aca` (preserved through revert)
+
 ---
 
 ## ARCHITECTURE PATTERNS
@@ -1146,6 +1178,8 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 27, 2026 | **WalletConnect Retry** - Auto-retry with exponential backoff for mobile relay timeouts | 67482b734 |
 | Jan 27, 2026 | **Reown Migration (REVERTED)** - Attempted @reown/appkit, reverted due to project ID 403 | 882b1be64→8c688ed69 |
 | Jan 27, 2026 | **RoyaltySplitter Contract** - Post-mint collaborator royalty splits via EIP-2981 | soundchain-contracts 038e95b |
+| Jan 28, 2026 | **External Wallet Mint Fix** - Fixed _execute() Magic-only gate for external wallets | f7fc29aca |
+| Jan 28, 2026 | **SITE DOWN - TDZ Crash** - Circular import crashed site, batch reverted 10 commits | 811e32db9→ca14c8fe2 |
 
 ---
 
