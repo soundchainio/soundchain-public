@@ -317,17 +317,32 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       return
     }
 
-    if (parseFloat(amount) > parseFloat(ogunBalance)) {
-      toast.error('Insufficient OGUN balance')
+    // Calculate 0.05% platform fee
+    const platformFeeRate = config.soundchainFee || 0.0005
+    const platformFee = parseFloat(amount) * platformFeeRate
+    const totalNeeded = parseFloat(amount) + platformFee
+
+    if (totalNeeded > parseFloat(ogunBalance)) {
+      toast.error(`Insufficient OGUN balance. Need ${totalNeeded.toFixed(6)} (${amount} + ${platformFee.toFixed(6)} fee)`)
       return
     }
 
     setIsLoading(true)
     try {
       const weiAmount = web3.utils.toWei(amount, 'ether')
+      const feeWei = web3.utils.toWei(platformFee.toFixed(18), 'ether')
       const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3), 'gwei').toString()
+      const treasuryAddress = config.treasuryAddress
 
-      // Check allowance
+      // Step 1: Send platform fee to treasury (in OGUN)
+      setTransactionState('Collecting platform fee...')
+      console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN fee to treasury: ${treasuryAddress}`)
+      const feeTx = tokenContract(web3).methods.transfer(treasuryAddress, feeWei)
+      const feeGas = await feeTx.estimateGas({ from: account })
+      await feeTx.send({ from: account, gas: feeGas.toString(), gasPrice })
+      console.log('✅ Platform fee sent to treasury')
+
+      // Step 2: Check allowance
       const allowance = await tokenContract(web3).methods.allowance(account, tokenStakeContractAddress).call() as string
       if (parseFloat(allowance) < parseFloat(weiAmount)) {
         setTransactionState('Approving OGUN...')
@@ -336,13 +351,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
         await approveTx.send({ from: account, gas: approveGas.toString(), gasPrice })
       }
 
-      // Stake
+      // Step 3: Stake
       setTransactionState('Staking OGUN...')
       const stakeTx = tokenStakeContract(web3).methods.stake(weiAmount)
       const stakeGas = await stakeTx.estimateGas({ from: account })
       await stakeTx.send({ from: account, gas: stakeGas.toString(), gasPrice })
 
-      toast.success(`Successfully staked ${amount} OGUN!`)
+      toast.success(`Successfully staked ${amount} OGUN! (fee: ${platformFee.toFixed(6)} OGUN)`)
       setAmount('')
       fetchBalances()
     } catch (error: any) {
@@ -354,7 +369,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
   }
 
-  // Unstake OGUN
+  // Unstake OGUN (with 0.05% platform fee deducted from unstaked amount)
   const handleUnstake = async () => {
     if (!web3 || !account || !amount || parseFloat(amount) <= 0) {
       toast.error('Enter a valid amount to unstake')
@@ -366,17 +381,32 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       return
     }
 
+    // Calculate 0.05% platform fee (deducted from unstaked amount)
+    const platformFeeRate = config.soundchainFee || 0.0005
+    const platformFee = parseFloat(amount) * platformFeeRate
+
     setIsLoading(true)
     try {
       const weiAmount = web3.utils.toWei(amount, 'ether')
+      const feeWei = web3.utils.toWei(platformFee.toFixed(18), 'ether')
       const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3), 'gwei').toString()
+      const treasuryAddress = config.treasuryAddress
 
+      // Step 1: Unstake
       setTransactionState('Unstaking OGUN...')
       const unstakeTx = tokenStakeContract(web3).methods.withdrawStake(weiAmount)
       const unstakeGas = await unstakeTx.estimateGas({ from: account })
       await unstakeTx.send({ from: account, gas: unstakeGas.toString(), gasPrice })
 
-      toast.success(`Successfully unstaked ${amount} OGUN!`)
+      // Step 2: Send platform fee to treasury (from newly unstaked OGUN)
+      setTransactionState('Collecting platform fee...')
+      console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN fee to treasury: ${treasuryAddress}`)
+      const feeTx = tokenContract(web3).methods.transfer(treasuryAddress, feeWei)
+      const feeGas = await feeTx.estimateGas({ from: account })
+      await feeTx.send({ from: account, gas: feeGas.toString(), gasPrice })
+      console.log('✅ Platform fee sent to treasury')
+
+      toast.success(`Successfully unstaked ${amount} OGUN! (fee: ${platformFee.toFixed(6)} OGUN)`)
       setAmount('')
       fetchBalances()
     } catch (error: any) {
