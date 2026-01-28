@@ -21,63 +21,6 @@
 - Attempted Reown AppKit migration → reverted (project ID needs migration at cloud.reown.com)
 - Created RoyaltySplitter contract for post-mint collaborator royalty splits
 - **BLOCKER:** WalletConnect project ID `8e33134dfeea545054faa3493a504b8d` returns 403 from Reown API. Must register at `cloud.reown.com` before re-attempting Reown migration.
-
-### CRITICAL: Site Down - Client-Side Error (Jan 27, 2026 evening)
-
-**Status:** SITE IS DOWN. All pages show "client side error" / legacy error page.
-
-**Root Cause (investigating):** Another Claude session ("Bo") pushed 17 commits between 1:47pm-2pm (commits `0abf96a7f`..`f3252898f`) focused on external wallet minting. One of these commits added `@walletconnect/ethereum-provider@^2.21.6` to `web/package.json`, which conflicts with `@web3modal/ethers5@5.1.11` (bundles its own `v2.16.1`). This version mismatch crashes the client-side JavaScript on EVERY page since `Web3ModalContext` and `UnifiedWalletContext` wrap the entire app via `_app.tsx`.
-
-**What the other session was fixing:**
-- External wallets (MetaMask, Coinbase) not "locking" as selected wallet during NFT mint
-- When user selected MetaMask to mint, Magic OAuth wallet was used for gas fees instead
-- Gnosis vault received gas fees but NFT edition never completed
-
-**Fixes attempted so far (NONE WORKED YET):**
-1. `7ce4e1a11` - Updated Web3ModalContext.tsx fallback project ID from `'YOUR_PROJECT_ID'` to `'53a9f7ff...'`
-2. `7ce4e1a11` - Added `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` env var to Vercel production (was never set!)
-3. `ce205b711` - Removed conflicting `@walletconnect/ethereum-provider@^2.21.6` entirely
-4. `c7236faa1` - Added it back pinned to `2.16.1` (matching @web3modal/ethers5)
-
-**All 4 Vercel deploys show "Ready" but site still crashes client-side.**
-
-**Next step:** User returning to warroom with browser console screenshots to identify the exact JavaScript error. Without the console error, we're guessing.
-
-**The 17 commits from other session (0abf96a7f..f3252898f):**
-| Commit | Description |
-|--------|-------------|
-| `0abf96a7f` | Update WalletConnect project ID to Reown registration |
-| `44ea81694` | WalletSelector syncs when MetaMask connects |
-| `c6e854dfd` | Prevent infinite loop in WalletSelector sync |
-| `4bd265169` | WalletSelector menus as centered modals |
-| `18d3141e6` | MetaMask detection with EIP-5749 |
-| `085292f64` | Show OGUN balance for all connected wallets |
-| `a18cdef9a` | Remove full-screen network blocker + pre-load WalletConnect SDK |
-| `2f50b487d` | Multi-wallet portfolio registry + bio dark overlay |
-| `81fde0286` | Sweep NFT batch transfer + ZetaChain LIVE badge |
-| `cfa03470e` | Mobile scroll fixes (pull-to-refresh, bottom sheets) |
-| `d74e10a73` | Mobile bottom sheet max-height + safe area |
-| `b86029edd` | Multi-wallet activity + real NFT transfer + POL/OGUN send |
-| `f213db131` | JSX comment syntax error fix |
-| `3ad6de4cf` | Collaborator wallet address text white |
-| `f7fc29aca` | Support external wallets for NFT minting |
-| `811e32db9` | External wallets (Coinbase/WC) work for minting |
-| `f3252898f` | Update CLAUDE.md |
-
-**Files changed by other session:**
-- `web/src/pages/dex/[...slug].tsx` (+497 lines)
-- `web/src/components/waveform/WalletSelector.tsx` (+256 lines)
-- `web/src/hooks/useWalletContext.tsx` (+101 lines)
-- `web/src/contexts/UnifiedWalletContext.tsx` (+58 lines)
-- `web/src/hooks/useBlockchainV2.ts` (+33 lines)
-- `web/src/components/dex/MultiWalletAggregator.tsx` (+42 lines)
-- `web/src/styles/globals.css` (+30 lines)
-- `web/package.json` (added @walletconnect/ethereum-provider, lucide-react)
-- `yarn.lock` (+8261 lines)
-
-**DO NOT revert all 17 commits** — they contain real fixes for external wallet minting. Need targeted fix once we see the console error.
-
-**Last known-good commit:** `0aa4dd6d1` (our CLAUDE.md update before the other session)
   - **Added 0.05% platform fee on minting** (0.01 POL per NFT)
   - **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
 
@@ -698,40 +641,6 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 **Files:** `web/src/contexts/Web3ModalContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
 **Commits:** `882b1be64` (migration), `3b15a1915` (SSR fix), `8c688ed69` (full revert)
 
-### 30. NFT Mint Fails With External Wallet - Magic Gate (Jan 27, 2026)
-**Symptom:** User connected MetaMask on mobile, minted NFT. Platform fee (0.001 POL) sent to Gnosis Safe successfully, but NFT mint itself failed with "There was an error while minting your NFT". No failed tx on Polygonscan - mint never reached the blockchain.
-**Root Cause:** Three layers of Magic-only assumptions:
-1. `BlockchainFunction._execute()` in `useBlockchainV2.ts` line 111: `if (!me?.magicWalletAddress)` - only checked Magic address
-2. Line 115-116: `await this.magic?.user.isLoggedIn()` → returns false for external wallets → `if (!isLoggedIn) return` silently aborts
-3. `useWalletContext.tsx` only supported `DefaultWallet.Soundchain` and `DefaultWallet.MetaMask` enum values - Coinbase/WalletConnect/Phantom had no path
-4. `UnifiedWalletContext.tsx` didn't set `web3` for `web3modal` and `direct` wallet types - no signing provider available
-**Fix (3 commits):**
-1. `useBlockchainV2.ts`: Check all OAuth addresses (`googleWalletAddress`, `discordWalletAddress`, etc.), only do Magic login check when `provider.isMagic` is true
-2. `useWalletContext.tsx`: Added `useUnifiedWallet()` integration - when active wallet is external, use its address and create Web3 from `window.ethereum`
-3. `UnifiedWalletContext.tsx`: Added `new Web3(window.ethereum)` for `web3modal` and `direct` switch cases
-**Don't Do This:**
-- Don't assume `magicWalletAddress` is the only user wallet
-- Don't gate blockchain operations behind `magic.user.isLoggedIn()` without checking provider type
-- Don't silently `return` on auth failure - throw or call `onErrorFunction`
-**Key Insight:** Platform fee uses raw `web3.eth.sendTransaction()` (works with any wallet), but mint goes through `BlockchainFunction._execute()` which had Magic-only validation
-**Files:** `useBlockchainV2.ts`, `useWalletContext.tsx`, `UnifiedWalletContext.tsx`
-**Commits:** `f7fc29aca`, `811e32db9`
-
-### 31. Collaborator Wallet Address Dark Text (Jan 27, 2026)
-**Symptom:** Wallet address in collaborator form unreadable - dark text on dark background
-**Root Cause:** Input had `color: '#22d3ee'` (cyan) which rendered too dark on some mobile displays
-**Fix:** Changed to `color: '#ffffff'` (white) with `text-white` class and `WebkitTextFillColor: '#ffffff'`
-**File:** `web/src/components/forms/track/TrackMetadataForm.tsx` (line 396)
-**Commit:** `3ad6de4cf`
-
-### 32. JSX Comment Inside Element Props (Jan 27, 2026)
-**Symptom:** All Vercel deploys fail with SWC parser error at line 5263
-**Root Cause:** A subagent placed `{/* TODO */}` JSX comment inside an `<input>` element's attribute list. JSX comments cannot go inside HTML element props.
-**Fix:** Changed to `// TODO` JavaScript comment
-**Don't Do This:** Never place `{/* */}` comments inside JSX element attribute lists
-**File:** `web/src/pages/dex/[...slug].tsx`
-**Commit:** `f213db131`
-
 ---
 
 ## ARCHITECTURE PATTERNS
@@ -1237,12 +1146,6 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 27, 2026 | **WalletConnect Retry** - Auto-retry with exponential backoff for mobile relay timeouts | 67482b734 |
 | Jan 27, 2026 | **Reown Migration (REVERTED)** - Attempted @reown/appkit, reverted due to project ID 403 | 882b1be64→8c688ed69 |
 | Jan 27, 2026 | **RoyaltySplitter Contract** - Post-mint collaborator royalty splits via EIP-2981 | soundchain-contracts 038e95b |
-| Jan 27, 2026 | **Multi-Wallet Mint Fix** - External wallets now work for NFT minting, all tx signing | f7fc29aca, 811e32db9 |
-| Jan 27, 2026 | **Wallet Page Features** - Sweep NFTs, real transfers, POL/OGUN send, activity aggregation | b86029edd, 81fde0286 |
-| Jan 27, 2026 | **Mobile Scroll Fixes** - Pull-to-refresh guard, bottom sheet dvh, scroll containers | cfa03470e, d74e10a73 |
-| Jan 27, 2026 | **Build Fix** - JSX comment syntax in element props broke Vercel | f213db131 |
-| Jan 27, 2026 | **Collaborator Text Fix** - White text for wallet addresses in dark forms | 3ad6de4cf |
-| Jan 27, 2026 | **SITE DOWN** - Client-side crash from @walletconnect version conflict. Investigating. | 7ce4e1a11, ce205b711, c7236faa1 |
 
 ---
 

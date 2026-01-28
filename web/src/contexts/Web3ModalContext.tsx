@@ -3,7 +3,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react'
 
 // Get your projectId from https://cloud.reown.com (migrate from cloud.walletconnect.com)
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID'
 
 // Chain configurations
 const polygon = {
