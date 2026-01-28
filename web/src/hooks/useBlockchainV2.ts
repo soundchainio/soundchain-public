@@ -684,11 +684,29 @@ interface SendOgunParams extends DefaultParam {
 class SendOgun extends BlockchainFunction<SendOgunParams> {
   execute = async (web3: Web3) => {
     const { from, to, amount } = this.params;
-    const amountWei = web3.utils.toWei(amount, 'ether');
     this.web3 = web3;
     const tokenAddress = config.ogunTokenAddress;
     const contract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], tokenAddress);
 
+    // Calculate 0.05% platform fee on OGUN transfer (tips)
+    const platformFeeRate = config.soundchainFee || 0.0005;
+    const amountNum = parseFloat(amount);
+    const platformFee = amountNum * platformFeeRate;
+    const feeWei = web3.utils.toWei(platformFee.toFixed(18), 'ether');
+    const amountWei = web3.utils.toWei(amount, 'ether');
+    const treasuryAddress = config.treasuryAddress;
+    const gasPrice = await web3.eth.getGasPrice();
+
+    // Step 1: Send platform fee to treasury (in OGUN)
+    if (platformFee > 0 && treasuryAddress) {
+      console.log(`📤 Sending ${platformFee.toFixed(8)} OGUN tip fee to treasury: ${treasuryAddress}`);
+      const feeTx = contract.methods.transfer(treasuryAddress, feeWei);
+      const feeGas = await feeTx.estimateGas({ from });
+      await feeTx.send({ from, gas: feeGas, gasPrice });
+      console.log('✅ Tip platform fee sent to treasury');
+    }
+
+    // Step 2: Send OGUN to recipient
     const data = await contract.methods.transfer(to, amountWei).encodeABI();
 
     await this._execute(gasPrice =>

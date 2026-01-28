@@ -70,7 +70,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss
+  Radio, MapPin, Download, Smartphone, Rss, Gift
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 
@@ -781,8 +781,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [quickDMMessage, setQuickDMMessage] = useState('')
   const [quickDMSending, setQuickDMSending] = useState(false)
 
-  // Tip Jar coming soon accordion state
+  // Tip Jar states
   const [tipJarUserId, setTipJarUserId] = useState<string | null>(null)
+  const [showProfileTipJar, setShowProfileTipJar] = useState(false)
+  const [profileTipAmount, setProfileTipAmount] = useState('')
+  const [profileTipSending, setProfileTipSending] = useState(false)
 
   // Account Settings inline edit state
   const [showAccountSettings, setShowAccountSettings] = useState(false)
@@ -2108,6 +2111,67 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       toast.error(`Sweep failed: ${err.message || 'Unknown error'}`)
       setSweeping(false)
       setSweepProgress({ current: 0, total: 0 })
+    }
+  }
+
+  // Handle Profile Tip - Send OGUN to profile with 0.05% fee
+  const handleProfileTip = async () => {
+    if (!profileTipAmount || parseFloat(profileTipAmount) <= 0) {
+      toast.error('Please enter a valid tip amount')
+      return
+    }
+    if (!userWallet || !viewingProfile?.magicWalletAddress) {
+      toast.error('Wallet not connected or recipient has no wallet')
+      return
+    }
+
+    const amount = parseFloat(profileTipAmount)
+    const platformFeeRate = config.soundchainFee || 0.0005
+    const platformFee = amount * platformFeeRate
+    const totalNeeded = amount + platformFee
+
+    // Check OGUN balance
+    if (totalNeeded > parseFloat(ogunBalance || '0')) {
+      toast.error(`Insufficient OGUN. Need ${totalNeeded.toFixed(6)} (${amount} + ${platformFee.toFixed(6)} fee)`)
+      return
+    }
+
+    setProfileTipSending(true)
+    try {
+      const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+      const treasuryAddress = config.treasuryAddress
+      const amountWei = web3Instance.utils.toWei(profileTipAmount, 'ether')
+      const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
+      const gasPrice = await web3Instance.eth.getGasPrice()
+
+      // OGUN contract
+      const SoundchainOGUN20 = (await import('contract/SoundchainOGUN20.sol/SoundchainOGUN20.json')).default
+      const contract = new web3Instance.eth.Contract(
+        SoundchainOGUN20.abi as AbiItem[],
+        config.ogunTokenAddress
+      )
+
+      // Step 1: Send platform fee to treasury (0.05% of tip)
+      console.log(`📤 Sending ${platformFee.toFixed(8)} OGUN tip fee to treasury: ${treasuryAddress}`)
+      const feeTx = contract.methods.transfer(treasuryAddress, feeWei)
+      const feeGas = await feeTx.estimateGas({ from: userWallet })
+      await feeTx.send({ from: userWallet, gas: Math.ceil(Number(feeGas) * 1.2), gasPrice })
+      console.log('✅ Tip platform fee sent to treasury')
+
+      // Step 2: Send tip to recipient
+      const tipTx = contract.methods.transfer(viewingProfile.magicWalletAddress, amountWei)
+      const tipGas = await tipTx.estimateGas({ from: userWallet })
+      await tipTx.send({ from: userWallet, gas: Math.ceil(Number(tipGas) * 1.2), gasPrice })
+
+      toast.success(`🎉 Sent ${profileTipAmount} OGUN to ${viewingProfile.name || viewingProfile.userHandle}!`)
+      setProfileTipAmount('')
+      setShowProfileTipJar(false)
+      if (refetchBalance) refetchBalance()
+    } catch (err: any) {
+      console.error('Profile tip error:', err)
+      toast.error(`Tip failed: ${err.message || 'Unknown error'}`)
+    } finally {
+      setProfileTipSending(false)
     }
   }
 
@@ -6927,6 +6991,94 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   >
                                     <PiggyBank className="w-4 h-4 text-pink-400 group-hover:text-pink-300 group-hover:scale-110 transition-all" />
                                   </Button>
+                                  {/* Tip Jar - Only show on OTHER people's profiles */}
+                                  {!isViewingOwnProfile && (
+                                    <div className="relative">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowProfileTipJar(!showProfileTipJar)}
+                                        className={`p-1 group ${showProfileTipJar ? 'bg-yellow-500/30' : 'hover:bg-yellow-500/20'}`}
+                                        title={`Tip ${viewingProfile.name || viewingProfile.userHandle} with OGUN`}
+                                      >
+                                        <Gift className="w-4 h-4 text-yellow-400 group-hover:text-yellow-300 group-hover:scale-110 transition-all" />
+                                      </Button>
+
+                                      {/* Mini Tip Jar Dropdown */}
+                                      {showProfileTipJar && (
+                                        <Card className="absolute right-0 top-10 w-64 z-50 shadow-2xl border-2 border-yellow-500/50 bg-gradient-to-b from-neutral-900 via-yellow-950/10 to-neutral-900">
+                                          {/* Header */}
+                                          <div className="flex items-center justify-between p-2 border-b border-yellow-500/30 bg-gradient-to-r from-yellow-900/50 to-orange-900/50">
+                                            <div className="flex items-center gap-2">
+                                              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+                                                <Gift className="w-3 h-3 text-white" />
+                                              </div>
+                                              <span className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">Tip Jar</span>
+                                            </div>
+                                            <Button variant="ghost" size="sm" onClick={() => setShowProfileTipJar(false)} className="w-5 h-5 p-0 hover:bg-yellow-500/20">
+                                              <X className="w-3 h-3 text-yellow-400" />
+                                            </Button>
+                                          </div>
+
+                                          {/* Content */}
+                                          <div className="p-3 space-y-3">
+                                            {/* Recipient */}
+                                            <div className="text-[10px] text-center text-gray-400">
+                                              Send OGUN to <span className="text-yellow-400 font-bold">{viewingProfile.name || viewingProfile.userHandle}</span>
+                                            </div>
+
+                                            {/* Amount Input */}
+                                            <div className="relative">
+                                              <input
+                                                type="number"
+                                                value={profileTipAmount}
+                                                onChange={(e) => setProfileTipAmount(e.target.value)}
+                                                placeholder="0"
+                                                className="w-full px-3 py-2 bg-gray-800 border border-yellow-500/30 rounded-lg text-white text-sm font-bold focus:outline-none focus:border-yellow-500"
+                                              />
+                                              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-400 text-[10px] font-bold">OGUN</div>
+                                            </div>
+
+                                            {/* Quick Amounts */}
+                                            <div className="flex gap-1">
+                                              {[1, 5, 10, 25].map((preset) => (
+                                                <button
+                                                  key={preset}
+                                                  onClick={() => setProfileTipAmount(String(preset))}
+                                                  className="flex-1 py-1 text-[10px] font-bold rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
+                                                >
+                                                  {preset}
+                                                </button>
+                                              ))}
+                                            </div>
+
+                                            {/* Fee */}
+                                            {profileTipAmount && parseFloat(profileTipAmount) > 0 && (
+                                              <div className="text-[9px] text-gray-500 text-center">
+                                                Fee: {(parseFloat(profileTipAmount) * 0.0005).toFixed(6)} OGUN (0.05%)
+                                              </div>
+                                            )}
+
+                                            {/* Send Button */}
+                                            <Button
+                                              onClick={handleProfileTip}
+                                              disabled={!profileTipAmount || parseFloat(profileTipAmount) <= 0 || profileTipSending}
+                                              className="w-full py-2 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold rounded-lg disabled:opacity-50"
+                                            >
+                                              {profileTipSending ? (
+                                                <RefreshCw className="w-3 h-3 animate-spin" />
+                                              ) : (
+                                                <span className="flex items-center justify-center gap-1">
+                                                  <Gift className="w-3 h-3" />
+                                                  Send Tip
+                                                </span>
+                                              )}
+                                            </Button>
+                                          </div>
+                                        </Card>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               </Card>
                             )}
@@ -7682,6 +7834,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           }}
         />
       )}
+
     </div>
     </>
   )
