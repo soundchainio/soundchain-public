@@ -1,28 +1,36 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 27, 2026
+**Last Updated:** January 28, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
 ---
 
-## CURRENT SESSION (Jan 27, 2026)
+## CURRENT SESSION (Jan 28, 2026)
 
-**Environment:** War Room (back on desktop)
+**Environment:** War Room
 **Device:** Desktop + iPhone 14 Pro Max (testing)
 **Working Dir:** `/Users/soundchain/soundchain`
 **Branch:** production
 
 **Session Notes:**
+- **SITE DOWN → RECOVERED** — TDZ crash from Jan 27 changes. Nuclear rollback + production bisect identified `dex/[...slug].tsx` as the poison pill
+- Restored 8 of 9 wallet files safely via incremental bisect deploys
+- `dex/[...slug].tsx` reverted to `69bd51c20` (pre-Jan-27) — the 559 added lines cause TDZ when bundled
+- Added dark overlay backgrounds behind bio text and nav tabs for readability
+- Fixed track detail page play counts to use SCid `streamCount` instead of stale `playbackCount`
+- **TODO (next session):** Surgically re-add the safe parts of the 559 lines from `dex/[...slug].tsx` (ConnectedWalletsPanel, multi-wallet portfolio, wallet activity, NFT transfer UI, POL/OGUN send)
+- **BLOCKER:** WalletConnect project ID `8e33134dfeea545054faa3493a504b8d` returns 403 from Reown API. Must register at `cloud.reown.com` before re-attempting Reown migration.
+- **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
+
+### Previous Session (Jan 27, 2026)
 - Fixed stream count dedup bug (loops now count properly)
 - Stream logging moved to 30-second mark (not song end)
 - Added streamCountCalibratedAt audit field
 - Fixed external wallet balance fetching (MetaMask, WalletConnect, Coinbase, Trust)
 - Attempted Reown AppKit migration → reverted (project ID needs migration at cloud.reown.com)
 - Created RoyaltySplitter contract for post-mint collaborator royalty splits
-- **BLOCKER:** WalletConnect project ID `8e33134dfeea545054faa3493a504b8d` returns 403 from Reown API. Must register at `cloud.reown.com` before re-attempting Reown migration.
-  - **Added 0.05% platform fee on minting** (0.01 POL per NFT)
-  - **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
+- Added 0.05% platform fee on minting (0.01 POL per NFT)
 
 ### Platform Fee Structure (Jan 26, 2026)
 
@@ -641,25 +649,29 @@ lastLogTime.current.set(trackId, Date.now())  // Update timestamp on success
 **Files:** `web/src/contexts/Web3ModalContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
 **Commits:** `882b1be64` (migration), `3b15a1915` (SSR fix), `8c688ed69` (full revert)
 
-### 30. Dual-Version WalletConnect TDZ Crash - SITE DOWN (Jan 28, 2026)
+### 30. TDZ Crash - SITE DOWN for Hours (Jan 28, 2026)
 **Symptom:** Entire site crashes with `ReferenceError: Cannot access 'iy' before initialization` in webpack chunk `1600`. Application error page renders with legacy header.
-**Root Cause:** `yarn.lock` contained TWO versions of `@walletconnect/ethereum-provider`:
-- `2.16.1` — required internally by `@web3modal/ethers5@5.1.11` (added during Reown migration/revert)
-- `2.23.0` — resolved from direct `^2.21.6` dep in `package.json`
-Webpack bundled both into chunk `1600`. One version's module referenced a variable from the other before initialization, triggering the TDZ error.
-**Why reverts didn't fix it:** The stale `2.16.1` entry survived in `yarn.lock` through all git reverts because `yarn install` was never re-run to clean the lockfile. The problem was invisible at the source code level.
-**Contributing factor:** Commit `811e32db9` added a circular import between `useWalletContext` and `UnifiedWalletContext` which compounded the chunk initialization issue.
-**Timeline:**
-- `8c688ed69` (Jan 27 AM) - Reown revert introduced dual-version in yarn.lock (latent)
-- `811e32db9` (1:47 PM) - Circular import triggered the latent TDZ
-- 7+ fix attempts across 2 Claude sessions failed (all source-level, none touched yarn.lock)
-- `ca14c8fe2` - Batch revert of 10 commits (didn't fix - yarn.lock still dirty)
-- `74e7557a6` - **ACTUAL FIX**: Removed direct `@walletconnect/ethereum-provider` dep + ran `yarn install` to clean lockfile
-**Fix:** Removed direct `@walletconnect/ethereum-provider` from `package.json`. Ran `yarn install` to regenerate `yarn.lock` with single version (2.16.1 from `@web3modal/ethers5`).
+**Initial Theory (WRONG):** Dual `@walletconnect/ethereum-provider` versions in `yarn.lock` (2.16.1 + 2.23.0).
+**Actual Root Cause:** The +559 lines added to `dex/[...slug].tsx` during the Jan 27 session caused the TDZ when webpack bundled the chunk. Cleaning yarn.lock and removing the direct WC dep were necessary but NOT sufficient — the crash persisted even after a clean `vercel deploy --prod --force` build.
+**How We Found It — Production Bisect:**
+1. Nuclear rollback: Restored ALL 9 wallet-related files to `69bd51c20` (pre-Jan-27) → site came back up
+2. Bisect 1/5: Re-added `UnifiedWalletContext.tsx` from `f7fc29aca` → SAFE (`908806d93`)
+3. Bisect 2/5: Re-added `WalletSelector.tsx` → SAFE (`53e65a923`)
+4. Bisect 3/5: Re-added `useWalletContext.tsx` + `useMetaMask.ts` + `WalletConnectButton.tsx` → SAFE (`dc76a9f7b`)
+5. Bisect 4/5: Re-added `MultiWalletAggregator.tsx` + `CreateModal.tsx` + `useBlockchainV2.ts` → SAFE (`5912b3a3d`)
+6. Bisect 5/5: Re-added `dex/[...slug].tsx` → **CRASHED** (`80c52ee63`)
+7. Reverted `dex/[...slug].tsx` back to `69bd51c20` → site recovered (`35428e848`)
+**Poison Pill:** `web/src/pages/dex/[...slug].tsx` — the 559 lines added Jan 27 (ConnectedWalletsPanel, multi-wallet portfolio view, wallet activity feed, NFT transfer UI, POL/OGUN send UI)
+**Current State:**
+- 8 of 9 wallet files restored to `f7fc29aca` (Jan 27 final) — all working
+- `dex/[...slug].tsx` reverted to `69bd51c20` (pre-Jan-27) — missing Jan 27 features
+- yarn.lock cleaned (single WC version 2.16.1)
+- `@walletconnect/ethereum-provider` removed as direct dep
+**Next Step:** Surgically re-add the 559 lines in smaller batches to find the exact poison import/code block
 **Don't Do This:**
-- **NEVER import `useUnifiedWallet` into `useWalletContext.tsx`** - circular dependency within same webpack chunk
+- **NEVER do a nuclear rollback without communicating first** — the user needs those features ASAP
+- **NEVER import `useUnifiedWallet` into `useWalletContext.tsx`** — circular dependency within same webpack chunk
 - **NEVER import between context providers that wrap each other** in `_app.tsx` without checking the dependency graph
-- Don't try incremental source-level fixes when yarn.lock is the problem
 - Don't add direct deps that duplicate transitive deps from other packages
 **CRITICAL RULE — ALWAYS run `yarn install` after:**
 - Reverting commits that touched `package.json`
@@ -667,9 +679,9 @@ Webpack bundled both into chunk `1600`. One version's module referenced a variab
 - Any `git revert` that spans dependency changes
 - Multiple sessions making package changes
 - **If in doubt, run `yarn install` — stale yarn.lock entries are invisible killers**
-**Lesson:** When adding cross-context dependencies, use localStorage, events, or a shared non-context module instead of direct imports between provider files.
-**Files:** `web/package.json`, `web/yarn.lock`, `web/src/hooks/useWalletContext.tsx`, `web/src/contexts/UnifiedWalletContext.tsx`
-**Commits:** `8c688ed69` (latent), `811e32db9` (triggered), `ca14c8fe2` (partial revert), `74e7557a6` (actual fix)
+**Lesson:** When the site is down, bisect via production deploys — it's methodical and conclusive. Don't guess at the cause.
+**Files:** `web/src/pages/dex/[...slug].tsx` (poison pill), `web/package.json`, `web/yarn.lock`
+**Commits:** `7013a20c8` (nuclear rollback), `908806d93`→`5912b3a3d` (safe bisects), `80c52ee63` (crash confirmed), `35428e848` (reverted culprit)
 
 ### 31. NFT Mint Silently Fails with External Wallets (Jan 28, 2026)
 **Symptom:** Platform fee sends to Gnosis Safe successfully, but NFT mint never reaches blockchain. Toast shows "There was an error while minting your NFT."
@@ -684,6 +696,13 @@ Webpack bundled both into chunk `1600`. One version's module referenced a variab
 - Skip Magic checks entirely for external wallets
 **File:** `web/src/hooks/useBlockchainV2.ts`
 **Commit:** `f7fc29aca` (preserved through revert)
+
+### 32. Track Detail Play Count Out of Sync (Jan 28, 2026)
+**Symptom:** NFT track detail page shows wrong play count (stale or 0)
+**Root Cause:** Two places in the track detail view used `trackDetailData.track.playbackCount` (old MongoDB field that doesn't get updated) instead of `scidData.scidByTrack.streamCount` (real-time SCid stream count)
+**Fix:** Both the header stats row (line 5800) and Edition Info "Total Plays" (line 6074) now prefer `scidData?.scidByTrack?.streamCount` with fallback to `playbackCount`
+**File:** `web/src/pages/dex/[...slug].tsx`
+**Commit:** `7b5b77854`
 
 ---
 
@@ -1191,7 +1210,9 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 27, 2026 | **Reown Migration (REVERTED)** - Attempted @reown/appkit, reverted due to project ID 403 | 882b1be64→8c688ed69 |
 | Jan 27, 2026 | **RoyaltySplitter Contract** - Post-mint collaborator royalty splits via EIP-2981 | soundchain-contracts 038e95b |
 | Jan 28, 2026 | **External Wallet Mint Fix** - Fixed _execute() Magic-only gate for external wallets | f7fc29aca |
-| Jan 28, 2026 | **SITE DOWN - TDZ Crash** - Circular import crashed site, batch reverted 10 commits | 811e32db9→ca14c8fe2 |
+| Jan 28, 2026 | **SITE DOWN - TDZ Crash** - Nuclear rollback + production bisect identified `dex/[...slug].tsx` as poison pill | 7013a20c8→35428e848 |
+| Jan 28, 2026 | **Bisect Recovery** - Restored 8/9 wallet files safely, reverted only culprit file | 908806d93→5912b3a3d |
+| Jan 28, 2026 | Dark overlay for bio/nav tabs + track detail play count sync with SCid | 8a0c7071b, 7b5b77854 |
 
 ---
 
