@@ -1721,7 +1721,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     await mutation({ variables: { input: { followedId: profileId } } })
   }
 
-  // Handle NFT Transfer - calls ERC-721 transferFrom on-chain
+  // Handle NFT Transfer - calls ERC-721 transferFrom on-chain (with 0.01 POL platform fee)
   const handleTransferNFT = async () => {
     if (!transferRecipient || !selectedNftId || !userWallet) {
       toast.error('Please enter a recipient address and select an NFT')
@@ -1752,8 +1752,32 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     // Get web3 instance - prefer Magic, fallback to public RPC
     const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
 
+    // Check POL balance for platform fee (0.01 POL per NFT transfer)
+    const nftTransferFee = config.mintFeePerNft || 0.01
+    const polBalance = parseFloat(maticBalance || '0')
+    if (polBalance < nftTransferFee + 0.01) { // fee + gas buffer
+      toast.error(`Insufficient POL for transfer fee. Need at least ${(nftTransferFee + 0.01).toFixed(3)} POL`)
+      return
+    }
+
     setTransferring(true)
     try {
+      const treasuryAddress = config.treasuryAddress
+      const feeWei = web3Instance.utils.toWei(nftTransferFee.toString(), 'ether')
+      const gasPrice = await web3Instance.eth.getGasPrice()
+
+      // Step 1: Send platform fee to treasury
+      console.log(`📤 Sending ${nftTransferFee} POL fee to treasury: ${treasuryAddress}`)
+      await web3Instance.eth.sendTransaction({
+        from: userWallet,
+        to: treasuryAddress,
+        value: feeWei,
+        gas: 21000,
+        gasPrice,
+      })
+      console.log('✅ Platform fee sent to treasury')
+
+      // Step 2: Transfer NFT
       // Minimal ERC-721 ABI for transferFrom
       const erc721TransferAbi: AbiItem[] = [
         {
@@ -1776,7 +1800,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       const gas = await tx.estimateGas({ from: userWallet })
       await tx.send({ from: userWallet, gas: Math.ceil(Number(gas) * 1.2) })
 
-      toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)}`)
+      toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)} (fee: ${nftTransferFee} POL)`)
       setTransferRecipient('')
       setSelectedNftId('')
     } catch (err: any) {
@@ -1791,7 +1815,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     }
   }
 
-  // Handle Token Transfer (POL or OGUN)
+  // Handle Token Transfer (POL or OGUN) - with 0.05% platform fee
   const handleTransferToken = async () => {
     if (!tokenRecipient || !transferAmount || !userWallet) {
       toast.error('Please fill in recipient address and amount')
@@ -1810,11 +1834,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       toast.error('Please enter a valid amount greater than 0')
       return
     }
+
+    // Calculate 0.05% platform fee
+    const platformFeeRate = config.soundchainFee || 0.0005
+    const platformFee = amount * platformFeeRate
+    const totalNeeded = amount + platformFee
+
     const currentBalance = tokenTransferType === 'POL'
       ? parseFloat(maticBalance || '0')
       : parseFloat(ogunBalance || '0')
-    if (amount > currentBalance) {
-      toast.error(`Insufficient ${tokenTransferType} balance`)
+    if (totalNeeded > currentBalance) {
+      toast.error(`Insufficient ${tokenTransferType} balance. Need ${totalNeeded.toFixed(6)} (${amount} + ${platformFee.toFixed(6)} fee)`)
       return
     }
 
@@ -1822,9 +1852,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     try {
       const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
       const amountWei = web3Instance.utils.toWei(transferAmount, 'ether')
+      const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
+      const treasuryAddress = config.treasuryAddress
 
       if (tokenTransferType === 'POL') {
         const gasPrice = await web3Instance.eth.getGasPrice()
+
+        // Step 1: Send platform fee to treasury
+        console.log(`📤 Sending ${platformFee.toFixed(6)} POL fee to treasury: ${treasuryAddress}`)
+        await web3Instance.eth.sendTransaction({
+          from: userWallet,
+          to: treasuryAddress,
+          value: feeWei,
+          gas: 21000,
+          gasPrice,
+        })
+        console.log('✅ Platform fee sent to treasury')
+
+        // Step 2: Send amount to recipient
         await web3Instance.eth.sendTransaction({
           from: userWallet,
           to: tokenRecipient,
@@ -1833,11 +1878,23 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           gasPrice,
         })
       } else {
+        // OGUN transfer - fee also in OGUN
         const SoundchainOGUN20 = (await import('contract/SoundchainOGUN20.sol/SoundchainOGUN20.json')).default
         const contract = new web3Instance.eth.Contract(
           SoundchainOGUN20.abi as AbiItem[],
           config.ogunTokenAddress
         )
+
+        // Step 1: Send platform fee to treasury (in OGUN)
+        console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN fee to treasury: ${treasuryAddress}`)
+        const feeGasEstimate = await contract.methods.transfer(treasuryAddress, feeWei).estimateGas({ from: userWallet })
+        await contract.methods.transfer(treasuryAddress, feeWei).send({
+          from: userWallet,
+          gas: Math.ceil(Number(feeGasEstimate) * 1.2),
+        })
+        console.log('✅ Platform fee sent to treasury')
+
+        // Step 2: Send amount to recipient
         const gasEstimate = await contract.methods.transfer(tokenRecipient, amountWei).estimateGas({ from: userWallet })
         await contract.methods.transfer(tokenRecipient, amountWei).send({
           from: userWallet,
@@ -1845,7 +1902,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         })
       }
 
-      toast.success(`${transferAmount} ${tokenTransferType} sent to ${tokenRecipient.slice(0, 6)}...${tokenRecipient.slice(-4)}`)
+      toast.success(`${transferAmount} ${tokenTransferType} sent to ${tokenRecipient.slice(0, 6)}...${tokenRecipient.slice(-4)} (fee: ${platformFee.toFixed(6)})`)
       setTokenRecipient('')
       setTransferAmount('')
       if (refetchBalance) refetchBalance()
@@ -1933,7 +1990,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }
   const deselectAllForSweep = () => setSweepSelectedIds(new Set())
 
-  // Handle Sweep - batch transfer NFTs via individual transferFrom calls
+  // Handle Sweep - batch transfer NFTs via individual transferFrom calls (with 0.01 POL fee per NFT)
   const handleSweep = async () => {
     if (!sweepRecipient || sweepSelectedIds.size === 0 || !userWallet) {
       toast.error('Please select NFTs and enter a recipient address')
@@ -1954,11 +2011,44 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       return
     }
 
+    // Calculate total platform fee (0.01 POL per NFT)
+    const feePerNft = config.mintFeePerNft || 0.01
+    const totalFee = feePerNft * tracksToSweep.length
+    const polBalance = parseFloat(maticBalance || '0')
+    const gasBuffer = 0.05 * tracksToSweep.length // rough gas estimate
+    if (polBalance < totalFee + gasBuffer) {
+      toast.error(`Insufficient POL for sweep. Need ~${(totalFee + gasBuffer).toFixed(3)} POL (${totalFee.toFixed(3)} fee + gas)`)
+      return
+    }
+
     setSweeping(true)
     setSweepProgress({ current: 0, total: tracksToSweep.length })
 
     // Get web3 instance - prefer Magic, fallback to public RPC
     const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+    const treasuryAddress = config.treasuryAddress
+
+    try {
+      // Step 1: Collect total platform fee upfront
+      const feeWei = web3Instance.utils.toWei(totalFee.toString(), 'ether')
+      const gasPrice = await web3Instance.eth.getGasPrice()
+      console.log(`📤 Sending ${totalFee} POL sweep fee (${tracksToSweep.length} NFTs × ${feePerNft} POL) to treasury: ${treasuryAddress}`)
+      await web3Instance.eth.sendTransaction({
+        from: userWallet,
+        to: treasuryAddress,
+        value: feeWei,
+        gas: 21000,
+        gasPrice,
+      })
+      console.log('✅ Sweep platform fee sent to treasury')
+      toast.success(`Platform fee collected: ${totalFee} POL`)
+    } catch (err: any) {
+      console.error('Sweep fee collection failed:', err)
+      toast.error(`Fee collection failed: ${err.message || 'Unknown error'}`)
+      setSweeping(false)
+      setSweepProgress({ current: 0, total: 0 })
+      return
+    }
 
     // Minimal ERC-721 ABI for transferFrom
     const erc721TransferAbi: AbiItem[] = [
@@ -1978,6 +2068,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     let succeeded = 0
     let failed = 0
 
+    // Step 2: Transfer each NFT
     for (let i = 0; i < tracksToSweep.length; i++) {
       const track = tracksToSweep[i]
       const tokenId = track.nftData?.tokenId || track.tokenId
@@ -2002,7 +2093,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     setSweepProgress({ current: 0, total: 0 })
 
     if (succeeded > 0) {
-      toast.success(`Sweep complete! ${succeeded} NFT${succeeded > 1 ? 's' : ''} transferred${failed > 0 ? `, ${failed} failed` : ''}`)
+      toast.success(`Sweep complete! ${succeeded} NFT${succeeded > 1 ? 's' : ''} transferred${failed > 0 ? `, ${failed} failed` : ''} (fee: ${totalFee} POL)`)
       setSweepSelectedIds(new Set())
       setSweepRecipient('')
       setShowSweepPanel(false)
