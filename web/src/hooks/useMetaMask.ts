@@ -53,31 +53,13 @@ export const useMetaMask = () => {
 
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
       if (window.ethereum.selectedAddress) {
-        // MetaMask already connected - request accounts
         window.ethereum
           .request({ method: 'eth_requestAccounts' })
           .then(([newAccount]: string[]) => onSetAccount(newAccount))
           .catch(() => setLoadingAccount(false))
-      } else {
-        // MetaMask not yet connected - mark as ready (user can manually connect)
-        setLoadingAccount(false)
-        setLoadingChain(false)
       }
       window.ethereum.on('accountsChanged', ([newAccount]: string[]) => onSetAccount(newAccount))
-      window.ethereum.on('chainChanged', (newChainId: string) => {
-        setChainId(parseInt(newChainId, 16))
-        // Refetch balances on new chain instead of full reload (preserves audio playback)
-        if (account && web3) {
-          web3.eth.getBalance(account).then(bal => {
-            setBalance(web3.utils.fromWei(bal, 'ether'))
-          }).catch(() => {})
-          getOGUNBalance(web3).catch(() => {})
-        }
-      })
-    } else {
-      // MetaMask not installed - mark as ready
-      setLoadingAccount(false)
-      setLoadingChain(false)
+      window.ethereum.on('chainChanged', () => window.location.reload())
     }
   }, [me])
 
@@ -157,21 +139,10 @@ export const useMetaMask = () => {
 
   const connect = () => {
     if (MetaMaskOnboarding.isMetaMaskInstalled()) {
-      setLoadingAccount(true)
       window.ethereum
         .request({ method: 'eth_requestAccounts' })
-        .then(([newAccount]: string[]) => {
-          onSetAccount(newAccount)
-          // Also fetch chain ID after successful connection
-          window.ethereum.request({ method: 'eth_chainId' }).then((chainId: string) => {
-            setChainId(parseInt(chainId, 16))
-            setLoadingChain(false)
-          }).catch(() => setLoadingChain(false))
-        })
-        .catch((err: any) => {
-          console.log('MetaMask connection rejected or failed:', err?.message || err)
-          setLoadingAccount(false)
-        })
+        .then(([newAccount]: string[]) => onSetAccount(newAccount))
+        .catch(() => {})
     } else {
       onboarding?.current?.startOnboarding()
     }

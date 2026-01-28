@@ -29,7 +29,7 @@ import soundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceE
 export const gas = 1200000;
 
 const claimOgunAddress = config.claimOgunAddress as string;
-export const gasPriceMultiplier = 1.2; // 20% safety buffer (was 1.5)
+export const gasPriceMultiplier = 1.5;
 
 const nftAddress = config.web3.contractsV2.contractAddress as string;
 const marketplaceAddress = config.web3.contractsV1.marketplaceAddress as string;
@@ -108,37 +108,22 @@ class BlockchainFunction<Type> {
 
   protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
     const { me } = this;
-    // Resolve wallet address from any OAuth method or external wallet
-    const userAddress = me?.magicWalletAddress
-      || me?.googleWalletAddress
-      || me?.discordWalletAddress
-      || me?.twitchWalletAddress
-      || me?.emailWalletAddress;
-    if (!userAddress) {
+    if (!me?.magicWalletAddress) {
       throw new Error('User address not found');
     }
-    await this.validateAddress(userAddress);
-    // Only check Magic login if the provider is actually Magic SDK
-    const isMagicProvider = this.web3?.currentProvider && (this.web3.currentProvider as unknown as SDKBase['rpcProvider']).isMagic;
-    if (isMagicProvider) {
-      const isLoggedIn = await this.magic?.user.isLoggedIn() || false;
-      if (!isLoggedIn && me?.email) {
-        try {
-          await this.magic?.auth.loginWithMagicLink({ email: me.email, showUI: false });
-        } catch (e) {
-          if (this.onErrorFunction) {
-            this.onErrorFunction(new Error('Failed to refresh login session'));
-          }
-          return;
-        }
-      } else if (!isLoggedIn) {
+    await this.validateAddress(me.magicWalletAddress);
+    const isLoggedIn = await this.magic?.user.isLoggedIn() || false; // Added login check
+    if (!isLoggedIn) return; // Prevent execution if not logged in
+    if (this.web3?.currentProvider && (this.web3.currentProvider as unknown as SDKBase['rpcProvider']).isMagic && !isLoggedIn && me.email) {
+      try {
+        await this.magic?.auth.loginWithMagicLink({ email: me.email, showUI: false });
+      } catch (e) {
         if (this.onErrorFunction) {
-          this.onErrorFunction(new Error('Magic session expired. Please log in again.'));
+          this.onErrorFunction(new Error('Failed to refresh login session'));
         }
         return;
       }
     }
-    // For external wallets (MetaMask, WalletConnect, etc.), skip Magic checks entirely
     const gasPriceString = await this.web3?.eth.getGasPrice();
     const gasPrice = Math.floor(Number(gasPriceString) * gasPriceMultiplier) ?? fallbackGasPrice;
     lambda(gasPrice)

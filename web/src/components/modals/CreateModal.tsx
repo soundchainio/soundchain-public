@@ -5,7 +5,6 @@ import { FormValues, InitialValues, TrackMetadataForm } from 'components/forms/t
 import { TrackUploader } from 'components/forms/track/TrackUploader'
 import { SimpleTrackUploadForm } from 'components/forms/track/SimpleTrackUploadForm'
 import { Modal } from 'components/Modal'
-import { config } from 'config'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
@@ -39,40 +38,6 @@ import { genres } from 'utils/Genres'
 import { MintingDone } from './MintingDone'
 
 export const BATCH_SIZE = 120
-
-// Retry utility for RPC rate limiting
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
-const isRateLimitError = (error: any): boolean => {
-  const errorStr = error?.message || error?.toString() || ''
-  return errorStr.includes('rate limit') ||
-         errorStr.includes('Too many requests') ||
-         errorStr.includes('429') ||
-         errorStr.includes('-32603')
-}
-
-const withRetry = async <T>(
-  fn: () => Promise<T>,
-  maxRetries = 3,
-  initialDelayMs = 15000 // 15s initial delay for Magic RPC rate limits
-): Promise<T> => {
-  let lastError: any
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn()
-    } catch (error) {
-      lastError = error
-      if (isRateLimitError(error) && attempt < maxRetries) {
-        const delay = initialDelayMs * Math.pow(2, attempt) // Exponential backoff
-        console.log(`Rate limited, retrying in ${delay/1000}s (attempt ${attempt + 1}/${maxRetries})`)
-        await sleep(delay)
-      } else {
-        throw error
-      }
-    }
-  }
-  throw lastError
-}
 
 enum Tabs {
   NFT = 'NFT',
@@ -370,13 +335,7 @@ export const CreateModal = () => {
         const onError = (cause: Error) => {
           console.error('Error on minting', cause)
           setTransactionHash(undefined)
-          // Check if it's a rate limit error
-          const errorStr = cause?.message || cause?.toString() || ''
-          if (errorStr.includes('rate limit') || errorStr.includes('Too many requests')) {
-            setMintingState('Rate limited by RPC. Please wait 30 seconds and try again.')
-          } else {
-            setMintingState('There was an error while minting your NFT')
-          }
+          setMintingState('There was an error while minting your NFT')
           setMintError(true)
         }
 
@@ -510,80 +469,16 @@ export const CreateModal = () => {
           })
         }
 
-        // Brief pause to let RPC rate limits recover after IPFS pinning
-        setMintingState('Preparing blockchain transaction...')
-        await sleep(3000)
-
-        // Calculate platform fee: 0.05% of estimated gas cost
-        const gasPriceWei = await web3.eth.getGasPrice()
-        // Use 50% buffer for faster confirmation (Polygon can be congested)
-        const gasPrice = Math.floor(Number(gasPriceWei) * 1.5)
-        console.log(`📊 Gas price: ${web3.utils.fromWei(gasPriceWei.toString(), 'gwei')} gwei, with 50% buffer: ${web3.utils.fromWei(gasPrice.toString(), 'gwei')} gwei`)
-
-        // Estimate gas for edition creation + minting
-        const estimatedGas = 65000 + (values.editionQuantity * 55000) // createEdition + mint per NFT
-        const estimatedGasCostWei = BigInt(estimatedGas) * BigInt(gasPrice)
-        const estimatedGasCostPol = Number(web3.utils.fromWei(estimatedGasCostWei.toString(), 'ether'))
-
-        // Platform fee = 0.05% of estimated gas cost, with minimum threshold
-        // Minimum fee ensures meaningful revenue even for small gas costs
-        const MINIMUM_PLATFORM_FEE = 0.001 // 0.001 POL minimum (~$0.001)
-        const calculatedFee = estimatedGasCostPol * config.soundchainFee
-        const platformFee = Math.max(calculatedFee, MINIMUM_PLATFORM_FEE)
-        console.log(`💰 Gas cost: ${estimatedGasCostPol.toFixed(4)} POL, Calculated fee: ${calculatedFee.toFixed(6)}, Platform fee: ${platformFee.toFixed(6)} POL (min: ${MINIMUM_PLATFORM_FEE})`)
-
-        if (platformFee > 0 && config.treasuryAddress) {
-          setMintingState(`Collecting platform fee (${platformFee.toFixed(4)} POL)...`)
-          try {
-            // Convert to wei with proper precision (avoid floating point issues)
-            const feeInWei = web3.utils.toWei(platformFee.toFixed(18), 'ether')
-            // Clean treasury address (trim whitespace, ensure lowercase for compatibility)
-            const treasuryAddress = config.treasuryAddress.trim().toLowerCase()
-            console.log(`📤 Sending ${platformFee.toFixed(6)} POL (${feeInWei} wei) to treasury: ${treasuryAddress}`)
-
-            const txReceipt = await web3.eth.sendTransaction({
-              from: account,
-              to: treasuryAddress,
-              value: feeInWei,
-              gas: 100000, // High buffer for Magic SDK RPC infrastructure overhead
-              gasPrice: gasPrice.toString(),
-            })
-
-            console.log(`✅ Platform fee sent! TX: ${txReceipt.transactionHash}`)
-            setMintingState('Platform fee collected! Proceeding to mint...')
-            await sleep(1000) // Brief pause to show success
-          } catch (feeError: any) {
-            console.error('❌ Platform fee collection failed:', feeError)
-            // If user rejected, stop the flow
-            if (feeError?.code === 4001 || feeError?.message?.includes('User denied') || feeError?.message?.includes('rejected')) {
-              setMintingState('Platform fee rejected. Please approve to continue.')
-              setMintError(true)
-              return
-            }
-            // For other errors (network issues, etc.), log but continue with minting
-            // This prevents blocking users due to fee issues
-            console.warn('⚠️ Fee collection failed, proceeding with mint anyway')
-            setMintingState('Fee skipped due to network issue. Proceeding to mint...')
-            await sleep(1000)
-          }
-        }
-
         setMintingState('Minting Edition')
 
-        // Wrap with retry for RPC rate limiting (15s initial, doubles each retry)
-        const [editionNumber, trackEditionId, trackEditionTransactionHash] = await withRetry(
-          () => createAndMintEdition(),
-          3,
-          15000
-        )
+        const [editionNumber, trackEditionId, trackEditionTransactionHash] = await createAndMintEdition()
 
         let quantityLeft = values.editionQuantity
         const promises = []
         for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
           nonce = BigInt(await web3?.eth.getTransactionCount(account)) // Update nonce for each batch
           const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE
-          // Wrap with retry for RPC rate limiting (15s initial delay)
-          promises.push(withRetry(() => createAndMintTracks(quantity, editionNumber, index === 0), 3, 15000))
+          promises.push(createAndMintTracks(quantity, editionNumber, index === 0))
           setMintingState('Minting NFT')
 
           quantityLeft = quantityLeft - BATCH_SIZE
@@ -683,17 +578,9 @@ export const CreateModal = () => {
           </div>
         ) : (
           <div className="p-4">
-            <div className="mb-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
-              <p className="text-center text-sm text-green-400 font-bold mb-1">
-                FREE Upload
-              </p>
-              <p className="text-center text-xs text-gray-400">
-                No wallet needed. Get an SCid certificate as proof of ownership.
-              </p>
-              <p className="text-center text-xs text-gray-500 mt-2">
-                Earns OGUN rewards • NFT mints earn 2x rewards
-              </p>
-            </div>
+            <p className="mb-4 text-center text-sm text-gray-400">
+              Upload music without a wallet. Get an SCid certificate as proof of ownership.
+            </p>
             <SimpleTrackUploadForm
               onUploadAudio={handleScidUploadAudio}
               onUploadArtwork={handleScidUploadArtwork}

@@ -17,16 +17,6 @@ const DIRECT_WALLET_ADDRESS_KEY = 'soundchain_direct_wallet_address'
 const DIRECT_WALLET_TYPE_KEY = 'soundchain_direct_wallet_type'
 const DIRECT_WALLET_CHAIN_KEY = 'soundchain_direct_wallet_chain'
 
-// External wallet info stored in context for multi-wallet portfolio display
-export interface ExternalWalletInfo {
-  address: string
-  walletType: string // 'metamask' | 'coinbase' | 'walletconnect' | 'phantom'
-  chainId: number
-  chainName: string
-  balance: string
-  ogunBalance: string
-}
-
 export interface UnifiedWalletState {
   activeWalletType: WalletType
   activeAddress: string | null
@@ -37,7 +27,6 @@ export interface UnifiedWalletState {
   chainId: number | null
   chainName: string | null
   connectWeb3Modal: () => void
-  connectMetaMask: () => void  // Added explicit MetaMask connection
   disconnectWallet: () => void
   switchToMagic: () => void
   switchToMetaMask: () => void
@@ -48,12 +37,6 @@ export interface UnifiedWalletState {
   // Direct SDK connection support (for WalletConnectButton)
   setDirectConnection: (address: string, walletType: string, chainId?: number) => void
   directWalletSubtype: string | null  // e.g., 'metamask', 'walletconnect', 'coinbase'
-  // Multi-chain viewing support (EVM networks share the same address)
-  nativeTokenSymbol: string  // POL, ETH, etc. based on selected chain
-  // All connected external wallets (for multi-wallet portfolio)
-  connectedExternalWallets: ExternalWalletInfo[]
-  registerExternalWallet: (wallet: ExternalWalletInfo) => void
-  removeExternalWallet: (walletType: string) => void
 }
 
 const defaultState: UnifiedWalletState = {
@@ -66,7 +49,6 @@ const defaultState: UnifiedWalletState = {
   chainId: null,
   chainName: null,
   connectWeb3Modal: () => {},
-  connectMetaMask: () => {},
   disconnectWallet: () => {},
   switchToMagic: () => {},
   switchToMetaMask: () => {},
@@ -76,10 +58,6 @@ const defaultState: UnifiedWalletState = {
   isWeb3ModalReady: false,
   setDirectConnection: () => {},
   directWalletSubtype: null,
-  nativeTokenSymbol: 'POL',
-  connectedExternalWallets: [],
-  registerExternalWallet: () => {},
-  removeExternalWallet: () => {},
 }
 
 const UnifiedWalletContext = createContext<UnifiedWalletState>(defaultState)
@@ -98,31 +76,6 @@ const chainNames: Record<number, string> = {
   80002: 'Polygon Amoy',
 }
 
-// Native token symbols per chain
-const chainSymbols: Record<number, string> = {
-  1: 'ETH',
-  137: 'POL',
-  8453: 'ETH',
-  42161: 'ETH',
-  10: 'ETH',
-  43114: 'AVAX',
-  56: 'BNB',
-  7000: 'ZETA',
-  80002: 'POL',
-}
-
-// Public RPCs for balance fetching (read-only, no wallet needed)
-const chainRpcs: Record<number, string> = {
-  1: 'https://eth.llamarpc.com',
-  137: 'https://polygon-rpc.com',
-  8453: 'https://mainnet.base.org',
-  42161: 'https://arb1.arbitrum.io/rpc',
-  10: 'https://mainnet.optimism.io',
-  7000: 'https://zetachain-evm.blockpi.network/v1/rpc/public',
-}
-
-const getRpcForChain = (chainId: number): string => chainRpcs[chainId] || 'https://polygon-rpc.com'
-
 // Inner provider that uses Web3Modal hooks (only rendered when ready)
 function UnifiedWalletInner({
   children,
@@ -138,45 +91,12 @@ function UnifiedWalletInner({
   const [activeWalletType, setActiveWalletType] = useState<WalletType>(null)
   const [isConnecting, setIsConnecting] = useState(false)
   const [web3ModalOgunBalance, setWeb3ModalOgunBalance] = useState<string | null>(null)
-  const [web3ModalNativeBalance, setWeb3ModalNativeBalance] = useState<string | null>(null)
   const web3ModalBalanceFetchRef = useRef<string | null>(null)
-
-  // Direct connection balance state
-  const [directNativeBalance, setDirectNativeBalance] = useState<string | null>(null)
-  const [directOgunBalance, setDirectOgunBalance] = useState<string | null>(null)
-  const directBalanceFetchRef = useRef<string | null>(null)
 
   // Direct SDK connection state (for WalletConnectButton)
   const [directAddress, setDirectAddress] = useState<string | null>(null)
   const [directWalletSubtype, setDirectWalletSubtype] = useState<string | null>(null)
   const [directChainId, setDirectChainId] = useState<number | null>(null)
-
-  // Multi-wallet portfolio: all connected external wallets
-  const [connectedExternalWallets, setConnectedExternalWallets] = useState<ExternalWalletInfo[]>(() => {
-    if (typeof window === 'undefined') return []
-    try {
-      const saved = localStorage.getItem('soundchain_external_wallets')
-      return saved ? JSON.parse(saved) : []
-    } catch { return [] }
-  })
-
-  const registerExternalWallet = useCallback((wallet: ExternalWalletInfo) => {
-    setConnectedExternalWallets(prev => {
-      // Replace if same walletType, otherwise add
-      const filtered = prev.filter(w => w.walletType !== wallet.walletType)
-      const next = [...filtered, wallet]
-      localStorage.setItem('soundchain_external_wallets', JSON.stringify(next))
-      return next
-    })
-  }, [])
-
-  const removeExternalWallet = useCallback((walletType: string) => {
-    setConnectedExternalWallets(prev => {
-      const next = prev.filter(w => w.walletType !== walletType)
-      localStorage.setItem('soundchain_external_wallets', JSON.stringify(next))
-      return next
-    })
-  }, [])
 
   // Web3Modal hooks
   const { open } = web3ModalHooks.useWeb3Modal()
@@ -200,104 +120,59 @@ function UnifiedWalletInner({
     web3: metamaskWeb3,
     refetchBalance: metamaskRefetchBalance,
     chainId: metamaskChainId,
-    connect: connectMetaMaskHook,  // Added connect function
   } = useMetaMask()
 
-  // Fetch balances for Web3Modal connections
+  // Fetch OGUN balance for Web3Modal when connected on Polygon
   useEffect(() => {
-    const fetchWeb3ModalBalances = async () => {
-      if (!isWeb3ModalConnected || !web3ModalAddress) {
+    const fetchWeb3ModalOgunBalance = async () => {
+      // Only fetch if Web3Modal connected on Polygon (chain 137)
+      if (!isWeb3ModalConnected || !web3ModalAddress || web3ModalChainId !== 137) {
+        // Not on Polygon - can't fetch OGUN balance
+        if (web3ModalChainId && web3ModalChainId !== 137) {
+          console.log('⚠️ Web3Modal: Not on Polygon (chain', web3ModalChainId, '), OGUN balance unavailable')
+        }
         setWeb3ModalOgunBalance(null)
-        setWeb3ModalNativeBalance(null)
         return
       }
 
-      // Skip if already fetching for this address+chain combo
-      const fetchKey = `${web3ModalAddress}-${web3ModalChainId}`
-      if (web3ModalBalanceFetchRef.current === fetchKey) return
-      web3ModalBalanceFetchRef.current = fetchKey
+      // Skip if already fetching for this address
+      if (web3ModalBalanceFetchRef.current === web3ModalAddress) return
+      web3ModalBalanceFetchRef.current = web3ModalAddress
+
+      const ogunAddress = config.ogunTokenAddress
+      if (!ogunAddress) {
+        console.log('⚠️ Web3Modal: No OGUN token address configured')
+        return
+      }
 
       try {
-        // Use public RPC based on chain for balance fetching
-        const rpcUrl = getRpcForChain(web3ModalChainId || 137)
-        const web3Instance = new Web3(rpcUrl)
+        // Use window.ethereum for Web3Modal (it shares the provider)
+        if (!window.ethereum) return
 
-        // Fetch native balance (POL/ETH)
-        const nativeWei = await web3Instance.eth.getBalance(web3ModalAddress)
-        const nativeBalance = Number(web3Instance.utils.fromWei(nativeWei, 'ether')).toFixed(6)
-        setWeb3ModalNativeBalance(nativeBalance)
-        console.log(`💰 Web3Modal native balance: ${nativeBalance}`)
+        const web3 = new Web3(window.ethereum as any)
+        const ogunContract = new web3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
+        const tokenAmount = await ogunContract.methods.balanceOf(web3ModalAddress).call()
 
-        // Fetch OGUN balance (only on Polygon)
-        if (web3ModalChainId === 137) {
-          const ogunAddress = config.ogunTokenAddress
-          if (ogunAddress) {
-            const ogunContract = new web3Instance.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
-            const tokenAmount = await ogunContract.methods.balanceOf(web3ModalAddress).call()
-            const validAmount = tokenAmount ? tokenAmount.toString() : '0'
-            const ogunBalance = Number(web3Instance.utils.fromWei(validAmount, 'ether')).toFixed(6)
-            setWeb3ModalOgunBalance(ogunBalance)
-            console.log(`💎 Web3Modal OGUN balance: ${ogunBalance}`)
-          }
+        let validTokenAmount: string
+        if (typeof tokenAmount === 'bigint') {
+          validTokenAmount = tokenAmount.toString()
+        } else if (typeof tokenAmount === 'string' || typeof tokenAmount === 'number') {
+          validTokenAmount = String(tokenAmount)
         } else {
-          setWeb3ModalOgunBalance(null)
+          validTokenAmount = '0'
         }
+
+        const balance = Number(web3.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
+        console.log('💎 Web3Modal OGUN balance:', balance)
+        setWeb3ModalOgunBalance(balance)
       } catch (error) {
-        console.error('⚠️ Web3Modal balance fetch failed:', error)
-        setWeb3ModalNativeBalance(null)
+        console.error('⚠️ Web3Modal OGUN balance fetch failed:', error)
         setWeb3ModalOgunBalance(null)
       }
     }
 
-    fetchWeb3ModalBalances()
+    fetchWeb3ModalOgunBalance()
   }, [isWeb3ModalConnected, web3ModalAddress, web3ModalChainId])
-
-  // Fetch balances for direct SDK connections (MetaMask/Coinbase/WalletConnect via WalletConnectButton)
-  useEffect(() => {
-    const fetchDirectBalances = async () => {
-      if (!directAddress || activeWalletType !== 'direct') {
-        setDirectNativeBalance(null)
-        setDirectOgunBalance(null)
-        return
-      }
-
-      const fetchKey = `${directAddress}-${directChainId}`
-      if (directBalanceFetchRef.current === fetchKey) return
-      directBalanceFetchRef.current = fetchKey
-
-      try {
-        const rpcUrl = getRpcForChain(directChainId || 137)
-        const web3Instance = new Web3(rpcUrl)
-
-        // Fetch native balance
-        const nativeWei = await web3Instance.eth.getBalance(directAddress)
-        const nativeBalance = Number(web3Instance.utils.fromWei(nativeWei, 'ether')).toFixed(6)
-        setDirectNativeBalance(nativeBalance)
-        console.log(`💰 Direct wallet native balance: ${nativeBalance}`)
-
-        // Fetch OGUN balance (only on Polygon)
-        if (directChainId === 137 || !directChainId) {
-          const ogunAddress = config.ogunTokenAddress
-          if (ogunAddress) {
-            const ogunContract = new web3Instance.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
-            const tokenAmount = await ogunContract.methods.balanceOf(directAddress).call()
-            const validAmount = tokenAmount ? tokenAmount.toString() : '0'
-            const ogunBalance = Number(web3Instance.utils.fromWei(validAmount, 'ether')).toFixed(6)
-            setDirectOgunBalance(ogunBalance)
-            console.log(`💎 Direct wallet OGUN balance: ${ogunBalance}`)
-          }
-        } else {
-          setDirectOgunBalance(null)
-        }
-      } catch (error) {
-        console.error('⚠️ Direct wallet balance fetch failed:', error)
-        setDirectNativeBalance(null)
-        setDirectOgunBalance(null)
-      }
-    }
-
-    fetchDirectBalances()
-  }, [directAddress, directChainId, activeWalletType])
 
   // Load persisted wallet choice on mount
   useEffect(() => {
@@ -328,16 +203,6 @@ function UnifiedWalletInner({
     }
   }, [isWeb3ModalConnected, web3ModalAddress, activeWalletType])
 
-  // Auto-detect MetaMask connection (for when user connects via switchToMetaMask)
-  useEffect(() => {
-    if (metamaskAccount && activeWalletType !== 'metamask' && activeWalletType !== 'magic') {
-      // MetaMask just connected and we're not on magic - switch to it
-      console.log('🦊 MetaMask connected, switching wallet type')
-      setActiveWalletType('metamask')
-      localStorage.setItem(WALLET_STORAGE_KEY, 'metamask')
-    }
-  }, [metamaskAccount, activeWalletType])
-
   const persistWalletChoice = useCallback((type: WalletType) => {
     setActiveWalletType(type)
     if (type) {
@@ -367,17 +232,9 @@ function UnifiedWalletInner({
       setDirectAddress(null)
       setDirectWalletSubtype(null)
       setDirectChainId(null)
-      setDirectNativeBalance(null)
-      setDirectOgunBalance(null)
-      directBalanceFetchRef.current = null
       localStorage.removeItem(DIRECT_WALLET_ADDRESS_KEY)
       localStorage.removeItem(DIRECT_WALLET_TYPE_KEY)
       localStorage.removeItem(DIRECT_WALLET_CHAIN_KEY)
-    }
-    if (activeWalletType === 'web3modal') {
-      setWeb3ModalNativeBalance(null)
-      setWeb3ModalOgunBalance(null)
-      web3ModalBalanceFetchRef.current = null
     }
     persistWalletChoice(null)
     localStorage.removeItem('connectedWalletAddress')
@@ -392,15 +249,9 @@ function UnifiedWalletInner({
 
   const switchToMetaMask = useCallback(() => {
     if (metamaskAccount) {
-      // Already connected - just switch
       persistWalletChoice('metamask')
-    } else {
-      // Not connected - initiate connection then switch
-      console.log('🦊 Initiating MetaMask connection...')
-      connectMetaMaskHook()
-      // Will auto-switch when account becomes available via useEffect below
     }
-  }, [metamaskAccount, persistWalletChoice, connectMetaMaskHook])
+  }, [metamaskAccount, persistWalletChoice])
 
   const switchToWeb3Modal = useCallback(() => {
     if (isWeb3ModalConnected && web3ModalAddress) {
@@ -454,23 +305,16 @@ function UnifiedWalletInner({
       break
     case 'web3modal':
       activeAddress = web3ModalAddress || null
-      activeBalance = web3ModalNativeBalance
-      activeOgunBalance = web3ModalOgunBalance
+      activeOgunBalance = web3ModalOgunBalance  // Added OGUN balance for Web3Modal
       isConnected = isWeb3ModalConnected
       chainId = web3ModalChainId || null
-      refetchBalance = () => {
-        web3ModalBalanceFetchRef.current = null
-      }
       break
     case 'direct':
+      // Direct SDK connection (from WalletConnectButton)
       activeAddress = directAddress
-      activeBalance = directNativeBalance
-      activeOgunBalance = directOgunBalance
       isConnected = !!directAddress
       chainId = directChainId
-      refetchBalance = () => {
-        directBalanceFetchRef.current = null
-      }
+      // Note: Balance fetching for direct connections would require additional setup
       break
     default:
       if (magicAccount) {
@@ -485,7 +329,6 @@ function UnifiedWalletInner({
   }
 
   const chainName = chainId ? chainNames[chainId] || `Chain ${chainId}` : null
-  const nativeTokenSymbol = chainId ? chainSymbols[chainId] || 'ETH' : 'POL'
 
   const value: UnifiedWalletState = {
     activeWalletType,
@@ -497,7 +340,6 @@ function UnifiedWalletInner({
     chainId,
     chainName,
     connectWeb3Modal,
-    connectMetaMask: connectMetaMaskHook,
     disconnectWallet,
     switchToMagic,
     switchToMetaMask,
@@ -507,10 +349,6 @@ function UnifiedWalletInner({
     refetchBalance,
     web3,
     isWeb3ModalReady: true,
-    nativeTokenSymbol,
-    connectedExternalWallets,
-    registerExternalWallet,
-    removeExternalWallet,
   }
 
   return (
@@ -540,7 +378,6 @@ function UnifiedWalletFallback({ children }: { children: ReactNode }) {
     chainId: magicAccount ? 137 : null,
     chainName: magicAccount ? 'Polygon' : null,
     connectWeb3Modal: () => console.warn('Web3Modal not ready yet'),
-    connectMetaMask: () => console.warn('MetaMask context not ready yet'),
     disconnectWallet: () => {},
     switchToMagic: () => {},
     switchToMetaMask: () => {},
@@ -550,10 +387,6 @@ function UnifiedWalletFallback({ children }: { children: ReactNode }) {
     refetchBalance: magicRefetchBalance || (() => {}),
     web3: magicWeb3 || null,
     isWeb3ModalReady: false,
-    nativeTokenSymbol: 'POL',
-    connectedExternalWallets: [],
-    registerExternalWallet: () => {},
-    removeExternalWallet: () => {},
   }
 
   return (
@@ -569,7 +402,7 @@ export function UnifiedWalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isReady && typeof window !== 'undefined') {
-      // Dynamically import Web3Modal hooks
+      // Dynamically import hooks after Web3Modal is initialized
       import('@web3modal/ethers5/react').then((module) => {
         setWeb3ModalHooks({
           useWeb3Modal: module.useWeb3Modal,
