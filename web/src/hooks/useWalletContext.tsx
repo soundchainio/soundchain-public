@@ -1,11 +1,10 @@
 import { network } from 'lib/blockchainNetworks'
 import { DefaultWallet, useUpdateDefaultWalletMutation } from 'lib/graphql'
-import React, { createContext, ReactNode, useContext, useMemo } from 'react'
+import React, { createContext, ReactNode, useContext, useMemo, useState, useEffect } from 'react'
 import Web3 from 'web3'
 import { useMagicContext } from './useMagicContext'
 import { useMe } from './useMe'
 import useMetaMask from './useMetaMask'
-import { useUnifiedWallet } from '../contexts/UnifiedWalletContext'
 
 interface WalletContextData {
   web3?: Web3 | null
@@ -34,13 +33,52 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
     refetchBalance: magicRefetchBalance,
   } = useMagicContext()
 
-  const {
-    activeWalletType,
-    activeAddress,
-    activeBalance,
-    activeOgunBalance,
-    refetchBalance: unifiedRefetch,
-  } = useUnifiedWallet()
+  // Read external wallet selection from localStorage (set by WalletSelector)
+  const [externalWallet, setExternalWallet] = useState<{ address: string; type: string } | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const selectedType = localStorage.getItem('soundchain_selected_wallet')
+    if (selectedType && selectedType !== 'soundchain' && selectedType !== 'metamask') {
+      try {
+        const saved = localStorage.getItem('soundchain_external_wallets')
+        if (saved) {
+          const wallets = JSON.parse(saved)
+          const match = wallets.find((w: any) => w.walletType === selectedType)
+          if (match) {
+            setExternalWallet({ address: match.address, type: match.walletType })
+          }
+        }
+      } catch {}
+    } else {
+      setExternalWallet(null)
+    }
+    // Listen for storage changes from WalletSelector
+    const handler = () => {
+      const type = localStorage.getItem('soundchain_selected_wallet')
+      if (type && type !== 'soundchain' && type !== 'metamask') {
+        try {
+          const saved = localStorage.getItem('soundchain_external_wallets')
+          if (saved) {
+            const wallets = JSON.parse(saved)
+            const match = wallets.find((w: any) => w.walletType === type)
+            if (match) {
+              setExternalWallet({ address: match.address, type: match.walletType })
+              return
+            }
+          }
+        } catch {}
+      }
+      setExternalWallet(null)
+    }
+    window.addEventListener('storage', handler)
+    // Also poll briefly for same-tab updates
+    const interval = setInterval(handler, 2000)
+    return () => {
+      window.removeEventListener('storage', handler)
+      clearInterval(interval)
+    }
+  }, [])
 
   // Create Web3 instance from window.ethereum for external wallets
   const externalWeb3 = useMemo(() => {
@@ -82,27 +120,12 @@ const WalletProvider = ({ children }: WalletProviderProps) => {
     }
   }
 
-  // External wallets (Coinbase, WalletConnect, Phantom, etc.) via UnifiedWalletContext
-  // If no context was set above AND unified wallet has an active external connection, use it
-  if (!context.account && activeWalletType && activeWalletType !== 'magic' && activeAddress) {
+  // External wallets (Coinbase, WalletConnect, Phantom) via localStorage selection
+  if (externalWallet && externalWallet.address) {
     context = {
-      account: activeAddress,
-      balance: activeBalance || undefined,
-      OGUNBalance: activeOgunBalance || undefined,
-      web3: externalWeb3 || web3 || magicWeb3, // Prefer injected provider, fallback to MetaMask or Magic for read-only
-      refetchBalance: unifiedRefetch,
-    }
-  }
-
-  // Final fallback: if defaultWallet is Soundchain but magicAccount isn't loaded yet,
-  // and unified context has an active external wallet selected, prefer the external wallet
-  if (context.account === magicAccount && activeWalletType && activeWalletType !== 'magic' && activeAddress) {
-    context = {
-      account: activeAddress,
-      balance: activeBalance || undefined,
-      OGUNBalance: activeOgunBalance || undefined,
+      account: externalWallet.address,
       web3: externalWeb3 || web3 || magicWeb3,
-      refetchBalance: unifiedRefetch,
+      refetchBalance: refetchBalance || magicRefetchBalance,
     }
   }
 
