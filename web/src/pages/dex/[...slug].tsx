@@ -5797,7 +5797,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <div className="flex flex-wrap gap-4">
                           <div className="flex items-center gap-2">
                             <Play className="w-4 h-4 text-cyan-400" />
-                            <span className="text-white">{trackDetailData.track.playbackCountFormatted || '0'} plays</span>
+                            <span className="text-white">{scidData?.scidByTrack?.streamCount?.toLocaleString() || trackDetailData.track.playbackCountFormatted || '0'} plays</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Heart className={`w-4 h-4 ${trackDetailData.track.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
@@ -6071,7 +6071,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <div className="text-xs text-gray-400">Listed for Sale</div>
                           </div>
                           <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-                            <div className="text-2xl font-bold text-purple-400">{trackDetailData.track.playbackCount || 0}</div>
+                            <div className="text-2xl font-bold text-purple-400">{scidData?.scidByTrack?.streamCount || trackDetailData.track.playbackCount || 0}</div>
                             <div className="text-xs text-gray-400">Total Plays</div>
                           </div>
                           <div className="text-center p-4 bg-gray-800/50 rounded-lg">
