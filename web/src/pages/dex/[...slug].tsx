@@ -786,6 +786,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showProfileTipJar, setShowProfileTipJar] = useState(false)
   const [profileTipAmount, setProfileTipAmount] = useState('')
   const [profileTipSending, setProfileTipSending] = useState(false)
+  const [tipSelectedWallet, setTipSelectedWallet] = useState<'magic' | 'external'>('magic')
 
   // Account Settings inline edit state
   const [showAccountSettings, setShowAccountSettings] = useState(false)
@@ -2115,13 +2116,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }
 
   // Handle Profile Tip - Send OGUN to profile with 0.05% fee
+  // Supports both Magic (OAuth) wallet and external wallets (MetaMask/Web3Modal)
   const handleProfileTip = async () => {
     if (!profileTipAmount || parseFloat(profileTipAmount) <= 0) {
       toast.error('Please enter a valid tip amount')
       return
     }
-    if (!userWallet || !viewingProfile?.magicWalletAddress) {
-      toast.error('Wallet not connected or recipient has no wallet')
+    if (!viewingProfile?.magicWalletAddress) {
+      toast.error('Recipient has no wallet address')
+      return
+    }
+
+    // Determine sender wallet based on selection
+    const senderWallet = tipSelectedWallet === 'external' && activeAddress
+      ? activeAddress
+      : userWallet
+
+    if (!senderWallet) {
+      toast.error('No wallet connected. Please connect a wallet first.')
       return
     }
 
@@ -2130,15 +2142,23 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const platformFee = amount * platformFeeRate
     const totalNeeded = amount + platformFee
 
-    // Check OGUN balance
-    if (totalNeeded > parseFloat(ogunBalance || '0')) {
+    // Check OGUN balance based on selected wallet
+    const availableBalance = tipSelectedWallet === 'external'
+      ? parseFloat(activeOgunBalance || '0')
+      : parseFloat(ogunBalance || '0')
+
+    if (totalNeeded > availableBalance) {
       toast.error(`Insufficient OGUN. Need ${totalNeeded.toFixed(6)} (${amount} + ${platformFee.toFixed(6)} fee)`)
       return
     }
 
     setProfileTipSending(true)
     try {
-      const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+      // Use appropriate web3 instance based on wallet type
+      const web3Instance = tipSelectedWallet === 'external' && window.ethereum
+        ? new Web3(window.ethereum as any)
+        : magicWeb3 || new Web3('https://polygon-rpc.com')
+
       const treasuryAddress = config.treasuryAddress
       const amountWei = web3Instance.utils.toWei(profileTipAmount, 'ether')
       const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
@@ -2152,16 +2172,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       )
 
       // Step 1: Send platform fee to treasury (0.05% of tip)
-      console.log(`📤 Sending ${platformFee.toFixed(8)} OGUN tip fee to treasury: ${treasuryAddress}`)
+      console.log(`📤 Sending ${platformFee.toFixed(8)} OGUN tip fee from ${senderWallet} to treasury: ${treasuryAddress}`)
       const feeTx = contract.methods.transfer(treasuryAddress, feeWei)
-      const feeGas = await feeTx.estimateGas({ from: userWallet })
-      await feeTx.send({ from: userWallet, gas: Math.ceil(Number(feeGas) * 1.2), gasPrice })
+      const feeGas = await feeTx.estimateGas({ from: senderWallet })
+      await feeTx.send({ from: senderWallet, gas: Math.ceil(Number(feeGas) * 1.2), gasPrice })
       console.log('✅ Tip platform fee sent to treasury')
 
       // Step 2: Send tip to recipient
       const tipTx = contract.methods.transfer(viewingProfile.magicWalletAddress, amountWei)
-      const tipGas = await tipTx.estimateGas({ from: userWallet })
-      await tipTx.send({ from: userWallet, gas: Math.ceil(Number(tipGas) * 1.2), gasPrice })
+      const tipGas = await tipTx.estimateGas({ from: senderWallet })
+      await tipTx.send({ from: senderWallet, gas: Math.ceil(Number(tipGas) * 1.2), gasPrice })
 
       toast.success(`🎉 Sent ${profileTipAmount} OGUN to ${viewingProfile.name || viewingProfile.userHandle}!`)
       setProfileTipAmount('')
@@ -7020,8 +7040,71 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                             </Button>
                                           </div>
 
+                                          {/* Wallet Selector Tabs */}
+                                          <div className="flex border-b border-yellow-500/20">
+                                            <button
+                                              onClick={() => setTipSelectedWallet('magic')}
+                                              className={`flex-1 py-1.5 px-2 text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
+                                                tipSelectedWallet === 'magic'
+                                                  ? 'bg-purple-500/20 text-purple-400 border-b-2 border-purple-500'
+                                                  : 'text-gray-400 hover:text-purple-300 hover:bg-purple-500/10'
+                                              }`}
+                                            >
+                                              <Zap className="w-3 h-3" />
+                                              OAuth
+                                            </button>
+                                            <button
+                                              onClick={() => setTipSelectedWallet('external')}
+                                              disabled={!activeAddress}
+                                              className={`flex-1 py-1.5 px-2 text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
+                                                tipSelectedWallet === 'external'
+                                                  ? 'bg-orange-500/20 text-orange-400 border-b-2 border-orange-500'
+                                                  : activeAddress
+                                                    ? 'text-gray-400 hover:text-orange-300 hover:bg-orange-500/10'
+                                                    : 'text-gray-600 cursor-not-allowed'
+                                              }`}
+                                            >
+                                              <Wallet className="w-3 h-3" />
+                                              External
+                                            </button>
+                                          </div>
+
                                           {/* Content */}
                                           <div className="p-3 space-y-3">
+                                            {/* Selected Wallet Info */}
+                                            <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                                              <div className="text-[9px] text-gray-500 uppercase mb-1">Sending from</div>
+                                              <div className="flex items-center gap-2">
+                                                {tipSelectedWallet === 'magic' ? (
+                                                  <>
+                                                    <div className="w-5 h-5 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                                      <Zap className="w-3 h-3 text-white" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                      <div className="text-[10px] text-purple-400 font-bold">OAuth Wallet</div>
+                                                      <div className="text-[9px] text-gray-400 font-mono">
+                                                        {userWallet ? `${userWallet.slice(0, 6)}...${userWallet.slice(-4)}` : 'Not connected'}
+                                                      </div>
+                                                    </div>
+                                                    <div className="text-[10px] text-cyan-400 font-bold">{parseFloat(ogunBalance || '0').toFixed(2)}</div>
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <div className="w-5 h-5 rounded bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                                                      <Wallet className="w-3 h-3 text-white" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                      <div className="text-[10px] text-orange-400 font-bold">{activeWalletType || 'External'}</div>
+                                                      <div className="text-[9px] text-gray-400 font-mono">
+                                                        {activeAddress ? `${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)}` : 'Not connected'}
+                                                      </div>
+                                                    </div>
+                                                    <div className="text-[10px] text-cyan-400 font-bold">{parseFloat(activeOgunBalance || '0').toFixed(2)}</div>
+                                                  </>
+                                                )}
+                                              </div>
+                                            </div>
+
                                             {/* Recipient */}
                                             <div className="text-[10px] text-center text-gray-400">
                                               Send OGUN to <span className="text-yellow-400 font-bold">{viewingProfile.name || viewingProfile.userHandle}</span>
