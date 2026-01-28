@@ -2935,7 +2935,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
                 </div>
 
-                <div className="flex-1 space-y-4">
+                <div className="flex-1 space-y-4 bg-black/50 backdrop-blur-sm rounded-2xl p-4">
                   <div className="space-y-2">
                     {/* Username with inline badges - EXACT legacy UI */}
                     <div className="flex items-center gap-2">
@@ -3067,7 +3067,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8">
           {/* View Tabs - LEGACY UI PATTERN WITH GRADIENT TEXT */}
           {/* Order: Feed, Dashboard, Users first, then rest */}
-          <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+          <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 bg-black/50 backdrop-blur-sm rounded-xl py-2">
             <Button
               variant="ghost"
               onClick={() => router.push('/dex/feed', undefined, { shallow: false })}
