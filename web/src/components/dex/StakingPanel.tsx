@@ -520,23 +520,49 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       return
     }
 
-    // Check balance
+    // Calculate 0.05% platform fee
+    const platformFeeRate = config.soundchainFee || 0.0005
+    const platformFee = parseFloat(swapAmount) * platformFeeRate
+    const totalNeeded = parseFloat(swapAmount) + platformFee
+
+    // Check balance (including fee)
     const balance = swapFromToken === 'POL' ? polBalance : ogunBalance
-    if (parseFloat(swapAmount) > parseFloat(balance)) {
-      toast.error(`Insufficient ${swapFromToken} balance`)
+    if (totalNeeded > parseFloat(balance)) {
+      toast.error(`Insufficient ${swapFromToken} balance. Need ${totalNeeded.toFixed(6)} (${swapAmount} + ${platformFee.toFixed(6)} fee)`)
       return
     }
 
     setIsLoading(true)
     try {
       const amountIn = web3.utils.toWei(swapAmount, 'ether')
+      const feeWei = web3.utils.toWei(platformFee.toFixed(18), 'ether')
       const minAmountOut = web3.utils.toWei(
         (parseFloat(swapQuote) * (1 - slippage / 100)).toFixed(18),
         'ether'
       )
       const deadline = Math.floor(Date.now() / 1000) + (SWAP_CONFIG.DEADLINE_MINUTES * 60)
       const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3), 'gwei').toString()
+      const treasuryAddress = config.treasuryAddress
 
+      // Step 1: Send platform fee to treasury
+      setTransactionState('Collecting platform fee...')
+      console.log(`📤 Sending ${platformFee.toFixed(6)} ${swapFromToken} fee to treasury: ${treasuryAddress}`)
+      if (swapFromToken === 'POL') {
+        await web3.eth.sendTransaction({
+          from: account,
+          to: treasuryAddress,
+          value: feeWei,
+          gas: '21000',
+          gasPrice,
+        })
+      } else {
+        const feeTx = tokenContract(web3).methods.transfer(treasuryAddress, feeWei)
+        const feeGas = await feeTx.estimateGas({ from: account })
+        await feeTx.send({ from: account, gas: feeGas.toString(), gasPrice })
+      }
+      console.log('✅ Platform fee sent to treasury')
+
+      // Step 2: Perform swap
       if (swapFromToken === 'POL') {
         // POL -> OGUN: swapExactETHForTokens
         const path = [TOKEN_ADDRESSES.WPOL, TOKEN_ADDRESSES.OGUN]
@@ -576,7 +602,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       }
 
       const outToken = swapFromToken === 'POL' ? 'OGUN' : 'POL'
-      toast.success(`Swapped ${swapAmount} ${swapFromToken} for ${parseFloat(swapQuote).toFixed(4)} ${outToken}!`)
+      toast.success(`Swapped ${swapAmount} ${swapFromToken} for ${parseFloat(swapQuote).toFixed(4)} ${outToken}! (fee: ${platformFee.toFixed(6)} ${swapFromToken})`)
       setSwapAmount('')
       setSwapQuote(null)
       fetchBalances()
