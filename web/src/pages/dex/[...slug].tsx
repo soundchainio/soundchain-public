@@ -6686,7 +6686,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             </div>
                           </div>
 
-                          <div className="flex-1 space-y-4 backdrop-blur-md bg-black/60 rounded-2xl p-4 -ml-2 lg:ml-0">
+                          <div className="flex-1 space-y-4 backdrop-blur-md bg-black/80 rounded-2xl p-4 -ml-2 lg:ml-0">
                             <div className="space-y-2">
                               {/* Username with inline badges */}
                               <div className="flex items-center gap-2">
