@@ -872,6 +872,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [tokenRecipient, setTokenRecipient] = useState('')
   const [transferAmount, setTransferAmount] = useState('')
   const [isTransferringToken, setIsTransferringToken] = useState(false)
+  const [transferSourceWallet, setTransferSourceWallet] = useState<'oauth' | string>('oauth') // 'oauth' or external wallet address
 
   // NFT Transfer state
   const [transferRecipient, setTransferRecipient] = useState('')
@@ -1004,6 +1005,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     connectWeb3Modal: openWeb3Modal,
     disconnectWallet: unifiedDisconnectWallet,
     isWeb3ModalReady,
+    connectedExternalWallets,
   } = useUnifiedWallet()
 
   // Use active unified wallet address (covers Magic, MetaMask, Web3Modal) with Magic fallback
@@ -1726,8 +1728,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }
 
   // Handle NFT Transfer - calls ERC-721 transferFrom on-chain (with 0.05% of gas cost as platform fee)
+  // Supports both OAuth wallet and external wallets (MetaMask, Coinbase, etc.)
   const handleTransferNFT = async () => {
-    if (!transferRecipient || !selectedNftId || !userWallet) {
+    // Determine the from address based on selected source wallet
+    const fromAddress = transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet
+
+    if (!transferRecipient || !selectedNftId || !fromAddress) {
       toast.error('Please enter a recipient address and select an NFT')
       return
     }
@@ -1736,7 +1742,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
       return
     }
-    if (transferRecipient.toLowerCase() === userWallet.toLowerCase()) {
+    if (transferRecipient.toLowerCase() === fromAddress.toLowerCase()) {
       toast.error('Cannot transfer to yourself')
       return
     }
@@ -1753,8 +1759,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       return
     }
 
-    // Get web3 instance - prefer Magic, fallback to public RPC
-    const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
+    // Get web3 instance based on selected wallet type
+    let web3Instance: Web3
+    if (transferSourceWallet === 'oauth') {
+      web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
+    } else {
+      // Use window.ethereum for external wallets
+      if (typeof window !== 'undefined' && (window as any).ethereum) {
+        web3Instance = new Web3((window as any).ethereum)
+        await (window as any).ethereum.request({ method: 'eth_requestAccounts' })
+      } else {
+        toast.error('No external wallet found. Please install MetaMask or Coinbase Wallet.')
+        return
+      }
+    }
 
     setTransferring(true)
     try {
@@ -1780,8 +1798,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       const contract = new web3Instance.eth.Contract(erc721TransferAbi, nftContractAddress)
 
       // Estimate gas for the transfer
-      const tx = contract.methods.transferFrom(userWallet, transferRecipient, tokenId)
-      const gasEstimate = await tx.estimateGas({ from: userWallet })
+      const tx = contract.methods.transferFrom(fromAddress, transferRecipient, tokenId)
+      const gasEstimate = await tx.estimateGas({ from: fromAddress })
       const gasWithBuffer = Math.ceil(Number(gasEstimate) * 1.2)
 
       // Calculate 0.05% of gas cost as platform fee
@@ -1794,7 +1812,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       // Step 1: Send platform fee to treasury (0.05% of gas cost)
       console.log(`📤 Sending ${platformFee.toFixed(8)} POL fee (0.05% of ${gasCostPol.toFixed(6)} gas) to treasury: ${treasuryAddress}`)
       await web3Instance.eth.sendTransaction({
-        from: userWallet,
+        from: fromAddress,
         to: treasuryAddress,
         value: feeWei,
         gas: 21000,
@@ -1803,7 +1821,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       console.log('✅ Platform fee sent to treasury')
 
       // Step 2: Transfer NFT
-      await tx.send({ from: userWallet, gas: gasWithBuffer })
+      await tx.send({ from: fromAddress, gas: gasWithBuffer })
 
       toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)} (fee: ${platformFee.toFixed(8)} POL)`)
       setTransferRecipient('')
@@ -1821,8 +1839,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }
 
   // Handle Token Transfer (POL or OGUN) - with 0.05% platform fee
+  // Supports both OAuth wallet and external wallets (MetaMask, Coinbase, etc.)
   const handleTransferToken = async () => {
-    if (!tokenRecipient || !transferAmount || !userWallet) {
+    // Determine the from address based on selected source wallet
+    const fromAddress = transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet
+
+    if (!tokenRecipient || !transferAmount || !fromAddress) {
       toast.error('Please fill in recipient address and amount')
       return
     }
@@ -1830,7 +1852,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
       return
     }
-    if (tokenRecipient.toLowerCase() === userWallet.toLowerCase()) {
+    if (tokenRecipient.toLowerCase() === fromAddress.toLowerCase()) {
       toast.error('Cannot transfer to yourself')
       return
     }
@@ -1845,9 +1867,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const platformFee = amount * platformFeeRate
     const totalNeeded = amount + platformFee
 
-    const currentBalance = tokenTransferType === 'POL'
-      ? parseFloat(maticBalance || '0')
-      : parseFloat(ogunBalance || '0')
+    // Get balance for selected wallet
+    let currentBalance: number
+    if (transferSourceWallet === 'oauth') {
+      currentBalance = tokenTransferType === 'POL'
+        ? parseFloat(maticBalance || '0')
+        : parseFloat(ogunBalance || '0')
+    } else {
+      // External wallet - get balance from connectedExternalWallets
+      const extWallet = connectedExternalWallets?.find(w => w.address.toLowerCase() === transferSourceWallet.toLowerCase())
+      currentBalance = tokenTransferType === 'POL'
+        ? parseFloat(extWallet?.balance || '0')
+        : parseFloat(extWallet?.ogunBalance || '0')
+    }
+
     if (totalNeeded > currentBalance) {
       toast.error(`Insufficient ${tokenTransferType} balance. Need ${totalNeeded.toFixed(6)} (${amount} + ${platformFee.toFixed(6)} fee)`)
       return
@@ -1855,7 +1888,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
     setIsTransferringToken(true)
     try {
-      const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+      // Get appropriate web3 instance based on wallet type
+      let web3Instance: Web3
+      if (transferSourceWallet === 'oauth') {
+        // Use Magic SDK provider for OAuth wallet
+        web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+      } else {
+        // Use window.ethereum for external wallets (MetaMask, Coinbase, etc.)
+        if (typeof window !== 'undefined' && (window as any).ethereum) {
+          web3Instance = new Web3((window as any).ethereum)
+          // Request account access if needed
+          await (window as any).ethereum.request({ method: 'eth_requestAccounts' })
+        } else {
+          throw new Error('No external wallet found. Please install MetaMask or Coinbase Wallet.')
+        }
+      }
+
       const amountWei = web3Instance.utils.toWei(transferAmount, 'ether')
       const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
       const treasuryAddress = config.treasuryAddress
@@ -1866,7 +1914,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         // Step 1: Send platform fee to treasury
         console.log(`📤 Sending ${platformFee.toFixed(6)} POL fee to treasury: ${treasuryAddress}`)
         await web3Instance.eth.sendTransaction({
-          from: userWallet,
+          from: fromAddress,
           to: treasuryAddress,
           value: feeWei,
           gas: 21000,
@@ -1876,7 +1924,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         // Step 2: Send amount to recipient
         await web3Instance.eth.sendTransaction({
-          from: userWallet,
+          from: fromAddress,
           to: tokenRecipient,
           value: amountWei,
           gas: 21000,
@@ -1892,17 +1940,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         // Step 1: Send platform fee to treasury (in OGUN)
         console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN fee to treasury: ${treasuryAddress}`)
-        const feeGasEstimate = await contract.methods.transfer(treasuryAddress, feeWei).estimateGas({ from: userWallet })
+        const feeGasEstimate = await contract.methods.transfer(treasuryAddress, feeWei).estimateGas({ from: fromAddress })
         await contract.methods.transfer(treasuryAddress, feeWei).send({
-          from: userWallet,
+          from: fromAddress,
           gas: Math.ceil(Number(feeGasEstimate) * 1.2),
         })
         console.log('✅ Platform fee sent to treasury')
 
         // Step 2: Send amount to recipient
-        const gasEstimate = await contract.methods.transfer(tokenRecipient, amountWei).estimateGas({ from: userWallet })
+        const gasEstimate = await contract.methods.transfer(tokenRecipient, amountWei).estimateGas({ from: fromAddress })
         await contract.methods.transfer(tokenRecipient, amountWei).send({
-          from: userWallet,
+          from: fromAddress,
           gas: Math.ceil(Number(gasEstimate) * 1.2),
         })
       }
@@ -1996,8 +2044,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const deselectAllForSweep = () => setSweepSelectedIds(new Set())
 
   // Handle Sweep - batch transfer NFTs via individual transferFrom calls (with 0.05% of gas cost as platform fee)
+  // Supports both OAuth wallet and external wallets (MetaMask, Coinbase, etc.)
   const handleSweep = async () => {
-    if (!sweepRecipient || sweepSelectedIds.size === 0 || !userWallet) {
+    // Determine the from address based on selected source wallet
+    const fromAddress = transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet
+
+    if (!sweepRecipient || sweepSelectedIds.size === 0 || !fromAddress) {
       toast.error('Please select NFTs and enter a recipient address')
       return
     }
@@ -2005,7 +2057,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       toast.error('Invalid wallet address. Please enter a valid Ethereum address.')
       return
     }
-    if (sweepRecipient.toLowerCase() === userWallet.toLowerCase()) {
+    if (sweepRecipient.toLowerCase() === fromAddress.toLowerCase()) {
       toast.error('Cannot sweep to yourself')
       return
     }
@@ -2019,8 +2071,21 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     setSweeping(true)
     setSweepProgress({ current: 0, total: tracksToSweep.length })
 
-    // Get web3 instance - prefer Magic, fallback to public RPC
-    const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+    // Get web3 instance based on selected wallet type
+    let web3Instance: Web3
+    if (transferSourceWallet === 'oauth') {
+      web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+    } else {
+      // Use window.ethereum for external wallets
+      if (typeof window !== 'undefined' && (window as any).ethereum) {
+        web3Instance = new Web3((window as any).ethereum)
+        await (window as any).ethereum.request({ method: 'eth_requestAccounts' })
+      } else {
+        toast.error('No external wallet found. Please install MetaMask or Coinbase Wallet.')
+        setSweeping(false)
+        return
+      }
+    }
     const treasuryAddress = config.treasuryAddress
     const platformFeeRate = config.soundchainFee || 0.0005
 
@@ -2050,8 +2115,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         const tokenId = track.nftData?.tokenId || track.tokenId
         const contractAddr = track.nftData?.contract || config.web3.contractsV2.contractAddress
         const contract = new web3Instance.eth.Contract(erc721TransferAbi, contractAddr)
-        const tx = contract.methods.transferFrom(userWallet, sweepRecipient, tokenId)
-        const gas = await tx.estimateGas({ from: userWallet })
+        const tx = contract.methods.transferFrom(fromAddress, sweepRecipient, tokenId)
+        const gas = await tx.estimateGas({ from: fromAddress })
         const gasWithBuffer = Math.ceil(Number(gas) * 1.2)
         totalGasEstimate += BigInt(gasWithBuffer)
         gasEstimates.push({ track, gas: gasWithBuffer, contract, tx })
@@ -2066,7 +2131,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       // Step 2: Collect platform fee (0.05% of total gas cost)
       console.log(`📤 Sending ${platformFee.toFixed(8)} POL sweep fee (0.05% of ${totalGasCostPol.toFixed(6)} gas) to treasury: ${treasuryAddress}`)
       await web3Instance.eth.sendTransaction({
-        from: userWallet,
+        from: fromAddress,
         to: treasuryAddress,
         value: feeWei,
         gas: 21000,
@@ -2085,7 +2150,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         try {
           setSweepProgress({ current: i + 1, total: tracksToSweep.length })
-          await tx.send({ from: userWallet, gas })
+          await tx.send({ from: fromAddress, gas })
           succeeded++
           toast.success(`Transferred ${track.title || `Token #${tokenId}`} (${i + 1}/${tracksToSweep.length})`)
         } catch (err: any) {
@@ -5133,6 +5198,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
                   <p className="text-gray-400 text-sm mb-4">Select NFTs to batch transfer to another wallet.</p>
 
+                  {/* From Wallet Indicator - uses same selection as Token Transfer */}
+                  <div className="mb-4 p-2 bg-black/30 rounded-lg border border-gray-700">
+                    <span className="text-xs text-gray-500">From: </span>
+                    <span className="text-orange-400 font-mono text-xs">
+                      {transferSourceWallet === 'oauth'
+                        ? `OAuth (${userWallet?.slice(0, 6)}...${userWallet?.slice(-4)})`
+                        : `${connectedExternalWallets?.find(w => w.address.toLowerCase() === transferSourceWallet.toLowerCase())?.walletType || 'External'} (${transferSourceWallet.slice(0, 6)}...${transferSourceWallet.slice(-4)})`
+                      }
+                    </span>
+                  </div>
+
                   {/* Recipient Address */}
                   <div className="mb-4">
                     <label className="text-gray-400 text-xs mb-1 block">Recipient Address</label>
@@ -5220,7 +5296,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {/* Sweep Action Button */}
                   <Button
                     className="w-full retro-button bg-orange-500/20 hover:bg-orange-500/30 border-orange-500/50 text-orange-300"
-                    disabled={sweeping || sweepSelectedIds.size === 0 || !sweepRecipient || !userWallet}
+                    disabled={sweeping || sweepSelectedIds.size === 0 || !sweepRecipient || !(transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet)}
                     onClick={handleSweep}
                   >
                     {sweeping
@@ -5584,25 +5660,46 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </div>
                 <p className="text-gray-400 text-sm mb-4">Send POL or OGUN tokens to another wallet address.</p>
 
-                {/* From Address - Transparency */}
+                {/* From Wallet Selector */}
                 <div className="mb-4 p-3 bg-black/30 rounded-lg border border-gray-700">
-                  <label className="text-xs text-gray-500 mb-1 block">From</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-cyan-400 font-mono text-sm break-all">
-                      {userWallet || 'Connect wallet'}
-                    </span>
+                  <label className="text-xs text-gray-500 mb-2 block">From Wallet</label>
+                  <select
+                    value={transferSourceWallet}
+                    onChange={(e) => setTransferSourceWallet(e.target.value as 'oauth' | string)}
+                    className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-cyan-400 font-mono text-sm focus:border-cyan-500 focus:outline-none cursor-pointer"
+                    style={{ colorScheme: 'dark' }}
+                  >
+                    {/* OAuth Wallet Option */}
                     {userWallet && (
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(userWallet)
-                          toast.success('Address copied!')
-                        }}
-                        className="text-gray-500 hover:text-cyan-400 transition-colors flex-shrink-0"
-                        title="Copy address"
-                      >
-                        <Copy className="w-3 h-3" />
-                      </button>
+                      <option value="oauth" className="bg-gray-900 text-cyan-400">
+                        SoundChain OAuth: {userWallet.slice(0, 6)}...{userWallet.slice(-4)} ({parseFloat(maticBalance || '0').toFixed(4)} POL)
+                      </option>
                     )}
+                    {/* External Wallets from UnifiedWallet Context */}
+                    {connectedExternalWallets?.map((wallet) => (
+                      <option key={wallet.address} value={wallet.address} className="bg-gray-900 text-purple-400">
+                        {wallet.walletType}: {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} ({parseFloat(wallet.balance || '0').toFixed(4)} POL)
+                      </option>
+                    ))}
+                  </select>
+                  {/* Show selected wallet full address */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-gray-400 font-mono text-xs break-all">
+                      {transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const addr = transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet
+                        if (addr) {
+                          navigator.clipboard.writeText(addr)
+                          toast.success('Address copied!')
+                        }
+                      }}
+                      className="text-gray-500 hover:text-cyan-400 transition-colors flex-shrink-0"
+                      title="Copy address"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
 
@@ -5648,10 +5745,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <label className="text-xs text-gray-400 mb-2 block">
                       Amount ({tokenTransferType})
                       <span className="ml-2 text-gray-500">
-                        Balance: {tokenTransferType === 'POL'
-                          ? parseFloat(maticBalance || '0').toFixed(4)
-                          : parseFloat(ogunBalance || '0').toFixed(2)
-                        }
+                        Balance: {(() => {
+                          // Get balance for selected wallet
+                          if (transferSourceWallet === 'oauth') {
+                            return tokenTransferType === 'POL'
+                              ? parseFloat(maticBalance || '0').toFixed(4)
+                              : parseFloat(ogunBalance || '0').toFixed(2)
+                          } else {
+                            const extWallet = connectedExternalWallets?.find(w => w.address.toLowerCase() === transferSourceWallet.toLowerCase())
+                            return tokenTransferType === 'POL'
+                              ? parseFloat(extWallet?.balance || '0').toFixed(4)
+                              : parseFloat(extWallet?.ogunBalance || '0').toFixed(2)
+                          }
+                        })()}
                       </span>
                     </label>
                     <div className="relative">
@@ -5666,10 +5772,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       />
                       <button
                         onClick={() => {
-                          const bal = tokenTransferType === 'POL'
-                            ? (parseFloat(maticBalance || '0') - 0.01).toFixed(6)
-                            : parseFloat(ogunBalance || '0').toString()
-                          setTransferAmount(parseFloat(bal) > 0 ? bal : '0')
+                          // Get balance for selected wallet
+                          let walletBal: string
+                          if (transferSourceWallet === 'oauth') {
+                            walletBal = tokenTransferType === 'POL'
+                              ? (parseFloat(maticBalance || '0') - 0.01).toFixed(6)
+                              : parseFloat(ogunBalance || '0').toString()
+                          } else {
+                            const extWallet = connectedExternalWallets?.find(w => w.address.toLowerCase() === transferSourceWallet.toLowerCase())
+                            walletBal = tokenTransferType === 'POL'
+                              ? (parseFloat(extWallet?.balance || '0') - 0.01).toFixed(6)
+                              : parseFloat(extWallet?.ogunBalance || '0').toString()
+                          }
+                          setTransferAmount(parseFloat(walletBal) > 0 ? walletBal : '0')
                         }}
                         className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 rounded hover:bg-cyan-500/20 transition-all"
                       >
@@ -5686,7 +5801,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         ? 'border-cyan-500/50 hover:bg-cyan-500/10 text-cyan-400'
                         : 'border-purple-500/50 hover:bg-purple-500/10 text-purple-400'
                     }`}
-                    disabled={!userWallet || !tokenRecipient || !transferAmount || isTransferringToken}
+                    disabled={!(transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet) || !tokenRecipient || !transferAmount || isTransferringToken}
                     onClick={handleTransferToken}
                   >
                     {isTransferringToken ? (
@@ -5711,6 +5826,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <h3 className="retro-title text-lg">Transfer NFTs</h3>
                 </div>
                 <p className="text-gray-400 text-sm mb-4">Send your music NFTs to another wallet address.</p>
+
+                {/* From Wallet Indicator - uses same selection as Token Transfer */}
+                <div className="mb-4 p-2 bg-black/30 rounded-lg border border-gray-700">
+                  <span className="text-xs text-gray-500">From: </span>
+                  <span className="text-purple-400 font-mono text-xs">
+                    {transferSourceWallet === 'oauth'
+                      ? `OAuth (${userWallet?.slice(0, 6)}...${userWallet?.slice(-4)})`
+                      : `${connectedExternalWallets?.find(w => w.address.toLowerCase() === transferSourceWallet.toLowerCase())?.walletType || 'External'} (${transferSourceWallet.slice(0, 6)}...${transferSourceWallet.slice(-4)})`
+                    }
+                  </span>
+                </div>
+
                 <div className="space-y-4">
                   <div>
                     <label className="text-xs text-gray-400 mb-2 block">Recipient Address</label>
@@ -5738,7 +5865,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <Button
                     variant="outline"
                     className="w-full border-purple-500/50 hover:bg-purple-500/10 text-purple-400"
-                    disabled={!userWallet || !transferRecipient || !selectedNftId || transferring}
+                    disabled={!(transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet) || !transferRecipient || !selectedNftId || transferring}
                     onClick={handleTransferNFT}
                   >
                     {transferring ? (
