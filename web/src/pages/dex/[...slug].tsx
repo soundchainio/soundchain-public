@@ -955,8 +955,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const fetchStakedBalance = async () => {
       if (!walletAccount || !tokenStakeContractAddress) return
       try {
-        // Use Magic web3 or fallback to public Polygon RPC
-        const web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
+        // Use Magic web3 or fallback to Alchemy Polygon RPC
+        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
         const stakingContract = getStakingContract(web3Instance)
         const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
         if (balanceData) {
@@ -987,14 +987,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }, [selectedView, refetchBalance])
 
   // Transaction history query for wallet activity
+  // Use active unified wallet address (covers Magic, MetaMask, Web3Modal) with Magic fallback
+  const effectiveWalletForActivity = activeAddress || walletAccount || ''
   const { data: maticUsdData } = useMaticUsdQuery()
   const { data: transactionData, loading: transactionsLoading } = usePolygonscanQuery({
     variables: {
-      wallet: walletAccount || '',
+      wallet: effectiveWalletForActivity,
       page: { first: 10 },
     },
-    skip: !walletAccount, // Only fetch when wallet is connected
+    skip: !effectiveWalletForActivity, // Fetch when ANY wallet is connected
   })
+
+  // All known wallet addresses for direction detection
+  const allMyAddresses = useMemo(() => {
+    const addresses = [walletAccount, activeAddress].filter(Boolean).map(a => a!.toLowerCase())
+    return new Set(addresses)
+  }, [walletAccount, activeAddress])
 
   // Unified Wallet Context - synced across all pages (includes Web3Modal)
   const {
