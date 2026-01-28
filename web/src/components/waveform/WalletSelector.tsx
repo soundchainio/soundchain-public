@@ -904,7 +904,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
 
       {/* Connect Wallet Menu - Inline Accordion Dropdown (not fullscreen) */}
       {showConnectMenu && (
-        <div className="mt-3 bg-gray-900/95 backdrop-blur-sm border border-cyan-500/30 rounded-xl overflow-hidden shadow-xl animate-in slide-in-from-top-2 duration-200">
+        <div className="relative z-50 mt-3 bg-gray-900/95 backdrop-blur-sm border border-cyan-500/30 rounded-xl overflow-hidden shadow-2xl shadow-black/50 animate-in slide-in-from-top-2 duration-200">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
             <p className="text-xs text-cyan-400 uppercase tracking-wider font-bold">+ Add Wallet</p>
             <button onClick={() => setShowConnectMenu(false)} className="text-gray-500 hover:text-white transition-colors">
