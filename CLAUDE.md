@@ -20,7 +20,7 @@
 - Added dark overlay backgrounds behind bio text and nav tabs for readability
 - Fixed track detail page play counts to use SCid `streamCount` instead of stale `playbackCount`
 - **TODO (next session):** Surgically re-add the safe parts of the 559 lines from `dex/[...slug].tsx` (ConnectedWalletsPanel, multi-wallet portfolio, wallet activity, NFT transfer UI, POL/OGUN send)
-- **BLOCKER:** WalletConnect project ID `8e33134dfeea545054faa3493a504b8d` returns 403 from Reown API. Must register at `cloud.reown.com` before re-attempting Reown migration.
+- **RESOLVED:** WalletConnect project ID set to `53a9f7ff48d78a81624b5333d52b9123` (fallback in Web3ModalContext.tsx + Vercel env var)
 - **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
 
 ### Previous Session (Jan 27, 2026)
