@@ -57,6 +57,11 @@ export class ProfileResolver {
     return subscriptionService.exists({ subscriberId: user.profileId, profileId: profile._id });
   }
 
+  @FieldResolver(() => Boolean)
+  isOnline(@Ctx() { profileService }: Context, @Root() profile: Profile): boolean {
+    return profileService.isOnline(profile);
+  }
+
   @Query(() => Profile)
   @Authorized()
   myProfile(@Ctx() { profileService }: Context, @CurrentUser() { profileId }: User): Promise<Profile> {
@@ -146,5 +151,14 @@ export class ProfileResolver {
   ): Promise<UnsubscribeFromProfilePayload> {
     const profile = await subscriptionService.unsubscribeProfile(subscriberId.toString(), profileId.toString());
     return { profile };
+  }
+
+  @Mutation(() => Profile)
+  @Authorized()
+  heartbeat(
+    @Ctx() { profileService }: Context,
+    @CurrentUser() { profileId }: User,
+  ): Promise<Profile> {
+    return profileService.updateLastSeen(profileId.toString());
   }
 }

@@ -191,6 +191,34 @@ export class ProfileService extends ModelService<typeof Profile> {
   }
 
   // ============================================
+  // ONLINE PRESENCE TRACKING
+  // ============================================
+
+  /**
+   * Update user's last seen timestamp for online presence tracking
+   */
+  async updateLastSeen(profileId: string): Promise<Profile> {
+    const updatedProfile = await this.model.findByIdAndUpdate(
+      profileId,
+      { lastSeenAt: new Date() },
+      { new: true }
+    );
+    if (!updatedProfile) {
+      throw new NotFoundError('Profile', profileId);
+    }
+    return updatedProfile;
+  }
+
+  /**
+   * Check if user is online (seen within last 5 minutes)
+   */
+  isOnline(profile: Profile): boolean {
+    if (!profile.lastSeenAt) return false;
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    return new Date(profile.lastSeenAt) > fiveMinutesAgo;
+  }
+
+  // ============================================
   // WIN-WIN LISTENER REWARDS TRACKING
   // ============================================
 

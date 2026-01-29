@@ -49,6 +49,16 @@ export const UPDATE_COMMENT_MUTATION = gql`
   }
 `;
 
+// Heartbeat mutation for online presence tracking
+export const HEARTBEAT_MUTATION = gql`
+  mutation Heartbeat {
+    heartbeat {
+      id
+      lastSeenAt
+    }
+  }
+`;
+
 // Placeholder function to mimic the mutation call
 export const updateComment = (options: any) => {
   // This should be replaced with actual Apollo Client mutation logic

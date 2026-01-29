@@ -9,6 +9,7 @@ import { AudioPlayerProvider } from 'hooks/useAudioPlayer'
 import { TrackProvider } from 'hooks/useTrack'
 import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
 import { LayoutContextProvider } from 'hooks/useLayoutContext'
+import { HeartbeatProvider } from 'hooks/useHeartbeat'
 import { ApolloProvider } from 'lib/apollo'
 import type { AppProps } from 'next/app'
 import dynamic from 'next/dynamic'
@@ -64,6 +65,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                       <HideBottomNavBarProvider>
                         <LayoutContextProvider>
                           <CheckBodyScroll />
+                          <HeartbeatProvider />
                           <Layout>
                             <Component {...pageProps} />
                           </Layout>

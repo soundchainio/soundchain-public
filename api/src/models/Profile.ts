@@ -69,6 +69,10 @@ export class Profile extends Model {
   @prop({ type: [String], enum: Badge, default: [] })
   badges: string[];
 
+  @Field(() => Date, { nullable: true })
+  @prop({ required: false })
+  lastSeenAt?: Date;
+
   @Field(() => Date)
   createdAt: Date;
 
