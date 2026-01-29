@@ -344,13 +344,20 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetBalance = useCallback(async () => {
     try {
-      if (!account) return
+      if (!account) {
+        console.log('💰 No account set, cannot fetch POL balance')
+        return
+      }
 
       // Use Magic's web3 or fallback to public RPC
-      const web3Instance = web3 || new Web3(network.rpc)
+      const rpcUrl = network.rpc || 'https://polygon-rpc.com'
+      const web3Instance = web3 || new Web3(rpcUrl)
 
+      console.log('💰 Fetching POL balance for account:', account, 'using RPC:', web3 ? 'Magic web3' : rpcUrl)
       const maticBalance = await web3Instance.eth.getBalance(account)
-      setMaticBalance(Number(web3Instance.utils.fromWei(maticBalance, 'ether')).toFixed(6))
+      const balanceEther = Number(web3Instance.utils.fromWei(maticBalance, 'ether')).toFixed(6)
+      console.log('💰 POL balance result:', balanceEther)
+      setMaticBalance(balanceEther)
     } catch (error) {
       console.error('💰 Balance fetch error:', error)
       // Don't propagate error - just log it
@@ -367,12 +374,16 @@ export function MagicProvider({ children }: MagicProviderProps) {
         return
       }
 
-      if (!account) return
+      if (!account) {
+        console.log('💎 No account set, cannot fetch OGUN balance')
+        return
+      }
 
       // Use Magic's web3 or fallback to public RPC (Polygon)
-      const web3Instance = web3 || new Web3(network.rpc)
+      const rpcUrl = network.rpc || 'https://polygon-rpc.com'
+      const web3Instance = web3 || new Web3(rpcUrl)
 
-      console.log('💎 Fetching OGUN balance for account:', account)
+      console.log('💎 Fetching OGUN balance for account:', account, 'using RPC:', web3 ? 'Magic web3' : rpcUrl)
       const ogunContract = new web3Instance.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
 
       try {
@@ -417,11 +428,12 @@ export function MagicProvider({ children }: MagicProviderProps) {
     // This ensures balances can be fetched using public RPC
     // Check ALL OAuth wallet addresses, not just magicWalletAddress
     const fallbackWallet = getUserWalletAddress()
-    if (fallbackWallet && !account) {
-      console.log('💳 Magic: Setting account from profile (no web3):', fallbackWallet)
+    // Set account if we have a wallet and either no account or different account
+    if (fallbackWallet && (!account || account.toLowerCase() !== fallbackWallet.toLowerCase())) {
+      console.log('💳 Magic: Setting account from profile (no web3):', fallbackWallet, 'previous:', account || 'none')
       setAccount(fallbackWallet)
     }
-  }, [me, web3, handleSetAccount, getUserWalletAddress, account])
+  }, [me, web3, handleSetAccount, getUserWalletAddress])
 
   // Debounce ref to prevent rapid re-fetches
   const balanceFetchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
