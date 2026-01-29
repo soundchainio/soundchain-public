@@ -4949,184 +4949,101 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 openWeb3Modal={openWeb3Modal}
               />
 
-              {/* Header Card */}
-              <Card className="retro-card p-6">
+              {/* Blur-style Wallet Header */}
+              <div className="border-b border-gray-800 pb-4 mb-4">
+                {/* Wallet Address Row */}
                 <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-cyan-500/20">
-                      <Wallet className="w-8 h-8 text-green-400" />
-                    </div>
-                    <div>
-                      <h2 className="retro-title text-xl">Wallet Overview</h2>
-                      <p className="text-gray-400 text-sm">Balances & Transactions</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-white text-lg">
+                      {(activeAddress || walletAccount || '').slice(0, 6)}...{(activeAddress || walletAccount || '').slice(-4)}
+                    </span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(activeAddress || walletAccount || '')}
+                      className="p-1 hover:bg-white/5 rounded transition-colors"
+                    >
+                      <Copy className="w-4 h-4 text-gray-500 hover:text-white" />
+                    </button>
+                    <a
+                      href={`https://polygonscan.com/address/${activeAddress || walletAccount}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1 hover:bg-white/5 rounded transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4 text-gray-500 hover:text-white" />
+                    </a>
+                    {chainName && (
+                      <span className="text-xs text-gray-500 ml-2">{chainName}</span>
+                    )}
                   </div>
-                  {chainName && (
-                    <Badge className="bg-purple-500/20 text-purple-400 px-3 py-1">
-                      <span className="w-2 h-2 bg-purple-400 rounded-full inline-block mr-2 animate-pulse" />
-                      {chainName}
-                    </Badge>
+                  {activeWalletType === 'web3modal' && (
+                    <button
+                      onClick={unifiedDisconnectWallet}
+                      className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+                    >
+                      Disconnect
+                    </button>
                   )}
                 </div>
 
-                {/* Active Wallet Display - Synced Globally */}
-                {isUnifiedWalletConnected && activeAddress && (
-                  <Card className="metadata-section p-4 mb-4 border-cyan-500/50 bg-cyan-500/5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center">
-                          <span className="text-white text-xl">
-                            {activeWalletType === 'magic' ? '✨' : activeWalletType === 'metamask' ? '🦊' : '🔗'}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-xs text-gray-400">Active Wallet</p>
-                            <Badge className="bg-green-500/20 text-green-400 text-xs">
-                              <span className="w-1.5 h-1.5 bg-green-400 rounded-full inline-block mr-1 animate-pulse" />
-                              Connected
-                            </Badge>
-                          </div>
-                          <p className="font-mono text-cyan-400 text-lg">{activeAddress.slice(0, 10)}...{activeAddress.slice(-8)}</p>
-                          <p className="text-xs text-gray-500">
-                            {activeWalletType === 'magic' ? 'SoundChain Wallet' :
-                             activeWalletType === 'metamask' ? 'MetaMask' :
-                             chainName || 'External Wallet'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => { navigator.clipboard.writeText(activeAddress); }}
-                          className="hover:bg-cyan-500/20"
-                        >
-                          <Copy className="w-4 h-4 text-cyan-400" />
-                        </Button>
-                        <a href={`https://polygonscan.com/address/${activeAddress}`} target="_blank" rel="noreferrer">
-                          <Button variant="ghost" size="sm" className="hover:bg-purple-500/20">
-                            <ExternalLink className="w-4 h-4 text-purple-400" />
-                          </Button>
-                        </a>
-                        {activeWalletType === 'web3modal' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={unifiedDisconnectWallet}
-                            className="hover:bg-red-500/20 text-red-400"
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                )}
-
-                {/* Balance Cards - Real data from Magic wallet */}
-                {walletAccount && (
-                  <div className="mb-2 text-center">
-                    <a
-                      href={`https://polygonscan.com/address/${walletAccount}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
-                    >
-                      Verify on Polygonscan: {walletAccount.slice(0, 8)}...{walletAccount.slice(-6)} ↗
-                    </a>
+                {/* Horizontal Stats Bar - Blur style */}
+                <div className="flex items-center gap-8 text-sm">
+                  <div>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide">OGUN</span>
+                    <p className="text-yellow-400 font-mono">{(Number(ogunBalance || 0) + Number(stakedOgunBalance || 0)).toFixed(2)}</p>
                   </div>
-                )}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <Card className="metadata-section p-4 text-center hover:border-yellow-500/50 transition-all">
-                    <Coins className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400 mb-1">OGUN Total</p>
-                    <p className="text-xl font-bold text-yellow-400">
-                      {(Number(ogunBalance || 0) + Number(stakedOgunBalance || 0)).toFixed(2)}
-                    </p>
-                    <div className="text-xs text-gray-500 space-y-0.5 mt-1">
-                      <p className="text-green-400/80">{ogunBalance || '0.00'} liquid</p>
-                      <p className="text-orange-400/80">{stakedOgunBalance || '0.00'} staked</p>
-                    </div>
-                  </Card>
-                  <Card className="metadata-section p-4 text-center hover:border-purple-500/50 transition-all">
-                    <div className="w-8 h-8 mx-auto mb-2 text-purple-400">
-                      <svg viewBox="0 0 38 33" fill="currentColor"><path d="M29.7 16.5l-11.7 6.7-11.7-6.7 11.7-16.5 11.7 16.5zM18 25.2l-11.7-6.7 11.7 16.5 11.7-16.5-11.7 6.7z"/></svg>
-                    </div>
-                    <p className="text-xs text-gray-400 mb-1">POL</p>
-                    <p className="text-xl font-bold text-purple-400">{maticBalance || '0.00'}</p>
-                    <p className="text-xs text-gray-500">≈ ${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
-                  </Card>
-                  <Card className="metadata-section p-4 text-center hover:border-cyan-500/50 transition-all">
-                    <ImageIcon className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400 mb-1">NFTs</p>
-                    <p className="text-xl font-bold text-cyan-400">
-                      {ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}
-                    </p>
-                    <p className="text-xs text-gray-500">Owned</p>
-                  </Card>
-                  <Card className="metadata-section p-4 text-center hover:border-green-500/50 transition-all">
-                    <TrendingUp className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                    <p className="text-xs text-gray-400 mb-1">Total Value</p>
-                    <p className="text-xl font-bold text-green-400">
-                      ${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}
-                    </p>
-                    <p className="text-xs text-gray-500">Portfolio</p>
-                  </Card>
+                  <div>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide">POL</span>
+                    <p className="text-purple-400 font-mono">{maticBalance || '0.00'}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide">NFTs</span>
+                    <p className="text-cyan-400 font-mono">{ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 text-xs uppercase tracking-wide">VALUE</span>
+                    <p className="text-green-400 font-mono">${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
+                  </div>
                 </div>
+              </div>
 
-                {/* Quick Actions */}
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-                  <Button
-                    className="retro-button bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 flex-col h-auto py-4"
-                    onClick={() => document.getElementById('buy-crypto-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  >
-                    <Plus className="w-5 h-5 mb-1" />
-                    <span className="text-xs">Buy Crypto</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-cyan-500/50 hover:bg-cyan-500/10 flex-col h-auto py-4"
-                    onClick={() => document.getElementById('transfer-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  >
-                    <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                    <span className="text-xs">Send</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-purple-500/50 hover:bg-purple-500/10 flex-col h-auto py-4"
-                    onClick={() => {
-                      if (userWallet) {
-                        navigator.clipboard.writeText(userWallet)
-                        alert(`📥 Receive Crypto\n\nYour wallet address copied to clipboard:\n\n${userWallet}\n\nSend POL or OGUN to this address on Polygon network.`)
-                      } else {
-                        alert('Please connect your wallet first.')
-                      }
-                    }}
-                  >
-                    <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
-                    <span className="text-xs">Receive</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-yellow-500/50 hover:bg-yellow-500/10 flex-col h-auto py-4"
-                    onClick={() => document.getElementById('swap-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  >
-                    <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                    <span className="text-xs">Swap</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-orange-500/50 hover:bg-orange-500/10 flex-col h-auto py-4 relative"
-                    onClick={() => setShowSweepPanel(!showSweepPanel)}
-                  >
-                    <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
-                    <span className="text-xs">Sweep</span>
-                  </Button>
-                </div>
-              </Card>
+              {/* Slim Action Buttons */}
+              <div className="flex items-center gap-2 mb-6">
+                <button
+                  onClick={() => document.getElementById('buy-crypto-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 rounded text-sm font-medium text-white transition-all"
+                >
+                  Buy
+                </button>
+                <button
+                  onClick={() => document.getElementById('transfer-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-sm text-white transition-all"
+                >
+                  Send
+                </button>
+                <button
+                  onClick={() => {
+                    if (userWallet) {
+                      navigator.clipboard.writeText(userWallet)
+                      alert(`Wallet address copied:\n${userWallet}`)
+                    }
+                  }}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-sm text-white transition-all"
+                >
+                  Receive
+                </button>
+                <button
+                  onClick={() => document.getElementById('swap-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-sm text-white transition-all"
+                >
+                  Swap
+                </button>
+                <button
+                  onClick={() => setShowSweepPanel(!showSweepPanel)}
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-sm text-white transition-all"
+                >
+                  Sweep
+                </button>
+              </div>
 
               {/* Sweep Panel */}
               {showSweepPanel && (
