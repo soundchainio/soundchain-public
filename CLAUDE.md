@@ -80,6 +80,188 @@
 
 **Key Insight:** Magic SDK still works for OAuth authentication. We just prioritize external wallets for blockchain transactions to avoid their shared RPC infrastructure rate limits.
 
+---
+
+## 🔗 COMPLETE BLOCKCHAIN FLOW AUDIT (Jan 28, 2026)
+
+### Contract Architecture on Polygon Mainnet
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    POLYGON MAINNET (Chain ID: 137)                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   TOKENS & STAKING                    NFT & MARKETPLACE                  │
+│   ─────────────────                   ─────────────────                  │
+│   OGUN Token        →  Staking        NFT V2           →  Marketplace   │
+│   0x45f1af894...       Rewards        0xF0287926D...      0xD772ccf78...│
+│                        0xe6c3F86a2...                                    │
+│                                                                          │
+│   DEX & REVENUE                       AUCTIONS                           │
+│   ─────────────                       ────────                           │
+│   QuickSwap           Stream Rewards  Auction V2                         │
+│   0xa5E0829Ca...      0xcf9416c49...  0x35f662bD7...                    │
+│                                                                          │
+│   TREASURY (Gnosis Safe): 0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b    │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Complete Contract Address Reference
+
+| Contract | Address | ABI File |
+|----------|---------|----------|
+| **OGUN Token** | `0x45f1af89486aeec2da0b06340cd9cd3bd741a15c` | SoundchainOGUN20.json |
+| **Staking Rewards** | `0xe6c3F86a250b5AAd762405ce5F579F81Fddc426a` | StakingRewards.json |
+| **LP Token** | `0xfF0E141891D0E66b0D094215B44eF433F43066e5` | LPToken.json |
+| **LP Staking** | `0x5748E147b5479A97904eFCC466dF4f7C6dbB83F9` | LiquidityPoolRewards.json |
+| **NFT V2 (Editions)** | `0xF0287926D495719b239340Fc31d268b76bAD8B42` | Soundchain721Editions.json |
+| **Marketplace V1** | `0xD772ccf784Df67E14186AA6E512c1A1bd32F394f` | SoundchainMarketplace.json |
+| **Auction V1** | `0x903ea5B8f1BE6EdC74e66dd89565A1d537824A2F` | SoundchainAuction.json |
+| **Auction V2** | `0x35f662bD7d418fd7B19518A22aF3D54ea99e7bf0` | SoundchainAuction.json (v2) |
+| **QuickSwap Router** | `0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff` | UniswapV2Router.json |
+| **Stream Rewards** | `0xcf9416c49D525f7a50299c71f33606A158F28546` | Backend ethers.js |
+| **Treasury (Gnosis)** | `0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b` | N/A (native transfer) |
+
+### All 12 Operations → Direct Contract Calls
+
+| # | Operation | Contract | Method | Fee |
+|---|-----------|----------|--------|-----|
+| 1 | **POL Send** | Native | `web3.eth.sendTransaction` | 0.05% |
+| 2 | **OGUN Send** | OGUN Token | `transfer()` | 0.05% |
+| 3 | **NFT Transfer** | Soundchain721 | `transferFrom()` | 0.05% gas |
+| 4 | **NFT Mint** | Soundchain721Editions | `createEdition()` + `safeMintToEditionQuantity()` | 0.05% gas |
+| 5 | **NFT Sweep** | Soundchain721 | `transferFrom()` × N | 0.05% total gas |
+| 6 | **Marketplace List** | MarketplaceEditions | `listItem()` | - |
+| 7 | **Marketplace Buy** | MarketplaceEditions | `buyItem()` | 0.05% |
+| 8 | **Auction Create** | AuctionV2 | `createAuction()` | - |
+| 9 | **Auction Bid** | AuctionV2 | `placeBid()` | - |
+| 10 | **OGUN Stake** | StakingRewards | `approve()` + `stake()` | 0.05% |
+| 11 | **DEX Swap** | QuickSwap | `swapExactETHForTokens()` / `swapExactTokensForETH()` | 0.05% |
+| 12 | **Profile Tips** | OGUN Token | `transfer()` | 0.05% |
+
+### Operation Flow Diagrams
+
+#### 1. POL Transfer
+```
+User Wallet ──► Treasury (0.05% fee) ──► Recipient Wallet
+     │              │
+     └──────────────┴──► web3.eth.sendTransaction()
+```
+
+#### 2. OGUN Transfer
+```
+User Wallet ──► OGUN Contract ──► Treasury (0.05% fee)
+     │              │
+     │              └──► Recipient Wallet
+     └──► contract.methods.transfer()
+```
+
+#### 3. NFT Transfer
+```
+Owner ──► NFT Contract ──► New Owner
+  │           │
+  │           └──► contract.methods.transferFrom()
+  │
+  └──► Treasury (0.05% of gas cost)
+```
+
+#### 4. NFT Mint (Edition)
+```
+Artist ──► NFT Editions Contract ──► Edition Created
+  │              │
+  │              ├──► createEdition(quantity, to, royalty)
+  │              └──► safeMintToEditionQuantity(to, uri, edition, qty)
+  │
+  └──► Treasury (0.05% of gas cost)
+```
+
+#### 5. Marketplace Buy
+```
+Buyer ──► Treasury (0.05% fee) ──► Marketplace Contract
+  │              │                       │
+  │              │                       └──► NFT to Buyer
+  │              │                       └──► Payment to Seller
+  │              │
+  └──────────────┴──► marketplace.methods.buyItem()
+```
+
+#### 6. OGUN Staking
+```
+Staker ──► OGUN Contract ──► Treasury (0.05% fee)
+  │              │
+  │              └──► approve() + stake()
+  │                        │
+  │                        └──► Staking Rewards Contract
+  │                                    │
+  └────────────────────────────────────┴──► Earn Rewards Over Time
+```
+
+#### 7. DEX Swap (POL ↔ OGUN)
+```
+User ──► QuickSwap Router ──► Swap Output
+  │           │
+  │           ├──► swapExactETHForTokens() (POL→OGUN)
+  │           └──► swapExactTokensForETH() (OGUN→POL)
+  │
+  └──► Treasury (0.05% of input)
+```
+
+#### 8. Profile Tips
+```
+Tipper ──► OGUN Contract ──► Treasury (0.05% fee)
+  │              │
+  │              └──► Creator Wallet (remaining tip)
+  │
+  └──► contract.methods.transfer()
+```
+
+### Files by Contract Usage
+
+| File | Contracts Used |
+|------|----------------|
+| `useBlockchainV2.ts` | NFT, Marketplace, Auction, MerkleClaim |
+| `StakingPanel.tsx` | OGUN, StakingRewards, QuickSwap |
+| `dex/[...slug].tsx` | OGUN, NFT (transfers), StakingRewards |
+| `stake.tsx` | OGUN, StakingRewards, LPToken, LPStaking |
+| `lp-stake.tsx` | OGUN, LPToken, LPStaking |
+| `CreateModal.tsx` | NFT Editions (via useBlockchainV2) |
+| `useMetaMask.ts` | OGUN (balance only) |
+| `UnifiedWalletContext.tsx` | OGUN (balance only) |
+
+### Wallet Support Matrix
+
+| Wallet Type | Source | Direct Contract Calls |
+|-------------|--------|----------------------|
+| Magic OAuth | `useMagicContext` | ✅ Yes |
+| MetaMask | `useMetaMask` | ✅ Yes |
+| WalletConnect | `useWalletConnect` | ✅ Yes |
+| Web3Modal | `useUnifiedWallet` | ✅ Yes |
+| Coinbase | Web3Modal | ✅ Yes |
+
+### Verification Summary
+
+```
+✅ NO MAGIC SDK BLOCKCHAIN DEPENDENCIES
+
+All operations use:
+├── web3.eth.Contract(ABI, address)
+├── contract.methods.xxx().send()
+└── web3.eth.sendTransaction()
+
+Magic SDK ONLY used for:
+├── OAuth authentication (Google, Discord, Twitch, Email)
+├── Wallet creation (generates Polygon address)
+└── Transaction signing (via magic.rpcProvider)
+
+The MagicLink pivot is COMPLETE:
+├── OAuth login → Still works
+├── NFT minting → Direct contract calls
+├── All transfers → Direct contract calls
+└── Rate limits → Bypassed with external wallet priority
+```
+
+---
+
 **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
 
 ### Previous Session (Jan 27, 2026)
