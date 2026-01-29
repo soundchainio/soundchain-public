@@ -3411,7 +3411,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         {/* Profile Header - Only shown when logged in on feed view */}
         {user && selectedView === 'feed' && (
         <div className="relative z-10 pt-8 pb-6">
-          <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
+          {/* Dark gradient overlay for text readability on any cover image */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-transparent pointer-events-none" />
+          <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 relative">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
               {/* User Profile */}
               <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -3439,7 +3441,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
                 </div>
 
-                <div className="flex-1 space-y-4 rounded-2xl p-4 -ml-2 lg:ml-0 border border-cyan-500/30" style={{ backgroundColor: 'rgba(0, 0, 0, 0.92)', backdropFilter: 'blur(16px)' }}>
+                <div className="flex-1 space-y-4 rounded-2xl p-4 -ml-2 lg:ml-0 border border-cyan-500/30" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(16px)' }}>
                   <div className="space-y-2">
                     {/* Username with inline badges - EXACT legacy UI */}
                     <div className="flex items-center gap-2">
@@ -4204,12 +4206,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className="flex justify-center gap-0 xl:gap-6 -mx-4 md:mx-0 bg-black md:bg-transparent">
+            <div className="flex justify-center gap-4 xl:gap-6">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
               {/* Main Feed - Posts only (announcements moved to dedicated tab) */}
-              <div className="flex-1 max-w-full md:max-w-[614px] bg-black md:bg-transparent" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+              <div className="flex-1 max-w-full md:max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
                 <Posts />
               </div>
 
@@ -7012,7 +7014,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             </div>
                           </div>
 
-                          <div className="flex-1 space-y-4 rounded-2xl p-4 -ml-2 lg:ml-0 border border-cyan-500/30" style={{ backgroundColor: 'rgba(0, 0, 0, 0.92)', backdropFilter: 'blur(16px)' }}>
+                          <div className="flex-1 space-y-4 rounded-2xl p-4 -ml-2 lg:ml-0 border border-cyan-500/30" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(16px)' }}>
                             <div className="space-y-2">
                               {/* Username with inline badges */}
                               <div className="flex items-center gap-2">
