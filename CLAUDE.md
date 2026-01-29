@@ -157,6 +157,80 @@ Created `BLOCKCHAIN_FLOW.md` with:
 
 ---
 
+## AFTERNOON SESSION (Jan 29, 2026) - Bug Fixes & Listener Rewards
+
+**Environment:** War Room → Remote (iPhone via ttyd tunnel)
+
+### 🐛 Critical Fixes (Fleet Commander ~1-2pm)
+
+#### Login Page Crash - FIXED
+**Symptom:** Client-side error on login page after engagement features push
+**Root Cause:** `useHeartbeat` hook was destructuring `useMe()` incorrectly
+**Fix:** Fixed destructuring in `useHeartbeat.ts`
+**Commit:** `e52e575b8`
+
+#### DM Messages Not Rendering - FIXED
+**Symptom:** DM messages blank/not showing
+**Root Cause:** Wrong field name being accessed
+**Fix:** Corrected field name in DM component
+**Commit:** `5fe2c67e8`
+
+#### OAuth Wallet Balance Not Fetching - FIXED
+**Symptom:** Wallet balances showing 0 for OAuth users
+**Root Cause:** Balance fetch not triggering for OAuth wallet types
+**Fix:** Updated balance fetching logic
+**Commit:** `5f7984aa3`
+
+#### Phone Number Formatting - ADDED
+**Feature:** Phone numbers now auto-format with dashes
+**Commit:** `85385ea5f`
+
+### 🎧 Piggy Bank Listener Rewards - NOW LIVE!
+**Was:** Placeholder text "Coming Soon! Earn 30%..."
+**Now:** Real-time data synced with backend
+
+**Backend:**
+- Added `myListenerRewards` GraphQL query to ProfileResolver
+- Added `ListenerRewardsResult` type
+- Profile model tracks: `dailyListenerOgunEarned`, `totalListenerOgunEarned`, `dailyTracksStreamed`, `totalTracksStreamed`
+
+**Frontend:**
+- Listener tab shows: Total OGUN earned, Tracks streamed today, Daily earnings
+- Auto-updates when streaming NFT tracks
+
+**Commit:** `bb101fa6b`
+
+### 💳 Make Post Permanent - Wallet UI Enhanced
+**Was:** No wallet connection UI, just error toast
+**Now:** Full wallet selector with:
+- Multiple wallet support (Magic, MetaMask, WalletConnect)
+- Balance display per wallet
+- Auto-select wallet with sufficient funds
+- Support for wallet-only users (shows registered wallet)
+- Option to connect additional wallets
+
+**Commits:** `d35af2e88`, `512c5a2f7`, `a8e0bfdea`
+
+### 📱 Nostr NIP-17 Notifications via Bitchat
+**Feature:** Push notifications can now route through Bitchat/Nostr
+**Commit:** `9232890dd`
+
+### ✅ Afternoon Commits Summary
+```
+14:00 - feat: Add Nostr NIP-17 notifications via Bitchat
+13:39 - fix: DM messages not rendering - wrong field name
+13:30 - fix: OAuth wallet balance fetching not triggering
+13:27 - feat: Fix notifications, wallet connections, piggybank modal
+13:10 - feat: Add phone number formatting with dashes
+13:08 - fix: useMe destructuring in useHeartbeat (LOGIN PAGE CRASH)
+13:01 - feat: Support wallet-only users in MakePostPermanent modal
+12:58 - feat: Add wallet selector to MakePostPermanent modal
+12:50 - feat: Sync Piggy Bank listener rewards with real data
+12:42 - fix: Add wallet connection UI to Make Post Permanent modal
+```
+
+---
+
 ## PREVIOUS SESSION (Jan 28, 2026)
 
 **Session Notes:**
