@@ -55,11 +55,11 @@ export const AuthorActionsModal = () => {
     switch (authorActionsType) {
       case AuthorActionsType.POST:
         dispatchSetEditPostId(authorActionsId)
-        dispatchShowPostModal(true)
+        dispatchShowPostModal({ show: true })
         break
       case AuthorActionsType.COMMENT:
         dispatchSetEditCommentId(authorActionsId)
-        dispatchShowCommentModal(true)
+        dispatchShowCommentModal({ show: true })
         break
     }
   }
