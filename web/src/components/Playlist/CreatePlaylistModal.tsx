@@ -43,6 +43,37 @@ interface CreatePlaylistModalProps {
   onSuccess?: (playlistId: string) => void
 }
 
+// Extract URL from Bandcamp iframe embed code
+// Bandcamp shares as HTML: <iframe ... src="https://bandcamp.com/EmbeddedPlayer/..." ...></iframe>
+const extractBandcampUrl = (input: string): string | null => {
+  if (input.includes('<iframe') && input.includes('bandcamp.com')) {
+    // Extract the src URL from the iframe
+    const srcMatch = input.match(/src=["']([^"']+)["']/)
+    if (srcMatch && srcMatch[1]) {
+      return srcMatch[1]
+    }
+    // Also try to extract the album/track URL from the anchor tag inside
+    const hrefMatch = input.match(/href=["'](https:\/\/[^"']*bandcamp\.com[^"']*)["']/)
+    if (hrefMatch && hrefMatch[1]) {
+      return hrefMatch[1]
+    }
+  }
+  return null
+}
+
+// Normalize link input - handles Bandcamp iframe embeds
+const normalizeLink = (input: string): string => {
+  const trimmed = input.trim()
+
+  // Check for Bandcamp iframe embed
+  const bandcampUrl = extractBandcampUrl(trimmed)
+  if (bandcampUrl) {
+    return bandcampUrl
+  }
+
+  return trimmed
+}
+
 // Detect platform from URL
 const detectPlatform = (url: string): string => {
   const lowerUrl = url.toLowerCase()
@@ -151,10 +182,20 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
   const handleAddLink = useCallback(() => {
     if (!linkInput.trim()) return
 
-    // Basic URL validation
-    let url = linkInput.trim()
+    // Normalize input - extract URL from Bandcamp iframes, etc.
+    let url = normalizeLink(linkInput)
+
+    // Add https:// if missing
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = 'https://' + url
+    }
+
+    // Validate it's a proper URL
+    try {
+      new URL(url)
+    } catch {
+      console.error('Invalid URL:', url)
+      return
     }
 
     const platform = detectPlatform(url)
@@ -163,6 +204,8 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
       url,
       platform,
     }
+
+    console.log('[CreatePlaylist] Adding link:', { original: linkInput.substring(0, 50), normalized: url, platform })
 
     setExternalLinks(prev => [...prev, newLink])
     setLinkInput('')
@@ -221,22 +264,22 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
           console.log('Adding', externalLinks.length, 'external links to playlist')
           for (const link of externalLinks) {
             try {
-              // Map platform to sourceType
-              const sourceTypeMap: Record<string, string> = {
-                'YouTube': 'youtube',
-                'Spotify': 'spotify',
-                'Apple Music': 'apple_music',
-                'Amazon Music': 'custom',
-                'Tidal': 'tidal',
-                'Bandcamp': 'bandcamp',
-                'SoundCloud': 'soundcloud',
-                'IG Reels': 'custom',
-                'Instagram': 'custom',
-                'TikTok': 'custom',
-                'Audiomack': 'custom',
-                'Link': 'custom',
+              // Map platform to PlaylistTrackSourceType enum (not strings!)
+              const sourceTypeMap: Record<string, PlaylistTrackSourceType> = {
+                'YouTube': PlaylistTrackSourceType.Youtube,
+                'Spotify': PlaylistTrackSourceType.Spotify,
+                'Apple Music': PlaylistTrackSourceType.AppleMusic,
+                'Amazon Music': PlaylistTrackSourceType.Custom,
+                'Tidal': PlaylistTrackSourceType.Tidal,
+                'Bandcamp': PlaylistTrackSourceType.Bandcamp,
+                'SoundCloud': PlaylistTrackSourceType.Soundcloud,
+                'IG Reels': PlaylistTrackSourceType.Custom,
+                'Instagram': PlaylistTrackSourceType.Custom,
+                'TikTok': PlaylistTrackSourceType.Custom,
+                'Audiomack': PlaylistTrackSourceType.Custom,
+                'Link': PlaylistTrackSourceType.Custom,
               }
-              const sourceType = sourceTypeMap[link.platform] || 'custom'
+              const sourceType = sourceTypeMap[link.platform] || PlaylistTrackSourceType.Custom
 
               await addPlaylistItem({
                 variables: {

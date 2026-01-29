@@ -7,6 +7,39 @@ import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylist
 import { useApolloClient } from '@apollo/client'
 import Asset from 'components/Asset/Asset'
 
+// Extract URL from Bandcamp iframe embed code
+// Bandcamp shares as HTML: <iframe ... src="https://bandcamp.com/EmbeddedPlayer/..." ...></iframe>
+const extractBandcampUrl = (input: string): string | null => {
+  // Check if it's an iframe embed code
+  if (input.includes('<iframe') && input.includes('bandcamp.com')) {
+    // Extract the src URL from the iframe
+    const srcMatch = input.match(/src=["']([^"']+)["']/)
+    if (srcMatch && srcMatch[1]) {
+      return srcMatch[1]
+    }
+    // Also try to extract the album/track URL from the anchor tag inside
+    const hrefMatch = input.match(/href=["'](https:\/\/[^"']*bandcamp\.com[^"']*)["']/)
+    if (hrefMatch && hrefMatch[1]) {
+      return hrefMatch[1]
+    }
+  }
+  return null
+}
+
+// Normalize external link input - handles embed codes, cleans URLs
+const normalizeExternalLink = (input: string): { url: string; isBandcampEmbed: boolean } => {
+  const trimmed = input.trim()
+
+  // Check for Bandcamp iframe embed
+  const bandcampUrl = extractBandcampUrl(trimmed)
+  if (bandcampUrl) {
+    return { url: bandcampUrl, isBandcampEmbed: true }
+  }
+
+  // Return as-is for regular URLs
+  return { url: trimmed, isBandcampEmbed: false }
+}
+
 // Platform detection from URL - returns platform info OR generic "External" for any URL
 const detectPlatformFromUrl = (url: string): { platform: string; sourceType: PlaylistTrackSourceType } => {
   try {
@@ -183,23 +216,35 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
-  // Add external link to playlist - accepts ANY URL
+  // Add external link to playlist - accepts URLs and Bandcamp embed codes
   const handleAddExternalLink = async () => {
     if (!externalLinkUrl.trim()) {
       setAddLinkError('Please enter a URL')
       return
     }
 
+    // Normalize input - extract URL from Bandcamp iframe embeds
+    const { url: normalizedUrl, isBandcampEmbed } = normalizeExternalLink(externalLinkUrl)
+
     // Basic URL validation
     try {
-      new URL(externalLinkUrl.trim())
+      new URL(normalizedUrl)
     } catch {
-      setAddLinkError('Please enter a valid URL (e.g., https://example.com/audio)')
+      setAddLinkError('Please enter a valid URL (e.g., https://example.com/audio) or Bandcamp embed code')
       return
     }
 
     // Detect platform from URL - now accepts ANY URL
-    const detected = detectPlatformFromUrl(externalLinkUrl.trim())
+    const detected = detectPlatformFromUrl(normalizedUrl)
+
+    // Log for debugging
+    console.log('[Playlist] Adding external link:', {
+      original: externalLinkUrl.substring(0, 100),
+      normalized: normalizedUrl,
+      isBandcampEmbed,
+      platform: detected.platform,
+      sourceType: detected.sourceType,
+    })
 
     setAddingTracks(true)
     setAddLinkError('')
@@ -210,7 +255,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           input: {
             playlistId: playlist.id,
             sourceType: detected.sourceType,
-            externalUrl: externalLinkUrl.trim(),
+            externalUrl: normalizedUrl,
             title: externalLinkTitle.trim() || detected.platform,
           },
         },
