@@ -102,9 +102,15 @@ export class User extends Model {
   @prop({ required: false })
   nostrPubkey?: string;
 
+  // Nostr private key (NOT exposed to GraphQL - server-side only for sending)
+  // Auto-generated on registration for seamless decentralized notifications
+  @prop({ required: false })
+  nostrPrivateKey?: string;
+
   // Enable Nostr notifications (NIP-17 encrypted DMs)
+  // Auto-enabled for new users with generated keypairs
   @Field(() => Boolean, { nullable: true })
-  @prop({ required: false, default: false })
+  @prop({ required: false, default: true })
   notifyViaNostr?: boolean;
 
   // OTP fields - stored in DB but not exposed to frontend (no @Field decorator)

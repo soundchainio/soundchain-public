@@ -6,6 +6,7 @@ import { AuthMethod } from '../types/AuthMethod';
 import { Role } from '../types/Role';
 import { validateUniqueIdentifiers } from '../utils/Validation';
 import { Service } from './Service';
+import { generateNostrKeypair } from '../utils/nostrKeygen';
 
 export class AuthService extends Service {
   async register(
@@ -45,6 +46,10 @@ export class AuthService extends Service {
         break;
     }
 
+    // Auto-generate Nostr keypair for decentralized notifications
+    const nostrKeypair = generateNostrKeypair();
+    console.log('[Auth] Generated Nostr identity for new user:', nostrKeypair.publicKey.slice(0, 16) + '...');
+
     const user = new UserModel({
       email,
       handle,
@@ -52,6 +57,10 @@ export class AuthService extends Service {
       emailVerificationToken,
       ...walletFields,
       authMethod: oauthProvider || AuthMethod.magicLink,
+      // Auto-enable Nostr notifications with generated keypair
+      nostrPubkey: nostrKeypair.publicKey,
+      nostrPrivateKey: nostrKeypair.privateKey,
+      notifyViaNostr: true,
     });
 
     const soundChainUser = await this.getSoundChainUser();
@@ -128,6 +137,10 @@ export class AuthService extends Service {
 
     const emailVerificationToken = uuidv4();
 
+    // Auto-generate Nostr keypair for decentralized notifications
+    const nostrKeypair = generateNostrKeypair();
+    console.log('[Auth] Generated Nostr identity for wallet user:', nostrKeypair.publicKey.slice(0, 16) + '...');
+
     // Create user with wallet as primary identifier
     const user = new UserModel({
       email: syntheticEmail,
@@ -137,6 +150,10 @@ export class AuthService extends Service {
       magicWalletAddress: walletAddress, // Store in magic field for compatibility
       metaMaskWalletAddressees: [walletAddress], // Also store in MetaMask array
       authMethod: AuthMethod.wallet,
+      // Auto-enable Nostr notifications with generated keypair
+      nostrPubkey: nostrKeypair.publicKey,
+      nostrPrivateKey: nostrKeypair.privateKey,
+      notifyViaNostr: true,
     });
 
     const soundChainUser = await this.getSoundChainUser();

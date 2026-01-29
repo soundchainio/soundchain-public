@@ -5,7 +5,7 @@ import { config } from '../config';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
 import { ProofBookItem } from '../models/ProofBookItem';
-import { User } from '../models/User';
+import { User, UserModel } from '../models/User';
 import { AuthMethod } from '../types/AuthMethod';
 import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
@@ -21,6 +21,7 @@ import { UpdateOTPInput } from '../types/UpdateOTPInput';
 import { UpdateOTPPayload } from '../types/UpdateOTPPayload';
 import { UpdateWalletInput } from '../types/UpdateWalletInput';
 import { ValidateOTPRecoveryPhraseInput } from '../types/ValidateOTPRecoveryPhraseInput';
+import { generateNostrKeypair } from '../utils/nostrKeygen';
 
 @Resolver(User)
 export class UserResolver {
@@ -122,6 +123,28 @@ export class UserResolver {
         throw new AuthenticationError('already exists', { with: users.map(u => u.authMethod) });
       }
       console.log('User authenticated:', user.email);
+
+      // Grandfather existing users: auto-generate Nostr keypair if missing
+      if (!user.nostrPubkey || !user.nostrPrivateKey) {
+        try {
+          const nostrKeypair = generateNostrKeypair();
+          await UserModel.updateOne(
+            { _id: user._id },
+            {
+              $set: {
+                nostrPubkey: nostrKeypair.publicKey,
+                nostrPrivateKey: nostrKeypair.privateKey,
+                notifyViaNostr: true,
+              },
+            }
+          );
+          console.log('[Auth] Generated Nostr identity for existing user:', user.email, nostrKeypair.publicKey.slice(0, 16) + '...');
+        } catch (nostrErr) {
+          console.error('[Auth] Failed to generate Nostr keypair:', nostrErr);
+          // Non-blocking - continue login even if Nostr generation fails
+        }
+      }
+
       const jwt = jwtService.create(user);
       console.log('JWT created:', jwt);
       return { jwt };
@@ -157,6 +180,27 @@ export class UserResolver {
       const user = await authService.getOrCreateByWallet(walletAddress, handle, displayName);
 
       console.log('User authenticated via wallet:', user._id.toString());
+
+      // Grandfather existing wallet users: auto-generate Nostr keypair if missing
+      if (!user.nostrPubkey || !user.nostrPrivateKey) {
+        try {
+          const nostrKeypair = generateNostrKeypair();
+          await UserModel.updateOne(
+            { _id: user._id },
+            {
+              $set: {
+                nostrPubkey: nostrKeypair.publicKey,
+                nostrPrivateKey: nostrKeypair.privateKey,
+                notifyViaNostr: true,
+              },
+            }
+          );
+          console.log('[Auth] Generated Nostr identity for wallet user:', walletAddress, nostrKeypair.publicKey.slice(0, 16) + '...');
+        } catch (nostrErr) {
+          console.error('[Auth] Failed to generate Nostr keypair:', nostrErr);
+          // Non-blocking - continue login even if Nostr generation fails
+        }
+      }
 
       // Create JWT
       const jwt = jwtService.create(user);
