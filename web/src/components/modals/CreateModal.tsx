@@ -7,11 +7,13 @@ import { SimpleTrackUploadForm } from 'components/forms/track/SimpleTrackUploadF
 import { Modal } from 'components/Modal'
 import { config } from 'config'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
+import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useMe } from 'hooks/useMe'
 import { useUpload } from 'hooks/useUpload'
-import { useWalletContext } from 'hooks/useWalletContext'
+import { useMagicContext } from 'hooks/useMagicContext'
+import useMetaMask from 'hooks/useMetaMask'
 import {
   CreateMultipleTracksMutation,
   ExploreTracksDocument,
@@ -54,16 +56,20 @@ const isRateLimitError = (error: any): boolean => {
 const withRetry = async <T>(
   fn: () => Promise<T>,
   maxRetries = 3,
-  initialDelayMs = 15000 // 15s initial delay for Magic RPC rate limits
+  initialDelayMs = 15000, // 15s initial delay for Magic RPC rate limits
+  isMagicWallet = true // Use longer delays for Magic wallet
 ): Promise<T> => {
   let lastError: any
+  // Magic wallets need longer delays due to shared RPC infrastructure
+  const baseDelay = isMagicWallet ? initialDelayMs : 2000
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn()
     } catch (error) {
       lastError = error
       if (isRateLimitError(error) && attempt < maxRetries) {
-        const delay = initialDelayMs * Math.pow(2, attempt) // Exponential backoff
+        const delay = baseDelay * Math.pow(2, attempt) // Exponential backoff
         console.log(`Rate limited, retrying in ${delay/1000}s (attempt ${attempt + 1}/${maxRetries})`)
         await sleep(delay)
       } else {
@@ -99,7 +105,35 @@ export const CreateModal = () => {
   const [createTrackEdition] = useCreateTrackEditionMutation()
   const [createTrackWithSCid] = useCreateTrackWithScidMutation()
 
-  const { web3, account } = useWalletContext()
+  // Multi-wallet support for minting
+  // Priority: External wallets (MetaMask/Web3Modal) > Magic OAuth (to avoid Magic RPC rate limits)
+  const {
+    activeWalletType,
+    activeAddress,
+    web3: unifiedWeb3,
+    switchToMetaMask,
+    switchToWeb3Modal,
+  } = useUnifiedWallet()
+
+  // Get individual wallet contexts for wallet selection
+  const { web3: magicWeb3, account: magicAccount } = useMagicContext()
+  const { web3: metamaskWeb3, account: metamaskAccount, connect: connectMetaMask } = useMetaMask()
+
+  // State for wallet selection in minting
+  const [mintWalletType, setMintWalletType] = useState<'magic' | 'external'>('external')
+
+  // Determine which web3/account to use for minting
+  const hasExternalWallet = !!metamaskAccount || activeWalletType === 'web3modal' || activeWalletType === 'direct'
+  const hasMagicWallet = !!magicAccount
+
+  // Select web3 and account based on user's choice
+  const web3 = mintWalletType === 'external' && hasExternalWallet
+    ? (metamaskWeb3 || unifiedWeb3)
+    : magicWeb3
+  const account = mintWalletType === 'external' && hasExternalWallet
+    ? (metamaskAccount || activeAddress)
+    : magicAccount
+
   const [pinToIPFS] = usePinToIpfsMutation()
   const [pinJsonToIPFS] = usePinJsonToIpfsMutation()
 
@@ -565,13 +599,21 @@ export const CreateModal = () => {
           }
         }
 
-        setMintingState('Minting Edition')
+        // Detect if using Magic wallet (needs longer delays for rate limits)
+        const usingMagicWallet = mintWalletType === 'magic' || !hasExternalWallet
+        const walletTypeLabel = usingMagicWallet ? 'OAuth Wallet' : 'External Wallet'
+        console.log(`🔧 Minting with ${walletTypeLabel} (Magic delays: ${usingMagicWallet})`)
 
-        // Wrap with retry for RPC rate limiting (15s initial, doubles each retry)
+        setMintingState(`Minting Edition (${walletTypeLabel})`)
+
+        // Wrap with retry for RPC rate limiting
+        // External wallets: 2s initial delay (fast)
+        // Magic wallets: 15s initial delay (rate limit protection)
         const [editionNumber, trackEditionId, trackEditionTransactionHash] = await withRetry(
           () => createAndMintEdition(),
           3,
-          15000
+          15000,
+          usingMagicWallet
         )
 
         let quantityLeft = values.editionQuantity
@@ -579,9 +621,9 @@ export const CreateModal = () => {
         for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
           nonce = BigInt(await web3?.eth.getTransactionCount(account)) // Update nonce for each batch
           const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE
-          // Wrap with retry for RPC rate limiting (15s initial delay)
-          promises.push(withRetry(() => createAndMintTracks(quantity, editionNumber, index === 0), 3, 15000))
-          setMintingState('Minting NFT')
+          // Wrap with retry for RPC rate limiting
+          promises.push(withRetry(() => createAndMintTracks(quantity, editionNumber, index === 0), 3, 15000, usingMagicWallet))
+          setMintingState(`Minting NFT (${walletTypeLabel})`)
 
           quantityLeft = quantityLeft - BATCH_SIZE
         }
@@ -702,6 +744,86 @@ export const CreateModal = () => {
         <MintingDone transactionHash={transactionHash} track={newTrack} />
       ) : (
         <>
+          {/* Wallet Selection for Minting */}
+          <div className="px-4 pt-4">
+            {/* Show recommendation if only Magic wallet available */}
+            {hasMagicWallet && !hasExternalWallet && (
+              <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+                <p className="text-xs text-yellow-400 font-medium mb-1">
+                  Connect External Wallet for Best Performance
+                </p>
+                <p className="text-xs text-gray-400 mb-2">
+                  External wallets (MetaMask, Coinbase) mint faster with no rate limits.
+                </p>
+                <button
+                  onClick={connectMetaMask}
+                  className="text-xs bg-orange-600 hover:bg-orange-500 text-white px-3 py-1 rounded font-medium transition-colors"
+                >
+                  Connect MetaMask
+                </button>
+              </div>
+            )}
+
+            {/* Wallet selector when both options available */}
+            {hasMagicWallet && hasExternalWallet && (
+              <div className="mb-3 p-3 bg-gray-800/50 border border-gray-700 rounded-lg">
+                <p className="text-xs text-gray-400 mb-2">Select wallet for minting:</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setMintWalletType('external')}
+                    className={classNames(
+                      'flex-1 px-3 py-2 rounded text-xs font-medium transition-colors',
+                      mintWalletType === 'external'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    )}
+                  >
+                    External Wallet
+                    <span className="block text-[10px] opacity-75">
+                      {metamaskAccount ? `${metamaskAccount.slice(0, 6)}...` : activeAddress?.slice(0, 6) + '...'}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setMintWalletType('magic')}
+                    className={classNames(
+                      'flex-1 px-3 py-2 rounded text-xs font-medium transition-colors',
+                      mintWalletType === 'magic'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    )}
+                  >
+                    OAuth Wallet
+                    <span className="block text-[10px] opacity-75">
+                      {magicAccount?.slice(0, 6)}...
+                    </span>
+                  </button>
+                </div>
+                {mintWalletType === 'external' && (
+                  <p className="mt-2 text-[10px] text-green-400">Faster minting, no rate limits</p>
+                )}
+                {mintWalletType === 'magic' && (
+                  <p className="mt-2 text-[10px] text-yellow-400">May experience delays during high traffic</p>
+                )}
+              </div>
+            )}
+
+            {/* No wallet connected at all */}
+            {!hasMagicWallet && !hasExternalWallet && (
+              <div className="mb-3 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+                <p className="text-xs text-red-400 font-medium mb-1">Wallet Required</p>
+                <p className="text-xs text-gray-400 mb-2">
+                  Connect a wallet to mint NFTs. External wallets recommended.
+                </p>
+                <button
+                  onClick={connectMetaMask}
+                  className="text-xs bg-orange-600 hover:bg-orange-500 text-white px-3 py-1 rounded font-medium transition-colors"
+                >
+                  Connect MetaMask
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="px-4 py-4">
             <TrackUploader onFileChange={handleFileDrop} art={artworkPreview} />
           </div>

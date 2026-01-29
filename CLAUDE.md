@@ -47,6 +47,39 @@
 - Quick tip presets: 1, 5, 10, 25 OGUN
 - 0.05% fee collected before tip sent
 
+### 🚨 MagicLink NFT API Deprecation (Jan 28, 2026)
+**CRITICAL:** MagicLink deprecated their NFT minting API. Rate limits hitting thousands during minting.
+
+**GOOD NEWS:** We were already using DIRECT CONTRACT CALLS for minting, NOT Magic's NFT API!
+- `createEdition()` → `nftContractEditions.methods.createEdition()`
+- `mintNftTokensToEdition()` → `nftContractEditions.methods.safeMintToEditionQuantity()`
+
+**The Problem:** Magic's RPC provider (not their API) gets rate-limited during high-traffic minting.
+
+**The Solution:** Multi-wallet minting with external wallet priority.
+
+### 🔧 Multi-Wallet NFT Minting (Jan 28, 2026)
+**Feature:** CreateModal now supports wallet selection for minting to bypass Magic RPC rate limits.
+
+**Priority Order:**
+1. **External wallets (MetaMask/Web3Modal)** → No rate limits, faster minting
+2. **Magic OAuth wallets** → Longer delays, rate limit protection
+
+**UI Changes (CreateModal.tsx):**
+- Wallet selector shows when both wallet types available
+- Recommendation banner when only Magic wallet connected
+- Status shows wallet type during minting: "Minting NFT (External Wallet)"
+
+**Rate Limit Strategy:**
+- External wallets: 2s initial retry delay
+- Magic wallets: 15s initial retry delay (exponential backoff)
+
+**Files Modified:**
+- `web/src/components/modals/CreateModal.tsx` - Multi-wallet minting support
+- Uses `useUnifiedWallet`, `useMagicContext`, `useMetaMask`
+
+**Key Insight:** Magic SDK still works for OAuth authentication. We just prioritize external wallets for blockchain transactions to avoid their shared RPC infrastructure rate limits.
+
 **WARNING:** Don't use Alchemy API key from ZetaChain config for Polygon - it's network-specific!
 
 ### Previous Session (Jan 27, 2026)
