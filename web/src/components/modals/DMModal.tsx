@@ -130,7 +130,7 @@ export const DMModal = ({ show, onClose, recipientProfile }: DMModalProps) => {
                           : 'bg-purple-500/20 border border-purple-500/30 text-white'
                       }`}
                     >
-                      <p className="text-sm">{message.body}</p>
+                      <p className="text-sm">{message.message}</p>
                       <p className="text-[10px] text-gray-400 mt-1">
                         {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
                       </p>
