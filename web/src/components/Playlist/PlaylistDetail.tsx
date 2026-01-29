@@ -295,9 +295,14 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     const songs: Song[] = []
 
     for (const pt of tracks) {
-      if (pt.sourceType === PlaylistTrackSourceType.Nft && pt.trackId) {
+      console.log('[PlaylistDetail] Processing track:', { id: pt.id, sourceType: pt.sourceType, trackId: pt.trackId, externalUrl: pt.externalUrl?.substring(0, 50) })
+
+      // NFT tracks: sourceType is 'nft' OR null (for backwards compatibility with old playlist tracks)
+      if ((pt.sourceType === PlaylistTrackSourceType.Nft || pt.sourceType === null || pt.sourceType === undefined) && pt.trackId) {
         // NFT track - fetch playback URL
         const trackData = await fetchTrackData(pt.trackId)
+        console.log('[PlaylistDetail] NFT track data:', { trackId: pt.trackId, hasPlaybackUrl: !!trackData?.playbackUrl, playbackUrl: trackData?.playbackUrl?.substring(0, 50) })
+
         if (trackData?.playbackUrl) {
           songs.push({
             trackId: pt.trackId,
@@ -307,6 +312,8 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
             artist: trackData?.artist || pt.artist || 'Unknown Artist',
             isFavorite: trackData?.isFavorite || false,
           })
+        } else {
+          console.warn('[PlaylistDetail] NFT track missing playbackUrl:', pt.trackId)
         }
       } else if (pt.externalUrl || pt.uploadedFileUrl) {
         // External link - check if it's a direct audio file or needs embed
