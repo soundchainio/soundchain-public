@@ -155,16 +155,25 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             </div>
           </div>
         )}
-        {/* Only show menu for authors/admins - not on other people's posts */}
-        {canEdit && (
-          <button
-            aria-label="More options"
-            className="p-1.5 rounded-full hover:bg-neutral-800 transition-colors"
-            onClick={onEllipsisClick}
-          >
-            <Ellipsis className="h-5 w-5 text-neutral-400" />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Ephemeral time remaining badge - in header */}
+          {isEphemeral && !isExpired && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/90 rounded-full text-xs font-medium text-black">
+              <Clock className="w-3 h-3" />
+              <span>{getTimeRemaining()}</span>
+            </div>
+          )}
+          {/* Only show menu for authors/admins - not on other people's posts */}
+          {canEdit && (
+            <button
+              aria-label="More options"
+              className="p-1.5 rounded-full hover:bg-neutral-800 transition-colors"
+              onClick={onEllipsisClick}
+            >
+              <Ellipsis className="h-5 w-5 text-neutral-400" />
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Body text - Instagram style padding */}
@@ -221,13 +230,6 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                 />
               )}
 
-              {/* Ephemeral badge - rendered AFTER media so it appears on top */}
-              {isEphemeral && (
-                <div className="absolute top-2 left-2 z-20 flex items-center gap-1 px-2 py-1 bg-amber-500/90 rounded-full text-xs font-medium text-black shadow-lg">
-                  <Clock className="w-3 h-3" />
-                  <span>{getTimeRemaining()}</span>
-                </div>
-              )}
 
               {/* Fallback for unknown media type - try to render as image */}
               {uploadedMediaUrl && !['image', 'video', 'audio'].includes(uploadedMediaType || '') && (
