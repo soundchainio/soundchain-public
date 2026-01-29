@@ -16,13 +16,13 @@ const HEARTBEAT_MUTATION = gql`
  * to track online presence. Pauses when tab is hidden.
  */
 export function useHeartbeat() {
-  const { data: meData } = useMe();
+  const me = useMe(); // useMe returns me directly, not { data: me }
   const [heartbeat] = useMutation(HEARTBEAT_MUTATION);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Only start heartbeat if user is logged in
-    if (!meData?.me) {
+    if (!me) {
       return;
     }
 
@@ -69,7 +69,7 @@ export function useHeartbeat() {
       stopHeartbeat();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [meData?.me, heartbeat]);
+  }, [me, heartbeat]);
 }
 
 /**
