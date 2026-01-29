@@ -753,14 +753,25 @@ export const CreateModal = () => {
                   Connect External Wallet for Best Performance
                 </p>
                 <p className="text-xs text-gray-400 mb-2">
-                  External wallets (MetaMask, Coinbase) mint faster with no rate limits.
+                  External wallets mint faster with no rate limits.
                 </p>
-                <button
-                  onClick={connectMetaMask}
-                  className="text-xs bg-orange-600 hover:bg-orange-500 text-white px-3 py-1 rounded font-medium transition-colors"
-                >
-                  Connect MetaMask
-                </button>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={connectMetaMask}
+                    className="text-xs bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 rounded font-medium transition-colors flex items-center gap-1"
+                  >
+                    <span>MetaMask</span>
+                  </button>
+                  <button
+                    onClick={switchToWeb3Modal}
+                    className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded font-medium transition-colors flex items-center gap-1"
+                  >
+                    <span>WalletConnect</span>
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-2">
+                  WalletConnect supports Coinbase, Rainbow, Trust, Phantom & 300+ wallets
+                </p>
               </div>
             )}
 
