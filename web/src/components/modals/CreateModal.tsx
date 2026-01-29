@@ -309,7 +309,8 @@ export const CreateModal = () => {
   }
 
   const handleSubmit = async (values: FormValues) => {
-    if (file && web3 && account && me) {
+    // Support both OAuth users (me) and wallet-only users (just account)
+    if (file && web3 && account) {
       const {
         title,
         artworkFile,
@@ -323,9 +324,11 @@ export const CreateModal = () => {
         editionQuantity,
         ISRC,
       } = values
-      const artist = me.handle
-      const artistId = me.id
-      const artistProfileId = me.profile.id
+      // For wallet-only users: use wallet address as artist identifier
+      // For OAuth users: use their handle/profile
+      const artist = me?.handle || `${account.slice(0, 6)}...${account.slice(-4)}`
+      const artistId = me?.id || `wallet-${account.toLowerCase()}`
+      const artistProfileId = me?.profile?.id || null
 
       let asset = file
       if (file.type === 'audio/mpeg') {

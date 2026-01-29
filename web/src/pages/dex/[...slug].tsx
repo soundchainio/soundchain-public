@@ -1042,6 +1042,21 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     }
   }
 
+  // Mint+ Button Handler - Supports both OAuth users and wallet-only users
+  const handleMintClick = () => {
+    if (me) {
+      // OAuth user - use regular create modal with mint tab
+      dispatchShowCreateModal(true, 'mint')
+    } else if (isUnifiedWalletConnected || isWalletConnected) {
+      // Wallet-only user - they can mint! The blockchain doesn't need OAuth
+      // CreateModal will use their connected wallet for minting
+      dispatchShowCreateModal(true, 'mint')
+    } else {
+      // No wallet, no account - redirect to login
+      router.push('/login')
+    }
+  }
+
   // Disconnect wallet handler
   const handleWalletDisconnect = () => {
     setIsWalletConnected(false)
@@ -2779,7 +2794,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => me ? dispatchShowCreateModal(true, 'mint') : router.push('/login')}
+                  onClick={handleMintClick}
                   className="hover:bg-purple-500/10 px-2"
                   title="Mint NFT"
                 >
@@ -2810,11 +2825,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </Button>
 
                 {/* Mint+ Button - NFT Minting with TrackMetadataForm */}
+                {/* Supports both OAuth users (me) AND wallet-only users (isUnifiedWalletConnected) */}
                 {isMinting ? (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => me ? dispatchShowCreateModal(true, 'mint') : router.push('/login')}
+                    onClick={handleMintClick}
                     className="hover:bg-purple-500/10 nyan-cat-animation"
                   >
                     <Music className="w-4 h-4 mr-2 text-purple-400" />
@@ -2824,7 +2840,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => me ? dispatchShowCreateModal(true, 'mint') : router.push('/login')}
+                    onClick={handleMintClick}
                     className="hover:bg-purple-500/10"
                   >
                     <Music className="w-4 h-4 mr-2 text-purple-400" />
