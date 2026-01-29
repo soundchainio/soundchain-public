@@ -1,3 +1,4 @@
+import { ActivityResolver } from './ActivityResolver';
 import { AuctionEndedNotificationResolver } from './AuctionEndedNotificationResolver';
 import { AuctionIsEndingNotificationResolver } from './AuctionIsEndingNotificationResolver';
 import { AuctionItemResolver } from './AuctionItemResolver';
@@ -25,6 +26,7 @@ import { PinningResolver } from './PinningResolver';
 import { PolygonscanResolver } from './PolygonResolver';
 import { PostResolver } from './PostResolver';
 import { ProfileResolver } from './ProfileResolver';
+import { PushSubscriptionResolver } from './PushSubscriptionResolver';
 import { ProfileVerificationRequestResolver } from './ProfileVerificationRequestResolver';
 import { ReactionNotificationResolver } from './ReactionNotificationResolver';
 import { ReactionResolver } from './ReactionResolver';
@@ -42,6 +44,7 @@ import { TrackCommentResolver } from './TrackCommentResolver';
 import { DeveloperResolver } from './DeveloperResolver';
 
 export const resolvers = [
+  ActivityResolver,
   AuctionEndedNotificationResolver,
   AuctionIsEndingNotificationResolver,
   AuctionItemResolver,
@@ -69,6 +72,7 @@ export const resolvers = [
   PostResolver,
   ProfileResolver,
   ProfileVerificationRequestResolver,
+  PushSubscriptionResolver,
   ReactionNotificationResolver,
   ReactionResolver,
   TrackResolver,

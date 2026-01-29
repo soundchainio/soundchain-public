@@ -5,6 +5,8 @@ const withPWA = require('next-pwa')({
   skipWaiting: true,
   // Custom service worker for push notification handling
   sw: 'sw.js',
+  // Custom worker directory for push notification handlers
+  customWorkerDir: 'worker',
   // Exclude some precaching for faster SW updates
   buildExcludes: [/chunks\/.*$/, /middleware-manifest\.json$/],
 });
