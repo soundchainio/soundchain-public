@@ -139,13 +139,14 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       .slice(0, 5),
   }
 
-  // Handle claim to wallet
+  // Handle claim to wallet (with 0.05% platform fee)
   const handleClaimToWallet = async () => {
     if (!account) {
       toast.error('Please connect your wallet first')
       return
     }
 
+    setClaimLoading(true)
     try {
       const { data } = await claimStreamingRewardsMutation({
         variables: {
@@ -157,7 +158,31 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       })
 
       if (data?.claimStreamingRewards?.success) {
-        toast.success(`Successfully claimed ${data.claimStreamingRewards.totalClaimed.toFixed(2)} OGUN!`)
+        const totalClaimed = data.claimStreamingRewards.totalClaimed
+
+        // Collect 0.05% platform fee from claimed OGUN
+        const platformFeeRate = config.soundchainFee || 0.0005
+        const platformFee = totalClaimed * platformFeeRate
+        const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
+        const treasuryAddress = config.treasuryAddress
+
+        if (platformFee > 0 && treasuryAddress && web3Instance) {
+          try {
+            const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
+            const gasPrice = await web3Instance.eth.getGasPrice()
+            console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN streaming fee to treasury: ${treasuryAddress}`)
+            const feeTx = tokenContract(web3Instance).methods.transfer(treasuryAddress, feeWei)
+            const feeGas = await feeTx.estimateGas({ from: account })
+            await feeTx.send({ from: account, gas: feeGas.toString(), gasPrice: gasPrice.toString() })
+            console.log('✅ Streaming rewards platform fee sent to treasury')
+          } catch (feeErr) {
+            console.error('Fee collection failed:', feeErr)
+            // Don't fail the whole claim if fee collection fails
+          }
+        }
+
+        const netClaimed = totalClaimed - platformFee
+        toast.success(`Successfully claimed ${netClaimed.toFixed(2)} OGUN! (fee: ${platformFee.toFixed(4)} OGUN)`)
         refetchStreaming()
         fetchBalances()
       } else {
@@ -166,16 +191,19 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     } catch (err: any) {
       console.error('Claim error:', err)
       toast.error(err.message || 'Failed to claim rewards')
+    } finally {
+      setClaimLoading(false)
     }
   }
 
-  // Handle stake rewards directly
+  // Handle stake rewards directly (with 0.05% platform fee)
   const handleStakeRewards = async () => {
     if (!account) {
       toast.error('Please connect your wallet first')
       return
     }
 
+    setClaimLoading(true)
     try {
       const { data } = await claimStreamingRewardsMutation({
         variables: {
@@ -187,7 +215,32 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       })
 
       if (data?.claimStreamingRewards?.success) {
-        toast.success(`Successfully staked ${data.claimStreamingRewards.totalClaimed.toFixed(2)} OGUN from streaming!`)
+        const totalClaimed = data.claimStreamingRewards.totalClaimed
+
+        // Collect 0.05% platform fee from staked OGUN
+        // Note: The OGUN goes directly to staking, so we need user to pay fee from their balance
+        const platformFeeRate = config.soundchainFee || 0.0005
+        const platformFee = totalClaimed * platformFeeRate
+        const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
+        const treasuryAddress = config.treasuryAddress
+
+        if (platformFee > 0 && treasuryAddress && web3Instance) {
+          try {
+            const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
+            const gasPrice = await web3Instance.eth.getGasPrice()
+            console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN streaming stake fee to treasury: ${treasuryAddress}`)
+            const feeTx = tokenContract(web3Instance).methods.transfer(treasuryAddress, feeWei)
+            const feeGas = await feeTx.estimateGas({ from: account })
+            await feeTx.send({ from: account, gas: feeGas.toString(), gasPrice: gasPrice.toString() })
+            console.log('✅ Streaming stake platform fee sent to treasury')
+          } catch (feeErr) {
+            console.error('Fee collection failed:', feeErr)
+            // Don't fail the whole stake if fee collection fails
+          }
+        }
+
+        const netStaked = totalClaimed - platformFee
+        toast.success(`Successfully staked ${netStaked.toFixed(2)} OGUN from streaming! (fee: ${platformFee.toFixed(4)} OGUN)`)
         refetchStreaming()
         fetchBalances()
       } else {
@@ -196,6 +249,8 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     } catch (err: any) {
       console.error('Stake error:', err)
       toast.error(err.message || 'Failed to stake rewards')
+    } finally {
+      setClaimLoading(false)
     }
   }
 
