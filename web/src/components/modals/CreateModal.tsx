@@ -113,6 +113,8 @@ export const CreateModal = () => {
     web3: unifiedWeb3,
     switchToMetaMask,
     switchToWeb3Modal,
+    connectWeb3Modal,
+    isWeb3ModalReady,
   } = useUnifiedWallet()
 
   // Get individual wallet contexts for wallet selection
@@ -755,22 +757,31 @@ export const CreateModal = () => {
                 <p className="text-xs text-gray-400 mb-2">
                   External wallets mint faster with no rate limits.
                 </p>
-                <div className="flex gap-2 flex-wrap">
-                  <button
-                    onClick={connectMetaMask}
-                    className="text-xs bg-orange-600 hover:bg-orange-500 text-white px-3 py-1.5 rounded font-medium transition-colors flex items-center gap-1"
-                  >
-                    <span>MetaMask</span>
-                  </button>
-                  <button
-                    onClick={switchToWeb3Modal}
-                    className="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded font-medium transition-colors flex items-center gap-1"
-                  >
-                    <span>WalletConnect</span>
-                  </button>
-                </div>
-                <p className="text-[10px] text-gray-500 mt-2">
-                  WalletConnect supports Coinbase, Rainbow, Trust, Phantom & 300+ wallets
+                <button
+                  onClick={() => {
+                    console.log('🔗 Opening Web3Modal...', { isWeb3ModalReady })
+                    if (isWeb3ModalReady) {
+                      connectWeb3Modal()
+                    } else {
+                      // Fallback: try switchToWeb3Modal which may trigger init
+                      console.log('🔗 Web3Modal not ready, trying switchToWeb3Modal...')
+                      switchToWeb3Modal()
+                    }
+                  }}
+                  disabled={!isWeb3ModalReady}
+                  className={`w-full text-sm px-4 py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                    isWeb3ModalReady
+                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white'
+                      : 'bg-gray-600 text-gray-400 cursor-wait'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  {isWeb3ModalReady ? 'Connect Wallet' : 'Loading Wallets...'}
+                </button>
+                <p className="text-[10px] text-gray-500 mt-2 text-center">
+                  MetaMask, Coinbase, Rainbow, Trust, Phantom & 300+ wallets
                 </p>
               </div>
             )}
