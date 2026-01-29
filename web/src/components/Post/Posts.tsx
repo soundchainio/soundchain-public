@@ -293,7 +293,7 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
     return (
       <>
         {/* Simple mapped posts - no virtualization, stacked on mobile */}
-        <div className="space-y-2 md:space-y-4 bg-black">
+        <div className="space-y-2 md:space-y-4">
           {(simpleNodes as PostType[]).map((post) => (
             <div key={post.id} className="flex justify-center px-0 md:px-4">
               <div className="w-full max-w-full md:max-w-[614px]">

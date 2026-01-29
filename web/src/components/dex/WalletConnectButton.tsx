@@ -9,9 +9,11 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { Wallet, X, Check, Loader2, Copy, RefreshCw, Smartphone, ExternalLink } from 'lucide-react'
+import { Wallet, X, Check, Loader2, Copy, RefreshCw, Smartphone, ExternalLink, LogIn } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
+import { useWalletLogin, generateLoginMessage } from '../../hooks/useWalletLogin'
+import { useMe } from '../../hooks/useMe'
 
 // WalletConnect Project ID
 const WALLETCONNECT_PROJECT_ID = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '53a9f7ff48d78a81624b5333d52b9123'
@@ -170,8 +172,13 @@ export function WalletConnectButton({
   const [copiedUri, setCopiedUri] = useState(false)
   const [isMobileDevice, setIsMobileDevice] = useState(false)
   const [isWalletBrowser, setIsWalletBrowser] = useState(false)
+  const [isSigningIn, setIsSigningIn] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const wcProviderRef = useRef<any>(null)
+
+  // Auth hooks
+  const { me } = useMe()
+  const { loginWithWallet, loading: walletLoginLoading } = useWalletLogin()
 
   // Unified wallet context
   const {
@@ -658,6 +665,68 @@ export function WalletConnectButton({
     }
   }
 
+  // Sign in with connected wallet
+  const handleSignIn = useCallback(async () => {
+    if (!activeAddress) return
+
+    setIsSigningIn(true)
+    try {
+      // Generate login message
+      const message = generateLoginMessage(activeAddress)
+      console.log('📝 Requesting wallet signature for login...')
+
+      // Get the provider to sign with
+      let signature: string | null = null
+
+      // Try injected provider first (MetaMask, Coinbase extension)
+      const ethereum = (window as any).ethereum
+      if (ethereum) {
+        try {
+          signature = await ethereum.request({
+            method: 'personal_sign',
+            params: [message, activeAddress],
+          })
+        } catch (e) {
+          console.log('Injected provider sign failed, trying WalletConnect...')
+        }
+      }
+
+      // If no signature yet and we have a WalletConnect provider, try that
+      if (!signature && wcProviderRef.current) {
+        signature = await wcProviderRef.current.request({
+          method: 'personal_sign',
+          params: [message, activeAddress],
+        })
+      }
+
+      if (!signature) {
+        throw new Error('Could not sign message with wallet')
+      }
+
+      console.log('✍️ Signature received, authenticating...')
+
+      // Login with signature
+      const jwt = await loginWithWallet({
+        walletAddress: activeAddress,
+        signature,
+        message,
+      })
+
+      if (jwt) {
+        console.log('✅ Wallet sign-in successful!')
+        // Reload to pick up new auth state
+        window.location.reload()
+      } else {
+        throw new Error('Login failed')
+      }
+    } catch (err: any) {
+      console.error('❌ Wallet sign-in failed:', err)
+      setError(err.message || 'Sign-in failed')
+    } finally {
+      setIsSigningIn(false)
+    }
+  }, [activeAddress, loginWithWallet])
+
   // Format address for display
   const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
@@ -701,6 +770,26 @@ export function WalletConnectButton({
                 </div>
               )}
             </div>
+            {/* Sign In button - only show if wallet connected but not logged in */}
+            {!me && (
+              <button
+                onClick={handleSignIn}
+                disabled={isSigningIn || walletLoginLoading}
+                className="w-full px-4 py-3 text-left text-cyan-400 hover:bg-cyan-500/10 font-mono text-sm transition-colors border-b border-cyan-500/20 flex items-center gap-2"
+              >
+                {isSigningIn || walletLoginLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    SIGNING IN...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4" />
+                    SIGN IN WITH WALLET
+                  </>
+                )}
+              </button>
+            )}
             <button
               onClick={() => { disconnectWallet(); handleClose(); }}
               className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 font-mono text-sm transition-colors"

@@ -1,5 +1,14 @@
 import { gql } from '@apollo/client';
 
+// Wallet-only login mutation (MetaMask, Coinbase, WalletConnect, etc.)
+export const LOGIN_WITH_WALLET_MUTATION = gql`
+  mutation LoginWithWallet($input: LoginWithWalletInput!) {
+    loginWithWallet(input: $input) {
+      jwt
+    }
+  }
+`;
+
 export const UPDATE_COMMENT_MUTATION = gql`
   mutation UpdateComment($input: UpdateCommentInput!) {
     updateComment(input: $input) {
