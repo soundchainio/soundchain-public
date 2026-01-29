@@ -6,6 +6,7 @@ import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
 import { useMetaMask } from 'hooks/useMetaMask'
 import { useMutation } from '@apollo/client'
 import { MAKE_POST_PERMANENT_MUTATION } from 'lib/graphql/mutations'
+import { useMeQuery } from 'lib/graphql'
 import Web3 from 'web3'
 import { toast } from 'react-toastify'
 
@@ -43,6 +44,11 @@ export const MakePostPermanentModal = ({
   const [paymentToken, setPaymentToken] = useState<PaymentToken>('OGUN')
   const [isProcessing, setIsProcessing] = useState(false)
   const [step, setStep] = useState<'confirm' | 'fee' | 'payment' | 'complete'>('confirm')
+
+  // Get user's stored wallet addresses (for wallet-only users)
+  const { data: userData } = useMeQuery({ skip: !isOpen })
+  const storedWalletAddresses = userData?.me?.metaMaskWalletAddressees || []
+  const isWalletOnlyUser = storedWalletAddresses.length > 0 && !userData?.me?.magicWalletAddress && !userData?.me?.googleWalletAddress && !userData?.me?.discordWalletAddress && !userData?.me?.twitchWalletAddress
 
   // Multi-wallet support
   const { web3: magicWeb3, account: magicAccount, ogunBalance: magicOgunBalance, balance: magicPolBalance } = useMagicContext()
@@ -283,10 +289,22 @@ export const MakePostPermanentModal = ({
                   <div className="mb-4 p-4 bg-neutral-800/70 rounded-xl border border-neutral-700">
                     <div className="flex items-center gap-2 mb-3">
                       <Wallet className="w-4 h-4 text-amber-400" />
-                      <span className="text-white font-medium text-sm">Connect Wallet</span>
+                      <span className="text-white font-medium text-sm">
+                        {isWalletOnlyUser ? 'Reconnect Your Wallet' : 'Connect Wallet'}
+                      </span>
                     </div>
+                    {isWalletOnlyUser && storedWalletAddresses.length > 0 && (
+                      <div className="mb-3 p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
+                        <p className="text-cyan-400 text-xs mb-1">Your registered wallet:</p>
+                        <p className="text-cyan-300 text-xs font-mono">
+                          {storedWalletAddresses[0]}
+                        </p>
+                      </div>
+                    )}
                     <p className="text-neutral-400 text-xs mb-3">
-                      Connect a wallet to pay for making this post permanent.
+                      {isWalletOnlyUser
+                        ? 'Reconnect your wallet to make blockchain transactions.'
+                        : 'Connect a wallet to pay for making this post permanent.'}
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       <button
