@@ -11,8 +11,38 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { NavBarButton } from 'components/common/Buttons/NavBarButton'
 import { InboxBadge } from 'components/InboxBadge'
-import { PiggyBank, X, Users } from 'lucide-react'
+import { PiggyBank, X, Users, RefreshCw, Wallet, Zap } from 'lucide-react'
 import { FaDiscord, FaTelegramPlane, FaTwitter, FaYoutube, FaInstagram } from 'react-icons/fa'
+import { gql, useQuery, useMutation } from '@apollo/client'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { toast } from 'react-toastify'
+
+const GET_UNCLAIMED_REWARDS = gql`
+  query GetUnclaimedStreamingRewards {
+    myUnclaimedStreamingRewards {
+      totalUnclaimed
+      tracksWithRewards
+      breakdown {
+        scid
+        trackId
+        unclaimed
+      }
+    }
+  }
+`
+
+const CLAIM_STREAMING_REWARDS = gql`
+  mutation ClaimStreamingRewards($input: ClaimStreamingRewardsInput!) {
+    claimStreamingRewards(input: $input) {
+      success
+      totalClaimed
+      tracksCount
+      staked
+      transactionHash
+      error
+    }
+  }
+`
 
 export const BottomNavBar = () => {
   const { dispatchShowCreateModal } = useModalDispatch()
@@ -21,6 +51,91 @@ export const BottomNavBar = () => {
   const { isMinting } = useHideBottomNavBar()
   const [showWinWinModal, setShowWinWinModal] = useState(false)
   const [showSocialModal, setShowSocialModal] = useState(false)
+
+  // Fetch unclaimed streaming rewards - only when logged in and modal is open
+  const { data: rewardsData, loading: rewardsLoading, refetch: refetchRewards } = useQuery(GET_UNCLAIMED_REWARDS, {
+    skip: !me || !showWinWinModal,
+    fetchPolicy: 'network-only',
+  })
+
+  // Get user's wallet address for claiming
+  const { account: magicAccount } = useMagicContext()
+  const userWallet = magicAccount || me?.magicWalletAddress || me?.googleWalletAddress || me?.discordWalletAddress || me?.twitchWalletAddress
+
+  // Claim/stake mutation
+  const [claimStreamingRewardsMutation, { loading: claimLoading }] = useMutation(CLAIM_STREAMING_REWARDS)
+
+  // Handle claim to wallet
+  const handleClaimToWallet = async () => {
+    if (!userWallet) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    const unclaimedAmount = rewardsData?.myUnclaimedStreamingRewards?.totalUnclaimed || 0
+    if (unclaimedAmount <= 0) {
+      toast.error('No rewards to claim')
+      return
+    }
+
+    try {
+      const { data } = await claimStreamingRewardsMutation({
+        variables: {
+          input: {
+            walletAddress: userWallet,
+            stakeDirectly: false,
+          },
+        },
+      })
+
+      if (data?.claimStreamingRewards?.success) {
+        const totalClaimed = data.claimStreamingRewards.totalClaimed
+        toast.success(`Claimed ${totalClaimed.toFixed(4)} OGUN!`)
+        refetchRewards()
+      } else {
+        toast.error(data?.claimStreamingRewards?.error || 'Claim failed')
+      }
+    } catch (err: any) {
+      console.error('Claim error:', err)
+      toast.error(err.message || 'Failed to claim rewards')
+    }
+  }
+
+  // Handle stake rewards directly
+  const handleStakeRewards = async () => {
+    if (!userWallet) {
+      toast.error('Please connect your wallet first')
+      return
+    }
+
+    const unclaimedAmount = rewardsData?.myUnclaimedStreamingRewards?.totalUnclaimed || 0
+    if (unclaimedAmount <= 0) {
+      toast.error('No rewards to stake')
+      return
+    }
+
+    try {
+      const { data } = await claimStreamingRewardsMutation({
+        variables: {
+          input: {
+            walletAddress: userWallet,
+            stakeDirectly: true,
+          },
+        },
+      })
+
+      if (data?.claimStreamingRewards?.success) {
+        const totalClaimed = data.claimStreamingRewards.totalClaimed
+        toast.success(`Staked ${totalClaimed.toFixed(4)} OGUN!`)
+        refetchRewards()
+      } else {
+        toast.error(data?.claimStreamingRewards?.error || 'Stake failed')
+      }
+    } catch (err: any) {
+      console.error('Stake error:', err)
+      toast.error(err.message || 'Failed to stake rewards')
+    }
+  }
 
   const handleCreateClick = () => {
     me ? dispatchShowCreateModal(true) : router.push('/login')
@@ -142,6 +257,36 @@ export const BottomNavBar = () => {
 
             {/* Content */}
             <div className="p-6 space-y-4">
+              {/* Your Unclaimed Rewards - Only show when logged in */}
+              {me && (
+                <div className="bg-gradient-to-r from-green-900/40 to-emerald-900/40 rounded-xl p-4 border border-green-500/40">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-green-300 font-medium">Your Unclaimed OGUN</span>
+                    <button
+                      onClick={() => refetchRewards()}
+                      disabled={rewardsLoading}
+                      className="p-1 text-green-400 hover:text-green-300 transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${rewardsLoading ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
+                  {rewardsLoading ? (
+                    <div className="text-2xl font-bold text-green-400 animate-pulse">Loading...</div>
+                  ) : rewardsData?.myUnclaimedStreamingRewards ? (
+                    <>
+                      <div className="text-3xl font-bold text-green-400">
+                        {rewardsData.myUnclaimedStreamingRewards.totalUnclaimed.toFixed(4)} OGUN
+                      </div>
+                      <div className="text-xs text-green-300/60 mt-1">
+                        From {rewardsData.myUnclaimedStreamingRewards.tracksWithRewards} track{rewardsData.myUnclaimedStreamingRewards.tracksWithRewards !== 1 ? 's' : ''}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-2xl font-bold text-gray-500">0.0000 OGUN</div>
+                  )}
+                </div>
+              )}
+
               {/* Tagline */}
               <div className="text-center p-4 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-xl border border-pink-500/30">
                 <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
@@ -185,6 +330,36 @@ export const BottomNavBar = () => {
                   <span>NFT tracks earn 10x more rewards!</span>
                 </div>
               </div>
+
+              {/* Claim/Stake Buttons - Only show when logged in with rewards */}
+              {me && rewardsData?.myUnclaimedStreamingRewards?.totalUnclaimed > 0 && (
+                <div className="grid grid-cols-2 gap-3 pt-3">
+                  <button
+                    onClick={handleClaimToWallet}
+                    disabled={claimLoading || !userWallet}
+                    className="py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 disabled:from-gray-600 disabled:to-gray-600 text-black disabled:text-gray-400 font-bold rounded-lg text-sm flex items-center justify-center gap-2 transition-all disabled:cursor-not-allowed"
+                  >
+                    {claimLoading ? (
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Wallet className="w-4 h-4" />
+                    )}
+                    Claim
+                  </button>
+                  <button
+                    onClick={handleStakeRewards}
+                    disabled={claimLoading || !userWallet}
+                    className="py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-600 text-white disabled:text-gray-400 font-bold rounded-lg text-sm flex items-center justify-center gap-2 transition-all disabled:cursor-not-allowed"
+                  >
+                    {claimLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Zap className="w-4 h-4" />
+                    )}
+                    Stake
+                  </button>
+                </div>
+              )}
 
               {/* Footer */}
               <div className="pt-3 border-t border-pink-500/30 text-center">

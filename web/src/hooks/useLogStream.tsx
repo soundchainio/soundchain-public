@@ -148,7 +148,8 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
   const logStream = useCallback(async (
     trackId: string,
     duration: number,
-    listenerWallet?: string
+    listenerWallet?: string,
+    listenerProfileId?: string
   ): Promise<LogStreamResult | null> => {
     // Check minimum duration
     if (duration < minDuration) {
@@ -183,6 +184,7 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
             scid,
             duration: Math.floor(duration),
             listenerWallet,
+            listenerProfileId,
           }
         }
       })
@@ -241,10 +243,11 @@ export function useLogStream(options: UseLogStreamOptions = {}) {
    */
   const logStreamOnEnd = useCallback(async (
     trackId: string,
-    listenerWallet?: string
+    listenerWallet?: string,
+    listenerProfileId?: string
   ): Promise<LogStreamResult | null> => {
     const duration = stopTracking(trackId)
-    return logStream(trackId, duration, listenerWallet)
+    return logStream(trackId, duration, listenerWallet, listenerProfileId)
   }, [stopTracking, logStream])
 
   /**

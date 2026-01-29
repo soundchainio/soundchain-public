@@ -1,16 +1,49 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { X, Lock, Coins, AlertCircle, CheckCircle, Loader2, Wallet } from 'lucide-react'
 import { config } from '../../config'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
-import { useMetaMask } from 'hooks/useMetaMask'
 import { useMutation } from '@apollo/client'
 import { MAKE_POST_PERMANENT_MUTATION } from 'lib/graphql/mutations'
 import { useMeQuery } from 'lib/graphql'
 import Web3 from 'web3'
 import { toast } from 'react-toastify'
 
-// OGUN Token ABI (just transfer function)
+// Detect mobile device
+const isMobile = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
+// Get specific wallet provider when multiple wallets are installed
+// This fixes the "wallet collision" where Coinbase hijacks window.ethereum
+const getSpecificProvider = (walletType: 'metamask' | 'coinbase' | 'trust' | 'any'): any => {
+  if (typeof window === 'undefined') return null
+
+  const ethereum = (window as any).ethereum
+  if (!ethereum) return null
+
+  // Check if multiple providers exist (EIP-5749)
+  const providers = ethereum.providers || []
+
+  if (walletType === 'metamask') {
+    const metamaskProvider = providers.find((p: any) => p.isMetaMask && !p.isCoinbaseWallet)
+    if (metamaskProvider) return metamaskProvider
+    if (ethereum.isMetaMask && !ethereum.isCoinbaseWallet) return ethereum
+    return null
+  }
+
+  if (walletType === 'coinbase') {
+    const coinbaseProvider = providers.find((p: any) => p.isCoinbaseWallet)
+    if (coinbaseProvider) return coinbaseProvider
+    if (ethereum.isCoinbaseWallet) return ethereum
+    return null
+  }
+
+  return ethereum
+}
+
+// OGUN Token ABI (transfer + balanceOf)
 const OGUN_ABI = [
   {
     inputs: [
@@ -20,6 +53,13 @@ const OGUN_ABI = [
     name: 'transfer',
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'account', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
     type: 'function',
   },
 ]
@@ -52,7 +92,6 @@ export const MakePostPermanentModal = ({
 
   // Multi-wallet support
   const { web3: magicWeb3, account: magicAccount, ogunBalance: magicOgunBalance, balance: magicPolBalance } = useMagicContext()
-  const { web3: metamaskWeb3, account: metamaskAccount, connect: connectMetaMask, OGUNBalance: metamaskOgunBalance, balance: metamaskPolBalance } = useMetaMask()
   const {
     activeWalletType,
     activeAddress,
@@ -61,7 +100,68 @@ export const MakePostPermanentModal = ({
     polBalance: unifiedPolBalance,
     connectWeb3Modal,
     isWeb3ModalReady,
+    setDirectConnection,
   } = useUnifiedWallet()
+
+  // Track MetaMask connection state
+  const [metamaskAccount, setMetamaskAccount] = useState<string | null>(null)
+  const [metamaskWeb3, setMetamaskWeb3] = useState<Web3 | null>(null)
+  const [metamaskOgunBalance, setMetamaskOgunBalance] = useState<string>('0')
+  const [metamaskPolBalance, setMetamaskPolBalance] = useState<string>('0')
+  const [isConnecting, setIsConnecting] = useState(false)
+
+  // Connect MetaMask with proper provider detection
+  const connectMetaMask = useCallback(async () => {
+    const metamaskProvider = getSpecificProvider('metamask')
+
+    // On mobile, use deep link
+    if (isMobile()) {
+      // Open MetaMask app with WalletConnect or dapp browser
+      window.location.href = `https://metamask.app.link/dapp/${window.location.host}`
+      return
+    }
+
+    if (!metamaskProvider) {
+      toast.error('MetaMask not detected. Please install the extension.')
+      window.open('https://metamask.io/download/', '_blank')
+      return
+    }
+
+    setIsConnecting(true)
+    try {
+      const accounts = await metamaskProvider.request({ method: 'eth_requestAccounts' })
+      if (accounts && accounts[0]) {
+        const chainIdHex = await metamaskProvider.request({ method: 'eth_chainId' })
+        const chainId = parseInt(chainIdHex as string, 16)
+
+        // Create Web3 instance with this provider
+        const web3Instance = new Web3(metamaskProvider as any)
+        setMetamaskWeb3(web3Instance)
+        setMetamaskAccount(accounts[0])
+        setDirectConnection(accounts[0], 'metamask', chainId)
+
+        // Fetch balances
+        const polWei = await web3Instance.eth.getBalance(accounts[0])
+        setMetamaskPolBalance(web3Instance.utils.fromWei(polWei, 'ether'))
+
+        // Fetch OGUN balance
+        try {
+          const ogunContract = new web3Instance.eth.Contract(OGUN_ABI as any, config.ogunTokenAddress)
+          const ogunWei = await ogunContract.methods.balanceOf(accounts[0]).call()
+          setMetamaskOgunBalance(web3Instance.utils.fromWei(ogunWei as string, 'ether'))
+        } catch {
+          setMetamaskOgunBalance('0')
+        }
+
+        toast.success('MetaMask connected!')
+      }
+    } catch (err: any) {
+      console.error('MetaMask connection error:', err)
+      toast.error(err.message || 'Failed to connect MetaMask')
+    } finally {
+      setIsConnecting(false)
+    }
+  }, [setDirectConnection])
 
   // Track selected wallet for payment
   const [selectedWallet, setSelectedWallet] = useState<'magic' | 'metamask' | 'web3modal' | null>(null)

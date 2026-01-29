@@ -4,8 +4,124 @@ import { usePushNotifications } from 'hooks/usePushNotifications';
 import { Button } from 'components/common/Buttons/Button';
 import { Bell, Phone, MessageCircle, Heart, Users, DollarSign, ShoppingBag } from 'lucide-react';
 
+// International country codes - 1, 2, or 3 digits
+// Common codes: +1 (US/CA), +44 (UK), +91 (India), +86 (China), +55 (Brazil), +971 (UAE)
+const COUNTRY_CODES: { [key: string]: number } = {
+  '1': 1,    // USA, Canada
+  '7': 1,    // Russia, Kazakhstan
+  '20': 2,   // Egypt
+  '27': 2,   // South Africa
+  '30': 2,   // Greece
+  '31': 2,   // Netherlands
+  '32': 2,   // Belgium
+  '33': 2,   // France
+  '34': 2,   // Spain
+  '36': 2,   // Hungary
+  '39': 2,   // Italy
+  '40': 2,   // Romania
+  '41': 2,   // Switzerland
+  '43': 2,   // Austria
+  '44': 2,   // UK
+  '45': 2,   // Denmark
+  '46': 2,   // Sweden
+  '47': 2,   // Norway
+  '48': 2,   // Poland
+  '49': 2,   // Germany
+  '51': 2,   // Peru
+  '52': 2,   // Mexico
+  '53': 2,   // Cuba
+  '54': 2,   // Argentina
+  '55': 2,   // Brazil
+  '56': 2,   // Chile
+  '57': 2,   // Colombia
+  '58': 2,   // Venezuela
+  '60': 2,   // Malaysia
+  '61': 2,   // Australia
+  '62': 2,   // Indonesia
+  '63': 2,   // Philippines
+  '64': 2,   // New Zealand
+  '65': 2,   // Singapore
+  '66': 2,   // Thailand
+  '81': 2,   // Japan
+  '82': 2,   // South Korea
+  '84': 2,   // Vietnam
+  '86': 2,   // China
+  '90': 2,   // Turkey
+  '91': 2,   // India
+  '92': 2,   // Pakistan
+  '93': 2,   // Afghanistan
+  '94': 2,   // Sri Lanka
+  '95': 2,   // Myanmar
+  '98': 2,   // Iran
+  '212': 3,  // Morocco
+  '213': 3,  // Algeria
+  '216': 3,  // Tunisia
+  '218': 3,  // Libya
+  '220': 3,  // Gambia
+  '221': 3,  // Senegal
+  '234': 3,  // Nigeria
+  '249': 3,  // Sudan
+  '254': 3,  // Kenya
+  '255': 3,  // Tanzania
+  '256': 3,  // Uganda
+  '260': 3,  // Zambia
+  '263': 3,  // Zimbabwe
+  '351': 3,  // Portugal
+  '352': 3,  // Luxembourg
+  '353': 3,  // Ireland
+  '354': 3,  // Iceland
+  '358': 3,  // Finland
+  '370': 3,  // Lithuania
+  '371': 3,  // Latvia
+  '372': 3,  // Estonia
+  '380': 3,  // Ukraine
+  '381': 3,  // Serbia
+  '385': 3,  // Croatia
+  '420': 3,  // Czech Republic
+  '421': 3,  // Slovakia
+  '852': 3,  // Hong Kong
+  '853': 3,  // Macau
+  '880': 3,  // Bangladesh
+  '886': 3,  // Taiwan
+  '960': 3,  // Maldives
+  '961': 3,  // Lebanon
+  '962': 3,  // Jordan
+  '963': 3,  // Syria
+  '964': 3,  // Iraq
+  '965': 3,  // Kuwait
+  '966': 3,  // Saudi Arabia
+  '967': 3,  // Yemen
+  '968': 3,  // Oman
+  '970': 3,  // Palestine
+  '971': 3,  // UAE
+  '972': 3,  // Israel
+  '973': 3,  // Bahrain
+  '974': 3,  // Qatar
+  '975': 3,  // Bhutan
+  '976': 3,  // Mongolia
+  '977': 3,  // Nepal
+  '992': 3,  // Tajikistan
+  '993': 3,  // Turkmenistan
+  '994': 3,  // Azerbaijan
+  '995': 3,  // Georgia
+  '996': 3,  // Kyrgyzstan
+  '998': 3,  // Uzbekistan
+};
+
+// Detect country code length from phone number
+function detectCountryCodeLength(digits: string): number {
+  // Check 3-digit codes first (more specific)
+  if (digits.length >= 3 && COUNTRY_CODES[digits.slice(0, 3)] === 3) return 3;
+  // Check 2-digit codes
+  if (digits.length >= 2 && COUNTRY_CODES[digits.slice(0, 2)] === 2) return 2;
+  // Check 1-digit codes
+  if (digits.length >= 1 && COUNTRY_CODES[digits.slice(0, 1)] === 1) return 1;
+  // Default: assume 1-digit code (covers unlisted countries)
+  return 1;
+}
+
 // Format phone number with dashes as user types
-// Supports international: +1-480-231-5629 or +44-20-7946-0958
+// Supports international: +1-480-231-5629 (US) or +44-20-7946-0958 (UK) or +971-50-123-4567 (UAE)
 function formatPhoneNumber(value: string): string {
   // Remove all non-digit characters except +
   const cleaned = value.replace(/[^\d+]/g, '');
@@ -17,16 +133,23 @@ function formatPhoneNumber(value: string): string {
   const withPlus = cleaned.startsWith('+') ? cleaned : '+' + cleaned;
   const digits = withPlus.slice(1); // Remove + for formatting
 
-  // Format based on length
-  if (digits.length <= 1) {
-    return '+' + digits;
-  } else if (digits.length <= 4) {
-    return '+' + digits.slice(0, 1) + '-' + digits.slice(1);
-  } else if (digits.length <= 7) {
-    return '+' + digits.slice(0, 1) + '-' + digits.slice(1, 4) + '-' + digits.slice(4);
+  if (digits.length === 0) return '+';
+
+  // Detect country code length
+  const ccLength = detectCountryCodeLength(digits);
+  const countryCode = digits.slice(0, ccLength);
+  const nationalNumber = digits.slice(ccLength);
+
+  // Format: +CC-XXX-XXX-XXXX (adapts to country code length)
+  if (nationalNumber.length === 0) {
+    return '+' + countryCode;
+  } else if (nationalNumber.length <= 3) {
+    return '+' + countryCode + '-' + nationalNumber;
+  } else if (nationalNumber.length <= 6) {
+    return '+' + countryCode + '-' + nationalNumber.slice(0, 3) + '-' + nationalNumber.slice(3);
   } else {
-    // Full format: +1-480-231-5629
-    return '+' + digits.slice(0, 1) + '-' + digits.slice(1, 4) + '-' + digits.slice(4, 7) + '-' + digits.slice(7, 11);
+    // Full format with max 4 digits in last group
+    return '+' + countryCode + '-' + nationalNumber.slice(0, 3) + '-' + nationalNumber.slice(3, 6) + '-' + nationalNumber.slice(6, 10);
   }
 }
 
@@ -114,8 +237,18 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
     setError(null);
     setSuccess(false);
 
+    console.log('[NotificationSettingsForm] Saving settings:', {
+      phoneNumber: phoneNumber || null,
+      notifyOnFollow,
+      notifyOnLike,
+      notifyOnComment,
+      notifyOnSale,
+      notifyOnTip,
+      notifyOnDM,
+    });
+
     try {
-      await updateSettings({
+      const result = await updateSettings({
         variables: {
           input: {
             phoneNumber: phoneNumber || null,
@@ -128,6 +261,8 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
           },
         },
       });
+
+      console.log('[NotificationSettingsForm] Save result:', result);
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -143,11 +278,25 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
     }
   };
 
+  const [pushError, setPushError] = useState<string | null>(null);
+
   const handlePushToggle = async () => {
-    if (isSubscribed) {
-      await unsubscribe();
-    } else {
-      await subscribe();
+    setPushError(null);
+    console.log('[NotificationSettingsForm] Push toggle clicked, isSubscribed:', isSubscribed);
+    try {
+      if (isSubscribed) {
+        const result = await unsubscribe();
+        console.log('[NotificationSettingsForm] Unsubscribe result:', result);
+      } else {
+        const result = await subscribe();
+        console.log('[NotificationSettingsForm] Subscribe result:', result);
+        if (!result) {
+          setPushError('Failed to enable notifications. Check browser permissions.');
+        }
+      }
+    } catch (err) {
+      console.error('[NotificationSettingsForm] Push toggle error:', err);
+      setPushError(err instanceof Error ? err.message : 'Push notification error');
     }
   };
 
@@ -184,6 +333,9 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
                 {pushLoading ? '...' : isSubscribed ? 'Enabled' : 'Enable'}
               </button>
             </div>
+            {pushError && (
+              <p className="text-red-400 text-xs mt-2">{pushError}</p>
+            )}
           </div>
         </div>
       )}
