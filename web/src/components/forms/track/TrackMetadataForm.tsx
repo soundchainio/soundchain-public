@@ -132,15 +132,7 @@ function InnerForm(props: InnerFormProps) {
   const maxMintGasFee = useMaxMintGasFee(values.editionQuantity)
   const [enoughFunds, setEnoughFunds] = useState<boolean>()
 
-  const [dictionary, setDictionary] = useState<any>(null)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      import('typo-js').then((Typo) => {
-        setDictionary(new Typo.default('en_US'))
-      })
-    }
-  }, [])
+  // Removed typo-js dictionary - autocorrect was causing 200ms+ INP issues on keystroke
   const { balance } = useWalletContext()
   const { account: magicWalletAddress } = useMagicContext()
   const [isCollaboratorExpanded, setIsCollaboratorExpanded] = useState(false)
@@ -204,20 +196,12 @@ function InnerForm(props: InnerFormProps) {
     setIsCollaboratorExpanded(!isCollaboratorExpanded)
   }
 
-  const autoCorrectText = (field: string, value: string) => {
-    if (!dictionary) return value;
-    const suggestions = dictionary.suggest(value);
-    if (suggestions.length > 0 && suggestions[0] !== value) {
-      setFieldValue(field, suggestions[0]);
-      return suggestions[0];
-    }
-    return value;
-  };
-
+  // Removed autocorrect - it was causing significant INP (Interaction to Next Paint) issues
+  // The dictionary.suggest() call blocked UI updates for 200ms+ on each keystroke
   const handleTextareaChange = (field: string) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     if (value.length <= (field === 'description' ? 2500 : 10000)) {
-      setFieldValue(field, autoCorrectText(field, value));
+      setFieldValue(field, value);
     }
   };
 
@@ -393,8 +377,8 @@ function InnerForm(props: InnerFormProps) {
                   value={collaborator.walletAddress}
                   onChange={e => updateCollaborator(index, 'walletAddress', e.target.value)}
                   placeholder="Wallet address (0x...)"
-                  className="w-full p-2 border border-gray-30 rounded bg-gray-25 text-xs font-mono text-white"
-                  style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+                  className="w-full p-2 border border-gray-30 rounded bg-gray-25 text-xs font-mono"
+                  style={{ color: '#22d3ee', WebkitTextFillColor: '#22d3ee' }}
                 />
               </div>
             ))}

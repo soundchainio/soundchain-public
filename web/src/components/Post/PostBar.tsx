@@ -78,7 +78,7 @@ export const PostBar = ({
   }
 
   return (
-    <div className="flex items-center bg-gray-15 p-4">
+    <div className="flex items-center p-4 border-t border-neutral-800" style={{ backgroundColor: '#262626' }}>
       <div className="w-16 cursor-pointer text-center" onClick={onEmojiPickerClick}>
         {isEmojiPickerVisible ? '❌' : '😃'}
       </div>

@@ -9,6 +9,36 @@ export const LOGIN_WITH_WALLET_MUTATION = gql`
   }
 `;
 
+// Make Post Permanent mutation
+export const MAKE_POST_PERMANENT_MUTATION = gql`
+  mutation MakePostPermanent($input: MakePostPermanentInput!) {
+    makePostPermanent(input: $input) {
+      success
+      error
+      post {
+        id
+        isPermanent
+        isEphemeral
+        mediaExpiresAt
+      }
+    }
+  }
+`;
+
+// Remove From Permanent mutation
+export const REMOVE_FROM_PERMANENT_MUTATION = gql`
+  mutation RemoveFromPermanent($input: RemoveFromPermanentInput!) {
+    removeFromPermanent(input: $input) {
+      success
+      error
+      post {
+        id
+        deleted
+      }
+    }
+  }
+`;
+
 export const UPDATE_COMMENT_MUTATION = gql`
   mutation UpdateComment($input: UpdateCommentInput!) {
     updateComment(input: $input) {

@@ -4925,7 +4925,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               />
 
               {/* EVM Network Switcher */}
-              <Card className="retro-card p-4">
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     <Globe className="w-4 h-4 text-cyan-400" />
@@ -4934,7 +4934,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Multi-Chain</Badge>
                 </div>
                 <ChainSwitcher showBalance={true} />
-              </Card>
+              </div>
 
               {/* Multi-Wallet Aggregator - Connect & View All Wallets */}
               <MultiWalletAggregator
@@ -4950,7 +4950,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               />
 
               {/* Blur-style Wallet Header */}
-              <div className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
                 {/* Wallet Address Row */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -5007,7 +5007,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               {/* Slim Action Buttons */}
-              <div className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-3 flex items-center gap-2 mb-6">
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-3 flex items-center gap-2 mb-6">
                 <button
                   onClick={() => document.getElementById('buy-crypto-section')?.scrollIntoView({ behavior: 'smooth' })}
                   className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 rounded text-sm font-medium text-white transition-all"
@@ -5047,7 +5047,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Sweep Panel */}
               {showSweepPanel && (
-                <Card id="sweep-section" className="retro-card p-6 border-orange-500/30">
+                <div id="sweep-section" className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5167,11 +5167,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       : `Sweep ${sweepSelectedIds.size} NFT${sweepSelectedIds.size !== 1 ? 's' : ''}`
                     }
                   </Button>
-                </Card>
+                </div>
               )}
 
               {/* Slim Buy/Bridge Links */}
-              <div id="buy-crypto-section" className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-3 mb-4">
+              <div id="buy-crypto-section" className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-3 mb-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400 text-sm">Get POL:</span>
                   <div className="flex items-center gap-3">
@@ -5184,7 +5184,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               {/* Slim Swap Link */}
-              <div id="swap-section" className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-3 mb-4">
+              <div id="swap-section" className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-3 mb-4">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400 text-sm">Swap:</span>
                   <div className="flex items-center gap-3">
@@ -5196,14 +5196,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Your NFT Collection - Figma-style Connected Wallets Design */}
               {ownedTracksLoading ? (
-                <Card className="retro-card p-6">
+                <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-6">
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
                     <span className="ml-3 text-gray-400">Loading your NFTs...</span>
                   </div>
-                </Card>
+                </div>
               ) : ownedTracksError ? (
-                <Card className="retro-card p-6">
+                <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-6">
                   <div className="text-center py-8">
                     <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
                     <p className="text-red-400 text-sm font-medium mb-2">Failed to load NFTs</p>
@@ -5217,7 +5217,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       Retry
                     </Button>
                   </div>
-                </Card>
+                </div>
               ) : ownedTracks.length > 0 ? (
                 <WalletNFTCollection
                   walletAddress={userWallet || ''}
@@ -5241,7 +5241,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   isPlaying={isPlaying}
                 />
               ) : (
-                <Card className="retro-card p-6">
+                <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-6">
                   <div className="text-center py-8">
                     <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                     <p className="text-gray-400 text-sm">No NFTs owned yet</p>
@@ -5251,11 +5251,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       Browse Marketplace
                     </Button>
                   </div>
-                </Card>
+                </div>
               )}
 
               {/* Transfer Tokens Section */}
-              <div className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Coins className="w-4 h-4 text-cyan-400" />
                   <h3 className="text-sm font-medium text-white">Send Tokens</h3>
@@ -5421,7 +5421,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               {/* Transfer NFTs Section */}
-              <div id="transfer-section" className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
+              <div id="transfer-section" className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Share2 className="w-4 h-4 text-purple-400" />
                   <h3 className="text-sm font-medium text-white">Transfer NFT</h3>
@@ -5484,7 +5484,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               {/* Transaction History - Real Data */}
-              <div className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-4">
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-cyan-400" />

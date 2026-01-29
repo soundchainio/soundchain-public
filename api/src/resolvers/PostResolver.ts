@@ -19,6 +19,8 @@ import { CreateRepostPayload } from '../types/CreateRepostPayload';
 import { DeletePostInput } from '../types/DeletePostInput';
 import { DeletePostPayload } from '../types/DeletePostPayload';
 import { FilterPostInput } from '../types/FilterPostInput';
+import { MakePostPermanentInput, RemoveFromPermanentInput } from '../types/MakePostPermanentInput';
+import { MakePostPermanentPayload, RemoveFromPermanentPayload } from '../types/MakePostPermanentPayload';
 import { PageInput } from '../types/PageInput';
 import { PostConnection } from '../types/PostConnection';
 import { ReactionConnection } from '../types/ReactionConnection';
@@ -323,5 +325,48 @@ export class PostResolver {
       walletAddress: walletAddress.toLowerCase(),
     });
     return { post };
+  }
+
+  // ============================================
+  // MAKE POST PERMANENT MUTATIONS
+  // ============================================
+
+  @Mutation(() => MakePostPermanentPayload)
+  @Authorized()
+  async makePostPermanent(
+    @Ctx() { postService }: Context,
+    @Arg('input') { postId, transactionHash, amountPaid }: MakePostPermanentInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<MakePostPermanentPayload> {
+    try {
+      const post = await postService.makePostPermanent({
+        profileId: profileId.toString(),
+        postId,
+        transactionHash,
+        amountPaid,
+      });
+      return { post, success: true };
+    } catch (error: any) {
+      return { success: false, error: error?.message || 'Failed to make post permanent' };
+    }
+  }
+
+  @Mutation(() => RemoveFromPermanentPayload)
+  @Authorized()
+  async removeFromPermanent(
+    @Ctx() { postService }: Context,
+    @Arg('input') { postId, transactionHash }: RemoveFromPermanentInput,
+    @CurrentUser() { profileId }: User,
+  ): Promise<RemoveFromPermanentPayload> {
+    try {
+      const post = await postService.removeFromPermanent({
+        profileId: profileId.toString(),
+        postId,
+        transactionHash,
+      });
+      return { post, success: true };
+    } catch (error: any) {
+      return { success: false, error: error?.message || 'Failed to remove from permanent' };
+    }
   }
 }

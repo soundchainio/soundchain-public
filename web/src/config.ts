@@ -32,4 +32,16 @@ export const config = {
   airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true',
   sentryUrl: process.env.NEXT_PUBLIC_SENTRY_URL,
   gtmId: process.env.NEXT_PUBLIC_GTM_ID,
+  // Permanent Post Pricing - pay to convert 24hr ephemeral posts to permanent
+  permanentPostPricing: {
+    tiers: [
+      { maxSizeBytes: 0, ogun: 5, pol: 0.1, label: 'Text-only' },
+      { maxSizeBytes: 1024 * 1024, ogun: 10, pol: 0.25, label: '<1 MB' },
+      { maxSizeBytes: 10 * 1024 * 1024, ogun: 25, pol: 0.5, label: '1-10 MB' },
+      { maxSizeBytes: 50 * 1024 * 1024, ogun: 75, pol: 1.5, label: '10-50 MB' },
+      { maxSizeBytes: 100 * 1024 * 1024, ogun: 150, pol: 3, label: '50-100 MB' },
+    ],
+    removalFeeMultiplier: 0.5, // 50% of original price to remove
+    platformFeeRate: 0.0005, // 0.05% platform fee
+  },
 }

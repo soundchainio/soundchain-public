@@ -53,6 +53,19 @@ interface DeletePostParams {
   postId: string;
 }
 
+interface MakePostPermanentParams {
+  profileId: string;
+  postId: string;
+  transactionHash: string;
+  amountPaid: number;
+}
+
+interface RemoveFromPermanentParams {
+  profileId: string;
+  postId: string;
+  transactionHash: string;
+}
+
 export class PostService extends ModelService<typeof Post> {
   constructor(context: Context) {
     super(context, PostModel);
@@ -291,5 +304,48 @@ export class PostService extends ModelService<typeof Post> {
       .lean()
       .exec();
     return result as unknown as Post;
+  }
+
+  // ============================================
+  // MAKE POST PERMANENT METHODS
+  // ============================================
+
+  async makePostPermanent(params: MakePostPermanentParams): Promise<Post> {
+    const post = await this.model.findOne({ _id: params.postId, profileId: params.profileId });
+
+    if (!post) {
+      throw new UserInputError("Can't make post permanent because it doesn't exist or you don't own it.");
+    }
+
+    if (post.isPermanent) {
+      throw new UserInputError('This post is already permanent.');
+    }
+
+    // Update post to permanent status
+    post.isPermanent = true;
+    post.isEphemeral = false;
+    post.mediaExpiresAt = undefined;
+    post.permanentPrice = params.amountPaid;
+    post.permanentTxHash = params.transactionHash;
+
+    await post.save();
+    return post.toObject() as unknown as Post;
+  }
+
+  async removeFromPermanent(params: RemoveFromPermanentParams): Promise<Post> {
+    const post = await this.model.findOne({ _id: params.postId, profileId: params.profileId });
+
+    if (!post) {
+      throw new UserInputError("Can't remove post because it doesn't exist or you don't own it.");
+    }
+
+    if (!post.isPermanent) {
+      throw new UserInputError('This post is not a permanent post.');
+    }
+
+    // Soft delete the post
+    post.deleted = true;
+    await post.save();
+    return post.toObject() as unknown as Post;
   }
 }

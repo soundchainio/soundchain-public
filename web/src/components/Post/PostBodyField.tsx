@@ -1,4 +1,3 @@
-import classNames from 'classnames'
 import { useField } from 'formik'
 import React, { useEffect } from 'react'
 
@@ -7,8 +6,6 @@ interface PostBodyFieldProps extends React.ComponentPropsWithoutRef<'textarea'> 
   maxLength?: number
   updatedValue?: (val: string) => void
 }
-
-const commonClasses = 'flex-1 bg-gray-10 text-white text-sm placeholder-gray-50 focus:ring-0 border-0 resize-none'
 
 export const PostBodyField = ({ ...props }: PostBodyFieldProps) => {
   const [field, meta] = useField(props)
@@ -20,7 +17,12 @@ export const PostBodyField = ({ ...props }: PostBodyFieldProps) => {
   return (
     <textarea
       {...field}
-      className={classNames(commonClasses)}
+      className="w-full min-h-[80px] text-sm focus:ring-0 focus:outline-none border-0 resize-none p-4"
+      style={{
+        backgroundColor: '#171717',
+        color: '#ffffff',
+        WebkitTextFillColor: '#ffffff',
+      }}
       placeholder="What's happening?"
       maxLength={props.maxLength}
     />

@@ -5,10 +5,11 @@ import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
-import { Clock } from 'lucide-react'
+import { Clock, Lock } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
+import { MakePostPermanentModal } from '../modals/MakePostPermanentModal'
 
 // Helper to extract YouTube video ID and generate thumbnail URL
 const getYouTubeThumbnail = (url: string): string | null => {
@@ -46,6 +47,7 @@ interface PostProps {
 const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const me = useMe()
   const { dispatchShowAuthorActionsModal } = useModalDispatch()
+  const [showPermanentModal, setShowPermanentModal] = useState(false)
 
   if (!post) return <PostSkeleton />
 
@@ -156,12 +158,24 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           </div>
         )}
         <div className="flex items-center gap-2">
-          {/* Ephemeral time remaining badge - in header */}
+          {/* Ephemeral time remaining badge - clickable for owner to make permanent */}
           {isEphemeral && !isExpired && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/90 rounded-full text-xs font-medium text-black">
-              <Clock className="w-3 h-3" />
-              <span>{getTimeRemaining()}</span>
-            </div>
+            isAuthor ? (
+              <button
+                onClick={() => setShowPermanentModal(true)}
+                className="flex items-center gap-1 px-2 py-1 bg-amber-500/90 hover:bg-amber-400 rounded-full text-xs font-medium text-black transition-colors group"
+                title="Click to make permanent"
+              >
+                <Clock className="w-3 h-3 group-hover:hidden" />
+                <Lock className="w-3 h-3 hidden group-hover:block" />
+                <span>{getTimeRemaining()}</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/90 rounded-full text-xs font-medium text-black">
+                <Clock className="w-3 h-3" />
+                <span>{getTimeRemaining()}</span>
+              </div>
+            )
           )}
           {/* Only show menu for authors/admins - not on other people's posts */}
           {canEdit && (
@@ -424,6 +438,17 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
           }}
         />
       </div>
+
+      {/* Make Post Permanent Modal */}
+      {showPermanentModal && (
+        <MakePostPermanentModal
+          isOpen={showPermanentModal}
+          onClose={() => setShowPermanentModal(false)}
+          postId={post.id}
+          mediaSize={(postWithMedia as any).mediaSize || 0}
+          onSuccess={() => setShowPermanentModal(false)}
+        />
+      )}
     </article>
   )
 }

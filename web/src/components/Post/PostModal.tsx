@@ -1,4 +1,3 @@
-import classNames from 'classnames'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import GraphemeSplitter from 'grapheme-splitter'
 import { usePostLazyQuery } from 'lib/graphql'
@@ -7,9 +6,7 @@ import { PostFormType } from 'types/PostFormType'
 import { getNormalizedLink, hasLink } from '../../utils/NormalizeEmbedLinks'
 import { ModalsPortal } from '../ModalsPortal'
 import { PostForm } from './PostForm'
-
-const baseClasses =
-  'fixed top-0 left-0 w-screen bottom-0 z-[60] duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
+import { X } from 'lucide-react'
 
 export const maxLength = 1000
 
@@ -131,27 +128,37 @@ export const PostModal = () => {
     }
   }, [editingPost])
 
+  // Don't render if not showing - prevents click interception (same pattern as AuthorActionsModal)
+  if (!showNewPost) return null
+
   return (
     <ModalsPortal>
+      {/* Backdrop */}
       <div
-        className={classNames(baseClasses, {
-          'translate-y-0 opacity-100': showNewPost,
-          'translate-y-full opacity-0': !showNewPost,
-        })}
-      >
-        <PostForm
-          type={postType}
-          initialValues={initialValues}
-          postLink={postLink}
-          originalLink={originalLink}
-          afterSubmit={clearState}
-          onCancel={cancel}
-          showNewPost={showNewPost}
-          setOriginalLink={setOriginalLink}
-          setPostLink={setPostLink}
-          setBodyValue={setBodyValue}
-          trackId={trackId}
-        />
+        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={() => clearState()}
+      />
+
+      {/* Modal - centered on desktop, bottom sheet on mobile - EXACT same pattern as AuthorActionsModal */}
+      <div className="fixed z-50 bottom-0 left-0 right-0 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-md sm:w-full animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+        <div
+          className="border border-neutral-700 rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl max-h-[80vh] overflow-y-auto"
+          style={{ backgroundColor: '#171717' }}
+        >
+          <PostForm
+            type={postType}
+            initialValues={initialValues}
+            postLink={postLink}
+            originalLink={originalLink}
+            afterSubmit={clearState}
+            onCancel={cancel}
+            showNewPost={showNewPost}
+            setOriginalLink={setOriginalLink}
+            setPostLink={setPostLink}
+            setBodyValue={setBodyValue}
+            trackId={trackId}
+          />
+        </div>
       </div>
     </ModalsPortal>
   )

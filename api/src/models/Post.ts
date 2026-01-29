@@ -75,6 +75,23 @@ export class Post extends Model {
   @prop({ default: false })
   isEphemeral?: boolean;
 
+  // Make Post Permanent feature fields
+  @Field(() => Boolean, { nullable: true })
+  @prop({ default: false })
+  isPermanent?: boolean;
+
+  @Field(() => Number, { nullable: true })
+  @prop({ required: false })
+  permanentPrice?: number;
+
+  @Field(() => Number, { nullable: true })
+  @prop({ required: false })
+  mediaSize?: number;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  permanentTxHash?: string;
+
   @Field(() => Date)
   createdAt: Date;
 

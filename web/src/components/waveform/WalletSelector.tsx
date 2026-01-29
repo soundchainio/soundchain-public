@@ -740,6 +740,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
           {/* Add Wallet Button */}
           {availableWallets.length > 0 && (
             <button
+              type="button"
               onClick={() => setShowConnectMenu(!showConnectMenu)}
               className="flex items-center gap-1 px-2 py-1 text-xs text-cyan-400 hover:bg-cyan-500/20 active:bg-cyan-500/30 rounded-lg transition-colors"
             >
@@ -752,6 +753,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
         {/* Current Wallet Display */}
         {currentWallet && (
           <button
+            type="button"
             onClick={() => setShowWalletMenu(!showWalletMenu)}
             className="w-full flex items-center justify-between p-3 bg-black/30 rounded-lg border border-white/10 hover:border-cyan-500/50 active:border-cyan-500 transition-colors"
           >
@@ -773,6 +775,7 @@ export const WalletSelector = ({ className, ownerAddressAccount, showOgun = fals
                 <div className="flex items-center gap-1">
                   <code className="text-xs text-cyan-400 font-mono truncate max-w-[180px] sm:max-w-none">{currentWallet.address}</code>
                   <button
+                    type="button"
                     onClick={(e) => copyAddress(currentWallet.address, e)}
                     className="p-1 text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded transition-colors flex-shrink-0"
                     title="Copy address"

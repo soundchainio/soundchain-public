@@ -132,27 +132,25 @@ export const PostForm = ({ ...props }: PostFormProps) => {
       onSubmit={onSubmit}
     >
       {({ values, setFieldValue }) => (
-        <Form className="pb-safe flex h-full flex-col">
-          <div className="flex items-center rounded-tl-3xl rounded-tr-3xl bg-gray-20">
+        <Form className="pb-safe flex flex-col">
+          {/* Header - dark styling with inline style for guaranteed visibility */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800" style={{ backgroundColor: '#171717' }}>
             <button
-              className="flex-1 p-2 text-center font-bold text-gray-400"
+              type="button"
+              className="text-neutral-400 hover:text-white font-medium text-sm transition-colors"
               onClick={() => props.onCancel(setFieldValue)}
             >
               Cancel
             </button>
-            <div className="flex-1 text-center font-bold text-white">
+            <span className="text-white font-semibold text-sm">
               {props.type === PostFormType.REPOST && 'Repost'}
               {props.type === PostFormType.EDIT && 'Edit Post'}
               {props.type === PostFormType.NEW && 'New Post'}
-            </div>
-            <div className="m-2 flex-1 text-center">
-              <div className="ml-6">
-                <Button className="bg-gray-30 text-sm " type="submit" variant="rainbow-rounded">
-                  {props.type === PostFormType.EDIT && 'Save'}
-                  {props.type !== PostFormType.EDIT && 'Post'}
-                </Button>
-              </div>
-            </div>
+            </span>
+            <Button className="text-sm px-4 py-1.5" type="submit" variant="rainbow-rounded">
+              {props.type === PostFormType.EDIT && 'Save'}
+              {props.type !== PostFormType.EDIT && 'Post'}
+            </Button>
           </div>
           <PostBodyField
             name="body"
@@ -161,7 +159,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             updatedValue={onTextAreaChange}
           />
           {props.type === PostFormType.REPOST && (
-            <div className="bg-gray-20 p-4">
+            <div className="bg-neutral-800 p-4">
               <RepostPreview postId={repostId as string} />
             </div>
           )}
@@ -189,10 +187,12 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             let enhancedUrl = props.postLink
 
             // CSS to prevent iframe reload on mobile orientation change
+            // Also limit height to keep modal compact
             const orientationStableStyle = {
               contain: 'layout style' as const,
               willChange: 'contents' as const,
               transform: 'translateZ(0)',
+              maxHeight: '200px',
             }
 
             // Platform-specific enhancements
@@ -205,11 +205,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               url.searchParams.set('rel', '0')
               enhancedUrl = url.toString()
 
-              // Return responsive YouTube embed - fixed height on mobile to reduce letterboxing
+              // Return compact YouTube embed for modal preview
               return (
                 <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
                   <iframe
-                    className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                    className="w-full h-[160px]"
                     frameBorder="0"
                     allowFullScreen
                     src={enhancedUrl}
@@ -226,11 +226,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               url.searchParams.set('muted', '1')
               enhancedUrl = url.toString()
 
-              // Return responsive Vimeo embed - fixed height on mobile to reduce letterboxing
+              // Return compact Vimeo embed for modal preview
               return (
                 <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
                   <iframe
-                    className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                    className="w-full h-[160px]"
                     frameBorder="0"
                     allowFullScreen
                     src={enhancedUrl}
@@ -242,11 +242,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             }
 
             if (mediaType === MediaProvider.INSTAGRAM) {
-              // Instagram embeds - responsive
+              // Instagram embeds - compact for modal
               return (
                 <div style={orientationStableStyle}>
                   <iframe
-                    className="w-full bg-gray-20 h-[80vh] max-h-[700px] md:h-[700px]"
+                    className="w-full bg-gray-20 h-[180px]"
                     frameBorder="0"
                     allowFullScreen
                     scrolling="no"
@@ -259,11 +259,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             }
 
             if (mediaType === MediaProvider.TIKTOK) {
-              // TikTok vertical video - responsive
+              // TikTok vertical video - compact for modal
               return (
                 <div style={orientationStableStyle}>
                   <iframe
-                    className="w-full bg-gray-20 h-[80vh] max-h-[650px] md:h-[650px]"
+                    className="w-full bg-gray-20 h-[180px]"
                     frameBorder="0"
                     allowFullScreen
                     scrolling="no"
@@ -276,11 +276,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             }
 
             if (mediaType === MediaProvider.X) {
-              // X (Twitter) embeds - responsive
+              // X (Twitter) embeds - compact for modal
               return (
                 <div style={orientationStableStyle}>
                   <iframe
-                    className="w-full bg-gray-20 h-[70vh] max-h-[700px] md:h-[700px]"
+                    className="w-full bg-gray-20 h-[180px]"
                     frameBorder="0"
                     allowFullScreen
                     scrolling="no"
@@ -292,11 +292,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             }
 
             if (mediaType === MediaProvider.BANDCAMP) {
-              // Bandcamp with tracklist visible - responsive
+              // Bandcamp - compact for modal
               return (
                 <div style={orientationStableStyle}>
                   <iframe
-                    className="w-full bg-gray-20 h-[500px] md:h-[600px]"
+                    className="w-full bg-gray-20 h-[120px]"
                     frameBorder="0"
                     allowFullScreen
                     seamless
@@ -308,7 +308,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             }
 
             if (mediaType === MediaProvider.TWITCH) {
-              // Twitch livestream/VOD - responsive with autoplay
+              // Twitch livestream/VOD - compact for modal
               const url = new URL(enhancedUrl)
               url.searchParams.set('muted', '1')
               enhancedUrl = url.toString()
@@ -316,7 +316,7 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               return (
                 <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
                   <iframe
-                    className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                    className="w-full h-[160px]"
                     frameBorder="0"
                     allowFullScreen
                     src={enhancedUrl}
@@ -328,11 +328,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             }
 
             if (mediaType === MediaProvider.DISCORD) {
-              // Discord server widget - responsive
+              // Discord server widget - compact for modal
               return (
                 <div style={orientationStableStyle}>
                   <iframe
-                    className="w-full bg-gray-20 h-[500px] md:h-[600px]"
+                    className="w-full bg-gray-20 h-[160px]"
                     frameBorder="0"
                     src={enhancedUrl}
                     title="Media preview"
@@ -342,11 +342,11 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               )
             }
 
-            // Default iframe for SoundCloud, Spotify, and Custom HTML
+            // Default iframe for SoundCloud, Spotify, and Custom HTML - compact for modal
             return (
               <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
                 <iframe
-                  className="w-full h-[280px] sm:h-[350px] md:aspect-video md:h-auto"
+                  className="w-full h-[120px]"
                   frameBorder="0"
                   allowFullScreen
                   src={enhancedUrl}
