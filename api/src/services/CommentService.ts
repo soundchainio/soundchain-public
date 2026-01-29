@@ -64,6 +64,17 @@ export class CommentService extends ModelService<typeof Comment> {
       }
     }
 
+    // Log activity for activity feed
+    try {
+      await this.context.activityService.logCommented(
+        params.profileId.toString(),
+        params.postId.toString(),
+        params.body
+      );
+    } catch (activityError) {
+      console.error('[CommentService] Failed to log comment activity:', activityError);
+    }
+
     // ⚠️ CRITICAL FIX - DO NOT REMOVE ⚠️
     // Convert to plain object to avoid mongoose Symbol(mongoose#Document#scope) serialization errors
     // Without this, GraphQL tries to serialize internal mongoose properties and fails

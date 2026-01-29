@@ -67,6 +67,36 @@ export class User extends Model {
   @prop({ type: [String], enum: Role, default: [Role.USER] })
   roles: string[];
 
+  // Phone number for future notifications
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  phoneNumber?: string;
+
+  // Notification preferences
+  @Field(() => Boolean, { nullable: true })
+  @prop({ required: false, default: true })
+  notifyOnFollow?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  @prop({ required: false, default: true })
+  notifyOnLike?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  @prop({ required: false, default: true })
+  notifyOnComment?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  @prop({ required: false, default: true })
+  notifyOnSale?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  @prop({ required: false, default: true })
+  notifyOnTip?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  @prop({ required: false, default: true })
+  notifyOnDM?: boolean;
+
   // OTP fields - stored in DB but not exposed to frontend (no @Field decorator)
   @prop({ required: false, default: undefined })
   otpSecret?: string;

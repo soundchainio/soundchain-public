@@ -35,6 +35,7 @@ import { PlaylistService } from '../services/PlaylistService';
 import { SCidService } from '../services/SCidService';
 import { BookmarkService } from '../services/BookmarkService';
 import { TrackCommentService } from '../services/TrackCommentService';
+import { ActivityService } from '../services/ActivityService';
 
 export class Context {
   auctionItemService: AuctionItemService;
@@ -74,6 +75,7 @@ export class Context {
   scidService: SCidService;
   bookmarkService: BookmarkService;
   trackCommentService: TrackCommentService;
+  activityService: ActivityService;
 
   constructor(jwtUser?: JwtUser) {
     this.auctionItemService = new AuctionItemService(this);
@@ -111,6 +113,7 @@ export class Context {
     this.scidService = new SCidService(this);
     this.bookmarkService = new BookmarkService(this);
     this.trackCommentService = new TrackCommentService(this);
+    this.activityService = new ActivityService(this);
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);
   }
 }

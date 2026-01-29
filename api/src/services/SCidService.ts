@@ -419,6 +419,21 @@ export class SCidService extends Service {
     }
     await scidRecord.save();
 
+    // Log "listened" activity for activity feed (only if listener has a profile)
+    if (listenerProfileId) {
+      try {
+        await this.context.activityService.logListened(
+          listenerProfileId,
+          scidRecord.trackId,
+          trackTitle,
+          creatorProfile?.displayName,
+          track?.artworkUrl
+        );
+      } catch (err) {
+        console.warn('[SCidService] Failed to log listened activity:', err);
+      }
+    }
+
     // Get creator wallet
     const creatorWallet = scidRecord.walletAddress || creatorProfile?.magicWalletAddress;
 

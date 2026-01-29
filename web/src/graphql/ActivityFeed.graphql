@@ -1,0 +1,21 @@
+query ActivityFeed($page: PageInput) {
+  activityFeed(page: $page) {
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    nodes {
+      id
+      type
+      metadata
+      createdAt
+      profile {
+        id
+        displayName
+        profilePicture
+        userHandle
+        isOnline
+      }
+    }
+  }
+}

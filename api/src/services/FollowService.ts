@@ -33,9 +33,9 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
   }
 
   async createFollow(followerId: string, followedId: string): Promise<Follow> {
-    const follow = new FollowModel({ 
-      followerId: new mongoose.Types.ObjectId(followerId), 
-      followedId: new mongoose.Types.ObjectId(followedId) 
+    const follow = new FollowModel({
+      followerId: new mongoose.Types.ObjectId(followerId),
+      followedId: new mongoose.Types.ObjectId(followedId)
     });
     await follow.save();
     this.dataLoader.clear(this.getKeyFromComponents({
@@ -44,6 +44,21 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
     }));
     this.context.notificationService.notifyNewFollower(follow);
     this.context.feedService.addRecentPostsToFollowerFeed(follow);
+
+    // Log activity for activity feed
+    try {
+      const followedProfile = await this.context.profileService.getProfile(followedId);
+      const followedUser = await this.context.userService.getUserByProfileId(followedId);
+      await this.context.activityService.logFollowed(
+        followerId,
+        followedId,
+        followedProfile.displayName,
+        followedUser?.handle
+      );
+    } catch (err) {
+      console.error('[FollowService] Failed to log follow activity:', err);
+    }
+
     return follow;
   }
 
@@ -61,6 +76,12 @@ export class FollowService extends ModelService<typeof Follow, FollowKeyComponen
     // Use .lean() to get plain objects and avoid mongoose document symbol issues
     const rest = await this.model.find({ followedId: profileId }, { followerId: 1, _id: 0 }).lean();
     return rest.map(({ followerId }) => followerId?.toString() || '').filter(Boolean);
+  }
+
+  async getFollowedIds(profileId: string): Promise<string[]> {
+    // Get IDs of users this profile follows
+    const follows = await this.model.find({ followerId: profileId }, { followedId: 1, _id: 0 }).lean();
+    return follows.map(({ followedId }) => followedId?.toString() || '').filter(Boolean);
   }
 
   async getFollowers(profileId: string, page: PageInput): Promise<PaginateResult<Follow>> {

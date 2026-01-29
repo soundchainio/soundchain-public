@@ -45,6 +45,21 @@ export class ReactionService extends ModelService<typeof Reaction, ReactionKeyCo
     await reaction.save();
     this.dataLoader.clear(this.getKeyFromComponents(reaction));
     this.context.notificationService.notifyNewReaction(reaction);
+
+    // Log activity for activity feed
+    if (params.profileId) {
+      try {
+        const post = await this.context.postService.getPost(params.postId.toString());
+        await this.context.activityService.logLiked(
+          params.profileId.toString(),
+          params.postId.toString(),
+          post?.body
+        );
+      } catch (err) {
+        console.error('[ReactionService] Failed to log like activity:', err);
+      }
+    }
+
     return reaction;
   }
 

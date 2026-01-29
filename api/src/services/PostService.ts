@@ -98,6 +98,14 @@ export class PostService extends ModelService<typeof Post> {
         this.context.feedService.createFeedItem({ profileId: post.profileId, postId: post._id, postedAt: post.createdAt });
         this.context.feedService.addPostToFollowerFeeds(post);
         this.context.notificationService.notifyNewPostForSubscribers(post);
+
+        // Log activity for activity feed
+        await this.context.activityService.logPosted(
+          post.profileId,
+          post._id.toString(),
+          post.body,
+          !!(post.mediaLink || params.uploadedMediaUrl)
+        );
       } catch (feedError) {
         // Log but don't fail the post creation if feed/notification fails
         console.error('[PostService] Error creating feed items or notifications:', feedError);
