@@ -97,6 +97,16 @@ export class User extends Model {
   @prop({ required: false, default: true })
   notifyOnDM?: boolean;
 
+  // Nostr pubkey for decentralized notifications via Bitchat/Nostr clients
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  nostrPubkey?: string;
+
+  // Enable Nostr notifications (NIP-17 encrypted DMs)
+  @Field(() => Boolean, { nullable: true })
+  @prop({ required: false, default: false })
+  notifyViaNostr?: boolean;
+
   // OTP fields - stored in DB but not exposed to frontend (no @Field decorator)
   @prop({ required: false, default: undefined })
   otpSecret?: string;

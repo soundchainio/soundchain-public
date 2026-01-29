@@ -8,6 +8,7 @@ import { Post } from '../models/Post';
 import { Profile, ProfileModel } from '../models/Profile';
 import { Reaction } from '../models/Reaction'; // Fixed import path
 import { Track } from '../models/Track';
+import { UserModel } from '../models/User';
 import { CommentNotificationMetadata } from '../types/CommentNotificationMetadata';
 import { Context } from '../types/Context';
 import { DeletedPostNotificationMetadata } from '../types/DeletedPostNotificationMetadata';
@@ -20,6 +21,7 @@ import { PageInput } from '../types/PageInput';
 import { SortNotificationInput } from '../types/SortNotificationInput';
 import { TrackWithPriceMetadata } from '../types/TrackWithPriceMetadata';
 import { ModelService } from './ModelService';
+import { getNostrNotificationService } from './NostrNotificationService';
 
 interface CommentNotificationParams {
   comment: Comment;
@@ -45,6 +47,65 @@ interface AuctionIsOverParams {
 export class NotificationService extends ModelService<typeof Notification> {
   constructor(context: Context) {
     super(context, NotificationModel);
+  }
+
+  /**
+   * Get user's Nostr pubkey if they have Nostr notifications enabled
+   * @param profileId - Profile ID to lookup user
+   * @returns Nostr pubkey or null if not enabled
+   */
+  private async getNostrPubkeyIfEnabled(profileId: string): Promise<string | null> {
+    try {
+      const user = await UserModel.findOne({ profileId });
+      if (user?.notifyViaNostr && user?.nostrPubkey) {
+        return user.nostrPubkey;
+      }
+    } catch (err) {
+      console.debug('[NotificationService] Error checking Nostr settings:', err);
+    }
+    return null;
+  }
+
+  /**
+   * Send Nostr notification if user has it enabled
+   */
+  private async sendNostrNotification(
+    profileId: string,
+    type: 'follow' | 'like' | 'comment' | 'dm' | 'tip' | 'nftSold' | 'ogunEarned',
+    params: Record<string, string>
+  ): Promise<void> {
+    try {
+      const nostrPubkey = await this.getNostrPubkeyIfEnabled(profileId);
+      if (!nostrPubkey) return;
+
+      const nostrService = getNostrNotificationService();
+
+      switch (type) {
+        case 'follow':
+          await nostrService.notifyNewFollower(nostrPubkey, params.followerName, params.followerHandle);
+          break;
+        case 'like':
+          await nostrService.notifyNewLike(nostrPubkey, params.likerName, params.postId);
+          break;
+        case 'comment':
+          await nostrService.notifyNewComment(nostrPubkey, params.commenterName, params.postId);
+          break;
+        case 'dm':
+          await nostrService.notifyNewDM(nostrPubkey, params.senderName, params.senderHandle);
+          break;
+        case 'tip':
+          await nostrService.notifyNewTip(nostrPubkey, params.tipperName, params.amount);
+          break;
+        case 'nftSold':
+          await nostrService.notifyNFTSold(nostrPubkey, params.buyerName, params.trackName, params.price);
+          break;
+        case 'ogunEarned':
+          await nostrService.notifyOgunEarned(nostrPubkey, params.amount, params.trackTitle, params.isCreator === 'true');
+          break;
+      }
+    } catch (err) {
+      console.error('[NotificationService] Nostr notification error:', err);
+    }
   }
 
   async notifyNewCommentOnPost({ comment, post, authorProfileId }: CommentNotificationParams): Promise<void> {
@@ -95,6 +156,12 @@ export class NotificationService extends ModelService<typeof Notification> {
       authorName,
       post._id.toString()
     );
+
+    // Send Nostr notification (if enabled)
+    await this.sendNostrNotification(postProfileId.toString(), 'comment', {
+      commenterName: authorName,
+      postId: post._id.toString(),
+    });
   }
 
   async notifyNewReaction({ postId, profileId, type: reactionType }: Reaction): Promise<void> {
@@ -141,6 +208,12 @@ export class NotificationService extends ModelService<typeof Notification> {
       authorName,
       postId.toString()
     );
+
+    // Send Nostr notification (if enabled)
+    await this.sendNostrNotification(postProfileId.toString(), 'like', {
+      likerName: authorName || 'Someone',
+      postId: postId.toString(),
+    });
   }
 
   async notifyNewFollower({ followerId, followedId }: Follow): Promise<void> {
@@ -176,6 +249,12 @@ export class NotificationService extends ModelService<typeof Notification> {
         followerProfile.displayName || 'Someone',
         followerHandle
       );
+
+      // Send Nostr notification (if enabled)
+      await this.sendNostrNotification(followedId.toString(), 'follow', {
+        followerName: followerProfile.displayName || 'Someone',
+        followerHandle: followerHandle || '',
+      });
     } catch (err) {
       console.error('[NotificationService] Error in notifyNewFollower:', err);
     }

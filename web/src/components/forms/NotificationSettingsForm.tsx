@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { usePushNotifications } from 'hooks/usePushNotifications';
 import { Button } from 'components/common/Buttons/Button';
-import { Bell, Phone, MessageCircle, Heart, Users, DollarSign, ShoppingBag } from 'lucide-react';
+import { Bell, Phone, MessageCircle, Heart, Users, DollarSign, ShoppingBag, Radio, ExternalLink } from 'lucide-react';
 
 // International country codes - 1, 2, or 3 digits
 // Common codes: +1 (US/CA), +44 (UK), +91 (India), +86 (China), +55 (Brazil), +971 (UAE)
@@ -183,6 +183,8 @@ const UPDATE_NOTIFICATION_SETTINGS = gql`
       notifyOnSale
       notifyOnTip
       notifyOnDM
+      nostrPubkey
+      notifyViaNostr
     }
   }
 `;
@@ -197,6 +199,8 @@ interface NotificationSettingsFormProps {
     notifyOnSale?: boolean | null;
     notifyOnTip?: boolean | null;
     notifyOnDM?: boolean | null;
+    nostrPubkey?: string | null;
+    notifyViaNostr?: boolean | null;
   };
 }
 
@@ -210,6 +214,8 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
   const [notifyOnSale, setNotifyOnSale] = useState(initialValues?.notifyOnSale ?? true);
   const [notifyOnTip, setNotifyOnTip] = useState(initialValues?.notifyOnTip ?? true);
   const [notifyOnDM, setNotifyOnDM] = useState(initialValues?.notifyOnDM ?? true);
+  const [nostrPubkey, setNostrPubkey] = useState(initialValues?.nostrPubkey || '');
+  const [notifyViaNostr, setNotifyViaNostr] = useState(initialValues?.notifyViaNostr ?? false);
 
   // Update state when initialValues change
   useEffect(() => {
@@ -221,6 +227,8 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
       setNotifyOnSale(initialValues.notifyOnSale ?? true);
       setNotifyOnTip(initialValues.notifyOnTip ?? true);
       setNotifyOnDM(initialValues.notifyOnDM ?? true);
+      setNostrPubkey(initialValues.nostrPubkey || '');
+      setNotifyViaNostr(initialValues.notifyViaNostr ?? false);
     }
   }, [initialValues]);
 
@@ -245,6 +253,8 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
       notifyOnSale,
       notifyOnTip,
       notifyOnDM,
+      nostrPubkey: nostrPubkey || null,
+      notifyViaNostr,
     });
 
     try {
@@ -258,6 +268,8 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
             notifyOnSale,
             notifyOnTip,
             notifyOnDM,
+            nostrPubkey: nostrPubkey || null,
+            notifyViaNostr,
           },
         },
       });
@@ -340,11 +352,63 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
         </div>
       )}
 
-      {/* Phone Number Section */}
+      {/* Nostr Notifications Section (Bitchat) */}
+      <div className="space-y-4">
+        <h3 className="text-white font-bold flex items-center gap-2">
+          <Radio className="w-5 h-5 text-orange-400" />
+          Nostr Notifications (Bitchat)
+        </h3>
+        <div className="bg-black/30 rounded-xl p-4 border border-orange-500/30 space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <p className="text-white font-medium">Decentralized Notifications</p>
+              <p className="text-gray-400 text-sm">
+                FREE notifications via Nostr protocol. Receive alerts in{' '}
+                <a
+                  href="https://apps.apple.com/us/app/bitchat-mesh/id6748219622"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-400 hover:text-orange-300 inline-flex items-center gap-1"
+                >
+                  Bitchat app <ExternalLink className="w-3 h-3" />
+                </a>
+                {' '}or any NIP-17 compatible Nostr client.
+              </p>
+            </div>
+            <Toggle checked={notifyViaNostr} onChange={setNotifyViaNostr} />
+          </div>
+
+          {notifyViaNostr && (
+            <div className="space-y-2">
+              <label className="text-gray-400 text-sm">Your Nostr Public Key (npub or hex)</label>
+              <input
+                type="text"
+                value={nostrPubkey}
+                onChange={(e) => setNostrPubkey(e.target.value.trim())}
+                placeholder="npub1... or hex pubkey"
+                className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-orange-500 focus:outline-none font-mono text-sm"
+              />
+              <p className="text-gray-500 text-xs">
+                Find your pubkey in Bitchat Settings → Profile, or from any Nostr client
+              </p>
+            </div>
+          )}
+
+          <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+            <p className="text-orange-300 text-xs">
+              🔐 <strong>End-to-end encrypted</strong> — Your notifications are private and decentralized.
+              No SMS costs, works even when browser is closed.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Phone Number Section (Legacy - for future SMS) */}
       <div className="space-y-4">
         <h3 className="text-white font-bold flex items-center gap-2">
           <Phone className="w-5 h-5 text-cyan-400" />
           Phone Number
+          <span className="text-xs text-gray-500 font-normal">(Optional)</span>
         </h3>
         <div className="bg-black/30 rounded-xl p-4 border border-cyan-500/30">
           <input

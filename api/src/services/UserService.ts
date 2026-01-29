@@ -180,6 +180,8 @@ export class UserService extends ModelService<typeof User> {
       notifyOnSale?: boolean;
       notifyOnTip?: boolean;
       notifyOnDM?: boolean;
+      nostrPubkey?: string;
+      notifyViaNostr?: boolean;
     }
   ): Promise<User> {
     // Build update object with only provided fields
@@ -206,11 +208,44 @@ export class UserService extends ModelService<typeof User> {
     if (settings.notifyOnDM !== undefined) {
       updateFields.notifyOnDM = settings.notifyOnDM;
     }
+    if (settings.nostrPubkey !== undefined) {
+      // Validate and normalize Nostr pubkey (handle npub or hex format)
+      updateFields.nostrPubkey = this.normalizeNostrPubkey(settings.nostrPubkey);
+    }
+    if (settings.notifyViaNostr !== undefined) {
+      updateFields.notifyViaNostr = settings.notifyViaNostr;
+    }
 
     const updatedUser = await UserModel.findByIdAndUpdate(id, updateFields, { new: true });
     if (!updatedUser) {
       throw new Error(`Could not update notification settings for user: ${id}`);
     }
     return updatedUser;
+  }
+
+  /**
+   * Normalize Nostr pubkey - convert npub to hex if needed
+   */
+  private normalizeNostrPubkey(pubkey: string | null): string | null {
+    if (!pubkey) return null;
+
+    const trimmed = pubkey.trim();
+    if (!trimmed) return null;
+
+    // If it's already hex (64 chars), return as is
+    if (/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+      return trimmed.toLowerCase();
+    }
+
+    // If it starts with npub, we need to decode it
+    // For now, store as-is - proper bech32 decoding would require nostr-tools
+    // The NostrNotificationService can handle both formats
+    if (trimmed.startsWith('npub1')) {
+      return trimmed;
+    }
+
+    // Invalid format, return null
+    console.warn(`[UserService] Invalid Nostr pubkey format: ${trimmed.slice(0, 20)}...`);
+    return null;
   }
 }

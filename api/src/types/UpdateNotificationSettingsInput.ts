@@ -22,4 +22,10 @@ export class UpdateNotificationSettingsInput {
 
   @Field(() => Boolean, { nullable: true })
   notifyOnDM?: boolean;
+
+  @Field(() => String, { nullable: true })
+  nostrPubkey?: string;
+
+  @Field(() => Boolean, { nullable: true })
+  notifyViaNostr?: boolean;
 }
