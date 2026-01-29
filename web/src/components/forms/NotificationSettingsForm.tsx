@@ -1,8 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { usePushNotifications } from 'hooks/usePushNotifications';
 import { Button } from 'components/common/Buttons/Button';
 import { Bell, Phone, MessageCircle, Heart, Users, DollarSign, ShoppingBag } from 'lucide-react';
+
+// Format phone number with dashes as user types
+// Supports international: +1-480-231-5629 or +44-20-7946-0958
+function formatPhoneNumber(value: string): string {
+  // Remove all non-digit characters except +
+  const cleaned = value.replace(/[^\d+]/g, '');
+
+  // If empty or just +, return as is
+  if (!cleaned || cleaned === '+') return cleaned;
+
+  // Ensure starts with +
+  const withPlus = cleaned.startsWith('+') ? cleaned : '+' + cleaned;
+  const digits = withPlus.slice(1); // Remove + for formatting
+
+  // Format based on length
+  if (digits.length <= 1) {
+    return '+' + digits;
+  } else if (digits.length <= 4) {
+    return '+' + digits.slice(0, 1) + '-' + digits.slice(1);
+  } else if (digits.length <= 7) {
+    return '+' + digits.slice(0, 1) + '-' + digits.slice(1, 4) + '-' + digits.slice(4);
+  } else {
+    // Full format: +1-480-231-5629
+    return '+' + digits.slice(0, 1) + '-' + digits.slice(1, 4) + '-' + digits.slice(4, 7) + '-' + digits.slice(7, 11);
+  }
+}
 
 // Simple toggle switch component
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (val: boolean) => void }) {
@@ -54,7 +80,7 @@ interface NotificationSettingsFormProps {
 export function NotificationSettingsForm({ afterSubmit, initialValues }: NotificationSettingsFormProps) {
   const { permission, isSubscribed, subscribe, unsubscribe, isLoading: pushLoading, isSupported } = usePushNotifications();
 
-  const [phoneNumber, setPhoneNumber] = useState(initialValues?.phoneNumber || '');
+  const [phoneNumber, setPhoneNumber] = useState(formatPhoneNumber(initialValues?.phoneNumber || ''));
   const [notifyOnFollow, setNotifyOnFollow] = useState(initialValues?.notifyOnFollow ?? true);
   const [notifyOnLike, setNotifyOnLike] = useState(initialValues?.notifyOnLike ?? true);
   const [notifyOnComment, setNotifyOnComment] = useState(initialValues?.notifyOnComment ?? true);
@@ -65,7 +91,7 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
   // Update state when initialValues change
   useEffect(() => {
     if (initialValues) {
-      setPhoneNumber(initialValues.phoneNumber || '');
+      setPhoneNumber(formatPhoneNumber(initialValues.phoneNumber || ''));
       setNotifyOnFollow(initialValues.notifyOnFollow ?? true);
       setNotifyOnLike(initialValues.notifyOnLike ?? true);
       setNotifyOnComment(initialValues.notifyOnComment ?? true);
@@ -79,7 +105,9 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [updateSettings] = useMutation(UPDATE_NOTIFICATION_SETTINGS);
+  const [updateSettings] = useMutation(UPDATE_NOTIFICATION_SETTINGS, {
+    refetchQueries: ['Me'], // Refetch Me query to update Apollo cache
+  });
 
   const handleSave = async () => {
     setSaving(true);
@@ -170,11 +198,11 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
           <input
             type="tel"
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="+1 (555) 123-4567"
-            className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none"
+            onChange={(e) => setPhoneNumber(formatPhoneNumber(e.target.value))}
+            placeholder="+1-555-123-4567"
+            className="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none font-mono"
           />
-          <p className="text-gray-500 text-xs mt-2">Optional - for future SMS notifications via Nostr</p>
+          <p className="text-gray-500 text-xs mt-2">Format: +1-480-231-5629 (US) or +44-20-7946-0958 (UK)</p>
         </div>
       </div>
 
