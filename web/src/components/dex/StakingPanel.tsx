@@ -418,23 +418,39 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
   }
 
-  // Claim Rewards
+  // Claim Rewards (with 0.05% platform fee)
   const handleClaimRewards = async () => {
     if (!web3 || !account || parseFloat(rewardBalance) <= 0) {
       toast.error('No rewards to claim')
       return
     }
 
+    // Calculate 0.05% platform fee (deducted from claimed amount)
+    const platformFeeRate = config.soundchainFee || 0.0005
+    const platformFee = parseFloat(rewardBalance) * platformFeeRate
+
     setIsLoading(true)
     try {
       const gasPrice = web3.utils.toWei(await getCurrentGasPrice(web3), 'gwei').toString()
+      const feeWei = web3.utils.toWei(platformFee.toFixed(18), 'ether')
+      const treasuryAddress = config.treasuryAddress
 
+      // Step 1: Claim rewards
       setTransactionState('Claiming rewards...')
       const claimTx = tokenStakeContract(web3).methods.withdrawRewards()
       const claimGas = await claimTx.estimateGas({ from: account })
       await claimTx.send({ from: account, gas: claimGas.toString(), gasPrice })
 
-      toast.success(`Successfully claimed ${formatToCompactNumber(parseFloat(rewardBalance))} OGUN!`)
+      // Step 2: Send platform fee to treasury (from newly claimed OGUN)
+      setTransactionState('Collecting platform fee...')
+      console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN fee to treasury: ${treasuryAddress}`)
+      const feeTx = tokenContract(web3).methods.transfer(treasuryAddress, feeWei)
+      const feeGas = await feeTx.estimateGas({ from: account })
+      await feeTx.send({ from: account, gas: feeGas.toString(), gasPrice })
+      console.log('✅ Platform fee sent to treasury')
+
+      const netClaimed = parseFloat(rewardBalance) - platformFee
+      toast.success(`Successfully claimed ${formatToCompactNumber(netClaimed)} OGUN! (fee: ${platformFee.toFixed(6)} OGUN)`)
       fetchBalances()
     } catch (error: any) {
       console.error('Claim error:', error)
