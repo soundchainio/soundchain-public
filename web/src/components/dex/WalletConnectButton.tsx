@@ -177,7 +177,7 @@ export function WalletConnectButton({
   const wcProviderRef = useRef<any>(null)
 
   // Auth hooks
-  const { me } = useMe()
+  const me = useMe()  // useMe returns the user directly, not { me }
   const { loginWithWallet, loading: walletLoginLoading } = useWalletLogin()
 
   // Unified wallet context
