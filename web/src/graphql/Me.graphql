@@ -13,6 +13,13 @@ query Me {
     authMethod
     isApprovedOnMarketplace
     roles
+    phoneNumber
+    notifyOnFollow
+    notifyOnLike
+    notifyOnComment
+    notifyOnSale
+    notifyOnTip
+    notifyOnDM
     profile {
       ...ProfileComponentFields
     }

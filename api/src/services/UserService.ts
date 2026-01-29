@@ -169,4 +169,48 @@ export class UserService extends ModelService<typeof User> {
 
     return ids;
   }
+
+  async updateNotificationSettings(
+    id: string,
+    settings: {
+      phoneNumber?: string;
+      notifyOnFollow?: boolean;
+      notifyOnLike?: boolean;
+      notifyOnComment?: boolean;
+      notifyOnSale?: boolean;
+      notifyOnTip?: boolean;
+      notifyOnDM?: boolean;
+    }
+  ): Promise<User> {
+    // Build update object with only provided fields
+    const updateFields: Record<string, any> = {};
+
+    if (settings.phoneNumber !== undefined) {
+      updateFields.phoneNumber = settings.phoneNumber;
+    }
+    if (settings.notifyOnFollow !== undefined) {
+      updateFields.notifyOnFollow = settings.notifyOnFollow;
+    }
+    if (settings.notifyOnLike !== undefined) {
+      updateFields.notifyOnLike = settings.notifyOnLike;
+    }
+    if (settings.notifyOnComment !== undefined) {
+      updateFields.notifyOnComment = settings.notifyOnComment;
+    }
+    if (settings.notifyOnSale !== undefined) {
+      updateFields.notifyOnSale = settings.notifyOnSale;
+    }
+    if (settings.notifyOnTip !== undefined) {
+      updateFields.notifyOnTip = settings.notifyOnTip;
+    }
+    if (settings.notifyOnDM !== undefined) {
+      updateFields.notifyOnDM = settings.notifyOnDM;
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate(id, updateFields, { new: true });
+    if (!updatedUser) {
+      throw new Error(`Could not update notification settings for user: ${id}`);
+    }
+    return updatedUser;
+  }
 }

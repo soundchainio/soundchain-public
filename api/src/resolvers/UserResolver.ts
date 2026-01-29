@@ -16,6 +16,7 @@ import { UpdateDefaultWalletInput } from '../types/UpdateDefaultWalletInput';
 import { UpdateDefaultWalletPayload } from '../types/UpdateDefaultWalletPayload';
 import { UpdateHandleInput } from '../types/UpdateHandleInput';
 import { UpdateHandlePayload } from '../types/UpdateHandlePayload';
+import { UpdateNotificationSettingsInput } from '../types/UpdateNotificationSettingsInput';
 import { UpdateOTPInput } from '../types/UpdateOTPInput';
 import { UpdateOTPPayload } from '../types/UpdateOTPPayload';
 import { UpdateWalletInput } from '../types/UpdateWalletInput';
@@ -250,5 +251,18 @@ export class UserResolver {
     const proofBook = await proofBookService.getUserProofBook(walletAddress);
     console.log('Proof book by wallet:', proofBook ? proofBook._id : 'none');
     return proofBook;
+  }
+
+  @Mutation(() => User)
+  @Authorized()
+  async updateNotificationSettings(
+    @Ctx() { userService }: Context,
+    @Arg('input') input: UpdateNotificationSettingsInput,
+    @CurrentUser() { _id }: User,
+  ): Promise<User> {
+    console.log(`updateNotificationSettings called for user: ${_id}`);
+    const user = await userService.updateNotificationSettings(_id.toString(), input);
+    console.log('Notification settings updated');
+    return user;
   }
 }

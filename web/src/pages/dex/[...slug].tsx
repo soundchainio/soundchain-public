@@ -93,6 +93,7 @@ const ProfilePictureForm = dynamic(() => import('components/forms/profile/Profil
 const CoverPictureForm = dynamic(() => import('components/forms/profile/CoverPictureForm').then(mod => ({ default: mod.CoverPictureForm })), { ssr: false })
 const SocialLinksForm = dynamic(() => import('components/forms/profile/SocialLinksForm').then(mod => ({ default: mod.SocialLinksForm })), { ssr: false })
 const SecurityForm = dynamic(() => import('components/forms/profile/SecurityForm').then(mod => ({ default: mod.SecurityForm })), { ssr: false })
+const NotificationSettingsForm = dynamic(() => import('components/forms/NotificationSettingsForm').then(mod => ({ default: mod.NotificationSettingsForm })), { ssr: false })
 const HandleForm = dynamic(() => import('components/forms/profile/HandleForm').then(mod => ({ default: mod.HandleForm })), { ssr: false })
 const DisplayNameForm = dynamic(() => import('components/forms/profile/DisplayNameForm').then(mod => ({ default: mod.DisplayNameForm })), { ssr: false })
 const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr: false })
@@ -5614,6 +5615,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <SecurityForm afterSubmit={() => router.push('/dex/settings')} />
                 </Card>
               )}
+              {routeId === 'notifications' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Notifications</h2>
+                  </div>
+                  <NotificationSettingsForm afterSubmit={() => router.push('/dex/settings')} />
+                </Card>
+              )}
               {routeId === 'username' && (
                 <Card className="retro-card p-6">
                   <div className="flex items-center gap-3 mb-4">
@@ -5743,6 +5753,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <p className="text-xs text-gray-400 mt-1">
                               2FA: {userData?.me?.otpSecret ? <span className="text-green-400">Enabled</span> : <span className="text-red-400">Disabled</span>}
                             </p>
+                          </div>
+                          <span className="text-cyan-400">→</span>
+                        </div>
+                      </Card>
+                    </Link>
+                    <Link href="/dex/settings/notifications">
+                      <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-bold text-white text-sm">Notifications</h3>
+                            <p className="text-xs text-gray-400 mt-1">Phone number & push preferences</p>
                           </div>
                           <span className="text-cyan-400">→</span>
                         </div>
