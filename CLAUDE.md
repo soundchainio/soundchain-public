@@ -603,6 +603,21 @@ These files have caused critical bugs when modified. Require extra caution:
 - The user tests on mobile via Cloudflare tunnel to production
 - If you need to verify a fix works, push to production and wait for Vercel deploy
 
+### NEVER Use Twilio/SMS Services
+**CRITICAL:** SoundChain is DECENTRALIZED. We break down centralized systems.
+- NEVER suggest Twilio, AWS SNS, or any paid SMS service
+- NEVER implement traditional SMS notifications
+- Phone numbers in settings are for Nostr-based notifications ONLY
+- All notifications go through: **Web Push (FREE)** or **Nostr/Bitchat (FREE)**
+- We don't pay per-message fees to centralized telecom gatekeepers
+
+**Our Notification Stack:**
+| Method | Protocol | Cost |
+|--------|----------|------|
+| Web Push | VAPID/Service Worker | FREE |
+| Nostr DMs | NIP-17 Encrypted | FREE |
+| Bitchat | Bluetooth Mesh + Nostr | FREE |
+
 ---
 
 ## BUGS FOUND & FIXED (Lessons Learned)
