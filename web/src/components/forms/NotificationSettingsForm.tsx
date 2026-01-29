@@ -1,10 +1,42 @@
-import { useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
-import { useMe } from '../../hooks/useMe';
-import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { Button } from '../ui/button';
-import { Switch } from '../ui/switch';
+import { useState, useEffect } from 'react';
+import { gql, useMutation, useQuery } from '@apollo/client';
+import { usePushNotifications } from 'hooks/usePushNotifications';
+import { Button } from 'components/common/Buttons/Button';
 import { Bell, Phone, MessageCircle, Heart, Users, DollarSign, ShoppingBag } from 'lucide-react';
+
+// Simple toggle switch component
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (val: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        checked ? 'bg-cyan-500' : 'bg-gray-600'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+  );
+}
+
+const ME_QUERY = gql`
+  query MeNotificationSettings {
+    me {
+      id
+      phoneNumber
+      notifyOnFollow
+      notifyOnLike
+      notifyOnComment
+      notifyOnSale
+      notifyOnTip
+      notifyOnDM
+    }
+  }
+`;
 
 const UPDATE_NOTIFICATION_SETTINGS = gql`
   mutation UpdateNotificationSettings($input: UpdateNotificationSettingsInput!) {
@@ -26,16 +58,31 @@ interface NotificationSettingsFormProps {
 }
 
 export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFormProps) {
-  const { me, refetch } = useMe();
+  const { data, refetch } = useQuery(ME_QUERY);
+  const me = data?.me;
+
   const { permission, isSubscribed, subscribe, unsubscribe, isLoading: pushLoading, isSupported } = usePushNotifications();
 
-  const [phoneNumber, setPhoneNumber] = useState(me?.phoneNumber || '');
-  const [notifyOnFollow, setNotifyOnFollow] = useState(me?.notifyOnFollow ?? true);
-  const [notifyOnLike, setNotifyOnLike] = useState(me?.notifyOnLike ?? true);
-  const [notifyOnComment, setNotifyOnComment] = useState(me?.notifyOnComment ?? true);
-  const [notifyOnSale, setNotifyOnSale] = useState(me?.notifyOnSale ?? true);
-  const [notifyOnTip, setNotifyOnTip] = useState(me?.notifyOnTip ?? true);
-  const [notifyOnDM, setNotifyOnDM] = useState(me?.notifyOnDM ?? true);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [notifyOnFollow, setNotifyOnFollow] = useState(true);
+  const [notifyOnLike, setNotifyOnLike] = useState(true);
+  const [notifyOnComment, setNotifyOnComment] = useState(true);
+  const [notifyOnSale, setNotifyOnSale] = useState(true);
+  const [notifyOnTip, setNotifyOnTip] = useState(true);
+  const [notifyOnDM, setNotifyOnDM] = useState(true);
+
+  // Update state when data loads
+  useEffect(() => {
+    if (me) {
+      setPhoneNumber(me.phoneNumber || '');
+      setNotifyOnFollow(me.notifyOnFollow ?? true);
+      setNotifyOnLike(me.notifyOnLike ?? true);
+      setNotifyOnComment(me.notifyOnComment ?? true);
+      setNotifyOnSale(me.notifyOnSale ?? true);
+      setNotifyOnTip(me.notifyOnTip ?? true);
+      setNotifyOnDM(me.notifyOnDM ?? true);
+    }
+  }, [me]);
 
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -107,13 +154,17 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
                     : 'Get notified even when the tab is closed'}
                 </p>
               </div>
-              <Button
+              <button
                 onClick={handlePushToggle}
                 disabled={pushLoading || permission === 'denied'}
-                className={isSubscribed ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-600 hover:bg-purple-700'}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${
+                  isSubscribed
+                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                }`}
               >
                 {pushLoading ? '...' : isSubscribed ? 'Enabled' : 'Enable'}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -151,7 +202,7 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
                 <p className="text-gray-500 text-xs">When someone follows you</p>
               </div>
             </div>
-            <Switch checked={notifyOnFollow} onCheckedChange={setNotifyOnFollow} />
+            <Toggle checked={notifyOnFollow} onChange={setNotifyOnFollow} />
           </div>
 
           <div className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-gray-700">
@@ -162,7 +213,7 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
                 <p className="text-gray-500 text-xs">When someone likes your post or track</p>
               </div>
             </div>
-            <Switch checked={notifyOnLike} onCheckedChange={setNotifyOnLike} />
+            <Toggle checked={notifyOnLike} onChange={setNotifyOnLike} />
           </div>
 
           <div className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-gray-700">
@@ -173,7 +224,7 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
                 <p className="text-gray-500 text-xs">When someone comments on your content</p>
               </div>
             </div>
-            <Switch checked={notifyOnComment} onCheckedChange={setNotifyOnComment} />
+            <Toggle checked={notifyOnComment} onChange={setNotifyOnComment} />
           </div>
 
           <div className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-gray-700">
@@ -184,7 +235,7 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
                 <p className="text-gray-500 text-xs">When you receive a new DM</p>
               </div>
             </div>
-            <Switch checked={notifyOnDM} onCheckedChange={setNotifyOnDM} />
+            <Toggle checked={notifyOnDM} onChange={setNotifyOnDM} />
           </div>
 
           <div className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-gray-700">
@@ -195,7 +246,7 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
                 <p className="text-gray-500 text-xs">When your NFT sells on the marketplace</p>
               </div>
             </div>
-            <Switch checked={notifyOnSale} onCheckedChange={setNotifyOnSale} />
+            <Toggle checked={notifyOnSale} onChange={setNotifyOnSale} />
           </div>
 
           <div className="flex items-center justify-between p-4 bg-black/30 rounded-xl border border-gray-700">
@@ -206,7 +257,7 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
                 <p className="text-gray-500 text-xs">When someone tips you OGUN</p>
               </div>
             </div>
-            <Switch checked={notifyOnTip} onCheckedChange={setNotifyOnTip} />
+            <Toggle checked={notifyOnTip} onChange={setNotifyOnTip} />
           </div>
         </div>
       </div>
@@ -227,7 +278,6 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
       <Button
         onClick={handleSave}
         disabled={saving}
-        className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3"
       >
         {saving ? 'Saving...' : 'Save Settings'}
       </Button>
