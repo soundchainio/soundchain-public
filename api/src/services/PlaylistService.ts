@@ -69,7 +69,13 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   async createPlaylist(params: CreatePlaylistParams): Promise<Playlist> {
     const { trackIds = [], profileId } = params;
 
-    const playlist = new this.model(params);
+    // Ensure profileId is stored as ObjectId for consistent queries
+    const playlistData = {
+      ...params,
+      profileId: new mongoose.Types.ObjectId(profileId),
+    };
+
+    const playlist = new this.model(playlistData);
     await playlist.save();
 
     if (trackIds.length > 0) {
@@ -102,10 +108,23 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async deletePlaylist(playlistId: string, profileId: string): Promise<boolean> {
+    // Debug: Find the playlist first to understand ownership
+    const existingPlaylist = await this.model.findById(playlistId);
+    console.log('[deletePlaylist] playlistId:', playlistId);
+    console.log('[deletePlaylist] user profileId:', profileId);
+    console.log('[deletePlaylist] playlist exists:', !!existingPlaylist);
+    if (existingPlaylist) {
+      console.log('[deletePlaylist] playlist.profileId:', existingPlaylist.profileId?.toString());
+      console.log('[deletePlaylist] profileId match:', existingPlaylist.profileId?.toString() === profileId);
+    }
+
+    // Convert profileId to ObjectId for proper comparison
+    const profileObjectId = new mongoose.Types.ObjectId(profileId);
+
     // Verify ownership and delete
     const result = await this.model.deleteOne({
       _id: playlistId,
-      profileId,
+      profileId: profileObjectId,
     });
 
     if (result.deletedCount === 0) {
