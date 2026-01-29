@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
-import { X, Lock, Coins, AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { X, Lock, Coins, AlertCircle, CheckCircle, Loader2, Wallet } from 'lucide-react'
 import { config } from '../../config'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
+import { useMetaMask } from 'hooks/useMetaMask'
 import { useMutation } from '@apollo/client'
 import { MAKE_POST_PERMANENT_MUTATION } from 'lib/graphql/mutations'
 import Web3 from 'web3'
@@ -43,8 +44,27 @@ export const MakePostPermanentModal = ({
   const [isProcessing, setIsProcessing] = useState(false)
   const [step, setStep] = useState<'confirm' | 'fee' | 'payment' | 'complete'>('confirm')
 
-  const { web3, account: magicAccount } = useMagicContext()
-  const { ogunBalance, polBalance } = useUnifiedWallet()
+  // Multi-wallet support
+  const { web3: magicWeb3, account: magicAccount } = useMagicContext()
+  const { web3: metamaskWeb3, account: metamaskAccount, connect: connectMetaMask } = useMetaMask()
+  const {
+    activeWalletType,
+    activeAddress,
+    web3: unifiedWeb3,
+    ogunBalance,
+    polBalance,
+    connectWeb3Modal,
+    isWeb3ModalReady,
+  } = useUnifiedWallet()
+
+  // Determine active wallet and web3 instance
+  const hasExternalWallet = !!metamaskAccount || activeWalletType === 'web3modal' || activeWalletType === 'direct'
+  const hasMagicWallet = !!magicAccount
+  const hasAnyWallet = hasExternalWallet || hasMagicWallet
+
+  // Select web3 instance based on available wallets
+  const web3 = unifiedWeb3 || metamaskWeb3 || magicWeb3
+  const connectedAccount = activeAddress || metamaskAccount || magicAccount
 
   const [makePostPermanent] = useMutation(MAKE_POST_PERMANENT_MUTATION, {
     refetchQueries: ['Posts', 'Feed', 'Post'],
@@ -84,7 +104,7 @@ export const MakePostPermanentModal = ({
   }, [paymentToken, ogunBalance, polBalance, pricing.total])
 
   const handleMakePermanent = async () => {
-    if (!web3 || !magicAccount) {
+    if (!web3 || !connectedAccount) {
       toast.error('Please connect your wallet')
       return
     }
@@ -106,7 +126,7 @@ export const MakePostPermanentModal = ({
         setStep('payment')
         const amountWei = web3.utils.toWei(pricing.total.toString(), 'ether')
         const tx = await web3.eth.sendTransaction({
-          from: magicAccount,
+          from: connectedAccount,
           to: treasuryAddress,
           value: amountWei,
         })
@@ -117,7 +137,7 @@ export const MakePostPermanentModal = ({
         const ogunContract = new web3.eth.Contract(OGUN_ABI as any, config.ogunTokenAddress)
         const amountWei = web3.utils.toWei(pricing.total.toString(), 'ether')
         const tx = await ogunContract.methods.transfer(treasuryAddress, amountWei).send({
-          from: magicAccount,
+          from: connectedAccount,
         })
         txHash = tx.transactionHash
       }
@@ -189,6 +209,55 @@ export const MakePostPermanentModal = ({
                 <p className="text-neutral-400 text-sm mb-4">
                   Convert your 24-hour ephemeral post to a permanent post that never expires.
                 </p>
+
+                {/* Wallet Connection Section */}
+                {!hasAnyWallet && (
+                  <div className="mb-4 p-4 bg-neutral-800/70 rounded-xl border border-neutral-700">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Wallet className="w-4 h-4 text-amber-400" />
+                      <span className="text-white font-medium text-sm">Connect Wallet</span>
+                    </div>
+                    <p className="text-neutral-400 text-xs mb-3">
+                      Connect a wallet to pay for making this post permanent.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={connectMetaMask}
+                        className="py-2.5 px-3 bg-orange-500/20 border border-orange-500/50 hover:border-orange-400 rounded-lg text-orange-400 text-xs font-medium transition-all flex items-center justify-center gap-2"
+                      >
+                        <span>MetaMask</span>
+                      </button>
+                      <button
+                        onClick={() => isWeb3ModalReady && connectWeb3Modal()}
+                        disabled={!isWeb3ModalReady}
+                        className={`py-2.5 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 ${
+                          isWeb3ModalReady
+                            ? 'bg-purple-500/20 border border-purple-500/50 hover:border-purple-400 text-purple-400'
+                            : 'bg-neutral-700 text-neutral-500 cursor-wait'
+                        }`}
+                      >
+                        <span>{isWeb3ModalReady ? 'WalletConnect' : 'Loading...'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Connected Wallet Indicator */}
+                {hasAnyWallet && connectedAccount && (
+                  <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                        <span className="text-green-400 text-xs font-medium">
+                          {hasExternalWallet ? 'External Wallet' : 'Magic Wallet'}
+                        </span>
+                      </div>
+                      <span className="text-neutral-400 text-xs font-mono">
+                        {connectedAccount.slice(0, 6)}...{connectedAccount.slice(-4)}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Token Selection */}
                 <div className="mb-4">
@@ -264,14 +333,14 @@ export const MakePostPermanentModal = ({
                 {/* Action Button */}
                 <button
                   onClick={handleMakePermanent}
-                  disabled={isProcessing || !hasEnoughBalance}
+                  disabled={isProcessing || !hasEnoughBalance || !hasAnyWallet}
                   className={`w-full py-3 rounded-xl font-medium transition-all ${
-                    hasEnoughBalance
+                    hasEnoughBalance && hasAnyWallet
                       ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black'
                       : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
                   }`}
                 >
-                  Make Permanent
+                  {!hasAnyWallet ? 'Connect Wallet First' : 'Make Permanent'}
                 </button>
               </>
             )}

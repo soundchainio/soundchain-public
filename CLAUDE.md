@@ -81,6 +81,82 @@ User idea: Posts that are made permanent (via OGUN payment) should earn streamin
 
 ---
 
+## MORNING SESSION (Jan 29, 2026) - MagicLink Pivot & Blockchain Audit
+
+**Environment:** War Room - Fleet Commander (Pro MacBook) + iPhone 14 Pro Max (mobile testing)
+
+### 🚨 MagicLink Support Response
+Received news from MagicLink support:
+- Rate limits hitting **thousands** during NFT minting
+- MagicLink **DEPRECATED their mint NFTs API** - no longer available
+- Needed to pivot for existing users with Magic OAuth wallets on Polygon
+
+### 🔍 Discovery: We're Already Safe!
+**GOOD NEWS:** Audited codebase and found we were ALREADY using **DIRECT CONTRACT CALLS**:
+```typescript
+// NOT using Magic's NFT API (deprecated)
+// USING direct Web3.js contract calls:
+nftContractEditions.methods.createEdition(quantity, to, royalty)
+nftContractEditions.methods.safeMintToEditionQuantity(to, uri, edition, qty)
+```
+
+**The Real Problem:** Magic's RPC provider (shared infrastructure) gets rate-limited, NOT their API.
+
+### 🔧 Solution: Multi-Wallet Minting Priority
+Implemented external wallet priority to bypass Magic RPC rate limits:
+
+**CreateModal.tsx Changes:**
+1. Added `useUnifiedWallet`, `useMagicContext`, `useMetaMask` hooks
+2. Wallet selector when both OAuth + external wallet available
+3. "Connect Wallet" button opens Web3Modal (300+ wallets)
+4. Rate-limit-aware retry delays:
+   - External wallets: 2s initial delay (fast)
+   - Magic wallets: 15s initial delay (rate limit protection)
+
+**UI Flow:**
+```
+┌─────────────────────────────────────────────┐
+│  Connect External Wallet for Best Performance│
+│                                              │
+│  ┌─────────────────────────────────────┐    │
+│  │  🔗 Connect Wallet                  │    │
+│  └─────────────────────────────────────┘    │
+│                                              │
+│  MetaMask, Coinbase, Rainbow, Trust,        │
+│  Phantom & 300+ wallets                     │
+└─────────────────────────────────────────────┘
+```
+
+### 📱 Mobile Testing Findings
+- **MetaMask Browser:** Wallet connections LIGHTNING FAST, but OAuth popups blocked (expected)
+- **MetaMask Button on Mobile:** Opens extension download page (wrong behavior)
+- **Fix:** Single Web3Modal button that works on all platforms
+
+### 📋 Complete Blockchain Audit Created
+Created `BLOCKCHAIN_FLOW.md` with:
+- All 11 live contract addresses
+- 12 operation flow diagrams
+- Fee collection verification (0.05% on all ops)
+- Wallet support matrix
+- File-to-contract usage map
+
+### ✅ Commits This Session
+1. `feat: Multi-wallet NFT minting to bypass Magic RPC rate limits`
+2. `docs: Add comprehensive blockchain flow audit`
+3. `docs: Add complete blockchain audit to CLAUDE.md`
+4. `feat: Add WalletConnect option to mint page`
+5. `fix: Mobile wallet connection on mint page`
+
+### 🎯 Key Insight
+**Magic SDK Role After Pivot:**
+- ✅ OAuth authentication (Google, Discord, Twitch, Email) - STILL WORKS
+- ✅ Wallet creation (generates Polygon address) - STILL WORKS
+- ✅ Transaction signing - STILL WORKS
+- ❌ NFT minting API - DEPRECATED (but we never used it!)
+- ⚠️ RPC provider - RATE LIMITED (bypassed with external wallets)
+
+---
+
 ## PREVIOUS SESSION (Jan 28, 2026)
 
 **Session Notes:**
