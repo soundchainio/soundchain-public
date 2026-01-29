@@ -416,7 +416,8 @@ export const CreateModal = () => {
           setMintError(true)
         }
 
-        let nonce = await web3?.eth.getTransactionCount(account)
+        // Get initial nonce - will be refreshed after fee TX with 'pending' to include in-flight transactions
+        let nonce = await web3?.eth.getTransactionCount(account, 'pending')
 
         const createAndMintEdition = (): Promise<Array<string>> => {
           return new Promise((resolve, reject) => {
@@ -601,6 +602,11 @@ export const CreateModal = () => {
           }
         }
 
+        // CRITICAL: Refresh nonce with 'pending' to include the fee TX we just sent
+        // This prevents "nonce too low" error when mint TX follows fee TX
+        nonce = await web3?.eth.getTransactionCount(account, 'pending')
+        console.log(`🔢 Refreshed nonce (pending): ${nonce}`)
+
         // Detect if using Magic wallet (needs longer delays for rate limits)
         const usingMagicWallet = mintWalletType === 'magic' || !hasExternalWallet
         const walletTypeLabel = usingMagicWallet ? 'OAuth Wallet' : 'External Wallet'
@@ -621,7 +627,7 @@ export const CreateModal = () => {
         let quantityLeft = values.editionQuantity
         const promises = []
         for (let index = 0; index < values.editionQuantity; index += BATCH_SIZE) {
-          nonce = BigInt(await web3?.eth.getTransactionCount(account)) // Update nonce for each batch
+          nonce = BigInt(await web3?.eth.getTransactionCount(account, 'pending')) // Update nonce for each batch (use 'pending' to include in-flight TXs)
           const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE
           // Wrap with retry for RPC rate limiting
           promises.push(withRetry(() => createAndMintTracks(quantity, editionNumber, index === 0), 3, 15000, usingMagicWallet))
