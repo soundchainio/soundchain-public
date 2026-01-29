@@ -5254,12 +5254,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
 
               {/* Transfer Tokens Section */}
-              <Card className="retro-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Coins className="w-6 h-6 text-cyan-400" />
-                  <h3 className="retro-title text-lg">Transfer Tokens</h3>
+              <div className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Coins className="w-4 h-4 text-cyan-400" />
+                  <h3 className="text-sm font-medium text-white">Send Tokens</h3>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">Send POL or OGUN tokens to another wallet address.</p>
 
                 {/* From Wallet Selector */}
                 <div className="mb-4 p-3 bg-black/30 rounded-lg border border-gray-700">
@@ -5418,15 +5417,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     )}
                   </Button>
                 </div>
-              </Card>
+              </div>
 
               {/* Transfer NFTs Section */}
-              <Card id="transfer-section" className="retro-card p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Share2 className="w-6 h-6 text-purple-400" />
-                  <h3 className="retro-title text-lg">Transfer NFTs</h3>
+              <div id="transfer-section" className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Share2 className="w-4 h-4 text-purple-400" />
+                  <h3 className="text-sm font-medium text-white">Transfer NFT</h3>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">Send your music NFTs to another wallet address.</p>
 
                 {/* From Wallet Indicator - uses same selection as Token Transfer */}
                 <div className="mb-4 p-2 bg-black/30 rounded-lg border border-gray-700">
@@ -5482,14 +5480,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     )}
                   </Button>
                 </div>
-              </Card>
+              </div>
 
               {/* Transaction History - Real Data */}
-              <Card className="retro-card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <BarChart3 className="w-6 h-6 text-cyan-400" />
-                    <h3 className="retro-title text-lg">Recent Activity</h3>
+              <div className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-sm font-medium text-white">Recent Activity</h3>
                   </div>
                   {effectiveWalletForActivity && (
                     <a href={`https://polygonscan.com/address/${effectiveWalletForActivity}`} target="_blank" rel="noreferrer">
@@ -5561,7 +5559,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <p className="text-xs text-gray-600 mt-1">Your transaction history will appear here</p>
                   </div>
                 )}
-              </Card>
+              </div>
             </div>
             </MultiChainProvider>
           )}
