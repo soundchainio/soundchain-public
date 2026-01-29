@@ -5192,6 +5192,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <a href="https://www.zetachain.com" target="_blank" rel="noreferrer" className="text-xs text-green-400 hover:text-green-300">Learn More</a>
                   </div>
                 </div>
+              </div>
 
               {/* Your NFT Collection - Figma-style Connected Wallets Design */}
               {ownedTracksLoading ? (
