@@ -11,8 +11,8 @@ export interface BlockchainNetwork {
 
 export const mainNetwork: BlockchainNetwork = {
   name: 'Polygon Mainnet',
-  // Use Alchemy RPC for better rate limits
-  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com',
+  // Use Ankr public RPC - CORS-friendly with better rate limits
+  rpc: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon',
   id: 137,
   idHex: '0x89',
   symbol: 'POL',
@@ -37,7 +37,8 @@ export const testnetNetwork: BlockchainNetwork = {
 
 export const ethereumNetwork: BlockchainNetwork = {
   name: 'Ethereum',
-  rpc: process.env.NEXT_PUBLIC_ETHEREUM_RPC || 'https://eth.llamarpc.com',
+  // Use Ankr public RPC - CORS-friendly
+  rpc: process.env.NEXT_PUBLIC_ETHEREUM_RPC || 'https://rpc.ankr.com/eth',
   id: 1,
   idHex: '0x1',
   symbol: 'ETH',
