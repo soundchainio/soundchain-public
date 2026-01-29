@@ -137,9 +137,14 @@ export class UserService extends ModelService<typeof User> {
   }
 
   async getUserByWallet(walletAddress: string): Promise<User | null> {
+    // Check ALL wallet address fields (OAuth wallets + MetaMask)
     const user = await this.model.findOne({
       $or: [
         { magicWalletAddress: { $regex: `^${walletAddress}$`, $options: 'i' } },
+        { googleWalletAddress: { $regex: `^${walletAddress}$`, $options: 'i' } },
+        { discordWalletAddress: { $regex: `^${walletAddress}$`, $options: 'i' } },
+        { twitchWalletAddress: { $regex: `^${walletAddress}$`, $options: 'i' } },
+        { emailWalletAddress: { $regex: `^${walletAddress}$`, $options: 'i' } },
         { metaMaskWalletAddressees: { $regex: `^${walletAddress}$`, $options: 'i' } },
       ],
     });

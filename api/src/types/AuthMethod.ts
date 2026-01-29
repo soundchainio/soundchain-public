@@ -5,6 +5,7 @@ enum AuthMethod {
   google = 'google',
   discord = 'discord',
   twitch = 'twitch',
+  wallet = 'wallet',  // Direct wallet login (MetaMask, Coinbase, etc.)
 }
 
 registerEnumType(AuthMethod, {

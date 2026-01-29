@@ -10,6 +10,7 @@ import { AuthMethod } from '../types/AuthMethod';
 import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
 import { LoginInput } from '../types/LoginInput';
+import { LoginWithWalletInput } from '../types/LoginWithWalletInput';
 import { RegisterInput } from '../types/RegisterInput';
 import { UpdateDefaultWalletInput } from '../types/UpdateDefaultWalletInput';
 import { UpdateDefaultWalletPayload } from '../types/UpdateDefaultWalletPayload';
@@ -125,6 +126,44 @@ export class UserResolver {
       return { jwt };
     } catch (error) {
       console.error('login mutation error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Login with wallet signature (MetaMask, Coinbase, WalletConnect, etc.)
+   * No email/OAuth required - creates account if doesn't exist
+   */
+  @Mutation(() => AuthPayload)
+  async loginWithWallet(
+    @Ctx() { authService, jwtService }: Context,
+    @Arg('input') { walletAddress, signature, message, handle, displayName }: LoginWithWalletInput,
+  ): Promise<AuthPayload> {
+    console.log('loginWithWallet mutation called for wallet:', walletAddress);
+
+    try {
+      // Verify the signature matches the wallet address
+      const isValid = authService.verifyWalletSignature(walletAddress, message, signature);
+
+      if (!isValid) {
+        console.error('Invalid wallet signature for:', walletAddress);
+        throw new AuthenticationError('Invalid wallet signature');
+      }
+
+      console.log('Signature verified for wallet:', walletAddress);
+
+      // Get existing user or create new wallet-only user
+      const user = await authService.getOrCreateByWallet(walletAddress, handle, displayName);
+
+      console.log('User authenticated via wallet:', user._id.toString());
+
+      // Create JWT
+      const jwt = jwtService.create(user);
+      console.log('JWT created for wallet user:', jwt.substring(0, 20) + '...');
+
+      return { jwt };
+    } catch (error) {
+      console.error('loginWithWallet mutation error:', error);
       throw error;
     }
   }
