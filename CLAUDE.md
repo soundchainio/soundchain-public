@@ -1,17 +1,87 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 28, 2026
+**Last Updated:** January 29, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
 ---
 
-## CURRENT SESSION (Jan 28, 2026)
+## CURRENT SESSION (Jan 29, 2026)
 
 **Environment:** War Room
 **Device:** Desktop + iPhone 14 Pro Max (testing)
 **Working Dir:** `/Users/soundchain/soundchain`
 **Branch:** production
+
+### 🔔 User Engagement Features - GAME CHANGER DAY!
+
+**Three major features implemented to compete with IG/X/FB/Spotify/SoundCloud/Bandcamp:**
+
+#### Phase 1: Online Indicators (COMPLETE)
+- Added `lastSeenAt` field to Profile model
+- `heartbeat` mutation updates lastSeenAt every 60 seconds
+- `isOnline` field resolver returns true if lastSeenAt < 5 min ago
+- Green dot indicator on Avatar component
+- `useHeartbeat` hook pauses when tab hidden (visibility API)
+
+**Files:**
+- `api/src/models/Profile.ts` - lastSeenAt field
+- `api/src/services/ProfileService.ts` - updateLastSeen(), isOnline()
+- `api/src/resolvers/ProfileResolver.ts` - isOnline, heartbeat
+- `web/src/hooks/useHeartbeat.ts` - 60s heartbeat hook
+- `web/src/components/Avatar.tsx` - green dot indicator
+
+#### Phase 2: Activity Feed (COMPLETE)
+- Track what users you follow are doing: Listened, Liked, Commented, Followed, Minted, Posted
+- Debounced "listened" activity (1 per track per hour)
+- Integrated with FollowService, ReactionService, CommentService, PostService, SCidService
+
+**Files:**
+- `api/src/models/Activity.ts` - Activity model with metadata types
+- `api/src/types/ActivityType.ts` - Enum: Listened, Liked, Commented, Followed, Minted, Posted
+- `api/src/services/ActivityService.ts` - logActivity(), getActivityFeed(), logListened(), etc.
+- `api/src/resolvers/ActivityResolver.ts` - activityFeed query
+
+#### Phase 3: Web Push Notifications (COMPLETE)
+- FREE browser notifications when tab is closed (no SMS costs!)
+- VAPID keys generated and configured
+- Push notifications for: Follow, Like, Comment, DM, Tip, NFT Sale, Stream Milestone
+
+**Backend:**
+- `api/src/models/PushSubscription.ts` - endpoint + keys per user
+- `api/src/services/PushSubscriptionService.ts` - subscribe/unsubscribe
+- `api/src/services/WebPushService.ts` - sends via web-push package
+- `api/src/resolvers/PushSubscriptionResolver.ts` - GraphQL mutations
+- `api/src/services/NotificationService.ts` - integrated push sending
+
+**Frontend:**
+- `web/src/hooks/usePushNotifications.ts` - permission + subscription management
+- `web/src/components/dex/PushPermissionBanner.tsx` - banner/card/inline variants
+- `web/worker/index.js` - custom SW for push + notification click handlers
+- `web/next.config.js` - next-pwa with customWorkerDir
+
+**VAPID Keys (in .env.sample):**
+- Public: `BKeK9ZBclfl7jIGhP2t32uQbjgevLfXxqhXVedQ7KhlVbJMzLY-vl2r37INmrpqU75WxCleQDaOGYMQv3FPEsA0`
+- Private: `VAPID_PRIVATE_KEY_REDACTED`
+
+**New Notification Types Added:**
+- Repost, Mention, DirectMessage, Tip, MarketplaceOffer, TrackComment, NewTrack, PlaylistAdded, StreamMilestone
+
+### TypeScript Fixes (GitHub Actions was failing)
+- `PageInfo.totalCount` - moved inside pageInfo object (was at root level)
+- Document type returns - added `.toObject()` in ActivityService/PushSubscriptionService
+- ObjectId to string - added `.toString()` in PostService.logPosted()
+
+### 💡 Future Idea: Permanent Post Rewards (SPid?)
+User idea: Posts that are made permanent (via OGUN payment) should earn streaming rewards based on "splays" (social plays/views). Concept:
+- Generate SPid (Social Post ID) similar to SCid for tracks
+- Track post views/interactions
+- Reward creators for viral permanent content
+- Creates incentive for quality permanent posts
+
+---
+
+## PREVIOUS SESSION (Jan 28, 2026)
 
 **Session Notes:**
 - **SITE DOWN → RECOVERED** — TDZ crash from Jan 27 changes. Nuclear rollback + production bisect identified `dex/[...slug].tsx` as the poison pill
@@ -1455,6 +1525,7 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 28, 2026 | **SITE DOWN - TDZ Crash** - Nuclear rollback + production bisect identified `dex/[...slug].tsx` as poison pill | 7013a20c8→35428e848 |
 | Jan 28, 2026 | **Bisect Recovery** - Restored 8/9 wallet files safely, reverted only culprit file | 908806d93→5912b3a3d |
 | Jan 28, 2026 | Dark overlay for bio/nav tabs + track detail play count sync with SCid | 8a0c7071b, 7b5b77854 |
+| Jan 29, 2026 | **GAME CHANGER: User Engagement Features** - Online Indicators, Activity Feed, Web Push Notifications | f2b1a5359, 0bfbcd989 |
 
 ---
 
