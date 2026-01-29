@@ -5650,7 +5650,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
                     <h2 className="retro-title text-xl">Notifications</h2>
                   </div>
-                  <NotificationSettingsForm afterSubmit={() => router.push('/dex/settings')} />
+                  <NotificationSettingsForm
+                    afterSubmit={() => router.push('/dex/settings')}
+                    initialValues={{
+                      phoneNumber: userData?.me?.phoneNumber,
+                      notifyOnFollow: userData?.me?.notifyOnFollow,
+                      notifyOnLike: userData?.me?.notifyOnLike,
+                      notifyOnComment: userData?.me?.notifyOnComment,
+                      notifyOnSale: userData?.me?.notifyOnSale,
+                      notifyOnTip: userData?.me?.notifyOnTip,
+                      notifyOnDM: userData?.me?.notifyOnDM,
+                    }}
+                  />
                 </Card>
               )}
               {routeId === 'username' && (

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { X, Lock, Coins, AlertCircle, CheckCircle, Loader2, Wallet } from 'lucide-react'
 import { config } from '../../config'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -45,26 +45,94 @@ export const MakePostPermanentModal = ({
   const [step, setStep] = useState<'confirm' | 'fee' | 'payment' | 'complete'>('confirm')
 
   // Multi-wallet support
-  const { web3: magicWeb3, account: magicAccount } = useMagicContext()
-  const { web3: metamaskWeb3, account: metamaskAccount, connect: connectMetaMask } = useMetaMask()
+  const { web3: magicWeb3, account: magicAccount, ogunBalance: magicOgunBalance, balance: magicPolBalance } = useMagicContext()
+  const { web3: metamaskWeb3, account: metamaskAccount, connect: connectMetaMask, OGUNBalance: metamaskOgunBalance, balance: metamaskPolBalance } = useMetaMask()
   const {
     activeWalletType,
     activeAddress,
     web3: unifiedWeb3,
-    ogunBalance,
-    polBalance,
+    ogunBalance: unifiedOgunBalance,
+    polBalance: unifiedPolBalance,
     connectWeb3Modal,
     isWeb3ModalReady,
   } = useUnifiedWallet()
 
+  // Track selected wallet for payment
+  const [selectedWallet, setSelectedWallet] = useState<'magic' | 'metamask' | 'web3modal' | null>(null)
+
+  // Build list of available wallets with balances
+  const availableWallets = useMemo(() => {
+    const wallets: Array<{
+      type: 'magic' | 'metamask' | 'web3modal'
+      address: string
+      label: string
+      ogunBalance: string
+      polBalance: string
+      web3: Web3 | null
+    }> = []
+
+    if (magicAccount && magicWeb3) {
+      wallets.push({
+        type: 'magic',
+        address: magicAccount,
+        label: 'Magic Wallet',
+        ogunBalance: magicOgunBalance || '0',
+        polBalance: magicPolBalance || '0',
+        web3: magicWeb3,
+      })
+    }
+
+    if (metamaskAccount && metamaskWeb3) {
+      wallets.push({
+        type: 'metamask',
+        address: metamaskAccount,
+        label: 'MetaMask',
+        ogunBalance: metamaskOgunBalance || '0',
+        polBalance: metamaskPolBalance || '0',
+        web3: metamaskWeb3,
+      })
+    }
+
+    if (activeWalletType === 'web3modal' && activeAddress && unifiedWeb3) {
+      wallets.push({
+        type: 'web3modal',
+        address: activeAddress,
+        label: 'WalletConnect',
+        ogunBalance: unifiedOgunBalance || '0',
+        polBalance: unifiedPolBalance || '0',
+        web3: unifiedWeb3,
+      })
+    }
+
+    return wallets
+  }, [magicAccount, magicWeb3, magicOgunBalance, magicPolBalance, metamaskAccount, metamaskWeb3, metamaskOgunBalance, metamaskPolBalance, activeWalletType, activeAddress, unifiedWeb3, unifiedOgunBalance, unifiedPolBalance])
+
+  // Auto-select first wallet with sufficient balance, or first wallet if none have enough
+  useEffect(() => {
+    if (availableWallets.length > 0 && !selectedWallet) {
+      const walletWithBalance = availableWallets.find(w => {
+        const balance = paymentToken === 'OGUN' ? parseFloat(w.ogunBalance) : parseFloat(w.polBalance)
+        return balance >= pricing.total
+      })
+      setSelectedWallet(walletWithBalance?.type || availableWallets[0].type)
+    }
+  }, [availableWallets.length]) // Only run when wallets change, not on every render
+
+  // Get currently selected wallet
+  const currentWallet = useMemo(() => {
+    return availableWallets.find(w => w.type === selectedWallet) || availableWallets[0] || null
+  }, [availableWallets, selectedWallet])
+
   // Determine active wallet and web3 instance
   const hasExternalWallet = !!metamaskAccount || activeWalletType === 'web3modal' || activeWalletType === 'direct'
   const hasMagicWallet = !!magicAccount
-  const hasAnyWallet = hasExternalWallet || hasMagicWallet
+  const hasAnyWallet = availableWallets.length > 0
 
-  // Select web3 instance based on available wallets
-  const web3 = unifiedWeb3 || metamaskWeb3 || magicWeb3
-  const connectedAccount = activeAddress || metamaskAccount || magicAccount
+  // Select web3 instance based on selected wallet
+  const web3 = currentWallet?.web3 || unifiedWeb3 || metamaskWeb3 || magicWeb3
+  const connectedAccount = currentWallet?.address || activeAddress || metamaskAccount || magicAccount
+  const ogunBalance = currentWallet?.ogunBalance || unifiedOgunBalance || '0'
+  const polBalance = currentWallet?.polBalance || unifiedPolBalance || '0'
 
   const [makePostPermanent] = useMutation(MAKE_POST_PERMANENT_MUTATION, {
     refetchQueries: ['Posts', 'Feed', 'Post'],
@@ -242,20 +310,71 @@ export const MakePostPermanentModal = ({
                   </div>
                 )}
 
-                {/* Connected Wallet Indicator */}
-                {hasAnyWallet && connectedAccount && (
-                  <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        <span className="text-green-400 text-xs font-medium">
-                          {hasExternalWallet ? 'External Wallet' : 'Magic Wallet'}
-                        </span>
-                      </div>
-                      <span className="text-neutral-400 text-xs font-mono">
-                        {connectedAccount.slice(0, 6)}...{connectedAccount.slice(-4)}
-                      </span>
+                {/* Wallet Selector */}
+                {availableWallets.length > 0 && (
+                  <div className="mb-4">
+                    <label className="text-neutral-500 text-xs uppercase tracking-wide mb-2 block">
+                      Pay from wallet
+                    </label>
+                    <div className="space-y-2">
+                      {availableWallets.map((wallet) => {
+                        const isSelected = selectedWallet === wallet.type
+                        const walletBalance = paymentToken === 'OGUN' ? parseFloat(wallet.ogunBalance) : parseFloat(wallet.polBalance)
+                        const hasSufficientBalance = walletBalance >= pricing.total
+                        return (
+                          <button
+                            key={wallet.type}
+                            onClick={() => setSelectedWallet(wallet.type)}
+                            className={`w-full p-3 rounded-xl border transition-all text-left ${
+                              isSelected
+                                ? 'bg-green-500/10 border-green-500/50'
+                                : 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-600'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${isSelected ? 'bg-green-400 animate-pulse' : 'bg-neutral-600'}`} />
+                                <span className={`text-sm font-medium ${isSelected ? 'text-green-400' : 'text-neutral-300'}`}>
+                                  {wallet.label}
+                                </span>
+                              </div>
+                              <span className="text-neutral-400 text-xs font-mono">
+                                {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between mt-2 pl-4">
+                              <span className="text-xs text-neutral-500">Balance:</span>
+                              <span className={`text-xs font-medium ${hasSufficientBalance ? 'text-green-400' : 'text-red-400'}`}>
+                                {paymentToken === 'OGUN' ? wallet.ogunBalance : wallet.polBalance} {paymentToken}
+                                {!hasSufficientBalance && ' (insufficient)'}
+                              </span>
+                            </div>
+                          </button>
+                        )
+                      })}
                     </div>
+                    {/* Option to connect more wallets */}
+                    {(!metamaskAccount || (activeWalletType !== 'web3modal' && activeWalletType !== 'direct')) && (
+                      <div className="mt-2 flex gap-2">
+                        {!metamaskAccount && (
+                          <button
+                            onClick={connectMetaMask}
+                            className="flex-1 py-2 px-3 bg-neutral-800 border border-neutral-700 hover:border-orange-500/50 rounded-lg text-neutral-400 hover:text-orange-400 text-xs font-medium transition-all"
+                          >
+                            + MetaMask
+                          </button>
+                        )}
+                        {activeWalletType !== 'web3modal' && activeWalletType !== 'direct' && (
+                          <button
+                            onClick={() => isWeb3ModalReady && connectWeb3Modal()}
+                            disabled={!isWeb3ModalReady}
+                            className="flex-1 py-2 px-3 bg-neutral-800 border border-neutral-700 hover:border-purple-500/50 rounded-lg text-neutral-400 hover:text-purple-400 text-xs font-medium transition-all disabled:opacity-50"
+                          >
+                            + WalletConnect
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

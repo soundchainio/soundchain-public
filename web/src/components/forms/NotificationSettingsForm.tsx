@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import { usePushNotifications } from 'hooks/usePushNotifications';
 import { Button } from 'components/common/Buttons/Button';
 import { Bell, Phone, MessageCircle, Heart, Users, DollarSign, ShoppingBag } from 'lucide-react';
@@ -23,21 +23,6 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (val: boole
   );
 }
 
-const ME_QUERY = gql`
-  query MeNotificationSettings {
-    me {
-      id
-      phoneNumber
-      notifyOnFollow
-      notifyOnLike
-      notifyOnComment
-      notifyOnSale
-      notifyOnTip
-      notifyOnDM
-    }
-  }
-`;
-
 const UPDATE_NOTIFICATION_SETTINGS = gql`
   mutation UpdateNotificationSettings($input: UpdateNotificationSettingsInput!) {
     updateNotificationSettings(input: $input) {
@@ -55,34 +40,40 @@ const UPDATE_NOTIFICATION_SETTINGS = gql`
 
 interface NotificationSettingsFormProps {
   afterSubmit?: () => void;
+  initialValues?: {
+    phoneNumber?: string | null;
+    notifyOnFollow?: boolean | null;
+    notifyOnLike?: boolean | null;
+    notifyOnComment?: boolean | null;
+    notifyOnSale?: boolean | null;
+    notifyOnTip?: boolean | null;
+    notifyOnDM?: boolean | null;
+  };
 }
 
-export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFormProps) {
-  const { data, refetch } = useQuery(ME_QUERY);
-  const me = data?.me;
-
+export function NotificationSettingsForm({ afterSubmit, initialValues }: NotificationSettingsFormProps) {
   const { permission, isSubscribed, subscribe, unsubscribe, isLoading: pushLoading, isSupported } = usePushNotifications();
 
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [notifyOnFollow, setNotifyOnFollow] = useState(true);
-  const [notifyOnLike, setNotifyOnLike] = useState(true);
-  const [notifyOnComment, setNotifyOnComment] = useState(true);
-  const [notifyOnSale, setNotifyOnSale] = useState(true);
-  const [notifyOnTip, setNotifyOnTip] = useState(true);
-  const [notifyOnDM, setNotifyOnDM] = useState(true);
+  const [phoneNumber, setPhoneNumber] = useState(initialValues?.phoneNumber || '');
+  const [notifyOnFollow, setNotifyOnFollow] = useState(initialValues?.notifyOnFollow ?? true);
+  const [notifyOnLike, setNotifyOnLike] = useState(initialValues?.notifyOnLike ?? true);
+  const [notifyOnComment, setNotifyOnComment] = useState(initialValues?.notifyOnComment ?? true);
+  const [notifyOnSale, setNotifyOnSale] = useState(initialValues?.notifyOnSale ?? true);
+  const [notifyOnTip, setNotifyOnTip] = useState(initialValues?.notifyOnTip ?? true);
+  const [notifyOnDM, setNotifyOnDM] = useState(initialValues?.notifyOnDM ?? true);
 
-  // Update state when data loads
+  // Update state when initialValues change
   useEffect(() => {
-    if (me) {
-      setPhoneNumber(me.phoneNumber || '');
-      setNotifyOnFollow(me.notifyOnFollow ?? true);
-      setNotifyOnLike(me.notifyOnLike ?? true);
-      setNotifyOnComment(me.notifyOnComment ?? true);
-      setNotifyOnSale(me.notifyOnSale ?? true);
-      setNotifyOnTip(me.notifyOnTip ?? true);
-      setNotifyOnDM(me.notifyOnDM ?? true);
+    if (initialValues) {
+      setPhoneNumber(initialValues.phoneNumber || '');
+      setNotifyOnFollow(initialValues.notifyOnFollow ?? true);
+      setNotifyOnLike(initialValues.notifyOnLike ?? true);
+      setNotifyOnComment(initialValues.notifyOnComment ?? true);
+      setNotifyOnSale(initialValues.notifyOnSale ?? true);
+      setNotifyOnTip(initialValues.notifyOnTip ?? true);
+      setNotifyOnDM(initialValues.notifyOnDM ?? true);
     }
-  }, [me]);
+  }, [initialValues]);
 
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -110,7 +101,6 @@ export function NotificationSettingsForm({ afterSubmit }: NotificationSettingsFo
         },
       });
 
-      await refetch();
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
 
