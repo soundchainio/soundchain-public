@@ -88,6 +88,13 @@ export class NotificationService extends ModelService<typeof Notification> {
     });
     await notification.save();
     await this.incrementNotificationCount(postProfileId.toString());
+
+    // Send web push notification
+    await this.context.webPushService.notifyNewComment(
+      postProfileId.toString(),
+      authorName,
+      post._id.toString()
+    );
   }
 
   async notifyNewReaction({ postId, profileId, type: reactionType }: Reaction): Promise<void> {
@@ -127,6 +134,13 @@ export class NotificationService extends ModelService<typeof Notification> {
 
     await notification.save();
     await this.incrementNotificationCount(postProfileId.toString());
+
+    // Send web push notification
+    await this.context.webPushService.notifyNewLike(
+      postProfileId.toString(),
+      authorName,
+      postId.toString()
+    );
   }
 
   async notifyNewFollower({ followerId, followedId }: Follow): Promise<void> {
@@ -155,6 +169,13 @@ export class NotificationService extends ModelService<typeof Notification> {
       });
       await notification.save();
       await this.incrementNotificationCount(followedId.toString());
+
+      // Send web push notification
+      await this.context.webPushService.notifyNewFollower(
+        followedId.toString(),
+        followerProfile.displayName || 'Someone',
+        followerHandle
+      );
     } catch (err) {
       console.error('[NotificationService] Error in notifyNewFollower:', err);
     }

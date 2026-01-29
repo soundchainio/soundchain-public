@@ -32,7 +32,8 @@ export class ActivityService extends ModelService<typeof Activity> {
    */
   async logActivity(params: LogActivityParams): Promise<Activity> {
     const activity = new ActivityModel(params);
-    return activity.save();
+    await activity.save();
+    return activity.toObject() as Activity;
   }
 
   /**
@@ -47,10 +48,10 @@ export class ActivityService extends ModelService<typeof Activity> {
       return {
         nodes: [],
         pageInfo: {
+          totalCount: 0,
           hasNextPage: false,
           hasPreviousPage: false,
         },
-        totalCount: 0,
       };
     }
 
@@ -78,7 +79,7 @@ export class ActivityService extends ModelService<typeof Activity> {
       type: ActivityType.Listened,
       'metadata.trackId': trackId,
       createdAt: { $gte: oneHourAgo }
-    });
+    }).lean();
 
     if (!recent) {
       const metadata: ListenedMetadata = { trackId, trackTitle, artistName, artworkUrl };

@@ -101,7 +101,7 @@ export class PostService extends ModelService<typeof Post> {
 
         // Log activity for activity feed
         await this.context.activityService.logPosted(
-          post.profileId,
+          post.profileId.toString(),
           post._id.toString(),
           post.body,
           !!(post.mediaLink || params.uploadedMediaUrl)

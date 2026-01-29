@@ -1,4 +1,15 @@
-module.exports = {
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+  // Custom service worker for push notification handling
+  sw: 'sw.js',
+  // Exclude some precaching for faster SW updates
+  buildExcludes: [/chunks\/.*$/, /middleware-manifest\.json$/],
+});
+
+module.exports = withPWA({
   reactStrictMode: false,
   // Redirect all legacy routes to DEX (modern UI)
   async redirects() {
@@ -119,4 +130,4 @@ module.exports = {
       },
     ];
   },
-};
+});
