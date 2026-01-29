@@ -108,28 +108,27 @@ export class PlaylistService extends ModelService<typeof Playlist> {
   }
 
   async deletePlaylist(playlistId: string, profileId: string): Promise<boolean> {
-    // Debug: Find the playlist first to understand ownership
+    // Find the playlist first to verify ownership
     const existingPlaylist = await this.model.findById(playlistId);
     console.log('[deletePlaylist] playlistId:', playlistId);
     console.log('[deletePlaylist] user profileId:', profileId);
     console.log('[deletePlaylist] playlist exists:', !!existingPlaylist);
-    if (existingPlaylist) {
-      console.log('[deletePlaylist] playlist.profileId:', existingPlaylist.profileId?.toString());
-      console.log('[deletePlaylist] profileId match:', existingPlaylist.profileId?.toString() === profileId);
-    }
 
-    // Convert profileId to ObjectId for proper comparison
-    const profileObjectId = new mongoose.Types.ObjectId(profileId);
-
-    // Verify ownership and delete
-    const result = await this.model.deleteOne({
-      _id: playlistId,
-      profileId: profileObjectId,
-    });
-
-    if (result.deletedCount === 0) {
+    if (!existingPlaylist) {
       throw new Error('Playlist not found or you do not have permission to delete it');
     }
+
+    // Compare profileIds as strings to handle both ObjectId and legacy string storage
+    const playlistProfileId = existingPlaylist.profileId?.toString();
+    console.log('[deletePlaylist] playlist.profileId:', playlistProfileId);
+    console.log('[deletePlaylist] profileId match:', playlistProfileId === profileId);
+
+    if (playlistProfileId !== profileId) {
+      throw new Error('Playlist not found or you do not have permission to delete it');
+    }
+
+    // Delete the playlist
+    await this.model.deleteOne({ _id: playlistId });
 
     // Also delete all tracks in the playlist
     await PlaylistTrackModel.deleteMany({ playlistId });
