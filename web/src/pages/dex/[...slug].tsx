@@ -4950,7 +4950,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               />
 
               {/* Blur-style Wallet Header */}
-              <div className="border-b border-gray-800 pb-4 mb-4">
+              <div className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
                 {/* Wallet Address Row */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -4959,26 +4959,26 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </span>
                     <button
                       onClick={() => navigator.clipboard.writeText(activeAddress || walletAccount || '')}
-                      className="p-1 hover:bg-white/5 rounded transition-colors"
+                      className="p-1 hover:bg-white/10 rounded transition-colors"
                     >
-                      <Copy className="w-4 h-4 text-gray-500 hover:text-white" />
+                      <Copy className="w-4 h-4 text-gray-400 hover:text-white" />
                     </button>
                     <a
                       href={`https://polygonscan.com/address/${activeAddress || walletAccount}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-1 hover:bg-white/5 rounded transition-colors"
+                      className="p-1 hover:bg-white/10 rounded transition-colors"
                     >
-                      <ExternalLink className="w-4 h-4 text-gray-500 hover:text-white" />
+                      <ExternalLink className="w-4 h-4 text-gray-400 hover:text-white" />
                     </a>
                     {chainName && (
-                      <span className="text-xs text-gray-500 ml-2">{chainName}</span>
+                      <span className="text-xs text-gray-400 ml-2">{chainName}</span>
                     )}
                   </div>
                   {activeWalletType === 'web3modal' && (
                     <button
                       onClick={unifiedDisconnectWallet}
-                      className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+                      className="text-xs text-gray-400 hover:text-red-400 transition-colors"
                     >
                       Disconnect
                     </button>
@@ -4988,26 +4988,26 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 {/* Horizontal Stats Bar - Blur style */}
                 <div className="flex items-center gap-8 text-sm">
                   <div>
-                    <span className="text-gray-500 text-xs uppercase tracking-wide">OGUN</span>
+                    <span className="text-gray-400 text-xs uppercase tracking-wide">OGUN</span>
                     <p className="text-yellow-400 font-mono">{(Number(ogunBalance || 0) + Number(stakedOgunBalance || 0)).toFixed(2)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 text-xs uppercase tracking-wide">POL</span>
+                    <span className="text-gray-400 text-xs uppercase tracking-wide">POL</span>
                     <p className="text-purple-400 font-mono">{maticBalance || '0.00'}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 text-xs uppercase tracking-wide">NFTs</span>
+                    <span className="text-gray-400 text-xs uppercase tracking-wide">NFTs</span>
                     <p className="text-cyan-400 font-mono">{ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500 text-xs uppercase tracking-wide">VALUE</span>
+                    <span className="text-gray-400 text-xs uppercase tracking-wide">VALUE</span>
                     <p className="text-green-400 font-mono">${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
                   </div>
                 </div>
               </div>
 
               {/* Slim Action Buttons */}
-              <div className="flex items-center gap-2 mb-6">
+              <div className="bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 p-3 flex items-center gap-2 mb-6">
                 <button
                   onClick={() => document.getElementById('buy-crypto-section')?.scrollIntoView({ behavior: 'smooth' })}
                   className="px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 rounded text-sm font-medium text-white transition-all"
