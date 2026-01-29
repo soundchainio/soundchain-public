@@ -17,6 +17,7 @@ import { UnsubscribeFromProfileInput } from '../types/UnsubscribeProfileInput';
 import { UnsubscribeFromProfilePayload } from '../types/UnsubscribeProfilePayload';
 import { UpdateProfileInput } from '../types/UpdateProfileInput';
 import { UpdateProfilePayload } from '../types/UpdateProfilePayload';
+import { ListenerRewardsResult } from '../types/ListenerRewardsResult';
 
 @Resolver(Profile)
 export class ProfileResolver {
@@ -160,5 +161,20 @@ export class ProfileResolver {
     @CurrentUser() { profileId }: User,
   ): Promise<Profile> {
     return profileService.updateLastSeen(profileId.toString());
+  }
+
+  @Query(() => ListenerRewardsResult)
+  @Authorized()
+  async myListenerRewards(
+    @Ctx() { profileService }: Context,
+    @CurrentUser() { profileId }: User,
+  ): Promise<ListenerRewardsResult> {
+    const rewards = await profileService.getListenerRewards(profileId.toString());
+    return {
+      dailyEarned: rewards.dailyEarned,
+      totalEarned: rewards.totalEarned,
+      dailyLimit: rewards.dailyLimit,
+      tracksStreamedToday: rewards.tracksStreamedToday || 0,
+    };
   }
 }

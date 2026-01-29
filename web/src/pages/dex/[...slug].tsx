@@ -130,6 +130,18 @@ const PROFILE_STREAMING_REWARDS_QUERY = gql`
   }
 `
 
+// Listener rewards query - for WIN-WIN earnings as a listener
+const MY_LISTENER_REWARDS_QUERY = gql`
+  query MyListenerRewards {
+    myListenerRewards {
+      dailyEarned
+      totalEarned
+      dailyLimit
+      tracksStreamedToday
+    }
+  }
+`
+
 // Real NFT data comes from the database via listingItems query
 // NFT listings with prices will be shown in the NFT tab
 // Tracks without listings are streaming-only (no price)
@@ -1109,6 +1121,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     variables: { profileId: userData?.me?.profile?.id || '' },
     skip: !userData?.me?.profile?.id,
     fetchPolicy: 'cache-first',
+  })
+
+  // Fetch listener rewards (WIN-WIN - earn by streaming others' tracks)
+  const { data: myListenerRewardsData, loading: myListenerRewardsLoading } = useQuery(MY_LISTENER_REWARDS_QUERY, {
+    skip: !userData?.me,
+    fetchPolicy: 'cache-and-network',
   })
 
   // Calculate total earnings from all tracks
@@ -2628,33 +2646,33 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           </div>
                           <div className="grid grid-cols-3 gap-2">
                             <div className="text-center p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                              <div className="text-[9px] text-cyan-500/70 uppercase">Listener</div>
+                              <div className="text-[9px] text-cyan-500/70 uppercase">Earned</div>
                               <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
-                                0.00
+                                {myListenerRewardsLoading ? '...' : (myListenerRewardsData?.myListenerRewards?.totalEarned || 0).toFixed(2)}
                               </div>
                               <div className="text-[9px] text-cyan-500/70">OGUN</div>
                             </div>
                             <div className="text-center p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
                               <div className="text-[9px] text-purple-500/70 uppercase">Streamed</div>
                               <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                                0
+                                {myListenerRewardsLoading ? '...' : (myListenerRewardsData?.myListenerRewards?.tracksStreamedToday || 0)}
                               </div>
-                              <div className="text-[9px] text-purple-500/70">NFTs</div>
+                              <div className="text-[9px] text-purple-500/70">Today</div>
                             </div>
                             <div className="text-center p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                              <div className="text-[9px] text-green-500/70 uppercase">Rate</div>
+                              <div className="text-[9px] text-green-500/70 uppercase">Today</div>
                               <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
-                                0.15
+                                {myListenerRewardsLoading ? '...' : (myListenerRewardsData?.myListenerRewards?.dailyEarned || 0).toFixed(2)}
                               </div>
-                              <div className="text-[9px] text-green-500/70">OGUN/NFT</div>
+                              <div className="text-[9px] text-green-500/70">OGUN</div>
                             </div>
                           </div>
                           <div className="mt-2 p-2 bg-cyan-500/5 rounded-lg border border-cyan-500/20">
                             <p className="text-[9px] text-cyan-400 text-center">
-                              🎧 Coming Soon! Earn 30% when YOU stream NFT tracks
+                              🎧 WIN-WIN! Earn 30% when YOU stream NFT tracks
                             </p>
                             <p className="text-[8px] text-gray-500 text-center mt-1">
-                              Stream NFT tracks for 30+ sec → Earn 0.15 OGUN each
+                              Stream NFT tracks for 30+ sec → Earn 0.15 OGUN each (max {myListenerRewardsData?.myListenerRewards?.dailyLimit || 50} OGUN/day)
                             </p>
                           </div>
                         </div>
@@ -3021,23 +3039,34 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <div className="text-center p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                            <div className="text-[9px] text-cyan-500/70 uppercase">Listener</div>
-                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">0.00</div>
+                            <div className="text-[9px] text-cyan-500/70 uppercase">Earned</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+                              {myListenerRewardsLoading ? '...' : (myListenerRewardsData?.myListenerRewards?.totalEarned || 0).toFixed(2)}
+                            </div>
                             <div className="text-[9px] text-cyan-500/70">OGUN</div>
                           </div>
                           <div className="text-center p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
                             <div className="text-[9px] text-purple-500/70 uppercase">Streamed</div>
-                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">0</div>
-                            <div className="text-[9px] text-purple-500/70">NFTs</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
+                              {myListenerRewardsLoading ? '...' : (myListenerRewardsData?.myListenerRewards?.tracksStreamedToday || 0)}
+                            </div>
+                            <div className="text-[9px] text-purple-500/70">Today</div>
                           </div>
                           <div className="text-center p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                            <div className="text-[9px] text-green-500/70 uppercase">Rate</div>
-                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">0.15</div>
-                            <div className="text-[9px] text-green-500/70">OGUN/NFT</div>
+                            <div className="text-[9px] text-green-500/70 uppercase">Today</div>
+                            <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-400">
+                              {myListenerRewardsLoading ? '...' : (myListenerRewardsData?.myListenerRewards?.dailyEarned || 0).toFixed(2)}
+                            </div>
+                            <div className="text-[9px] text-green-500/70">OGUN</div>
                           </div>
                         </div>
                         <div className="mt-2 p-2 bg-cyan-500/5 rounded-lg border border-cyan-500/20">
-                          <p className="text-[9px] text-cyan-400 text-center">Coming Soon! Earn 30% when YOU stream NFT tracks</p>
+                          <p className="text-[9px] text-cyan-400 text-center">
+                            🎧 WIN-WIN! Earn 30% when YOU stream NFT tracks
+                          </p>
+                          <p className="text-[8px] text-gray-500 text-center mt-1">
+                            Stream NFT tracks for 30+ sec → Earn 0.15 OGUN each (max {myListenerRewardsData?.myListenerRewards?.dailyLimit || 50} OGUN/day)
+                          </p>
                         </div>
                       </div>
                     )}

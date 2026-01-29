@@ -73,6 +73,26 @@ export class Profile extends Model {
   @prop({ required: false })
   lastSeenAt?: Date;
 
+  // Listener rewards tracking (WIN-WIN model - listeners earn 30%)
+  @Field(() => Number, { nullable: true })
+  @prop({ required: false, default: 0 })
+  dailyListenerOgunEarned?: number;
+
+  @Field(() => Number, { nullable: true })
+  @prop({ required: false, default: 0 })
+  totalListenerOgunEarned?: number;
+
+  @Field(() => Number, { nullable: true })
+  @prop({ required: false, default: 0 })
+  dailyTracksStreamed?: number;
+
+  @Field(() => Number, { nullable: true })
+  @prop({ required: false, default: 0 })
+  totalTracksStreamed?: number;
+
+  @prop({ required: false })
+  listenerDailyReset?: Date;
+
   @Field(() => Date)
   createdAt: Date;
 

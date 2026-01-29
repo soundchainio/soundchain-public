@@ -244,9 +244,11 @@ export class ProfileService extends ModelService<typeof Profile> {
           $set: {
             dailyListenerOgunEarned: amount,
             listenerDailyReset: todayStart,
+            dailyTracksStreamed: 1, // Reset and count this stream
           },
           $inc: {
             totalListenerOgunEarned: amount,
+            totalTracksStreamed: 1,
           },
         }
       );
@@ -258,6 +260,8 @@ export class ProfileService extends ModelService<typeof Profile> {
           $inc: {
             dailyListenerOgunEarned: amount,
             totalListenerOgunEarned: amount,
+            dailyTracksStreamed: 1,
+            totalTracksStreamed: 1,
           },
         }
       );
@@ -273,10 +277,11 @@ export class ProfileService extends ModelService<typeof Profile> {
     dailyEarned: number;
     totalEarned: number;
     dailyLimit: number;
+    tracksStreamedToday: number;
   }> {
     const profile = await this.model.findById(profileId);
     if (!profile) {
-      return { dailyEarned: 0, totalEarned: 0, dailyLimit: 50 };
+      return { dailyEarned: 0, totalEarned: 0, dailyLimit: 50, tracksStreamedToday: 0 };
     }
 
     // Check if daily reset needed
@@ -285,14 +290,17 @@ export class ProfileService extends ModelService<typeof Profile> {
     const lastReset = (profile as any).listenerDailyReset;
 
     let dailyEarned = (profile as any).dailyListenerOgunEarned || 0;
+    let tracksStreamedToday = (profile as any).dailyTracksStreamed || 0;
     if (lastReset && new Date(lastReset) < todayStart) {
       dailyEarned = 0; // New day, hasn't been reset yet
+      tracksStreamedToday = 0;
     }
 
     return {
       dailyEarned,
       totalEarned: (profile as any).totalListenerOgunEarned || 0,
       dailyLimit: 50, // From OGUN_REWARDS_CONFIG.listenerMaxDaily
+      tracksStreamedToday,
     };
   }
 }
