@@ -20,6 +20,8 @@ query Me {
     notifyOnSale
     notifyOnTip
     notifyOnDM
+    nostrPubkey
+    notifyViaNostr
     profile {
       ...ProfileComponentFields
     }

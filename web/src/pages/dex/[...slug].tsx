@@ -5660,6 +5660,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       notifyOnSale: userData?.me?.notifyOnSale,
                       notifyOnTip: userData?.me?.notifyOnTip,
                       notifyOnDM: userData?.me?.notifyOnDM,
+                      nostrPubkey: userData?.me?.nostrPubkey,
+                      notifyViaNostr: userData?.me?.notifyViaNostr,
                     }}
                   />
                 </Card>

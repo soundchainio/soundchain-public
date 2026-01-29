@@ -17,6 +17,10 @@ import ConfirmDeleteEditionModal from './modals/ConfirmDeleteEditionModal'
 import { TagManager } from './TagManager'
 import { TopNavBar, TopNavBarProps } from './TopNavBar'
 
+// Decentralized notification components (no SMS/Twilio - pure web!)
+const PWAInstallPrompt = dynamic(() => import('components/dex/PWAInstallPrompt'), { ssr: false })
+const NostrNotificationListener = dynamic(() => import('components/dex/NostrNotificationListener'), { ssr: false })
+
 const PostModal = dynamic(import('./Post/PostModal'))
 const ReactionsModal = dynamic(import('./ReactionsModal'))
 const CommentModal = dynamic(import('./Comment/CommentModal'))
@@ -135,6 +139,9 @@ export const Layout = ({ children, className }: LayoutProps) => {
           textAlign: 'center',
         }}
       />
+      {/* Decentralized notification stack - no SMS/Twilio! */}
+      <PWAInstallPrompt />
+      <NostrNotificationListener />
     </div>
   )
 }
