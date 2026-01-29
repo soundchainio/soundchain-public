@@ -14,7 +14,8 @@ import { useMe } from 'hooks/useMe'
  * 3. Shows toast notifications for incoming DMs
  */
 export function NostrNotificationListener() {
-  const { me } = useMe()
+  // useMe returns the user directly, not { me }
+  const me = useMe()
 
   // Get user's Nostr pubkey from their profile
   // Users can set this in their notification settings
