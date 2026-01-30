@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { X, Lock, Coins, AlertCircle, CheckCircle, Loader2, Wallet } from 'lucide-react'
+import { X, Lock, Coins, AlertCircle, CheckCircle, Loader2, Wallet, ChevronDown, ChevronUp } from 'lucide-react'
 import { config } from '../../config'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
@@ -16,14 +16,12 @@ const isMobile = () => {
 }
 
 // Get specific wallet provider when multiple wallets are installed
-// This fixes the "wallet collision" where Coinbase hijacks window.ethereum
 const getSpecificProvider = (walletType: 'metamask' | 'coinbase' | 'trust' | 'any'): any => {
   if (typeof window === 'undefined') return null
 
   const ethereum = (window as any).ethereum
   if (!ethereum) return null
 
-  // Check if multiple providers exist (EIP-5749)
   const providers = ethereum.providers || []
 
   if (walletType === 'metamask') {
@@ -84,6 +82,8 @@ export const MakePostPermanentModal = ({
   const [paymentToken, setPaymentToken] = useState<PaymentToken>('OGUN')
   const [isProcessing, setIsProcessing] = useState(false)
   const [step, setStep] = useState<'confirm' | 'fee' | 'payment' | 'complete'>('confirm')
+  const [showDetails, setShowDetails] = useState(false)
+  const [showWallets, setShowWallets] = useState(false)
 
   // Get user's stored wallet addresses (for wallet-only users)
   const { data: userData } = useMeQuery({ skip: !isOpen })
@@ -114,9 +114,7 @@ export const MakePostPermanentModal = ({
   const connectMetaMask = useCallback(async () => {
     const metamaskProvider = getSpecificProvider('metamask')
 
-    // On mobile, use deep link
     if (isMobile()) {
-      // Open MetaMask app with WalletConnect or dapp browser
       window.location.href = `https://metamask.app.link/dapp/${window.location.host}`
       return
     }
@@ -134,17 +132,14 @@ export const MakePostPermanentModal = ({
         const chainIdHex = await metamaskProvider.request({ method: 'eth_chainId' })
         const chainId = parseInt(chainIdHex as string, 16)
 
-        // Create Web3 instance with this provider
         const web3Instance = new Web3(metamaskProvider as any)
         setMetamaskWeb3(web3Instance)
         setMetamaskAccount(accounts[0])
         setDirectConnection(accounts[0], 'metamask', chainId)
 
-        // Fetch balances
         const polWei = await web3Instance.eth.getBalance(accounts[0])
         setMetamaskPolBalance(web3Instance.utils.fromWei(polWei, 'ether'))
 
-        // Fetch OGUN balance
         try {
           const ogunContract = new web3Instance.eth.Contract(OGUN_ABI as any, config.ogunTokenAddress)
           const ogunWei = await ogunContract.methods.balanceOf(accounts[0]).call()
@@ -154,6 +149,7 @@ export const MakePostPermanentModal = ({
         }
 
         toast.success('MetaMask connected!')
+        setShowWallets(false)
       }
     } catch (err: any) {
       console.error('MetaMask connection error:', err)
@@ -163,7 +159,6 @@ export const MakePostPermanentModal = ({
     }
   }, [setDirectConnection])
 
-  // Track selected wallet for payment
   const [selectedWallet, setSelectedWallet] = useState<'magic' | 'metamask' | 'web3modal' | null>(null)
 
   // Build list of available wallets with balances
@@ -181,7 +176,7 @@ export const MakePostPermanentModal = ({
       wallets.push({
         type: 'magic',
         address: magicAccount,
-        label: 'Magic Wallet',
+        label: 'Magic',
         ogunBalance: magicOgunBalance || '0',
         polBalance: magicPolBalance || '0',
         web3: magicWeb3,
@@ -213,7 +208,7 @@ export const MakePostPermanentModal = ({
     return wallets
   }, [magicAccount, magicWeb3, magicOgunBalance, magicPolBalance, metamaskAccount, metamaskWeb3, metamaskOgunBalance, metamaskPolBalance, activeWalletType, activeAddress, unifiedWeb3, unifiedOgunBalance, unifiedPolBalance])
 
-  // Auto-select first wallet with sufficient balance, or first wallet if none have enough
+  // Auto-select first wallet with sufficient balance
   useEffect(() => {
     if (availableWallets.length > 0 && !selectedWallet) {
       const walletWithBalance = availableWallets.find(w => {
@@ -222,19 +217,14 @@ export const MakePostPermanentModal = ({
       })
       setSelectedWallet(walletWithBalance?.type || availableWallets[0].type)
     }
-  }, [availableWallets.length]) // Only run when wallets change, not on every render
+  }, [availableWallets.length])
 
-  // Get currently selected wallet
   const currentWallet = useMemo(() => {
     return availableWallets.find(w => w.type === selectedWallet) || availableWallets[0] || null
   }, [availableWallets, selectedWallet])
 
-  // Determine active wallet and web3 instance
-  const hasExternalWallet = !!metamaskAccount || activeWalletType === 'web3modal' || activeWalletType === 'direct'
-  const hasMagicWallet = !!magicAccount
   const hasAnyWallet = availableWallets.length > 0
 
-  // Select web3 instance based on selected wallet
   const web3 = currentWallet?.web3 || unifiedWeb3 || metamaskWeb3 || magicWeb3
   const connectedAccount = currentWallet?.address || activeAddress || metamaskAccount || magicAccount
   const ogunBalance = currentWallet?.ogunBalance || unifiedOgunBalance || '0'
@@ -247,8 +237,7 @@ export const MakePostPermanentModal = ({
   // Calculate pricing based on media size
   const pricing = useMemo(() => {
     const { tiers, platformFeeRate } = config.permanentPostPricing
-    // Find the appropriate tier
-    let tier = tiers[0] // Default to text-only
+    let tier = tiers[0]
     for (let i = tiers.length - 1; i >= 0; i--) {
       if (mediaSize > tiers[i].maxSizeBytes) {
         tier = tiers[i + 1] || tiers[tiers.length - 1]
@@ -263,15 +252,9 @@ export const MakePostPermanentModal = ({
     const platformFee = basePrice * platformFeeRate
     const total = basePrice + platformFee
 
-    return {
-      tier,
-      basePrice,
-      platformFee,
-      total,
-    }
+    return { tier, basePrice, platformFee, total }
   }, [mediaSize, paymentToken])
 
-  // Check if user has enough balance
   const hasEnoughBalance = useMemo(() => {
     const balance = paymentToken === 'OGUN' ? parseFloat(ogunBalance || '0') : parseFloat(polBalance || '0')
     return balance >= pricing.total
@@ -296,7 +279,6 @@ export const MakePostPermanentModal = ({
       let txHash: string
 
       if (paymentToken === 'POL') {
-        // Send POL directly
         setStep('payment')
         const amountWei = web3.utils.toWei(pricing.total.toString(), 'ether')
         const tx = await web3.eth.sendTransaction({
@@ -306,7 +288,6 @@ export const MakePostPermanentModal = ({
         })
         txHash = tx.transactionHash
       } else {
-        // Send OGUN tokens
         setStep('payment')
         const ogunContract = new web3.eth.Contract(OGUN_ABI as any, config.ogunTokenAddress)
         const amountWei = web3.utils.toWei(pricing.total.toString(), 'ether')
@@ -316,7 +297,6 @@ export const MakePostPermanentModal = ({
         txHash = tx.transactionHash
       }
 
-      // Call the GraphQL mutation
       const result = await makePostPermanent({
         variables: {
           input: {
@@ -349,276 +329,245 @@ export const MakePostPermanentModal = ({
 
   if (!isOpen) return null
 
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="fixed z-50 bottom-0 left-0 right-0 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-md sm:w-full animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
-        <div className="bg-neutral-900 border border-neutral-700 rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
-            <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4 text-amber-400" />
-              <span className="text-white font-medium text-sm">Make Post Permanent</span>
+  // Processing/Complete states - compact spinner
+  if (step === 'fee' || step === 'payment' || step === 'complete') {
+    return (
+      <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-80">
+        <div className="bg-neutral-900/95 backdrop-blur-xl border border-neutral-700 rounded-2xl shadow-2xl p-4">
+          {step === 'complete' ? (
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
+              <div>
+                <p className="text-white font-medium text-sm">Post is permanent!</p>
+                <p className="text-neutral-500 text-xs">No longer expires</p>
+              </div>
             </div>
-            <button
-              onClick={onClose}
-              disabled={isProcessing}
-              className="p-1 rounded-full hover:bg-neutral-800 transition-colors disabled:opacity-50"
-            >
-              <X className="w-4 h-4 text-neutral-400" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-4">
-            {step === 'confirm' && (
-              <>
-                {/* Explanation */}
-                <p className="text-neutral-400 text-sm mb-4">
-                  Convert your 24-hour ephemeral post to a permanent post that never expires.
+          ) : (
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-6 h-6 text-amber-400 animate-spin flex-shrink-0" />
+              <div>
+                <p className="text-white font-medium text-sm">
+                  {step === 'fee' ? 'Preparing...' : 'Processing...'}
                 </p>
-
-                {/* Wallet Connection Section */}
-                {!hasAnyWallet && (
-                  <div className="mb-4 p-4 bg-neutral-800/70 rounded-xl border border-neutral-700">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Wallet className="w-4 h-4 text-amber-400" />
-                      <span className="text-white font-medium text-sm">
-                        {isWalletOnlyUser ? 'Reconnect Your Wallet' : 'Connect Wallet'}
-                      </span>
-                    </div>
-                    {isWalletOnlyUser && storedWalletAddresses.length > 0 && (
-                      <div className="mb-3 p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg">
-                        <p className="text-cyan-400 text-xs mb-1">Your registered wallet:</p>
-                        <p className="text-cyan-300 text-xs font-mono">
-                          {storedWalletAddresses[0]}
-                        </p>
-                      </div>
-                    )}
-                    <p className="text-neutral-400 text-xs mb-3">
-                      {isWalletOnlyUser
-                        ? 'Reconnect your wallet to make blockchain transactions.'
-                        : 'Connect a wallet to pay for making this post permanent.'}
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={connectMetaMask}
-                        className="py-2.5 px-3 bg-orange-500/20 border border-orange-500/50 hover:border-orange-400 rounded-lg text-orange-400 text-xs font-medium transition-all flex items-center justify-center gap-2"
-                      >
-                        <span>MetaMask</span>
-                      </button>
-                      <button
-                        onClick={() => isWeb3ModalReady && connectWeb3Modal()}
-                        disabled={!isWeb3ModalReady}
-                        className={`py-2.5 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-2 ${
-                          isWeb3ModalReady
-                            ? 'bg-purple-500/20 border border-purple-500/50 hover:border-purple-400 text-purple-400'
-                            : 'bg-neutral-700 text-neutral-500 cursor-wait'
-                        }`}
-                      >
-                        <span>{isWeb3ModalReady ? 'WalletConnect' : 'Loading...'}</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Wallet Selector */}
-                {availableWallets.length > 0 && (
-                  <div className="mb-4">
-                    <label className="text-neutral-500 text-xs uppercase tracking-wide mb-2 block">
-                      Pay from wallet
-                    </label>
-                    <div className="space-y-2">
-                      {availableWallets.map((wallet) => {
-                        const isSelected = selectedWallet === wallet.type
-                        const walletBalance = paymentToken === 'OGUN' ? parseFloat(wallet.ogunBalance) : parseFloat(wallet.polBalance)
-                        const hasSufficientBalance = walletBalance >= pricing.total
-                        return (
-                          <button
-                            key={wallet.type}
-                            onClick={() => setSelectedWallet(wallet.type)}
-                            className={`w-full p-3 rounded-xl border transition-all text-left ${
-                              isSelected
-                                ? 'bg-green-500/10 border-green-500/50'
-                                : 'bg-neutral-800/50 border-neutral-700 hover:border-neutral-600'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className={`w-2 h-2 rounded-full ${isSelected ? 'bg-green-400 animate-pulse' : 'bg-neutral-600'}`} />
-                                <span className={`text-sm font-medium ${isSelected ? 'text-green-400' : 'text-neutral-300'}`}>
-                                  {wallet.label}
-                                </span>
-                              </div>
-                              <span className="text-neutral-400 text-xs font-mono">
-                                {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between mt-2 pl-4">
-                              <span className="text-xs text-neutral-500">Balance:</span>
-                              <span className={`text-xs font-medium ${hasSufficientBalance ? 'text-green-400' : 'text-red-400'}`}>
-                                {paymentToken === 'OGUN' ? wallet.ogunBalance : wallet.polBalance} {paymentToken}
-                                {!hasSufficientBalance && ' (insufficient)'}
-                              </span>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                    {/* Option to connect more wallets */}
-                    {(!metamaskAccount || (activeWalletType !== 'web3modal' && activeWalletType !== 'direct')) && (
-                      <div className="mt-2 flex gap-2">
-                        {!metamaskAccount && (
-                          <button
-                            onClick={connectMetaMask}
-                            className="flex-1 py-2 px-3 bg-neutral-800 border border-neutral-700 hover:border-orange-500/50 rounded-lg text-neutral-400 hover:text-orange-400 text-xs font-medium transition-all"
-                          >
-                            + MetaMask
-                          </button>
-                        )}
-                        {activeWalletType !== 'web3modal' && activeWalletType !== 'direct' && (
-                          <button
-                            onClick={() => isWeb3ModalReady && connectWeb3Modal()}
-                            disabled={!isWeb3ModalReady}
-                            className="flex-1 py-2 px-3 bg-neutral-800 border border-neutral-700 hover:border-purple-500/50 rounded-lg text-neutral-400 hover:text-purple-400 text-xs font-medium transition-all disabled:opacity-50"
-                          >
-                            + WalletConnect
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Token Selection */}
-                <div className="mb-4">
-                  <label className="text-neutral-500 text-xs uppercase tracking-wide mb-2 block">
-                    Pay with
-                  </label>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setPaymentToken('OGUN')}
-                      className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                        paymentToken === 'OGUN'
-                          ? 'bg-yellow-500/20 border border-yellow-500 text-yellow-400'
-                          : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-600'
-                      }`}
-                    >
-                      <Coins className="w-4 h-4 inline mr-2" />
-                      OGUN
-                    </button>
-                    <button
-                      onClick={() => setPaymentToken('POL')}
-                      className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                        paymentToken === 'POL'
-                          ? 'bg-purple-500/20 border border-purple-500 text-purple-400'
-                          : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:border-neutral-600'
-                      }`}
-                    >
-                      POL
-                    </button>
-                  </div>
-                </div>
-
-                {/* Pricing Breakdown */}
-                <div className="bg-neutral-800/50 rounded-xl p-4 mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-neutral-400">File size tier</span>
-                    <span className="text-neutral-300">{pricing.tier.label}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-neutral-400">Base price</span>
-                    <span className="text-neutral-300">
-                      {pricing.basePrice} {paymentToken}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-neutral-400">Platform fee (0.05%)</span>
-                    <span className="text-neutral-300">
-                      {pricing.platformFee.toFixed(6)} {paymentToken}
-                    </span>
-                  </div>
-                  <div className="border-t border-neutral-700 mt-2 pt-2 flex justify-between text-sm font-medium">
-                    <span className="text-white">Total</span>
-                    <span className={paymentToken === 'OGUN' ? 'text-yellow-400' : 'text-purple-400'}>
-                      {pricing.total.toFixed(6)} {paymentToken}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Balance Check */}
-                <div className="flex items-center justify-between text-sm mb-4">
-                  <span className="text-neutral-500">Your balance:</span>
-                  <span className={hasEnoughBalance ? 'text-green-400' : 'text-red-400'}>
-                    {paymentToken === 'OGUN' ? ogunBalance : polBalance} {paymentToken}
-                  </span>
-                </div>
-
-                {!hasEnoughBalance && (
-                  <div className="flex items-center gap-2 text-red-400 text-sm mb-4 bg-red-500/10 rounded-lg p-3">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                    <span>Insufficient balance. You need {pricing.total.toFixed(4)} {paymentToken}.</span>
-                  </div>
-                )}
-
-                {/* Action Button */}
-                <button
-                  onClick={handleMakePermanent}
-                  disabled={isProcessing || !hasEnoughBalance || !hasAnyWallet}
-                  className={`w-full py-3 rounded-xl font-medium transition-all ${
-                    hasEnoughBalance && hasAnyWallet
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black'
-                      : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
-                  }`}
-                >
-                  {!hasAnyWallet ? 'Connect Wallet First' : 'Make Permanent'}
-                </button>
-              </>
-            )}
-
-            {(step === 'fee' || step === 'payment') && (
-              <div className="text-center py-8">
-                <Loader2 className="w-12 h-12 text-amber-400 animate-spin mx-auto mb-4" />
-                <p className="text-white font-medium mb-2">
-                  {step === 'fee' ? 'Preparing transaction...' : 'Processing payment...'}
-                </p>
-                <p className="text-neutral-400 text-sm">
-                  Please confirm the transaction in your wallet
-                </p>
+                <p className="text-neutral-500 text-xs">Confirm in wallet</p>
               </div>
-            )}
-
-            {step === 'complete' && (
-              <div className="text-center py-8">
-                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                <p className="text-white font-medium mb-2">Post is now permanent!</p>
-                <p className="text-neutral-400 text-sm">
-                  Your post will no longer expire.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Cancel button for mobile */}
-          {step === 'confirm' && (
-            <div className="p-4 pt-0 sm:hidden">
-              <button
-                onClick={onClose}
-                className="w-full py-3 rounded-xl bg-neutral-800 text-neutral-300 font-medium hover:bg-neutral-700 transition-colors"
-              >
-                Cancel
-              </button>
             </div>
           )}
         </div>
       </div>
-    </>
+    )
+  }
+
+  return (
+    <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-auto sm:right-4 sm:w-96">
+      <div className="bg-neutral-900/95 backdrop-blur-xl border border-neutral-700 rounded-2xl shadow-2xl overflow-hidden">
+        {/* Header - Always visible */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
+          <div className="flex items-center gap-2">
+            <Lock className="w-4 h-4 text-amber-400" />
+            <span className="text-white font-medium text-sm">Make Permanent</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-neutral-800 transition-colors"
+          >
+            <X className="w-4 h-4 text-neutral-400" />
+          </button>
+        </div>
+
+        {/* Quick Actions - Compact by default */}
+        <div className="p-3 space-y-3">
+          {/* No wallet connected */}
+          {!hasAnyWallet && (
+            <div className="space-y-2">
+              <p className="text-neutral-400 text-xs">Connect wallet to continue</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={connectMetaMask}
+                  disabled={isConnecting}
+                  className="flex-1 py-2 px-3 bg-orange-500/20 border border-orange-500/40 rounded-xl text-orange-400 text-xs font-medium hover:bg-orange-500/30 transition-all"
+                >
+                  MetaMask
+                </button>
+                <button
+                  onClick={() => isWeb3ModalReady && connectWeb3Modal()}
+                  disabled={!isWeb3ModalReady}
+                  className="flex-1 py-2 px-3 bg-purple-500/20 border border-purple-500/40 rounded-xl text-purple-400 text-xs font-medium hover:bg-purple-500/30 transition-all disabled:opacity-50"
+                >
+                  WalletConnect
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Has wallet - show quick pay */}
+          {hasAnyWallet && (
+            <>
+              {/* Token toggle - slim */}
+              <div className="flex bg-neutral-800/50 rounded-xl p-0.5">
+                <button
+                  onClick={() => setPaymentToken('OGUN')}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
+                    paymentToken === 'OGUN'
+                      ? 'bg-yellow-500/20 text-yellow-400'
+                      : 'text-neutral-500 hover:text-neutral-300'
+                  }`}
+                >
+                  <Coins className="w-3 h-3 inline mr-1" />
+                  OGUN
+                </button>
+                <button
+                  onClick={() => setPaymentToken('POL')}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-medium transition-all ${
+                    paymentToken === 'POL'
+                      ? 'bg-purple-500/20 text-purple-400'
+                      : 'text-neutral-500 hover:text-neutral-300'
+                  }`}
+                >
+                  POL
+                </button>
+              </div>
+
+              {/* Price + Pay button row */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-lg font-bold ${paymentToken === 'OGUN' ? 'text-yellow-400' : 'text-purple-400'}`}>
+                      {pricing.total.toFixed(2)}
+                    </span>
+                    <span className="text-neutral-500 text-xs">{paymentToken}</span>
+                  </div>
+                  <p className="text-neutral-500 text-xs">{pricing.tier.label}</p>
+                </div>
+                <button
+                  onClick={handleMakePermanent}
+                  disabled={isProcessing || !hasEnoughBalance}
+                  className={`py-2.5 px-5 rounded-xl font-medium text-sm transition-all ${
+                    hasEnoughBalance
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black'
+                      : 'bg-neutral-700 text-neutral-500 cursor-not-allowed'
+                  }`}
+                >
+                  Pay
+                </button>
+              </div>
+
+              {/* Insufficient balance warning - compact */}
+              {!hasEnoughBalance && (
+                <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 rounded-lg px-3 py-2">
+                  <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                  <span>Need {pricing.total.toFixed(2)} {paymentToken} (have {paymentToken === 'OGUN' ? parseFloat(ogunBalance).toFixed(2) : parseFloat(polBalance).toFixed(2)})</span>
+                </div>
+              )}
+
+              {/* Expandable wallet section */}
+              <button
+                onClick={() => setShowWallets(!showWallets)}
+                className="w-full flex items-center justify-between py-2 px-3 bg-neutral-800/30 rounded-xl hover:bg-neutral-800/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Wallet className="w-3.5 h-3.5 text-neutral-500" />
+                  <span className="text-neutral-400 text-xs">
+                    {currentWallet ? `${currentWallet.label} ...${currentWallet.address.slice(-4)}` : 'Select wallet'}
+                  </span>
+                </div>
+                {showWallets ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-neutral-500" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-neutral-500" />
+                )}
+              </button>
+
+              {/* Wallet list - expandable */}
+              {showWallets && (
+                <div className="space-y-1.5 pl-2">
+                  {availableWallets.map((wallet) => {
+                    const isSelected = selectedWallet === wallet.type
+                    const balance = paymentToken === 'OGUN' ? wallet.ogunBalance : wallet.polBalance
+                    const hasSufficient = parseFloat(balance) >= pricing.total
+                    return (
+                      <button
+                        key={wallet.type}
+                        onClick={() => {
+                          setSelectedWallet(wallet.type)
+                          setShowWallets(false)
+                        }}
+                        className={`w-full flex items-center justify-between p-2 rounded-lg transition-all ${
+                          isSelected
+                            ? 'bg-green-500/10 border border-green-500/30'
+                            : 'bg-neutral-800/30 border border-transparent hover:border-neutral-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-green-400' : 'bg-neutral-600'}`} />
+                          <span className={`text-xs ${isSelected ? 'text-green-400' : 'text-neutral-400'}`}>
+                            {wallet.label}
+                          </span>
+                        </div>
+                        <span className={`text-xs font-mono ${hasSufficient ? 'text-green-400' : 'text-red-400'}`}>
+                          {parseFloat(balance).toFixed(2)} {paymentToken}
+                        </span>
+                      </button>
+                    )
+                  })}
+                  {/* Add more wallets */}
+                  <div className="flex gap-1.5 pt-1">
+                    {!metamaskAccount && (
+                      <button
+                        onClick={connectMetaMask}
+                        className="flex-1 py-1.5 text-xs text-neutral-500 hover:text-orange-400 transition-colors"
+                      >
+                        + MetaMask
+                      </button>
+                    )}
+                    {activeWalletType !== 'web3modal' && (
+                      <button
+                        onClick={() => isWeb3ModalReady && connectWeb3Modal()}
+                        className="flex-1 py-1.5 text-xs text-neutral-500 hover:text-purple-400 transition-colors"
+                      >
+                        + WalletConnect
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Expandable details section */}
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className="w-full flex items-center justify-between py-2 px-3 bg-neutral-800/30 rounded-xl hover:bg-neutral-800/50 transition-colors"
+              >
+                <span className="text-neutral-400 text-xs">Price breakdown</span>
+                {showDetails ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-neutral-500" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-neutral-500" />
+                )}
+              </button>
+
+              {showDetails && (
+                <div className="space-y-1.5 pl-2 text-xs">
+                  <div className="flex justify-between text-neutral-500">
+                    <span>Base ({pricing.tier.label})</span>
+                    <span>{pricing.basePrice.toFixed(4)} {paymentToken}</span>
+                  </div>
+                  <div className="flex justify-between text-neutral-500">
+                    <span>Platform fee (0.05%)</span>
+                    <span>{pricing.platformFee.toFixed(6)} {paymentToken}</span>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-neutral-800">
+                    <span className="text-neutral-400 font-medium">Total</span>
+                    <span className={`font-medium ${paymentToken === 'OGUN' ? 'text-yellow-400' : 'text-purple-400'}`}>
+                      {pricing.total.toFixed(4)} {paymentToken}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 
