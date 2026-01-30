@@ -1,7 +1,5 @@
 {
   "version": 2,
   "framework": "nextjs",
-  "buildCommand": "cd web && yarn build",
-  "outputDirectory": "web/.next",
-  "installCommand": "cd web && yarn install"
+  "rootDirectory": "web"
 }
