@@ -4272,7 +4272,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className="flex justify-center gap-4 xl:gap-6 bg-black/95 min-h-screen py-4 -mx-4 px-4">
+            <div className="flex justify-center gap-4 xl:gap-6 bg-black min-h-screen py-4 -mx-4 px-4">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
@@ -4288,7 +4288,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Single Post View - /dex/post/[id] for shared links */}
           {selectedView === 'post' && routeId && (
-            <div className="flex justify-center gap-6 px-0 md:px-4 bg-black/95 min-h-screen py-4">
+            <div className="flex justify-center gap-6 px-0 md:px-4 bg-black min-h-screen py-4">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
@@ -6606,7 +6606,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Profile View - /dex/profile/[handle] or /dex/me */}
           {selectedView === 'profile' && (routeId || isExplicitOwnProfileRoute) && router.isReady && (
             <ProfileErrorBoundary>
-            <div className="relative pb-32 overflow-y-auto min-h-screen bg-black/95" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="relative pb-32 overflow-y-auto min-h-screen bg-black" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
               {viewingProfile && (
                 <Head>
@@ -7045,7 +7045,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
 
                     {/* Tab Content */}
-                    <div className="min-h-[400px] bg-black/95 rounded-xl p-2">
+                    <div className="min-h-[400px] bg-black rounded-xl p-2">
                       {/* My Feed - Full social feed (posts from people you follow + your own) */}
                       {profileTab === 'myfeed' && isViewingOwnProfile && (
                         <Posts disableVirtualization />
@@ -7133,7 +7133,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       {/* Top 100 NFTs Modal */}
       {showTop100Modal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/95" onClick={() => setShowTop100Modal(false)} />
+          <div className="absolute inset-0 bg-black" onClick={() => setShowTop100Modal(false)} />
           <div className="relative z-10 w-full max-w-lg max-h-[85vh] overflow-hidden rounded-2xl border-2 border-yellow-500 bg-gradient-to-br from-neutral-900 via-yellow-900/10 to-neutral-900 shadow-[0_0_30px_rgba(234,179,8,0.3)]">
             {/* Header */}
             <div className="bg-gradient-to-r from-yellow-900 to-orange-900 px-4 py-3 flex items-center justify-between border-b border-yellow-500">
