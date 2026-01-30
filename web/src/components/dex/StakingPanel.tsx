@@ -700,124 +700,99 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 bg-black/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-4 p-4 md:p-6 bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-white/5">
+      {/* Header - Clean minimal style */}
+      <div className="flex items-center justify-between pb-4 border-b border-white/5">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-xl shadow-lg shadow-purple-500/30">
-            <Coins className="w-6 h-6 text-white drop-shadow-lg" />
+          <div className="p-2.5 bg-gradient-to-br from-cyan-500/20 to-purple-500/20 rounded-xl border border-white/10">
+            <Coins className="w-5 h-5 text-cyan-400" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white drop-shadow-md">OGUN Staking</h2>
-            <p className="text-sm text-gray-300">Earn rewards by staking OGUN</p>
+            <h2 className="text-lg font-semibold text-white">OGUN Staking</h2>
+            <p className="text-xs text-gray-500">Earn rewards by staking</p>
           </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
-            <span className="text-2xl">&times;</span>
+          <button onClick={onClose} className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-all">
+            <span className="text-xl">&times;</span>
           </button>
         )}
       </div>
 
       {/* ========== STREAMING REWARDS AGGREGATOR ========== */}
       {me?.profile?.id && (
-        <div className="relative overflow-hidden rounded-2xl">
-          {/* Animated gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-500/20 to-cyan-500/20 animate-pulse" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-cyan-500/10" />
-
-          {/* Glowing border effect */}
-          <div className="absolute inset-0 rounded-2xl border border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.3),inset_0_0_30px_rgba(168,85,247,0.1)]" />
-
-          <div className="relative p-5">
-            {/* Header with sparkles */}
+        <div className="bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-xl border border-purple-500/20">
+          <div className="p-4">
+            {/* Header - Clean */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur-lg opacity-50 animate-pulse" />
-                  <div className="relative p-3 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-xl">
-                    <Headphones className="w-6 h-6 text-white" />
-                  </div>
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <Headphones className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-white">Streaming Rewards</h3>
-                    <Sparkles className="w-4 h-4 text-yellow-400 animate-pulse" />
+                    <h3 className="text-sm font-semibold text-white">Streaming Rewards</h3>
+                    <Sparkles className="w-3 h-3 text-yellow-400" />
                   </div>
-                  <p className="text-sm text-purple-300">Earn OGUN from every stream</p>
+                  <p className="text-xs text-gray-500">Earn OGUN from streams</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowStreamingDetails(!showStreamingDetails)}
-                className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-all flex items-center gap-1"
               >
                 {showStreamingDetails ? 'Hide' : 'Details'}
-                <span className={`transition-transform ${showStreamingDetails ? 'rotate-180' : ''}`}>▼</span>
+                <span className={`transition-transform text-[10px] ${showStreamingDetails ? 'rotate-180' : ''}`}>▼</span>
               </button>
             </div>
 
-            {/* Main Stats - Glowing Cards */}
+            {/* Main Stats - Clean Cards */}
             <div className="grid grid-cols-3 gap-2 mb-4">
               {/* Total OGUN Catalog */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-yellow-500/30 hover:border-yellow-500/60 transition-all min-h-[90px]">
-                  <div className="text-[10px] text-yellow-400/80 uppercase tracking-wider mb-1 text-center">Catalog</div>
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400 leading-tight">
-                      {streamingLoading ? '...' : streamingStats.totalOgunEarned.toFixed(2)}
-                    </div>
-                    <div className="text-[10px] text-yellow-500/70 mt-0.5">OGUN</div>
+              <div className="bg-black/30 rounded-lg p-3 border border-white/5 hover:border-yellow-500/30 transition-all">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 text-center">Earned</div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-yellow-400">
+                    {streamingLoading ? '...' : streamingStats.totalOgunEarned.toFixed(2)}
                   </div>
+                  <div className="text-[10px] text-gray-600">OGUN</div>
                 </div>
               </div>
 
               {/* Total Streams */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-cyan-500/30 hover:border-cyan-500/60 transition-all min-h-[90px]">
-                  <div className="text-[10px] text-cyan-400/80 uppercase tracking-wider mb-1 text-center">Streams</div>
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 leading-tight">
-                      {streamingLoading ? '...' : formatToCompactNumber(streamingStats.totalStreams)}
-                    </div>
-                    <div className="text-[10px] text-cyan-500/70 mt-0.5">plays</div>
+              <div className="bg-black/30 rounded-lg p-3 border border-white/5 hover:border-cyan-500/30 transition-all">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 text-center">Streams</div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-cyan-400">
+                    {streamingLoading ? '...' : formatToCompactNumber(streamingStats.totalStreams)}
                   </div>
+                  <div className="text-[10px] text-gray-600">plays</div>
                 </div>
               </div>
 
               {/* Tracks Earning */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
-                <div className="relative bg-black/40 backdrop-blur-sm rounded-xl p-3 border border-pink-500/30 hover:border-pink-500/60 transition-all min-h-[90px]">
-                  <div className="text-[10px] text-pink-400/80 uppercase tracking-wider mb-1 text-center">Tracks</div>
-                  <div className="text-center">
-                    <div className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 leading-tight">
-                      {streamingLoading ? '...' : streamingStats.tracksWithStreams}
-                    </div>
-                    <div className="text-[10px] text-pink-500/70 mt-0.5">active</div>
+              <div className="bg-black/30 rounded-lg p-3 border border-white/5 hover:border-purple-500/30 transition-all">
+                <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 text-center">Tracks</div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-purple-400">
+                    {streamingLoading ? '...' : streamingStats.tracksWithStreams}
                   </div>
+                  <div className="text-[10px] text-gray-600">active</div>
                 </div>
               </div>
             </div>
 
-            {/* Reward Tiers Info */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="flex flex-col items-center py-2 px-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                <div className="flex items-center gap-1 mb-0.5">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                  <span className="text-[10px] text-gray-400">NFT</span>
-                </div>
-                <span className="text-sm font-bold text-green-400">0.5</span>
-                <span className="text-[9px] text-green-500/70">OGUN/stream</span>
+            {/* Reward Tiers Info - Compact */}
+            <div className="flex gap-2 mb-4">
+              <div className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                <span className="text-xs text-gray-400">NFT:</span>
+                <span className="text-xs font-semibold text-green-400">0.5 OGUN</span>
               </div>
-              <div className="flex flex-col items-center py-2 px-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                <div className="flex items-center gap-1 mb-0.5">
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-                  <span className="text-[10px] text-gray-400">Non-NFT</span>
-                </div>
-                <span className="text-sm font-bold text-blue-400">0.05</span>
-                <span className="text-[9px] text-blue-500/70">OGUN/stream</span>
+              <div className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white/5 rounded-lg border border-white/10">
+                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
+                <span className="text-xs text-gray-400">Free:</span>
+                <span className="text-xs font-semibold text-gray-300">0.05 OGUN</span>
               </div>
             </div>
 
@@ -857,42 +832,35 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               </div>
             )}
 
-            {/* Action Buttons - Claim or Stake */}
-            <div className="grid grid-cols-2 gap-3 mt-4">
+            {/* Action Buttons - Clean style */}
+            <div className="grid grid-cols-2 gap-2">
               {/* Claim to Wallet */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl blur opacity-0 group-hover:opacity-30 transition-opacity" />
-                <button
-                  disabled={streamingStats.totalUnclaimed <= 0 || claimLoading}
-                  className="relative w-full py-3 bg-gradient-to-r from-green-600/80 to-emerald-600/80 hover:from-green-500 hover:to-emerald-500 disabled:from-gray-600/50 disabled:to-gray-600/50 text-white disabled:text-gray-400 font-bold rounded-xl flex items-center justify-center gap-2 border border-green-500/30 disabled:border-gray-500/30 transition-all disabled:cursor-not-allowed"
-                  onClick={handleClaimToWallet}
-                >
-                  {claimLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Wallet className="w-4 h-4" />
-                  )}
-                  <span className="text-sm">Claim to Wallet</span>
-                </button>
-              </div>
+              <button
+                disabled={streamingStats.totalUnclaimed <= 0 || claimLoading}
+                className="py-2.5 bg-white/5 hover:bg-white/10 disabled:bg-white/5 text-white disabled:text-gray-500 font-medium rounded-lg flex items-center justify-center gap-2 border border-white/10 disabled:border-white/5 transition-all disabled:cursor-not-allowed text-sm"
+                onClick={handleClaimToWallet}
+              >
+                {claimLoading ? (
+                  <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Wallet className="w-3.5 h-3.5" />
+                )}
+                Claim
+              </button>
 
-              {/* Stake Rewards - THE NEW FEATURE */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity animate-pulse" />
-                <button
-                  disabled={streamingStats.totalUnclaimed <= 0 || claimLoading}
-                  className="relative w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-600/50 disabled:to-gray-600/50 text-white disabled:text-gray-400 font-bold rounded-xl flex items-center justify-center gap-2 border border-purple-500/50 disabled:border-gray-500/30 transition-all disabled:cursor-not-allowed shadow-[0_0_20px_rgba(168,85,247,0.3)]"
-                  onClick={handleStakeRewards}
-                >
-                  {claimLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Lock className="w-4 h-4" />
-                  )}
-                  <span className="text-sm">Stake Rewards</span>
-                  <Sparkles className="w-3 h-3 text-yellow-300" />
-                </button>
-              </div>
+              {/* Stake Rewards */}
+              <button
+                disabled={streamingStats.totalUnclaimed <= 0 || claimLoading}
+                className="py-2.5 bg-cyan-500/20 hover:bg-cyan-500/30 disabled:bg-white/5 text-cyan-400 disabled:text-gray-500 font-medium rounded-lg flex items-center justify-center gap-2 border border-cyan-500/30 disabled:border-white/5 transition-all disabled:cursor-not-allowed text-sm"
+                onClick={handleStakeRewards}
+              >
+                {claimLoading ? (
+                  <div className="w-3 h-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Lock className="w-3.5 h-3.5" />
+                )}
+                Stake
+              </button>
             </div>
 
             {/* Rewards Summary */}
@@ -914,58 +882,62 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
         </div>
       )}
 
-      {/* Chain Selector */}
-      <div className="flex items-center gap-2 p-3 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10">
-        <span className="text-sm text-gray-300">Chain:</span>
+      {/* Chain Selector - Minimal */}
+      <div className="flex items-center gap-3 px-3 py-2 bg-white/5 rounded-lg border border-white/5">
+        <span className="text-xs text-gray-500">Network</span>
         <select
           value={selectedChain}
           onChange={(e) => setSelectedChain(e.target.value)}
-          className="bg-gray-900/80 text-white text-sm rounded-lg px-3 py-1.5 border border-white/10 focus:border-purple-500/50 focus:outline-none transition-colors"
+          className="flex-1 bg-transparent text-white text-sm focus:outline-none cursor-pointer"
         >
-          <option value="Polygon">Polygon (Live - OGUN Native)</option>
-          <option value="ZetaChain">ZetaChain (Omnichain)</option>
-          <option value="Ethereum">Ethereum</option>
-          <option value="Base">Base</option>
+          <option value="Polygon" className="bg-gray-900">Polygon</option>
+          <option value="ZetaChain" className="bg-gray-900">ZetaChain</option>
+          <option value="Ethereum" className="bg-gray-900">Ethereum</option>
+          <option value="Base" className="bg-gray-900">Base</option>
         </select>
         <a
           href={CHAIN_EXPLORERS[selectedChain]}
           target="_blank"
           rel="noreferrer"
-          className="text-cyan-400 hover:text-cyan-300 ml-auto transition-colors"
+          className="text-gray-500 hover:text-cyan-400 transition-colors"
         >
-          <ExternalLink className="w-4 h-4" />
+          <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-gradient-to-br from-purple-900/60 to-purple-800/40 backdrop-blur-sm p-4 rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/10 hover:border-purple-500/50 transition-all">
-          <div className="flex items-center gap-2 text-purple-300 mb-1">
-            <Wallet className="w-4 h-4" />
-            <span className="text-xs font-medium">Balance</span>
+      {/* Stats Grid - Clean cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="bg-white/5 p-3 rounded-lg border border-white/5 hover:border-white/10 transition-all">
+          <div className="flex items-center gap-1.5 text-gray-500 mb-1">
+            <Wallet className="w-3 h-3" />
+            <span className="text-[10px] font-medium uppercase">Balance</span>
           </div>
-          <p className="text-lg font-bold text-white drop-shadow-sm">{formatToCompactNumber(parseFloat(ogunBalance))} OGUN</p>
+          <p className="text-base font-semibold text-white">{formatToCompactNumber(parseFloat(ogunBalance))}</p>
+          <p className="text-[10px] text-gray-600">OGUN</p>
         </div>
-        <div className="bg-gradient-to-br from-cyan-900/60 to-cyan-800/40 backdrop-blur-sm p-4 rounded-xl border border-cyan-500/30 shadow-lg shadow-cyan-500/10 hover:border-cyan-500/50 transition-all">
-          <div className="flex items-center gap-2 text-cyan-300 mb-1">
-            <Lock className="w-4 h-4" />
-            <span className="text-xs font-medium">Staked</span>
+        <div className="bg-white/5 p-3 rounded-lg border border-white/5 hover:border-cyan-500/30 transition-all">
+          <div className="flex items-center gap-1.5 text-gray-500 mb-1">
+            <Lock className="w-3 h-3" />
+            <span className="text-[10px] font-medium uppercase">Staked</span>
           </div>
-          <p className="text-lg font-bold text-white drop-shadow-sm">{formatToCompactNumber(parseFloat(stakedBalance))} OGUN</p>
+          <p className="text-base font-semibold text-cyan-400">{formatToCompactNumber(parseFloat(stakedBalance))}</p>
+          <p className="text-[10px] text-gray-600">OGUN</p>
         </div>
-        <div className="bg-gradient-to-br from-green-900/60 to-green-800/40 backdrop-blur-sm p-4 rounded-xl border border-green-500/30 shadow-lg shadow-green-500/10 hover:border-green-500/50 transition-all">
-          <div className="flex items-center gap-2 text-green-300 mb-1">
-            <Gift className="w-4 h-4" />
-            <span className="text-xs font-medium">Rewards</span>
+        <div className="bg-white/5 p-3 rounded-lg border border-white/5 hover:border-green-500/30 transition-all">
+          <div className="flex items-center gap-1.5 text-gray-500 mb-1">
+            <Gift className="w-3 h-3" />
+            <span className="text-[10px] font-medium uppercase">Rewards</span>
           </div>
-          <p className="text-lg font-bold text-white drop-shadow-sm">{formatToCompactNumber(parseFloat(rewardBalance))} OGUN</p>
+          <p className="text-base font-semibold text-green-400">{formatToCompactNumber(parseFloat(rewardBalance))}</p>
+          <p className="text-[10px] text-gray-600">OGUN</p>
         </div>
-        <div className="bg-gradient-to-br from-yellow-900/60 to-yellow-800/40 backdrop-blur-sm p-4 rounded-xl border border-yellow-500/30 shadow-lg shadow-yellow-500/10 hover:border-yellow-500/50 transition-all">
-          <div className="flex items-center gap-2 text-yellow-300 mb-1">
-            <TrendingUp className="w-4 h-4" />
-            <span className="text-xs font-medium">APR</span>
+        <div className="bg-white/5 p-3 rounded-lg border border-white/5 hover:border-yellow-500/30 transition-all">
+          <div className="flex items-center gap-1.5 text-gray-500 mb-1">
+            <TrendingUp className="w-3 h-3" />
+            <span className="text-[10px] font-medium uppercase">APR</span>
           </div>
-          <p className="text-lg font-bold text-white drop-shadow-sm">{apr}%</p>
+          <p className="text-base font-semibold text-yellow-400">{apr}%</p>
+          <p className="text-[10px] text-gray-600">Annual</p>
         </div>
       </div>
 
@@ -974,68 +946,68 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
         <button
           onClick={handleClaimRewards}
           disabled={isLoading}
-          className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+          className="w-full py-2.5 bg-green-500/20 hover:bg-green-500/30 text-green-400 font-medium rounded-lg flex items-center justify-center gap-2 border border-green-500/30 transition-all text-sm"
         >
-          <Gift className="w-5 h-5" />
-          Claim {formatToCompactNumber(parseFloat(rewardBalance))} OGUN Rewards
+          <Gift className="w-4 h-4" />
+          Claim {formatToCompactNumber(parseFloat(rewardBalance))} OGUN
         </button>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-2 p-1 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10">
+      {/* Tabs - Modern pill style */}
+      <div className="flex gap-1 p-1 bg-white/5 rounded-lg">
         <button
           onClick={() => setActiveTab('stake')}
-          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'stake'
-              ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+              : 'text-gray-500 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Lock className="w-4 h-4" />
+          <Lock className="w-3.5 h-3.5" />
           Stake
         </button>
         <button
           onClick={() => setActiveTab('unstake')}
-          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'unstake'
-              ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+              : 'text-gray-500 hover:text-white hover:bg-white/5'
           }`}
         >
-          <Unlock className="w-4 h-4" />
+          <Unlock className="w-3.5 h-3.5" />
           Unstake
         </button>
         <button
           onClick={() => setActiveTab('swap')}
-          className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'swap'
-              ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+              : 'text-gray-500 hover:text-white hover:bg-white/5'
           }`}
         >
-          <ArrowDownUp className="w-4 h-4" />
+          <ArrowDownUp className="w-3.5 h-3.5" />
           Swap
         </button>
       </div>
 
       {/* Transaction State */}
       {transactionState && (
-        <div className="flex items-center gap-2 p-3 bg-blue-500/20 border border-blue-500/50 rounded-lg text-blue-400">
-          <div className="animate-spin w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full" />
+        <div className="flex items-center gap-2 p-2.5 bg-cyan-500/10 border border-cyan-500/20 rounded-lg text-cyan-400 text-sm">
+          <div className="animate-spin w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full" />
           {transactionState}
         </div>
       )}
 
       {/* Stake/Unstake Form */}
       {(activeTab === 'stake' || activeTab === 'unstake') && (
-        <div className="space-y-4">
-          <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+        <div className="space-y-3">
+          <div className="bg-white/5 rounded-lg p-3 border border-white/5">
             <div className="flex justify-between mb-2">
-              <span className="text-sm text-gray-400">
-                {activeTab === 'stake' ? 'Amount to Stake' : 'Amount to Unstake'}
+              <span className="text-xs text-gray-500">
+                {activeTab === 'stake' ? 'Stake Amount' : 'Unstake Amount'}
               </span>
-              <span className="text-sm text-gray-400">
-                Available: {formatToCompactNumber(parseFloat(activeTab === 'stake' ? ogunBalance : stakedBalance))} OGUN
+              <span className="text-xs text-gray-500">
+                Available: <span className="text-gray-400">{formatToCompactNumber(parseFloat(activeTab === 'stake' ? ogunBalance : stakedBalance))}</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1044,31 +1016,31 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="flex-1 bg-transparent text-2xl font-bold text-white outline-none"
+                className="flex-1 bg-transparent text-xl font-semibold text-white outline-none"
               />
               <button
                 onClick={handleSetMax}
-                className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-500/30"
+                className="px-2 py-1 bg-white/10 text-gray-400 hover:text-white rounded text-xs font-medium hover:bg-white/20 transition-all"
               >
                 MAX
               </button>
-              <span className="text-gray-400 font-medium">OGUN</span>
+              <span className="text-gray-500 text-sm">OGUN</span>
             </div>
           </div>
 
           <button
             onClick={activeTab === 'stake' ? handleStake : handleUnstake}
             disabled={isLoading || !amount || parseFloat(amount) <= 0}
-            className="w-full py-4 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+            className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black disabled:text-gray-500 font-semibold rounded-lg flex items-center justify-center gap-2 transition-all text-sm"
           >
             {activeTab === 'stake' ? (
               <>
-                <Lock className="w-5 h-5" />
+                <Lock className="w-4 h-4" />
                 Stake OGUN
               </>
             ) : (
               <>
-                <Unlock className="w-5 h-5" />
+                <Unlock className="w-4 h-4" />
                 Unstake OGUN
               </>
             )}
@@ -1078,13 +1050,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
       {/* Swap Tab */}
       {activeTab === 'swap' && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* From Token Input */}
-          <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+          <div className="bg-white/5 rounded-lg p-3 border border-white/5">
             <div className="flex justify-between mb-2">
-              <span className="text-sm text-gray-400">From</span>
-              <span className="text-sm text-gray-400">
-                Balance: {formatToCompactNumber(parseFloat(swapFromToken === 'POL' ? polBalance : ogunBalance))} {swapFromToken}
+              <span className="text-xs text-gray-500">From</span>
+              <span className="text-xs text-gray-500">
+                Balance: <span className="text-gray-400">{formatToCompactNumber(parseFloat(swapFromToken === 'POL' ? polBalance : ogunBalance))}</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -1093,15 +1065,15 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
                 value={swapAmount}
                 onChange={(e) => setSwapAmount(e.target.value)}
                 placeholder="0.00"
-                className="flex-1 bg-transparent text-2xl font-bold text-white outline-none"
+                className="flex-1 bg-transparent text-xl font-semibold text-white outline-none"
               />
               <button
                 onClick={handleSwapSetMax}
-                className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium hover:bg-purple-500/30"
+                className="px-2 py-1 bg-white/10 text-gray-400 hover:text-white rounded text-xs font-medium hover:bg-white/20 transition-all"
               >
                 MAX
               </button>
-              <span className="text-gray-300 font-medium min-w-[60px] text-right">{swapFromToken}</span>
+              <span className="text-gray-400 text-sm min-w-[50px] text-right">{swapFromToken}</span>
             </div>
           </div>
 
@@ -1109,50 +1081,47 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
           <div className="flex justify-center">
             <button
               onClick={toggleSwapDirection}
-              className="p-2 bg-gray-700 hover:bg-gray-600 rounded-full transition-all hover:rotate-180 duration-300"
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-all hover:rotate-180 duration-300 border border-white/10"
             >
-              <ArrowDownUp className="w-5 h-5 text-purple-400" />
+              <ArrowDownUp className="w-4 h-4 text-cyan-400" />
             </button>
           </div>
 
           {/* To Token Output */}
-          <div className="bg-black/40 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+          <div className="bg-white/5 rounded-lg p-3 border border-white/5">
             <div className="flex justify-between mb-2">
-              <span className="text-sm text-gray-400">To (estimated)</span>
-              <span className="text-sm text-gray-400">
-                Balance: {formatToCompactNumber(parseFloat(swapFromToken === 'POL' ? ogunBalance : polBalance))} {swapFromToken === 'POL' ? 'OGUN' : 'POL'}
+              <span className="text-xs text-gray-500">To (estimated)</span>
+              <span className="text-xs text-gray-500">
+                Balance: <span className="text-gray-400">{formatToCompactNumber(parseFloat(swapFromToken === 'POL' ? ogunBalance : polBalance))}</span>
               </span>
             </div>
             <div className="flex items-center gap-2">
               {swapQuoteLoading ? (
                 <div className="flex-1 flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
-                  <span className="text-gray-400">Fetching quote...</span>
+                  <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-gray-500 text-sm">Loading...</span>
                 </div>
               ) : (
-                <span className="flex-1 text-2xl font-bold text-white">
+                <span className="flex-1 text-xl font-semibold text-white">
                   {swapQuote ? parseFloat(swapQuote).toFixed(6) : '0.00'}
                 </span>
               )}
-              <span className="text-gray-300 font-medium min-w-[60px] text-right">{swapFromToken === 'POL' ? 'OGUN' : 'POL'}</span>
+              <span className="text-gray-400 text-sm min-w-[50px] text-right">{swapFromToken === 'POL' ? 'OGUN' : 'POL'}</span>
             </div>
           </div>
 
-          {/* Slippage Settings */}
-          <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 border border-white/5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-400">Slippage Tolerance</span>
-              <span className="text-sm text-cyan-400">{slippage}%</span>
-            </div>
-            <div className="flex gap-2">
+          {/* Slippage Settings - Compact */}
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs text-gray-500">Slippage</span>
+            <div className="flex gap-1">
               {[0.5, 1, 2].map((val) => (
                 <button
                   key={val}
                   onClick={() => setSlippage(val)}
-                  className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-2 py-1 rounded text-xs font-medium transition-all ${
                     slippage === val
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                      : 'bg-white/5 text-gray-500 hover:text-white border border-transparent'
                   }`}
                 >
                   {val}%
@@ -1163,22 +1132,18 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
           {/* Swap Details */}
           {swapQuote && swapAmount && (
-            <div className="bg-black/30 backdrop-blur-sm rounded-xl p-3 space-y-2 border border-white/5">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Rate</span>
-                <span className="text-white">
-                  1 {swapFromToken} = {(parseFloat(swapQuote) / parseFloat(swapAmount)).toFixed(6)} {swapFromToken === 'POL' ? 'OGUN' : 'POL'}
+            <div className="bg-white/5 rounded-lg p-2.5 space-y-1.5 border border-white/5">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Rate</span>
+                <span className="text-gray-300">
+                  1 {swapFromToken} = {(parseFloat(swapQuote) / parseFloat(swapAmount)).toFixed(4)} {swapFromToken === 'POL' ? 'OGUN' : 'POL'}
                 </span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Minimum received</span>
-                <span className="text-white">
-                  {(parseFloat(swapQuote) * (1 - slippage / 100)).toFixed(6)} {swapFromToken === 'POL' ? 'OGUN' : 'POL'}
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-500">Min received</span>
+                <span className="text-gray-300">
+                  {(parseFloat(swapQuote) * (1 - slippage / 100)).toFixed(4)}
                 </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Route</span>
-                <span className="text-cyan-400">{swapFromToken} → {swapFromToken === 'POL' ? 'OGUN' : 'POL'}</span>
               </div>
             </div>
           )}
@@ -1187,10 +1152,10 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
           <button
             onClick={handleSwap}
             disabled={isLoading || !swapAmount || parseFloat(swapAmount) <= 0 || !swapQuote}
-            className="w-full py-4 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+            className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black disabled:text-gray-500 font-semibold rounded-lg flex items-center justify-center gap-2 transition-all text-sm"
           >
-            <ArrowDownUp className="w-5 h-5" />
-            {isLoading ? transactionState || 'Processing...' : `Swap ${swapFromToken} for ${swapFromToken === 'POL' ? 'OGUN' : 'POL'}`}
+            <ArrowDownUp className="w-4 h-4" />
+            {isLoading ? transactionState || 'Processing...' : `Swap`}
           </button>
 
           {/* QuickSwap Fallback Link */}
@@ -1199,50 +1164,48 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               href={QUICKSWAP_SWAP_URL(TOKEN_ADDRESSES.WPOL, TOKEN_ADDRESSES.OGUN)}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-cyan-400 transition-colors"
             >
-              Or swap on QuickSwap <ExternalLink className="w-3 h-3" />
+              Swap on QuickSwap <ExternalLink className="w-3 h-3" />
             </a>
           </div>
         </div>
       )}
 
-      {/* Staking Phases */}
-      <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-white/5">
-        <h3 className="text-sm font-bold text-gray-300 mb-3 drop-shadow-sm">REWARD PHASES</h3>
-        <div className="space-y-2">
+      {/* Staking Phases - Compact */}
+      <div className="bg-white/5 rounded-lg p-3 border border-white/5">
+        <h3 className="text-xs font-medium text-gray-500 uppercase mb-2">Reward Phases</h3>
+        <div className="space-y-1.5">
           {phases.map((phase) => (
             <div
               key={phase.phase}
-              className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+              className={`flex items-center justify-between p-2 rounded-lg transition-all ${
                 phase.status === 'active'
-                  ? 'bg-gradient-to-r from-green-500/30 to-green-500/10 border border-green-500/40 shadow-lg shadow-green-500/10'
-                  : 'bg-black/30 border border-white/5 hover:border-white/10'
+                  ? 'bg-green-500/10 border border-green-500/30'
+                  : 'bg-white/5 border border-transparent hover:border-white/10'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <span className={`text-xs font-bold px-2 py-1 rounded ${
-                  phase.status === 'active' ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                  phase.status === 'active' ? 'bg-green-500 text-black' : 'bg-gray-700 text-gray-400'
                 }`}>
-                  Phase {phase.phase}
+                  P{phase.phase}
                 </span>
-                <span className="text-sm text-gray-400">{phase.days} days</span>
+                <span className="text-xs text-gray-500">{phase.days}d</span>
               </div>
               <div className="text-right">
-                <span className="text-white font-bold">{phase.reward}</span>
-                <span className="text-gray-400 text-sm ml-1">OGUN/day</span>
+                <span className="text-xs text-white font-medium">{phase.reward}</span>
+                <span className="text-[10px] text-gray-500 ml-1">/day</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Total Staked */}
-      <div className="bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/30 shadow-lg shadow-purple-500/10">
-        <div className="flex items-center justify-between">
-          <span className="text-gray-300">Total Value Locked</span>
-          <span className="text-xl font-bold text-white drop-shadow-sm">{totalStaked} OGUN</span>
-        </div>
+      {/* Total Staked - Clean footer */}
+      <div className="flex items-center justify-between px-3 py-2 bg-white/5 rounded-lg border border-white/5">
+        <span className="text-xs text-gray-500">Total Value Locked</span>
+        <span className="text-sm font-semibold text-white">{totalStaked} OGUN</span>
       </div>
     </div>
   )

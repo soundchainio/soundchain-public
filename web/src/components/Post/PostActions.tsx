@@ -48,8 +48,8 @@ interface PostActionsProps {
   }
 }
 
-// Icon-only action button styles
-const commonClasses = 'text-neutral-400 flex-1 flex justify-center'
+// Icon-only action button styles - Modern spacing
+const commonClasses = 'text-gray-400 flex items-center justify-center'
 
 export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmarked, commentCount = 0, repostCount = 0, hasTrack, isEphemeral, isOwner, postData }: PostActionsProps) => {
   const [reactionSelectorOpened, setReactionSelectorOpened] = useState(false)
@@ -244,7 +244,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   }, [postId, router.asPath])
 
   return (
-    <div className="relative flex items-center bg-neutral-900/50 rounded-lg px-1 py-1.5">
+    <div className="relative flex items-center justify-between gap-2">
       {/* Like button with hover zone */}
       <div
         ref={likeButtonRef}
@@ -253,7 +253,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
         onMouseLeave={handleLikeMouseLeave}
       >
         <button
-          className="flex items-center justify-center font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
+          className="flex items-center gap-2 px-3 py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
           onClick={handleLikeButton}
           title="Like"
         >
@@ -304,31 +304,31 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
 
       <div className={commonClasses}>
         <button
-          className="flex items-center justify-center gap-1 font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
+          className="flex items-center gap-1.5 px-3 py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
           onClick={() => dispatchShowCommentModal({ show: true, postId })}
           title="Reply"
         >
           <ChatBubbleLeftIcon className="h-4 w-4" />
           {commentCount > 0 && (
-            <span className="text-xs text-neutral-400">{commentCount}</span>
+            <span className="text-xs">{commentCount}</span>
           )}
         </button>
       </div>
       <div className={commonClasses}>
         <button
-          className="flex items-center justify-center gap-1 font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
+          className="flex items-center gap-1.5 px-3 py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
           onClick={onRepostClick}
           title="Repost"
         >
           <ArrowPathIcon className="h-4 w-4" />
           {repostCount > 0 && (
-            <span className="text-xs text-neutral-400">{repostCount}</span>
+            <span className="text-xs">{repostCount}</span>
           )}
         </button>
       </div>
       <div className={commonClasses}>
         <button
-          className="flex items-center justify-center font-medium hover:text-white transition-colors p-2 rounded-lg hover:bg-neutral-800/50"
+          className="flex items-center px-3 py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
           onClick={onShareClick}
           title="Share"
         >
@@ -339,7 +339,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       {!hasTrack && postData && (
         <div className={commonClasses}>
           <button
-            className={`flex items-center justify-center p-2 rounded-lg hover:bg-neutral-800/50 transition-colors ${isDownloading ? 'opacity-50' : ''}`}
+            className={`flex items-center px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${isDownloading ? 'opacity-50' : ''}`}
             onClick={handleDownloadClick}
             disabled={isDownloading}
             title="Download"
@@ -352,13 +352,13 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       {me && (
         <div className={commonClasses}>
           <button
-            className={`flex items-center justify-center p-2 rounded-lg hover:bg-neutral-800/50 transition-colors ${bookmarking || unbookmarking ? 'opacity-50' : ''}`}
+            className={`flex items-center px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${bookmarking || unbookmarking ? 'opacity-50' : ''}`}
             onClick={handleBookmarkClick}
             disabled={bookmarking || unbookmarking}
             title="Save"
           >
             {isBookmarked ? (
-              <Bookmark className="h-4 w-4 text-[#62AAFF] fill-[#62AAFF]" />
+              <Bookmark className="h-4 w-4 text-cyan-400 fill-cyan-400" />
             ) : (
               <Bookmark className="h-4 w-4" />
             )}
@@ -369,7 +369,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       {isEphemeral && isOwner && postData && (
         <div className={`${commonClasses} relative`}>
           <button
-            className={`flex items-center justify-center p-2 rounded-lg hover:bg-neutral-800/50 transition-colors ${isArchiving ? 'opacity-50' : ''}`}
+            className={`flex items-center px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${isArchiving ? 'opacity-50' : ''}`}
             onClick={handleArchiveClick}
             disabled={isArchiving}
             title={isArchiving ? 'Saving...' : 'Archive'}
