@@ -124,7 +124,7 @@ export default function LoginPage() {
   const [authMethod, setAuthMethod] = useState<AuthMethod[]>();
   const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
   const { magic } = useMagicContext();
-  const { setDirectConnection } = useUnifiedWallet();
+  const { setDirectConnection, connectWeb3Modal, isWeb3ModalReady, activeAddress: web3ModalAddress, activeWalletType } = useUnifiedWallet();
   const { loginWithWallet: walletLoginMutation, loading: walletLoginLoading } = useWalletLogin();
   const [checkWalletUser] = useUserByWalletLazyQuery();
   const [isClient, setIsClient] = useState(false);
@@ -142,6 +142,7 @@ export default function LoginPage() {
   const [walletTermsAccepted, setWalletTermsAccepted] = useState(false);
   const [signedMessage, setSignedMessage] = useState<string | null>(null);
   const [signedSignature, setSignedSignature] = useState<string | null>(null);
+  const [selectedWalletType, setSelectedWalletType] = useState<'metamask' | 'walletconnect' | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -419,6 +420,105 @@ export default function LoginPage() {
     }
   };
 
+  // Handle WalletConnect login (Trust, Rainbow, etc.)
+  const handleWalletConnectLogin = async () => {
+    if (!isWeb3ModalReady) {
+      setError('WalletConnect not ready. Please try again.');
+      return;
+    }
+
+    setSelectedWalletType('walletconnect');
+    setWalletLoginStep('connecting');
+    setError(null);
+
+    try {
+      console.log('[WalletConnect] Opening Web3Modal...');
+      await connectWeb3Modal();
+      // Note: The actual connection result comes through the activeAddress state
+      // We'll handle this in a useEffect
+    } catch (err: any) {
+      console.error('[WalletConnect] Error:', err);
+      setWalletLoginStep('error');
+      setError(err.message || 'WalletConnect failed. Please try again.');
+    }
+  };
+
+  // Watch for WalletConnect connection result
+  useEffect(() => {
+    const handleWeb3ModalConnection = async () => {
+      if (selectedWalletType === 'walletconnect' && web3ModalAddress && walletLoginStep === 'connecting') {
+        console.log('[WalletConnect] Connected:', web3ModalAddress);
+        setWalletAddress(web3ModalAddress);
+
+        // Check if user exists
+        setWalletLoginStep('checking');
+        const { data: existingUser } = await checkWalletUser({
+          variables: { walletAddress: web3ModalAddress }
+        });
+
+        if (existingUser?.getUserByWallet) {
+          console.log('[WalletConnect] Existing user, signing...');
+          await signAndCompleteWalletConnectLogin(web3ModalAddress);
+        } else {
+          console.log('[WalletConnect] New user, showing registration...');
+          setIsNewWalletUser(true);
+          setWalletLoginStep('register');
+          setWalletDisplayName(`${web3ModalAddress.slice(0, 6)}...${web3ModalAddress.slice(-4)}`);
+        }
+      }
+    };
+    handleWeb3ModalConnection();
+  }, [web3ModalAddress, selectedWalletType, walletLoginStep]);
+
+  // Sign via WalletConnect provider
+  const signAndCompleteWalletConnectLogin = async (address: string, handle?: string, displayName?: string) => {
+    try {
+      setWalletLoginStep('signing');
+
+      const message = generateLoginMessage(address);
+      console.log('[WalletConnect] Requesting signature...');
+
+      // Get the Web3Modal provider from window.ethereum (WalletConnect injects it)
+      const provider = (window as any).ethereum;
+      if (!provider) {
+        throw new Error('No wallet provider found');
+      }
+
+      const signature = await provider.request({
+        method: 'personal_sign',
+        params: [message, address],
+      });
+
+      console.log('[WalletConnect] Signature received, calling backend...');
+
+      const jwt = await walletLoginMutation({
+        walletAddress: address,
+        signature: signature as string,
+        message,
+        ...(handle && { handle }),
+        ...(displayName && { displayName }),
+      });
+
+      if (!jwt) {
+        throw new Error('Backend authentication failed');
+      }
+
+      await setJwt(jwt);
+      setWalletLoginStep('success');
+      setDirectConnection(address, 'web3modal', 137);
+
+      setTimeout(() => {
+        const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+        router.push(redirectUrl);
+      }, 1000);
+
+    } catch (err: any) {
+      console.error('[WalletConnect] Sign error:', err);
+      setWalletLoginStep('error');
+      setError(err.message || 'Signature failed. Please try again.');
+    }
+  };
+
   // Handle wallet registration form submission
   const handleWalletRegistration = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -438,8 +538,14 @@ export default function LoginPage() {
       return;
     }
 
-    console.log('[WalletLogin] Submitting registration:', { handle: walletHandle, displayName: walletDisplayName });
-    await signAndCompleteWalletLogin(walletAddress, walletHandle.trim(), walletDisplayName.trim() || undefined);
+    console.log('[WalletLogin] Submitting registration:', { handle: walletHandle, displayName: walletDisplayName, walletType: selectedWalletType });
+
+    // Use appropriate sign function based on wallet type
+    if (selectedWalletType === 'walletconnect') {
+      await signAndCompleteWalletConnectLogin(walletAddress, walletHandle.trim(), walletDisplayName.trim() || undefined);
+    } else {
+      await signAndCompleteWalletLogin(walletAddress, walletHandle.trim(), walletDisplayName.trim() || undefined);
+    }
   };
 
   // Unified handler for magic_credential callbacks (OAuth and Email Magic Links)
@@ -792,13 +898,38 @@ export default function LoginPage() {
 
               {walletLoginStep === 'idle' && (
                 <>
-                  <button
-                    onClick={handleWalletLogin}
-                    className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 via-cyan-600 to-purple-600 hover:from-purple-500 hover:via-cyan-500 hover:to-purple-500 text-white text-lg font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-xl shadow-purple-500/30 border border-white/20"
-                  >
-                    🔐 Connect Wallet & Sign In
-                  </button>
-                  <p className="text-xs text-gray-400 mt-3">
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    {/* MetaMask / Injected Wallet */}
+                    {hasWallet && (
+                      <button
+                        onClick={() => { setSelectedWalletType('metamask'); handleWalletLogin(); }}
+                        className="py-3 px-4 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/50 hover:border-orange-400 rounded-xl text-white font-medium transition-all hover:scale-[1.02] flex flex-col items-center gap-2"
+                      >
+                        <span className="text-2xl">🦊</span>
+                        <span className="text-sm">{walletBrowserInfo.walletName || 'MetaMask'}</span>
+                      </button>
+                    )}
+
+                    {/* WalletConnect - Trust, Rainbow, etc. */}
+                    <button
+                      onClick={handleWalletConnectLogin}
+                      disabled={!isWeb3ModalReady}
+                      className={`py-3 px-4 rounded-xl font-medium transition-all flex flex-col items-center gap-2 ${
+                        isWeb3ModalReady
+                          ? 'bg-gradient-to-br from-blue-500/20 to-purple-600/10 border border-blue-500/50 hover:border-blue-400 text-white hover:scale-[1.02]'
+                          : 'bg-gray-800 border border-gray-700 text-gray-500 cursor-wait'
+                      }`}
+                    >
+                      <span className="text-2xl">🔗</span>
+                      <span className="text-sm">{isWeb3ModalReady ? 'WalletConnect' : 'Loading...'}</span>
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-gray-500 text-center">
+                    WalletConnect supports <span className="text-blue-400">Trust</span>, <span className="text-purple-400">Rainbow</span>, <span className="text-green-400">Ledger</span> + 300 more
+                  </p>
+
+                  <p className="text-xs text-gray-400 mt-3 text-center">
                     Sign a message to verify ownership • Zero gas fees • Instant access
                   </p>
                 </>
