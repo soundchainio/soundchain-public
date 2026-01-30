@@ -144,9 +144,9 @@ Buy, sell, and trade using your favorite tokens:
 ## 🔗 Connect With Us
 
 - **Website:** [soundchain.io](https://soundchain.io)
-- **App:** [app.soundchain.io](https://app.soundchain.io)
-- **Twitter/X:** [@soundaboreum](https://twitter.com/soundaboreum)
-- **Discord:** [Join Community](https://discord.gg/soundchain)
+- **Twitter/X:** [@soundchain_io](https://twitter.com/soundchain_io)
+- **Discord:** [Join Community](https://discord.com/invite/5yZG6BTTHV)
+- **GitHub:** [soundchainio/soundchain-public](https://github.com/soundchainio/soundchain-public)
 
 ---
 
