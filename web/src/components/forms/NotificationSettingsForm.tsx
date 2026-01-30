@@ -35,6 +35,10 @@ function NostrNotificationSection({
 }) {
   const [copied, setCopied] = useState(false);
 
+  // Debug logging
+  console.log('[NostrSection] nostrPubkey:', nostrPubkey);
+  console.log('[NostrSection] notifyViaNostr:', notifyViaNostr);
+
   const handleCopy = async () => {
     if (!nostrPubkey) return;
     try {
@@ -153,6 +157,9 @@ interface NotificationSettingsFormProps {
 }
 
 export function NotificationSettingsForm({ afterSubmit, initialValues }: NotificationSettingsFormProps) {
+  // Debug: log what we're receiving from the Me query
+  console.log('[NotificationSettingsForm] initialValues:', JSON.stringify(initialValues, null, 2));
+
   const { permission, isSubscribed, subscribe, unsubscribe, isLoading: pushLoading, isSupported } = usePushNotifications();
 
   const [notifyOnFollow, setNotifyOnFollow] = useState(initialValues?.notifyOnFollow ?? true);
