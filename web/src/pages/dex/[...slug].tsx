@@ -2490,7 +2490,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
       {/* REMOVED ScrollingBackground - it was covering user's real cover art with Unsplash placeholders */}
 
-      <div className="relative z-10">
+      <div className="relative z-10 pb-20">
         {/* Navigation Bar */}
         <nav className="backdrop-blur-xl bg-gray-900/95 border-b border-cyan-500/20 px-2 sm:px-4 lg:px-6 py-1.5 sm:py-2 sticky top-0 z-50 shadow-lg overflow-x-hidden">
           <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
@@ -7118,10 +7118,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
         </div>
 
-        {/* Footer - Sticky at bottom with solid background */}
-        <footer className="sticky bottom-0 border-t border-cyan-500/30 bg-black py-4 mt-auto z-40">
+        {/* Footer - Fixed at bottom with solid background */}
+        <footer className="fixed bottom-0 left-0 right-0 border-t border-cyan-500/30 bg-black py-3 z-40">
           <div className="max-w-screen-2xl mx-auto px-4 text-center">
-            <div className="retro-json text-sm mb-1">powered_by: "SoundChain × ZetaChain"</div>
+            <div className="retro-json text-sm mb-0.5">powered_by: "SoundChain × ZetaChain"</div>
             <div className="text-xs text-gray-500">DEX Dashboard • CarPlay Ready • Amazon Fire TV Ready • All Devices</div>
           </div>
         </footer>
