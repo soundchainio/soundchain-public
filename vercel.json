@@ -1,18 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "web/package.json",
-      "use": "@vercel/next"
-    }
-  ],
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "web/$1"
-    }
-  ]
+  "framework": "nextjs",
+  "buildCommand": "cd web && yarn build",
+  "outputDirectory": "web/.next",
+  "installCommand": "cd web && yarn install"
 }
