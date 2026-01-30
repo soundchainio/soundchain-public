@@ -850,41 +850,10 @@ export default function LoginPage() {
         </div>
         <Overlay />
         <ContentContainer>
-          <div className="mb-2 flex h-36 items-center justify-center">
-            <LogoAndText className="text-white filter drop-shadow-lg" />
-          </div>
-          {/* Error display */}
-          {error && (
-            <div className="mb-4 py-3 px-4 rounded-lg bg-red-500/20 border border-red-500 text-center text-sm text-red-400 font-semibold">
-              {error}
-            </div>
-          )}
-
-          {/* In-app browser warning */}
-          {inAppBrowserWarning && !hasWallet && (
-            <div className="mb-4 rounded-lg bg-yellow-500/20 border border-yellow-500 p-4 text-center">
-              <p className="text-sm font-semibold text-yellow-400">
-                You're using an in-app browser
-              </p>
-              <p className="text-xs text-yellow-300 mt-1">
-                For Google login, tap ⋮ menu → "Open in Safari/Chrome"
-              </p>
-            </div>
-          )}
-
-          {/* OTP waiting indicator */}
-          {waitingForOtp && (
-            <div className="mb-4 rounded-lg bg-cyan-500/20 border border-cyan-500 p-4 text-center animate-pulse">
-              <p className="text-sm font-semibold text-cyan-400">
-                Check your email for a 6-digit code
-              </p>
-            </div>
-          )}
-
           {/* ═══════════════════════════════════════════════════════════════
-              🔥 WALLET LOGIN - FIRST CLASS, FRONT AND CENTER 🔥
+              🔥 VIP WALLET LOGIN - TOP OF PAGE, FIRST THING YOU SEE 🔥
               ═══════════════════════════════════════════════════════════════ */}
-          {hasWallet && walletLoginStep !== 'success' && (
+          {walletLoginStep !== 'success' && (
             <div className="mb-6 rounded-2xl bg-gradient-to-br from-purple-600/30 via-cyan-600/20 to-orange-500/20 border-2 border-purple-500/50 p-6 text-center shadow-2xl shadow-purple-500/20">
               <div className="flex items-center justify-center gap-3 mb-4">
                 <span className="text-3xl">{walletBrowserInfo.walletName === 'MetaMask' ? '🦊' : walletBrowserInfo.walletName === 'Coinbase Wallet' ? '🔵' : '💎'}</span>
@@ -1068,19 +1037,54 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Divider - only show if wallet available */}
-          {hasWallet && walletLoginStep === 'idle' && (
-            <div className="flex items-center gap-4 my-2">
+          {/* Divider after wallet section */}
+          {walletLoginStep === 'idle' && (
+            <div className="flex items-center gap-4 my-4">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-              <span className="text-gray-500 text-xs font-medium">OR CONTINUE WITH</span>
+              <span className="text-gray-500 text-xs font-medium">OR</span>
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+            </div>
+          )}
+
+          {/* Logo - now below VIP wallet section */}
+          {walletLoginStep === 'idle' && (
+            <div className="mb-4 flex h-24 items-center justify-center">
+              <LogoAndText className="text-white filter drop-shadow-lg" />
+            </div>
+          )}
+
+          {/* Error display */}
+          {error && (
+            <div className="mb-4 py-3 px-4 rounded-lg bg-red-500/20 border border-red-500 text-center text-sm text-red-400 font-semibold">
+              {error}
+            </div>
+          )}
+
+          {/* In-app browser warning */}
+          {inAppBrowserWarning && !hasWallet && walletLoginStep === 'idle' && (
+            <div className="mb-4 rounded-lg bg-yellow-500/20 border border-yellow-500 p-4 text-center">
+              <p className="text-sm font-semibold text-yellow-400">
+                You're using an in-app browser
+              </p>
+              <p className="text-xs text-yellow-300 mt-1">
+                For Google login, tap ⋮ menu → "Open in Safari/Chrome"
+              </p>
+            </div>
+          )}
+
+          {/* OTP waiting indicator */}
+          {waitingForOtp && (
+            <div className="mb-4 rounded-lg bg-cyan-500/20 border border-cyan-500 p-4 text-center animate-pulse">
+              <p className="text-sm font-semibold text-cyan-400">
+                Check your email for a 6-digit code
+              </p>
             </div>
           )}
 
           {/* OAuth buttons - secondary option now */}
           {walletLoginStep === 'idle' && (
             <>
-              <div className="flex flex-col gap-2 mt-2">
+              <div className="flex flex-col gap-2">
                 <GoogleButton />
                 <DiscordButton />
                 <TwitchButton />
@@ -1094,23 +1098,6 @@ export default function LoginPage() {
 
               <LoginForm handleMagicLogin={handleSubmit} disabled={waitingForOtp} />
             </>
-          )}
-
-          {/* No wallet message for users without wallets */}
-          {!hasWallet && !inAppBrowserWarning && walletLoginStep === 'idle' && (
-            <div className="mt-6 pt-4 border-t border-gray-700">
-              <p className="text-xs text-gray-500 text-center">
-                🦊 Have a wallet? Open in{' '}
-                <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
-                  MetaMask
-                </a>
-                {' '}or{' '}
-                <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                  Coinbase Wallet
-                </a>
-                {' '}for instant Web3 login
-              </p>
-            </div>
           )}
         </ContentContainer>
       </div>
