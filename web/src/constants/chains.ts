@@ -41,7 +41,7 @@ export const CHAINS: Record<string, ChainConfig> = {
     icon: '🔷',
     color: '#627EEA',
     chainId: 1,
-    rpcUrl: 'https://eth.llamarpc.com',
+    rpcUrl: 'https://ethereum.publicnode.com',
     explorer: 'https://etherscan.io',
     nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     enabled: true,

@@ -975,7 +975,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       if (!walletAccount || !tokenStakeContractAddress) return
       try {
         // Use Magic web3 or fallback to Alchemy Polygon RPC
-        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com')
+        const web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
         const stakingContract = getStakingContract(web3Instance)
         const balanceData = await stakingContract.methods.getBalanceOf(walletAccount).call() as [string, string, string] | undefined
         if (balanceData) {
@@ -1797,7 +1797,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     // Get web3 instance based on selected wallet type
     let web3Instance: Web3
     if (transferSourceWallet === 'oauth') {
-      web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com')
+      web3Instance = magicWeb3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-rpc.com')
     } else {
       // Use window.ethereum for external wallets
       if (typeof window !== 'undefined' && (window as any).ethereum) {
@@ -1927,7 +1927,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       let web3Instance: Web3
       if (transferSourceWallet === 'oauth') {
         // Use Magic SDK provider for OAuth wallet
-        web3Instance = magicWeb3 || new Web3('https://polygon.llamarpc.com')
+        web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
       } else {
         // Use window.ethereum for external wallets (MetaMask, Coinbase, etc.)
         if (typeof window !== 'undefined' && (window as any).ethereum) {
@@ -2109,7 +2109,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     // Get web3 instance based on selected wallet type
     let web3Instance: Web3
     if (transferSourceWallet === 'oauth') {
-      web3Instance = magicWeb3 || new Web3('https://polygon.llamarpc.com')
+      web3Instance = magicWeb3 || new Web3('https://polygon-rpc.com')
     } else {
       // Use window.ethereum for external wallets
       if (typeof window !== 'undefined' && (window as any).ethereum) {
@@ -2257,7 +2257,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       // Use appropriate web3 instance based on wallet type
       const web3Instance = tipSelectedWallet === 'external' && window.ethereum
         ? new Web3(window.ethereum as any)
-        : magicWeb3 || new Web3('https://polygon.llamarpc.com')
+        : magicWeb3 || new Web3('https://polygon-rpc.com')
 
       const treasuryAddress = config.treasuryAddress
       const amountWei = web3Instance.utils.toWei(profileTipAmount, 'ether')
