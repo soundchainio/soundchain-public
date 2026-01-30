@@ -150,6 +150,7 @@ export class AuthService extends Service {
       magicWalletAddress: walletAddress, // Store in magic field for compatibility
       metaMaskWalletAddressees: [walletAddress], // Also store in MetaMask array
       authMethod: AuthMethod.wallet,
+      isApprovedOnMarketplace: false, // Explicit default for wallet-only users
       // Auto-enable Nostr notifications with generated keypair
       nostrPubkey: nostrKeypair.publicKey,
       nostrPrivateKey: nostrKeypair.privateKey,
