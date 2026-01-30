@@ -21,6 +21,7 @@ import { useRouter } from 'next/router';
 import { isApolloError } from '@apollo/client';
 import styled from 'styled-components';
 import Web3 from 'web3';
+import { useWalletLogin, generateLoginMessage } from 'hooks/useWalletLogin';
 
 const Overlay = styled.div`
   position: fixed;
@@ -122,6 +123,7 @@ export default function LoginPage() {
   const { setTopNavBarProps, setIsAuthLayout } = useLayoutContext();
   const { magic } = useMagicContext();
   const { setDirectConnection } = useUnifiedWallet();
+  const { loginWithWallet: walletLoginMutation, loading: walletLoginLoading } = useWalletLogin();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
   const [walletBrowserInfo, setWalletBrowserInfo] = useState<{ isWallet: boolean; walletName: string }>({ isWallet: false, walletName: '' });
@@ -286,6 +288,7 @@ export default function LoginPage() {
   const handleTwitchLogin = () => handleSocialLogin('twitch');
 
   // Wallet signature login - works natively in wallet browsers
+  // This calls the backend loginWithWallet mutation to get a real JWT and create/find user
   const handleWalletLogin = async () => {
     if (typeof window === 'undefined' || !window.ethereum) {
       setError('No wallet detected. Please use a wallet browser.');
@@ -316,19 +319,8 @@ export default function LoginPage() {
       // Step 3: Sign a message to verify ownership
       setWalletLoginStep('signing');
 
-      // Create SIWE-style message
-      const timestamp = new Date().toISOString();
-      const nonce = Math.random().toString(36).substring(2, 15);
-      const message = `Welcome to SoundChain!
-
-Sign this message to verify your wallet ownership.
-
-Wallet: ${address}
-Timestamp: ${timestamp}
-Nonce: ${nonce}
-
-This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
-
+      // Generate message using the same format as useWalletLogin hook
+      const message = generateLoginMessage(address);
       console.log('[WalletLogin] Requesting signature...');
 
       // Request signature using personal_sign
@@ -337,41 +329,38 @@ This signature does NOT trigger a blockchain transaction or cost any gas fees.`;
         params: [message, address],
       });
 
-      console.log('[WalletLogin] Signature received:', signature?.slice(0, 20) + '...');
+      console.log('[WalletLogin] Signature received:', (signature as string)?.slice(0, 20) + '...');
 
-      // Step 4: Verify signature client-side using Web3
-      // This confirms the user actually controls the wallet
-      const web3 = new Web3(window.ethereum as any);
-      const recoveredAddress = web3.eth.accounts.recover(message, signature as string);
+      // Step 4: Call backend mutation to authenticate and get JWT
+      // This creates the user if they don't exist and generates their Nostr keypair!
+      console.log('[WalletLogin] Calling backend loginWithWallet mutation...');
 
-      if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
-        throw new Error('Signature verification failed - address mismatch');
+      const jwt = await walletLoginMutation({
+        walletAddress: address,
+        signature: signature as string,
+        message,
+      });
+
+      if (!jwt) {
+        throw new Error('Backend authentication failed - no JWT returned');
       }
 
-      console.log('[WalletLogin] Signature verified!');
+      console.log('[WalletLogin] Backend authenticated! JWT received.');
 
-      // Step 5: Success! Store wallet session and update context
+      // Step 5: Set JWT (same as OAuth flow)
+      await setJwt(jwt);
+      console.log('[WalletLogin] JWT set in cookies.');
+
+      // Step 6: Update wallet context for blockchain operations
       setWalletLoginStep('success');
 
-      // Determine wallet type
       const walletType = window.ethereum.isMetaMask ? 'metamask' :
                         (window as any).ethereum?.isCoinbaseWallet ? 'coinbase' :
                         (window as any).ethereum?.isTrust ? 'trust' : 'injected';
 
-      // Update the unified wallet context
       setDirectConnection(address, walletType, chainId);
 
-      // Store wallet session info
-      localStorage.setItem('soundchain_wallet_session', JSON.stringify({
-        address,
-        walletType,
-        chainId,
-        signature: signature as string,
-        timestamp,
-        nonce,
-      }));
-
-      console.log('[WalletLogin] Session stored, redirecting...');
+      console.log('[WalletLogin] Success! Redirecting...');
 
       // Brief delay to show success, then redirect
       setTimeout(() => {
