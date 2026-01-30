@@ -168,8 +168,8 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
   const [notifyOnSale, setNotifyOnSale] = useState(initialValues?.notifyOnSale ?? true);
   const [notifyOnTip, setNotifyOnTip] = useState(initialValues?.notifyOnTip ?? true);
   const [notifyOnDM, setNotifyOnDM] = useState(initialValues?.notifyOnDM ?? true);
-  // nostrPubkey is auto-generated, read-only display
-  const [nostrPubkey] = useState(initialValues?.nostrPubkey || '');
+  // nostrPubkey is auto-generated, read-only display (but needs to update when Me query returns)
+  const [nostrPubkey, setNostrPubkey] = useState(initialValues?.nostrPubkey || '');
   const [notifyViaNostr, setNotifyViaNostr] = useState(initialValues?.notifyViaNostr ?? true);
 
   // Update state when initialValues change
@@ -182,6 +182,7 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
       setNotifyOnTip(initialValues.notifyOnTip ?? true);
       setNotifyOnDM(initialValues.notifyOnDM ?? true);
       setNotifyViaNostr(initialValues.notifyViaNostr ?? true);
+      setNostrPubkey(initialValues.nostrPubkey || '');
     }
   }, [initialValues]);
 
