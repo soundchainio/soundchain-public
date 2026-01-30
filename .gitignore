@@ -1,6 +1,16 @@
 .vercel
 api-source.tar.gz
 
+# Environment files - NEVER commit secrets
+.env
+.env.local
+.env.*.local
+.env.backup
+.env.bak*
+*.env
+!.env.sample
+!.env.example
+
 # Large files - don't commit
 soundchain_toc.json
 api-source.tar.gz
