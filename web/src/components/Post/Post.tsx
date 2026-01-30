@@ -96,7 +96,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   }
 
   return (
-    <article className="bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-colors">
+    <article className="bg-black border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
       {/* Header - Clean modern style */}
       <header className="flex items-center justify-between px-4 py-3">
         {isGuest ? (
