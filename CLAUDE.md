@@ -8,54 +8,88 @@
 
 ## CURRENT SESSION (Jan 29-30, 2026)
 
-**Environment:** Remote ttyd terminal (iPhone at work)
-**Device:** iPhone 14 Pro Max
+**Environment:** Remote ttyd terminal (iPhone at work) → War Room
+**Device:** iPhone 14 Pro Max → Desktop
 **Working Dir:** `/Users/soundchain/soundchain`
 **Branch:** production
 
-### Decentralized Notifications - Full Stack Implementation
+### Nostr NIP-17 Server-Side Notifications (Jan 29, 2026)
 
-#### 3-Angle Push Notification System (NO SMS/Twilio!)
-All notifications are FREE and decentralized:
+**Feature:** Server-side Nostr notification service that sends encrypted DMs via NIP-17 protocol. Users receive notifications in Bitchat app or any NIP-17-compatible Nostr client - **completely FREE, no SMS costs!**
 
-1. **PWA Install Prompt** (`web/src/components/dex/PWAInstallPrompt.tsx`)
-   - Encourages users to install as native app
-   - Full push notification support when browser closed
-   - iOS instructions for Add to Home Screen
+#### Architecture
+```
+┌──────────────────────┐     ┌───────────────────┐     ┌──────────────────────┐
+│  SoundChain API      │     │   Nostr Relays    │     │  User's Bitchat      │
+│  (Server-side)       │────▶│   (5 public)      │────▶│  or Nostr Client     │
+│                      │     │                   │     │                      │
+│  NotificationService │     │  Encrypted DM     │     │  Receives real-time  │
+│  + NostrService      │     │  (kind 1059)      │     │  notifications       │
+└──────────────────────┘     └───────────────────┘     └──────────────────────┘
+```
 
-2. **Background Sync API** (`web/worker/index.js`)
-   - Offline action queue (replays when back online)
-   - Periodic notification checks (hourly)
-   - Periodic rewards checks (every 30 min)
+#### Implementation Details
 
-3. **Nostr Real-Time Subscriptions** (`web/src/hooks/useNostrNotifications.ts`)
-   - WebSocket to 4 public relays (damus, nostr.band, nos.lol, snort)
-   - NIP-17 encrypted DM support (kinds 4, 14, 1059)
-   - Auto-reconnect with exponential backoff
-   - Shows toast notifications for incoming DMs
+**Backend Files:**
+- `api/src/services/NostrNotificationService.ts` - **NEW** Full NIP-17 DM sending service
+  - Uses nostr-tools 2.7.0 with nip44 encryption
+  - Gift-wrapped messages (kind 1059) for privacy
+  - Supports npub (bech32) and hex pubkey formats
+  - Publishes to 5 relays: damus, snort, nos.lol, nostr.band, purplepag.es
+- `api/src/services/NotificationService.ts` - Integrated Nostr notifications
+  - Added `sendNostrNotification()` helper method
+  - Nostr notifications sent alongside web push for: Follow, Like, Comment
+- `api/src/models/User.ts` - Added fields:
+  - `nostrPubkey?: string` - User's Nostr public key
+  - `notifyViaNostr?: boolean` - Enable/disable Nostr notifications
+- `api/src/services/UserService.ts` - Updated `updateNotificationSettings()`
+  - Handles npub to hex conversion
+  - Validates pubkey format
+- `api/src/types/UpdateNotificationSettingsInput.ts` - Added Nostr fields
 
-#### Auto-Generated Nostr Identity
-- **New users**: Keypair generated at registration
-- **Existing users**: Keypair auto-generated on next login (grandfather)
-- Private key stored server-side for sending notifications
-- Public key exposed to users in Settings → Notifications
+**Frontend Files:**
+- `web/src/components/forms/NotificationSettingsForm.tsx` - New Nostr UI section
+  - Toggle to enable Nostr notifications
+  - Input for Nostr pubkey (npub or hex)
+  - Link to Bitchat app on App Store
+  - Privacy explanation
+- `web/src/graphql/Me.graphql` - Added nostrPubkey, notifyViaNostr
+- `web/src/pages/dex/[...slug].tsx` - Pass Nostr fields to form
 
-**Files:**
-- `api/src/utils/nostrKeygen.ts` - Keypair generation utility
-- `api/src/services/AuthService.ts` - Generates on registration
-- `api/src/resolvers/UserResolver.ts` - Grandfather on login
-- `api/src/models/User.ts` - nostrPubkey, nostrPrivateKey, notifyViaNostr fields
+**Environment Variable (for production):**
+```bash
+SOUNDCHAIN_NOSTR_PRIVATE_KEY=<64-char-hex-private-key>
+```
+If not set, service generates ephemeral key (dev mode warning).
 
-#### Notification Settings UI Updates
-- Removed phone number field (no SMS - decentralized only!)
-- Auto-generated Nostr pubkey displayed with copy button
-- Read-only display (users don't need to do anything)
-- Default `notifyViaNostr: true` for all users
+**Notification Types Supported:**
+- New Follower
+- New Like
+- New Comment
+- New DM
+- New Tip
+- NFT Sold
+- OGUN Earned (streaming rewards)
 
-**Known Issue (Debugging):**
-- Nostr pubkey not showing after login despite API deployment
-- Debug logging added to frontend (`6665d4153`)
-- Check browser console for `[NotificationSettingsForm] initialValues:`
+**Commits:**
+- `9232890dd` - feat: Add Nostr NIP-17 notifications via Bitchat
+- `06c5d6b5b` - fix: Add Nostr fields to Me query and NotificationSettingsForm
+
+---
+
+### DM Messages Fix (Jan 29, 2026)
+
+**Issue:** DM messages showing timestamps but no message content
+**Root Cause:** `DMModal.tsx` used `message.body` but GraphQL fragment uses `message.message`
+**Fix:** Changed to `message.message` in DMModal.tsx
+**Commit:** `5fe2c67e8`
+
+### OAuth Wallet Balance Fix (Jan 29, 2026)
+
+**Issue:** OAuth wallet balances showing 0 POL and 0 OGUN
+**Root Cause:** Condition in useMagicContext wasn't triggering fallback wallet properly
+**Fix:** Updated condition to check if wallet differs from current account
+**Commit:** `5f7984aa3`
 
 ---
 
