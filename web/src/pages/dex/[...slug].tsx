@@ -2492,18 +2492,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
       <div className="relative z-10">
         {/* Navigation Bar */}
-        <nav className="backdrop-blur-xl bg-gray-900/95 border-b border-cyan-500/20 px-4 lg:px-6 py-2 sticky top-0 z-50 shadow-lg">
+        <nav className="backdrop-blur-xl bg-gray-900/95 border-b border-cyan-500/20 px-2 sm:px-4 lg:px-6 py-1.5 sm:py-2 sticky top-0 z-50 shadow-lg overflow-x-hidden">
           <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
-            <div className="flex items-center space-x-4 lg:space-x-8">
-              <Link href="/" className="flex items-center space-x-3">
-                <Logo className="h-12 w-12" />
+            <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-8 flex-shrink min-w-0">
+              <Link href="/" className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                <Logo className="h-9 w-9 sm:h-12 sm:w-12" />
                 <span className="text-xl font-bold bg-gradient-to-r from-orange-400 via-yellow-400 to-cyan-400 bg-clip-text text-transparent hidden lg:block">
                   SoundChain
                 </span>
               </Link>
 
               {/* Mobile WIN-WIN, Vibes, and Nearby buttons - visible on small screens only */}
-              <div className="flex sm:hidden items-center space-x-1">
+              <div className="flex sm:hidden items-center space-x-0.5">
                 {/* Nearby (Bitchat) - Mobile */}
                 <div className="relative">
                   <Button
@@ -2870,7 +2870,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
             </div>
 
-            <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3 flex-shrink-0">
+            <div className="flex items-center space-x-0.5 sm:space-x-2 lg:space-x-3 flex-shrink-0 ml-1 sm:ml-2">
               <div className="relative hidden lg:block">
                 <input
                   type="search"

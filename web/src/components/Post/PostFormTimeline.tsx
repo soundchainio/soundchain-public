@@ -204,7 +204,7 @@ export const PostFormTimeline = () => {
   // Allow public posting - no login or wallet required!
 
   return (
-    <div className="mb-[25px] rounded-md bg-neutral-800 py-[14px] px-[16px]">
+    <div className="mb-[25px] rounded-md bg-neutral-900 border border-neutral-800 py-[14px] px-[16px]">
       <div className="mb-[16px] flex items-center justify-between">
         <span className="text-white">Post</span>
         {!me && (

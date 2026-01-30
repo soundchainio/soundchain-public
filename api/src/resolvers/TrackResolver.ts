@@ -35,6 +35,7 @@ import { UpdateTrackPayload } from '../types/UpdateTrackPayload';
 import { TrackPrice } from '../types/TrackPrice';
 import { CurrencyType } from '../types/CurrencyType';
 import { GenreTracks } from '../types/GenreTracks';
+import { sendEditionMintedNotification } from '../services/DiscordNotificationService';
 
 // Default fallback artwork URL
 const DEFAULT_ARTWORK_URL = 'https://soundchain.io/default-artwork.png';
@@ -286,7 +287,7 @@ export class TrackResolver {
   @Mutation(() => CreateMultipleTracksPayload)
   @Authorized()
   async createMultipleTracks(
-    @Ctx() { trackService, postService }: Context,
+    @Ctx() { trackService, postService, profileService }: Context,
     @CurrentUser() { profileId }: User,
     @Arg('input') input: CreateMultipleTracksInput,
   ): Promise<CreateMultipleTracksPayload> {
@@ -301,6 +302,38 @@ export class TrackResolver {
         trackEditionId: track.trackEditionId,
       });
     }
+
+    // Send Discord NFT announcement (non-blocking)
+    try {
+      // Get artist name from track data or user profile
+      let artistName = input.track.artist || 'Unknown Artist';
+      if (!input.track.artist) {
+        try {
+          const profile = await profileService.getProfile(profileId.toString());
+          artistName = profile?.displayName || 'Unknown Artist';
+        } catch {
+          // Fallback to wallet address if profile lookup fails
+          artistName = input.track.nftData?.minter
+            ? `${input.track.nftData.minter.slice(0, 6)}...${input.track.nftData.minter.slice(-4)}`
+            : 'Unknown Artist';
+        }
+      }
+
+      sendEditionMintedNotification({
+        trackTitle: input.track.title,
+        artistName,
+        description: input.track.description,
+        artworkUrl: input.track.artworkUrl,
+        trackId: track._id.toString(),
+        editionSize: input.batchSize,
+        minterAddress: input.track.nftData?.minter,
+        network: 'Polygon',
+      }).catch(err => console.error('[Discord] NFT notification failed:', err));
+    } catch (discordError) {
+      // Don't fail the mint if Discord notification fails
+      console.error('[Discord] Error preparing NFT notification:', discordError);
+    }
+
     return {
       firstTrack: track,
       trackIds: [track._id.toString(), ...otherTracks.map(track => track._id.toString())],

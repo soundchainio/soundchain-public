@@ -96,7 +96,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   }
 
   return (
-    <article className="bg-black border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-colors">
+    <article className="bg-black border border-neutral-800 rounded-2xl overflow-hidden hover:border-neutral-700 transition-colors">
       {/* Header - Clean modern style */}
       <header className="flex items-center justify-between px-4 py-3">
         {isGuest ? (
@@ -267,7 +267,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 
           {/* Expired media placeholder */}
           {hasUploadedMedia && isExpired && (
-            <div className="p-8 flex flex-col items-center justify-center text-neutral-500 bg-neutral-800/50">
+            <div className="p-8 flex flex-col items-center justify-center text-neutral-500 bg-neutral-800">
               <Clock className="w-8 h-8 mb-2" />
               <span className="text-sm">Media expired</span>
             </div>
