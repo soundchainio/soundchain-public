@@ -87,27 +87,29 @@ function isInAppBrowser(): boolean {
 }
 
 // Detect wallet in-app browsers (MetaMask, Coinbase, Trust, etc.)
-// These have issues with Magic OAuth popups and email OTP
 function isWalletBrowser(): { isWallet: boolean; walletName: string } {
   if (typeof window === 'undefined') return { isWallet: false, walletName: '' };
   const ua = navigator.userAgent.toLowerCase();
   const ethereum = (window as any).ethereum;
 
-  // Check user agent and window.ethereum properties
-  if (ua.includes('metamask') || ethereum?.isMetaMask) {
-    return { isWallet: true, walletName: 'MetaMask' };
-  }
-  if (ua.includes('coinbase') || ethereum?.isCoinbaseWallet) {
-    return { isWallet: true, walletName: 'Coinbase Wallet' };
-  }
-  if (ua.includes('trust') || ethereum?.isTrust) {
-    return { isWallet: true, walletName: 'Trust Wallet' };
-  }
-  if (ua.includes('rainbow')) {
-    return { isWallet: true, walletName: 'Rainbow' };
-  }
+  // Check user agent for in-app wallet browsers
+  if (ua.includes('metamask')) return { isWallet: true, walletName: 'MetaMask' };
+  if (ua.includes('coinbase')) return { isWallet: true, walletName: 'Coinbase Wallet' };
+  if (ua.includes('trust')) return { isWallet: true, walletName: 'Trust Wallet' };
+  if (ua.includes('rainbow')) return { isWallet: true, walletName: 'Rainbow' };
+
+  // Check window.ethereum for injected wallet (desktop extension or mobile dapp browser)
+  if (ethereum?.isMetaMask && !ethereum?.isCoinbaseWallet) return { isWallet: true, walletName: 'MetaMask' };
+  if (ethereum?.isCoinbaseWallet) return { isWallet: true, walletName: 'Coinbase Wallet' };
+  if (ethereum?.isTrust) return { isWallet: true, walletName: 'Trust Wallet' };
 
   return { isWallet: false, walletName: '' };
+}
+
+// Check if ANY wallet is available (extension or injected)
+function hasWalletAvailable(): boolean {
+  if (typeof window === 'undefined') return false;
+  return !!(window as any).ethereum;
 }
 
 export default function LoginPage() {
@@ -127,6 +129,7 @@ export default function LoginPage() {
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
   const [walletBrowserInfo, setWalletBrowserInfo] = useState<{ isWallet: boolean; walletName: string }>({ isWallet: false, walletName: '' });
+  const [hasWallet, setHasWallet] = useState(false); // Any wallet available (extension or injected)
   const isProcessingCredential = useRef(false); // Prevent multiple OAuth processing
 
   // Wallet signature login state
@@ -139,11 +142,11 @@ export default function LoginPage() {
     if (isInAppBrowser()) {
       setInAppBrowserWarning(true);
     }
-    // Detect wallet browser
+    // Detect wallet browser or extension
     const walletInfo = isWalletBrowser();
-    if (walletInfo.isWallet) {
-      setWalletBrowserInfo(walletInfo);
-    }
+    setWalletBrowserInfo(walletInfo);
+    // Check if ANY wallet is available
+    setHasWallet(hasWalletAvailable());
   }, []);
 
   const topNavBarProps = useMemo(
@@ -686,117 +689,153 @@ export default function LoginPage() {
           <div className="mb-2 flex h-36 items-center justify-center">
             <LogoAndText className="text-white filter drop-shadow-lg" />
           </div>
-          {inAppBrowserWarning && (
+          {/* Error display */}
+          {error && (
+            <div className="mb-4 py-3 px-4 rounded-lg bg-red-500/20 border border-red-500 text-center text-sm text-red-400 font-semibold">
+              {error}
+            </div>
+          )}
+
+          {/* In-app browser warning */}
+          {inAppBrowserWarning && !hasWallet && (
             <div className="mb-4 rounded-lg bg-yellow-500/20 border border-yellow-500 p-4 text-center">
               <p className="text-sm font-semibold text-yellow-400">
                 You're using an in-app browser
               </p>
               <p className="text-xs text-yellow-300 mt-1">
-                For Google login, tap ⋮ or ⋯ menu and select "Open in Safari/Chrome"
-              </p>
-              <p className="text-xs text-white mt-2">
-                Or use <strong>Email login</strong> below - it works everywhere!
+                For Google login, tap ⋮ menu → "Open in Safari/Chrome"
               </p>
             </div>
           )}
-          {walletBrowserInfo.isWallet && (
-            <div className="mb-4 rounded-lg bg-gradient-to-br from-purple-500/30 to-cyan-500/20 border border-purple-500 p-5 text-center">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-2xl">🦊</span>
-                <p className="text-lg font-bold text-white">
-                  {walletBrowserInfo.walletName} Detected
-                </p>
+
+          {/* OTP waiting indicator */}
+          {waitingForOtp && (
+            <div className="mb-4 rounded-lg bg-cyan-500/20 border border-cyan-500 p-4 text-center animate-pulse">
+              <p className="text-sm font-semibold text-cyan-400">
+                Check your email for a 6-digit code
+              </p>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════
+              🔥 WALLET LOGIN - FIRST CLASS, FRONT AND CENTER 🔥
+              ═══════════════════════════════════════════════════════════════ */}
+          {hasWallet && walletLoginStep !== 'success' && (
+            <div className="mb-6 rounded-2xl bg-gradient-to-br from-purple-600/30 via-cyan-600/20 to-orange-500/20 border-2 border-purple-500/50 p-6 text-center shadow-2xl shadow-purple-500/20">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <span className="text-3xl">{walletBrowserInfo.walletName === 'MetaMask' ? '🦊' : walletBrowserInfo.walletName === 'Coinbase Wallet' ? '🔵' : '💎'}</span>
+                <div>
+                  <p className="text-xl font-bold text-white">
+                    {walletBrowserInfo.isWallet ? walletBrowserInfo.walletName : 'Web3 Wallet'} Ready
+                  </p>
+                  <p className="text-xs text-purple-300">Decentralized • Self-Custody • No Email Needed</p>
+                </div>
               </div>
 
               {walletLoginStep === 'idle' && (
                 <>
-                  <p className="text-sm text-purple-200 mb-4">
-                    Sign in directly with your wallet - no email needed!
-                  </p>
                   <button
                     onClick={handleWalletLogin}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-500/25"
+                    className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 via-cyan-600 to-purple-600 hover:from-purple-500 hover:via-cyan-500 hover:to-purple-500 text-white text-lg font-bold rounded-xl transition-all transform hover:scale-[1.02] shadow-xl shadow-purple-500/30 border border-white/20"
                   >
-                    🔐 Sign in with {walletBrowserInfo.walletName}
+                    🔐 Connect Wallet & Sign In
                   </button>
                   <p className="text-xs text-gray-400 mt-3">
-                    You'll sign a message to verify wallet ownership (no gas fees)
+                    Sign a message to verify ownership • Zero gas fees • Instant access
                   </p>
                 </>
               )}
 
               {walletLoginStep === 'connecting' && (
                 <div className="py-4">
-                  <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto mb-3"></div>
-                  <p className="text-purple-300 font-medium">Connecting wallet...</p>
-                  <p className="text-xs text-gray-400 mt-1">Please approve in {walletBrowserInfo.walletName}</p>
+                  <div className="animate-spin w-10 h-10 border-3 border-purple-400 border-t-transparent rounded-full mx-auto mb-3"></div>
+                  <p className="text-purple-300 font-medium text-lg">Connecting...</p>
+                  <p className="text-xs text-gray-400 mt-1">Approve in your wallet</p>
                 </div>
               )}
 
               {walletLoginStep === 'signing' && (
                 <div className="py-4">
-                  <div className="animate-pulse text-4xl mb-3">✍️</div>
-                  <p className="text-cyan-300 font-medium">Sign the message</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Connected: {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                  <div className="animate-pulse text-5xl mb-3">✍️</div>
+                  <p className="text-cyan-300 font-bold text-lg">Sign the Message</p>
+                  <p className="text-sm text-white mt-2 font-mono bg-black/30 rounded-lg py-2 px-3">
+                    {walletAddress?.slice(0, 8)}...{walletAddress?.slice(-6)}
                   </p>
-                  <p className="text-xs text-purple-300 mt-2">
-                    Check {walletBrowserInfo.walletName} for the signature request
+                  <p className="text-xs text-purple-300 mt-3">
+                    Check your wallet for the signature request
                   </p>
-                </div>
-              )}
-
-              {walletLoginStep === 'success' && (
-                <div className="py-4">
-                  <div className="text-4xl mb-3">✅</div>
-                  <p className="text-green-400 font-bold">Verified!</p>
-                  <p className="text-sm text-white mt-1">
-                    {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">Redirecting to SoundChain...</p>
                 </div>
               )}
 
               {walletLoginStep === 'error' && (
                 <div className="py-2">
                   <button
-                    onClick={handleWalletLogin}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-base font-bold rounded-xl transition-all"
+                    onClick={() => { setWalletLoginStep('idle'); setError(null); }}
+                    className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-lg font-bold rounded-xl transition-all"
                   >
                     🔄 Try Again
                   </button>
                 </div>
               )}
+            </div>
+          )}
 
-              <div className="mt-4 pt-3 border-t border-purple-500/30">
-                <p className="text-xs text-gray-500">
-                  Or open soundchain.io in Safari/Chrome for email login
-                </p>
+          {/* Wallet login success state */}
+          {walletLoginStep === 'success' && (
+            <div className="mb-6 rounded-2xl bg-gradient-to-br from-green-600/30 to-cyan-600/20 border-2 border-green-500/50 p-6 text-center">
+              <div className="text-5xl mb-3">✅</div>
+              <p className="text-green-400 font-bold text-xl">Wallet Verified!</p>
+              <p className="text-sm text-white mt-2 font-mono">
+                {walletAddress?.slice(0, 8)}...{walletAddress?.slice(-6)}
+              </p>
+              <p className="text-xs text-gray-400 mt-3">Entering SoundChain...</p>
+            </div>
+          )}
+
+          {/* Divider - only show if wallet available */}
+          {hasWallet && walletLoginStep === 'idle' && (
+            <div className="flex items-center gap-4 my-2">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+              <span className="text-gray-500 text-xs font-medium">OR CONTINUE WITH</span>
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+            </div>
+          )}
+
+          {/* OAuth buttons - secondary option now */}
+          {walletLoginStep === 'idle' && (
+            <>
+              <div className="flex flex-col gap-2 mt-2">
+                <GoogleButton />
+                <DiscordButton />
+                <TwitchButton />
               </div>
-            </div>
+
+              <div className="flex items-center gap-4 my-4">
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+                <span className="text-gray-500 text-xs font-medium">OR</span>
+                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+              </div>
+
+              <LoginForm handleMagicLogin={handleSubmit} disabled={waitingForOtp} />
+            </>
           )}
-          {waitingForOtp && (
-            <div className="mb-4 rounded-lg bg-cyan-500/20 border border-cyan-500 p-4 text-center animate-pulse">
-              <p className="text-sm font-semibold text-cyan-400">
-                Check your email for a 6-digit code
+
+          {/* No wallet message for users without wallets */}
+          {!hasWallet && !inAppBrowserWarning && walletLoginStep === 'idle' && (
+            <div className="mt-6 pt-4 border-t border-gray-700">
+              <p className="text-xs text-gray-500 text-center">
+                🦊 Have a wallet? Open in{' '}
+                <a href="https://metamask.io/download/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
+                  MetaMask
+                </a>
+                {' '}or{' '}
+                <a href="https://www.coinbase.com/wallet" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                  Coinbase Wallet
+                </a>
+                {' '}for instant Web3 login
               </p>
-              <p className="text-xs text-cyan-300 mt-1">
-                Magic's popup should appear. If not, check your spam folder.
-              </p>
             </div>
           )}
-          {error && (
-            <div className="py-4 text-center text-sm text-red-500 font-semibold drop-shadow-md">
-              {error}
-            </div>
-          )}
-          <div className="flex flex-col gap-3">
-            <GoogleButton />
-            <DiscordButton />
-            <TwitchButton />
-          </div>
-          <div className="py-7 text-center text-sm font-bold text-gray-50 drop-shadow-md">OR</div>
-          <LoginForm handleMagicLogin={handleSubmit} disabled={waitingForOtp} />
         </ContentContainer>
       </div>
     </>
