@@ -13,6 +13,42 @@
 **Working Dir:** `/Users/soundchain/soundchain`
 **Branch:** production
 
+### 🚀 PUBLIC REPO LAUNCH & UI POLISH (Jan 30, 2026)
+
+**MILESTONE: SoundChain Open-Sourced to Public Repo!**
+
+**Public Repo:** `github.com/soundchainio/soundchain-public`
+**Tagline:** "Stream. Earn. Own. LFG."
+
+#### Open Source Setup
+- Switched git origin from AE private repo to new public repo
+- Connected Vercel to public repo (first deploy succeeded!)
+- Fixed Node.js 22 requirements for Capacitor CLI
+- Created GitHub Wiki pages with holographic matrix design
+- Updated README social links for public visibility
+
+#### Post Card UI Polish (Holographic Matrix Era)
+Fixed background transparency issues where cover photos bled through post cards:
+
+**Files Modified:**
+- `web/src/pages/dex/[...slug].tsx`
+  - Feed container: Added `bg-black/95` for solid background
+  - Single post view: Same treatment
+  - Profile section: Added solid backgrounds to container + tab content
+  - Footer: Made solid black + sticky at bottom (`sticky bottom-0 bg-black`)
+- `web/src/components/Post/CompactPost.tsx`
+  - Text cards: Changed from transparent gradient to solid `bg-neutral-900`
+  - Footer: Changed from 50% opacity to solid background
+- `web/src/components/Post/Posts.tsx`
+  - View mode toggle: Changed from `bg-neutral-800/50` to solid
+
+**Result:** Post cards now have solid backgrounds that don't let the background image/video bleed through.
+
+**Commits:**
+- `d447a9b0e` - fix: Solid backgrounds for post cards - no more transparency bleed
+
+---
+
 ### Nostr NIP-17 Server-Side Notifications (Jan 29, 2026)
 
 **Feature:** Server-side Nostr notification service that sends encrypted DMs via NIP-17 protocol. Users receive notifications in Bitchat app or any NIP-17-compatible Nostr client - **completely FREE, no SMS costs!**
