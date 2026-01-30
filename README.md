@@ -152,8 +152,8 @@ Buy, sell, and trade using your favorite tokens:
 
 <div align="center">
 
-**Built with ❤️ for artists and music lovers**
+**Stream. Earn. Own. LFG.**
 
-*Last Updated: January 2026*
+*Open sourced January 2026*
 
 </div>
