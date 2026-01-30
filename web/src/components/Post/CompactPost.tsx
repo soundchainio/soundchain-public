@@ -328,7 +328,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
 
         {/* Text-only posts - clean card with emotes rendered inline */}
         {!hasMedia && post.body && (
-          <div className="aspect-square flex flex-col bg-gradient-to-br from-neutral-800/50 via-neutral-900 to-neutral-800/50 relative overflow-hidden">
+          <div className="aspect-square flex flex-col bg-neutral-900 relative overflow-hidden">
             {/* Animated background */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,255,255,0.05),transparent_70%)]" />
 
@@ -341,8 +341,8 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
           </div>
         )}
 
-        {/* Footer - Premium glass effect */}
-        <div className="p-3 border-t border-white/5 bg-gradient-to-r from-neutral-900/80 via-neutral-800/50 to-neutral-900/80 backdrop-blur-sm">
+        {/* Footer - Solid background */}
+        <div className="p-3 border-t border-white/10 bg-neutral-900">
           <div className="flex items-center justify-between">
             {/* User info */}
             {isGuest ? (

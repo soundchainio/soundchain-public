@@ -4272,7 +4272,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className="flex justify-center gap-4 xl:gap-6">
+            <div className="flex justify-center gap-4 xl:gap-6 bg-black/95 min-h-screen py-4 -mx-4 px-4">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
@@ -4288,7 +4288,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Single Post View - /dex/post/[id] for shared links */}
           {selectedView === 'post' && routeId && (
-            <div className="flex justify-center gap-6 px-0 md:px-4">
+            <div className="flex justify-center gap-6 px-0 md:px-4 bg-black/95 min-h-screen py-4">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
@@ -6606,7 +6606,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Profile View - /dex/profile/[handle] or /dex/me */}
           {selectedView === 'profile' && (routeId || isExplicitOwnProfileRoute) && router.isReady && (
             <ProfileErrorBoundary>
-            <div className="relative pb-32 overflow-y-auto min-h-screen" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="relative pb-32 overflow-y-auto min-h-screen bg-black/95" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
               {viewingProfile && (
                 <Head>
@@ -7045,7 +7045,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
 
                     {/* Tab Content */}
-                    <div className="min-h-[400px]">
+                    <div className="min-h-[400px] bg-black/95 rounded-xl p-2">
                       {/* My Feed - Full social feed (posts from people you follow + your own) */}
                       {profileTab === 'myfeed' && isViewingOwnProfile && (
                         <Posts disableVirtualization />
@@ -7118,10 +7118,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
         </div>
 
-        {/* Footer */}
-        <footer className="border-t border-cyan-500/30 bg-gray-900/80 py-6 mt-12">
+        {/* Footer - Sticky at bottom with solid background */}
+        <footer className="sticky bottom-0 border-t border-cyan-500/30 bg-black py-4 mt-auto z-40">
           <div className="max-w-screen-2xl mx-auto px-4 text-center">
-            <div className="retro-json text-sm mb-2">powered_by: "SoundChain × ZetaChain"</div>
+            <div className="retro-json text-sm mb-1">powered_by: "SoundChain × ZetaChain"</div>
             <div className="text-xs text-gray-500">DEX Dashboard • CarPlay Ready • Amazon Fire TV Ready • All Devices</div>
           </div>
         </footer>

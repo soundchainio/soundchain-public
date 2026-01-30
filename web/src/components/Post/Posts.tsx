@@ -385,7 +385,7 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center gap-1 bg-neutral-800/50 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-neutral-800 rounded-lg p-1">
           <button
             onClick={() => {
               setViewMode('list')
