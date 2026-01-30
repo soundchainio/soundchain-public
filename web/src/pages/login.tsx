@@ -15,7 +15,7 @@ import { LeftArrow } from 'icons/LeftArrow';
 import { LogoAndText } from 'icons/LogoAndText';
 import { UserWarning } from 'icons/UserWarning';
 import { setJwt } from 'lib/apollo';
-import { AuthMethod, useLoginMutation, useMeQuery } from 'lib/graphql';
+import { AuthMethod, useLoginMutation, useMeQuery, useUserByWalletLazyQuery } from 'lib/graphql';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
 import { isApolloError } from '@apollo/client';
@@ -126,6 +126,7 @@ export default function LoginPage() {
   const { magic } = useMagicContext();
   const { setDirectConnection } = useUnifiedWallet();
   const { loginWithWallet: walletLoginMutation, loading: walletLoginLoading } = useWalletLogin();
+  const [checkWalletUser] = useUserByWalletLazyQuery();
   const [isClient, setIsClient] = useState(false);
   const [inAppBrowserWarning, setInAppBrowserWarning] = useState(false);
   const [walletBrowserInfo, setWalletBrowserInfo] = useState<{ isWallet: boolean; walletName: string }>({ isWallet: false, walletName: '' });
@@ -133,8 +134,14 @@ export default function LoginPage() {
   const isProcessingCredential = useRef(false); // Prevent multiple OAuth processing
 
   // Wallet signature login state
-  const [walletLoginStep, setWalletLoginStep] = useState<'idle' | 'connecting' | 'signing' | 'success' | 'error'>('idle');
+  const [walletLoginStep, setWalletLoginStep] = useState<'idle' | 'connecting' | 'checking' | 'register' | 'signing' | 'success' | 'error'>('idle');
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [isNewWalletUser, setIsNewWalletUser] = useState(false);
+  const [walletHandle, setWalletHandle] = useState('');
+  const [walletDisplayName, setWalletDisplayName] = useState('');
+  const [walletTermsAccepted, setWalletTermsAccepted] = useState(false);
+  const [signedMessage, setSignedMessage] = useState<string | null>(null);
+  const [signedSignature, setSignedSignature] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -314,34 +321,66 @@ export default function LoginPage() {
       setWalletAddress(address);
       console.log('[WalletLogin] Connected:', address);
 
-      // Step 2: Get chain ID
-      const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' });
-      const chainId = parseInt(chainIdHex as string, 16);
-      console.log('[WalletLogin] Chain ID:', chainId);
+      // Step 2: Check if this wallet user already exists
+      setWalletLoginStep('checking');
+      console.log('[WalletLogin] Checking if user exists...');
 
-      // Step 3: Sign a message to verify ownership
+      const { data: existingUser } = await checkWalletUser({
+        variables: { walletAddress: address }
+      });
+
+      if (existingUser?.getUserByWallet) {
+        // EXISTING USER - proceed directly to sign & login
+        console.log('[WalletLogin] Existing user found, proceeding to sign...');
+        await signAndCompleteWalletLogin(address);
+      } else {
+        // NEW USER - show registration form first
+        console.log('[WalletLogin] New wallet user, showing registration form...');
+        setIsNewWalletUser(true);
+        setWalletLoginStep('register');
+        // Pre-fill display name with wallet prefix
+        setWalletDisplayName(`${address.slice(0, 6)}...${address.slice(-4)}`);
+      }
+
+    } catch (err: any) {
+      console.error('[WalletLogin] Error:', err);
+      setWalletLoginStep('error');
+
+      if (err.code === 4001 || err.message?.includes('User rejected') || err.message?.includes('User denied')) {
+        setError('Wallet connection cancelled. Please try again.');
+      } else {
+        setError(err.message || 'Wallet login failed. Please try again.');
+      }
+    }
+  };
+
+  // Complete wallet login after connecting (for existing users) or after registration (for new users)
+  const signAndCompleteWalletLogin = async (address: string, handle?: string, displayName?: string) => {
+    try {
       setWalletLoginStep('signing');
 
-      // Generate message using the same format as useWalletLogin hook
+      // Get chain ID
+      const chainIdHex = await window.ethereum!.request({ method: 'eth_chainId' });
+      const chainId = parseInt(chainIdHex as string, 16);
+
+      // Generate and sign message
       const message = generateLoginMessage(address);
       console.log('[WalletLogin] Requesting signature...');
 
-      // Request signature using personal_sign
-      const signature = await window.ethereum.request({
+      const signature = await window.ethereum!.request({
         method: 'personal_sign',
         params: [message, address],
       });
 
-      console.log('[WalletLogin] Signature received:', (signature as string)?.slice(0, 20) + '...');
+      console.log('[WalletLogin] Signature received, calling backend...');
 
-      // Step 4: Call backend mutation to authenticate and get JWT
-      // This creates the user if they don't exist and generates their Nostr keypair!
-      console.log('[WalletLogin] Calling backend loginWithWallet mutation...');
-
+      // Call backend mutation with optional handle/displayName for new users
       const jwt = await walletLoginMutation({
         walletAddress: address,
         signature: signature as string,
         message,
+        ...(handle && { handle }),
+        ...(displayName && { displayName }),
       });
 
       if (!jwt) {
@@ -350,14 +389,10 @@ export default function LoginPage() {
 
       console.log('[WalletLogin] Backend authenticated! JWT received.');
 
-      // Step 5: Set JWT (same as OAuth flow)
       await setJwt(jwt);
-      console.log('[WalletLogin] JWT set in cookies.');
-
-      // Step 6: Update wallet context for blockchain operations
       setWalletLoginStep('success');
 
-      const walletType = window.ethereum.isMetaMask ? 'metamask' :
+      const walletType = window.ethereum!.isMetaMask ? 'metamask' :
                         (window as any).ethereum?.isCoinbaseWallet ? 'coinbase' :
                         (window as any).ethereum?.isTrust ? 'trust' : 'injected';
 
@@ -365,23 +400,46 @@ export default function LoginPage() {
 
       console.log('[WalletLogin] Success! Redirecting...');
 
-      // Brief delay to show success, then redirect
+      // Redirect to feed - new wallet users already set handle/displayName on login page
+      // They can complete profile (picture, bio, etc.) from settings later
       setTimeout(() => {
         const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
         router.push(redirectUrl);
       }, 1000);
 
     } catch (err: any) {
-      console.error('[WalletLogin] Error:', err);
+      console.error('[WalletLogin] Sign error:', err);
       setWalletLoginStep('error');
 
-      // Handle user rejection gracefully
       if (err.code === 4001 || err.message?.includes('User rejected') || err.message?.includes('User denied')) {
-        setError('Wallet connection cancelled. Please try again.');
+        setError('Signature rejected. Please try again.');
       } else {
         setError(err.message || 'Wallet login failed. Please try again.');
       }
     }
+  };
+
+  // Handle wallet registration form submission
+  const handleWalletRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!walletAddress) {
+      setError('Wallet not connected');
+      return;
+    }
+
+    if (!walletHandle.trim()) {
+      setError('Please enter a username');
+      return;
+    }
+
+    if (!walletTermsAccepted) {
+      setError('Please accept the Terms & Conditions');
+      return;
+    }
+
+    console.log('[WalletLogin] Submitting registration:', { handle: walletHandle, displayName: walletDisplayName });
+    await signAndCompleteWalletLogin(walletAddress, walletHandle.trim(), walletDisplayName.trim() || undefined);
   };
 
   // Unified handler for magic_credential callbacks (OAuth and Email Magic Links)
@@ -754,6 +812,93 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {walletLoginStep === 'checking' && (
+                <div className="py-4">
+                  <div className="animate-spin w-10 h-10 border-3 border-cyan-400 border-t-transparent rounded-full mx-auto mb-3"></div>
+                  <p className="text-cyan-300 font-medium text-lg">Checking account...</p>
+                  <p className="text-sm text-white mt-2 font-mono bg-black/30 rounded-lg py-2 px-3">
+                    {walletAddress?.slice(0, 8)}...{walletAddress?.slice(-6)}
+                  </p>
+                </div>
+              )}
+
+              {/* NEW USER REGISTRATION FORM */}
+              {walletLoginStep === 'register' && (
+                <form onSubmit={handleWalletRegistration} className="space-y-4">
+                  <div className="text-center mb-4">
+                    <p className="text-green-400 font-bold text-lg">🎉 Welcome to SoundChain!</p>
+                    <p className="text-sm text-white mt-1 font-mono bg-black/30 rounded-lg py-2 px-3 inline-block">
+                      {walletAddress?.slice(0, 8)}...{walletAddress?.slice(-6)}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">Create your account to get started</p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-purple-300 font-medium mb-1 block">Display Name</label>
+                    <input
+                      type="text"
+                      value={walletDisplayName}
+                      onChange={(e) => setWalletDisplayName(e.target.value)}
+                      placeholder="Your name"
+                      className="w-full bg-black/50 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-purple-300 font-medium mb-1 block">Username *</label>
+                    <input
+                      type="text"
+                      value={walletHandle}
+                      onChange={(e) => setWalletHandle(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
+                      placeholder="username"
+                      maxLength={24}
+                      className="w-full bg-black/50 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Letters and numbers only, max 24 chars</p>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-3 bg-black/30 rounded-lg border border-gray-800">
+                    <input
+                      type="checkbox"
+                      id="walletTerms"
+                      checked={walletTermsAccepted}
+                      onChange={(e) => setWalletTermsAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-cyan-500 bg-black text-cyan-500"
+                    />
+                    <label htmlFor="walletTerms" className="text-xs text-gray-400">
+                      I agree to SoundChain's{' '}
+                      <a href="/terms-and-conditions" className="text-cyan-400 hover:underline" target="_blank">
+                        Terms & Conditions
+                      </a>{' '}
+                      and{' '}
+                      <a href="/privacy-policy" className="text-cyan-400 hover:underline" target="_blank">
+                        Privacy Policy
+                      </a>
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={!walletHandle.trim() || !walletTermsAccepted}
+                    className={`w-full py-4 px-6 rounded-xl text-lg font-bold transition-all ${
+                      walletHandle.trim() && walletTermsAccepted
+                        ? 'bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-500 hover:to-cyan-500 text-white'
+                        : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    ✍️ Sign & Create Account
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setWalletLoginStep('idle'); setIsNewWalletUser(false); }}
+                    className="w-full py-2 text-gray-500 hover:text-gray-400 text-sm"
+                  >
+                    ← Back
+                  </button>
+                </form>
+              )}
+
               {walletLoginStep === 'signing' && (
                 <div className="py-4">
                   <div className="animate-pulse text-5xl mb-3">✍️</div>
@@ -770,7 +915,7 @@ export default function LoginPage() {
               {walletLoginStep === 'error' && (
                 <div className="py-2">
                   <button
-                    onClick={() => { setWalletLoginStep('idle'); setError(null); }}
+                    onClick={() => { setWalletLoginStep('idle'); setError(null); setIsNewWalletUser(false); }}
                     className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-lg font-bold rounded-xl transition-all"
                   >
                     🔄 Try Again
