@@ -17,12 +17,14 @@ import { InstagramSquare } from 'icons/social/InstagramSquare'
 import { TwitterSquare } from 'icons/social/TwitterSquare'
 import { Verified } from 'icons/Verified'
 import { Wallet } from 'icons/Wallet'
+import { Logo } from 'icons/Logo'
 import { setJwt } from 'lib/apollo'
 import { Role, usePendingRequestsBadgeNumberQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 import { FollowModalType } from 'types/FollowModalType'
+import { Wallet as WalletIcon, FileText, MessageSquare, Terminal, Shield, User, LogOut, ChevronRight, ExternalLink } from 'lucide-react'
 
 import { InboxButton } from './common/Buttons/InboxButton'
 import { DisplayName } from './DisplayName'
@@ -88,89 +90,146 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
     setShowModal(false)
   }
 
+  const { polBalance, ogunBalance } = useMagicContext()
+
+  const formatBalance = (bal: number | string | undefined) => {
+    const num = Number(bal) || 0
+    if (num < 0.001) return '0'
+    if (num < 1) return num.toFixed(4)
+    if (num < 1000) return num.toFixed(2)
+    return `${(num / 1000).toFixed(1)}K`
+  }
+
   return (
     <>
-      <div className="h-0 flex-1 overflow-y-auto">
-        <div className="px-6">
-          {me && (
-            <>
-              <div className="relative mt-6 flex flex-row">
-                <Avatar profile={me.profile} pixels={60} className="h-[68px] rounded-full border-4 border-gray-10" />
-                <div className="flex flex-grow items-center justify-center space-x-4 px-2">
-                  <button className="text-center text-lg" onClick={onFollowers}>
-                    <p className="font-semibold text-white">
-                      <Number value={me.profile.followerCount} />
-                    </p>
-                    <p className="text-xs text-gray-80">Followers</p>
-                  </button>
-                  <button className="text-center text-lg" onClick={onFollowing}>
-                    <p className="font-semibold text-white">
-                      <Number value={me.profile.followingCount} />
-                    </p>
-                    <p className="text-xs text-gray-80">Following</p>
-                  </button>
+      <div className="flex-1 overflow-y-auto">
+        {me && (
+          <>
+            {/* Profile Header - Modern Style */}
+            <div className="p-6 border-b border-white/5">
+              <div className="flex items-center gap-4">
+                <Avatar profile={me.profile} pixels={56} className="rounded-full ring-2 ring-white/10" />
+                <div className="flex-1 min-w-0">
+                  <DisplayName
+                    name={me.profile.displayName}
+                    verified={me.profile.verified}
+                    teamMember={me.profile.teamMember}
+                    badges={me.profile.badges}
+                  />
+                  <p className="text-sm text-gray-400 truncate">@{me.handle}</p>
                 </div>
               </div>
-              <div className="mt-4 flex flex-col">
-                <DisplayName
-                  name={me.profile.displayName}
-                  verified={me.profile.verified}
-                  teamMember={me.profile.teamMember}
-                  badges={me.profile.badges}
+
+              {/* Stats Row */}
+              <div className="flex items-center gap-6 mt-4">
+                <button className="group" onClick={onFollowers}>
+                  <span className="block text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                    <Number value={me.profile.followerCount} />
+                  </span>
+                  <span className="text-xs text-gray-500">Followers</span>
+                </button>
+                <button className="group" onClick={onFollowing}>
+                  <span className="block text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                    <Number value={me.profile.followingCount} />
+                  </span>
+                  <span className="text-xs text-gray-500">Following</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Wallet Overview */}
+            <div className="px-6 py-4 border-b border-white/5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-gray-400 font-medium">BALANCE</span>
+                <Link href="/wallet" passHref>
+                  <span className="text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer flex items-center gap-1">
+                    View All <ChevronRight className="w-3 h-3" />
+                  </span>
+                </Link>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🟣</span>
+                    <span className="text-white font-medium">{formatBalance(polBalance)} POL</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Logo className="w-4 h-4" />
+                    <span className="text-cyan-400 font-medium">{formatBalance(ogunBalance)} OGUN</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="px-6 py-3 border-b border-white/5">
+              <InboxButton showLabel />
+            </div>
+
+            {/* Menu Links - Cleaner */}
+            <div className="py-2">
+              <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
+              <MenuLink
+                icon={Document}
+                label="Docs"
+                target="_blank"
+                rel="noreferrer"
+                href="https://soundchain-1.gitbook.io/soundchain-docs/"
+              />
+              <MenuLink icon={Feedback} label="Feedback" href="/feedback" />
+              <MenuLink icon={Code} label="Developers" href="/developers" />
+              {me.roles.includes(Role.Admin) ? (
+                <MenuLink
+                  icon={Verified}
+                  label="Admin Panel"
+                  href="/manage-requests"
+                  badgeNumber={pendingRequestsBadgeNumber?.pendingRequestsBadgeNumber}
                 />
-                <p className="text-md text-gray-80">@{me.handle}</p>
+              ) : (
+                !me.profile.verified && <MenuLink icon={Verified} label="Get Verified" href="/get-verified" />
+              )}
+              <MenuLink icon={Settings} label="Settings" href="/settings" />
+            </div>
 
-                <div className="py-4">
-                  <InboxButton showLabel />
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+            {/* Logout - Separate Section */}
+            <div className="px-6 py-3 border-t border-white/5">
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-medium">Sign Out</span>
+              </button>
+            </div>
+          </>
+        )}
       </div>
-      {me && (
-        <div>
-          <MenuLink icon={Wallet} label="Wallet" href="/wallet" />
-          <MenuLink
-            icon={Document}
-            label="Docs"
-            target="_blank"
-            rel="noreferrer"
-            href="https://soundchain-1.gitbook.io/soundchain-docs/"
+
+      {/* Footer */}
+      <div className="px-6 py-4 border-t border-white/5">
+        {/* Social Links */}
+        <div className="flex items-center justify-center gap-4 mb-3">
+          <SocialTag
+            ariaLabel="SoundChain Twitter"
+            url="https://twitter.com/Soundchain_io"
+            icon={TwitterSquare}
           />
-          <MenuLink icon={Feedback} label="Leave Feedback" href="/feedback" />
-          <MenuLink icon={Code} label="Developers" href="/developers" />
-          {me.roles.includes(Role.Admin) ? (
-            <MenuLink
-              icon={Verified}
-              label="Admin Panel"
-              href="/manage-requests"
-              badgeNumber={pendingRequestsBadgeNumber?.pendingRequestsBadgeNumber}
-            />
-          ) : (
-            !me.profile.verified && <MenuLink icon={Verified} label="Get Verified" href="/get-verified" />
-          )}
-
-          <MenuLink icon={Settings} label="Account Settings" href="/settings" />
-          <MenuItem icon={Logout} label="Logout" onClick={onLogout} />
+          <SocialTag ariaLabel="SoundChain Discord" url="https://discord.gg/5yZG6BTTHV" icon={Discord} />
+          <SocialTag
+            ariaLabel="SoundChain Instagram"
+            url="https://www.instagram.com/soundchain.io/"
+            icon={InstagramSquare}
+          />
         </div>
-      )}
-      <div className="my-4 mx-8 flex h-10 flex-shrink-0 items-center justify-between text-gray-CC">
-        <Link href="/privacy-policy">PRIVACY POLICY</Link>
-        <span>v {config.appVersion}</span>
-      </div>
-      <div className="mx-8 flex h-10 flex-shrink-0 flex-row items-center justify-between">
-        <SocialTag
-          ariaLabel="SoundChain Twitter account"
-          url="https://twitter.com/Soundchain_io"
-          icon={TwitterSquare}
-        />
-        <SocialTag ariaLabel="SoundChain Discord account" url="https://discord.gg/5yZG6BTTHV" icon={Discord} />
-        <SocialTag
-          ariaLabel="SoundChain Instagram account"
-          url="https://www.instagram.com/soundchain.io/"
-          icon={InstagramSquare}
-        />
+        {/* Version & Legal */}
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <Link href="/privacy-policy" className="hover:text-gray-400 transition-colors">
+            Privacy Policy
+          </Link>
+          <span>v{config.appVersion}</span>
+        </div>
       </div>
 
       {me && (
