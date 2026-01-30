@@ -349,14 +349,29 @@ export function MagicProvider({ children }: MagicProviderProps) {
         return
       }
 
-      // Use Magic's web3 or fallback to public RPC
-      const rpcUrl = network.rpc || 'https://polygon-rpc.com'
-      const web3Instance = web3 || new Web3(rpcUrl)
+      // Try Magic's web3 first, then fallback to public RPC on failure
+      const rpcUrl = 'https://polygon-rpc.com'
 
-      console.log('💰 Fetching POL balance for account:', account, 'using RPC:', web3 ? 'Magic web3' : rpcUrl)
-      const maticBalance = await web3Instance.eth.getBalance(account)
-      const balanceEther = Number(web3Instance.utils.fromWei(maticBalance, 'ether')).toFixed(6)
-      console.log('💰 POL balance result:', balanceEther)
+      // First try Magic web3 if available
+      if (web3) {
+        try {
+          console.log('💰 Fetching POL balance for account:', account, 'using RPC: Magic web3')
+          const maticBalance = await web3.eth.getBalance(account)
+          const balanceEther = Number(web3.utils.fromWei(maticBalance, 'ether')).toFixed(6)
+          console.log('💰 POL balance result:', balanceEther)
+          setMaticBalance(balanceEther)
+          return // Success with Magic, no need for fallback
+        } catch (magicError: any) {
+          console.warn('💰 Magic RPC failed, trying public RPC fallback:', magicError?.message || magicError)
+        }
+      }
+
+      // Fallback to public RPC (either Magic wasn't available or it failed)
+      console.log('💰 Fetching POL balance for account:', account, 'using RPC:', rpcUrl)
+      const fallbackWeb3 = new Web3(rpcUrl)
+      const maticBalance = await fallbackWeb3.eth.getBalance(account)
+      const balanceEther = Number(fallbackWeb3.utils.fromWei(maticBalance, 'ether')).toFixed(6)
+      console.log('💰 POL balance result (fallback):', balanceEther)
       setMaticBalance(balanceEther)
     } catch (error) {
       console.error('💰 Balance fetch error:', error)
@@ -379,14 +394,10 @@ export function MagicProvider({ children }: MagicProviderProps) {
         return
       }
 
-      // Use Magic's web3 or fallback to public RPC (Polygon)
-      const rpcUrl = network.rpc || 'https://polygon-rpc.com'
-      const web3Instance = web3 || new Web3(rpcUrl)
-
-      console.log('💎 Fetching OGUN balance for account:', account, 'using RPC:', web3 ? 'Magic web3' : rpcUrl)
-      const ogunContract = new web3Instance.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
-
-      try {
+      // Helper to fetch OGUN balance with a given web3 instance
+      const fetchOgunWithWeb3 = async (web3Instance: Web3, label: string) => {
+        console.log('💎 Fetching OGUN balance for account:', account, 'using RPC:', label)
+        const ogunContract = new web3Instance.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
         const tokenAmount = await ogunContract.methods.balanceOf(account).call()
         console.log('💎 Raw OGUN balance:', tokenAmount, 'type:', typeof tokenAmount)
 
@@ -403,9 +414,29 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
         const tokenAmountInEther = Number(web3Instance.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
         console.log('💎 OGUN balance in ether:', tokenAmountInEther)
-        setOgunBalance(tokenAmountInEther)
-      } catch (contractErr: any) {
-        console.error('💎 OGUN contract call failed:', contractErr?.message || contractErr)
+        return tokenAmountInEther
+      }
+
+      const rpcUrl = 'https://polygon-rpc.com'
+
+      // First try Magic web3 if available
+      if (web3) {
+        try {
+          const balance = await fetchOgunWithWeb3(web3, 'Magic web3')
+          setOgunBalance(balance)
+          return // Success with Magic, no need for fallback
+        } catch (magicError: any) {
+          console.warn('💎 Magic RPC failed for OGUN, trying public RPC fallback:', magicError?.message || magicError)
+        }
+      }
+
+      // Fallback to public RPC (either Magic wasn't available or it failed)
+      try {
+        const fallbackWeb3 = new Web3(rpcUrl)
+        const balance = await fetchOgunWithWeb3(fallbackWeb3, rpcUrl)
+        setOgunBalance(balance)
+      } catch (fallbackErr: any) {
+        console.error('💎 OGUN contract call failed (fallback):', fallbackErr?.message || fallbackErr)
         setOgunBalance(prev => prev || '0')
       }
     } catch (error: any) {

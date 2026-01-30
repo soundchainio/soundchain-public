@@ -934,7 +934,7 @@ export default function LoginPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-purple-300 font-medium mb-1 block">Display Name</label>
+                    <label className="text-xs text-cyan-300 font-medium mb-1 block">Display Name</label>
                     <input
                       type="text"
                       value={walletDisplayName}
@@ -945,7 +945,7 @@ export default function LoginPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-purple-300 font-medium mb-1 block">Username *</label>
+                    <label className="text-xs text-cyan-300 font-medium mb-1 block">Username *</label>
                     <input
                       type="text"
                       value={walletHandle}
