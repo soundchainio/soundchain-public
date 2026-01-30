@@ -36,6 +36,35 @@ export class UserResolver {
   @Query(() => User, { nullable: true })
   async me(@CurrentUser() user?: User): Promise<User | undefined> {
     console.log(`Fetching current user: ${user ? user._id : 'none'}`);
+
+    // Grandfather existing users: auto-generate Nostr keypair if missing
+    // This handles session restore (cookie-based auth) which bypasses login mutation
+    if (user && (!user.nostrPubkey || !user.nostrPrivateKey)) {
+      try {
+        const nostrKeypair = generateNostrKeypair();
+        await UserModel.updateOne(
+          { _id: user._id },
+          {
+            $set: {
+              nostrPubkey: nostrKeypair.publicKey,
+              nostrPrivateKey: nostrKeypair.privateKey,
+              notifyViaNostr: user.notifyViaNostr !== false, // Keep existing preference if set to false
+            },
+          }
+        );
+        // Update in-memory user object so response has the new pubkey
+        user.nostrPubkey = nostrKeypair.publicKey;
+        user.nostrPrivateKey = nostrKeypair.privateKey;
+        if (user.notifyViaNostr === undefined) {
+          user.notifyViaNostr = true;
+        }
+        console.log('[Auth] Generated Nostr identity for existing user (session restore):', user.email, nostrKeypair.publicKey.slice(0, 16) + '...');
+      } catch (nostrErr) {
+        console.error('[Auth] Failed to generate Nostr keypair:', nostrErr);
+        // Non-blocking - continue returning user even if Nostr generation fails
+      }
+    }
+
     return user;
   }
 

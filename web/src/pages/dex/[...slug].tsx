@@ -807,6 +807,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [editHandle, setEditHandle] = useState('')
   const [accountSettingsSaving, setAccountSettingsSaving] = useState(false)
   const [accountSettingsSuccess, setAccountSettingsSuccess] = useState<string | null>(null)
+  const [nostrPubkeyCopied, setNostrPubkeyCopied] = useState(false)
 
   // Account Settings mutations
   const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
@@ -3392,6 +3393,41 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                     </div>
                                     <p className="text-xs text-gray-500">soundchain.io/dex/users/{editHandle || 'username'}</p>
                                   </div>
+
+                                  {/* Nostr Identity */}
+                                  {me?.nostrPubkey && (
+                                    <div className="space-y-2">
+                                      <label className="text-xs text-gray-400 flex items-center gap-2">
+                                        <Radio className="w-3 h-3 text-orange-400" />
+                                        Nostr Identity
+                                      </label>
+                                      <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500/10 to-purple-500/10 border border-orange-500/30 rounded px-3 py-2">
+                                        <code className="flex-1 text-xs text-orange-300 font-mono truncate">
+                                          {me.nostrPubkey.slice(0, 12)}...{me.nostrPubkey.slice(-8)}
+                                        </code>
+                                        <button
+                                          onClick={async () => {
+                                            try {
+                                              await navigator.clipboard.writeText(me.nostrPubkey || '')
+                                              setNostrPubkeyCopied(true)
+                                              setTimeout(() => setNostrPubkeyCopied(false), 2000)
+                                            } catch (err) {
+                                              console.error('Failed to copy:', err)
+                                            }
+                                          }}
+                                          className="p-1 bg-orange-500/20 hover:bg-orange-500/30 rounded transition-colors"
+                                          title="Copy Nostr pubkey"
+                                        >
+                                          {nostrPubkeyCopied ? (
+                                            <Check className="w-3 h-3 text-green-400" />
+                                          ) : (
+                                            <Copy className="w-3 h-3 text-orange-400" />
+                                          )}
+                                        </button>
+                                      </div>
+                                      <p className="text-xs text-gray-500">Add this pubkey in Bitchat to receive notifications</p>
+                                    </div>
+                                  )}
 
                                   {/* Link to full settings page */}
                                   <Link href="/dex/settings" onClick={() => setShowUserMenu(false)}>
