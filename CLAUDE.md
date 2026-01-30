@@ -1,19 +1,65 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 29, 2026
+**Last Updated:** January 30, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
 ---
 
-## CURRENT SESSION (Jan 29, 2026)
+## CURRENT SESSION (Jan 29-30, 2026)
 
-**Environment:** War Room
-**Device:** Desktop + iPhone 14 Pro Max (testing)
+**Environment:** Remote ttyd terminal (iPhone at work)
+**Device:** iPhone 14 Pro Max
 **Working Dir:** `/Users/soundchain/soundchain`
 **Branch:** production
 
-### 🔔 User Engagement Features - GAME CHANGER DAY!
+### Decentralized Notifications - Full Stack Implementation
+
+#### 3-Angle Push Notification System (NO SMS/Twilio!)
+All notifications are FREE and decentralized:
+
+1. **PWA Install Prompt** (`web/src/components/dex/PWAInstallPrompt.tsx`)
+   - Encourages users to install as native app
+   - Full push notification support when browser closed
+   - iOS instructions for Add to Home Screen
+
+2. **Background Sync API** (`web/worker/index.js`)
+   - Offline action queue (replays when back online)
+   - Periodic notification checks (hourly)
+   - Periodic rewards checks (every 30 min)
+
+3. **Nostr Real-Time Subscriptions** (`web/src/hooks/useNostrNotifications.ts`)
+   - WebSocket to 4 public relays (damus, nostr.band, nos.lol, snort)
+   - NIP-17 encrypted DM support (kinds 4, 14, 1059)
+   - Auto-reconnect with exponential backoff
+   - Shows toast notifications for incoming DMs
+
+#### Auto-Generated Nostr Identity
+- **New users**: Keypair generated at registration
+- **Existing users**: Keypair auto-generated on next login (grandfather)
+- Private key stored server-side for sending notifications
+- Public key exposed to users in Settings → Notifications
+
+**Files:**
+- `api/src/utils/nostrKeygen.ts` - Keypair generation utility
+- `api/src/services/AuthService.ts` - Generates on registration
+- `api/src/resolvers/UserResolver.ts` - Grandfather on login
+- `api/src/models/User.ts` - nostrPubkey, nostrPrivateKey, notifyViaNostr fields
+
+#### Notification Settings UI Updates
+- Removed phone number field (no SMS - decentralized only!)
+- Auto-generated Nostr pubkey displayed with copy button
+- Read-only display (users don't need to do anything)
+- Default `notifyViaNostr: true` for all users
+
+**Known Issue (Debugging):**
+- Nostr pubkey not showing after login despite API deployment
+- Debug logging added to frontend (`6665d4153`)
+- Check browser console for `[NotificationSettingsForm] initialValues:`
+
+---
+
+### Previous: User Engagement Features - GAME CHANGER DAY!
 
 **Three major features implemented to compete with IG/X/FB/Spotify/SoundCloud/Bandcamp:**
 
@@ -1691,6 +1737,7 @@ alias cc='tmux new -s claude 2>/dev/null || tmux attach -t claude'
 | Jan 28, 2026 | **Bisect Recovery** - Restored 8/9 wallet files safely, reverted only culprit file | 908806d93→5912b3a3d |
 | Jan 28, 2026 | Dark overlay for bio/nav tabs + track detail play count sync with SCid | 8a0c7071b, 7b5b77854 |
 | Jan 29, 2026 | **GAME CHANGER: User Engagement Features** - Online Indicators, Activity Feed, Web Push Notifications | f2b1a5359, 0bfbcd989 |
+| Jan 29-30, 2026 | **Decentralized Notifications Stack** - PWA prompt, Background Sync, Nostr subscriptions, auto-generated keypairs | 2c1f67e3a, 6b843c998, 861974dcc |
 
 ---
 
