@@ -11,7 +11,7 @@ const polygon = {
   name: 'Polygon',
   currency: 'POL',
   explorerUrl: 'https://polygonscan.com',
-  rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon'
+  rpcUrl: process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com'
 }
 
 const ethereum = {

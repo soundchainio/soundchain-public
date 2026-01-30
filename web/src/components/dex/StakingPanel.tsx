@@ -163,7 +163,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
         // Collect 0.05% platform fee from claimed OGUN
         const platformFeeRate = config.soundchainFee || 0.0005
         const platformFee = totalClaimed * platformFeeRate
-        const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon')
+        const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com')
         const treasuryAddress = config.treasuryAddress
 
         if (platformFee > 0 && treasuryAddress && web3Instance) {
@@ -221,7 +221,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
         // Note: The OGUN goes directly to staking, so we need user to pay fee from their balance
         const platformFeeRate = config.soundchainFee || 0.0005
         const platformFee = totalClaimed * platformFeeRate
-        const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon')
+        const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com')
         const treasuryAddress = config.treasuryAddress
 
         if (platformFee > 0 && treasuryAddress && web3Instance) {
@@ -308,7 +308,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
 
     // Use Magic web3 if available, otherwise fallback to Alchemy Polygon RPC
-    const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://rpc.ankr.com/polygon')
+    const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon.llamarpc.com')
 
     try {
       // POL (native) Balance

@@ -114,15 +114,15 @@ const chainSymbols: Record<number, string> = {
 // Public RPCs for balance fetching (read-only, no wallet needed)
 // Using Ankr where possible - CORS-friendly and better rate limits
 const chainRpcs: Record<number, string> = {
-  1: 'https://rpc.ankr.com/eth',
-  137: 'https://rpc.ankr.com/polygon',
-  8453: 'https://rpc.ankr.com/base',
-  42161: 'https://rpc.ankr.com/arbitrum',
-  10: 'https://rpc.ankr.com/optimism',
+  1: 'https://eth.llamarpc.com',
+  137: 'https://polygon.llamarpc.com',
+  8453: 'https://base.llamarpc.com',
+  42161: 'https://arbitrum.llamarpc.com',
+  10: 'https://optimism.llamarpc.com',
   7000: 'https://zetachain-evm.blockpi.network/v1/rpc/public',
 }
 
-const getRpcForChain = (chainId: number): string => chainRpcs[chainId] || 'https://rpc.ankr.com/polygon'
+const getRpcForChain = (chainId: number): string => chainRpcs[chainId] || 'https://polygon.llamarpc.com'
 
 // Inner provider that uses Web3Modal hooks (only rendered when ready)
 function UnifiedWalletInner({
