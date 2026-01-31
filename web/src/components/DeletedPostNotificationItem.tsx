@@ -5,6 +5,7 @@ import { Timestamp } from 'components/Timestamp'
 import { DeletedPostNotification } from 'lib/graphql'
 
 import { MiniAudioPlayer } from './MiniAudioPlayer'
+import { PostBodyWithEmotes } from './EmoteRenderer'
 
 interface DeletedPostNotificationProps {
   notification: DeletedPostNotification
@@ -43,7 +44,7 @@ export const DeletedPostNotificationItem = ({
               }}
             />
           ) : (
-            previewBody
+            <PostBodyWithEmotes body={previewBody || ''} linkify />
           )}
         </div>
       </div>
