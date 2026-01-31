@@ -33,6 +33,7 @@ export const config = {
   sentryUrl: process.env.NEXT_PUBLIC_SENTRY_URL,
   gtmId: process.env.NEXT_PUBLIC_GTM_ID,
   // Permanent Post Pricing - pay to convert 24hr ephemeral posts to permanent
+  // Pricing scales with file size - larger files cost more to store permanently
   permanentPostPricing: {
     tiers: [
       { maxSizeBytes: 0, ogun: 5, pol: 0.1, label: 'Text-only' },
@@ -40,9 +41,12 @@ export const config = {
       { maxSizeBytes: 10 * 1024 * 1024, ogun: 25, pol: 0.5, label: '1-10 MB' },
       { maxSizeBytes: 50 * 1024 * 1024, ogun: 75, pol: 1.5, label: '10-50 MB' },
       { maxSizeBytes: 100 * 1024 * 1024, ogun: 150, pol: 3, label: '50-100 MB' },
+      { maxSizeBytes: 250 * 1024 * 1024, ogun: 300, pol: 6, label: '100-250 MB' },
+      { maxSizeBytes: 500 * 1024 * 1024, ogun: 500, pol: 10, label: '250-500 MB' },
+      { maxSizeBytes: 1024 * 1024 * 1024, ogun: 800, pol: 16, label: '500 MB-1 GB' },
     ],
     removalFeeMultiplier: 0.5, // 50% of original price to remove
-    platformFeeRate: 0.0005, // 0.05% platform fee
+    platformFeeRate: 0.005, // 0.5% platform fee on permanent posts (higher than trades)
   },
 }
 // GitHub webhook test - Fri Jan 30 18:00:00 MST 2026

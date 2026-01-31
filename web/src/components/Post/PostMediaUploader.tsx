@@ -105,6 +105,7 @@ const captureVideoThumbnail = (videoFile: File): Promise<Blob | null> => {
 
 // Accepted file types for posts (same as NFT minting)
 // Note: Use explicit MIME types instead of wildcards for better desktop browser support
+// Extended MIME types for cross-browser compatibility - browsers report different types!
 const acceptedTypes = {
   // Images
   'image/jpeg': ['.jpg', '.jpeg'],
@@ -112,20 +113,29 @@ const acceptedTypes = {
   'image/gif': ['.gif'],
   'image/webp': ['.webp'],
   'image/bmp': ['.bmp'],
-  // Videos - explicit MIME types for desktop browser compatibility
-  'video/mp4': ['.mp4'],
-  'video/quicktime': ['.mov'], // MOV files - important for iOS recordings
+  // Videos - extended for cross-browser compatibility
+  'video/mp4': ['.mp4', '.m4v'],
+  'video/quicktime': ['.mov', '.qt'], // MOV files - important for iOS recordings
   'video/webm': ['.webm'],
   'video/x-msvideo': ['.avi'],
   'video/x-matroska': ['.mkv'],
+  'video/x-m4v': ['.m4v'], // Some browsers report this instead of video/mp4
+  'video/3gpp': ['.3gp', '.3gpp'],
+  'video/3gpp2': ['.3g2', '.3gpp2'],
+  'video/ogg': ['.ogv', '.ogg'],
   // Audio
   'audio/mpeg': ['.mp3'],
   'audio/wav': ['.wav'],
+  'audio/wave': ['.wav'], // Some browsers use audio/wave
+  'audio/x-wav': ['.wav'], // Some browsers use audio/x-wav
   'audio/flac': ['.flac'],
-  'audio/ogg': ['.ogg'],
-  'audio/mp4': ['.m4a'],
-  'audio/aiff': ['.aiff'],
-  'audio/x-aiff': ['.aiff'],
+  'audio/x-flac': ['.flac'],
+  'audio/ogg': ['.ogg', '.oga'],
+  'audio/mp4': ['.m4a', '.mp4'],
+  'audio/x-m4a': ['.m4a'],
+  'audio/aiff': ['.aiff', '.aif'],
+  'audio/x-aiff': ['.aiff', '.aif'],
+  'audio/webm': ['.weba'],
 }
 
 export const PostMediaUploader = ({
@@ -169,16 +179,25 @@ export const PostMediaUploader = ({
       setError(null)
       setUploading(true)
 
-      // Determine media type
+      // Log file info for debugging
+      console.log('[PostMediaUploader] File accepted:', {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+      })
+
+      // Determine media type - with extension fallback for edge cases
       let type: 'image' | 'video' | 'audio'
+      const ext = file.name.toLowerCase().split('.').pop()
+
       if (file.type.startsWith('image/')) {
         type = 'image'
-      } else if (file.type.startsWith('video/')) {
+      } else if (file.type.startsWith('video/') || ['mov', 'mp4', 'webm', 'avi', 'mkv', 'm4v', '3gp'].includes(ext || '')) {
         type = 'video'
-      } else if (file.type.startsWith('audio/')) {
+      } else if (file.type.startsWith('audio/') || ['mp3', 'wav', 'flac', 'ogg', 'm4a', 'aiff'].includes(ext || '')) {
         type = 'audio'
       } else {
-        setError('Unsupported file type')
+        setError(`Unsupported file type: ${file.type || ext}`)
         setUploading(false)
         return
       }
@@ -232,10 +251,17 @@ export const PostMediaUploader = ({
     disabled: uploading,
     onDropRejected: (rejections) => {
       const rejection = rejections[0]
-      if (rejection?.errors[0]?.code === 'file-too-large') {
-        setError('File too large. Max size is 1GB.')
+      const errorCode = rejection?.errors[0]?.code
+      const fileType = rejection?.file?.type || 'unknown'
+
+      if (errorCode === 'file-too-large') {
+        const sizeMB = Math.round((rejection?.file?.size || 0) / (1024 * 1024))
+        setError(`File too large (${sizeMB} MB). Maximum size is 1GB.`)
+      } else if (errorCode === 'file-invalid-type') {
+        console.error('Rejected file type:', fileType, rejection?.file?.name)
+        setError(`Unsupported format (${fileType}). Try MP4, MOV, MP3, or common image formats.`)
       } else {
-        setError('Invalid file type')
+        setError(`Upload error: ${rejection?.errors[0]?.message || 'Unknown error'}`)
       }
     },
   })
@@ -282,7 +308,13 @@ export const PostMediaUploader = ({
           <video
             src={preview}
             controls
-            className="w-full max-h-80"
+            playsInline
+            preload="metadata"
+            className="w-full max-h-80 bg-black"
+            onError={(e) => {
+              console.error('Video preview error:', e)
+              setError('Video format may not be supported by your browser. Try MP4 format.')
+            }}
           />
         )}
 
@@ -299,6 +331,13 @@ export const PostMediaUploader = ({
         {uploading && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <div className="p-2 bg-red-500/20 border-t border-red-500/30">
+            <p className="text-red-400 text-xs">{error}</p>
           </div>
         )}
       </div>

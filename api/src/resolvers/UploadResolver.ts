@@ -12,13 +12,23 @@ export class UploadResolver {
     return uploadService.generateUploadUrl(fileType);
   }
 
-  // Guest upload URL - allows anonymous users to upload images for guest posts
+  // Guest upload URL - allows anonymous users to upload media for guest posts
+  // Media is ephemeral (24h) by default, users can pay to make permanent
   @Query(() => UploadUrl)
   guestUploadUrl(@Ctx() { uploadService }: Context, @Arg('fileType') fileType: string): Promise<UploadUrl> {
-    // Only allow image uploads for guests
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    // Allow images, videos, and audio for guests (ephemeral posts)
+    const allowedTypes = [
+      // Images
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
+      // Videos - expanded for browser compatibility
+      'video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo', 'video/x-matroska',
+      'video/x-m4v', 'video/3gpp', 'video/3gpp2', 'video/ogg',
+      // Audio
+      'audio/mpeg', 'audio/wav', 'audio/flac', 'audio/ogg', 'audio/mp4',
+      'audio/aiff', 'audio/x-aiff', 'audio/x-m4a', 'audio/webm',
+    ];
     if (!allowedTypes.includes(fileType)) {
-      throw new Error('Guests can only upload images');
+      throw new Error(`Unsupported file type: ${fileType}. Supported: images, videos, and audio.`);
     }
     return uploadService.generateUploadUrl(fileType);
   }
