@@ -121,7 +121,7 @@ module.exports = withPWA({
           // Allow RPC endpoints for wallet balance fetching (Magic SDK may inject restrictive CSP)
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data:; connect-src 'self' https: wss:; img-src 'self' https: data: blob:; font-src 'self' https: data:; frame-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline' https:;",
+            value: "default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data:; connect-src 'self' https: wss:; img-src 'self' https: data: blob:; font-src 'self' https: data:; frame-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline' https:; media-src 'self' https: blob: data:;",
           },
         ],
       },

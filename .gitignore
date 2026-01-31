@@ -1,6 +1,16 @@
 .vercel
 api-source.tar.gz
 
+# Claude/AI session files - PRIVATE, not for public repo
+CLAUDE.md
+CLAUDE_*.md
+*HANDOFF*.md
+*SESSION*.md
+*VISION*.md
+*VICTORY*.md
+MASTER_HANDOFF.md
+.claude/
+
 # Environment files - NEVER commit secrets
 .env
 .env.local
