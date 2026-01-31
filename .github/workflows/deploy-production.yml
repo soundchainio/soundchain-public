@@ -3,6 +3,7 @@ name: Deploy Production API
 on:
   push:
     branches:
+      - main
       - production
     paths:
       - "api/**"
