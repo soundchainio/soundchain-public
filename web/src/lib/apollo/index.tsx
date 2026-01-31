@@ -15,6 +15,7 @@ import {
   NormalizedCacheObject,
 } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
+import { onError } from '@apollo/client/link/error'
 import { getDataFromTree } from '@apollo/client/react/ssr'
 import { mergeDeep } from '@apollo/client/utilities'
 
@@ -50,8 +51,51 @@ export function createApolloClient(context?: GetServerSidePropsContext) {
     }
   })
 
+  // Error link to handle 401 (unauthorized) - clears stale JWT and redirects to login
+  const errorLink = onError(({ networkError, graphQLErrors }) => {
+    // Check for 401 in network errors (API returns 401 status)
+    if (networkError && 'statusCode' in networkError && networkError.statusCode === 401) {
+      console.error('[Apollo] 401 Unauthorized - clearing stale credentials')
+      if (isBrowser) {
+        // Clear all auth tokens
+        Cookies.remove(jwtKey, { path: '/' })
+        localStorage.removeItem('jwt_fallback')
+        localStorage.removeItem('didToken')
+        jwt = undefined
+
+        // Redirect to login if not already there
+        if (!window.location.pathname.includes('/login')) {
+          console.log('[Apollo] Redirecting to login due to 401')
+          window.location.href = '/login?expired=true'
+        }
+      }
+    }
+
+    // Also check GraphQL errors for UNAUTHENTICATED code
+    if (graphQLErrors) {
+      for (const error of graphQLErrors) {
+        if (error.extensions?.code === 'UNAUTHENTICATED' ||
+            error.message?.toLowerCase().includes('unauthorized')) {
+          console.error('[Apollo] GraphQL UNAUTHENTICATED error - clearing credentials')
+          if (isBrowser) {
+            Cookies.remove(jwtKey, { path: '/' })
+            localStorage.removeItem('jwt_fallback')
+            localStorage.removeItem('didToken')
+            jwt = undefined
+
+            if (!window.location.pathname.includes('/login')) {
+              console.log('[Apollo] Redirecting to login due to auth error')
+              window.location.href = '/login?expired=true'
+            }
+          }
+          break
+        }
+      }
+    }
+  })
+
   return new ApolloClient({
-    link: authLink.concat(httpLink),
+    link: errorLink.concat(authLink.concat(httpLink)),
     cache: new InMemoryCache(cacheConfig),
     ssrMode: !isBrowser,
     defaultOptions: {},
