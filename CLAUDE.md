@@ -1,17 +1,116 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 30, 2026
+**Last Updated:** January 31, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
 ---
 
-## CURRENT SESSION (Jan 30, 2026)
+## 🚨 CURRENT SESSION (Jan 31, 2026) - OPEN SOURCE MIGRATION RECOVERY
 
 **Environment:** Remote ttyd terminal via Cloudflare tunnel
-**Device:** iPhone 14 Pro Max (at work)
 **Working Dir:** `/Users/soundchain/soundchain`
 **Branch:** production
+**New Public Repo:** `github.com/soundchainio/soundchain-public`
+
+---
+
+### 🔥 CRITICAL: OPEN SOURCE REPO MIGRATION (Jan 30-31, 2026)
+
+**MILESTONE: SoundChain moved from private AE repo to public open source repo!**
+
+#### What Happened
+1. Migrated all code from private repo to `soundchainio/soundchain-public`
+2. Connected Vercel to new public repo
+3. Needed to migrate ALL environment variables to new GitHub Actions secrets
+4. Site went DOWN after migration - API returning 502 errors
+
+#### Issues Encountered & Fixes
+
+| Issue | Cause | Status | Fix |
+|-------|-------|--------|-----|
+| **502 Bad Gateway** | Missing GitHub secrets | ✅ FIXED | Added 28+ secrets to repo |
+| **Secret name mismatch** | Workflow expected `_PRODUCTION` suffix | ✅ FIXED | Edited workflow to use non-suffixed names |
+| **MongoError: Auth failed** | Missing DocumentDB params | ✅ FIXED | Added `?tls=true&authSource=admin&authMechanism=SCRAM-SHA-1&retryWrites=false` |
+| **MongoError: Auth failed** | PASSWORD special chars not URL-encoded | ⚠️ PENDING | User must update GitHub secret |
+| **SERVERLESS_ACCESS_KEY syntax** | Used GitHub syntax in serverless.yml | ✅ FIXED | Changed `${{ secrets.X }}` to `${env:X}` |
+| **WalletConnect WebSocket error** | Invalid relay key | ⚠️ INVESTIGATE | Check WalletConnect project ID |
+
+#### GitHub Secrets Added to New Repo (28+)
+```
+AWS_ACCESS_KEY_ID          = [configured - rotated keys]
+AWS_SECRET_ACCESS_KEY      = [configured - rotated keys]
+DATABASE_USERNAME          = soundchainadmin
+DATABASE_PASSWORD          = [MUST BE URL-ENCODED! See encoding section below]
+JWT_NAMESPACE             = https://soundchain.io
+JWT_SECRET                = [configured]
+PINATA_API_KEY            = [configured]
+PINATA_API_SECRET         = [configured]
+MUX_TOKEN_ID              = [configured]
+MUX_TOKEN_SECRET          = [configured]
+MUX_DATA_ID               = [configured]
+MUX_DATA_SECRET           = [configured]
+MAGIC_PRIVATE_KEY         = [configured]
+VAPID_PUBLIC_KEY          = [configured]
+VAPID_PRIVATE_KEY         = [configured]
+SENDGRID_API_KEY          = [configured]
+SENDGRID_SENDER_EMAIL     = [configured]
+WEB_APP_URL               = https://soundchain.io
+WALLET_PUBLIC_KEY         = [configured]
+WALLET_PRIVATE_KEY        = [configured]
+ALCHEMY_API_KEY           = [configured]
+MARKETPLACE_ADDRESS       = [configured]
+NFT_ADDRESS               = [configured]
+AUCTION_ADDRESS           = [configured]
+AUCTION_V2_ADDRESS        = [configured]
+NFT_MULTIPLE_EDITION_ADDRESS = [configured]
+MARKETPLACE_MULTIPLE_EDITION_ADDRESS = [configured]
+POLYGON_SCAN_API_KEY      = [configured]
+SERVERLESS_ACCESS_KEY     = [from app.serverless.com]
+```
+
+#### DATABASE_PASSWORD URL Encoding (CRITICAL)
+The password contains special characters that MUST be URL-encoded:
+- Raw: `C:8F4lx]mpF.C8Fmwd2ixdoIGUGM`
+- `:` → `%3A`
+- `]` → `%5D`
+- **URL-encoded: `C%3A8F4lx%5DmpF.C8Fmwd2ixdoIGUGM`**
+
+**GitHub Secret `DATABASE_PASSWORD` MUST contain the URL-encoded version!**
+
+#### Serverless.yml Fixes Made
+```yaml
+# Fix 1: Added DocumentDB connection params (commit 59c0aa64e)
+DATABASE_URL: mongodb://${env:DATABASE_USERNAME}:${env:DATABASE_PASSWORD}@${self:custom.db.host}:${self:custom.db.port}/soundchain?tls=true&authSource=admin&authMechanism=SCRAM-SHA-1&retryWrites=false
+
+# Fix 2: Corrected SERVERLESS_ACCESS_KEY syntax
+# BEFORE (wrong):
+SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+# AFTER (correct):
+SERVERLESS_ACCESS_KEY: ${env:SERVERLESS_ACCESS_KEY}
+```
+
+#### Workflow Secret Name Fixes (commit 593e64f4e)
+```yaml
+# BEFORE (expected _PRODUCTION suffix):
+DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD_PRODUCTION }}
+DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME_PRODUCTION }}
+
+# AFTER (no suffix):
+DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+```
+
+#### Current Status
+- **Frontend**: UP (HTML loading, Vercel deployment working)
+- **API**: DOWN (MongoError: Authentication failed)
+- **Login**: DOWN (no API connectivity + WalletConnect WebSocket errors)
+
+#### To Fix API:
+1. Go to GitHub → soundchainio/soundchain-public → Settings → Secrets and variables → Actions
+2. Edit the `DATABASE_PASSWORD` secret
+3. Replace with URL-encoded value: `C%3A8F4lx%5DmpF.C8Fmwd2ixdoIGUGM`
+4. Re-run the deployment workflow OR push a small change to trigger deploy
 
 ---
 
