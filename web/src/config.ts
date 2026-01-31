@@ -45,3 +45,4 @@ export const config = {
     platformFeeRate: 0.0005, // 0.05% platform fee
   },
 }
+// GitHub webhook test - Fri Jan 30 18:00:00 MST 2026
