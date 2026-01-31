@@ -6,12 +6,92 @@
 
 ---
 
-## CURRENT SESSION (Jan 29-30, 2026)
+## CURRENT SESSION (Jan 30, 2026)
 
-**Environment:** Remote ttyd terminal (iPhone at work) → War Room
-**Device:** iPhone 14 Pro Max → Desktop
+**Environment:** Remote ttyd terminal via Cloudflare tunnel
+**Device:** iPhone 14 Pro Max (at work)
 **Working Dir:** `/Users/soundchain/soundchain`
 **Branch:** production
+
+---
+
+### 🔥 WALLET-FIRST LOGIN - VIP DOOR FOR WEB3 POWER USERS (Jan 30, 2026)
+
+**MASSIVE ARCHITECTURAL SHIFT: Two doors to SoundChain**
+
+The MagicLink approach (2021-2022) was training wheels - great for onboarding non-crypto users, but it filtered out Web3 power users who saw it as "junior level." Now we have BOTH doors:
+
+1. **VIP Door (Wallet)** → Degens, whales, NFT collectors - 2 clicks, they're in
+2. **Front Door (OAuth/Email)** → Normies, new-to-crypto artists - gentle onboarding
+
+#### What We Built
+
+**Login Page Redesign (`web/src/pages/login.tsx`):**
+```
+┌─────────────────────────────────────────────┐
+│  🔥 VIP WALLET LOGIN - TOP OF PAGE          │
+│                                             │
+│   ┌───────────┐    ┌───────────┐           │
+│   │    🦊     │    │    🔗     │           │
+│   │ MetaMask  │    │WalletConnect│          │
+│   └───────────┘    └───────────┘           │
+│   Trust, Rainbow, Ledger + 300 more         │
+└─────────────────────────────────────────────┘
+                 ─── OR ───
+            [ SOUNDCHAIN LOGO ]
+         [ Google ] [ Discord ] [ Twitch ]
+                 ─── OR ───
+              [ Email login ]
+```
+
+**Features:**
+- Wallet login at TOP of page - first thing users see
+- MetaMask detection (extension + mobile dapp browser)
+- WalletConnect integration (Trust, Rainbow, Ledger + 300 wallets)
+- NEW user registration form with handle/displayName (same as OAuth!)
+- Existing users sign & go straight in
+- Backend `loginWithWallet` mutation creates user + generates Nostr keypair
+
+**Flow for New Wallet Users:**
+1. Click MetaMask or WalletConnect
+2. Connect wallet
+3. System checks: user exists?
+4. If NEW → Registration form (Display Name, Username, Terms)
+5. Sign message to verify ownership
+6. Account created with proper handle (not `wallet_1234abcd` garbage)
+7. Redirect to feed
+
+**Files Modified:**
+- `web/src/pages/login.tsx` - Complete redesign with wallet-first UI
+- `web/src/hooks/useWalletLogin.ts` - Backend mutation hook (already existed)
+- `api/src/resolvers/UserResolver.ts` - `loginWithWallet` mutation (already existed)
+- `api/src/services/AuthService.ts` - `registerWithWallet` + Nostr keypair generation
+
+**Commits:**
+- `9a0195eb2` - fix: Redesign MakePostPermanentModal as slim toast
+- `93ac78f02` - fix: Wallet browser login now authenticates with backend
+- `401a80a54` - feat: Wallet-first login - VIP door for Web3 power users
+- `6562a39ea` - feat: Wallet registration flow - same experience as OAuth
+- `36ed7ebf7` - feat: Add WalletConnect for Trust, Rainbow, Ledger + 300 wallets
+- `fdcae5a7e` - fix: VIP wallet flow now at TOP of login page
+
+---
+
+### 🎉 Make Post Permanent Modal Redesign (Jan 30, 2026)
+
+**Issue:** Modal opened above posts, off-screen on mobile
+**Fix:** Redesigned as slim toast-style modal at bottom of screen
+
+**Changes:**
+- Position: Fixed at bottom (not center/off-screen)
+- Accordion sections: Wallet selector and pricing collapse by default
+- Minimal default: Token toggle + price + pay button
+- Processing states: Ultra-compact toast spinner
+- Size reduced: 626 → 351 lines (44% smaller)
+
+**Commit:** `9a0195eb2`
+
+---
 
 ### 🚀 PUBLIC REPO LAUNCH & UI POLISH (Jan 30, 2026)
 
@@ -2516,6 +2596,8 @@ echo "🌿 Branch: $(git branch --show-current)"
 | Jan 28, 2026 | Dark overlay for bio/nav tabs + track detail play count sync with SCid | 8a0c7071b, 7b5b77854 |
 | Jan 29, 2026 | **GAME CHANGER: User Engagement Features** - Online Indicators, Activity Feed, Web Push Notifications | f2b1a5359, 0bfbcd989 |
 | Jan 29-30, 2026 | **Decentralized Notifications Stack** - PWA prompt, Background Sync, Nostr subscriptions, auto-generated keypairs | 2c1f67e3a, 6b843c998, 861974dcc |
+| Jan 30, 2026 | **🔥 WALLET-FIRST LOGIN** - VIP door for Web3 power users, WalletConnect (300+ wallets), registration flow same as OAuth | fdcae5a7e |
+| Jan 30, 2026 | **🎉 OPEN SOURCE LAUNCH** - Public repo live! | - |
 
 ---
 
