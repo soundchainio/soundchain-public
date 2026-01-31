@@ -42,9 +42,9 @@ const DEFAULT_ARTWORK_URL = 'https://soundchain.io/default-artwork.png';
 const IPFS_GATEWAY = 'https://gateway.pinata.cloud/ipfs/';
 
 // IPFS gateway for audio streaming with CORS support
-// dweb.link sends proper Access-Control-Allow-Origin: * headers
-// cloudflare-ipfs.com is faster but lacks CORS headers, breaking browser playback
-const FAST_AUDIO_GATEWAY = 'https://dweb.link/ipfs/';
+// dweb.link was used but now rejects crossOrigin="anonymous" audio with "URL safety check" error
+// Using Pinata dedicated gateway which properly supports CORS for SoundChain
+const FAST_AUDIO_GATEWAY = 'https://soundchain.mypinata.cloud/ipfs/';
 
 @Resolver(Track)
 export class TrackResolver {
@@ -93,8 +93,7 @@ export class TrackResolver {
   playbackUrl(@Root() { ipfsCid, ipfsGatewayUrl, muxAsset }: Track): string {
     // Priority 1: IPFS (decentralized, P2P)
     if (ipfsCid) {
-      // Always use fast gateway for audio streaming regardless of stored URL
-      // dweb.link is much faster than Pinata public gateway (30-40s vs 2-3s)
+      // Use Pinata dedicated gateway for audio streaming - has proper CORS headers
       return `${FAST_AUDIO_GATEWAY}${ipfsCid}`;
     }
     // Priority 2: Mux (legacy/fallback)
