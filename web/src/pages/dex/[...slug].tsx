@@ -2490,7 +2490,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
       {/* REMOVED ScrollingBackground - it was covering user's real cover art with Unsplash placeholders */}
 
-      <div className="relative z-10 pb-20">
+      <div className="relative pb-20">
         {/* Navigation Bar */}
         <nav className="backdrop-blur-xl bg-gray-900/95 border-b border-cyan-500/20 px-2 sm:px-4 lg:px-6 py-1.5 sm:py-2 sticky top-0 z-50 shadow-lg overflow-x-hidden">
           <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
