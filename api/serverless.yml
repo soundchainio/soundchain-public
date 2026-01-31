@@ -92,7 +92,7 @@ provider:
   environment:
     NODE_ENV: ${env:NODE_ENV}
     # Use existing DocumentDB cluster with production data
-    DATABASE_URL: mongodb://${env:DATABASE_USERNAME}:${env:DATABASE_PASSWORD}@${self:custom.db.host}:${self:custom.db.port}/soundchain?tls=true&authSource=admin&authMechanism=SCRAM-SHA-1&retryWrites=false
+    DATABASE_URL: mongodb://${env:DATABASE_USERNAME}:${env:DATABASE_PASSWORD}@${self:custom.db.host}:${self:custom.db.port}/test?tls=true&authSource=admin&authMechanism=SCRAM-SHA-1&retryWrites=false
     DATABASE_SSL_PATH: db/global-bundle.pem
     DATABASE_USERNAME: ${env:DATABASE_USERNAME}
     DATABASE_PASSWORD: ${env:DATABASE_PASSWORD}
