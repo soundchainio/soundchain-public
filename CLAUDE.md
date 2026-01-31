@@ -19,6 +19,15 @@
 
 **MILESTONE: SoundChain moved from private AE repo to public open source repo!**
 
+#### Backup Locations (PRIVATE - Local Machine Only)
+
+| What | Location | Purpose |
+|------|----------|---------|
+| **API Secrets** | `/Users/soundchain/soundchain/api/.env.local` | All API keys, DB creds, wallet keys |
+| **Frontend Env Vars** | `/Users/soundchain/soundchain-agent/VERCEL_ENV_VARS.md` | Vercel NEXT_PUBLIC_* documentation |
+| **Full Git History** | `/Users/soundchain/soundchain-backup-private/soundchain-full-history-20260130.git` | All 9,935 commits, all branches |
+| **Commit History** | `/Users/soundchain/soundchain-backup-private/commit-history-*.txt` | Searchable commit lists |
+
 #### What Happened
 1. Migrated all code from private repo to `soundchainio/soundchain-public`
 2. Connected Vercel to new public repo
@@ -32,9 +41,11 @@
 | **502 Bad Gateway** | Missing GitHub secrets | ✅ FIXED | Added 28+ secrets to repo |
 | **Secret name mismatch** | Workflow expected `_PRODUCTION` suffix | ✅ FIXED | Edited workflow to use non-suffixed names |
 | **MongoError: Auth failed** | Missing DocumentDB params | ✅ FIXED | Added `?tls=true&authSource=admin&authMechanism=SCRAM-SHA-1&retryWrites=false` |
-| **MongoError: Auth failed** | PASSWORD special chars not URL-encoded | ⚠️ PENDING | User must update GitHub secret |
+| **MongoError: Auth failed** | PASSWORD with special chars | ✅ FIXED | Rotated to `SoundChain2026Prod` (no special chars) |
+| **Empty data (no posts)** | Wrong database name | ✅ FIXED | Changed `/soundchain` to `/test` in DATABASE_URL |
+| **Login 502 timeout** | Lambda cold start too slow | ✅ FIXED | Added `timeout: 30` and `memorySize: 1024` |
+| **Audio unavailable** | dweb.link CORS rejection | ✅ FIXED | Changed to `soundchain.mypinata.cloud` gateway |
 | **SERVERLESS_ACCESS_KEY syntax** | Used GitHub syntax in serverless.yml | ✅ FIXED | Changed `${{ secrets.X }}` to `${env:X}` |
-| **WalletConnect WebSocket error** | Invalid relay key | ⚠️ INVESTIGATE | Check WalletConnect project ID |
 
 #### GitHub Secrets Added to New Repo (28+)
 ```
