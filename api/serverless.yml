@@ -10,6 +10,8 @@ plugins:
 functions:
   graphql:
     image: ${env:GRAPHQL_IMAGE_URI}
+    timeout: 30  # 30 seconds for Magic API calls during login
+    memorySize: 1024  # More memory for faster cold starts
     events:
       - http:
           path: /
