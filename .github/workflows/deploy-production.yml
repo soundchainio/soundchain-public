@@ -136,7 +136,7 @@ jobs:
           echo "Process Auctions: $PROCESSAUCTIONS_IMAGE_URI"
           echo "Process Pending: $PROCESSPENDING_IMAGE_URI"
           echo "Cleanup Ephemeral: $CLEANUPEPHEMERAL_IMAGE_URI"
-          serverless deploy -s ${GITHUB_REF#refs/heads/} --verbose
+          serverless deploy -s production --verbose
 
       - name: Trigger migrate lambda function
         run: |
