@@ -96,8 +96,11 @@ export class UserResolver {
       const jwt = jwtService.create(user);
       console.log('JWT created for registration:', jwt);
       return { jwt };
-    } catch (error) {
+    } catch (error: any) {
       console.error('register mutation error:', error);
+      console.error('Magic error data:', error?.data);
+      console.error('Magic error code:', error?.code);
+      console.error('Secret key used (first 10 chars):', config.magicLink.secretKey?.slice(0, 10));
       throw error;
     }
   }
@@ -177,8 +180,11 @@ export class UserResolver {
       const jwt = jwtService.create(user);
       console.log('JWT created:', jwt);
       return { jwt };
-    } catch (error) {
+    } catch (error: any) {
       console.error('login mutation error:', error);
+      console.error('Magic error data:', error?.data);
+      console.error('Magic error code:', error?.code);
+      console.error('Secret key used (first 10 chars):', config.magicLink.secretKey?.slice(0, 10));
       throw error;
     }
   }
