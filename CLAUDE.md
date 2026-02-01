@@ -41,6 +41,100 @@
 | **Vercel env vars with quotes** | GTM_ID, WalletConnect ID had literal `"` | ✅ FIXED | User removed quotes from Vercel env vars |
 | **Magic Admin SDK SERVICE_ERROR** | SDK v1.3.4 incompatible with new tokens | ✅ FIXED | Upgraded to v2.8.2, changed init to `await Magic.init()` |
 | **🚨 LOGIN STILL BROKEN** | Workflow deployed to `main` stage, API Gateway points to `production` stage | ✅ FIXED | Changed `serverless deploy -s production` (commit `9eb685a62`) |
+| **🚨 API COMPLETELY DOWN** | EC2 Nginx proxy (54.89.147.104) HTTPS port 443 not responding, SSL cert expired Dec 9 | ⏳ PENDING | Bypass EC2, point directly to API Gateway (see task below) |
+
+---
+
+## 🎯 PRIORITY TASK: Bypass EC2 Proxy → Direct API Gateway (Feb 1, 2026)
+
+**WHY:** The EC2 Nginx proxy at `54.89.147.104` is down (SSL expired, HTTPS not responding). Instead of fixing it, we're eliminating it entirely to save ~$15-35/month and reduce maintenance.
+
+**CURRENT:** `api.soundchain.io` → EC2 Nginx (BROKEN) → API Gateway → Lambda
+**TARGET:** `api.soundchain.io` → API Gateway (DIRECT) → Lambda
+
+### Step-by-Step Instructions
+
+#### STEP 1: Find Your API Gateway Domain
+1. Open AWS Console: https://console.aws.amazon.com
+2. Go to **API Gateway** (search in top bar)
+3. Click on `soundchain-api-production` (or similar name)
+4. In left sidebar, click **Stages**
+5. Click on `production` stage
+6. Copy the **Invoke URL** at the top - looks like:
+   ```
+   https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/production
+   ```
+7. **SAVE THIS URL** - you need just the domain part: `xxxxxxxxxx.execute-api.us-east-1.amazonaws.com`
+
+#### STEP 2: Set Up Custom Domain in API Gateway
+1. In API Gateway left sidebar, click **Custom domain names**
+2. Click **Create** button
+3. Fill in:
+   - **Domain name:** `api.soundchain.io`
+   - **TLS version:** TLS 1.2
+   - **Endpoint type:** Regional
+   - **Certificate:** Select or create ACM certificate for `api.soundchain.io`
+4. Click **Create domain name**
+5. After created, click on it and go to **API mappings** tab
+6. Click **Configure API mappings**
+7. Add mapping:
+   - **API:** `soundchain-api-production`
+   - **Stage:** `production`
+   - **Path:** (leave empty)
+8. Click **Save**
+9. Copy the **API Gateway domain name** shown (e.g., `d-xxxxxxxxxx.execute-api.us-east-1.amazonaws.com`)
+
+#### STEP 3: Update Route 53 DNS
+1. Go to **Route 53** in AWS Console
+2. Click **Hosted zones**
+3. Click on `soundchain.io`
+4. Find the record for `api.soundchain.io` (currently A record pointing to 54.89.147.104)
+5. Click on it → **Edit record**
+6. Change:
+   - **Record type:** CNAME (or Alias to API Gateway)
+   - **Value:** The API Gateway domain name from Step 2
+   - **TTL:** 300
+7. Click **Save changes**
+
+#### STEP 4: Verify It Works
+Wait 2-5 minutes for DNS propagation, then test:
+```bash
+curl https://api.soundchain.io/graphql -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{ __typename }"}'
+```
+
+Should return: `{"data":{"__typename":"Query"}}`
+
+#### STEP 5: (Optional) Stop the EC2 Instance
+Once confirmed working, stop the old EC2 to save money:
+1. Go to **EC2** → **Instances**
+2. Find instance with IP `54.89.147.104`
+3. Select it → **Instance state** → **Stop instance**
+4. (Later: Terminate to fully remove)
+
+### If You Need ACM Certificate
+If no certificate exists for `api.soundchain.io`:
+1. Go to **ACM** (Certificate Manager)
+2. Click **Request certificate**
+3. Choose **Request a public certificate**
+4. Domain: `api.soundchain.io`
+5. Validation: **DNS validation**
+6. Click through to create
+7. Click on the certificate → **Create records in Route 53** (auto-validates)
+8. Wait for status to show **Issued** (usually 5-10 mins)
+9. Go back to API Gateway Step 2 and select this certificate
+
+### Estimated Savings
+- EC2 instance: ~$10-30/month
+- EBS storage: ~$1-3/month
+- No more SSL renewal headaches
+- **Total: ~$15-35/month saved**
+
+### Rollback Plan
+If something goes wrong, you can always:
+1. Route 53 → Change `api.soundchain.io` back to A record → `54.89.147.104`
+2. EC2 Instance Connect → `sudo systemctl restart nginx`
 
 #### GitHub Secrets Added to New Repo (28+)
 ```
