@@ -75,7 +75,7 @@ export class UserResolver {
   ): Promise<AuthPayload> {
     console.log('register mutation called with:', { token, handle, displayName });
     try {
-      const magic = new Magic(config.magicLink.secretKey);
+      const magic = await Magic.init(config.magicLink.secretKey);
       console.log('Parsing DID token for registration');
       const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
       console.log('DID token parsed:', did);
@@ -112,7 +112,7 @@ export class UserResolver {
   ): Promise<AuthPayload> {
     console.log('login mutation called with token:', token);
     try {
-      const magic = new Magic(config.magicLink.secretKey);
+      const magic = await Magic.init(config.magicLink.secretKey);
       console.log('Parsing DID token');
       const did = magic.utils.parseAuthorizationHeader(`Bearer ${token}`);
       console.log('DID token parsed:', did);
