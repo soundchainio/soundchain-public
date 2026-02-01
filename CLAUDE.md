@@ -40,6 +40,7 @@
 | **Post-login 404 redirect** | Config defaulted to `/dex` not `/dex/feed` | ✅ FIXED | Changed `redirectUrlPostLogin` to `/dex/feed` |
 | **Vercel env vars with quotes** | GTM_ID, WalletConnect ID had literal `"` | ✅ FIXED | User removed quotes from Vercel env vars |
 | **Magic Admin SDK SERVICE_ERROR** | SDK v1.3.4 incompatible with new tokens | ✅ FIXED | Upgraded to v2.8.2, changed init to `await Magic.init()` |
+| **🚨 LOGIN STILL BROKEN** | Workflow deployed to `main` stage, API Gateway points to `production` stage | ✅ FIXED | Changed `serverless deploy -s production` (commit `9eb685a62`) |
 
 #### GitHub Secrets Added to New Repo (28+)
 ```
@@ -135,6 +136,36 @@ const magic = await Magic.init(config.magicLink.secretKey);
 - `api/src/resolvers/UserResolver.ts` - Changed `register` and `login` mutations to use async init
 
 **Commit:** `8031ec251`
+
+---
+
+### 🚨 CRITICAL: SERVERLESS STAGE MISMATCH (Jan 31, 2026)
+
+**Issue:** Google OAuth login STILL broken after all other fixes
+**Symptom:** Login fails, API returns errors even though code looks correct
+
+**ROOT CAUSE DISCOVERED:**
+```
+Old AE repo → deployed to stage "production" → Lambda: soundchain-api-production-graphql
+New public repo → deployed to stage "main" → Lambda: soundchain-api-main-graphql
+API Gateway (api.soundchain.io) → points to "production" stage → OLD CODE!
+```
+
+The new code with Magic SDK v2.8.2 was being deployed to the WRONG Lambda!
+
+**Fix:** Changed workflow to always deploy to `production` stage:
+```yaml
+# BEFORE (wrong - deployed to branch name):
+serverless deploy -s ${GITHUB_REF#refs/heads/} --verbose
+
+# AFTER (correct - always production):
+serverless deploy -s production --verbose
+```
+
+**File:** `.github/workflows/deploy-production.yml` line 139
+**Commit:** `9eb685a62`
+
+**LESSON LEARNED:** When migrating repos, check that the serverless stage matches what your API Gateway expects!
 
 ---
 
