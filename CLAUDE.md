@@ -10,8 +10,29 @@
 
 **Environment:** Remote ttyd terminal via Cloudflare tunnel
 **Working Dir:** `/Users/soundchain/soundchain`
-**Branch:** production
+**Branch:** main
 **New Public Repo:** `github.com/soundchainio/soundchain-public`
+
+### Session Summary (Feb 2, 2026 - Afternoon)
+
+**Completed:**
+- ✅ Pushed API redeploy after Vercel env var cleanup (removed quotes)
+- ✅ Magic Admin SDK v2.8.2 deployed (fixes SERVICE_ERROR on login)
+- ✅ Found production API Gateway: `production-soundchain-api` (ID: `19ne212py4`)
+- ✅ Invoke URL: `https://19ne212py4.execute-api.us-east-1.amazonaws.com/production`
+- ✅ Requested ACM certificate for `api.soundchain.io` (cert ID: `d802632a-515a-44a2-984d-371741e03d71`)
+- ✅ DNS provider confirmed: name.com (not Cloudflare)
+
+**Waiting on:**
+- ⏳ Co-founder adding CNAME validation record to name.com
+- ⏳ ACM cert to change from "Pending validation" → "Issued"
+
+**Next session (after 11pm MST Feb 2):**
+- Create custom domain in API Gateway
+- Map `production-soundchain-api` to custom domain
+- Update `api.soundchain.io` DNS to point directly to API Gateway
+- Test and verify login works
+- Optionally stop EC2 proxy to save ~$15-35/month
 
 ---
 
@@ -68,7 +89,9 @@
 
 ---
 
-### ⏳ WAITING ON: CNAME Validation Record
+### ⏳ WAITING ON: CNAME Validation Record (Co-founder handling)
+
+**Status:** Co-founder confirmed will add CNAME to name.com. User returning after 11pm MST on Feb 2, 2026 to complete remaining steps.
 
 **Co-founder needs to add this CNAME in name.com:**
 
