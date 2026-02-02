@@ -1,12 +1,12 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** January 31, 2026
+**Last Updated:** February 2, 2026
 **Project Start:** July 14, 2021
 **Total Commits:** 4,800+ on production branch
 
 ---
 
-## 🚨 CURRENT SESSION (Jan 31, 2026) - OPEN SOURCE MIGRATION RECOVERY
+## 🚨 CURRENT SESSION (Feb 2, 2026) - API GATEWAY DIRECT CONNECTION
 
 **Environment:** Remote ttyd terminal via Cloudflare tunnel
 **Working Dir:** `/Users/soundchain/soundchain`
@@ -45,85 +45,84 @@
 
 ---
 
-## 🎯 PRIORITY TASK: Bypass EC2 Proxy → Direct API Gateway (Feb 1, 2026)
+## 🎯 PRIORITY TASK: Bypass EC2 Proxy → Direct API Gateway (Feb 2, 2026)
 
 **WHY:** The EC2 Nginx proxy at `54.89.147.104` is down (SSL expired, HTTPS not responding). Instead of fixing it, we're eliminating it entirely to save ~$15-35/month and reduce maintenance.
 
 **CURRENT:** `api.soundchain.io` → EC2 Nginx (BROKEN) → API Gateway → Lambda
 **TARGET:** `api.soundchain.io` → API Gateway (DIRECT) → Lambda
 
-### Step-by-Step Instructions
+---
 
-#### STEP 1: Find Your API Gateway Domain
-1. Open AWS Console: https://console.aws.amazon.com
-2. Go to **API Gateway** (search in top bar)
-3. Click on `soundchain-api-production` (or similar name)
-4. In left sidebar, click **Stages**
-5. Click on `production` stage
-6. Copy the **Invoke URL** at the top - looks like:
-   ```
-   https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/production
-   ```
-7. **SAVE THIS URL** - you need just the domain part: `xxxxxxxxxx.execute-api.us-east-1.amazonaws.com`
+### ✅ PROGRESS (Feb 2, 2026)
 
-#### STEP 2: Set Up Custom Domain in API Gateway
-1. In API Gateway left sidebar, click **Custom domain names**
-2. Click **Create** button
-3. Fill in:
-   - **Domain name:** `api.soundchain.io`
-   - **TLS version:** TLS 1.2
-   - **Endpoint type:** Regional
-   - **Certificate:** Select or create ACM certificate for `api.soundchain.io`
-4. Click **Create domain name**
-5. After created, click on it and go to **API mappings** tab
-6. Click **Configure API mappings**
-7. Add mapping:
-   - **API:** `soundchain-api-production`
+| Step | Status | Details |
+|------|--------|---------|
+| 1. Find API Gateway | ✅ DONE | `production-soundchain-api` (ID: `19ne212py4`) |
+| 2. Get Invoke URL | ✅ DONE | `https://19ne212py4.execute-api.us-east-1.amazonaws.com/production` |
+| 3. Request ACM Certificate | ✅ DONE | Cert ID: `d802632a-515a-44a2-984d-371741e03d71` |
+| 4. Add CNAME for validation | ⏳ WAITING | Co-founder adding to name.com DNS |
+| 5. Create custom domain | ⏳ PENDING | After cert validates |
+| 6. Map API to domain | ⏳ PENDING | After custom domain created |
+| 7. Update DNS to API Gateway | ⏳ PENDING | Final step |
+
+---
+
+### ⏳ WAITING ON: CNAME Validation Record
+
+**Co-founder needs to add this CNAME in name.com:**
+
+| Type | Host | Value |
+|------|------|-------|
+| CNAME | `_d98dbeb53fe11ae9fa6365d8a447477d.api` | `_793b08a244a9972320659e9abe69bade.jkddzztszm.acm-validations.aws.` |
+
+Once added, cert validates in 5-30 minutes, then status changes to **"Issued"**.
+
+---
+
+### 🔜 REMAINING STEPS (after cert is Issued)
+
+#### STEP 5: Create Custom Domain in API Gateway
+1. Go to API Gateway → **Custom domain names** → **Create**
+2. Domain name: `api.soundchain.io`
+3. Endpoint type: **Regional**
+4. ACM certificate: Select `d802632a-515a-44a2-984d-371741e03d71`
+5. Click **Create domain name**
+
+#### STEP 6: Map API to Custom Domain
+1. Click on the new custom domain
+2. Go to **API mappings** tab → **Configure API mappings**
+3. Add mapping:
+   - **API:** `production-soundchain-api`
    - **Stage:** `production`
    - **Path:** (leave empty)
-8. Click **Save**
-9. Copy the **API Gateway domain name** shown (e.g., `d-xxxxxxxxxx.execute-api.us-east-1.amazonaws.com`)
+4. Click **Save**
+5. Copy the **API Gateway domain name** shown (e.g., `d-xxxxxxxxxx.execute-api.us-east-1.amazonaws.com`)
 
-#### STEP 3: Update Route 53 DNS
-1. Go to **Route 53** in AWS Console
-2. Click **Hosted zones**
-3. Click on `soundchain.io`
-4. Find the record for `api.soundchain.io` (currently A record pointing to 54.89.147.104)
-5. Click on it → **Edit record**
-6. Change:
-   - **Record type:** CNAME (or Alias to API Gateway)
-   - **Value:** The API Gateway domain name from Step 2
-   - **TTL:** 300
-7. Click **Save changes**
+#### STEP 7: Update DNS at name.com
+1. Log into name.com → soundchain.io → DNS Records
+2. Find existing `api.soundchain.io` record (A record pointing to 54.89.147.104)
+3. Delete or update it to:
+   - **Type:** CNAME
+   - **Host:** `api`
+   - **Value:** The API Gateway domain from Step 6
+4. Save and wait 2-5 min for propagation
 
-#### STEP 4: Verify It Works
-Wait 2-5 minutes for DNS propagation, then test:
+#### STEP 8: Verify & Cleanup
 ```bash
 curl https://api.soundchain.io/graphql -X POST \
   -H "Content-Type: application/json" \
   -d '{"query":"{ __typename }"}'
 ```
-
 Should return: `{"data":{"__typename":"Query"}}`
 
-#### STEP 5: (Optional) Stop the EC2 Instance
-Once confirmed working, stop the old EC2 to save money:
-1. Go to **EC2** → **Instances**
-2. Find instance with IP `54.89.147.104`
-3. Select it → **Instance state** → **Stop instance**
-4. (Later: Terminate to fully remove)
+Then optionally stop EC2 instance `54.89.147.104` to save ~$15-35/month.
 
-### If You Need ACM Certificate
-If no certificate exists for `api.soundchain.io`:
-1. Go to **ACM** (Certificate Manager)
-2. Click **Request certificate**
-3. Choose **Request a public certificate**
-4. Domain: `api.soundchain.io`
-5. Validation: **DNS validation**
-6. Click through to create
-7. Click on the certificate → **Create records in Route 53** (auto-validates)
-8. Wait for status to show **Issued** (usually 5-10 mins)
-9. Go back to API Gateway Step 2 and select this certificate
+---
+
+### 📝 Resume Command for Claude
+When ready to continue, tell Claude:
+> "Resume API Gateway migration - ACM cert should be validated now. Let's finish steps 5-8."
 
 ### Estimated Savings
 - EC2 instance: ~$10-30/month
