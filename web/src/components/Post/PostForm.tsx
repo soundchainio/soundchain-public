@@ -63,7 +63,7 @@ const defaultInitialValues = { body: '' }
 export const PostForm = ({ ...props }: PostFormProps) => {
   const me = useMe()
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false)
-  const [showMediaUploader, setShowMediaUploader] = useState(false)
+  const [showMediaUploader] = useState(true) // Always show media uploader
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | undefined>()
   const [uploadedMediaType, setUploadedMediaType] = useState<'image' | 'video' | 'audio' | undefined>()
   const [uploadedMediaThumbnail, setUploadedMediaThumbnail] = useState<string | undefined>()
@@ -384,7 +384,6 @@ export const PostForm = ({ ...props }: PostFormProps) => {
                 setUploadedMediaUrl(undefined)
                 setUploadedMediaType(undefined)
                 setUploadedMediaThumbnail(undefined)
-                setShowMediaUploader(false)
               }}
               currentUrl={uploadedMediaUrl}
               currentType={uploadedMediaType}
@@ -401,7 +400,6 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             values={values}
             postLink={props.postLink || ''}
             setPostLink={props.setPostLink}
-            onMediaUploadClick={() => setShowMediaUploader(!showMediaUploader)}
             hasMedia={!!uploadedMediaUrl}
           />
         </Form>

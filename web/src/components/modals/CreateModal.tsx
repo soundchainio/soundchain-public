@@ -53,7 +53,7 @@ const isRateLimitError = (error: any): boolean => {
          errorStr.includes('-32603')
 }
 
-const withRetry = async <T>(
+const withRetry = async <T,>(
   fn: () => Promise<T>,
   maxRetries = 3,
   initialDelayMs = 15000, // 15s initial delay for Magic RPC rate limits
