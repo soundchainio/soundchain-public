@@ -787,6 +787,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
   const [exploreTab, setExploreTab] = useState<'tracks' | 'users'>('users')
   const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
+  const [showNavMenu, setShowNavMenu] = useState(false)
   const [usersViewMode, setUsersViewMode] = useState<'browse' | 'leaderboard'>('browse')
 
   // Quick DM accordion state for Followers/Following modals
@@ -3637,57 +3638,69 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         {/* Main Content */}
         <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8 relative">
-          {/* View Tabs - Slim, app-style navigation */}
-          <div className="flex items-center gap-1 mb-4 overflow-x-auto scrollbar-hide py-2 px-2 backdrop-blur-md bg-black/80 rounded-full shadow-lg border border-white/5 mx-2">
-            <button
-              onClick={() => router.push('/dex/feed', undefined, { shallow: false })}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'feed' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              Feed
-            </button>
-            <button
-              onClick={() => router.push('/dex/announcements', undefined, { shallow: false })}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'announcements' ? 'bg-purple-500/20 text-purple-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-            >
-              <Rocket className="w-3.5 h-3.5" />
-              News
-            </button>
-            <button
-              onClick={() => router.push('/dex/explore', undefined, { shallow: false })}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'explore' ? 'bg-orange-500/20 text-orange-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-            >
-              <Compass className="w-3.5 h-3.5" />
-              Explore
-            </button>
-            <button
-              onClick={() => router.push('/dex/marketplace', undefined, { shallow: false })}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'marketplace' ? 'bg-green-500/20 text-green-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              Shop
-            </button>
-            <button
-              onClick={() => router.push('/dex/library', undefined, { shallow: false })}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'library' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-            >
-              <Library className="w-3.5 h-3.5" />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'library' ? 'blue-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Library
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/dex/playlist', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-pink-500/10 ${selectedView === 'playlist' ? 'bg-pink-500/10' : ''}`}
-            >
-              <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'playlist' ? 'text-pink-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'playlist' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Playlist
-              </span>
-              Library
-            </button>
-          </div>
+          {/* View Navigation - Sleek dropdown menu */}
+          {(() => {
+            const navItems = [
+              { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', color: 'cyan', bgColor: 'bg-cyan-500/20', textColor: 'text-cyan-400' },
+              { id: 'announcements', label: 'News', icon: Rocket, route: '/dex/announcements', color: 'purple', bgColor: 'bg-purple-500/20', textColor: 'text-purple-400' },
+              { id: 'explore', label: 'Explore', icon: Compass, route: '/dex/explore', color: 'orange', bgColor: 'bg-orange-500/20', textColor: 'text-orange-400' },
+              { id: 'marketplace', label: 'Shop', icon: ShoppingBag, route: '/dex/marketplace', color: 'green', bgColor: 'bg-green-500/20', textColor: 'text-green-400' },
+              { id: 'library', label: 'Library', icon: Library, route: '/dex/library', color: 'blue', bgColor: 'bg-blue-500/20', textColor: 'text-blue-400' },
+              { id: 'playlist', label: 'Playlists', icon: ListMusic, route: '/dex/playlist', color: 'pink', bgColor: 'bg-pink-500/20', textColor: 'text-pink-400' },
+            ]
+            const currentNav = navItems.find(item => item.id === selectedView) || navItems[0]
+            const CurrentIcon = currentNav.icon
+
+            return (
+              <div className="relative mb-4 mx-2">
+                {/* Dropdown Trigger Button - Shows current view icon only */}
+                <button
+                  onClick={() => setShowNavMenu(!showNavMenu)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-md bg-black/80 border border-white/10 hover:border-white/20 transition-all ${currentNav.bgColor}`}
+                >
+                  <CurrentIcon className={`w-5 h-5 ${currentNav.textColor}`} />
+                  <span className={`text-sm font-semibold ${currentNav.textColor}`}>{currentNav.label}</span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showNavMenu ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showNavMenu && (
+                  <>
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
+
+                    {/* Menu Panel */}
+                    <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="p-2">
+                        {navItems.map((item) => {
+                          const Icon = item.icon
+                          const isActive = selectedView === item.id
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                router.push(item.route, undefined, { shallow: false })
+                                setShowNavMenu(false)
+                              }}
+                              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                                isActive
+                                  ? `${item.bgColor} ${item.textColor}`
+                                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                              }`}
+                            >
+                              <Icon className={`w-5 h-5 ${isActive ? item.textColor : ''}`} />
+                              <span className="font-medium">{item.label}</span>
+                              {isActive && <Check className="w-4 h-4 ml-auto" />}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Dashboard View - Genres & Leaderboards Only */}
           {selectedView === 'dashboard' && (

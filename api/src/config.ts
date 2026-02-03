@@ -50,6 +50,9 @@ export const {
   MAILCHIMP_TRANSACTIONAL_API_KEY,
 } = process.env;
 
+// Debug: Log partial Magic key to verify it's being received
+console.log('[Config] MAGIC_PRIVATE_KEY loaded:', MAGIC_PRIVATE_KEY ? `${MAGIC_PRIVATE_KEY.slice(0, 10)}...${MAGIC_PRIVATE_KEY.slice(-4)} (length: ${MAGIC_PRIVATE_KEY.length})` : 'UNDEFINED');
+
 function assertEnvVar(name: string, value: string | undefined): asserts value {
   if (value === undefined) {
     throw new Error(`${name} env var must be set`);

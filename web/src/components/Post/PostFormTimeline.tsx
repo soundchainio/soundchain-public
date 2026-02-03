@@ -1,5 +1,6 @@
 import { MusicalNoteIcon, VideoCameraIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import Picker from '@emoji-mart/react'
+import data from '@emoji-mart/data'
 import { StickerPicker } from '../StickerPicker'
 import { Sparkles } from 'lucide-react'
 import { PostMediaUploader } from './PostMediaUploader'
