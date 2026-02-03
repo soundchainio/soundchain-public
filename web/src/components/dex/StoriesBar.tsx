@@ -38,14 +38,12 @@ const PUBLIC_STORIES = gql`
 const FEATURED_PROFILES = gql`
   query FeaturedProfiles($page: Page) {
     exploreUsers(page: $page) {
-      edges {
-        node {
-          id
-          displayName
-          userHandle
-          profilePicture
-          verified
-        }
+      nodes {
+        id
+        displayName
+        userHandle
+        profilePicture
+        verified
       }
     }
   }
@@ -148,9 +146,8 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
     const existingIds = new Set(realStories.map(s => s.profileId))
     const featuredUsers: Story[] = []
 
-    if (profilesData?.exploreUsers?.edges) {
-      profilesData.exploreUsers.edges.forEach((edge: any, index: number) => {
-        const profile = edge.node
+    if (profilesData?.exploreUsers?.nodes) {
+      profilesData.exploreUsers.nodes.forEach((profile: any, index: number) => {
         if (!existingIds.has(profile.id) && featuredUsers.length < (50 - realStories.length)) {
           featuredUsers.push({
             id: `featured-${profile.id}`,
