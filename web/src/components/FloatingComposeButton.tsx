@@ -1,22 +1,16 @@
 import { useModalDispatch } from 'contexts/ModalContext'
-import { useMe } from 'hooks/useMe'
-import { useRouter } from 'next/router'
 
 /**
  * Floating Action Button (FAB) for creating posts
  * Blade Runner 2049 inspired - cyberpunk aesthetic
+ * Opens compose modal for ALL users (guests can post too!)
  */
 export const FloatingComposeButton = () => {
   const { dispatchShowCreateModal } = useModalDispatch()
-  const me = useMe()
-  const router = useRouter()
 
   const handleClick = () => {
-    if (me) {
-      dispatchShowCreateModal(true, 'post')
-    } else {
-      router.push('/login')
-    }
+    // Open compose modal for everyone - guests can post too
+    dispatchShowCreateModal(true, 'post')
   }
 
   return (
