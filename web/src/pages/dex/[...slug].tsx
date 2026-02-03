@@ -3645,7 +3645,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', textColor: 'text-cyan-400' },
                 { id: 'announcements', label: 'News', icon: Rocket, route: '/dex/announcements', textColor: 'text-purple-400' },
                 { id: 'explore', label: 'Explore', icon: Compass, route: '/dex/explore', textColor: 'text-orange-400' },
-                { id: 'users', label: 'Users', icon: Users, route: '/dex/users', textColor: 'text-yellow-400' },
                 { id: 'marketplace', label: 'Shop', icon: ShoppingBag, route: '/dex/marketplace', textColor: 'text-green-400' },
                 { id: 'library', label: 'Library', icon: Library, route: '/dex/library', textColor: 'text-blue-400' },
                 { id: 'playlist', label: 'Playlists', icon: ListMusic, route: '/dex/playlist', textColor: 'text-pink-400' },
@@ -4239,7 +4238,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Main Feed - Posts lead, clean and content-first */}
               <div className="flex-1 max-w-full md:max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-                <Posts viewMode={viewMode} />
+                <Posts />
               </div>
 
               {/* Right Sidebar - Desktop only */}
@@ -5602,60 +5601,59 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
 
           {/* Settings View */}
-          {/* Settings View - App-style compact */}
           {selectedView === 'settings' && (
-            <div className="space-y-2">
+            <div className="space-y-6">
               {/* Settings sub-route forms */}
               {routeId === 'bio' && (
-                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
-                    <span className="text-sm font-bold text-white">Edit Bio</span>
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Edit Bio</h2>
                   </div>
                   <BioForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Bio" />
-                </div>
+                </Card>
               )}
               {routeId === 'profile-picture' && (
-                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
-                    <span className="text-sm font-bold text-white">Profile Picture</span>
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Profile Picture</h2>
                   </div>
                   <ProfilePictureForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Picture" />
-                </div>
+                </Card>
               )}
               {routeId === 'cover-picture' && (
-                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
-                    <span className="text-sm font-bold text-white">Cover Picture</span>
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Cover Picture</h2>
                   </div>
                   <CoverPictureForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Cover" />
-                </div>
+                </Card>
               )}
               {routeId === 'social-links' && (
-                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
-                    <span className="text-sm font-bold text-white">Social Links</span>
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Social Links</h2>
                   </div>
                   <SocialLinksForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Links" />
-                </div>
+                </Card>
               )}
               {routeId === 'security' && (
-                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
-                    <span className="text-sm font-bold text-white">Security</span>
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Security</h2>
                   </div>
                   <SecurityForm afterSubmit={() => router.push('/dex/settings')} />
-                </div>
+                </Card>
               )}
               {routeId === 'notifications' && (
-                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
-                    <span className="text-sm font-bold text-white">Notifications</span>
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Notifications</h2>
                   </div>
                   <NotificationSettingsForm
                     afterSubmit={() => router.push('/dex/settings')}
@@ -5671,25 +5669,25 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       notifyViaNostr: userData?.me?.notifyViaNostr,
                     }}
                   />
-                </div>
+                </Card>
               )}
               {routeId === 'username' && (
-                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
-                    <span className="text-sm font-bold text-white">Edit Username</span>
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Edit Username</h2>
                   </div>
                   <HandleForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Username" />
-                </div>
+                </Card>
               )}
               {routeId === 'display-name' && (
-                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
-                    <span className="text-sm font-bold text-white">Edit Display Name</span>
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Edit Display Name</h2>
                   </div>
                   <DisplayNameForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Name" />
-                </div>
+                </Card>
               )}
               {/* Main settings menu - show when no sub-route */}
               {!routeId && (
@@ -5824,83 +5822,89 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </div>
           )}
 
-          {/* Messages View - Compact DM System */}
+          {/* Messages View - Full DM System */}
           {selectedView === 'messages' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 h-[calc(100vh-140px)]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
               {/* Conversations List */}
-              <div className="bg-black/50 border border-gray-800 rounded-lg overflow-hidden lg:col-span-1">
-                <div className="p-2 border-b border-gray-800 flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm font-bold text-white">Messages</span>
+              <Card className="retro-card overflow-hidden lg:col-span-1">
+                <div className="p-4 border-b border-cyan-500/30">
+                  <div className="flex items-center gap-3">
+                    <MessageCircle className="w-6 h-6 text-blue-400" />
+                    <h2 className="retro-title text-lg">Messages</h2>
+                  </div>
                 </div>
-                <div className="overflow-y-auto h-[calc(100%-40px)]">
+                <div className="overflow-y-auto h-[calc(100%-60px)]">
                   {chatsLoading ? (
-                    <div className="flex items-center justify-center py-6">
-                      <div className="animate-spin w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
                     </div>
                   ) : (chatsData?.chats?.nodes?.length ?? 0) > 0 ? (
-                    <div className="divide-y divide-gray-800/50">
+                    <div className="divide-y divide-gray-800">
                       {chatsData?.chats?.nodes?.map((chat: any) => (
                         <div
                           key={chat.id}
                           onClick={() => setSelectedChatId(chat.profile?.id || chat.id)}
-                          className={`p-2 cursor-pointer hover:bg-white/5 transition-colors ${selectedChatId === (chat.profile?.id || chat.id) ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
+                          className={`p-4 cursor-pointer hover:bg-cyan-500/5 transition-colors ${selectedChatId === (chat.profile?.id || chat.id) ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
                         >
-                          <div className="flex items-center gap-2">
-                            <Avatar className="w-9 h-9 flex-shrink-0">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-12 h-12">
                               {chat.profile?.profilePicture ? (
                                 <AvatarImage src={chat.profile.profilePicture} />
                               ) : null}
-                              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white text-xs">
+                              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white">
                                 {chat.profile?.displayName?.charAt(0)?.toUpperCase() || '?'}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1">
-                                <p className="text-sm font-medium text-white truncate">{chat.profile?.displayName || 'Unknown'}</p>
-                                {chat.unread && <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full flex-shrink-0" />}
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-white truncate">{chat.profile?.displayName || 'Unknown'}</p>
+                                {chat.unread && (
+                                  <span className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0" />
+                                )}
                               </div>
-                              <p className="text-xs text-gray-500 truncate">{chat.message}</p>
+                              <p className="text-sm text-gray-400 truncate">{chat.message}</p>
+                              <p className="text-xs text-gray-600">{new Date(chat.createdAt).toLocaleDateString()}</p>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-6 px-3">
-                      <MessageCircle className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-                      <p className="text-gray-500 text-xs">No conversations</p>
+                    <div className="text-center py-8">
+                      <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-400 text-sm">No conversations yet</p>
+                      <p className="text-xs text-gray-600 mt-1">Visit an artist's profile to start a chat</p>
                     </div>
                   )}
                 </div>
-              </div>
+              </Card>
 
               {/* Chat Window */}
-              <div className="bg-black/50 border border-gray-800 rounded-lg overflow-hidden lg:col-span-2 flex flex-col">
+              <Card className="retro-card overflow-hidden lg:col-span-2 flex flex-col">
                 {selectedChatId ? (
                   <>
                     {/* Chat Header */}
-                    <div className="p-2 border-b border-gray-800 flex items-center gap-2">
+                    <div className="p-4 border-b border-cyan-500/30 flex items-center gap-3">
                       {chatHistoryData?.chatHistory?.nodes?.[0]?.fromProfile && (
                         <>
-                          <Avatar className="w-8 h-8">
+                          <Avatar className="w-10 h-10">
                             {(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.profilePicture ? (
                               <AvatarImage src={(chatHistoryData.chatHistory.nodes[0].fromProfile as any).profilePicture} />
                             ) : null}
-                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white text-xs">
+                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white">
                               {(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName?.charAt(0) || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="text-sm font-medium text-white">{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName}</p>
-                            <p className="text-[10px] text-gray-500">@{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.userHandle}</p>
+                            <p className="font-medium text-white">{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName}</p>
+                            <p className="text-xs text-gray-400">@{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.userHandle}</p>
                           </div>
                         </>
                       )}
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
                       {chatHistoryLoading ? (
                         <div className="flex items-center justify-center py-8">
                           <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
@@ -5976,67 +5980,75 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
 
           {/* Notifications View - Full Notifications Page */}
-          {/* Notifications View - Compact App-style */}
           {selectedView === 'notifications' && (
-            <div className="space-y-2">
-              {/* Header */}
-              <div className="flex items-center justify-between px-1 py-2">
-                <div className="flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-yellow-400" />
-                  <span className="text-sm font-bold text-white">Notifications</span>
-                  {notificationsLoading && <span className="text-[10px] text-yellow-400">Loading...</span>}
+            <div className="space-y-6">
+              <Card className="retro-card p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Bell className="w-8 h-8 text-yellow-400" />
+                    <h2 className="retro-title text-xl">Notifications</h2>
+                    {notificationsLoading && <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Loading...</Badge>}
+                  </div>
+                  {(notificationsData?.notifications?.nodes?.length ?? 0) > 0 && (
+                    <Badge className="bg-cyan-500/20 text-cyan-400">
+                      {notificationsData?.notifications?.nodes?.length} total
+                    </Badge>
+                  )}
                 </div>
-                {(notificationsData?.notifications?.nodes?.length ?? 0) > 0 && (
-                  <span className="text-[10px] text-cyan-400">{notificationsData?.notifications?.nodes?.length} total</span>
-                )}
-              </div>
 
-              {notificationsLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full" />
-                </div>
-              ) : (notificationsData?.notifications?.nodes?.length ?? 0) > 0 ? (
-                <div className="divide-y divide-gray-800/50">
-                  {notificationsData?.notifications?.nodes?.map((notification: any) => {
-                    const getNotificationIcon = () => {
-                      switch (notification.type) {
-                        case 'NewPost': return <MessageCircle className="w-4 h-4 text-blue-400" />
-                        case 'Comment': return <MessageCircle className="w-4 h-4 text-green-400" />
-                        case 'Reaction': return <Heart className="w-4 h-4 text-red-400" />
-                        case 'Follower': return <Users className="w-4 h-4 text-purple-400" />
-                        case 'NewBid': return <TrendingUp className="w-4 h-4 text-orange-400" />
-                        case 'Outbid': return <TrendingUp className="w-4 h-4 text-yellow-400" />
-                        case 'WonAuction': return <Trophy className="w-4 h-4 text-yellow-500" />
-                        case 'AuctionEnded': return <Zap className="w-4 h-4 text-cyan-400" />
-                        case 'NFTSold': return <Coins className="w-4 h-4 text-green-400" />
-                        default: return <Bell className="w-4 h-4 text-gray-400" />
+                {notificationsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full" />
+                    <span className="ml-3 text-gray-400">Loading notifications...</span>
+                  </div>
+                ) : (notificationsData?.notifications?.nodes?.length ?? 0) > 0 ? (
+                  <div className="space-y-3">
+                    {notificationsData?.notifications?.nodes?.map((notification: any) => {
+                      const getNotificationIcon = () => {
+                        switch (notification.type) {
+                          case 'NewPost': return <MessageCircle className="w-5 h-5 text-blue-400" />
+                          case 'Comment': return <MessageCircle className="w-5 h-5 text-green-400" />
+                          case 'Reaction': return <Heart className="w-5 h-5 text-red-400" />
+                          case 'Follower': return <Users className="w-5 h-5 text-purple-400" />
+                          case 'NewBid': return <TrendingUp className="w-5 h-5 text-orange-400" />
+                          case 'Outbid': return <TrendingUp className="w-5 h-5 text-yellow-400" />
+                          case 'WonAuction': return <Trophy className="w-5 h-5 text-gold-400" />
+                          case 'AuctionEnded': return <Zap className="w-5 h-5 text-cyan-400" />
+                          case 'NFTSold': return <Coins className="w-5 h-5 text-green-400" />
+                          default: return <Bell className="w-5 h-5 text-gray-400" />
+                        }
                       }
-                    }
-                    return (
-                      <div
-                        key={notification.id}
-                        className={`flex items-center gap-2 px-2 py-2.5 transition-colors ${notification.readAt ? '' : 'bg-cyan-500/5'}`}
-                      >
-                        <div className="flex-shrink-0">
-                          {getNotificationIcon()}
+                      return (
+                        <div
+                          key={notification.id}
+                          className={`p-4 rounded-lg border transition-colors ${notification.readAt ? 'bg-black/20 border-gray-800' : 'bg-cyan-500/5 border-cyan-500/30'}`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-black/30">
+                              {getNotificationIcon()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-medium">{notification.body || notification.type}</p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(notification.createdAt).toLocaleDateString()} • {new Date(notification.createdAt).toLocaleTimeString()}
+                              </p>
+                            </div>
+                            {!notification.readAt && (
+                              <span className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0 mt-2" />
+                            )}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-sm truncate">{notification.body || notification.type}</p>
-                          <p className="text-[10px] text-gray-500">{new Date(notification.createdAt).toLocaleDateString()}</p>
-                        </div>
-                        {!notification.readAt && (
-                          <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full flex-shrink-0" />
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Bell className="w-10 h-10 text-gray-700 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">No notifications yet</p>
-                </div>
-              )}
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Bell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 text-lg mb-2">No notifications yet</p>
+                    <p className="text-xs text-gray-500">When you get likes, follows, or sales you'll see them here</p>
+                  </div>
+                )}
+              </Card>
             </div>
           )}
 
@@ -6615,22 +6627,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
-                  {/* Profile Header - App-first compact layout */}
-                  <div className="relative z-10 pt-3 pb-3">
-                    <div className="max-w-screen-2xl mx-auto px-3">
-                      {/* Compact Back Button */}
-                      <button
+                  {/* Profile Header - Same layout as logged-in user */}
+                  <div className="relative z-10 pt-8 pb-6">
+                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
+                      {/* Back Button */}
+                      <Button
+                        variant="ghost"
                         onClick={() => router.back()}
-                        className="mb-2 flex items-center gap-1 text-gray-400 hover:text-white text-sm transition-colors min-h-[36px]"
+                        className="mb-4 hover:bg-cyan-500/10 backdrop-blur-sm bg-black/30"
                       >
-                        <ChevronDown className="w-4 h-4 rotate-90" />
-                        <span>Back</span>
-                      </button>
+                        <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
+                        Back
+                      </Button>
 
-                      <div className="flex gap-3 items-start">
-                        {/* Compact Avatar */}
-                        <div className="relative flex-shrink-0">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900 shadow-lg">
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+                        {/* User Profile */}
+                        <div className="flex flex-col lg:flex-row gap-6 items-start">
+                          <div className="relative">
+                            <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900 shadow-2xl">
                               {viewingProfile.profilePicture ? (
                                 <img
                                   src={viewingProfile.profilePicture}
@@ -6638,92 +6652,102 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-2xl text-white font-bold">
+                                <div className="w-full h-full flex items-center justify-center text-6xl text-white font-bold">
                                   {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
                                 </div>
                               )}
                             </div>
-                            {/* Online indicator */}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-2 border-black flex items-center justify-center">
-                              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-4 border-black/50 flex items-center justify-center">
+                              <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
                             </div>
                           </div>
 
-                          {/* Profile Info - Compact */}
-                          <div className="flex-1 min-w-0 space-y-2 rounded-xl p-3 border border-cyan-500/20 bg-black/60 backdrop-blur-md">
-                            {/* Name + Badges */}
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <h1 className="text-lg sm:text-xl font-bold text-white truncate" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace" }}>
+                          <div className="flex-1 space-y-4 rounded-2xl p-4 -ml-2 lg:ml-0 border border-cyan-500/30" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(16px)' }}>
+                            <div className="space-y-2">
+                              {/* Username with inline badges */}
+                              <div className="flex items-center gap-2">
+                                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-lg" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace", textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                   {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
-                              </h1>
-                              {/* Team/Verified Badge */}
-                              {viewingProfile.teamMember && (
-                                <SoundchainGoldLogo className="flex-shrink-0 w-5 h-5" aria-label="SoundChain Team Member" />
-                              )}
-                              {!viewingProfile.teamMember && viewingProfile.verified && (
-                                <VerifiedIcon className="flex-shrink-0 w-5 h-5" aria-label="Verified user" />
-                              )}
-                            </div>
-                            <p className="text-cyan-400 text-xs">@{viewingProfile.userHandle || 'user'}</p>
-                            {viewingProfile.bio && (
-                              <p className="text-gray-300 text-xs line-clamp-2">{viewingProfile.bio}</p>
-                            )}
-
-                            {/* Compact Stats Row */}
-                            <div className="flex gap-3 text-center py-1">
-                              <div>
-                                <span className="text-white font-bold text-sm">{viewingProfileTrackCount}</span>
-                                <span className="text-gray-500 text-xs ml-1">tracks</span>
+                                </h1>
+                                {/* Team Member Badge */}
+                                {viewingProfile.teamMember && (
+                                  <SoundchainGoldLogo className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="SoundChain Team Member" />
+                                )}
+                                {/* Verified Badge */}
+                                {!viewingProfile.teamMember && viewingProfile.verified && (
+                                  <VerifiedIcon className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="Verified user" />
+                                )}
                               </div>
-                              <div>
-                                <span className="text-white font-bold text-sm">{viewingProfile.followerCount?.toLocaleString() || 0}</span>
-                                <span className="text-gray-500 text-xs ml-1">followers</span>
-                              </div>
-                              <div>
-                                <span className="text-white font-bold text-sm">{viewingProfile.followingCount?.toLocaleString() || 0}</span>
-                                <span className="text-gray-500 text-xs ml-1">following</span>
-                              </div>
+                              <p className="retro-json text-sm drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>@{viewingProfile.userHandle || 'user'}</p>
+                              <p className="text-gray-300 text-sm max-w-md drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{viewingProfile.bio || ''}</p>
                             </div>
 
-                            {/* Compact Action Buttons */}
-                            <div className="flex gap-2 flex-wrap">
+                            <div className="grid grid-cols-3 gap-4">
+                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
+                                <div className="retro-text text-xl drop-shadow-md">{viewingProfileTrackCount}</div>
+                                <div className="metadata-label text-xs drop-shadow-sm">Tracks</div>
+                              </div>
+                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
+                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followerCount?.toLocaleString() || 0}</div>
+                                <div className="metadata-label text-xs drop-shadow-sm">Followers</div>
+                              </div>
+                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
+                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followingCount?.toLocaleString() || 0}</div>
+                                <div className="metadata-label text-xs drop-shadow-sm">Following</div>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3">
                               {userLoading ? (
-                                <button className="px-3 py-1.5 text-xs rounded-lg bg-gray-700 text-gray-400" disabled>...</button>
+                                // Show loading state while auth is being determined
+                                <Button className="retro-button opacity-50" disabled>
+                                  <span className="w-4 h-4 mr-2 animate-pulse">•</span>
+                                  Loading...
+                                </Button>
                               ) : isViewingOwnProfile ? (
-                                <button onClick={() => setSelectedView('settings')} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-colors flex items-center gap-1 min-h-[32px]">
-                                  <Settings className="w-3 h-3" />
-                                  Edit
-                                </button>
+                                <Button className="retro-button" onClick={() => setSelectedView('settings')}>
+                                  <Settings className="w-4 h-4 mr-2" />
+                                  Edit Profile
+                                </Button>
                               ) : (
-                                <button
+                                <Button
+                                  className={viewingProfile.isFollowed ? 'border-cyan-500/50 bg-cyan-500/10 hover:bg-red-500/20 text-cyan-300' : 'retro-button'}
+                                  variant={viewingProfile.isFollowed ? 'outline' : 'default'}
                                   onClick={async () => {
-                                    if (!me) { router.push('/login'); return }
+                                    if (!me) {
+                                      router.push('/login')
+                                      return
+                                    }
                                     if (viewingProfile.isFollowed) {
                                       await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
                                     } else {
                                       await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
                                     }
                                   }}
-                                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 min-h-[32px] ${
-                                    viewingProfile.isFollowed
-                                      ? 'bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400'
-                                      : 'bg-cyan-500 text-black hover:bg-cyan-400'
-                                  }`}
                                 >
+                                  <Users className="w-4 h-4 mr-2" />
                                   {viewingProfile.isFollowed ? 'Following' : 'Follow'}
-                                </button>
+                                </Button>
                               )}
                               {!isViewingOwnProfile && (
-                                <button
-                                  onClick={() => { if (!me) { router.push('/login'); return }; setShowDMModal(true) }}
-                                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-600 text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-1 min-h-[32px]"
+                                <Button
+                                  variant="outline"
+                                  className="border-purple-500/50 hover:bg-purple-500/20"
+                                  onClick={() => {
+                                    if (!me) {
+                                      router.push('/login')
+                                      return
+                                    }
+                                    // Open DM modal instead of navigating
+                                    setShowDMModal(true)
+                                  }}
                                 >
-                                  <MessageCircle className="w-3 h-3" />
-                                  Message
-                                </button>
+                                  <MessageCircle className="w-4 h-4 mr-2" />Message
+                                </Button>
                               )}
-                              <button
-                                className="p-1.5 rounded-lg border border-gray-600 text-gray-400 hover:bg-white/5 transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center"
+                              <Button
+                                variant="outline"
+                                className="border-cyan-500/50 hover:bg-cyan-500/20"
                                 onClick={async () => {
                                   const profileUrl = `${window.location.origin}/profiles/${viewingProfile.userHandle}`
                                   const shareData = {
@@ -6750,38 +6774,48 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   }
                                 }}
                               >
-                                <Share2 className="w-3 h-3" />
-                              </button>
+                                <Share2 className="w-4 h-4" />
+                              </Button>
                             </div>
 
-                            {/* Compact Wallet Row */}
                             {viewingProfile.magicWalletAddress && (
-                              <div className="flex items-center gap-2 text-xs">
-                                <Wallet className="w-3 h-3 text-orange-400 flex-shrink-0" />
-                                <span className="text-gray-400 font-mono">{viewingProfile.magicWalletAddress.slice(0, 6)}...{viewingProfile.magicWalletAddress.slice(-4)}</span>
-                                <button
-                                  onClick={() => { navigator.clipboard.writeText(viewingProfile.magicWalletAddress || ''); toast.success('Copied!') }}
-                                  className="p-1 hover:bg-white/10 rounded transition-colors"
-                                >
-                                  <Copy className="w-3 h-3 text-gray-500" />
-                                </button>
-                                <button
-                                  onClick={() => setShowWinWinStatsModal(true)}
-                                  className="p-1 hover:bg-pink-500/20 rounded transition-colors"
-                                  title="WIN-WIN Rewards"
-                                >
-                                  <PiggyBank className="w-3 h-3 text-pink-400" />
-                                </button>
-                                {/* Tip Jar */}
-                                {!isViewingOwnProfile && (
-                                  <div className="relative">
-                                    <button
-                                      onClick={() => setShowProfileTipJar(!showProfileTipJar)}
-                                      className={`p-1 rounded transition-colors ${showProfileTipJar ? 'bg-yellow-500/30' : 'hover:bg-yellow-500/20'}`}
-                                      title={`Tip ${viewingProfile.displayName || viewingProfile.userHandle}`}
-                                    >
-                                      <Gift className="w-3 h-3 text-yellow-400" />
-                                    </button>
+                              <Card className="retro-card p-3 w-fit">
+                                <div className="flex items-center gap-3">
+                                  <Wallet className="w-4 h-4 text-orange-400" />
+                                  <span className="retro-json text-sm">{viewingProfile.magicWalletAddress.slice(0, 6)}...{viewingProfile.magicWalletAddress.slice(-4)}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(viewingProfile.magicWalletAddress || '')
+                                      alert('Address copied!')
+                                    }}
+                                    className="p-1"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </Button>
+                                  {/* WIN-WIN Piggy Bank - Shows streaming rewards stats */}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowWinWinStatsModal(true)}
+                                    className="hover:bg-pink-500/20 p-1 group"
+                                    title="WIN-WIN Streaming Rewards"
+                                  >
+                                    <PiggyBank className="w-4 h-4 text-pink-400 group-hover:text-pink-300 group-hover:scale-110 transition-all" />
+                                  </Button>
+                                  {/* Tip Jar - Only show on OTHER people's profiles */}
+                                  {!isViewingOwnProfile && (
+                                    <div className="relative">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setShowProfileTipJar(!showProfileTipJar)}
+                                        className={`p-1 group ${showProfileTipJar ? 'bg-yellow-500/30' : 'hover:bg-yellow-500/20'}`}
+                                        title={`Tip ${viewingProfile.name || viewingProfile.userHandle} with OGUN`}
+                                      >
+                                        <Gift className="w-4 h-4 text-yellow-400 group-hover:text-yellow-300 group-hover:scale-110 transition-all" />
+                                      </Button>
 
                                       {/* Mini Tip Jar Dropdown */}
                                       {showProfileTipJar && (
@@ -6921,7 +6955,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                       )}
                                     </div>
                                   )}
-                              </div>
+                                </div>
+                              </Card>
                             )}
                           </div>
                         </div>
@@ -6929,55 +6964,64 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
                   </div>
 
-                  {/* Profile Content */}
-                  <div className="relative z-10 max-w-screen-2xl mx-auto px-3">
-                    {/* Compact Profile Tabs */}
-                    <div className="flex items-center gap-0 border-b border-gray-800 overflow-x-auto scrollbar-hide">
+                  {/* Main Content */}
+                  <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
+                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Playlists */}
+                    <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
+                      {/* My Feed tab - ONLY shown when viewing own profile */}
                       {isViewingOwnProfile && (
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={() => setProfileTab('myfeed')}
-                          className={`px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap border-b-2 min-h-[40px] ${
-                            profileTab === 'myfeed' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-500 hover:text-gray-300'
-                          }`}
+                          className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${profileTab === 'myfeed' ? 'bg-cyan-500/10' : ''}`}
                         >
-                          My Feed
-                        </button>
+                          <Rss className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'myfeed' ? 'text-cyan-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'myfeed' ? 'cyan-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                            My Feed
+                          </span>
+                        </Button>
                       )}
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={() => setProfileTab('posts')}
-                        className={`px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap border-b-2 min-h-[40px] ${
-                          profileTab === 'posts' ? 'border-green-400 text-green-400' : 'border-transparent text-gray-500 hover:text-gray-300'
-                        }`}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'posts' ? 'bg-green-500/10' : ''}`}
                       >
-                        Posts
-                      </button>
-                      <button
+                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'posts' ? 'text-green-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'posts' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Posts
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
                         onClick={() => setProfileTab('music')}
-                        className={`px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap border-b-2 min-h-[40px] ${
-                          profileTab === 'music' ? 'border-purple-400 text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-300'
-                        }`}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-purple-500/10 ${profileTab === 'music' ? 'bg-purple-500/10' : ''}`}
                       >
-                        Music
-                      </button>
-                      <button
+                        <Music className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'music' ? 'text-purple-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'music' ? 'purple-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Music
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
                         onClick={() => setProfileTab('playlists')}
-                        className={`px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap border-b-2 min-h-[40px] ${
-                          profileTab === 'playlists' ? 'border-pink-400 text-pink-400' : 'border-transparent text-gray-500 hover:text-gray-300'
-                        }`}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-pink-500/10 ${profileTab === 'playlists' ? 'bg-pink-500/10' : ''}`}
                       >
-                        Playlists
-                      </button>
+                        <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'playlists' ? 'text-pink-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'playlists' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Playlists
+                        </span>
+                      </Button>
                     </div>
 
-                    {/* Tab Content - Edge to edge */}
-                    <div className="pt-2">
+                    {/* Tab Content */}
+                    <div className="min-h-[400px] bg-black rounded-xl p-2">
                       {/* My Feed - Full social feed (posts from people you follow + your own) */}
                       {profileTab === 'myfeed' && isViewingOwnProfile && (
-                        <Posts disableVirtualization viewMode={viewMode} />
+                        <Posts disableVirtualization />
                       )}
                       {/* Posts - Only this user's posts */}
                       {profileTab === 'posts' && (
-                        <Posts profileId={viewingProfile.id} disableVirtualization viewMode={viewMode} />
+                        <Posts profileId={viewingProfile.id} disableVirtualization />
                       )}
                       {profileTab === 'music' && (
                         <TracksGrid profileId={viewingProfile.id} />
