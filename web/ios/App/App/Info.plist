@@ -51,6 +51,72 @@
 	<array>
 		<string>audio</string>
 		<string>fetch</string>
+		<string>remote-notification</string>
 	</array>
+
+	<!-- Push Notifications -->
+	<key>UIApplicationExitsOnSuspend</key>
+	<false/>
+
+	<!-- Camera & Photo Library (for profile/cover photos, NFT images) -->
+	<key>NSCameraUsageDescription</key>
+	<string>SoundChain needs camera access to take photos for your profile and posts.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SoundChain needs photo library access to select images for your profile, posts, and NFTs.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SoundChain needs to save images and NFT artwork to your photo library.</string>
+
+	<!-- Microphone (for audio recording) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SoundChain needs microphone access to record audio for your tracks.</string>
+
+	<!-- Location (for Nearby/Concert Chat via Nostr) -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SoundChain uses your location for the Nearby chat feature to connect with other users at concerts and events.</string>
+
+	<!-- Face ID (for secure wallet operations) -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>SoundChain uses Face ID to securely authorize wallet transactions and protect your account.</string>
+
+	<!-- App Transport Security - Allow IPFS gateways -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>soundchain.mypinata.cloud</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+
+	<!-- URL Schemes for Deep Linking -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>io.soundchain.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>soundchain</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Universal Links -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:soundchain.io</string>
+		<string>webcredentials:soundchain.io</string>
+	</array>
+
+	<!-- Status Bar -->
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
 </dict>
 </plist>

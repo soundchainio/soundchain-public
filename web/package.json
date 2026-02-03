@@ -16,7 +16,15 @@
     "find:unused": "next-unused",
     "vercel-build": "next build",
     "e2e": "cypress run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "cap:sync": "npx cap sync",
+    "cap:build": "next build && next export && npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "cap:ios:build": "next build && next export && npx cap sync ios && npx cap open ios",
+    "cap:android:build": "next build && next export && npx cap sync android && npx cap open android",
+    "cap:copy": "npx cap copy",
+    "cap:update": "npx cap update"
   },
   "lint-staged": {
     "*.{js,ts,tsx,jsx}": [
@@ -38,9 +46,19 @@
   "dependencies": {
     "@apollo/client": "^3.10.11",
     "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/browser": "^8.0.0",
     "@capacitor/cli": "^8.0.0",
     "@capacitor/core": "^8.0.0",
+    "@capacitor/device": "^8.0.0",
+    "@capacitor/haptics": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
+    "@capacitor/keyboard": "^8.0.0",
+    "@capacitor/network": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "@coinbase/wallet-sdk": "^4.3.7",
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
