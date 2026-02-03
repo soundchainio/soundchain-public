@@ -20,7 +20,8 @@ interface CreateStoryModalProps {
 }
 
 export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModalProps) => {
-  const { me } = useMe()
+  const meData = useMe()
+  const me = meData?.me
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null)

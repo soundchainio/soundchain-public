@@ -35,7 +35,8 @@ const mockStories: Story[] = [
 ]
 
 export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
-  const { me } = useMe()
+  const meData = useMe()
+  const me = meData?.me
   const router = useRouter()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)

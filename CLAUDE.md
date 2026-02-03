@@ -1,12 +1,219 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** February 2, 2026
+**Last Updated:** February 3, 2026
 **Project Start:** July 14, 2021
-**Total Commits:** 4,800+ on production branch
+**Total Commits:** 4,850+ on production branch
 
 ---
 
-## 🚨 CURRENT SESSION (Feb 2, 2026) - API GATEWAY DIRECT CONNECTION
+## 🎬 LATE NIGHT SESSION (Feb 2-3, 2026) - APP POLISH + 24HR STORIES/REELS
+
+**Environment:** Remote ttyd terminal via Cloudflare tunnel
+**Working Dir:** `/Users/soundchain/soundchain/web`
+**Branch:** main
+**Vibe:** "THIS IS AN APP NOW BRAH!" 🚀
+
+### Session Summary (Feb 2-3, 2026 - Late Night/Early Morning)
+
+**MASSIVE UI/UX Improvements:**
+
+| Feature | Status | Commit |
+|---------|--------|--------|
+| Full-screen profile cover (70vh) | ✅ DONE | `8766ca9c5` |
+| Users page in nav dropdown | ✅ DONE | `cbf499b25` |
+| Cyberpunk compose button (blade runner glow) | ✅ DONE | `09a9492e4` |
+| Massive emote expansion (100+ emotes) | ✅ DONE | `09a9492e4` |
+| 24hr Stories/Reels bar | ✅ DONE | `8724a63e5` |
+| Story Viewer modal (full-screen) | ✅ DONE | `202169109` |
+| Create Story modal | ✅ DONE | `202169109` |
+| Shareable stories (internal + external) | ✅ DONE | `776c636d7` |
+
+---
+
+### 🎬 24-HOUR STORIES/REELS FEATURE - DECENTRALIZED INSTAGRAM!
+
+**What makes SoundChain Stories BETTER than Instagram:**
+
+| Feature | Instagram | SoundChain |
+|---------|-----------|------------|
+| Storage | Meta servers | IPFS (decentralized) |
+| Permanence | Always expires | Pay OGUN to keep forever |
+| Proof | None | On-chain verification |
+| Algorithm | Manipulated | Chronological |
+| Payments | In-app only | External wallets (iOS compliant!) |
+
+**Story Constraints:**
+```typescript
+STORY_CONSTRAINTS = {
+  MIN_DURATION: 1,        // 1 second minimum
+  MAX_DURATION: 600,      // 10 minutes max
+  DEFAULT_DURATION: 60,   // 1 minute default
+  MAX_FILE_SIZE: 1GB,     // 1 GB max
+  EXPIRY_HOURS: 24,       // Stories expire after 24 hours
+}
+```
+
+**Components Created:**
+| Component | File | Purpose |
+|-----------|------|---------|
+| `StoriesBar` | `components/dex/StoriesBar.tsx` | Horizontal scrolling stories strip |
+| `StoryViewer` | `components/dex/StoryViewer.tsx` | Full-screen story viewing |
+| `CreateStoryModal` | `components/dex/CreateStoryModal.tsx` | Upload and share stories |
+
+**StoriesBar Features:**
+- IG-style avatar bubbles with gradient rings
+- Unwatched stories: cyan→purple→pink gradient
+- Watched stories: gray gradient
+- "Your Story" bubble with + to create
+- Permanent stories: gold sparkle badge
+- Multiple stories count indicator
+- Scroll arrows for desktop
+
+**StoryViewer Features:**
+- Progress bars for multi-story users
+- Tap left (prev), center (pause), right (next)
+- Quick reactions: ❤️🔥🚀😂
+- Reply input with send
+- Share menu (copy link, X/Twitter, native share)
+- Make Permanent CTA with OGUN payment
+- View count and reactions display
+- Desktop: user navigation arrows + user preview strip
+
+**CreateStoryModal Features:**
+- Drag & drop or tap to upload
+- Video duration detection (up to 10 min)
+- File size validation (up to 1 GB)
+- Caption overlay tool
+- File info badges (duration, size)
+- IPFS decentralized storage badge
+- Future: High-res compression to maintain quality
+
+**Share Functionality:**
+- Internal: Send to DM, share to feed
+- External: Copy link, share to X/Twitter
+- Native share API on mobile
+- External shares include full reel preview
+
+**Backend Requirements (TODO):**
+```graphql
+type Story {
+  id: ID!
+  profileId: ID!
+  mediaUrl: String!       # IPFS URL
+  mediaType: String!      # 'image' | 'video'
+  caption: String
+  createdAt: DateTime!
+  expiresAt: DateTime!    # createdAt + 24hrs
+  isPermanent: Boolean!
+  permanentTxHash: String
+  viewCount: Int!
+  reactions: [StoryReaction!]!
+}
+
+# Mutations
+createStory(mediaUrl: String!, mediaType: String!, caption: String): Story!
+viewStory(storyId: ID!): Story!
+reactToStory(storyId: ID!, emoji: String!): Story!
+makeStoryPermanent(storyId: ID!, txHash: String!): Story!
+
+# Queries
+myFollowingStories: [StoryUser!]!
+userStories(userId: ID!): [Story!]!
+```
+
+---
+
+### 🎨 CYBERPUNK COMPOSE BUTTON
+
+**Old:** Basic Feather icon with gradient background
+**New:** Blade Runner / Dystopian style with:
+- Glass-morphism backdrop blur
+- Cyan border with glow effect
+- Pulsing ring animation
+- PenLine icon with neon drop shadow
+- Hover: intensified glow
+
+```tsx
+<button className="fixed bottom-24 right-4 z-40 w-14 h-14 rounded-full
+  bg-black/80 backdrop-blur-xl border border-cyan-500/50
+  shadow-[0_0_30px_rgba(6,182,212,0.4),inset_0_0_20px_rgba(6,182,212,0.1)]
+  hover:shadow-[0_0_40px_rgba(6,182,212,0.6)]">
+  <PenLine className="text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+</button>
+```
+
+---
+
+### 😎 MASSIVE EMOTE EXPANSION
+
+**Before:** ~30 emotes
+**After:** 100+ animated emotes from 7TV, BTTV, FFZ, Twitch, Kick
+
+**SC Category (SoundChain Favorites):**
+```
+catJAM, pepeD, NODDERS, Clap, peepoClap, HYPERS, Prayge, KEKW, LULW,
+OMEGALUL, EZ, PogU, Sadge, Copium, PepeLaugh, monkaS, FeelsGoodMan,
+FeelsBadMan, peepoHappy, peepoSad, PepeHands, WideHard, HACKERMANS,
+WAYTOODANK, Pepega, Aware, BOOBA, TriHard, monkaW, forsenCD, PauseChamp,
+CoolCat, GIGACHAD, Clueless, Bedge, modCheck, Stare, BASED, DESPAIR,
+Susge, NOTED, CAUGHT, FeelsStrongMan, peepoArrive, peepoLeave, peepoRiot,
+peepoSit, peepoGiggles, peepoBlush, POGGERS, WeirdChamp, Pepepains,
+ICANT, Okayge, NOIDONTTHINKSO, xqcL, LETSGO, Madge, Pepepls, PETTHE,
+Chatting, lebronJAM
+```
+
+**Reactions Category:** 65+ curated emotes for quick reactions
+
+**Emote Flurry Mode:** Picker stays open for rapid emote insertion 🔥
+
+---
+
+### 📱 PROFILE PAGE - FULL-SCREEN COVER
+
+**Before:** Small banner with separate profile info section = lots of black space
+**After:** Instagram/Twitter-style with:
+- Cover image takes 70% viewport height (`h-[70vh] min-h-[400px]`)
+- Profile info overlaid at bottom of cover
+- Gradient overlay for text readability
+- Avatar "floats" with rounded corners and shadow
+- Stats, badges, action buttons all integrated in hero section
+- Back button top-left with blur backdrop
+
+---
+
+### 👥 USERS PAGE IN NAV DROPDOWN
+
+Added Users link to main navigation dropdown:
+- Position: After Explore, before Shop
+- Color: Indigo (`text-indigo-400`)
+- Icon: Users from lucide-react
+- Route: `/dex/users`
+- Shows stacked avatar grid of all users
+
+---
+
+### 🔮 UPCOMING: YZY TOKEN + SOLANA INTEGRATION
+
+User mentioned supporting Kanye West's YZY token on Solana. Combined with existing ZetaChain omnichain support (24-32 tokens), SoundChain is positioned for massive multi-chain expansion.
+
+**Solana Integration Notes:**
+- Install `@magic-ext/solana` + `@solana/web3.js`
+- Add SolanaExtension to Magic SDK
+- Users get separate Solana address (different from EVM)
+- Add `solanaWalletAddress` to User model
+
+---
+
+### 📋 NEXT SESSION PRIORITIES
+
+1. **AWS API Gateway** - Complete direct connection (bypass EC2 proxy)
+2. **Backend Stories** - GraphQL schema, MongoDB model, IPFS integration
+3. **High-res Compression** - FFmpeg.wasm for client-side compression without quality loss
+4. **iOS App Store** - Final polish before submission
+
+---
+
+## 🚨 PREVIOUS SESSION (Feb 2, 2026) - API GATEWAY DIRECT CONNECTION
 
 **Environment:** Remote ttyd terminal via Cloudflare tunnel
 **Working Dir:** `/Users/soundchain/soundchain`
