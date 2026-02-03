@@ -3,6 +3,7 @@ import { UserInputError } from 'apollo-server-express';
 import { Story, StoryModel } from '../models/Story';
 import { Context } from '../types/Context';
 import { ModelService } from './ModelService';
+import { ActivityType } from '../types/ActivityType';
 
 interface CreateStoryParams {
   profileId: string;
@@ -281,7 +282,7 @@ export class StoryService extends ModelService<typeof Story> {
     // Log activity for making story permanent
     try {
       await this.context.activityService.logActivity({
-        type: 'MINTED',
+        type: ActivityType.Minted,
         profileId: existingStory.profileId.toString(),
         targetId: storyId,
         message: `made a reel permanent (SCid: ${scid})`,
