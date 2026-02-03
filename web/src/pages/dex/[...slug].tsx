@@ -70,7 +70,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss, Gift, Feather
+  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 
@@ -4245,13 +4245,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {/* Right Sidebar - Desktop only */}
               <RightSidebar />
 
-              {/* Floating Compose Button - Instagram/Twitter style - Opens for ALL users (guests can post too!) */}
+              {/* Floating Compose Button - Blade Runner / Cyberpunk style - Opens for ALL users */}
               <button
                 onClick={() => dispatchShowCreateModal(true, 'post')}
-                className="fixed bottom-24 right-4 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-110 active:scale-95 transition-all duration-200 md:bottom-8 md:right-8"
+                className="fixed bottom-24 right-4 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-black/80 backdrop-blur-xl border border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.4),inset_0_0_20px_rgba(6,182,212,0.1)] hover:shadow-[0_0_40px_rgba(6,182,212,0.6),inset_0_0_30px_rgba(6,182,212,0.2)] hover:border-cyan-400 hover:scale-110 active:scale-95 transition-all duration-300 md:bottom-8 md:right-8 group"
                 aria-label="Create post"
               >
-                <Feather className="w-6 h-6 text-white" />
+                {/* Pulsing glow ring */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 animate-pulse" />
+                {/* Inner glow */}
+                <div className="absolute inset-1 rounded-full bg-gradient-to-br from-cyan-500/10 via-transparent to-purple-500/10" />
+                {/* Icon */}
+                <PenLine className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors relative z-10 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
               </button>
             </div>
           )}

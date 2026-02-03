@@ -340,10 +340,11 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     }
   }
 
-  // Popular reaction emotes (curated from 7TV)
+  // Popular reaction emotes (curated from 7TV) - MASSIVE collection!
   const getReactionEmotes = (): NormalizedEmote[] => {
-    // Popular reaction emote IDs from 7TV (all animated)
+    // Popular reaction emote IDs from 7TV (all animated) - GO BIG!
     const reactions = [
+      // Classic reactions
       { id: '60ae958e229664e8667aea38', name: 'KEKW' },
       { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
       { id: '60aefc43ff8a9a15a6de5847', name: 'PepeLaugh' },
@@ -374,6 +375,42 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
       { id: '60af3d5ee5e3c23f8a6ddc9e', name: 'HACKERMANS' },
       { id: '60b0d3df77ccd81f2b78b963', name: 'TriHard' },
       { id: '60ae8cac229664e8667ae5a8', name: 'pepeD' },
+      // More popular emotes
+      { id: '60b0bb0f8ed8b373e421cf47', name: 'Chatting' },
+      { id: '60ae7be1ff8a9a15a6de0e3e', name: 'GIGACHAD' },
+      { id: '60ae9f49ff8a9a15a6de5f93', name: 'Clueless' },
+      { id: '60ae37d7229664e8667ab051', name: 'Bedge' },
+      { id: '60b076aea64e9d892a82d9f1', name: 'BOOBA' },
+      { id: '60af7df477ccd81f2b77196d', name: 'modCheck' },
+      { id: '60b0bca1e5e3c23f8a6e24f1', name: 'Stare' },
+      { id: '60b09eb777ccd81f2b78dbd9', name: 'BASED' },
+      { id: '60b09c1477ccd81f2b78db76', name: 'DESPAIR' },
+      { id: '60b0a9aba64e9d892a82dd3b', name: 'Susge' },
+      { id: '60b09e93e5e3c23f8a6e1f48', name: 'NOTED' },
+      { id: '60b0952ee5e3c23f8a6e1cfe', name: 'CAUGHT' },
+      { id: '60b0b83377ccd81f2b78e4f4', name: 'ThisStream' },
+      { id: '60b0bfd6e5e3c23f8a6e25f7', name: 'FeelsStrongMan' },
+      { id: '60b109e077ccd81f2b78fc0c', name: 'peepoArrive' },
+      { id: '60b10a61a64e9d892a83081b', name: 'peepoLeave' },
+      { id: '60b11106a64e9d892a830d7c', name: 'peepoRiot' },
+      { id: '60b112648ed8b373e42210b5', name: 'peepoSit' },
+      { id: '60b11aab6a76e2db2da56f59', name: 'peepoClap' },
+      { id: '60b1195d6a76e2db2da56e83', name: 'peepoGiggles' },
+      { id: '60b11b38e5e3c23f8a6e340a', name: 'peepoBlush' },
+      { id: '60b0d50b8ed8b373e421e7c1', name: 'POGGERS' },
+      { id: '60b0d51c8ed8b373e421e7c5', name: 'WeirdChamp' },
+      { id: '60b0d4e0daa8fb57cd62c638', name: 'Pepepains' },
+      { id: '60b0d4cba5de6cf21b5ea87e', name: 'ICANT' },
+      { id: '60b0d4b3a5de6cf21b5ea877', name: 'Okayge' },
+      { id: '60b0d49a77ccd81f2b78babb', name: 'NOIDONTTHINKSO' },
+      { id: '60b0d47e77ccd81f2b78ba9c', name: 'forsenE' },
+      { id: '60b0d464daa8fb57cd62c609', name: 'xqcL' },
+      { id: '60b0d44fdaa8fb57cd62c5fe', name: 'LETSGO' },
+      { id: '60b0d4188ed8b373e421e7a8', name: 'Madge' },
+      { id: '60b0d401daa8fb57cd62c5f2', name: 'Pepepls' },
+      { id: '60b0d3be77ccd81f2b78b950', name: 'PETTHE' },
+      { id: '60b0d38a8ed8b373e421e795', name: 'YEAHBUT' },
+      { id: '60b0c0ce8ed8b373e421e68d', name: 'lebronJAM' },
     ]
 
     return reactions.map(r => ({
@@ -466,6 +503,37 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
               { id: 'sc-forsencd', name: 'forsenCD', url: 'https://cdn.7tv.app/emote/60b0d43b77ccd81f2b78ba37/2x.gif', animated: true, source: 'soundchain' },
               { id: 'sc-pausechamp', name: 'PauseChamp', url: 'https://cdn.7tv.app/emote/60af3bfc77ccd81f2b76a2c3/2x.gif', animated: true, source: 'soundchain' },
               { id: 'sc-coolcat', name: 'CoolCat', url: 'https://cdn.7tv.app/emote/60af2d01aa0d72dc39f1c470/2x.gif', animated: true, source: 'soundchain' },
+              // More SC favorites - MASSIVE expansion!
+              { id: 'sc-gigachad', name: 'GIGACHAD', url: 'https://cdn.7tv.app/emote/60ae7be1ff8a9a15a6de0e3e/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-clueless', name: 'Clueless', url: 'https://cdn.7tv.app/emote/60ae9f49ff8a9a15a6de5f93/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-bedge', name: 'Bedge', url: 'https://cdn.7tv.app/emote/60ae37d7229664e8667ab051/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-modcheck', name: 'modCheck', url: 'https://cdn.7tv.app/emote/60af7df477ccd81f2b77196d/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-stare', name: 'Stare', url: 'https://cdn.7tv.app/emote/60b0bca1e5e3c23f8a6e24f1/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-based', name: 'BASED', url: 'https://cdn.7tv.app/emote/60b09eb777ccd81f2b78dbd9/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-despair', name: 'DESPAIR', url: 'https://cdn.7tv.app/emote/60b09c1477ccd81f2b78db76/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-susge', name: 'Susge', url: 'https://cdn.7tv.app/emote/60b0a9aba64e9d892a82dd3b/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-noted', name: 'NOTED', url: 'https://cdn.7tv.app/emote/60b09e93e5e3c23f8a6e1f48/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-caught', name: 'CAUGHT', url: 'https://cdn.7tv.app/emote/60b0952ee5e3c23f8a6e1cfe/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-feelsstrongman', name: 'FeelsStrongMan', url: 'https://cdn.7tv.app/emote/60b0bfd6e5e3c23f8a6e25f7/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoarrive', name: 'peepoArrive', url: 'https://cdn.7tv.app/emote/60b109e077ccd81f2b78fc0c/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoleave', name: 'peepoLeave', url: 'https://cdn.7tv.app/emote/60b10a61a64e9d892a83081b/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peeporiot', name: 'peepoRiot', url: 'https://cdn.7tv.app/emote/60b11106a64e9d892a830d7c/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peeposit', name: 'peepoSit', url: 'https://cdn.7tv.app/emote/60b112648ed8b373e42210b5/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peepogiggles', name: 'peepoGiggles', url: 'https://cdn.7tv.app/emote/60b1195d6a76e2db2da56e83/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoblush', name: 'peepoBlush', url: 'https://cdn.7tv.app/emote/60b11b38e5e3c23f8a6e340a/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-poggers', name: 'POGGERS', url: 'https://cdn.7tv.app/emote/60b0d50b8ed8b373e421e7c1/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-weirdchamp', name: 'WeirdChamp', url: 'https://cdn.7tv.app/emote/60b0d51c8ed8b373e421e7c5/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-pepepains', name: 'Pepepains', url: 'https://cdn.7tv.app/emote/60b0d4e0daa8fb57cd62c638/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-icant', name: 'ICANT', url: 'https://cdn.7tv.app/emote/60b0d4cba5de6cf21b5ea87e/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-okayge', name: 'Okayge', url: 'https://cdn.7tv.app/emote/60b0d4b3a5de6cf21b5ea877/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-noidontthinkso', name: 'NOIDONTTHINKSO', url: 'https://cdn.7tv.app/emote/60b0d49a77ccd81f2b78babb/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-xqcl', name: 'xqcL', url: 'https://cdn.7tv.app/emote/60b0d464daa8fb57cd62c609/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-letsgo', name: 'LETSGO', url: 'https://cdn.7tv.app/emote/60b0d44fdaa8fb57cd62c5fe/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-madge', name: 'Madge', url: 'https://cdn.7tv.app/emote/60b0d4188ed8b373e421e7a8/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-pepepls', name: 'Pepepls', url: 'https://cdn.7tv.app/emote/60b0d401daa8fb57cd62c5f2/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-petthe', name: 'PETTHE', url: 'https://cdn.7tv.app/emote/60b0d3be77ccd81f2b78b950/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-chatting', name: 'Chatting', url: 'https://cdn.7tv.app/emote/60b0bb0f8ed8b373e421cf47/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-lebronjam', name: 'lebronJAM', url: 'https://cdn.7tv.app/emote/60b0c0ce8ed8b373e421e68d/2x.gif', animated: true, source: 'soundchain' },
             ]
             loadedEmotes = scEmotes
             break
