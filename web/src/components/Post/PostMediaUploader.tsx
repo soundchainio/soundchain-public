@@ -13,7 +13,8 @@ interface PostMediaUploaderProps {
   isGuest?: boolean // Use guest upload endpoint (images only)
 }
 
-const MAX_FILE_SIZE = 1024 * 1024 * 1024 // 1GB - SoundChain supports large audio/video files
+const MAX_FILE_SIZE_MEMBER = 1024 * 1024 * 1024 // 1GB for SC members
+const MAX_FILE_SIZE_GUEST = 10 * 1024 * 1024 // 10MB for public/guest users
 
 // Helper to capture a frame from video file and return as Blob
 const captureVideoThumbnail = (videoFile: File): Promise<Blob | null> => {
@@ -243,10 +244,14 @@ export const PostMediaUploader = ({
     [upload, uploadThumbnail, onMediaSelected]
   )
 
+  // Dynamic file size limit based on user type
+  const maxFileSize = isGuest ? MAX_FILE_SIZE_GUEST : MAX_FILE_SIZE_MEMBER
+  const maxSizeLabel = isGuest ? '10 MB' : '1 GB'
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: acceptedTypes,
-    maxSize: MAX_FILE_SIZE,
+    maxSize: maxFileSize,
     multiple: false,
     disabled: uploading,
     onDropRejected: (rejections) => {
@@ -256,7 +261,7 @@ export const PostMediaUploader = ({
 
       if (errorCode === 'file-too-large') {
         const sizeMB = Math.round((rejection?.file?.size || 0) / (1024 * 1024))
-        setError(`File too large (${sizeMB} MB). Maximum size is 1GB.`)
+        setError(`File too large (${sizeMB} MB). Maximum size is ${maxSizeLabel}.${isGuest ? ' Login for up to 1 GB!' : ''}`)
       } else if (errorCode === 'file-invalid-type') {
         console.error('Rejected file type:', fileType, rejection?.file?.name)
         setError(`Unsupported format (${fileType}). Try MP4, MOV, MP3, or common image formats.`)
