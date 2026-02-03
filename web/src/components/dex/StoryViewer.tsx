@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, MoreHorizontal, Sparkles, Volume2, VolumeX, Pause, Play } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, MoreHorizontal, Sparkles, Volume2, VolumeX, Pause, Play, Share2, Link2, Twitter, Copy, Check } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
 import { useRouter } from 'next/router'
+import { toast } from 'react-toastify'
 
 interface StoryItem {
   id: string
@@ -80,6 +81,8 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const [progress, setProgress] = useState(0)
   const [replyText, setReplyText] = useState('')
   const [showReactions, setShowReactions] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
   const progressInterval = useRef<NodeJS.Timeout | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -176,6 +179,46 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const handleMakePermanent = () => {
     console.log('Make permanent:', currentStory?.id)
     // TODO: Open payment modal for OGUN
+  }
+
+  const getShareUrl = () => {
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.io'
+    return `${baseUrl}/dex/story/${currentUser?.userHandle}/${currentStory?.id}`
+  }
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getShareUrl())
+      setLinkCopied(true)
+      toast.success('Link copied!')
+      setTimeout(() => setLinkCopied(false), 2000)
+    } catch (err) {
+      toast.error('Failed to copy link')
+    }
+  }
+
+  const handleShareTwitter = () => {
+    const text = `Check out this story from @${currentUser?.userHandle} on SoundChain 🎵`
+    const url = getShareUrl()
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank')
+    setShowShareMenu(false)
+  }
+
+  const handleShareNative = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${currentUser?.displayName}'s Story on SoundChain`,
+          text: `Check out this story from ${currentUser?.displayName || currentUser?.userHandle}`,
+          url: getShareUrl(),
+        })
+        setShowShareMenu(false)
+      } catch (err) {
+        // User cancelled or share failed
+      }
+    } else {
+      handleCopyLink()
+    }
   }
 
   if (!isOpen || !currentUser || !currentStory) return null
@@ -277,6 +320,55 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
             )}
+            {/* Share */}
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowShareMenu(!showShareMenu) }}
+                className={`w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${
+                  showShareMenu ? 'bg-cyan-500 text-white' : 'bg-black/30 text-white/80 hover:text-white'
+                }`}
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+
+              {/* Share menu dropdown */}
+              {showShareMenu && (
+                <div
+                  className="absolute top-full right-0 mt-2 w-48 bg-black/90 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden shadow-2xl z-50"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={handleShareNative}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-white/90 hover:bg-white/10 transition-colors text-sm"
+                  >
+                    <Share2 className="w-4 h-4 text-cyan-400" />
+                    Share Story
+                  </button>
+                  <button
+                    onClick={handleCopyLink}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-white/90 hover:bg-white/10 transition-colors text-sm"
+                  >
+                    {linkCopied ? (
+                      <Check className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <Link2 className="w-4 h-4 text-purple-400" />
+                    )}
+                    {linkCopied ? 'Copied!' : 'Copy Link'}
+                  </button>
+                  <button
+                    onClick={handleShareTwitter}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-white/90 hover:bg-white/10 transition-colors text-sm"
+                  >
+                    <Twitter className="w-4 h-4 text-blue-400" />
+                    Share to X
+                  </button>
+                  <div className="px-4 py-2 text-[10px] text-white/40 border-t border-white/5">
+                    External shares include full reel preview
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* More */}
             <button
               onClick={(e) => { e.stopPropagation(); /* TODO: More menu */ }}

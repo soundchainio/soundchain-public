@@ -1,6 +1,17 @@
 import { useState, useRef, useCallback } from 'react'
-import { X, Camera, Image as ImageIcon, Video, Sparkles, Upload, Type, Sticker, Music, Trash2 } from 'lucide-react'
+import { X, Camera, Image as ImageIcon, Video, Sparkles, Upload, Type, Sticker, Music, Trash2, Share2, Clock, HardDrive } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
+
+// Story constraints
+const STORY_CONSTRAINTS = {
+  MIN_DURATION: 1, // 1 second minimum
+  MAX_DURATION: 600, // 10 minutes max (600 seconds)
+  DEFAULT_DURATION: 60, // 1 minute default
+  MAX_FILE_SIZE: 1024 * 1024 * 1024, // 1 GB max
+  EXPIRY_HOURS: 24, // Stories expire after 24 hours
+  SUPPORTED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  SUPPORTED_VIDEO_TYPES: ['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'],
+}
 
 interface CreateStoryModalProps {
   isOpen: boolean
@@ -16,32 +27,80 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const [isUploading, setIsUploading] = useState(false)
   const [caption, setCaption] = useState('')
   const [showCaptionInput, setShowCaptionInput] = useState(false)
+  const [videoDuration, setVideoDuration] = useState(0)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+
+  // Format file size for display
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  }
+
+  // Format duration for display
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
+  }
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    setUploadError(null)
 
     // Validate file type
-    const isImage = file.type.startsWith('image/')
-    const isVideo = file.type.startsWith('video/')
+    const isImage = STORY_CONSTRAINTS.SUPPORTED_IMAGE_TYPES.includes(file.type)
+    const isVideo = STORY_CONSTRAINTS.SUPPORTED_VIDEO_TYPES.includes(file.type) || file.type.startsWith('video/')
 
     if (!isImage && !isVideo) {
-      alert('Please select an image or video file')
+      setUploadError('Unsupported file type. Please use JPG, PNG, GIF, WebP for images or MP4, WebM, MOV for videos.')
       return
     }
 
-    // Validate file size (50MB max for video, 10MB for image)
-    const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024
-    if (file.size > maxSize) {
-      alert(`File too large. Max size: ${isVideo ? '50MB' : '10MB'}`)
+    // Validate file size (1 GB max)
+    if (file.size > STORY_CONSTRAINTS.MAX_FILE_SIZE) {
+      setUploadError(`File too large. Max size: 1 GB. Your file: ${formatFileSize(file.size)}`)
       return
     }
 
-    setMediaFile(file)
-    setMediaType(isImage ? 'image' : 'video')
-    setMediaPreview(URL.createObjectURL(file))
+    const previewUrl = URL.createObjectURL(file)
+
+    // For videos, check duration
+    if (isVideo) {
+      const tempVideo = document.createElement('video')
+      tempVideo.preload = 'metadata'
+      tempVideo.src = previewUrl
+
+      tempVideo.onloadedmetadata = () => {
+        const duration = tempVideo.duration
+        setVideoDuration(duration)
+
+        if (duration > STORY_CONSTRAINTS.MAX_DURATION) {
+          setUploadError(`Video too long. Max: 10 minutes. Your video: ${formatDuration(duration)}`)
+          URL.revokeObjectURL(previewUrl)
+          return
+        }
+
+        setMediaFile(file)
+        setMediaType('video')
+        setMediaPreview(previewUrl)
+      }
+
+      tempVideo.onerror = () => {
+        setUploadError('Could not read video file. Please try a different format.')
+        URL.revokeObjectURL(previewUrl)
+      }
+    } else {
+      // Image - no duration check needed
+      setMediaFile(file)
+      setMediaType('image')
+      setMediaPreview(previewUrl)
+      setVideoDuration(0)
+    }
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -152,10 +211,28 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                 </div>
               </div>
 
-              <p className="text-white/30 text-xs mt-4">
-                Stories disappear after 24 hours<br />
-                Pay OGUN to make permanent
+              <div className="flex items-center gap-4 mt-4 text-white/30 text-xs">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>Up to 10 min</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <HardDrive className="w-3 h-3" />
+                  <span>Max 1 GB</span>
+                </div>
+              </div>
+
+              <p className="text-white/30 text-xs mt-2">
+                Stories expire after 24 hours<br />
+                Pay OGUN to make permanent • Shareable everywhere
               </p>
+
+              {/* Error display */}
+              {uploadError && (
+                <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                  {uploadError}
+                </div>
+              )}
             </div>
           ) : (
             /* Preview area */
@@ -254,6 +331,21 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                   {me?.profile?.displayName || me?.profile?.userHandle}
                 </span>
               </div>
+
+              {/* File info badge - bottom right */}
+              {mediaFile && (
+                <div className="absolute bottom-4 right-4 flex items-center gap-2 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm text-xs text-white/70">
+                  {mediaType === 'video' && videoDuration > 0 && (
+                    <>
+                      <Clock className="w-3 h-3" />
+                      <span>{formatDuration(videoDuration)}</span>
+                      <span className="text-white/30">•</span>
+                    </>
+                  )}
+                  <HardDrive className="w-3 h-3" />
+                  <span>{formatFileSize(mediaFile.size)}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
