@@ -6627,8 +6627,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
-                  {/* Cover Image - Full Width */}
-                  <div className="relative h-32 sm:h-40 md:h-48 w-full overflow-hidden">
+                  {/* Cover Image - FULL SCREEN with profile info overlaid at bottom */}
+                  <div className="relative h-[70vh] min-h-[400px] w-full overflow-hidden">
                     {viewingProfile.coverPicture ? (
                       <img
                         src={viewingProfile.coverPicture}
@@ -6636,45 +6636,45 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-900/50 via-cyan-900/30 to-black" />
+                      <div className="w-full h-full bg-gradient-to-br from-purple-900/80 via-cyan-900/50 to-black" />
                     )}
-                    {/* Gradient overlay for readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                    {/* Back Button - Floating over cover */}
+                    {/* Gradient overlay - stronger at bottom for text readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+                    {/* Back Button - Floating top left */}
                     <button
                       onClick={() => router.back()}
-                      className="absolute top-3 left-3 flex items-center gap-1 text-white/80 hover:text-white text-sm bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full transition-colors"
+                      className="absolute top-4 left-4 flex items-center gap-1 text-white/90 hover:text-white text-sm bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full transition-colors z-20"
                     >
                       <ChevronDown className="w-4 h-4 rotate-90" />
                       Back
                     </button>
-                  </div>
 
-                  {/* Profile Info - Overlapping cover */}
-                  <div className="relative z-10 -mt-16 px-4">
-                    <div className="max-w-screen-lg mx-auto">
-                      {/* Avatar + Name Row */}
-                      <div className="flex items-end gap-4">
-                        {/* Avatar - Floating over cover */}
-                        <div className="relative flex-shrink-0">
-                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-4 border-black bg-gradient-to-br from-purple-900 to-cyan-900 shadow-xl">
-                            {viewingProfile.profilePicture ? (
-                              <img
-                                src={viewingProfile.profilePicture}
-                                alt={viewingProfile.displayName || 'Profile'}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-3xl text-white font-bold">
-                                {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
-                              </div>
-                            )}
+                    {/* Profile Info - Positioned at bottom of cover */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+                      <div className="max-w-screen-lg mx-auto">
+                        {/* Avatar + Name Row */}
+                        <div className="flex items-end gap-4">
+                          {/* Avatar */}
+                          <div className="relative flex-shrink-0">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-3 border-white/20 bg-gradient-to-br from-purple-900 to-cyan-900 shadow-2xl">
+                              {viewingProfile.profilePicture ? (
+                                <img
+                                  src={viewingProfile.profilePicture}
+                                  alt={viewingProfile.displayName || 'Profile'}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-2xl text-white font-bold">
+                                  {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
+                                </div>
+                              )}
+                            </div>
+                            {/* Online indicator */}
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-black" />
                           </div>
-                          {/* Online indicator */}
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-black" />
-                        </div>
 
-                        {/* Name + Handle */}
+                          {/* Name + Handle */}
                         <div className="flex-1 min-w-0 pb-1">
                           <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
@@ -6772,6 +6772,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </button>
                       </div>
                     </div>
+                  </div>
                   </div>
 
                   {/* Wallet Address + Actions Row */}
