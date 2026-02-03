@@ -73,6 +73,7 @@ import {
   Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
+import { StoriesBar } from 'components/dex/StoriesBar'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
@@ -3637,9 +3638,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         )}
 
         {/* Main Content - Floats on cover art background */}
-        <div className="max-w-screen-2xl mx-auto px-3 pt-1 relative">
+        <div className="max-w-screen-2xl mx-auto relative">
+          {/* 24hr Stories/Reels Bar - Decentralized, pay to make permanent! */}
+          {(selectedView === 'feed' || selectedView === 'explore') && (
+            <StoriesBar
+              onCreateStory={() => dispatchShowCreateModal(true, 'post')}
+            />
+          )}
+
           {/* Floating nav - tap-friendly sizes */}
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 px-3 pt-1">
             {(() => {
               const navItems = [
                 { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', textColor: 'text-cyan-400' },
