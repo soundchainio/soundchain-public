@@ -20,6 +20,8 @@ interface PostsProps extends React.ComponentPropsWithoutRef<'div'> {
   // When true, uses simple scroll-based loading instead of virtualization
   // Needed when Posts is rendered inside a parent with its own scroll (like profile pages)
   disableVirtualization?: boolean
+  // External view mode control - when provided, overrides internal state
+  viewMode?: 'grid' | 'list'
 }
 
 const pageSize = 30
@@ -38,7 +40,7 @@ const GridCell = memo(({ columnIndex, rowIndex, style, data }: any) => {
   if (!post) return null
 
   return (
-    <div style={{ ...style, padding: '4px' }}>
+    <div style={{ ...style, padding: '1px' }}>
       <CompactPost
         post={post}
         handleOnPlayClicked={data.handleOnPlayClicked}
@@ -108,10 +110,13 @@ const PostDetailModal = ({ postId, onClose, handleOnPlayClicked }: { postId: str
   )
 }
 
-export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
+export const Posts = ({ profileId, disableVirtualization, viewMode: externalViewMode }: PostsProps) => {
   // Auto-disable virtualization for profile pages (they have their own scroll container)
   const useSimpleMode = disableVirtualization || !!profileId
-  const [viewMode, setViewMode] = useState<ViewMode>('list') // Default to list view for better content visibility
+  // Use external viewMode if provided, otherwise use internal state
+  const [internalViewMode, setInternalViewMode] = useState<ViewMode>('list')
+  const viewMode = externalViewMode || internalViewMode
+  const setViewMode = setInternalViewMode
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null)
   const [activePostId, setActivePostId] = useState<string | null>(null) // Track last interacted/playing post
   const { playlistState, currentSong, isPlaying } = useAudioPlayerContext()

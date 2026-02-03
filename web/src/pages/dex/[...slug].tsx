@@ -3645,6 +3645,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', textColor: 'text-cyan-400' },
                 { id: 'announcements', label: 'News', icon: Rocket, route: '/dex/announcements', textColor: 'text-purple-400' },
                 { id: 'explore', label: 'Explore', icon: Compass, route: '/dex/explore', textColor: 'text-orange-400' },
+                { id: 'users', label: 'Users', icon: Users, route: '/dex/users', textColor: 'text-yellow-400' },
                 { id: 'marketplace', label: 'Shop', icon: ShoppingBag, route: '/dex/marketplace', textColor: 'text-green-400' },
                 { id: 'library', label: 'Library', icon: Library, route: '/dex/library', textColor: 'text-blue-400' },
                 { id: 'playlist', label: 'Playlists', icon: ListMusic, route: '/dex/playlist', textColor: 'text-pink-400' },
@@ -4238,7 +4239,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Main Feed - Posts lead, clean and content-first */}
               <div className="flex-1 max-w-full md:max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-                <Posts />
+                <Posts viewMode={viewMode} />
               </div>
 
               {/* Right Sidebar - Desktop only */}
@@ -5822,89 +5823,83 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </div>
           )}
 
-          {/* Messages View - Full DM System */}
+          {/* Messages View - Compact DM System */}
           {selectedView === 'messages' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 h-[calc(100vh-140px)]">
               {/* Conversations List */}
-              <Card className="retro-card overflow-hidden lg:col-span-1">
-                <div className="p-4 border-b border-cyan-500/30">
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="w-6 h-6 text-blue-400" />
-                    <h2 className="retro-title text-lg">Messages</h2>
-                  </div>
+              <div className="bg-black/50 border border-gray-800 rounded-lg overflow-hidden lg:col-span-1">
+                <div className="p-2 border-b border-gray-800 flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm font-bold text-white">Messages</span>
                 </div>
-                <div className="overflow-y-auto h-[calc(100%-60px)]">
+                <div className="overflow-y-auto h-[calc(100%-40px)]">
                   {chatsLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                    <div className="flex items-center justify-center py-6">
+                      <div className="animate-spin w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full" />
                     </div>
                   ) : (chatsData?.chats?.nodes?.length ?? 0) > 0 ? (
-                    <div className="divide-y divide-gray-800">
+                    <div className="divide-y divide-gray-800/50">
                       {chatsData?.chats?.nodes?.map((chat: any) => (
                         <div
                           key={chat.id}
                           onClick={() => setSelectedChatId(chat.profile?.id || chat.id)}
-                          className={`p-4 cursor-pointer hover:bg-cyan-500/5 transition-colors ${selectedChatId === (chat.profile?.id || chat.id) ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
+                          className={`p-2 cursor-pointer hover:bg-white/5 transition-colors ${selectedChatId === (chat.profile?.id || chat.id) ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-12 h-12">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="w-9 h-9 flex-shrink-0">
                               {chat.profile?.profilePicture ? (
                                 <AvatarImage src={chat.profile.profilePicture} />
                               ) : null}
-                              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white">
+                              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white text-xs">
                                 {chat.profile?.displayName?.charAt(0)?.toUpperCase() || '?'}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-white truncate">{chat.profile?.displayName || 'Unknown'}</p>
-                                {chat.unread && (
-                                  <span className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0" />
-                                )}
+                              <div className="flex items-center gap-1">
+                                <p className="text-sm font-medium text-white truncate">{chat.profile?.displayName || 'Unknown'}</p>
+                                {chat.unread && <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full flex-shrink-0" />}
                               </div>
-                              <p className="text-sm text-gray-400 truncate">{chat.message}</p>
-                              <p className="text-xs text-gray-600">{new Date(chat.createdAt).toLocaleDateString()}</p>
+                              <p className="text-xs text-gray-500 truncate">{chat.message}</p>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                      <p className="text-gray-400 text-sm">No conversations yet</p>
-                      <p className="text-xs text-gray-600 mt-1">Visit an artist's profile to start a chat</p>
+                    <div className="text-center py-6 px-3">
+                      <MessageCircle className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+                      <p className="text-gray-500 text-xs">No conversations</p>
                     </div>
                   )}
                 </div>
-              </Card>
+              </div>
 
               {/* Chat Window */}
-              <Card className="retro-card overflow-hidden lg:col-span-2 flex flex-col">
+              <div className="bg-black/50 border border-gray-800 rounded-lg overflow-hidden lg:col-span-2 flex flex-col">
                 {selectedChatId ? (
                   <>
                     {/* Chat Header */}
-                    <div className="p-4 border-b border-cyan-500/30 flex items-center gap-3">
+                    <div className="p-2 border-b border-gray-800 flex items-center gap-2">
                       {chatHistoryData?.chatHistory?.nodes?.[0]?.fromProfile && (
                         <>
-                          <Avatar className="w-10 h-10">
+                          <Avatar className="w-8 h-8">
                             {(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.profilePicture ? (
                               <AvatarImage src={(chatHistoryData.chatHistory.nodes[0].fromProfile as any).profilePicture} />
                             ) : null}
-                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white">
+                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white text-xs">
                               {(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName?.charAt(0) || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium text-white">{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName}</p>
-                            <p className="text-xs text-gray-400">@{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.userHandle}</p>
+                            <p className="text-sm font-medium text-white">{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName}</p>
+                            <p className="text-[10px] text-gray-500">@{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.userHandle}</p>
                           </div>
                         </>
                       )}
                     </div>
 
                     {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div className="flex-1 overflow-y-auto p-2 space-y-2">
                       {chatHistoryLoading ? (
                         <div className="flex items-center justify-center py-8">
                           <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
@@ -6627,24 +6622,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
-                  {/* Profile Header - Same layout as logged-in user */}
-                  <div className="relative z-10 pt-8 pb-6">
-                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
-                      {/* Back Button */}
-                      <Button
-                        variant="ghost"
+                  {/* Profile Header - App-first compact layout */}
+                  <div className="relative z-10 pt-3 pb-3">
+                    <div className="max-w-screen-2xl mx-auto px-3">
+                      {/* Compact Back Button */}
+                      <button
                         onClick={() => router.back()}
-                        className="mb-4 hover:bg-cyan-500/10 backdrop-blur-sm bg-black/30"
+                        className="mb-2 flex items-center gap-1 text-gray-400 hover:text-white text-sm transition-colors min-h-[36px]"
                       >
-                        <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
-                        Back
-                      </Button>
+                        <ChevronDown className="w-4 h-4 rotate-90" />
+                        <span>Back</span>
+                      </button>
 
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-                        {/* User Profile */}
-                        <div className="flex flex-col lg:flex-row gap-6 items-start">
-                          <div className="relative">
-                            <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900 shadow-2xl">
+                      <div className="flex gap-3 items-start">
+                        {/* Compact Avatar */}
+                        <div className="relative flex-shrink-0">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900 shadow-lg">
                               {viewingProfile.profilePicture ? (
                                 <img
                                   src={viewingProfile.profilePicture}
@@ -6652,102 +6645,92 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-6xl text-white font-bold">
+                                <div className="w-full h-full flex items-center justify-center text-2xl text-white font-bold">
                                   {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
                                 </div>
                               )}
                             </div>
-                            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-4 border-black/50 flex items-center justify-center">
-                              <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                            {/* Online indicator */}
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-2 border-black flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                             </div>
                           </div>
 
-                          <div className="flex-1 space-y-4 rounded-2xl p-4 -ml-2 lg:ml-0 border border-cyan-500/30" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(16px)' }}>
-                            <div className="space-y-2">
-                              {/* Username with inline badges */}
-                              <div className="flex items-center gap-2">
-                                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-lg" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace", textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                          {/* Profile Info - Compact */}
+                          <div className="flex-1 min-w-0 space-y-2 rounded-xl p-3 border border-cyan-500/20 bg-black/60 backdrop-blur-md">
+                            {/* Name + Badges */}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h1 className="text-lg sm:text-xl font-bold text-white truncate" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace" }}>
                                   {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
-                                </h1>
-                                {/* Team Member Badge */}
-                                {viewingProfile.teamMember && (
-                                  <SoundchainGoldLogo className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="SoundChain Team Member" />
-                                )}
-                                {/* Verified Badge */}
-                                {!viewingProfile.teamMember && viewingProfile.verified && (
-                                  <VerifiedIcon className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="Verified user" />
-                                )}
+                              </h1>
+                              {/* Team/Verified Badge */}
+                              {viewingProfile.teamMember && (
+                                <SoundchainGoldLogo className="flex-shrink-0 w-5 h-5" aria-label="SoundChain Team Member" />
+                              )}
+                              {!viewingProfile.teamMember && viewingProfile.verified && (
+                                <VerifiedIcon className="flex-shrink-0 w-5 h-5" aria-label="Verified user" />
+                              )}
+                            </div>
+                            <p className="text-cyan-400 text-xs">@{viewingProfile.userHandle || 'user'}</p>
+                            {viewingProfile.bio && (
+                              <p className="text-gray-300 text-xs line-clamp-2">{viewingProfile.bio}</p>
+                            )}
+
+                            {/* Compact Stats Row */}
+                            <div className="flex gap-3 text-center py-1">
+                              <div>
+                                <span className="text-white font-bold text-sm">{viewingProfileTrackCount}</span>
+                                <span className="text-gray-500 text-xs ml-1">tracks</span>
                               </div>
-                              <p className="retro-json text-sm drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>@{viewingProfile.userHandle || 'user'}</p>
-                              <p className="text-gray-300 text-sm max-w-md drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{viewingProfile.bio || ''}</p>
+                              <div>
+                                <span className="text-white font-bold text-sm">{viewingProfile.followerCount?.toLocaleString() || 0}</span>
+                                <span className="text-gray-500 text-xs ml-1">followers</span>
+                              </div>
+                              <div>
+                                <span className="text-white font-bold text-sm">{viewingProfile.followingCount?.toLocaleString() || 0}</span>
+                                <span className="text-gray-500 text-xs ml-1">following</span>
+                              </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-4">
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfileTrackCount}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Tracks</div>
-                              </div>
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followerCount?.toLocaleString() || 0}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Followers</div>
-                              </div>
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followingCount?.toLocaleString() || 0}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Following</div>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-3">
+                            {/* Compact Action Buttons */}
+                            <div className="flex gap-2 flex-wrap">
                               {userLoading ? (
-                                // Show loading state while auth is being determined
-                                <Button className="retro-button opacity-50" disabled>
-                                  <span className="w-4 h-4 mr-2 animate-pulse">•</span>
-                                  Loading...
-                                </Button>
+                                <button className="px-3 py-1.5 text-xs rounded-lg bg-gray-700 text-gray-400" disabled>...</button>
                               ) : isViewingOwnProfile ? (
-                                <Button className="retro-button" onClick={() => setSelectedView('settings')}>
-                                  <Settings className="w-4 h-4 mr-2" />
-                                  Edit Profile
-                                </Button>
+                                <button onClick={() => setSelectedView('settings')} className="px-3 py-1.5 text-xs font-medium rounded-lg bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-colors flex items-center gap-1 min-h-[32px]">
+                                  <Settings className="w-3 h-3" />
+                                  Edit
+                                </button>
                               ) : (
-                                <Button
-                                  className={viewingProfile.isFollowed ? 'border-cyan-500/50 bg-cyan-500/10 hover:bg-red-500/20 text-cyan-300' : 'retro-button'}
-                                  variant={viewingProfile.isFollowed ? 'outline' : 'default'}
+                                <button
                                   onClick={async () => {
-                                    if (!me) {
-                                      router.push('/login')
-                                      return
-                                    }
+                                    if (!me) { router.push('/login'); return }
                                     if (viewingProfile.isFollowed) {
                                       await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
                                     } else {
                                       await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
                                     }
                                   }}
+                                  className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1 min-h-[32px] ${
+                                    viewingProfile.isFollowed
+                                      ? 'bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-400'
+                                      : 'bg-cyan-500 text-black hover:bg-cyan-400'
+                                  }`}
                                 >
-                                  <Users className="w-4 h-4 mr-2" />
                                   {viewingProfile.isFollowed ? 'Following' : 'Follow'}
-                                </Button>
+                                </button>
                               )}
                               {!isViewingOwnProfile && (
-                                <Button
-                                  variant="outline"
-                                  className="border-purple-500/50 hover:bg-purple-500/20"
-                                  onClick={() => {
-                                    if (!me) {
-                                      router.push('/login')
-                                      return
-                                    }
-                                    // Open DM modal instead of navigating
-                                    setShowDMModal(true)
-                                  }}
+                                <button
+                                  onClick={() => { if (!me) { router.push('/login'); return }; setShowDMModal(true) }}
+                                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-600 text-gray-300 hover:bg-white/5 transition-colors flex items-center gap-1 min-h-[32px]"
                                 >
-                                  <MessageCircle className="w-4 h-4 mr-2" />Message
-                                </Button>
+                                  <MessageCircle className="w-3 h-3" />
+                                  Message
+                                </button>
                               )}
-                              <Button
-                                variant="outline"
-                                className="border-cyan-500/50 hover:bg-cyan-500/20"
+                              <button
+                                className="p-1.5 rounded-lg border border-gray-600 text-gray-400 hover:bg-white/5 transition-colors min-h-[32px] min-w-[32px] flex items-center justify-center"
                                 onClick={async () => {
                                   const profileUrl = `${window.location.origin}/profiles/${viewingProfile.userHandle}`
                                   const shareData = {
@@ -6774,48 +6757,38 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   }
                                 }}
                               >
-                                <Share2 className="w-4 h-4" />
-                              </Button>
+                                <Share2 className="w-3 h-3" />
+                              </button>
                             </div>
 
+                            {/* Compact Wallet Row */}
                             {viewingProfile.magicWalletAddress && (
-                              <Card className="retro-card p-3 w-fit">
-                                <div className="flex items-center gap-3">
-                                  <Wallet className="w-4 h-4 text-orange-400" />
-                                  <span className="retro-json text-sm">{viewingProfile.magicWalletAddress.slice(0, 6)}...{viewingProfile.magicWalletAddress.slice(-4)}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(viewingProfile.magicWalletAddress || '')
-                                      alert('Address copied!')
-                                    }}
-                                    className="p-1"
-                                  >
-                                    <Copy className="w-3 h-3" />
-                                  </Button>
-                                  {/* WIN-WIN Piggy Bank - Shows streaming rewards stats */}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setShowWinWinStatsModal(true)}
-                                    className="hover:bg-pink-500/20 p-1 group"
-                                    title="WIN-WIN Streaming Rewards"
-                                  >
-                                    <PiggyBank className="w-4 h-4 text-pink-400 group-hover:text-pink-300 group-hover:scale-110 transition-all" />
-                                  </Button>
-                                  {/* Tip Jar - Only show on OTHER people's profiles */}
-                                  {!isViewingOwnProfile && (
-                                    <div className="relative">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setShowProfileTipJar(!showProfileTipJar)}
-                                        className={`p-1 group ${showProfileTipJar ? 'bg-yellow-500/30' : 'hover:bg-yellow-500/20'}`}
-                                        title={`Tip ${viewingProfile.name || viewingProfile.userHandle} with OGUN`}
-                                      >
-                                        <Gift className="w-4 h-4 text-yellow-400 group-hover:text-yellow-300 group-hover:scale-110 transition-all" />
-                                      </Button>
+                              <div className="flex items-center gap-2 text-xs">
+                                <Wallet className="w-3 h-3 text-orange-400 flex-shrink-0" />
+                                <span className="text-gray-400 font-mono">{viewingProfile.magicWalletAddress.slice(0, 6)}...{viewingProfile.magicWalletAddress.slice(-4)}</span>
+                                <button
+                                  onClick={() => { navigator.clipboard.writeText(viewingProfile.magicWalletAddress || ''); toast.success('Copied!') }}
+                                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                                >
+                                  <Copy className="w-3 h-3 text-gray-500" />
+                                </button>
+                                <button
+                                  onClick={() => setShowWinWinStatsModal(true)}
+                                  className="p-1 hover:bg-pink-500/20 rounded transition-colors"
+                                  title="WIN-WIN Rewards"
+                                >
+                                  <PiggyBank className="w-3 h-3 text-pink-400" />
+                                </button>
+                                {/* Tip Jar */}
+                                {!isViewingOwnProfile && (
+                                  <div className="relative">
+                                    <button
+                                      onClick={() => setShowProfileTipJar(!showProfileTipJar)}
+                                      className={`p-1 rounded transition-colors ${showProfileTipJar ? 'bg-yellow-500/30' : 'hover:bg-yellow-500/20'}`}
+                                      title={`Tip ${viewingProfile.displayName || viewingProfile.userHandle}`}
+                                    >
+                                      <Gift className="w-3 h-3 text-yellow-400" />
+                                    </button>
 
                                       {/* Mini Tip Jar Dropdown */}
                                       {showProfileTipJar && (
@@ -6955,8 +6928,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                       )}
                                     </div>
                                   )}
-                                </div>
-                              </Card>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -6964,64 +6936,55 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
                   </div>
 
-                  {/* Main Content */}
-                  <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
-                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Playlists */}
-                    <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
-                      {/* My Feed tab - ONLY shown when viewing own profile */}
+                  {/* Profile Content */}
+                  <div className="relative z-10 max-w-screen-2xl mx-auto px-3">
+                    {/* Compact Profile Tabs */}
+                    <div className="flex items-center gap-0 border-b border-gray-800 overflow-x-auto scrollbar-hide">
                       {isViewingOwnProfile && (
-                        <Button
-                          variant="ghost"
+                        <button
                           onClick={() => setProfileTab('myfeed')}
-                          className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${profileTab === 'myfeed' ? 'bg-cyan-500/10' : ''}`}
+                          className={`px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap border-b-2 min-h-[40px] ${
+                            profileTab === 'myfeed' ? 'border-cyan-400 text-cyan-400' : 'border-transparent text-gray-500 hover:text-gray-300'
+                          }`}
                         >
-                          <Rss className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'myfeed' ? 'text-cyan-400' : 'text-gray-400'}`} />
-                          <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'myfeed' ? 'cyan-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                            My Feed
-                          </span>
-                        </Button>
+                          My Feed
+                        </button>
                       )}
-                      <Button
-                        variant="ghost"
+                      <button
                         onClick={() => setProfileTab('posts')}
-                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'posts' ? 'bg-green-500/10' : ''}`}
+                        className={`px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap border-b-2 min-h-[40px] ${
+                          profileTab === 'posts' ? 'border-green-400 text-green-400' : 'border-transparent text-gray-500 hover:text-gray-300'
+                        }`}
                       >
-                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'posts' ? 'text-green-400' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'posts' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                          Posts
-                        </span>
-                      </Button>
-                      <Button
-                        variant="ghost"
+                        Posts
+                      </button>
+                      <button
                         onClick={() => setProfileTab('music')}
-                        className={`flex-shrink-0 transition-all duration-300 hover:bg-purple-500/10 ${profileTab === 'music' ? 'bg-purple-500/10' : ''}`}
+                        className={`px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap border-b-2 min-h-[40px] ${
+                          profileTab === 'music' ? 'border-purple-400 text-purple-400' : 'border-transparent text-gray-500 hover:text-gray-300'
+                        }`}
                       >
-                        <Music className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'music' ? 'text-purple-400' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'music' ? 'purple-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                          Music
-                        </span>
-                      </Button>
-                      <Button
-                        variant="ghost"
+                        Music
+                      </button>
+                      <button
                         onClick={() => setProfileTab('playlists')}
-                        className={`flex-shrink-0 transition-all duration-300 hover:bg-pink-500/10 ${profileTab === 'playlists' ? 'bg-pink-500/10' : ''}`}
+                        className={`px-4 py-2 text-xs font-bold transition-colors whitespace-nowrap border-b-2 min-h-[40px] ${
+                          profileTab === 'playlists' ? 'border-pink-400 text-pink-400' : 'border-transparent text-gray-500 hover:text-gray-300'
+                        }`}
                       >
-                        <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'playlists' ? 'text-pink-400' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'playlists' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                          Playlists
-                        </span>
-                      </Button>
+                        Playlists
+                      </button>
                     </div>
 
-                    {/* Tab Content */}
-                    <div className="min-h-[400px] bg-black rounded-xl p-2">
+                    {/* Tab Content - Edge to edge */}
+                    <div className="pt-2">
                       {/* My Feed - Full social feed (posts from people you follow + your own) */}
                       {profileTab === 'myfeed' && isViewingOwnProfile && (
-                        <Posts disableVirtualization />
+                        <Posts disableVirtualization viewMode={viewMode} />
                       )}
                       {/* Posts - Only this user's posts */}
                       {profileTab === 'posts' && (
-                        <Posts profileId={viewingProfile.id} disableVirtualization />
+                        <Posts profileId={viewingProfile.id} disableVirtualization viewMode={viewMode} />
                       )}
                       {profileTab === 'music' && (
                         <TracksGrid profileId={viewingProfile.id} />
