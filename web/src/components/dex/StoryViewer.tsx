@@ -88,7 +88,9 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
 
   const currentUser = users[currentUserIndex]
   const currentStory = currentUser?.stories[currentStoryIndex]
-  const storyDuration = currentStory?.mediaType === 'video' ? 15000 : 5000 // 15s for video, 5s for image
+  const [videoDuration, setVideoDuration] = useState(15000) // Default 15s for video
+  const imageDuration = 5000 // 5s for images
+  const storyDuration = currentStory?.mediaType === 'video' ? videoDuration : imageDuration
 
   // Find initial user index
   useEffect(() => {
@@ -97,6 +99,65 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
       if (index !== -1) setCurrentUserIndex(index)
     }
   }, [initialUserId, users])
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Escape':
+          onClose()
+          break
+        case 'ArrowLeft':
+          goToPrevStory()
+          break
+        case 'ArrowRight':
+          goToNextStory()
+          break
+        case ' ':
+          e.preventDefault()
+          setIsPaused(prev => !prev)
+          break
+        case 'm':
+          if (currentStory?.mediaType === 'video') {
+            setIsMuted(prev => !prev)
+          }
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, goToPrevStory, goToNextStory, currentStory, onClose])
+
+  // Handle video duration detection
+  useEffect(() => {
+    if (videoRef.current && currentStory?.mediaType === 'video') {
+      const handleLoadedMetadata = () => {
+        if (videoRef.current) {
+          // Video duration in milliseconds (capped at 10 minutes)
+          const duration = Math.min(videoRef.current.duration * 1000, 600000)
+          setVideoDuration(duration)
+        }
+      }
+      videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata)
+      return () => {
+        videoRef.current?.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      }
+    }
+  }, [currentStory?.mediaType, currentStory?.id])
+
+  // Pause/play video when isPaused changes
+  useEffect(() => {
+    if (videoRef.current && currentStory?.mediaType === 'video') {
+      if (isPaused) {
+        videoRef.current.pause()
+      } else {
+        videoRef.current.play().catch(() => {})
+      }
+    }
+  }, [isPaused, currentStory?.mediaType])
 
   // Progress bar timer
   useEffect(() => {
@@ -392,9 +453,9 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
             src={currentStory.mediaUrl}
             className="w-full h-full object-cover"
             autoPlay
-            loop
             muted={isMuted}
             playsInline
+            onEnded={goToNextStory}
           />
         )}
 
