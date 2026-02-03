@@ -3637,70 +3637,84 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         )}
 
         {/* Main Content */}
-        <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8 relative">
-          {/* View Navigation - Sleek dropdown menu */}
-          {(() => {
-            const navItems = [
-              { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', color: 'cyan', bgColor: 'bg-cyan-500/20', textColor: 'text-cyan-400' },
-              { id: 'announcements', label: 'News', icon: Rocket, route: '/dex/announcements', color: 'purple', bgColor: 'bg-purple-500/20', textColor: 'text-purple-400' },
-              { id: 'explore', label: 'Explore', icon: Compass, route: '/dex/explore', color: 'orange', bgColor: 'bg-orange-500/20', textColor: 'text-orange-400' },
-              { id: 'marketplace', label: 'Shop', icon: ShoppingBag, route: '/dex/marketplace', color: 'green', bgColor: 'bg-green-500/20', textColor: 'text-green-400' },
-              { id: 'library', label: 'Library', icon: Library, route: '/dex/library', color: 'blue', bgColor: 'bg-blue-500/20', textColor: 'text-blue-400' },
-              { id: 'playlist', label: 'Playlists', icon: ListMusic, route: '/dex/playlist', color: 'pink', bgColor: 'bg-pink-500/20', textColor: 'text-pink-400' },
-            ]
-            const currentNav = navItems.find(item => item.id === selectedView) || navItems[0]
-            const CurrentIcon = currentNav.icon
+        <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 pt-4 pb-4 relative">
+          {/* View Navigation Row - Dropdown + View Toggle aligned */}
+          <div className="flex items-center justify-between mb-4 mx-2">
+            {/* Nav Dropdown - Slim & Compact */}
+            {(() => {
+              const navItems = [
+                { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', textColor: 'text-cyan-400' },
+                { id: 'announcements', label: 'News', icon: Rocket, route: '/dex/announcements', textColor: 'text-purple-400' },
+                { id: 'explore', label: 'Explore', icon: Compass, route: '/dex/explore', textColor: 'text-orange-400' },
+                { id: 'marketplace', label: 'Shop', icon: ShoppingBag, route: '/dex/marketplace', textColor: 'text-green-400' },
+                { id: 'library', label: 'Library', icon: Library, route: '/dex/library', textColor: 'text-blue-400' },
+                { id: 'playlist', label: 'Playlists', icon: ListMusic, route: '/dex/playlist', textColor: 'text-pink-400' },
+              ]
+              const currentNav = navItems.find(item => item.id === selectedView) || navItems[0]
+              const CurrentIcon = currentNav.icon
 
-            return (
-              <div className="relative mb-4 mx-2">
-                {/* Dropdown Trigger Button - Shows current view icon only */}
-                <button
-                  onClick={() => setShowNavMenu(!showNavMenu)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl backdrop-blur-md bg-black/80 border border-white/10 hover:border-white/20 transition-all ${currentNav.bgColor}`}
-                >
-                  <CurrentIcon className={`w-5 h-5 ${currentNav.textColor}`} />
-                  <span className={`text-sm font-semibold ${currentNav.textColor}`}>{currentNav.label}</span>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${showNavMenu ? 'rotate-180' : ''}`} />
-                </button>
+              return (
+                <div className="relative">
+                  {/* Compact Trigger */}
+                  <button
+                    onClick={() => setShowNavMenu(!showNavMenu)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-all"
+                  >
+                    <CurrentIcon className={`w-4 h-4 ${currentNav.textColor}`} />
+                    <span className={`text-xs font-medium ${currentNav.textColor}`}>{currentNav.label}</span>
+                    <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${showNavMenu ? 'rotate-180' : ''}`} />
+                  </button>
 
-                {/* Dropdown Menu */}
-                {showNavMenu && (
-                  <>
-                    {/* Backdrop */}
-                    <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
-
-                    {/* Menu Panel */}
-                    <div className="absolute left-0 top-full mt-2 w-56 bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="p-2">
-                        {navItems.map((item) => {
-                          const Icon = item.icon
-                          const isActive = selectedView === item.id
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => {
-                                router.push(item.route, undefined, { shallow: false })
-                                setShowNavMenu(false)
-                              }}
-                              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                                isActive
-                                  ? `${item.bgColor} ${item.textColor}`
-                                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-                              }`}
-                            >
-                              <Icon className={`w-5 h-5 ${isActive ? item.textColor : ''}`} />
-                              <span className="font-medium">{item.label}</span>
-                              {isActive && <Check className="w-4 h-4 ml-auto" />}
-                            </button>
-                          )
-                        })}
+                  {/* Slim Dropdown */}
+                  {showNavMenu && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
+                      <div className="absolute left-0 top-full mt-1 w-36 bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div className="py-1">
+                          {navItems.map((item) => {
+                            const Icon = item.icon
+                            const isActive = selectedView === item.id
+                            return (
+                              <button
+                                key={item.id}
+                                onClick={() => {
+                                  router.push(item.route, undefined, { shallow: false })
+                                  setShowNavMenu(false)
+                                }}
+                                className={`w-full flex items-center gap-2 px-3 py-2 text-xs transition-all ${
+                                  isActive ? `${item.textColor} bg-white/5` : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                }`}
+                              >
+                                <Icon className="w-3.5 h-3.5" />
+                                <span>{item.label}</span>
+                                {isActive && <Check className="w-3 h-3 ml-auto opacity-60" />}
+                              </button>
+                            )
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )
-          })()}
+                    </>
+                  )}
+                </div>
+              )
+            })()}
+
+            {/* View Mode Toggle - Grid/List */}
+            <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5 border border-white/10">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded transition-all ${viewMode === 'list' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded transition-all ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-gray-300'}`}
+              >
+                <Grid className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
 
           {/* Dashboard View - Genres & Leaderboards Only */}
           {selectedView === 'dashboard' && (

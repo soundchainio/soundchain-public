@@ -69,10 +69,10 @@ export const Layout = ({ children, className }: LayoutProps) => {
 
   if (isAuthLayout) {
     return (
-      <div className="flex h-full flex-col bg-gray-20 pb-6">
+      <div className="flex min-h-screen flex-col bg-black">
         {canInsertScript && <TagManager />}
         <TopNavBar {...topNavBarProps} />
-        <div className="flex flex-1 flex-col bg-gray-20 px-6 pt-6 sm:mx-auto sm:w-full sm:max-w-lg lg:px-8">
+        <div className="flex flex-1 flex-col bg-black px-4 pt-4 pb-safe sm:mx-auto sm:w-full sm:max-w-lg lg:px-8">
           {children}
         </div>
       </div>
