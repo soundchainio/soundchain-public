@@ -94,6 +94,34 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const imageDuration = 5000 // 5s for images
   const storyDuration = currentStory?.mediaType === 'video' ? videoDuration : imageDuration
 
+  // IMPORTANT: Define navigation callbacks BEFORE useEffects that reference them (TDZ fix)
+  const goToNextStory = useCallback(() => {
+    setProgress(0)
+    if (currentStoryIndex < (currentUser?.stories?.length || 1) - 1) {
+      // Next story from same user
+      setCurrentStoryIndex(prev => prev + 1)
+    } else if (currentUserIndex < users.length - 1) {
+      // Next user's stories
+      setCurrentUserIndex(prev => prev + 1)
+      setCurrentStoryIndex(0)
+    } else {
+      // End of all stories
+      onClose()
+    }
+  }, [currentStoryIndex, currentUserIndex, currentUser?.stories?.length, users.length, onClose])
+
+  const goToPrevStory = useCallback(() => {
+    setProgress(0)
+    if (currentStoryIndex > 0) {
+      // Previous story from same user
+      setCurrentStoryIndex(prev => prev - 1)
+    } else if (currentUserIndex > 0) {
+      // Previous user's last story
+      setCurrentUserIndex(prev => prev - 1)
+      setCurrentStoryIndex(users[currentUserIndex - 1]?.stories?.length - 1 || 0)
+    }
+  }, [currentStoryIndex, currentUserIndex, users])
+
   // Find initial user index
   useEffect(() => {
     if (initialUserId && users.length > 0) {
@@ -183,34 +211,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
     return () => {
       if (progressInterval.current) clearInterval(progressInterval.current)
     }
-  }, [isOpen, isPaused, currentUserIndex, currentStoryIndex, storyDuration])
-
-  const goToNextStory = useCallback(() => {
-    setProgress(0)
-    if (currentStoryIndex < currentUser.stories.length - 1) {
-      // Next story from same user
-      setCurrentStoryIndex(prev => prev + 1)
-    } else if (currentUserIndex < users.length - 1) {
-      // Next user's stories
-      setCurrentUserIndex(prev => prev + 1)
-      setCurrentStoryIndex(0)
-    } else {
-      // End of all stories
-      onClose()
-    }
-  }, [currentStoryIndex, currentUserIndex, currentUser?.stories.length, users.length, onClose])
-
-  const goToPrevStory = useCallback(() => {
-    setProgress(0)
-    if (currentStoryIndex > 0) {
-      // Previous story from same user
-      setCurrentStoryIndex(prev => prev - 1)
-    } else if (currentUserIndex > 0) {
-      // Previous user's last story
-      setCurrentUserIndex(prev => prev - 1)
-      setCurrentStoryIndex(users[currentUserIndex - 1].stories.length - 1)
-    }
-  }, [currentStoryIndex, currentUserIndex, users])
+  }, [isOpen, isPaused, currentUserIndex, currentStoryIndex, storyDuration, goToNextStory])
 
   const handleTap = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect()
