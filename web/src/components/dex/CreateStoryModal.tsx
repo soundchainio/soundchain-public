@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback } from 'react'
-import { X, Camera, Image as ImageIcon, Video, Sparkles, Upload, Type, Sticker, Music, Trash2, Share2, Clock, HardDrive, Loader2, CheckCircle } from 'lucide-react'
+import { X, Image as ImageIcon, Video, Sparkles, Upload, Type, Sticker, Music, Trash2, Clock, HardDrive, Loader2, CheckCircle } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 import { smartCompress, needsCompression, formatBytes, CompressionProgress } from 'lib/mediaCompression'
+import { StoryTextOverlay, TextLayer } from './StoryTextOverlay'
 
 // Story/Reel constraints - file size is hidden (easter egg!), but time is shown
 const STORY_CONSTRAINTS = {
@@ -63,8 +64,11 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const [selectedDuration, setSelectedDuration] = useState(defaultDuration)
   const [wasCompressed, setWasCompressed] = useState(false)
   const [originalSize, setOriginalSize] = useState(0)
+  const [textLayers, setTextLayers] = useState<TextLayer[]>([])
+  const [isTextEditing, setIsTextEditing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const previewContainerRef = useRef<HTMLDivElement>(null)
 
   // Format file size for display
   const formatFileSize = (bytes: number) => {
@@ -215,9 +219,13 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
       await new Promise(resolve => setTimeout(resolve, 1500))
 
       // TODO: Create story via GraphQL mutation
-      // await createStory({ mediaUrl: ipfsUrl, mediaType, caption })
+      // await createStory({ mediaUrl: ipfsUrl, mediaType, textLayers, duration: selectedDuration })
 
-      console.log('Publishing story:', { mediaType, caption })
+      console.log('Publishing story:', {
+        mediaType,
+        textLayers: textLayers.length > 0 ? textLayers : 'No text overlays',
+        duration: selectedDuration,
+      })
 
       if (onPublish) {
         onPublish(mediaPreview, mediaType)
@@ -245,10 +253,12 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
     setShowCaptionInput(false)
     setCompressionProgress(null)
     setIsCompressing(false)
-    setSelectedDuration(STORY_CONSTRAINTS.DEFAULT_DURATION)
+    setSelectedDuration(defaultDuration)
     setVideoDuration(0)
     setWasCompressed(false)
     setOriginalSize(0)
+    setTextLayers([])
+    setIsTextEditing(false)
   }
 
   if (!isOpen) return null
@@ -281,7 +291,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.m4v,image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/webm,video/x-m4v"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -351,7 +361,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
             </div>
           ) : (
             /* Preview area */
-            <div className="relative aspect-[9/16] max-h-[60vh] rounded-xl overflow-hidden bg-black">
+            <div ref={previewContainerRef} className="relative aspect-[9/16] max-h-[60vh] rounded-xl overflow-hidden bg-black">
               {/* Media preview */}
               {mediaType === 'image' ? (
                 <img
@@ -374,35 +384,25 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
               {/* Gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50 pointer-events-none" />
 
-              {/* Caption overlay */}
-              {showCaptionInput && (
-                <div className="absolute inset-x-4 top-1/2 -translate-y-1/2">
-                  <textarea
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    placeholder="Add a caption..."
-                    className="w-full bg-black/50 backdrop-blur-sm border border-white/20 rounded-lg p-3 text-white text-center placeholder-white/50 resize-none focus:outline-none focus:border-cyan-500/50"
-                    rows={3}
-                    maxLength={200}
-                  />
-                </div>
-              )}
+              {/* Text overlay editor - IG-style draggable text layers */}
+              <StoryTextOverlay
+                layers={textLayers}
+                onLayersChange={setTextLayers}
+                containerRef={previewContainerRef as React.RefObject<HTMLDivElement>}
+                isEditing={isTextEditing}
+                onEditingChange={setIsTextEditing}
+              />
 
-              {/* Caption display */}
-              {caption && !showCaptionInput && (
-                <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 text-center">
-                  <p className="text-white text-lg font-medium drop-shadow-lg">{caption}</p>
-                </div>
-              )}
+              {/* Text layers are now handled by StoryTextOverlay above */}
 
               {/* Tools sidebar */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2">
+              <div className="absolute top-4 right-4 flex flex-col gap-2 z-30">
                 <button
-                  onClick={() => setShowCaptionInput(!showCaptionInput)}
+                  onClick={() => setIsTextEditing(!isTextEditing)}
                   className={`w-10 h-10 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors ${
-                    showCaptionInput || caption ? 'bg-cyan-500 text-white' : 'bg-black/50 text-white/70 hover:text-white'
+                    isTextEditing || textLayers.length > 0 ? 'bg-cyan-500 text-white' : 'bg-black/50 text-white/70 hover:text-white'
                   }`}
-                  title="Add caption"
+                  title="Add text overlay"
                 >
                   <Type className="w-5 h-5" />
                 </button>

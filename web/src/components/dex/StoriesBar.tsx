@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Plus, ChevronLeft, ChevronRight, Lock, Sparkles } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
 import { useMe } from 'hooks/useMe'
@@ -44,6 +45,12 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
   const [showStoryViewer, setShowStoryViewer] = useState(false)
   const [showCreateStory, setShowCreateStory] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>()
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
+
+  // Set up portal container on mount (client-side only)
+  useEffect(() => {
+    setPortalContainer(document.body)
+  }, [])
 
   const handleScroll = () => {
     if (!scrollRef.current) return
@@ -208,19 +215,25 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
       {/* Subtle bottom glow line */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
 
-      {/* Story Viewer Modal */}
-      <StoryViewer
-        isOpen={showStoryViewer}
-        onClose={() => setShowStoryViewer(false)}
-        initialUserId={selectedUserId}
-        users={[]}
-      />
+      {/* Story Viewer Modal - rendered via portal to escape stacking context */}
+      {portalContainer && showStoryViewer && createPortal(
+        <StoryViewer
+          isOpen={showStoryViewer}
+          onClose={() => setShowStoryViewer(false)}
+          initialUserId={selectedUserId}
+          users={[]}
+        />,
+        portalContainer
+      )}
 
-      {/* Create Story Modal */}
-      <CreateStoryModal
-        isOpen={showCreateStory}
-        onClose={() => setShowCreateStory(false)}
-      />
+      {/* Create Story Modal - rendered via portal to escape stacking context */}
+      {portalContainer && showCreateStory && createPortal(
+        <CreateStoryModal
+          isOpen={showCreateStory}
+          onClose={() => setShowCreateStory(false)}
+        />,
+        portalContainer
+      )}
     </div>
   )
 }
