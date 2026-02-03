@@ -6627,342 +6627,251 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
               {viewingProfile && (
                 <>
-                  {/* Profile Header - Same layout as logged-in user */}
-                  <div className="relative z-10 pt-8 pb-6">
-                    <div className="max-w-screen-2xl mx-auto px-4 lg:px-6">
-                      {/* Back Button */}
-                      <Button
-                        variant="ghost"
-                        onClick={() => router.back()}
-                        className="mb-4 hover:bg-cyan-500/10 backdrop-blur-sm bg-black/30"
-                      >
-                        <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
-                        Back
-                      </Button>
+                  {/* Cover Image - Full Width */}
+                  <div className="relative h-32 sm:h-40 md:h-48 w-full overflow-hidden">
+                    {viewingProfile.coverPicture ? (
+                      <img
+                        src={viewingProfile.coverPicture}
+                        alt="Cover"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-purple-900/50 via-cyan-900/30 to-black" />
+                    )}
+                    {/* Gradient overlay for readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                    {/* Back Button - Floating over cover */}
+                    <button
+                      onClick={() => router.back()}
+                      className="absolute top-3 left-3 flex items-center gap-1 text-white/80 hover:text-white text-sm bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full transition-colors"
+                    >
+                      <ChevronDown className="w-4 h-4 rotate-90" />
+                      Back
+                    </button>
+                  </div>
 
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-                        {/* User Profile */}
-                        <div className="flex flex-col lg:flex-row gap-6 items-start">
-                          <div className="relative">
-                            <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900 shadow-2xl">
-                              {viewingProfile.profilePicture ? (
-                                <img
-                                  src={viewingProfile.profilePicture}
-                                  alt={viewingProfile.displayName || 'Profile'}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-6xl text-white font-bold">
-                                  {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
-                                </div>
-                              )}
-                            </div>
-                            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-4 border-black/50 flex items-center justify-center">
-                              <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-                            </div>
-                          </div>
-
-                          <div className="flex-1 space-y-4 rounded-2xl p-4 -ml-2 lg:ml-0 border border-cyan-500/30" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(16px)' }}>
-                            <div className="space-y-2">
-                              {/* Username with inline badges */}
-                              <div className="flex items-center gap-2">
-                                <h1 className="text-2xl lg:text-3xl font-bold text-white drop-shadow-lg" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace", textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                                  {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
-                                </h1>
-                                {/* Team Member Badge */}
-                                {viewingProfile.teamMember && (
-                                  <SoundchainGoldLogo className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="SoundChain Team Member" />
-                                )}
-                                {/* Verified Badge */}
-                                {!viewingProfile.teamMember && viewingProfile.verified && (
-                                  <VerifiedIcon className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="Verified user" />
-                                )}
+                  {/* Profile Info - Overlapping cover */}
+                  <div className="relative z-10 -mt-16 px-4">
+                    <div className="max-w-screen-lg mx-auto">
+                      {/* Avatar + Name Row */}
+                      <div className="flex items-end gap-4">
+                        {/* Avatar - Floating over cover */}
+                        <div className="relative flex-shrink-0">
+                          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-4 border-black bg-gradient-to-br from-purple-900 to-cyan-900 shadow-xl">
+                            {viewingProfile.profilePicture ? (
+                              <img
+                                src={viewingProfile.profilePicture}
+                                alt={viewingProfile.displayName || 'Profile'}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-3xl text-white font-bold">
+                                {(viewingProfile.displayName || viewingProfile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
                               </div>
-                              <p className="retro-json text-sm drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>@{viewingProfile.userHandle || 'user'}</p>
-                              <p className="text-gray-300 text-sm max-w-md drop-shadow-md" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>{viewingProfile.bio || ''}</p>
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-4">
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfileTrackCount}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Tracks</div>
-                              </div>
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followerCount?.toLocaleString() || 0}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Followers</div>
-                              </div>
-                              <div className="metadata-section p-4 text-center backdrop-blur-sm bg-black/40">
-                                <div className="retro-text text-xl drop-shadow-md">{viewingProfile.followingCount?.toLocaleString() || 0}</div>
-                                <div className="metadata-label text-xs drop-shadow-sm">Following</div>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-3">
-                              {userLoading ? (
-                                // Show loading state while auth is being determined
-                                <Button className="retro-button opacity-50" disabled>
-                                  <span className="w-4 h-4 mr-2 animate-pulse">•</span>
-                                  Loading...
-                                </Button>
-                              ) : isViewingOwnProfile ? (
-                                <Button className="retro-button" onClick={() => setSelectedView('settings')}>
-                                  <Settings className="w-4 h-4 mr-2" />
-                                  Edit Profile
-                                </Button>
-                              ) : (
-                                <Button
-                                  className={viewingProfile.isFollowed ? 'border-cyan-500/50 bg-cyan-500/10 hover:bg-red-500/20 text-cyan-300' : 'retro-button'}
-                                  variant={viewingProfile.isFollowed ? 'outline' : 'default'}
-                                  onClick={async () => {
-                                    if (!me) {
-                                      router.push('/login')
-                                      return
-                                    }
-                                    if (viewingProfile.isFollowed) {
-                                      await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
-                                    } else {
-                                      await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
-                                    }
-                                  }}
-                                >
-                                  <Users className="w-4 h-4 mr-2" />
-                                  {viewingProfile.isFollowed ? 'Following' : 'Follow'}
-                                </Button>
-                              )}
-                              {!isViewingOwnProfile && (
-                                <Button
-                                  variant="outline"
-                                  className="border-purple-500/50 hover:bg-purple-500/20"
-                                  onClick={() => {
-                                    if (!me) {
-                                      router.push('/login')
-                                      return
-                                    }
-                                    // Open DM modal instead of navigating
-                                    setShowDMModal(true)
-                                  }}
-                                >
-                                  <MessageCircle className="w-4 h-4 mr-2" />Message
-                                </Button>
-                              )}
-                              <Button
-                                variant="outline"
-                                className="border-cyan-500/50 hover:bg-cyan-500/20"
-                                onClick={async () => {
-                                  const profileUrl = `${window.location.origin}/profiles/${viewingProfile.userHandle}`
-                                  const shareData = {
-                                    title: `${viewingProfile.displayName || viewingProfile.userHandle} on SoundChain`,
-                                    text: `Check out ${viewingProfile.displayName || viewingProfile.userHandle}'s profile on SoundChain - Music NFTs, streaming rewards & more!`,
-                                    url: profileUrl
-                                  }
-                                  
-                                  // Use native share if available (mobile)
-                                  if (navigator.share && navigator.canShare?.(shareData)) {
-                                    try {
-                                      await navigator.share(shareData)
-                                    } catch (err) {
-                                      // User cancelled or share failed - fallback to copy
-                                      if ((err as Error).name !== 'AbortError') {
-                                        navigator.clipboard.writeText(profileUrl)
-                                        toast.success('Profile link copied!')
-                                      }
-                                    }
-                                  } else {
-                                    // Desktop fallback - copy to clipboard
-                                    navigator.clipboard.writeText(profileUrl)
-                                    toast.success('Profile link copied! Share it on social media.')
-                                  }
-                                }}
-                              >
-                                <Share2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-
-                            {viewingProfile.magicWalletAddress && (
-                              <Card className="retro-card p-3 w-fit">
-                                <div className="flex items-center gap-3">
-                                  <Wallet className="w-4 h-4 text-orange-400" />
-                                  <span className="retro-json text-sm">{viewingProfile.magicWalletAddress.slice(0, 6)}...{viewingProfile.magicWalletAddress.slice(-4)}</span>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(viewingProfile.magicWalletAddress || '')
-                                      alert('Address copied!')
-                                    }}
-                                    className="p-1"
-                                  >
-                                    <Copy className="w-3 h-3" />
-                                  </Button>
-                                  {/* WIN-WIN Piggy Bank - Shows streaming rewards stats */}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setShowWinWinStatsModal(true)}
-                                    className="hover:bg-pink-500/20 p-1 group"
-                                    title="WIN-WIN Streaming Rewards"
-                                  >
-                                    <PiggyBank className="w-4 h-4 text-pink-400 group-hover:text-pink-300 group-hover:scale-110 transition-all" />
-                                  </Button>
-                                  {/* Tip Jar - Only show on OTHER people's profiles */}
-                                  {!isViewingOwnProfile && (
-                                    <div className="relative">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setShowProfileTipJar(!showProfileTipJar)}
-                                        className={`p-1 group ${showProfileTipJar ? 'bg-yellow-500/30' : 'hover:bg-yellow-500/20'}`}
-                                        title={`Tip ${viewingProfile.name || viewingProfile.userHandle} with OGUN`}
-                                      >
-                                        <Gift className="w-4 h-4 text-yellow-400 group-hover:text-yellow-300 group-hover:scale-110 transition-all" />
-                                      </Button>
-
-                                      {/* Mini Tip Jar Dropdown */}
-                                      {showProfileTipJar && (
-                                        <Card className="absolute right-0 top-10 w-64 z-50 shadow-2xl border-2 border-yellow-500/50 bg-gradient-to-b from-neutral-900 via-yellow-950/10 to-neutral-900">
-                                          {/* Header */}
-                                          <div className="flex items-center justify-between p-2 border-b border-yellow-500/30 bg-gradient-to-r from-yellow-900/50 to-orange-900/50">
-                                            <div className="flex items-center gap-2">
-                                              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
-                                                <Gift className="w-3 h-3 text-white" />
-                                              </div>
-                                              <span className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">Tip Jar</span>
-                                            </div>
-                                            <Button variant="ghost" size="sm" onClick={() => setShowProfileTipJar(false)} className="w-5 h-5 p-0 hover:bg-yellow-500/20">
-                                              <X className="w-3 h-3 text-yellow-400" />
-                                            </Button>
-                                          </div>
-
-                                          {/* Wallet Selector Tabs */}
-                                          <div className="flex border-b border-yellow-500/20">
-                                            <button
-                                              onClick={() => setTipSelectedWallet('magic')}
-                                              className={`flex-1 py-1.5 px-2 text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
-                                                tipSelectedWallet === 'magic'
-                                                  ? 'bg-purple-500/20 text-purple-400 border-b-2 border-purple-500'
-                                                  : 'text-gray-400 hover:text-purple-300 hover:bg-purple-500/10'
-                                              }`}
-                                            >
-                                              <Zap className="w-3 h-3" />
-                                              OAuth
-                                            </button>
-                                            <button
-                                              onClick={() => setTipSelectedWallet('external')}
-                                              disabled={!activeAddress}
-                                              className={`flex-1 py-1.5 px-2 text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
-                                                tipSelectedWallet === 'external'
-                                                  ? 'bg-orange-500/20 text-orange-400 border-b-2 border-orange-500'
-                                                  : activeAddress
-                                                    ? 'text-gray-400 hover:text-orange-300 hover:bg-orange-500/10'
-                                                    : 'text-gray-600 cursor-not-allowed'
-                                              }`}
-                                            >
-                                              <Wallet className="w-3 h-3" />
-                                              External
-                                            </button>
-                                          </div>
-
-                                          {/* Content */}
-                                          <div className="p-3 space-y-3">
-                                            {/* Selected Wallet Info */}
-                                            <div className="p-2 bg-gray-800/50 rounded-lg border border-gray-700/50">
-                                              <div className="text-[9px] text-gray-500 uppercase mb-1">Sending from</div>
-                                              <div className="flex items-center gap-2">
-                                                {tipSelectedWallet === 'magic' ? (
-                                                  <>
-                                                    <div className="w-5 h-5 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                                      <Zap className="w-3 h-3 text-white" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                      <div className="text-[10px] text-purple-400 font-bold">OAuth Wallet</div>
-                                                      <div className="text-[9px] text-gray-400 font-mono">
-                                                        {userWallet ? `${userWallet.slice(0, 6)}...${userWallet.slice(-4)}` : 'Not connected'}
-                                                      </div>
-                                                    </div>
-                                                    <div className="text-[10px] text-cyan-400 font-bold">{parseFloat(ogunBalance || '0').toFixed(2)}</div>
-                                                  </>
-                                                ) : (
-                                                  <>
-                                                    <div className="w-5 h-5 rounded bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
-                                                      <Wallet className="w-3 h-3 text-white" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                      <div className="text-[10px] text-orange-400 font-bold">{activeWalletType || 'External'}</div>
-                                                      <div className="text-[9px] text-gray-400 font-mono">
-                                                        {activeAddress ? `${activeAddress.slice(0, 6)}...${activeAddress.slice(-4)}` : 'Not connected'}
-                                                      </div>
-                                                    </div>
-                                                    <div className="text-[10px] text-cyan-400 font-bold">{parseFloat(activeOgunBalance || '0').toFixed(2)}</div>
-                                                  </>
-                                                )}
-                                              </div>
-                                            </div>
-
-                                            {/* Recipient */}
-                                            <div className="text-[10px] text-center text-gray-400">
-                                              Send OGUN to <span className="text-yellow-400 font-bold">{viewingProfile.name || viewingProfile.userHandle}</span>
-                                            </div>
-
-                                            {/* Amount Input */}
-                                            <div className="relative">
-                                              <input
-                                                type="number"
-                                                value={profileTipAmount}
-                                                onChange={(e) => setProfileTipAmount(e.target.value)}
-                                                placeholder="0"
-                                                className="w-full px-3 py-2 bg-gray-800 border border-yellow-500/30 rounded-lg text-white text-sm font-bold focus:outline-none focus:border-yellow-500"
-                                              />
-                                              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-yellow-400 text-[10px] font-bold">OGUN</div>
-                                            </div>
-
-                                            {/* Quick Amounts */}
-                                            <div className="flex gap-1">
-                                              {[1, 5, 10, 25].map((preset) => (
-                                                <button
-                                                  key={preset}
-                                                  onClick={() => setProfileTipAmount(String(preset))}
-                                                  className="flex-1 py-1 text-[10px] font-bold rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/20"
-                                                >
-                                                  {preset}
-                                                </button>
-                                              ))}
-                                            </div>
-
-                                            {/* Fee */}
-                                            {profileTipAmount && parseFloat(profileTipAmount) > 0 && (
-                                              <div className="text-[9px] text-gray-500 text-center">
-                                                Fee: {(parseFloat(profileTipAmount) * 0.0005).toFixed(6)} OGUN (0.05%)
-                                              </div>
-                                            )}
-
-                                            {/* Send Button */}
-                                            <Button
-                                              onClick={handleProfileTip}
-                                              disabled={!profileTipAmount || parseFloat(profileTipAmount) <= 0 || profileTipSending}
-                                              className="w-full py-2 text-xs bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold rounded-lg disabled:opacity-50"
-                                            >
-                                              {profileTipSending ? (
-                                                <RefreshCw className="w-3 h-3 animate-spin" />
-                                              ) : (
-                                                <span className="flex items-center justify-center gap-1">
-                                                  <Gift className="w-3 h-3" />
-                                                  Send Tip
-                                                </span>
-                                              )}
-                                            </Button>
-                                          </div>
-                                        </Card>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              </Card>
                             )}
                           </div>
+                          {/* Online indicator */}
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-black" />
                         </div>
+
+                        {/* Name + Handle */}
+                        <div className="flex-1 min-w-0 pb-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h1 className="text-xl sm:text-2xl font-bold text-white truncate">
+                              {viewingProfile.displayName || viewingProfile.userHandle || 'User'}
+                            </h1>
+                            {viewingProfile.teamMember && (
+                              <SoundchainGoldLogo className="flex-shrink-0 w-6 h-6" aria-label="SoundChain Team Member" />
+                            )}
+                            {!viewingProfile.teamMember && viewingProfile.verified && (
+                              <VerifiedIcon className="flex-shrink-0 w-6 h-6" aria-label="Verified user" />
+                            )}
+                          </div>
+                          <p className="text-cyan-400 text-sm">@{viewingProfile.userHandle || 'user'}</p>
+                        </div>
+                      </div>
+
+                      {/* Bio */}
+                      {viewingProfile.bio && (
+                        <p className="text-gray-300 text-sm mt-3 max-w-xl">{viewingProfile.bio}</p>
+                      )}
+
+                      {/* Stats Row - Compact */}
+                      <div className="flex items-center gap-6 mt-3 text-sm">
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold text-white">{viewingProfileTrackCount}</span>
+                          <span className="text-gray-500">Tracks</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold text-white">{viewingProfile.followerCount?.toLocaleString() || 0}</span>
+                          <span className="text-gray-500">Followers</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="font-bold text-white">{viewingProfile.followingCount?.toLocaleString() || 0}</span>
+                          <span className="text-gray-500">Following</span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons - Compact row */}
+                      <div className="flex flex-wrap items-center gap-2 mt-4">
+                        {userLoading ? (
+                          <button className="px-4 py-2 text-sm bg-gray-800 rounded-lg opacity-50" disabled>
+                            Loading...
+                          </button>
+                        ) : isViewingOwnProfile ? (
+                          <button
+                            onClick={() => setSelectedView('settings')}
+                            className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
+                          >
+                            <Settings className="w-4 h-4" />
+                            Edit Profile
+                          </button>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              if (!me) { router.push('/login'); return; }
+                              if (viewingProfile.isFollowed) {
+                                await unfollowProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                              } else {
+                                await followProfile({ variables: { input: { followedId: viewingProfile.id } } })
+                              }
+                            }}
+                            className={`px-4 py-2 text-sm rounded-lg flex items-center gap-2 transition-colors ${
+                              viewingProfile.isFollowed
+                                ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50'
+                                : 'bg-cyan-500 text-white hover:bg-cyan-600'
+                            }`}
+                          >
+                            <Users className="w-4 h-4" />
+                            {viewingProfile.isFollowed ? 'Following' : 'Follow'}
+                          </button>
+                        )}
+                        {!isViewingOwnProfile && (
+                          <button
+                            onClick={() => { if (!me) { router.push('/login'); return; } setShowDMModal(true); }}
+                            className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Message
+                          </button>
+                        )}
+                        <button
+                          onClick={async () => {
+                            const profileUrl = `${window.location.origin}/profiles/${viewingProfile.userHandle}`
+                            if (navigator.share) {
+                              try { await navigator.share({ title: viewingProfile.displayName, url: profileUrl }); }
+                              catch { navigator.clipboard.writeText(profileUrl); toast.success('Link copied!'); }
+                            } else {
+                              navigator.clipboard.writeText(profileUrl);
+                              toast.success('Link copied!');
+                            }
+                          }}
+                          className="p-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
+
+                  {/* Wallet Address + Actions Row */}
+                  {viewingProfile.magicWalletAddress && (
+                    <div className="px-4 mt-3">
+                      <div className="max-w-screen-lg mx-auto flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 bg-gray-900/50 rounded-lg px-3 py-1.5 text-sm">
+                          <Wallet className="w-4 h-4 text-orange-400" />
+                          <span className="text-gray-400 font-mono">{viewingProfile.magicWalletAddress.slice(0, 6)}...{viewingProfile.magicWalletAddress.slice(-4)}</span>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(viewingProfile.magicWalletAddress || ''); toast.success('Address copied!'); }}
+                            className="p-1 hover:bg-white/10 rounded"
+                          >
+                            <Copy className="w-3 h-3 text-gray-500" />
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => setShowWinWinStatsModal(true)}
+                          className="p-2 hover:bg-pink-500/20 rounded-lg"
+                          title="WIN-WIN Streaming Rewards"
+                        >
+                          <PiggyBank className="w-4 h-4 text-pink-400" />
+                        </button>
+                        {!isViewingOwnProfile && (
+                          <button
+                            onClick={() => setShowProfileTipJar(!showProfileTipJar)}
+                            className={`p-2 rounded-lg ${showProfileTipJar ? 'bg-yellow-500/30' : 'hover:bg-yellow-500/20'}`}
+                            title={`Tip ${viewingProfile.displayName || viewingProfile.userHandle}`}
+                          >
+                            <Gift className="w-4 h-4 text-yellow-400" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Tip Jar Dropdown - Simplified */}
+                      {showProfileTipJar && !isViewingOwnProfile && (
+                        <div className="max-w-screen-lg mx-auto mt-2">
+                          <Card className="w-full max-w-sm p-4 shadow-xl border border-yellow-500/50 bg-neutral-900">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <Gift className="w-4 h-4 text-yellow-400" />
+                                <span className="text-sm font-bold text-yellow-400">Tip {viewingProfile.displayName || viewingProfile.userHandle}</span>
+                              </div>
+                              <button onClick={() => setShowProfileTipJar(false)} className="p-1 hover:bg-white/10 rounded">
+                                <X className="w-4 h-4 text-gray-400" />
+                              </button>
+                            </div>
+
+                            {/* Amount Input */}
+                            <div className="relative mb-3">
+                              <input
+                                type="number"
+                                value={profileTipAmount}
+                                onChange={(e) => setProfileTipAmount(e.target.value)}
+                                placeholder="0"
+                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-yellow-500 pr-16"
+                              />
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-yellow-400 text-xs font-bold">OGUN</div>
+                            </div>
+
+                            {/* Quick Amounts */}
+                            <div className="flex gap-2 mb-3">
+                              {[1, 5, 10, 25].map((preset) => (
+                                <button
+                                  key={preset}
+                                  onClick={() => setProfileTipAmount(String(preset))}
+                                  className="flex-1 py-1.5 text-xs font-bold rounded bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20"
+                                >
+                                  {preset}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Fee */}
+                            {profileTipAmount && parseFloat(profileTipAmount) > 0 && (
+                              <div className="text-xs text-gray-500 text-center mb-3">
+                                Fee: {(parseFloat(profileTipAmount) * 0.0005).toFixed(6)} OGUN (0.05%)
+                              </div>
+                            )}
+
+                            {/* Send Button */}
+                            <button
+                              onClick={handleProfileTip}
+                              disabled={!profileTipAmount || parseFloat(profileTipAmount) <= 0 || profileTipSending}
+                              className="w-full py-2 text-sm bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                              {profileTipSending ? (
+                                <RefreshCw className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <Gift className="w-4 h-4" />
+                                  Send Tip
+                                </>
+                              )}
+                            </button>
+                          </Card>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Main Content */}
                   <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
