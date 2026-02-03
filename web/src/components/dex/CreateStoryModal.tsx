@@ -35,6 +35,15 @@ const GUEST_CREATE_STORY = gql`
   }
 `
 
+// Guest IPFS pinning mutation (no authentication required)
+const GUEST_PIN_TO_IPFS = gql`
+  mutation guestPinToIPFS($input: PinToIPFSInput!) {
+    guestPinToIPFS(input: $input) {
+      cid
+    }
+  }
+`
+
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {
   MIN_DURATION: 1,
@@ -66,6 +75,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   // Upload hooks
   const { upload } = useUpload(undefined, undefined, !isLoggedIn)
   const [pinToIPFS] = usePinToIpfsMutation()
+  const [guestPinToIPFS] = useMutation(GUEST_PIN_TO_IPFS)
   const [createStory] = useMutation(CREATE_STORY, {
     refetchQueries: ['publicStories', 'myFollowingStories'],
   })
@@ -214,22 +224,39 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         throw new Error('Failed to upload file')
       }
 
-      // Step 2: Pin to IPFS
+      // Step 2: Pin to IPFS (use guest mutation if not logged in)
       const fileKey = s3Url.substring(s3Url.lastIndexOf('/') + 1)
-      const { data: pinResult } = await pinToIPFS({
-        variables: {
-          input: {
-            fileKey,
-            fileName: `story-${Date.now()}`,
-          },
-        },
-      })
+      let ipfsCid: string
 
-      if (!pinResult?.pinToIPFS?.cid) {
-        throw new Error('Failed to pin to IPFS')
+      if (isLoggedIn) {
+        const { data: pinResult } = await pinToIPFS({
+          variables: {
+            input: {
+              fileKey,
+              fileName: `story-${Date.now()}`,
+            },
+          },
+        })
+        if (!pinResult?.pinToIPFS?.cid) {
+          throw new Error('Failed to pin to IPFS')
+        }
+        ipfsCid = pinResult.pinToIPFS.cid
+      } else {
+        const { data: pinResult } = await guestPinToIPFS({
+          variables: {
+            input: {
+              fileKey,
+              fileName: `guest-story-${Date.now()}`,
+            },
+          },
+        })
+        if (!pinResult?.guestPinToIPFS?.cid) {
+          throw new Error('Failed to pin to IPFS')
+        }
+        ipfsCid = pinResult.guestPinToIPFS.cid
       }
 
-      const ipfsUrl = `ipfs://${pinResult.pinToIPFS.cid}`
+      const ipfsUrl = `ipfs://${ipfsCid}`
 
       // Step 3: Create story in database
       if (isLoggedIn) {

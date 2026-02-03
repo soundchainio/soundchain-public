@@ -16,6 +16,17 @@ export class PinningResolver {
     return { cid: pinningResult.IpfsHash };
   }
 
+  // Guest version - no authentication required
+  // Allows guests to pin media for stories/posts
+  @Mutation(() => PinningPayload)
+  async guestPinToIPFS(@Ctx() { pinningService }: Context, @Arg('input') input: PinToIPFSInput): Promise<PinningPayload> {
+    const { fileName, fileKey } = input;
+
+    const pinningResult = await pinningService.pinToIPFS(fileKey, fileName);
+
+    return { cid: pinningResult.IpfsHash };
+  }
+
   @Mutation(() => PinningPayload)
   @Authorized()
   async pinJsonToIPFS(
