@@ -187,6 +187,9 @@ html.capacitor-app {
   /* Ensure full height accounting for safe areas */
   min-height: 100vh;
   min-height: -webkit-fill-available;
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 html.capacitor-app body {
@@ -196,6 +199,23 @@ html.capacitor-app body {
   /* Ensure content doesn't go behind status bar */
   min-height: 100vh;
   min-height: -webkit-fill-available;
+  /* Reset any zoom/scale */
+  zoom: 1;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Capacitor WebView specific fixes */
+html.capacitor-app * {
+  /* Ensure consistent box sizing */
+  box-sizing: border-box;
+}
+
+html.capacitor-app input,
+html.capacitor-app textarea,
+html.capacitor-app select,
+html.capacitor-app button {
+  /* Prevent iOS from zooming on input focus */
+  font-size: 16px !important;
 }
 
 /* iOS standalone mode (PWA/Capacitor) */
