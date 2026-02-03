@@ -6,20 +6,30 @@ import { smartCompress, needsCompression, formatBytes, CompressionProgress } fro
 // Story constraints - file size is hidden (easter egg!), but time is shown
 const STORY_CONSTRAINTS = {
   MIN_DURATION: 1, // 1 second minimum
-  MAX_DURATION: 600, // 10 minutes max (600 seconds)
-  DEFAULT_DURATION: 60, // 1 minute default
+  MAX_DURATION_GUEST: 30, // 30 seconds max for public/guest posts
+  MAX_DURATION_MEMBER: 600, // 10 minutes max for logged-in users
+  DEFAULT_DURATION_GUEST: 15, // 15 seconds default for guests
+  DEFAULT_DURATION_MEMBER: 60, // 1 minute default for members
   EXPIRY_HOURS: 24, // Stories expire after 24 hours
   MAX_FILE_SIZE: 1024 * 1024 * 1024, // 1 GB - hidden from users!
   SUPPORTED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   SUPPORTED_VIDEO_TYPES: ['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'],
 }
 
-// Duration options for users to see (1-10 minutes)
-const DURATION_OPTIONS = [
+// Duration options for LOGGED IN users (1-10 minutes)
+const DURATION_OPTIONS_MEMBER = [
   { label: '1 min', value: 60 },
   { label: '3 min', value: 180 },
   { label: '5 min', value: 300 },
   { label: '10 min', value: 600 },
+]
+
+// Duration options for PUBLIC/GUEST posts (max 30 seconds, 24hr expiry)
+const DURATION_OPTIONS_GUEST = [
+  { label: '10s', value: 10 },
+  { label: '15s', value: 15 },
+  { label: '20s', value: 20 },
+  { label: '30s', value: 30 },
 ]
 
 interface CreateStoryModalProps {
@@ -31,6 +41,13 @@ interface CreateStoryModalProps {
 export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModalProps) => {
   const meData = useMe()
   const me = meData?.me
+
+  // Determine if user is logged in - affects duration limits
+  const isLoggedIn = !!me?.profile
+  const maxDuration = isLoggedIn ? STORY_CONSTRAINTS.MAX_DURATION_MEMBER : STORY_CONSTRAINTS.MAX_DURATION_GUEST
+  const defaultDuration = isLoggedIn ? STORY_CONSTRAINTS.DEFAULT_DURATION_MEMBER : STORY_CONSTRAINTS.DEFAULT_DURATION_GUEST
+  const durationOptions = isLoggedIn ? DURATION_OPTIONS_MEMBER : DURATION_OPTIONS_GUEST
+
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null)
@@ -41,7 +58,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [compressionProgress, setCompressionProgress] = useState<CompressionProgress | null>(null)
   const [isCompressing, setIsCompressing] = useState(false)
-  const [selectedDuration, setSelectedDuration] = useState(STORY_CONSTRAINTS.DEFAULT_DURATION)
+  const [selectedDuration, setSelectedDuration] = useState(defaultDuration)
   const [wasCompressed, setWasCompressed] = useState(false)
   const [originalSize, setOriginalSize] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -88,8 +105,9 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         const duration = tempVideo.duration
         setVideoDuration(duration)
 
-        if (duration > STORY_CONSTRAINTS.MAX_DURATION) {
-          setUploadError(`Video too long. Max: 10 minutes. Your video: ${formatDuration(duration)}`)
+        if (duration > maxDuration) {
+          const maxMsg = isLoggedIn ? '10 minutes' : '30 seconds'
+          setUploadError(`Video too long. Max: ${maxMsg}. Your video: ${formatDuration(duration)}`)
           URL.revokeObjectURL(previewUrl)
           return
         }
@@ -283,7 +301,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
               <div className="flex items-center gap-4 mt-4 text-white/30 text-xs">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>Up to 10 min</span>
+                  <span>{isLoggedIn ? 'Up to 10 min' : 'Up to 30 sec'}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <HardDrive className="w-3 h-3" />
@@ -292,8 +310,11 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
               </div>
 
               <p className="text-white/30 text-xs mt-2">
-                Stories expire after 24 hours<br />
-                Pay OGUN to make permanent • Shareable everywhere
+                {isLoggedIn ? (
+                  <>Stories expire after 24 hours<br />Pay OGUN to make permanent • Shareable everywhere</>
+                ) : (
+                  <>Public stories: 30 sec max, 24hr expiry<br />Login for up to 10 min • Pay OGUN to make permanent</>
+                )}
               </p>
 
               {/* Compression progress */}
@@ -423,7 +444,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                   <div className="flex items-center justify-center gap-2 p-2 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10">
                     <Clock className="w-4 h-4 text-cyan-400" />
                     <span className="text-white/70 text-xs mr-2">Display:</span>
-                    {DURATION_OPTIONS.map((option) => (
+                    {durationOptions.map((option) => (
                       <button
                         key={option.value}
                         onClick={() => setSelectedDuration(option.value)}
@@ -461,7 +482,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                   {mediaType === 'image' && (
                     <>
                       <Clock className="w-3 h-3" />
-                      <span>{DURATION_OPTIONS.find(d => d.value === selectedDuration)?.label || '1 min'}</span>
+                      <span>{durationOptions.find(d => d.value === selectedDuration)?.label || (isLoggedIn ? '1 min' : '15s')}</span>
                       <span className="text-white/30">•</span>
                     </>
                   )}
