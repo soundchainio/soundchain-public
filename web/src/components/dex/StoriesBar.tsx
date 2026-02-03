@@ -22,6 +22,8 @@ const PUBLIC_STORIES = gql`
       expiresAt
       isPermanent
       viewCount
+      isGuest
+      walletAddress
       profile {
         id
         handle
@@ -58,6 +60,8 @@ interface Story {
   hasUnwatched: boolean
   isPermanent?: boolean
   storyCount: number
+  isGuest?: boolean
+  walletAddress?: string
 }
 
 // Gradient colors for users without profile pictures
@@ -103,23 +107,32 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
     let realStories: Story[] = []
 
     if (storiesData?.publicStories && storiesData.publicStories.length > 0) {
-      // Group stories by profileId
+      // Group stories by profileId (or walletAddress for guests)
       const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
-        const pid = story.profileId
-        if (!acc[pid]) {
-          acc[pid] = {
+        // For guest stories, use walletAddress as key; for registered users, use profileId
+        const isGuest = story.isGuest || !story.profileId
+        const key = isGuest ? `guest-${story.walletAddress}` : story.profileId
+
+        if (!acc[key]) {
+          acc[key] = {
             id: story.id,
-            profileId: pid,
-            profilePicture: story.profile?.profilePicture,
-            displayName: story.profile?.displayName,
-            userHandle: story.profile?.handle || 'user',
+            profileId: key, // Use the key as profileId for consistency
+            profilePicture: isGuest ? undefined : story.profile?.profilePicture,
+            displayName: isGuest
+              ? `${story.walletAddress?.slice(0, 6)}...${story.walletAddress?.slice(-4)}`
+              : story.profile?.displayName,
+            userHandle: isGuest
+              ? story.walletAddress?.slice(0, 8) || 'guest'
+              : story.profile?.handle || 'user',
             hasUnwatched: true, // TODO: track viewed stories
             isPermanent: story.isPermanent,
             storyCount: 1,
+            isGuest,
+            walletAddress: story.walletAddress,
           }
         } else {
-          acc[pid].storyCount++
-          if (story.isPermanent) acc[pid].isPermanent = true
+          acc[key].storyCount++
+          if (story.isPermanent) acc[key].isPermanent = true
         }
         return acc
       }, {})
