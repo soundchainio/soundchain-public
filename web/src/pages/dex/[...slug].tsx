@@ -3639,7 +3639,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         {/* Main Content - Floats on cover art background */}
         <div className="max-w-screen-2xl mx-auto relative">
-          {/* Floating nav - tap-friendly sizes - ABOVE stories bar */}
+          {/* 24hr Stories/Reels Bar - ABOVE feed tabs */}
+          {(selectedView === 'feed' || selectedView === 'explore') && (
+            <StoriesBar />
+          )}
+
+          {/* Floating nav - tap-friendly sizes - BELOW stories bar */}
           <div className="flex items-center gap-2 mb-1 px-3 pt-1">
             {(() => {
               const navItems = [
@@ -3704,11 +3709,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </button>
             </div>
           </div>
-
-          {/* 24hr Stories/Reels Bar - BELOW nav, Decentralized, pay to make permanent! */}
-          {(selectedView === 'feed' || selectedView === 'explore') && (
-            <StoriesBar />
-          )}
 
           {/* Dashboard View - Genres & Leaderboards Only */}
           {selectedView === 'dashboard' && (
