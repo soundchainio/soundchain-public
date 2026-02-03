@@ -85,6 +85,8 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const [linkCopied, setLinkCopied] = useState(false)
   const progressInterval = useRef<NodeJS.Timeout | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const touchStartX = useRef<number | null>(null)
+  const touchStartY = useRef<number | null>(null)
 
   const currentUser = users[currentUserIndex]
   const currentStory = currentUser?.stories[currentStoryIndex]
@@ -224,6 +226,44 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
     }
   }
 
+  // Touch handlers for swipe gestures
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return
+
+    const touchEndX = e.changedTouches[0].clientX
+    const touchEndY = e.changedTouches[0].clientY
+    const deltaX = touchEndX - touchStartX.current
+    const deltaY = touchEndY - touchStartY.current
+
+    // Horizontal swipe threshold
+    const swipeThreshold = 50
+    const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold
+
+    if (isHorizontalSwipe) {
+      if (deltaX > 0) {
+        // Swipe right - go to previous
+        goToPrevStory()
+      } else {
+        // Swipe left - go to next
+        goToNextStory()
+      }
+    }
+
+    // Vertical swipe down to close (like Instagram)
+    const isVerticalSwipeDown = deltaY > 100 && Math.abs(deltaY) > Math.abs(deltaX)
+    if (isVerticalSwipeDown) {
+      onClose()
+    }
+
+    touchStartX.current = null
+    touchStartY.current = null
+  }
+
   const handleReaction = (emoji: string) => {
     console.log('Reaction:', emoji, 'on story:', currentStory?.id)
     setShowReactions(false)
@@ -318,6 +358,8 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
       <div
         className="relative w-full h-full md:w-[420px] md:h-[750px] md:rounded-3xl overflow-hidden bg-neutral-900"
         onClick={handleTap}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Progress bars */}
         <div className="absolute top-0 left-0 right-0 z-40 flex gap-1 p-2">
