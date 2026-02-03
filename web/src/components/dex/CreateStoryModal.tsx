@@ -3,15 +3,16 @@ import { X, Camera, Image as ImageIcon, Video, Sparkles, Upload, Type, Sticker, 
 import { useMe } from 'hooks/useMe'
 import { smartCompress, needsCompression, formatBytes, CompressionProgress } from 'lib/mediaCompression'
 
-// Story constraints - file size is hidden (easter egg!), but time is shown
+// Story/Reel constraints - file size is hidden (easter egg!), but time is shown
 const STORY_CONSTRAINTS = {
   MIN_DURATION: 1, // 1 second minimum
-  MAX_DURATION_GUEST: 30, // 30 seconds max for public/guest posts
+  MAX_DURATION_GUEST: 30, // 30 seconds max for public/guest
   MAX_DURATION_MEMBER: 600, // 10 minutes max for logged-in users
   DEFAULT_DURATION_GUEST: 15, // 15 seconds default for guests
   DEFAULT_DURATION_MEMBER: 60, // 1 minute default for members
-  EXPIRY_HOURS: 24, // Stories expire after 24 hours
-  MAX_FILE_SIZE: 1024 * 1024 * 1024, // 1 GB - hidden from users!
+  EXPIRY_HOURS: 24, // All stories expire after 24 hours
+  MAX_FILE_SIZE_GUEST: 10 * 1024 * 1024, // 10 MB for public/guest users
+  MAX_FILE_SIZE_MEMBER: 1024 * 1024 * 1024, // 1 GB for SC members
   SUPPORTED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   SUPPORTED_VIDEO_TYPES: ['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'],
 }
@@ -42,9 +43,10 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const meData = useMe()
   const me = meData?.me
 
-  // Determine if user is logged in - affects duration limits
+  // Determine if user is logged in - affects duration and file size limits
   const isLoggedIn = !!me?.profile
   const maxDuration = isLoggedIn ? STORY_CONSTRAINTS.MAX_DURATION_MEMBER : STORY_CONSTRAINTS.MAX_DURATION_GUEST
+  const maxFileSize = isLoggedIn ? STORY_CONSTRAINTS.MAX_FILE_SIZE_MEMBER : STORY_CONSTRAINTS.MAX_FILE_SIZE_GUEST
   const defaultDuration = isLoggedIn ? STORY_CONSTRAINTS.DEFAULT_DURATION_MEMBER : STORY_CONSTRAINTS.DEFAULT_DURATION_GUEST
   const durationOptions = isLoggedIn ? DURATION_OPTIONS_MEMBER : DURATION_OPTIONS_GUEST
 
@@ -91,6 +93,13 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
 
     if (!isImage && !isVideo) {
       setUploadError('Unsupported file type. Please use JPG, PNG, GIF, WebP for images or MP4, WebM, MOV for videos.')
+      return
+    }
+
+    // Validate file size based on user type
+    if (file.size > maxFileSize) {
+      const maxSizeLabel = isLoggedIn ? '1 GB' : '10 MB'
+      setUploadError(`File too large. Max: ${maxSizeLabel}. Your file: ${formatFileSize(file.size)}${!isLoggedIn ? ' - Login for up to 1 GB!' : ''}`)
       return
     }
 
@@ -305,7 +314,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                 </div>
                 <div className="flex items-center gap-1">
                   <HardDrive className="w-3 h-3" />
-                  <span>Max 1 GB</span>
+                  <span>{isLoggedIn ? 'Max 1 GB' : 'Max 10 MB'}</span>
                 </div>
               </div>
 
