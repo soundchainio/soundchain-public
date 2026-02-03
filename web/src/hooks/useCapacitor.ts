@@ -34,10 +34,24 @@ export const useCapacitor = () => {
         if (currentPlatform === 'ios') {
           try {
             const { StatusBar, Style } = await import('@capacitor/status-bar');
+            // Set status bar to NOT overlay the WebView content
+            await StatusBar.setOverlaysWebView({ overlay: false });
+            // Light text on dark background
             await StatusBar.setStyle({ style: Style.Dark });
             await StatusBar.setBackgroundColor({ color: '#000000' });
           } catch (e) {
-            console.log('StatusBar not available');
+            console.log('StatusBar not available:', e);
+          }
+        }
+
+        // Configure status bar for Android
+        if (currentPlatform === 'android') {
+          try {
+            const { StatusBar, Style } = await import('@capacitor/status-bar');
+            await StatusBar.setStyle({ style: Style.Dark });
+            await StatusBar.setBackgroundColor({ color: '#000000' });
+          } catch (e) {
+            console.log('StatusBar not available:', e);
           }
         }
 

@@ -13,13 +13,15 @@ const config: CapacitorConfig = {
 
   // iOS specific settings
   ios: {
-    contentInset: 'automatic',
+    contentInset: 'always', // Always inset content below status bar
     allowsLinkPreview: true,
     backgroundColor: '#000000',
     scrollEnabled: true,
     appendUserAgent: 'SoundChain-iOS/1.0',
     preferredContentMode: 'mobile',
     scheme: 'soundchain',
+    // Ensure WebView respects safe areas
+    limitsNavigationsToAppBoundDomains: false,
   },
 
   // Android specific settings
