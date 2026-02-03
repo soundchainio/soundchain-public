@@ -3641,9 +3641,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         <div className="max-w-screen-2xl mx-auto relative">
           {/* 24hr Stories/Reels Bar - Decentralized, pay to make permanent! */}
           {(selectedView === 'feed' || selectedView === 'explore') && (
-            <StoriesBar
-              onCreateStory={() => dispatchShowCreateModal(true, 'post')}
-            />
+            <StoriesBar />
           )}
 
           {/* Floating nav - tap-friendly sizes */}
