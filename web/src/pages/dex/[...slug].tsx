@@ -3638,8 +3638,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         {/* Main Content - Floats on cover art background */}
         <div className="max-w-screen-2xl mx-auto px-3 pt-1 relative">
-          {/* Floating nav - no background, sits on cover art */}
-          <div className="flex items-center gap-1.5 mb-1">
+          {/* Floating nav - tap-friendly sizes */}
+          <div className="flex items-center gap-2 mb-1">
             {(() => {
               const navItems = [
                 { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', textColor: 'text-cyan-400' },
@@ -3656,17 +3656,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <div className="relative">
                   <button
                     onClick={() => setShowNavMenu(!showNavMenu)}
-                    className="flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity"
+                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all min-h-[36px]"
                   >
-                    <CurrentIcon className={`w-3.5 h-3.5 ${currentNav.textColor}`} />
-                    <span className={`text-xs font-medium ${currentNav.textColor}`}>{currentNav.label}</span>
-                    <ChevronDown className={`w-2.5 h-2.5 text-gray-500 transition-transform duration-150 ${showNavMenu ? 'rotate-180' : ''}`} />
+                    <CurrentIcon className={`w-4 h-4 ${currentNav.textColor}`} />
+                    <span className={`text-sm font-medium ${currentNav.textColor}`}>{currentNav.label}</span>
+                    <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-150 ${showNavMenu ? 'rotate-180' : ''}`} />
                   </button>
 
                   {showNavMenu && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
-                      <div className="absolute left-0 top-full mt-1 w-24 bg-black/90 backdrop-blur-xl border border-white/10 rounded-lg shadow-xl z-50">
+                      <div className="absolute left-0 top-full mt-1 w-32 bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-xl z-50">
                         {navItems.map((item) => {
                           const Icon = item.icon
                           const isActive = selectedView === item.id
@@ -3677,11 +3677,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 router.push(item.route, undefined, { shallow: false })
                                 setShowNavMenu(false)
                               }}
-                              className={`w-full flex items-center gap-1.5 px-2 py-1.5 text-[10px] transition-all ${
-                                isActive ? `${item.textColor}` : 'text-gray-400 hover:text-white'
+                              className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs transition-all min-h-[40px] ${
+                                isActive ? `${item.textColor}` : 'text-gray-400 hover:text-white hover:bg-white/5'
                               }`}
                             >
-                              <Icon className="w-2.5 h-2.5" />
+                              <Icon className="w-4 h-4" />
                               <span>{item.label}</span>
                             </button>
                           )
@@ -3692,13 +3692,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </div>
               )
             })()}
-            {/* View toggle - minimal */}
-            <div className="flex items-center gap-0.5 opacity-60">
-              <button onClick={() => setViewMode('list')} className={`p-0.5 ${viewMode === 'list' ? 'text-white opacity-100' : 'text-gray-500'}`}>
-                <List className="w-2.5 h-2.5" />
+            {/* View toggle - tap-friendly */}
+            <div className="flex items-center">
+              <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${viewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
+                <List className="w-4 h-4" />
               </button>
-              <button onClick={() => setViewMode('grid')} className={`p-0.5 ${viewMode === 'grid' ? 'text-white opacity-100' : 'text-gray-500'}`}>
-                <Grid className="w-2.5 h-2.5" />
+              <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${viewMode === 'grid' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
+                <Grid className="w-4 h-4" />
               </button>
             </div>
           </div>
