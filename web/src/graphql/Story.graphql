@@ -27,7 +27,7 @@ query publicStories($limit: Int) {
       id
       handle
       displayName
-      avatarUrl
+      profilePicture
     }
   }
 }
@@ -39,7 +39,7 @@ query myFollowingStories {
       id
       handle
       displayName
-      avatarUrl
+      profilePicture
     }
   }
 }
@@ -51,7 +51,7 @@ query userStories($profileId: ID!) {
       id
       handle
       displayName
-      avatarUrl
+      profilePicture
     }
   }
 }

@@ -26,7 +26,24 @@ const PUBLIC_STORIES = gql`
         id
         handle
         displayName
-        avatarUrl
+        profilePicture
+      }
+    }
+  }
+`
+
+// GraphQL query to fetch actual users for featured stories bar
+const FEATURED_PROFILES = gql`
+  query FeaturedProfiles($page: Page) {
+    profiles(page: $page) {
+      edges {
+        node {
+          id
+          displayName
+          userHandle
+          profilePicture
+          verified
+        }
       }
     }
   }
@@ -95,45 +112,84 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
     fetchPolicy: 'cache-and-network',
   })
 
+  // Fetch actual user profiles for the featured bar when no stories exist
+  const { data: profilesData } = useQuery(FEATURED_PROFILES, {
+    variables: { page: { first: 50 } },
+    fetchPolicy: 'cache-first',
+  })
+
   // Transform API data to Story format, grouped by profile
-  // Falls back to placeholder users to keep the bar looking alive
+  // Falls back to real user profiles to keep the bar looking alive with actual avatars
   const stories: Story[] = useMemo(() => {
-    if (!storiesData?.publicStories || storiesData.publicStories.length === 0) {
-      // Return placeholder users when no real stories exist
-      return generatePlaceholderUsers(50)
-    }
+    // First, process any real stories
+    let realStories: Story[] = []
 
-    // Group stories by profileId
-    const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
-      const pid = story.profileId
-      if (!acc[pid]) {
-        acc[pid] = {
-          id: story.id,
-          profileId: pid,
-          profilePicture: story.profile?.avatarUrl,
-          displayName: story.profile?.displayName,
-          userHandle: story.profile?.handle || 'user',
-          hasUnwatched: true, // TODO: track viewed stories
-          isPermanent: story.isPermanent,
-          storyCount: 1,
+    if (storiesData?.publicStories && storiesData.publicStories.length > 0) {
+      // Group stories by profileId
+      const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
+        const pid = story.profileId
+        if (!acc[pid]) {
+          acc[pid] = {
+            id: story.id,
+            profileId: pid,
+            profilePicture: story.profile?.profilePicture,
+            displayName: story.profile?.displayName,
+            userHandle: story.profile?.handle || 'user',
+            hasUnwatched: true, // TODO: track viewed stories
+            isPermanent: story.isPermanent,
+            storyCount: 1,
+          }
+        } else {
+          acc[pid].storyCount++
+          if (story.isPermanent) acc[pid].isPermanent = true
         }
-      } else {
-        acc[pid].storyCount++
-        if (story.isPermanent) acc[pid].isPermanent = true
-      }
-      return acc
-    }, {})
-
-    const realStories = Object.values(grouped) as Story[]
-
-    // If we have few real stories, pad with placeholders to fill the bar
-    if (realStories.length < 20) {
-      const placeholders = generatePlaceholderUsers(30).slice(0, 30 - realStories.length)
-      return [...realStories, ...placeholders]
+        return acc
+      }, {})
+      realStories = Object.values(grouped) as Story[]
     }
 
-    return realStories
-  }, [storiesData])
+    // If we have enough real stories, return them
+    if (realStories.length >= 20) {
+      return realStories
+    }
+
+    // Fill remaining slots with real user profiles (not placeholder data)
+    const existingIds = new Set(realStories.map(s => s.profileId))
+    const featuredUsers: Story[] = []
+
+    if (profilesData?.profiles?.edges) {
+      const colors = [
+        'from-pink-500 to-rose-500', 'from-purple-500 to-indigo-500', 'from-cyan-500 to-blue-500',
+        'from-green-500 to-emerald-500', 'from-yellow-500 to-orange-500', 'from-red-500 to-pink-500',
+        'from-indigo-500 to-purple-500', 'from-teal-500 to-cyan-500', 'from-amber-500 to-yellow-500',
+      ]
+
+      profilesData.profiles.edges.forEach((edge: any, index: number) => {
+        const profile = edge.node
+        if (!existingIds.has(profile.id) && featuredUsers.length < (50 - realStories.length)) {
+          featuredUsers.push({
+            id: `featured-${profile.id}`,
+            profileId: profile.id,
+            profilePicture: profile.profilePicture,
+            displayName: profile.displayName,
+            userHandle: profile.userHandle || profile.handle,
+            hasUnwatched: Math.random() > 0.3, // Simulate unwatched for visual variety
+            isPermanent: profile.verified, // Verified users get the special badge
+            storyCount: 1,
+            _gradientClass: colors[index % colors.length], // Fallback gradient if no picture
+          } as Story & { _gradientClass: string })
+        }
+      })
+    }
+
+    // If we still don't have enough, fall back to placeholder data
+    if (realStories.length + featuredUsers.length < 20) {
+      const placeholders = generatePlaceholderUsers(30).slice(0, 30 - realStories.length - featuredUsers.length)
+      return [...realStories, ...featuredUsers, ...placeholders]
+    }
+
+    return [...realStories, ...featuredUsers]
+  }, [storiesData, profilesData])
 
   // Set up portal container on mount (client-side only)
   useEffect(() => {

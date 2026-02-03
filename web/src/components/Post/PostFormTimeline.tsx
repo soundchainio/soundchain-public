@@ -93,7 +93,8 @@ export const PostFormTimeline = () => {
 
     try {
       // Create post - authenticated users use regular mutation, others use guest mutation
-      if (me) {
+      // Check me?.profile to ensure user is actually logged in (not just partial data)
+      if (me?.profile) {
         await createPost({ variables: { input: newPostParams } })
         toast.success(`Post successfully created.`)
       } else {

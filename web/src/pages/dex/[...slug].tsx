@@ -2835,17 +2835,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </Link>
                 ))}
 
-                {/* Post+ Button - Create posts, embeds, stories */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCreateClick}
-                  className="hover:bg-cyan-500/10"
-                >
-                  <NewPost className="w-4 h-4 mr-2" />
-                  Post+
-                </Button>
-
                 {/* Mint+ Button - NFT Minting with TrackMetadataForm */}
                 {/* Supports both OAuth users (me) AND wallet-only users (isUnifiedWalletConnected) */}
                 {isMinting ? (
