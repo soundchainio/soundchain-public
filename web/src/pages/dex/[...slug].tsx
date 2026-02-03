@@ -5602,59 +5602,60 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
 
           {/* Settings View */}
+          {/* Settings View - App-style compact */}
           {selectedView === 'settings' && (
-            <div className="space-y-6">
+            <div className="space-y-2">
               {/* Settings sub-route forms */}
               {routeId === 'bio' && (
-                <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
-                    <h2 className="retro-title text-xl">Edit Bio</h2>
+                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
+                    <span className="text-sm font-bold text-white">Edit Bio</span>
                   </div>
                   <BioForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Bio" />
-                </Card>
+                </div>
               )}
               {routeId === 'profile-picture' && (
-                <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
-                    <h2 className="retro-title text-xl">Profile Picture</h2>
+                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
+                    <span className="text-sm font-bold text-white">Profile Picture</span>
                   </div>
                   <ProfilePictureForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Picture" />
-                </Card>
+                </div>
               )}
               {routeId === 'cover-picture' && (
-                <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
-                    <h2 className="retro-title text-xl">Cover Picture</h2>
+                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
+                    <span className="text-sm font-bold text-white">Cover Picture</span>
                   </div>
                   <CoverPictureForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Cover" />
-                </Card>
+                </div>
               )}
               {routeId === 'social-links' && (
-                <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
-                    <h2 className="retro-title text-xl">Social Links</h2>
+                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
+                    <span className="text-sm font-bold text-white">Social Links</span>
                   </div>
                   <SocialLinksForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Links" />
-                </Card>
+                </div>
               )}
               {routeId === 'security' && (
-                <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
-                    <h2 className="retro-title text-xl">Security</h2>
+                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
+                    <span className="text-sm font-bold text-white">Security</span>
                   </div>
                   <SecurityForm afterSubmit={() => router.push('/dex/settings')} />
-                </Card>
+                </div>
               )}
               {routeId === 'notifications' && (
-                <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
-                    <h2 className="retro-title text-xl">Notifications</h2>
+                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
+                    <span className="text-sm font-bold text-white">Notifications</span>
                   </div>
                   <NotificationSettingsForm
                     afterSubmit={() => router.push('/dex/settings')}
@@ -5670,25 +5671,25 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       notifyViaNostr: userData?.me?.notifyViaNostr,
                     }}
                   />
-                </Card>
+                </div>
               )}
               {routeId === 'username' && (
-                <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
-                    <h2 className="retro-title text-xl">Edit Username</h2>
+                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
+                    <span className="text-sm font-bold text-white">Edit Username</span>
                   </div>
                   <HandleForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Username" />
-                </Card>
+                </div>
               )}
               {routeId === 'display-name' && (
-                <Card className="retro-card p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
-                    <h2 className="retro-title text-xl">Edit Display Name</h2>
+                <div className="bg-black/50 border border-gray-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300 text-sm">← Back</Link>
+                    <span className="text-sm font-bold text-white">Edit Display Name</span>
                   </div>
                   <DisplayNameForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Name" />
-                </Card>
+                </div>
               )}
               {/* Main settings menu - show when no sub-route */}
               {!routeId && (
@@ -5975,75 +5976,67 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
 
           {/* Notifications View - Full Notifications Page */}
+          {/* Notifications View - Compact App-style */}
           {selectedView === 'notifications' && (
-            <div className="space-y-6">
-              <Card className="retro-card p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <Bell className="w-8 h-8 text-yellow-400" />
-                    <h2 className="retro-title text-xl">Notifications</h2>
-                    {notificationsLoading && <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Loading...</Badge>}
-                  </div>
-                  {(notificationsData?.notifications?.nodes?.length ?? 0) > 0 && (
-                    <Badge className="bg-cyan-500/20 text-cyan-400">
-                      {notificationsData?.notifications?.nodes?.length} total
-                    </Badge>
-                  )}
+            <div className="space-y-2">
+              {/* Header */}
+              <div className="flex items-center justify-between px-1 py-2">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-yellow-400" />
+                  <span className="text-sm font-bold text-white">Notifications</span>
+                  {notificationsLoading && <span className="text-[10px] text-yellow-400">Loading...</span>}
                 </div>
-
-                {notificationsLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full" />
-                    <span className="ml-3 text-gray-400">Loading notifications...</span>
-                  </div>
-                ) : (notificationsData?.notifications?.nodes?.length ?? 0) > 0 ? (
-                  <div className="space-y-3">
-                    {notificationsData?.notifications?.nodes?.map((notification: any) => {
-                      const getNotificationIcon = () => {
-                        switch (notification.type) {
-                          case 'NewPost': return <MessageCircle className="w-5 h-5 text-blue-400" />
-                          case 'Comment': return <MessageCircle className="w-5 h-5 text-green-400" />
-                          case 'Reaction': return <Heart className="w-5 h-5 text-red-400" />
-                          case 'Follower': return <Users className="w-5 h-5 text-purple-400" />
-                          case 'NewBid': return <TrendingUp className="w-5 h-5 text-orange-400" />
-                          case 'Outbid': return <TrendingUp className="w-5 h-5 text-yellow-400" />
-                          case 'WonAuction': return <Trophy className="w-5 h-5 text-gold-400" />
-                          case 'AuctionEnded': return <Zap className="w-5 h-5 text-cyan-400" />
-                          case 'NFTSold': return <Coins className="w-5 h-5 text-green-400" />
-                          default: return <Bell className="w-5 h-5 text-gray-400" />
-                        }
-                      }
-                      return (
-                        <div
-                          key={notification.id}
-                          className={`p-4 rounded-lg border transition-colors ${notification.readAt ? 'bg-black/20 border-gray-800' : 'bg-cyan-500/5 border-cyan-500/30'}`}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-lg bg-black/30">
-                              {getNotificationIcon()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white font-medium">{notification.body || notification.type}</p>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {new Date(notification.createdAt).toLocaleDateString()} • {new Date(notification.createdAt).toLocaleTimeString()}
-                              </p>
-                            </div>
-                            {!notification.readAt && (
-                              <span className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0 mt-2" />
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Bell className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg mb-2">No notifications yet</p>
-                    <p className="text-xs text-gray-500">When you get likes, follows, or sales you'll see them here</p>
-                  </div>
+                {(notificationsData?.notifications?.nodes?.length ?? 0) > 0 && (
+                  <span className="text-[10px] text-cyan-400">{notificationsData?.notifications?.nodes?.length} total</span>
                 )}
-              </Card>
+              </div>
+
+              {notificationsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full" />
+                </div>
+              ) : (notificationsData?.notifications?.nodes?.length ?? 0) > 0 ? (
+                <div className="divide-y divide-gray-800/50">
+                  {notificationsData?.notifications?.nodes?.map((notification: any) => {
+                    const getNotificationIcon = () => {
+                      switch (notification.type) {
+                        case 'NewPost': return <MessageCircle className="w-4 h-4 text-blue-400" />
+                        case 'Comment': return <MessageCircle className="w-4 h-4 text-green-400" />
+                        case 'Reaction': return <Heart className="w-4 h-4 text-red-400" />
+                        case 'Follower': return <Users className="w-4 h-4 text-purple-400" />
+                        case 'NewBid': return <TrendingUp className="w-4 h-4 text-orange-400" />
+                        case 'Outbid': return <TrendingUp className="w-4 h-4 text-yellow-400" />
+                        case 'WonAuction': return <Trophy className="w-4 h-4 text-yellow-500" />
+                        case 'AuctionEnded': return <Zap className="w-4 h-4 text-cyan-400" />
+                        case 'NFTSold': return <Coins className="w-4 h-4 text-green-400" />
+                        default: return <Bell className="w-4 h-4 text-gray-400" />
+                      }
+                    }
+                    return (
+                      <div
+                        key={notification.id}
+                        className={`flex items-center gap-2 px-2 py-2.5 transition-colors ${notification.readAt ? '' : 'bg-cyan-500/5'}`}
+                      >
+                        <div className="flex-shrink-0">
+                          {getNotificationIcon()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm truncate">{notification.body || notification.type}</p>
+                          <p className="text-[10px] text-gray-500">{new Date(notification.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        {!notification.readAt && (
+                          <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full flex-shrink-0" />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Bell className="w-10 h-10 text-gray-700 mx-auto mb-2" />
+                  <p className="text-gray-500 text-sm">No notifications yet</p>
+                </div>
+              )}
             </div>
           )}
 
