@@ -3,7 +3,6 @@ import { UserInputError } from 'apollo-server-express';
 import { Story, StoryModel } from '../models/Story';
 import { Context } from '../types/Context';
 import { ModelService } from './ModelService';
-import { ActivityType } from '../types/ActivityType';
 
 interface CreateStoryParams {
   profileId: string;
@@ -279,14 +278,13 @@ export class StoryService extends ModelService<typeof Story> {
       throw new UserInputError('Story not found');
     }
 
-    // Log activity for making story permanent
+    // Log activity for making story permanent (using Minted metadata format)
     try {
-      await this.context.activityService.logActivity({
-        type: ActivityType.Minted,
-        profileId: existingStory.profileId.toString(),
-        targetId: storyId,
-        message: `made a reel permanent (SCid: ${scid})`,
-      });
+      await this.context.activityService.logMinted(
+        existingStory.profileId.toString(),
+        scid,
+        existingStory.caption || 'Permanent Reel'
+      );
     } catch (err) {
       console.error('[StoryService] Failed to log permanent activity:', err);
     }
