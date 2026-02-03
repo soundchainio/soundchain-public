@@ -265,8 +265,8 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         onClick={onClose}
       />
 
-      {/* Ultra-slim modal */}
-      <div className="fixed z-[101] top-16 left-1/2 -translate-x-1/2 w-[92vw] max-w-xs animate-in slide-in-from-top-2 duration-150">
+      {/* Ultra-slim modal - positioned at top below header */}
+      <div className="fixed z-[101] top-14 sm:top-16 left-1/2 -translate-x-1/2 w-[94vw] max-w-sm animate-in slide-in-from-top-2 duration-150">
         <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl">
           {/* Compact header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-800">
