@@ -42,7 +42,9 @@ const ContentContainer = styled.div`
   justify-content: center;
   min-height: 100vh;
   width: 100%;
-  padding: 0 1rem;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 0 0.75rem;
 `;
 
 const HoverableButton = styled(Button)`
@@ -752,31 +754,31 @@ export default function LoginPage() {
 
   const GoogleButton = () => (
     <button
-      className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-yellow-400"
+      className="flex items-center justify-center gap-2 rounded-md bg-white/5 px-3 py-2 text-xs font-medium text-white w-full transition-all hover:bg-white/10 hover:text-yellow-400"
       onClick={handleGoogleLogin}
     >
-      <Google className="h-5 w-5" />
-      <span>Login with Google</span>
+      <Google className="h-4 w-4" />
+      <span>Google</span>
     </button>
   );
 
   const DiscordButton = () => (
     <button
-      className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-[#5865F2]"
+      className="flex items-center justify-center gap-2 rounded-md bg-white/5 px-3 py-2 text-xs font-medium text-white w-full transition-all hover:bg-white/10 hover:text-[#5865F2]"
       onClick={handleDiscordLogin}
     >
-      <Discord className="h-5 w-5" />
-      <span>Login with Discord</span>
+      <Discord className="h-4 w-4" />
+      <span>Discord</span>
     </button>
   );
 
   const TwitchButton = () => (
     <button
-      className="flex items-center justify-center gap-2 rounded-lg bg-transparent px-4 py-3 text-sm font-semibold text-white w-64 transition-all hover:scale-105 hover:text-[#9146FF]"
+      className="flex items-center justify-center gap-2 rounded-md bg-white/5 px-3 py-2 text-xs font-medium text-white w-full transition-all hover:bg-white/10 hover:text-[#9146FF]"
       onClick={handleTwitchLogin}
     >
-      <Twitch className="h-5 w-5" />
-      <span>Login with Twitch</span>
+      <Twitch className="h-4 w-4" />
+      <span>Twitch</span>
     </button>
   );
 
@@ -866,254 +868,194 @@ export default function LoginPage() {
         </div>
         <Overlay />
         <ContentContainer>
-          {/* ═══════════════════════════════════════════════════════════════
-              🔥 VIP WALLET LOGIN - TOP OF PAGE, FIRST THING YOU SEE 🔥
-              ═══════════════════════════════════════════════════════════════ */}
+          {/* VIP Wallet Login - Compact */}
           {walletLoginStep !== 'success' && (
-            <div className="mb-6 rounded-2xl bg-gradient-to-br from-purple-600/30 via-cyan-600/20 to-orange-500/20 border-2 border-purple-500/50 p-6 text-center shadow-2xl shadow-purple-500/20">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <span className="text-3xl">{walletBrowserInfo.walletName === 'MetaMask' ? '🦊' : walletBrowserInfo.walletName === 'Coinbase Wallet' ? '🔵' : '💎'}</span>
+            <div className="mb-3 rounded-xl bg-black/40 border border-purple-500/30 p-3 text-center backdrop-blur-sm w-full">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-lg">{walletBrowserInfo.walletName === 'MetaMask' ? '🦊' : '💎'}</span>
                 <div>
-                  <p className="text-xl font-bold text-white">
-                    {walletBrowserInfo.isWallet ? walletBrowserInfo.walletName : 'Web3 Wallet'} Ready
-                  </p>
-                  <p className="text-xs text-purple-300">Decentralized • Self-Custody • No Email Needed</p>
+                  <p className="text-sm font-semibold text-white">Web3 Wallet Ready</p>
+                  <p className="text-[10px] text-purple-300">Decentralized • Self-Custody • No Email</p>
                 </div>
               </div>
 
               {walletLoginStep === 'idle' && (
                 <>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    {/* MetaMask / Injected Wallet */}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
                     {hasWallet && (
                       <button
                         onClick={() => { setSelectedWalletType('metamask'); handleWalletLogin(); }}
-                        className="py-3 px-4 bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/50 hover:border-orange-400 rounded-xl text-white font-medium transition-all hover:scale-[1.02] flex flex-col items-center gap-2"
+                        className="py-2 px-2 bg-orange-500/10 border border-orange-500/30 hover:border-orange-400 rounded-lg text-white text-xs font-medium transition-all flex items-center justify-center gap-1.5"
                       >
-                        <span className="text-2xl">🦊</span>
-                        <span className="text-sm">{walletBrowserInfo.walletName || 'MetaMask'}</span>
+                        <span>🦊</span>
+                        <span>{walletBrowserInfo.walletName || 'MetaMask'}</span>
                       </button>
                     )}
-
-                    {/* WalletConnect - Trust, Rainbow, etc. */}
                     <button
                       onClick={handleWalletConnectLogin}
                       disabled={!isWeb3ModalReady}
-                      className={`py-3 px-4 rounded-xl font-medium transition-all flex flex-col items-center gap-2 ${
+                      className={`py-2 px-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
                         isWeb3ModalReady
-                          ? 'bg-gradient-to-br from-blue-500/20 to-purple-600/10 border border-blue-500/50 hover:border-blue-400 text-white hover:scale-[1.02]'
-                          : 'bg-gray-800 border border-gray-700 text-gray-500 cursor-wait'
+                          ? 'bg-blue-500/10 border border-blue-500/30 hover:border-blue-400 text-white'
+                          : 'bg-gray-800/50 border border-gray-700 text-gray-500'
                       }`}
                     >
-                      <span className="text-2xl">🔗</span>
-                      <span className="text-sm">{isWeb3ModalReady ? 'WalletConnect' : 'Loading...'}</span>
+                      <span>🔗</span>
+                      <span>{isWeb3ModalReady ? 'WalletConnect' : '...'}</span>
                     </button>
                   </div>
-
-                  <p className="text-xs text-gray-500 text-center">
-                    WalletConnect supports <span className="text-blue-400">Trust</span>, <span className="text-purple-400">Rainbow</span>, <span className="text-green-400">Ledger</span> + 300 more
-                  </p>
-
-                  <p className="text-xs text-gray-400 mt-3 text-center">
-                    Sign a message to verify ownership • Zero gas fees • Instant access
-                  </p>
+                  <p className="text-[9px] text-gray-500">Trust, Rainbow, Ledger + 300 more</p>
                 </>
               )}
 
               {walletLoginStep === 'connecting' && (
-                <div className="py-4">
-                  <div className="animate-spin w-10 h-10 border-3 border-purple-400 border-t-transparent rounded-full mx-auto mb-3"></div>
-                  <p className="text-purple-300 font-medium text-lg">Connecting...</p>
-                  <p className="text-xs text-gray-400 mt-1">Approve in your wallet</p>
+                <div className="py-2">
+                  <div className="animate-spin w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <p className="text-purple-300 font-medium text-sm">Connecting...</p>
+                  <p className="text-[10px] text-gray-400">Approve in wallet</p>
                 </div>
               )}
 
               {walletLoginStep === 'checking' && (
-                <div className="py-4">
-                  <div className="animate-spin w-10 h-10 border-3 border-cyan-400 border-t-transparent rounded-full mx-auto mb-3"></div>
-                  <p className="text-cyan-300 font-medium text-lg">Checking account...</p>
-                  <p className="text-sm text-white mt-2 font-mono bg-black/30 rounded-lg py-2 px-3">
-                    {walletAddress?.slice(0, 8)}...{walletAddress?.slice(-6)}
-                  </p>
+                <div className="py-2">
+                  <div className="animate-spin w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <p className="text-cyan-300 font-medium text-sm">Checking...</p>
+                  <p className="text-[10px] text-white font-mono">{walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</p>
                 </div>
               )}
 
-              {/* NEW USER REGISTRATION FORM */}
+              {/* Registration Form - Compact */}
               {walletLoginStep === 'register' && (
-                <form onSubmit={handleWalletRegistration} className="space-y-4">
-                  <div className="text-center mb-4">
-                    <p className="text-green-400 font-bold text-lg">🎉 Welcome to SoundChain!</p>
-                    <p className="text-sm text-white mt-1 font-mono bg-black/30 rounded-lg py-2 px-3 inline-block">
-                      {walletAddress?.slice(0, 8)}...{walletAddress?.slice(-6)}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-2">Create your account to get started</p>
+                <form onSubmit={handleWalletRegistration} className="space-y-2">
+                  <div className="text-center mb-2">
+                    <p className="text-green-400 font-semibold text-sm">Welcome to SoundChain!</p>
+                    <p className="text-[10px] text-white font-mono">{walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</p>
                   </div>
 
-                  <div>
-                    <label className="text-xs text-cyan-300 font-medium mb-1 block">Display Name</label>
-                    <input
-                      type="text"
-                      value={walletDisplayName}
-                      onChange={(e) => setWalletDisplayName(e.target.value)}
-                      placeholder="Your name"
-                      className="w-full bg-black/50 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    value={walletDisplayName}
+                    onChange={(e) => setWalletDisplayName(e.target.value)}
+                    placeholder="Display name"
+                    className="w-full bg-black/50 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
+                  />
 
-                  <div>
-                    <label className="text-xs text-cyan-300 font-medium mb-1 block">Username *</label>
-                    <input
-                      type="text"
-                      value={walletHandle}
-                      onChange={(e) => setWalletHandle(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
-                      placeholder="username"
-                      maxLength={24}
-                      className="w-full bg-black/50 border border-purple-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Letters and numbers only, max 24 chars</p>
-                  </div>
+                  <input
+                    type="text"
+                    value={walletHandle}
+                    onChange={(e) => setWalletHandle(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
+                    placeholder="username *"
+                    maxLength={24}
+                    className="w-full bg-black/50 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
+                  />
 
-                  <div className="flex items-start gap-3 p-3 bg-black/30 rounded-lg border border-gray-800">
+                  <label className="flex items-center gap-2 text-[10px] text-gray-400">
                     <input
                       type="checkbox"
-                      id="walletTerms"
                       checked={walletTermsAccepted}
                       onChange={(e) => setWalletTermsAccepted(e.target.checked)}
-                      className="mt-1 h-4 w-4 rounded border-cyan-500 bg-black text-cyan-500"
+                      className="h-3 w-3 rounded border-cyan-500 bg-black text-cyan-500"
                     />
-                    <label htmlFor="walletTerms" className="text-xs text-gray-400">
-                      I agree to SoundChain's{' '}
-                      <a href="/terms-and-conditions" className="text-cyan-400 hover:underline" target="_blank">
-                        Terms & Conditions
-                      </a>{' '}
-                      and{' '}
-                      <a href="/privacy-policy" className="text-cyan-400 hover:underline" target="_blank">
-                        Privacy Policy
-                      </a>
-                    </label>
-                  </div>
+                    I agree to <a href="/terms-and-conditions" className="text-cyan-400" target="_blank">Terms</a> & <a href="/privacy-policy" className="text-cyan-400" target="_blank">Privacy</a>
+                  </label>
 
                   <button
                     type="submit"
                     disabled={!walletHandle.trim() || !walletTermsAccepted}
-                    className={`w-full py-4 px-6 rounded-xl text-lg font-bold transition-all ${
+                    className={`w-full py-2 rounded-md text-sm font-semibold transition-all ${
                       walletHandle.trim() && walletTermsAccepted
-                        ? 'bg-gradient-to-r from-green-600 to-cyan-600 hover:from-green-500 hover:to-cyan-500 text-white'
-                        : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                        : 'bg-gray-700 text-gray-500'
                     }`}
                   >
-                    ✍️ Sign & Create Account
+                    Create Account
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => { setWalletLoginStep('idle'); setIsNewWalletUser(false); }}
-                    className="w-full py-2 text-gray-500 hover:text-gray-400 text-sm"
-                  >
-                    ← Back
-                  </button>
+                  <button type="button" onClick={() => { setWalletLoginStep('idle'); setIsNewWalletUser(false); }} className="w-full text-gray-500 hover:text-gray-400 text-xs">← Back</button>
                 </form>
               )}
 
               {walletLoginStep === 'signing' && (
-                <div className="py-4">
-                  <div className="animate-pulse text-5xl mb-3">✍️</div>
-                  <p className="text-cyan-300 font-bold text-lg">Sign the Message</p>
-                  <p className="text-sm text-white mt-2 font-mono bg-black/30 rounded-lg py-2 px-3">
-                    {walletAddress?.slice(0, 8)}...{walletAddress?.slice(-6)}
-                  </p>
-                  <p className="text-xs text-purple-300 mt-3">
-                    Check your wallet for the signature request
-                  </p>
+                <div className="py-2">
+                  <div className="animate-pulse text-2xl mb-1">✍️</div>
+                  <p className="text-cyan-300 font-semibold text-sm">Sign Message</p>
+                  <p className="text-[10px] text-gray-400">Check your wallet</p>
                 </div>
               )}
 
               {walletLoginStep === 'error' && (
-                <div className="py-2">
-                  <button
-                    onClick={() => { setWalletLoginStep('idle'); setError(null); setIsNewWalletUser(false); }}
-                    className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white text-lg font-bold rounded-xl transition-all"
-                  >
-                    🔄 Try Again
-                  </button>
-                </div>
+                <button
+                  onClick={() => { setWalletLoginStep('idle'); setError(null); setIsNewWalletUser(false); }}
+                  className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-md"
+                >
+                  Try Again
+                </button>
               )}
             </div>
           )}
 
-          {/* Wallet login success state */}
+          {/* Success */}
           {walletLoginStep === 'success' && (
-            <div className="mb-6 rounded-2xl bg-gradient-to-br from-green-600/30 to-cyan-600/20 border-2 border-green-500/50 p-6 text-center">
-              <div className="text-5xl mb-3">✅</div>
-              <p className="text-green-400 font-bold text-xl">Wallet Verified!</p>
-              <p className="text-sm text-white mt-2 font-mono">
-                {walletAddress?.slice(0, 8)}...{walletAddress?.slice(-6)}
-              </p>
-              <p className="text-xs text-gray-400 mt-3">Entering SoundChain...</p>
+            <div className="mb-3 rounded-xl bg-green-500/10 border border-green-500/30 p-3 text-center">
+              <p className="text-green-400 font-semibold text-sm">✅ Verified!</p>
+              <p className="text-[10px] text-white font-mono">{walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</p>
             </div>
           )}
 
-          {/* Divider after wallet section */}
+          {/* Divider */}
           {walletLoginStep === 'idle' && (
-            <div className="flex items-center gap-4 my-4">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-              <span className="text-gray-500 text-xs font-medium">OR</span>
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+            <div className="flex items-center gap-2 my-2 w-full">
+              <div className="flex-1 h-px bg-gray-700"></div>
+              <span className="text-gray-600 text-[10px]">OR</span>
+              <div className="flex-1 h-px bg-gray-700"></div>
             </div>
           )}
 
-          {/* Logo - now below VIP wallet section */}
+          {/* Logo - compact */}
           {walletLoginStep === 'idle' && (
-            <div className="mb-4 flex h-24 items-center justify-center">
-              <LogoAndText className="text-white filter drop-shadow-lg" />
+            <div className="mb-2 flex h-12 items-center justify-center">
+              <LogoAndText className="text-white h-8" />
             </div>
           )}
 
-          {/* Error display */}
+          {/* Error */}
           {error && (
-            <div className="mb-4 py-3 px-4 rounded-lg bg-red-500/20 border border-red-500 text-center text-sm text-red-400 font-semibold">
+            <div className="mb-2 py-2 px-3 rounded-md bg-red-500/20 border border-red-500/50 text-center text-xs text-red-400 w-full">
               {error}
             </div>
           )}
 
-          {/* In-app browser warning */}
+          {/* In-app warning */}
           {inAppBrowserWarning && !hasWallet && walletLoginStep === 'idle' && (
-            <div className="mb-4 rounded-lg bg-yellow-500/20 border border-yellow-500 p-4 text-center">
-              <p className="text-sm font-semibold text-yellow-400">
-                You're using an in-app browser
-              </p>
-              <p className="text-xs text-yellow-300 mt-1">
-                For Google login, tap ⋮ menu → "Open in Safari/Chrome"
-              </p>
+            <div className="mb-2 rounded-md bg-yellow-500/10 border border-yellow-500/30 p-2 text-center w-full">
+              <p className="text-[10px] text-yellow-400">In-app browser detected. Open in Safari/Chrome for Google.</p>
             </div>
           )}
 
-          {/* OTP waiting indicator */}
+          {/* OTP */}
           {waitingForOtp && (
-            <div className="mb-4 rounded-lg bg-cyan-500/20 border border-cyan-500 p-4 text-center animate-pulse">
-              <p className="text-sm font-semibold text-cyan-400">
-                Check your email for a 6-digit code
-              </p>
+            <div className="mb-2 rounded-md bg-cyan-500/10 border border-cyan-500/30 p-2 text-center animate-pulse w-full">
+              <p className="text-xs text-cyan-400">Check email for code</p>
             </div>
           )}
 
-          {/* OAuth buttons - secondary option now */}
+          {/* OAuth + Email */}
           {walletLoginStep === 'idle' && (
-            <>
-              <div className="flex flex-col gap-2">
+            <div className="w-full">
+              <div className="grid grid-cols-3 gap-2 mb-2">
                 <GoogleButton />
                 <DiscordButton />
                 <TwitchButton />
               </div>
 
-              <div className="flex items-center gap-4 my-4">
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
-                <span className="text-gray-500 text-xs font-medium">OR</span>
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+              <div className="flex items-center gap-2 my-2">
+                <div className="flex-1 h-px bg-gray-700"></div>
+                <span className="text-gray-600 text-[10px]">OR</span>
+                <div className="flex-1 h-px bg-gray-700"></div>
               </div>
 
               <LoginForm handleMagicLogin={handleSubmit} disabled={waitingForOtp} />
-            </>
+            </div>
           )}
         </ContentContainer>
       </div>
