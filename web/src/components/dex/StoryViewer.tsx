@@ -3,6 +3,7 @@ import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, MoreHorizonta
 import { Avatar } from 'components/Avatar'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
+import { MakeStoryPermanentModal } from './MakeStoryPermanentModal'
 
 interface StoryItem {
   id: string
@@ -12,6 +13,7 @@ interface StoryItem {
   isPermanent?: boolean
   viewCount: number
   reactions: { emoji: string; count: number }[]
+  mediaSize?: number // bytes - for pricing calculation
 }
 
 interface StoryUser {
@@ -83,6 +85,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const [showReactions, setShowReactions] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
+  const [showPermanentModal, setShowPermanentModal] = useState(false)
   const progressInterval = useRef<NodeJS.Timeout | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const touchStartX = useRef<number | null>(null)
@@ -279,8 +282,15 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   }
 
   const handleMakePermanent = () => {
-    console.log('Make permanent:', currentStory?.id)
-    // TODO: Open payment modal for OGUN
+    setIsPaused(true) // Pause the story while modal is open
+    setShowPermanentModal(true)
+  }
+
+  const handlePermanentSuccess = () => {
+    // Update the story to show as permanent in UI
+    // This will be handled by the refetch in the mutation
+    setShowPermanentModal(false)
+    setIsPaused(false)
   }
 
   const getShareUrl = () => {
@@ -593,6 +603,20 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
           </button>
         ))}
       </div>
+
+      {/* Make Story Permanent Modal */}
+      {currentStory && (
+        <MakeStoryPermanentModal
+          isOpen={showPermanentModal}
+          onClose={() => {
+            setShowPermanentModal(false)
+            setIsPaused(false)
+          }}
+          storyId={currentStory.id}
+          mediaSize={currentStory.mediaSize || 0}
+          onSuccess={handlePermanentSuccess}
+        />
+      )}
     </div>
   )
 }

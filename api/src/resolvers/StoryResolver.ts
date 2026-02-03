@@ -4,6 +4,8 @@ import { Story } from '../models/Story';
 import { Profile } from '../models/Profile';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
+import { MakeStoryPermanentInput } from '../types/MakeStoryPermanentInput';
+import { MakeStoryPermanentResult } from '../types/MakeStoryPermanentResult';
 
 @Resolver(Story)
 export class StoryResolver {
@@ -142,23 +144,54 @@ export class StoryResolver {
 
   /**
    * Make a story permanent (pay OGUN to keep forever)
+   * Generates an SCid enabling streaming rewards
    * Requires authentication
    */
-  @Mutation(() => Story)
+  @Mutation(() => MakeStoryPermanentResult)
   @Authorized()
   async makeStoryPermanent(
     @Ctx() { storyService }: Context,
-    @Arg('storyId') storyId: string,
-    @Arg('txHash') txHash: string,
+    @Arg('input') input: MakeStoryPermanentInput,
     @CurrentUser() { profileId }: User
-  ): Promise<Story> {
-    // Verify the story belongs to the user
-    const story = await storyService.getById(storyId);
-    if (story.profileId.toString() !== profileId.toString()) {
-      throw new Error('You can only make your own stories permanent');
-    }
+  ): Promise<MakeStoryPermanentResult> {
+    try {
+      const { storyId, transactionHash, paymentToken, amountPaid } = input;
 
-    return storyService.makePermanent({ storyId, txHash });
+      // Verify the story belongs to the user
+      const existingStory = await storyService.getById(storyId);
+      if (existingStory.profileId.toString() !== profileId.toString()) {
+        return {
+          success: false,
+          error: 'You can only make your own stories permanent',
+        };
+      }
+
+      // Check if already permanent
+      if (existingStory.isPermanent) {
+        return {
+          success: false,
+          error: 'This story is already permanent',
+        };
+      }
+
+      const story = await storyService.makePermanent({
+        storyId,
+        txHash: transactionHash,
+        paymentToken,
+        amountPaid,
+      });
+
+      return {
+        success: true,
+        story,
+      };
+    } catch (error: any) {
+      console.error('[StoryResolver] makeStoryPermanent error:', error);
+      return {
+        success: false,
+        error: error?.message || 'Failed to make story permanent',
+      };
+    }
   }
 
   /**

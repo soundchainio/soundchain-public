@@ -55,6 +55,18 @@ export class Story extends Model {
   @prop({ required: false })
   permanentTxHash?: string;
 
+  @Field(() => String, { nullable: true })
+  @prop({ required: false, index: true })
+  scid?: string; // SCid for permanent stories - enables streaming rewards
+
+  @Field(() => Number, { nullable: true })
+  @prop({ required: false })
+  amountPaid?: number; // OGUN or POL paid to make permanent
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  paymentToken?: string; // 'OGUN' or 'POL'
+
   @Field(() => Number)
   @prop({ default: 0 })
   viewCount!: number;

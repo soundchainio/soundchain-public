@@ -21,6 +21,8 @@ interface AddReactionParams {
 interface MakePermanentParams {
   storyId: string;
   txHash: string;
+  paymentToken?: string;
+  amountPaid?: number;
 }
 
 const STORY_EXPIRY_HOURS = 24;
@@ -210,16 +212,55 @@ export class StoryService extends ModelService<typeof Story> {
   }
 
   /**
-   * Make a story permanent (removes expiry)
+   * Generate a unique SCid for a permanent story
+   * Format: SR-POL-XXXX-XXXXXX (Story Reel + Chain + ArtistHash + Sequence)
+   */
+  private async generateStoryScid(profileId: string): Promise<string> {
+    const artistHash = profileId.slice(-4).toUpperCase(); // Last 4 chars of profile ID
+    const year = new Date().getFullYear().toString().slice(-2); // Last 2 digits of year
+
+    // Find the highest sequence for this artist's permanent stories
+    const latestStory = await StoryModel.findOne({
+      profileId: new mongoose.Types.ObjectId(profileId),
+      isPermanent: true,
+      scid: { $exists: true, $ne: null },
+    }).sort({ createdAt: -1 }).lean();
+
+    let sequence = 1;
+    if (latestStory?.scid) {
+      // Extract sequence from existing SCid (last 6 digits)
+      const existingSeq = parseInt(latestStory.scid.split('-').pop() || '0', 10);
+      sequence = existingSeq + 1;
+    }
+
+    // Format: SR-POL-XXXX-YYNNNNNN (SR=Story Reel, POL=Polygon, XXXX=artistHash, YY=year, NNNNNN=sequence)
+    const sequenceStr = `${year}${sequence.toString().padStart(6, '0')}`;
+    return `SR-POL-${artistHash}-${sequenceStr}`;
+  }
+
+  /**
+   * Make a story permanent (removes expiry, generates SCid for rewards)
    */
   async makePermanent(params: MakePermanentParams): Promise<Story> {
-    const { storyId, txHash } = params;
+    const { storyId, txHash, paymentToken, amountPaid } = params;
+
+    // Get the story first to get profileId for SCid generation
+    const existingStory = await StoryModel.findById(storyId).lean();
+    if (!existingStory) {
+      throw new UserInputError('Story not found');
+    }
+
+    // Generate SCid for this permanent story
+    const scid = await this.generateStoryScid(existingStory.profileId.toString());
 
     const story = await StoryModel.findByIdAndUpdate(
       storyId,
       {
         isPermanent: true,
         permanentTxHash: txHash,
+        scid,
+        paymentToken,
+        amountPaid,
         $unset: { expiresAt: 1 }, // Remove expiry
       },
       { new: true }
@@ -227,6 +268,18 @@ export class StoryService extends ModelService<typeof Story> {
 
     if (!story) {
       throw new UserInputError('Story not found');
+    }
+
+    // Log activity for making story permanent
+    try {
+      await this.context.activityService.logActivity({
+        type: 'MINTED',
+        profileId: existingStory.profileId.toString(),
+        targetId: storyId,
+        message: `made a reel permanent (SCid: ${scid})`,
+      });
+    } catch (err) {
+      console.error('[StoryService] Failed to log permanent activity:', err);
     }
 
     return story as unknown as Story;

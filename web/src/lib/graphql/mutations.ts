@@ -59,6 +59,22 @@ export const HEARTBEAT_MUTATION = gql`
   }
 `;
 
+// Make Story Permanent mutation - pay OGUN to convert 24hr story to permanent reel with SCid
+export const MAKE_STORY_PERMANENT_MUTATION = gql`
+  mutation MakeStoryPermanent($input: MakeStoryPermanentInput!) {
+    makeStoryPermanent(input: $input) {
+      success
+      error
+      story {
+        id
+        isPermanent
+        permanentTxHash
+        scid
+      }
+    }
+  }
+`;
+
 // Placeholder function to mimic the mutation call
 export const updateComment = (options: any) => {
   // This should be replaced with actual Apollo Client mutation logic

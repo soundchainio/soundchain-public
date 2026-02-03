@@ -43,6 +43,35 @@ interface Story {
   storyCount: number
 }
 
+// Generate placeholder users for empty state - makes the bar look alive
+const generatePlaceholderUsers = (count: number): Story[] => {
+  const names = [
+    'Ye', 'Drake', 'Rihanna', 'Travis', 'Doja', 'Kendrick', 'SZA', 'Metro', 'Future', 'Cardi',
+    'Megan', 'Lil Baby', 'Gunna', '21 Savage', 'Post', 'Dua Lipa', 'Bad Bunny', 'J Cole', 'Tyler',
+    'Playboi', 'Young Thug', 'Lil Uzi', 'Roddy', 'DaBaby', 'Jack Harlow', 'Lizzo', 'Billie',
+    'Ariana', 'The Weeknd', 'Ed Sheeran', 'Bruno Mars', 'Justin', 'Selena', 'Halsey', 'Khalid',
+    'Polo G', 'Lil Durk', 'Moneybagg', 'EST Gee', 'Yeat', 'Ken Carson', 'Destroy Lonely', 'Baby Keem',
+    'Don Toliver', 'Kali Uchis', 'Steve Lacy', 'Omar Apollo', 'Dominic Fike', 'Brent Faiyaz'
+  ]
+
+  const colors = [
+    'from-pink-500 to-rose-500', 'from-purple-500 to-indigo-500', 'from-cyan-500 to-blue-500',
+    'from-green-500 to-emerald-500', 'from-yellow-500 to-orange-500', 'from-red-500 to-pink-500',
+    'from-indigo-500 to-purple-500', 'from-teal-500 to-cyan-500', 'from-amber-500 to-yellow-500',
+  ]
+
+  return Array.from({ length: Math.min(count, names.length) }, (_, i) => ({
+    id: `placeholder-${i}`,
+    profileId: `placeholder-${i}`,
+    displayName: names[i],
+    userHandle: names[i].toLowerCase().replace(/\s+/g, ''),
+    hasUnwatched: Math.random() > 0.3, // 70% have unwatched stories
+    isPermanent: Math.random() > 0.8, // 20% are permanent
+    storyCount: Math.floor(Math.random() * 5) + 1,
+    _gradientClass: colors[i % colors.length], // For avatar background
+  }))
+}
+
 interface StoriesBarProps {
   onCreateStory?: () => void
   onViewStory?: (profileId: string) => void
@@ -67,8 +96,12 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
   })
 
   // Transform API data to Story format, grouped by profile
+  // Falls back to placeholder users to keep the bar looking alive
   const stories: Story[] = useMemo(() => {
-    if (!storiesData?.publicStories) return []
+    if (!storiesData?.publicStories || storiesData.publicStories.length === 0) {
+      // Return placeholder users when no real stories exist
+      return generatePlaceholderUsers(50)
+    }
 
     // Group stories by profileId
     const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
@@ -91,7 +124,15 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
       return acc
     }, {})
 
-    return Object.values(grouped) as Story[]
+    const realStories = Object.values(grouped) as Story[]
+
+    // If we have few real stories, pad with placeholders to fill the bar
+    if (realStories.length < 20) {
+      const placeholders = generatePlaceholderUsers(30).slice(0, 30 - realStories.length)
+      return [...realStories, ...placeholders]
+    }
+
+    return realStories
   }, [storiesData])
 
   // Set up portal container on mount (client-side only)
@@ -158,8 +199,8 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex gap-3 px-4 overflow-x-auto scrollbar-hide"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="flex gap-2 sm:gap-3 px-2 sm:px-4 overflow-x-auto scrollbar-hide"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >
         {/* Your Story - Create new */}
         <button
@@ -168,9 +209,9 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
         >
           <div className="relative">
             {/* Outer ring - dashed for "add" state */}
-            <div className="w-16 h-16 rounded-full border-2 border-dashed border-cyan-500/50 group-hover:border-cyan-400 transition-colors flex items-center justify-center">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-dashed border-cyan-500/50 group-hover:border-cyan-400 transition-colors flex items-center justify-center">
               {/* Avatar or placeholder */}
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center overflow-hidden">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center overflow-hidden">
                 {me?.profile?.profilePicture ? (
                   <img
                     src={me.profile.profilePicture}
@@ -178,84 +219,92 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-lg font-bold text-white/50">
-                    {me?.profile?.displayName?.charAt(0) || me?.profile?.userHandle?.charAt(0) || '?'}
+                  <span className="text-base sm:text-lg font-bold text-white/50">
+                    {me?.profile?.displayName?.charAt(0) || me?.profile?.userHandle?.charAt(0) || '+'}
                   </span>
                 )}
               </div>
             </div>
             {/* Plus button */}
-            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center ring-2 ring-black">
-              <Plus className="w-3 h-3 text-white" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 flex items-center justify-center ring-2 ring-black">
+              <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
             </div>
           </div>
-          <span className="text-[10px] text-gray-400 group-hover:text-cyan-400 transition-colors">Your Story</span>
+          <span className="text-[9px] sm:text-[10px] text-gray-400 group-hover:text-cyan-400 transition-colors">Your Story</span>
         </button>
 
         {/* Other users' stories */}
-        {stories.map((story) => (
-          <button
-            key={story.id}
-            onClick={() => handleViewStory(story)}
-            className="flex flex-col items-center gap-1 flex-shrink-0 group"
-          >
-            <div className="relative">
-              {/* Gradient ring - colorful if unwatched, gray if watched */}
-              <div
-                className={`w-16 h-16 rounded-full p-[2px] transition-all ${
-                  story.hasUnwatched
-                    ? 'bg-gradient-to-tr from-cyan-500 via-purple-500 to-pink-500 group-hover:from-cyan-400 group-hover:via-purple-400 group-hover:to-pink-400'
-                    : 'bg-gradient-to-tr from-gray-600 to-gray-700'
-                }`}
-              >
-                {/* Inner black ring */}
-                <div className="w-full h-full rounded-full p-[2px] bg-black">
-                  {/* Avatar */}
-                  <div className="w-full h-full rounded-full bg-gradient-to-br from-neutral-800 to-neutral-900 flex items-center justify-center overflow-hidden">
-                    {story.profilePicture ? (
-                      <img
-                        src={story.profilePicture}
-                        alt={story.displayName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg font-bold text-white/70">
-                        {story.displayName?.charAt(0) || story.userHandle?.charAt(0) || '?'}
-                      </span>
-                    )}
+        {stories.map((story) => {
+          // Get gradient class for placeholder users
+          const gradientClass = (story as any)._gradientClass || 'from-purple-500 to-pink-500'
+          const isPlaceholder = story.id.startsWith('placeholder-')
+
+          return (
+            <button
+              key={story.id}
+              onClick={() => !isPlaceholder && handleViewStory(story)}
+              className={`flex flex-col items-center gap-1 flex-shrink-0 group ${isPlaceholder ? 'opacity-60 hover:opacity-100' : ''}`}
+            >
+              <div className="relative">
+                {/* Gradient ring - colorful if unwatched, gray if watched */}
+                <div
+                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] transition-all ${
+                    story.hasUnwatched
+                      ? 'bg-gradient-to-tr from-cyan-500 via-purple-500 to-pink-500 group-hover:from-cyan-400 group-hover:via-purple-400 group-hover:to-pink-400'
+                      : 'bg-gradient-to-tr from-gray-600 to-gray-700'
+                  }`}
+                >
+                  {/* Inner black ring */}
+                  <div className="w-full h-full rounded-full p-[2px] bg-black">
+                    {/* Avatar */}
+                    <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden ${
+                      story.profilePicture ? 'bg-neutral-900' : `bg-gradient-to-br ${gradientClass}`
+                    }`}>
+                      {story.profilePicture ? (
+                        <img
+                          src={story.profilePicture}
+                          alt={story.displayName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-base sm:text-lg font-bold text-white drop-shadow-sm">
+                          {story.displayName?.charAt(0) || story.userHandle?.charAt(0) || '?'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {/* Permanent badge */}
+                {story.isPermanent && (
+                  <div className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center ring-2 ring-black" title="Permanent Reel">
+                    <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" />
+                  </div>
+                )}
+
+                {/* Multiple stories indicator */}
+                {story.storyCount > 1 && (
+                  <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 px-1 py-0.5 rounded-full bg-black/80 backdrop-blur-sm border border-white/10">
+                    <span className="text-[7px] sm:text-[8px] text-cyan-400 font-medium">{story.storyCount}</span>
+                  </div>
+                )}
               </div>
-
-              {/* Permanent badge */}
-              {story.isPermanent && (
-                <div className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center ring-2 ring-black" title="Permanent Reel">
-                  <Sparkles className="w-2.5 h-2.5 text-white" />
-                </div>
-              )}
-
-              {/* Multiple stories indicator */}
-              {story.storyCount > 1 && (
-                <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-black/80 backdrop-blur-sm border border-white/10">
-                  <span className="text-[8px] text-cyan-400 font-medium">{story.storyCount}</span>
-                </div>
-              )}
-            </div>
-            <span className="text-[10px] text-gray-400 group-hover:text-white transition-colors max-w-[60px] truncate">
-              {story.displayName || story.userHandle}
-            </span>
-          </button>
-        ))}
+              <span className="text-[9px] sm:text-[10px] text-gray-400 group-hover:text-white transition-colors max-w-[50px] sm:max-w-[60px] truncate">
+                {story.displayName || story.userHandle}
+              </span>
+            </button>
+          )
+        })}
 
         {/* "See All" button at end */}
         <button
           onClick={() => router.push('/dex/stories')}
           className="flex flex-col items-center gap-1 flex-shrink-0 group px-2"
         >
-          <div className="w-16 h-16 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 transition-all">
-            <ChevronRight className="w-5 h-5 text-gray-500 group-hover:text-cyan-400 transition-colors" />
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border border-white/10 bg-white/5 flex items-center justify-center group-hover:border-cyan-500/50 group-hover:bg-cyan-500/10 transition-all">
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 group-hover:text-cyan-400 transition-colors" />
           </div>
-          <span className="text-[10px] text-gray-500 group-hover:text-cyan-400 transition-colors">See All</span>
+          <span className="text-[9px] sm:text-[10px] text-gray-500 group-hover:text-cyan-400 transition-colors">See All</span>
         </button>
       </div>
 

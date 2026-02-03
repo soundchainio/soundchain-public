@@ -280,65 +280,73 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
           </div>
 
           {/* Content */}
-          <div className="p-2">
-            {!mediaPreview ? (
-              /* Ultra-compact upload */
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-neutral-700 hover:border-cyan-500/50 hover:bg-cyan-500/5 cursor-pointer transition-all"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.m4v,image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/webm,video/x-m4v"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
-                  <Upload className="w-4 h-4 text-cyan-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-xs font-medium">Tap to upload</p>
-                  <p className="text-neutral-500 text-[10px]">
-                    {isLoggedIn ? '10min • 1GB' : '30sec • 10MB'} • 24h
-                  </p>
-                </div>
+          <div className="p-2 space-y-2">
+            {/* Always visible upload area - slim inline style */}
+            <div
+              onClick={() => !mediaPreview && fileInputRef.current?.click()}
+              className={`flex items-center gap-2 p-2 rounded-lg border border-dashed transition-all ${
+                mediaPreview
+                  ? 'border-cyan-500/30 bg-cyan-500/5'
+                  : 'border-neutral-700 hover:border-cyan-500/50 hover:bg-cyan-500/5 cursor-pointer'
+              }`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.m4v,image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/webm,video/x-m4v"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                {mediaPreview ? (
+                  mediaType === 'image' ? <ImageIcon className="w-3.5 h-3.5 text-cyan-400" /> : <Video className="w-3.5 h-3.5 text-cyan-400" />
+                ) : (
+                  <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                )}
               </div>
-            ) : (
-              /* Compact preview */
-              <div className="space-y-2">
-                <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-black">
-                  {mediaType === 'image' ? (
-                    <img src={mediaPreview} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <video src={mediaPreview} className="w-full h-full object-cover" autoPlay loop muted playsInline />
-                  )}
-                  <button
-                    onClick={handleClear}
-                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center text-white/70 hover:text-white"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                  {videoDuration > 0 && (
-                    <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] text-white/70">
-                      {formatDuration(videoDuration)}
-                    </div>
-                  )}
-                </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-[11px] font-medium truncate">
+                  {mediaPreview ? (mediaFile?.name || 'Media selected') : 'Add photo or video'}
+                </p>
+                <p className="text-neutral-500 text-[9px]">
+                  {mediaPreview && videoDuration > 0 ? formatDuration(videoDuration) + ' • ' : ''}
+                  {isLoggedIn ? '10min • 1GB' : '30sec • 10MB'} • 24h
+                </p>
+              </div>
+              {mediaPreview && (
                 <button
-                  onClick={handlePublish}
-                  disabled={isUploading}
-                  className="w-full py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center gap-1.5"
+                  onClick={(e) => { e.stopPropagation(); handleClear() }}
+                  className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-red-500/20"
                 >
-                  {isUploading ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-3 h-3" />
-                  )}
-                  {isUploading ? 'Uploading...' : 'Share Story'}
+                  <X className="w-3 h-3" />
                 </button>
+              )}
+            </div>
+
+            {/* Preview - only when media selected */}
+            {mediaPreview && (
+              <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-black">
+                {mediaType === 'image' ? (
+                  <img src={mediaPreview} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <video src={mediaPreview} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                )}
               </div>
             )}
+
+            {/* Share button - always visible */}
+            <button
+              onClick={handlePublish}
+              disabled={isUploading || !mediaPreview}
+              className="w-full py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-medium disabled:opacity-50 disabled:from-neutral-700 disabled:to-neutral-700 flex items-center justify-center gap-1.5"
+            >
+              {isUploading ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Sparkles className="w-3 h-3" />
+              )}
+              {isUploading ? 'Uploading...' : 'Share Story'}
+            </button>
 
             {/* Compression progress - inline */}
             {isCompressing && compressionProgress && (
