@@ -161,7 +161,7 @@ export const CreateModal = () => {
   useEffect(() => {
     if (modalState.showCreate && modalState.createModalTab === 'post') {
       dispatchShowCreateModal(false)
-      dispatchShowPostModal(true)
+      dispatchShowPostModal({ show: true })
     }
   }, [modalState.showCreate, modalState.createModalTab, dispatchShowCreateModal, dispatchShowPostModal])
 
@@ -201,7 +201,7 @@ export const CreateModal = () => {
 
   const handlePostTabClick = () => {
     dispatchShowCreateModal(false)
-    dispatchShowPostModal(true)
+    dispatchShowPostModal({ show: true })
   }
 
   const onCloseError = () => {
