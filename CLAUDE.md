@@ -27,9 +27,13 @@
 | Story Viewer modal (full-screen) | ✅ DONE | `202169109` |
 | Create Story modal | ✅ DONE | `202169109` |
 | Shareable stories (internal + external) | ✅ DONE | `776c636d7` |
-| Smart media compression engine | ✅ DONE | (this session) |
-| Duration selector for image stories (1-10 min) | ✅ DONE | (this session) |
-| Compression progress UI + success badge | ✅ DONE | (this session) |
+| Safe useMe() destructuring (crash fix) | ✅ DONE | `9906cd302` |
+| Smart media compression engine | ✅ DONE | `7d22bba0c` |
+| Duration selector for image stories (1-10 min) | ✅ DONE | `7d22bba0c` |
+| Compression progress UI + success badge | ✅ DONE | `7d22bba0c` |
+| StoryViewer keyboard navigation | ✅ DONE | `bf2dcc1fb` |
+| StoryViewer video duration detection | ✅ DONE | `bf2dcc1fb` |
+| StoryViewer touch swipe gestures | ✅ DONE | `7369af16f` |
 
 ---
 
@@ -75,6 +79,9 @@ STORY_CONSTRAINTS = {
 **StoryViewer Features:**
 - Progress bars for multi-story users
 - Tap left (prev), center (pause), right (next)
+- **Touch swipe gestures**: Swipe left/right for navigation, swipe down to close
+- **Keyboard navigation**: Escape (close), Arrow keys (nav), Space (pause), M (mute)
+- **Video duration detection**: Uses actual video length instead of hardcoded timing
 - Quick reactions: ❤️🔥🚀😂
 - Reply input with send
 - Share menu (copy link, X/Twitter, native share)
