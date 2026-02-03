@@ -60,34 +60,12 @@ interface Story {
   storyCount: number
 }
 
-// Generate placeholder users for empty state - makes the bar look alive
-const generatePlaceholderUsers = (count: number): Story[] => {
-  const names = [
-    'Ye', 'Drake', 'Rihanna', 'Travis', 'Doja', 'Kendrick', 'SZA', 'Metro', 'Future', 'Cardi',
-    'Megan', 'Lil Baby', 'Gunna', '21 Savage', 'Post', 'Dua Lipa', 'Bad Bunny', 'J Cole', 'Tyler',
-    'Playboi', 'Young Thug', 'Lil Uzi', 'Roddy', 'DaBaby', 'Jack Harlow', 'Lizzo', 'Billie',
-    'Ariana', 'The Weeknd', 'Ed Sheeran', 'Bruno Mars', 'Justin', 'Selena', 'Halsey', 'Khalid',
-    'Polo G', 'Lil Durk', 'Moneybagg', 'EST Gee', 'Yeat', 'Ken Carson', 'Destroy Lonely', 'Baby Keem',
-    'Don Toliver', 'Kali Uchis', 'Steve Lacy', 'Omar Apollo', 'Dominic Fike', 'Brent Faiyaz'
-  ]
-
-  const colors = [
-    'from-pink-500 to-rose-500', 'from-purple-500 to-indigo-500', 'from-cyan-500 to-blue-500',
-    'from-green-500 to-emerald-500', 'from-yellow-500 to-orange-500', 'from-red-500 to-pink-500',
-    'from-indigo-500 to-purple-500', 'from-teal-500 to-cyan-500', 'from-amber-500 to-yellow-500',
-  ]
-
-  return Array.from({ length: Math.min(count, names.length) }, (_, i) => ({
-    id: `placeholder-${i}`,
-    profileId: `placeholder-${i}`,
-    displayName: names[i],
-    userHandle: names[i].toLowerCase().replace(/\s+/g, ''),
-    hasUnwatched: Math.random() > 0.3, // 70% have unwatched stories
-    isPermanent: Math.random() > 0.8, // 20% are permanent
-    storyCount: Math.floor(Math.random() * 5) + 1,
-    _gradientClass: colors[i % colors.length], // For avatar background
-  }))
-}
+// Gradient colors for users without profile pictures
+const GRADIENT_COLORS = [
+  'from-pink-500 to-rose-500', 'from-purple-500 to-indigo-500', 'from-cyan-500 to-blue-500',
+  'from-green-500 to-emerald-500', 'from-yellow-500 to-orange-500', 'from-red-500 to-pink-500',
+  'from-indigo-500 to-purple-500', 'from-teal-500 to-cyan-500', 'from-amber-500 to-yellow-500',
+]
 
 interface StoriesBarProps {
   onCreateStory?: () => void
@@ -153,17 +131,11 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
       return realStories
     }
 
-    // Fill remaining slots with real user profiles (not placeholder data)
+    // Fill remaining slots with REAL user profiles from database only
     const existingIds = new Set(realStories.map(s => s.profileId))
     const featuredUsers: Story[] = []
 
     if (profilesData?.exploreUsers?.edges) {
-      const colors = [
-        'from-pink-500 to-rose-500', 'from-purple-500 to-indigo-500', 'from-cyan-500 to-blue-500',
-        'from-green-500 to-emerald-500', 'from-yellow-500 to-orange-500', 'from-red-500 to-pink-500',
-        'from-indigo-500 to-purple-500', 'from-teal-500 to-cyan-500', 'from-amber-500 to-yellow-500',
-      ]
-
       profilesData.exploreUsers.edges.forEach((edge: any, index: number) => {
         const profile = edge.node
         if (!existingIds.has(profile.id) && featuredUsers.length < (50 - realStories.length)) {
@@ -176,18 +148,13 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
             hasUnwatched: Math.random() > 0.3, // Simulate unwatched for visual variety
             isPermanent: profile.verified, // Verified users get the special badge
             storyCount: 1,
-            _gradientClass: colors[index % colors.length], // Fallback gradient if no picture
+            _gradientClass: GRADIENT_COLORS[index % GRADIENT_COLORS.length], // Fallback gradient if no picture
           } as Story & { _gradientClass: string })
         }
       })
     }
 
-    // If we still don't have enough, fall back to placeholder data
-    if (realStories.length + featuredUsers.length < 20) {
-      const placeholders = generatePlaceholderUsers(30).slice(0, 30 - realStories.length - featuredUsers.length)
-      return [...realStories, ...featuredUsers, ...placeholders]
-    }
-
+    // Return only real users from database - no fake placeholders
     return [...realStories, ...featuredUsers]
   }, [storiesData, profilesData])
 
