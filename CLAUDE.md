@@ -27,6 +27,9 @@
 | Story Viewer modal (full-screen) | ✅ DONE | `202169109` |
 | Create Story modal | ✅ DONE | `202169109` |
 | Shareable stories (internal + external) | ✅ DONE | `776c636d7` |
+| Smart media compression engine | ✅ DONE | (this session) |
+| Duration selector for image stories (1-10 min) | ✅ DONE | (this session) |
+| Compression progress UI + success badge | ✅ DONE | (this session) |
 
 ---
 
@@ -82,11 +85,30 @@ STORY_CONSTRAINTS = {
 **CreateStoryModal Features:**
 - Drag & drop or tap to upload
 - Video duration detection (up to 10 min)
-- File size validation (up to 1 GB)
+- File size validation (up to 1 GB - hidden from users!)
+- **Duration selector for images** (1, 3, 5, 10 min options)
+- **Smart compression engine** - auto-compresses large files while maintaining quality
+- **Compression progress UI** - shows real-time optimization progress
+- **Compression success badge** - shows % reduction after optimization
 - Caption overlay tool
 - File info badges (duration, size)
 - IPFS decentralized storage badge
-- Future: High-res compression to maintain quality
+
+**Media Compression Engine (`lib/mediaCompression.ts`):**
+- Smart detection: Only compresses when needed (> target size)
+- Image compression: Canvas-based JPEG with quality binary search (0.92 → 0.7)
+- Video compression: MediaRecorder + VP9/VP8 codec transcoding
+- Progress callbacks: Real-time stage and percentage updates
+- Quality-first: Never drops below minimum quality thresholds
+
+```typescript
+// Easter egg: File size limits are HIDDEN from users!
+// They just see their file "magically" fit the requirements
+COMPRESSION_CONFIG = {
+  story: { maxFileSize: 1GB, targetBitrate: 8Mbps },
+  image: { maxWidth: 4096, quality: 0.92, minQuality: 0.7 }
+}
+```
 
 **Share Functionality:**
 - Internal: Send to DM, share to feed

@@ -1,17 +1,26 @@
 import { useState, useRef, useCallback } from 'react'
-import { X, Camera, Image as ImageIcon, Video, Sparkles, Upload, Type, Sticker, Music, Trash2, Share2, Clock, HardDrive } from 'lucide-react'
+import { X, Camera, Image as ImageIcon, Video, Sparkles, Upload, Type, Sticker, Music, Trash2, Share2, Clock, HardDrive, Loader2, CheckCircle } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
+import { smartCompress, needsCompression, formatBytes, CompressionProgress } from 'lib/mediaCompression'
 
-// Story constraints
+// Story constraints - file size is hidden (easter egg!), but time is shown
 const STORY_CONSTRAINTS = {
   MIN_DURATION: 1, // 1 second minimum
   MAX_DURATION: 600, // 10 minutes max (600 seconds)
   DEFAULT_DURATION: 60, // 1 minute default
-  MAX_FILE_SIZE: 1024 * 1024 * 1024, // 1 GB max
   EXPIRY_HOURS: 24, // Stories expire after 24 hours
+  MAX_FILE_SIZE: 1024 * 1024 * 1024, // 1 GB - hidden from users!
   SUPPORTED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   SUPPORTED_VIDEO_TYPES: ['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'],
 }
+
+// Duration options for users to see (1-10 minutes)
+const DURATION_OPTIONS = [
+  { label: '1 min', value: 60 },
+  { label: '3 min', value: 180 },
+  { label: '5 min', value: 300 },
+  { label: '10 min', value: 600 },
+]
 
 interface CreateStoryModalProps {
   isOpen: boolean
@@ -30,6 +39,11 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const [showCaptionInput, setShowCaptionInput] = useState(false)
   const [videoDuration, setVideoDuration] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [compressionProgress, setCompressionProgress] = useState<CompressionProgress | null>(null)
+  const [isCompressing, setIsCompressing] = useState(false)
+  const [selectedDuration, setSelectedDuration] = useState(STORY_CONSTRAINTS.DEFAULT_DURATION)
+  const [wasCompressed, setWasCompressed] = useState(false)
+  const [originalSize, setOriginalSize] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -48,10 +62,11 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`
   }
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     setUploadError(null)
+    setCompressionProgress(null)
 
     // Validate file type
     const isImage = STORY_CONSTRAINTS.SUPPORTED_IMAGE_TYPES.includes(file.type)
@@ -62,21 +77,14 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
       return
     }
 
-    // Validate file size (1 GB max)
-    if (file.size > STORY_CONSTRAINTS.MAX_FILE_SIZE) {
-      setUploadError(`File too large. Max size: 1 GB. Your file: ${formatFileSize(file.size)}`)
-      return
-    }
-
-    const previewUrl = URL.createObjectURL(file)
-
-    // For videos, check duration
+    // For videos, check duration first
     if (isVideo) {
+      const previewUrl = URL.createObjectURL(file)
       const tempVideo = document.createElement('video')
       tempVideo.preload = 'metadata'
       tempVideo.src = previewUrl
 
-      tempVideo.onloadedmetadata = () => {
+      tempVideo.onloadedmetadata = async () => {
         const duration = tempVideo.duration
         setVideoDuration(duration)
 
@@ -86,9 +94,36 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
           return
         }
 
-        setMediaFile(file)
-        setMediaType('video')
-        setMediaPreview(previewUrl)
+        // Check if compression is needed (file too large)
+        if (needsCompression(file, 'story')) {
+          setIsCompressing(true)
+          setOriginalSize(file.size)
+          try {
+            const result = await smartCompress(file, 'story', (progress) => {
+              setCompressionProgress(progress)
+            })
+            setMediaFile(result.file)
+            setMediaType('video')
+            setMediaPreview(URL.createObjectURL(result.file))
+            setWasCompressed(result.wasCompressed)
+            URL.revokeObjectURL(previewUrl)
+          } catch (err) {
+            console.error('Compression failed:', err)
+            // Fall back to original file
+            setMediaFile(file)
+            setMediaType('video')
+            setMediaPreview(previewUrl)
+            setWasCompressed(false)
+          } finally {
+            setIsCompressing(false)
+            setCompressionProgress(null)
+          }
+        } else {
+          setMediaFile(file)
+          setMediaType('video')
+          setMediaPreview(previewUrl)
+          setWasCompressed(false)
+        }
       }
 
       tempVideo.onerror = () => {
@@ -96,10 +131,37 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         URL.revokeObjectURL(previewUrl)
       }
     } else {
-      // Image - no duration check needed
-      setMediaFile(file)
-      setMediaType('image')
-      setMediaPreview(previewUrl)
+      // Image - check if compression is needed
+      if (needsCompression(file, 'story')) {
+        setIsCompressing(true)
+        setOriginalSize(file.size)
+        try {
+          const result = await smartCompress(file, 'story', (progress) => {
+            setCompressionProgress(progress)
+          })
+          setMediaFile(result.file)
+          setMediaType('image')
+          setMediaPreview(URL.createObjectURL(result.file))
+          setWasCompressed(result.wasCompressed)
+        } catch (err) {
+          console.error('Compression failed:', err)
+          // Fall back to original file
+          const previewUrl = URL.createObjectURL(file)
+          setMediaFile(file)
+          setMediaType('image')
+          setMediaPreview(previewUrl)
+          setWasCompressed(false)
+        } finally {
+          setIsCompressing(false)
+          setCompressionProgress(null)
+        }
+      } else {
+        const previewUrl = URL.createObjectURL(file)
+        setMediaFile(file)
+        setMediaType('image')
+        setMediaPreview(previewUrl)
+        setWasCompressed(false)
+      }
       setVideoDuration(0)
     }
   }, [])
@@ -154,6 +216,12 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
     setMediaType(null)
     setCaption('')
     setShowCaptionInput(false)
+    setCompressionProgress(null)
+    setIsCompressing(false)
+    setSelectedDuration(STORY_CONSTRAINTS.DEFAULT_DURATION)
+    setVideoDuration(0)
+    setWasCompressed(false)
+    setOriginalSize(0)
   }
 
   if (!isOpen) return null
@@ -208,7 +276,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                 <div className="w-px h-4 bg-white/20" />
                 <div className="flex items-center gap-1 text-white/40 text-xs">
                   <Video className="w-4 h-4" />
-                  <span>Videos (15s)</span>
+                  <span>Videos</span>
                 </div>
               </div>
 
@@ -227,6 +295,22 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                 Stories expire after 24 hours<br />
                 Pay OGUN to make permanent • Shareable everywhere
               </p>
+
+              {/* Compression progress */}
+              {isCompressing && compressionProgress && (
+                <div className="mt-4 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                    <span className="text-cyan-400 text-sm">{compressionProgress.message}</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-black/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-300"
+                      style={{ width: `${compressionProgress.progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Error display */}
               {uploadError && (
@@ -333,6 +417,37 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                 </span>
               </div>
 
+              {/* Duration selector for images */}
+              {mediaType === 'image' && (
+                <div className="absolute bottom-16 left-4 right-4">
+                  <div className="flex items-center justify-center gap-2 p-2 rounded-xl bg-black/60 backdrop-blur-sm border border-white/10">
+                    <Clock className="w-4 h-4 text-cyan-400" />
+                    <span className="text-white/70 text-xs mr-2">Display:</span>
+                    {DURATION_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setSelectedDuration(option.value)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          selectedDuration === option.value
+                            ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg'
+                            : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Compression success badge */}
+              {wasCompressed && originalSize > 0 && (
+                <div className="absolute bottom-4 left-4 flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/20 backdrop-blur-sm border border-green-500/30 text-xs text-green-400">
+                  <CheckCircle className="w-3 h-3" />
+                  <span>Optimized ({Math.round((1 - (mediaFile?.size || 0) / originalSize) * 100)}% smaller)</span>
+                </div>
+              )}
+
               {/* File info badge - bottom right */}
               {mediaFile && (
                 <div className="absolute bottom-4 right-4 flex items-center gap-2 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm text-xs text-white/70">
@@ -340,6 +455,13 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                     <>
                       <Clock className="w-3 h-3" />
                       <span>{formatDuration(videoDuration)}</span>
+                      <span className="text-white/30">•</span>
+                    </>
+                  )}
+                  {mediaType === 'image' && (
+                    <>
+                      <Clock className="w-3 h-3" />
+                      <span>{DURATION_OPTIONS.find(d => d.value === selectedDuration)?.label || '1 min'}</span>
                       <span className="text-white/30">•</span>
                     </>
                   )}
@@ -369,16 +491,21 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
             )}
             <button
               onClick={handlePublish}
-              disabled={!mediaPreview || isUploading}
+              disabled={!mediaPreview || isUploading || isCompressing}
               className={`px-6 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all ${
-                mediaPreview && !isUploading
+                mediaPreview && !isUploading && !isCompressing
                   ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white hover:from-cyan-400 hover:to-purple-400'
                   : 'bg-white/10 text-white/30 cursor-not-allowed'
               }`}
             >
-              {isUploading ? (
+              {isCompressing ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Optimizing...
+                </>
+              ) : isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Uploading...
                 </>
               ) : (
