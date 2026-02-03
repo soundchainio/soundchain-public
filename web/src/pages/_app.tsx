@@ -32,6 +32,16 @@ const MagicProvider = dynamic(() => import('hooks/useMagicContext'), { ssr: fals
 const Web3ModalProvider = dynamic(() => import('contexts/Web3ModalContext').then(mod => mod.Web3ModalProvider), { ssr: false })
 const UnifiedWalletProvider = dynamic(() => import('contexts/UnifiedWalletContext').then(mod => mod.UnifiedWalletProvider), { ssr: false })
 
+// Capacitor native app detection and safe area handling
+const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
+  // Return a component that uses the hook
+  const CapacitorInitComponent = () => {
+    mod.useCapacitor();
+    return null;
+  };
+  return CapacitorInitComponent;
+}), { ssr: false })
+
 NProgress.configure({
   showSpinner: false,
 })
@@ -65,6 +75,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                       <HideBottomNavBarProvider>
                         <LayoutContextProvider>
                           <CheckBodyScroll />
+                          <CapacitorInit />
                           <HeartbeatProvider />
                           <Layout>
                             <Component {...pageProps} />

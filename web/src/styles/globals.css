@@ -180,6 +180,41 @@ body {
   #bottom-nav-bar {
     padding-top: max(0.75rem, env(safe-area-inset-bottom));
   }
+}
+
+/* Capacitor Native App - Safe Area Handling */
+html.capacitor-app {
+  /* Ensure full height accounting for safe areas */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+html.capacitor-app body {
+  /* Add top padding for notch/Dynamic Island/status bar */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  /* Ensure content doesn't go behind status bar */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* iOS standalone mode (PWA/Capacitor) */
+@media all and (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* When running in Capacitor WebView */
+body.capacitor-ios {
+  padding-top: env(safe-area-inset-top);
+}
+
+body.capacitor-android {
+  /* Android typically handles status bar differently */
+  padding-top: 0;
+}
 
   @layer utilities {
     .pb-safe {
