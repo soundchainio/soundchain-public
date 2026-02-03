@@ -207,4 +207,58 @@ export class StoryResolver {
   ): Promise<Story> {
     return storyService.deleteStory(storyId, profileId.toString());
   }
+
+  // ============================================
+  // GUEST ACCESS MUTATIONS (wallet-only, no account required)
+  // ============================================
+
+  /**
+   * Create a guest story (no account required)
+   * Guest can upload media to IPFS and create a 24h story
+   */
+  @Mutation(() => Story)
+  async guestCreateStory(
+    @Ctx() { storyService }: Context,
+    @Arg('mediaUrl') mediaUrl: string,
+    @Arg('mediaType') mediaType: string,
+    @Arg('walletAddress') walletAddress: string,
+    @Arg('caption', { nullable: true }) caption?: string,
+    @Arg('duration', () => Int, { nullable: true }) duration?: number
+  ): Promise<Story> {
+    // Validate wallet address format (can be empty for true anonymous posts)
+    if (walletAddress && !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      // If invalid but not empty, generate a random address for anonymous posting
+      const hexChars = '0123456789abcdef';
+      let addressBody = '';
+      for (let i = 0; i < 40; i++) {
+        addressBody += hexChars[Math.floor(Math.random() * 16)];
+      }
+      walletAddress = `0x${addressBody}`;
+    }
+
+    return storyService.createGuestStory({
+      walletAddress: walletAddress.toLowerCase(),
+      mediaUrl,
+      mediaType,
+      caption,
+      duration,
+    });
+  }
+
+  /**
+   * Delete a guest story
+   * Uses wallet address for verification instead of profileId
+   */
+  @Mutation(() => Story)
+  async guestDeleteStory(
+    @Ctx() { storyService }: Context,
+    @Arg('storyId') storyId: string,
+    @Arg('walletAddress') walletAddress: string
+  ): Promise<Story> {
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      throw new Error('Invalid wallet address');
+    }
+
+    return storyService.deleteGuestStory(storyId, walletAddress.toLowerCase());
+  }
 }

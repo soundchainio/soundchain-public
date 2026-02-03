@@ -12,6 +12,14 @@ interface CreateStoryParams {
   duration?: number;
 }
 
+interface CreateGuestStoryParams {
+  walletAddress: string;
+  mediaUrl: string;
+  mediaType: string;
+  caption?: string;
+  duration?: number;
+}
+
 interface AddReactionParams {
   storyId: string;
   profileId: string;
@@ -313,6 +321,58 @@ export class StoryService extends ModelService<typeof Story> {
       {
         _id: storyId,
         profileId: new mongoose.Types.ObjectId(profileId),
+      },
+      { deleted: true },
+      { new: true }
+    ).lean();
+
+    if (!story) {
+      throw new UserInputError("Story not found or you don't have permission to delete it");
+    }
+
+    return story as unknown as Story;
+  }
+
+  /**
+   * Create a guest story (no account required, wallet-only)
+   * Guest stories still expire in 24 hours and can be uploaded to IPFS
+   */
+  async createGuestStory(params: CreateGuestStoryParams): Promise<Story> {
+    const { walletAddress, mediaUrl, mediaType, caption, duration } = params;
+
+    // Calculate expiry time (24 hours from now)
+    const expiresAt = new Date(Date.now() + STORY_EXPIRY_HOURS * 60 * 60 * 1000);
+
+    const story = new StoryModel({
+      // Guest stories don't have a profileId - use wallet address for identification
+      walletAddress: walletAddress.toLowerCase(),
+      isGuest: true,
+      mediaUrl,
+      mediaType,
+      caption,
+      duration: duration || (mediaType === 'video' ? undefined : 60),
+      expiresAt,
+      isPermanent: false,
+      viewCount: 0,
+      reactions: [],
+      viewerIds: [],
+      deleted: false,
+    });
+
+    await story.save();
+
+    return story.toObject() as unknown as Story;
+  }
+
+  /**
+   * Delete a guest story (by wallet address)
+   */
+  async deleteGuestStory(storyId: string, walletAddress: string): Promise<Story> {
+    const story = await StoryModel.findOneAndUpdate(
+      {
+        _id: storyId,
+        walletAddress: walletAddress.toLowerCase(),
+        isGuest: true,
       },
       { deleted: true },
       { new: true }

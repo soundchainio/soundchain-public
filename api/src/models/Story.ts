@@ -23,9 +23,17 @@ export class Story extends Model {
   @Field(() => ID, { name: 'id' })
   public override _id!: mongoose.Types.ObjectId;
 
-  @Field(() => ID)
-  @prop({ type: mongoose.Types.ObjectId, required: true, index: true })
-  profileId!: mongoose.Types.ObjectId;
+  @Field(() => ID, { nullable: true })
+  @prop({ type: mongoose.Types.ObjectId, required: false, index: true })
+  profileId?: mongoose.Types.ObjectId;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false, index: true })
+  walletAddress?: string; // For guest stories (no account required)
+
+  @Field(() => Boolean, { nullable: true })
+  @prop({ default: false })
+  isGuest?: boolean; // True for guest-created stories
 
   @Field(() => String)
   @prop({ required: true })

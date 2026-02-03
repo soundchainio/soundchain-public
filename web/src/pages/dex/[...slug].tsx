@@ -70,7 +70,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine
+  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
@@ -3996,6 +3996,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Users View - Browse and Leaderboard for all profiles */}
           {selectedView === 'users' && (
             <div className="space-y-6">
+              {/* Back button and title */}
+              <div className="flex items-center gap-3 mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="text-gray-400 hover:text-white hover:bg-white/10"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                  Users
+                </h1>
+              </div>
+
               {/* Users view mode toggle */}
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-3">

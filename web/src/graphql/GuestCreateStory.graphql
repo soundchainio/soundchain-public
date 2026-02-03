@@ -1,0 +1,12 @@
+mutation GuestCreateStory($mediaUrl: String!, $mediaType: String!, $walletAddress: String!, $caption: String, $duration: Int) {
+  guestCreateStory(mediaUrl: $mediaUrl, mediaType: $mediaType, walletAddress: $walletAddress, caption: $caption, duration: $duration) {
+    id
+    mediaUrl
+    mediaType
+    caption
+    createdAt
+    expiresAt
+    isGuest
+    walletAddress
+  }
+}

@@ -20,6 +20,21 @@ const CREATE_STORY = gql`
   }
 `
 
+// GraphQL mutation for guest story (no login required)
+const GUEST_CREATE_STORY = gql`
+  mutation guestCreateStory($mediaUrl: String!, $mediaType: String!, $walletAddress: String!, $caption: String, $duration: Int) {
+    guestCreateStory(mediaUrl: $mediaUrl, mediaType: $mediaType, walletAddress: $walletAddress, caption: $caption, duration: $duration) {
+      id
+      mediaUrl
+      mediaType
+      createdAt
+      expiresAt
+      isGuest
+      walletAddress
+    }
+  }
+`
+
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {
   MIN_DURATION: 1,
@@ -53,6 +68,10 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const [pinToIPFS] = usePinToIpfsMutation()
   const [createStory] = useMutation(CREATE_STORY, {
     refetchQueries: ['publicStories', 'myFollowingStories'],
+  })
+
+  const [guestCreateStory] = useMutation(GUEST_CREATE_STORY, {
+    refetchQueries: ['publicStories'],
   })
 
   const [mediaFile, setMediaFile] = useState<File | null>(null)
@@ -212,7 +231,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
 
       const ipfsUrl = `ipfs://${pinResult.pinToIPFS.cid}`
 
-      // Step 3: Create story in database (for logged in users)
+      // Step 3: Create story in database
       if (isLoggedIn) {
         await createStory({
           variables: {
@@ -223,8 +242,23 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         })
         toast.success('Story shared!')
       } else {
-        // Guest users - just show success, story won't persist in DB
-        toast.success('Story uploaded! Login to save permanently.')
+        // Guest users - create guest story with anonymous wallet address
+        const hexChars = '0123456789abcdef'
+        let addressBody = ''
+        for (let i = 0; i < 40; i++) {
+          addressBody += hexChars[Math.floor(Math.random() * 16)]
+        }
+        const anonymousAddress = `0x${addressBody}`
+
+        await guestCreateStory({
+          variables: {
+            mediaUrl: ipfsUrl,
+            mediaType,
+            walletAddress: anonymousAddress,
+            duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
+          },
+        })
+        toast.success('Story shared! Login to keep permanently.')
       }
 
       if (onPublish) {
