@@ -181,4 +181,41 @@ export class WebPushService extends Service {
       data: { url: `/dex/dashboard`, type: 'milestone' }
     });
   }
+
+  // ============================================
+  // STORY/REEL NOTIFICATIONS
+  // ============================================
+
+  /**
+   * Send push notification for story reaction
+   */
+  async notifyStoryReaction(profileId: string, reactorName: string, emoji: string, storyId: string): Promise<void> {
+    await this.sendNotification(profileId, {
+      title: 'Story Reaction',
+      body: `${reactorName} reacted ${emoji} to your story`,
+      data: { url: `/dex/stories`, type: 'storyReaction', storyId }
+    });
+  }
+
+  /**
+   * Send push notification for story view (batch to prevent spam)
+   */
+  async notifyStoryView(profileId: string, viewerName: string, storyId: string): Promise<void> {
+    await this.sendNotification(profileId, {
+      title: 'Story Viewed',
+      body: `${viewerName} viewed your story`,
+      data: { url: `/dex/stories`, type: 'storyView', storyId }
+    });
+  }
+
+  /**
+   * Send push notification for story reply
+   */
+  async notifyStoryReply(profileId: string, replierName: string, storyId: string): Promise<void> {
+    await this.sendNotification(profileId, {
+      title: 'Story Reply',
+      body: `${replierName} replied to your story`,
+      data: { url: `/dex/messages`, type: 'storyReply', storyId }
+    });
+  }
 }

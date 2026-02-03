@@ -178,6 +178,19 @@ export class StoryService extends ModelService<typeof Story> {
       throw new UserInputError('Story not found');
     }
 
+    // Send notification to story owner (if not guest story and viewer is different from owner)
+    if (viewerProfileId && story.profileId && story.profileId.toString() !== viewerProfileId) {
+      try {
+        await this.context.notificationService.notifyStoryView({
+          storyOwnerId: story.profileId.toString(),
+          viewerProfileId,
+          storyId,
+        });
+      } catch (err) {
+        console.error('[StoryService] Failed to send story view notification:', err);
+      }
+    }
+
     return story as unknown as Story;
   }
 
@@ -214,6 +227,20 @@ export class StoryService extends ModelService<typeof Story> {
 
     if (!story) {
       throw new UserInputError('Story not found');
+    }
+
+    // Send notification to story owner (if not guest story and reactor is different from owner)
+    if (story.profileId && story.profileId.toString() !== profileId) {
+      try {
+        await this.context.notificationService.notifyStoryReaction({
+          storyOwnerId: story.profileId.toString(),
+          reactorProfileId: profileId,
+          emoji,
+          storyId,
+        });
+      } catch (err) {
+        console.error('[StoryService] Failed to send story reaction notification:', err);
+      }
     }
 
     return story as unknown as Story;

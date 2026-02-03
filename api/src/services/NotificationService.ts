@@ -71,7 +71,7 @@ export class NotificationService extends ModelService<typeof Notification> {
    */
   private async sendNostrNotification(
     profileId: string,
-    type: 'follow' | 'like' | 'comment' | 'dm' | 'tip' | 'nftSold' | 'ogunEarned',
+    type: 'follow' | 'like' | 'comment' | 'dm' | 'tip' | 'nftSold' | 'ogunEarned' | 'storyReaction' | 'storyView',
     params: Record<string, string>
   ): Promise<void> {
     try {
@@ -101,6 +101,14 @@ export class NotificationService extends ModelService<typeof Notification> {
           break;
         case 'ogunEarned':
           await nostrService.notifyOgunEarned(nostrPubkey, params.amount, params.trackTitle, params.isCreator === 'true');
+          break;
+        case 'storyReaction':
+          // Nostr notification for story reaction (uses like notification format)
+          await nostrService.notifyNewLike(nostrPubkey, `${params.reactorName} reacted ${params.emoji} to`, 'your story');
+          break;
+        case 'storyView':
+          // Nostr notification for story view
+          await nostrService.notifyNewLike(nostrPubkey, params.viewerName, 'viewed your story');
           break;
       }
     } catch (err) {
@@ -638,5 +646,110 @@ export class NotificationService extends ModelService<typeof Notification> {
 
     await notification.save();
     await this.incrementNotificationCount(profileId);
+  }
+
+  // ============================================
+  // STORY/REEL NOTIFICATIONS
+  // ============================================
+
+  /**
+   * Notify story owner when someone reacts to their story
+   */
+  async notifyStoryReaction(params: {
+    storyOwnerId: string;
+    reactorProfileId: string;
+    emoji: string;
+    storyId: string;
+  }): Promise<void> {
+    const { storyOwnerId, reactorProfileId, emoji, storyId } = params;
+
+    // Don't notify yourself
+    if (storyOwnerId === reactorProfileId) return;
+
+    try {
+      const reactorProfile = await this.context.profileService.getProfile(reactorProfileId);
+      if (!reactorProfile) return;
+
+      const notification = new NotificationModel({
+        type: NotificationType.StoryReaction,
+        profileId: storyOwnerId,
+        metadata: {
+          reactorName: reactorProfile.displayName || 'Someone',
+          reactorPicture: reactorProfile.profilePicture,
+          reactorProfileId,
+          emoji,
+          storyId,
+        },
+      });
+
+      await notification.save();
+      await this.incrementNotificationCount(storyOwnerId);
+
+      // Web push notification
+      await this.context.webPushService.notifyStoryReaction(
+        storyOwnerId,
+        reactorProfile.displayName || 'Someone',
+        emoji,
+        storyId
+      );
+
+      // Nostr notification
+      await this.sendNostrNotification(storyOwnerId, 'storyReaction', {
+        reactorName: reactorProfile.displayName || 'Someone',
+        emoji,
+        storyId,
+      });
+    } catch (err) {
+      console.error('[NotificationService] Error in notifyStoryReaction:', err);
+    }
+  }
+
+  /**
+   * Notify story owner when someone views their story
+   * Note: This can be high-volume, consider batching or throttling
+   */
+  async notifyStoryView(params: {
+    storyOwnerId: string;
+    viewerProfileId: string;
+    storyId: string;
+  }): Promise<void> {
+    const { storyOwnerId, viewerProfileId, storyId } = params;
+
+    // Don't notify yourself
+    if (storyOwnerId === viewerProfileId) return;
+
+    try {
+      const viewerProfile = await this.context.profileService.getProfile(viewerProfileId);
+      if (!viewerProfile) return;
+
+      const notification = new NotificationModel({
+        type: NotificationType.StoryView,
+        profileId: storyOwnerId,
+        metadata: {
+          viewerName: viewerProfile.displayName || 'Someone',
+          viewerPicture: viewerProfile.profilePicture,
+          viewerProfileId,
+          storyId,
+        },
+      });
+
+      await notification.save();
+      await this.incrementNotificationCount(storyOwnerId);
+
+      // Web push notification
+      await this.context.webPushService.notifyStoryView(
+        storyOwnerId,
+        viewerProfile.displayName || 'Someone',
+        storyId
+      );
+
+      // Nostr notification
+      await this.sendNostrNotification(storyOwnerId, 'storyView', {
+        viewerName: viewerProfile.displayName || 'Someone',
+        storyId,
+      });
+    } catch (err) {
+      console.error('[NotificationService] Error in notifyStoryView:', err);
+    }
   }
 }

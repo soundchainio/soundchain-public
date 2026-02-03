@@ -28,6 +28,11 @@ enum NotificationType {
   PlaylistAdded = 'PlaylistAdded',             // Your track added to a playlist
   StreamMilestone = 'StreamMilestone',         // Hit stream milestone (100, 1K, 10K, etc.)
 
+  // Stories/Reels
+  StoryReaction = 'StoryReaction',             // Someone reacted to your story
+  StoryView = 'StoryView',                     // Someone viewed your story
+  StoryReply = 'StoryReply',                   // Someone replied to your story
+
   // WIN-WIN Streaming Rewards
   OgunEarnedCreator = 'OgunEarnedCreator',     // Creator earned OGUN from stream
   OgunEarnedListener = 'OgunEarnedListener',   // Listener earned OGUN from streaming
