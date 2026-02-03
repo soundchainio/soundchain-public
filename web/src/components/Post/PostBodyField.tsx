@@ -17,11 +17,12 @@ export const PostBodyField = ({ ...props }: PostBodyFieldProps) => {
   return (
     <textarea
       {...field}
-      className="w-full min-h-[80px] text-sm focus:ring-0 focus:outline-none border-0 resize-none p-4"
+      className="w-full min-h-[80px] text-sm focus:ring-0 focus:outline-none border-0 resize-none p-4 text-white placeholder-gray-500"
       style={{
         backgroundColor: '#171717',
-        color: '#ffffff',
+        color: '#ffffff !important',
         WebkitTextFillColor: '#ffffff',
+        caretColor: '#ffffff',
       }}
       placeholder="What's happening?"
       maxLength={props.maxLength}

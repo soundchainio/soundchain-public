@@ -536,13 +536,13 @@ input[type='number'] {
   -moz-appearance: textfield; /* Firefox */
 }
 
-/* Override @tailwindcss/forms white backgrounds - use inherit to respect component styles */
+/* Override @tailwindcss/forms - dark theme defaults */
 input,
 textarea,
 select {
   background-color: inherit !important;
-  color: inherit !important;
-  -webkit-text-fill-color: inherit !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Force textareas to be full width and borderless inside containers */
