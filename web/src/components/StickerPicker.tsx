@@ -97,13 +97,11 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
 
       const normalized: NormalizedEmote[] = (data.emotes || []).map((emote: SevenTVEmote) => {
         const isAnimated = emote.data?.animated || false
-        // 7TV CDN requires explicit file extension
-        // Use .gif for animated emotes, .webp for static (better compression)
-        const ext = isAnimated ? 'gif' : 'webp'
+        // 7TV CDN - no file extension needed, CDN auto-serves correct format
         return {
           id: emote.id,
           name: emote.name,
-          url: `https://cdn.7tv.app/emote/${emote.id}/2x.${ext}`,
+          url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
           animated: isAnimated,
           source: '7tv' as const,
         }
@@ -254,11 +252,10 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
           if (data.emotes) {
             for (const emote of data.emotes.slice(0, 25)) {
               const isAnimated = emote.data?.animated || false
-              const ext = isAnimated ? 'gif' : 'webp'
               allEmotes.push({
                 id: `kick-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x.${ext}`,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
                 animated: isAnimated,
                 source: 'kick' as const,
               })
@@ -281,7 +278,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
       const curated = curatedKickEmotes.map(e => ({
         id: `kick-curated-${e.id}`,
         name: e.name,
-        url: `https://cdn.7tv.app/emote/${e.id}/2x.gif`,
+        url: `https://cdn.7tv.app/emote/${e.id}/2x`,
         animated: true,
         source: 'kick' as const,
       }))
@@ -317,11 +314,10 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
           if (data.emotes) {
             for (const emote of data.emotes.slice(0, 30)) {
               const isAnimated = emote.data?.animated || false
-              const ext = isAnimated ? 'gif' : 'webp'
               allEmotes.push({
                 id: `trend-${emote.id}`,
                 name: emote.name,
-                url: `https://cdn.7tv.app/emote/${emote.id}/2x.${ext}`,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
                 animated: isAnimated,
                 source: '7tv' as const,
               })
@@ -416,7 +412,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return reactions.map(r => ({
       id: `react-${r.id}`,
       name: r.name,
-      url: `https://cdn.7tv.app/emote/${r.id}/2x.gif`,
+      url: `https://cdn.7tv.app/emote/${r.id}/2x`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -451,7 +447,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
     return musicEmotes.map(e => ({
       id: `music-${e.id}`,
       name: e.name,
-      url: `https://cdn.7tv.app/emote/${e.id}/2x.gif`,
+      url: `https://cdn.7tv.app/emote/${e.id}/2x`,
       animated: true,
       source: '7tv' as const,
     }))
@@ -471,69 +467,69 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
             // Use 7TV emotes instead of data URLs (which break when inserted)
             const scEmotes: NormalizedEmote[] = [
               // Music vibes from 7TV (working URLs)
-              { id: 'sc-catjam', name: 'catJAM', url: 'https://cdn.7tv.app/emote/60aec9186d0b8c60ac0be7c0/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peped', name: 'pepeD', url: 'https://cdn.7tv.app/emote/60ae8cac229664e8667ae5a8/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-nodders', name: 'NODDERS', url: 'https://cdn.7tv.app/emote/60afe3c580df1e6b58fd7f3f/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-clap', name: 'Clap', url: 'https://cdn.7tv.app/emote/60af2c40aa0d72dc39f1c3e4/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peepoClap', name: 'peepoClap', url: 'https://cdn.7tv.app/emote/60b11aab6a76e2db2da56f59/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-hypers', name: 'HYPERS', url: 'https://cdn.7tv.app/emote/60ae4aa5229664e8667ab8ef/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-prayge', name: 'Prayge', url: 'https://cdn.7tv.app/emote/60af3c7e229664e8667ac2eb/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-kekw', name: 'KEKW', url: 'https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-lulw', name: 'LULW', url: 'https://cdn.7tv.app/emote/60b04b4a77ccd81f2b77d67d/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-omegalul', name: 'OMEGALUL', url: 'https://cdn.7tv.app/emote/60b0d3ec8ed8b373e421e7a7/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-ez', name: 'EZ', url: 'https://cdn.7tv.app/emote/60b0d3f1daa8fb57cd62c5e6/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-pogu', name: 'PogU', url: 'https://cdn.7tv.app/emote/60b0d3d4a5de6cf21b5ea84e/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-sadge', name: 'Sadge', url: 'https://cdn.7tv.app/emote/60ae3fd1229664e8667ab074/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-copium', name: 'Copium', url: 'https://cdn.7tv.app/emote/60af9fdde5e3c23f8a6dea93/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-pepelaugh', name: 'PepeLaugh', url: 'https://cdn.7tv.app/emote/60aefc43ff8a9a15a6de5847/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-monkas', name: 'monkaS', url: 'https://cdn.7tv.app/emote/60b0d3c3daa8fb57cd62c5db/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-feelsgoodman', name: 'FeelsGoodMan', url: 'https://cdn.7tv.app/emote/60b0d3a7a5de6cf21b5ea83b/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-feelsbadman', name: 'FeelsBadMan', url: 'https://cdn.7tv.app/emote/60b0d3b5a5de6cf21b5ea842/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peepoHappy', name: 'peepoHappy', url: 'https://cdn.7tv.app/emote/60b0d53e77ccd81f2b78c1c0/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peepoSad', name: 'peepoSad', url: 'https://cdn.7tv.app/emote/60b0d577f0e6f5574632aad8/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-pepehands', name: 'PepeHands', url: 'https://cdn.7tv.app/emote/60ae4dc1229664e8667ab9d9/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-widehard', name: 'WideHard', url: 'https://cdn.7tv.app/emote/60af14f4e5e3c23f8a6dd802/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-hackermans', name: 'HACKERMANS', url: 'https://cdn.7tv.app/emote/60af3d5ee5e3c23f8a6ddc9e/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-waytoodank', name: 'WAYTOODANK', url: 'https://cdn.7tv.app/emote/60b04bc4daa8fb57cd61b38c/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-pepega', name: 'Pepega', url: 'https://cdn.7tv.app/emote/60af69b37e08e07de9d40f04/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-aware', name: 'Aware', url: 'https://cdn.7tv.app/emote/60af1b9eaa0d72dc39f1ea0f/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-booba', name: 'BOOBA', url: 'https://cdn.7tv.app/emote/60b076aea64e9d892a82d9f1/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-trihard', name: 'TriHard', url: 'https://cdn.7tv.app/emote/60b0d3df77ccd81f2b78b963/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-monkaw', name: 'monkaW', url: 'https://cdn.7tv.app/emote/60b0d42e77ccd81f2b78ba2d/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-forsencd', name: 'forsenCD', url: 'https://cdn.7tv.app/emote/60b0d43b77ccd81f2b78ba37/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-pausechamp', name: 'PauseChamp', url: 'https://cdn.7tv.app/emote/60af3bfc77ccd81f2b76a2c3/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-coolcat', name: 'CoolCat', url: 'https://cdn.7tv.app/emote/60af2d01aa0d72dc39f1c470/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-catjam', name: 'catJAM', url: 'https://cdn.7tv.app/emote/60aec9186d0b8c60ac0be7c0/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peped', name: 'pepeD', url: 'https://cdn.7tv.app/emote/60ae8cac229664e8667ae5a8/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-nodders', name: 'NODDERS', url: 'https://cdn.7tv.app/emote/60afe3c580df1e6b58fd7f3f/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-clap', name: 'Clap', url: 'https://cdn.7tv.app/emote/60af2c40aa0d72dc39f1c3e4/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoClap', name: 'peepoClap', url: 'https://cdn.7tv.app/emote/60b11aab6a76e2db2da56f59/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-hypers', name: 'HYPERS', url: 'https://cdn.7tv.app/emote/60ae4aa5229664e8667ab8ef/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-prayge', name: 'Prayge', url: 'https://cdn.7tv.app/emote/60af3c7e229664e8667ac2eb/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-kekw', name: 'KEKW', url: 'https://cdn.7tv.app/emote/60ae958e229664e8667aea38/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-lulw', name: 'LULW', url: 'https://cdn.7tv.app/emote/60b04b4a77ccd81f2b77d67d/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-omegalul', name: 'OMEGALUL', url: 'https://cdn.7tv.app/emote/60b0d3ec8ed8b373e421e7a7/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-ez', name: 'EZ', url: 'https://cdn.7tv.app/emote/60b0d3f1daa8fb57cd62c5e6/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-pogu', name: 'PogU', url: 'https://cdn.7tv.app/emote/60b0d3d4a5de6cf21b5ea84e/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-sadge', name: 'Sadge', url: 'https://cdn.7tv.app/emote/60ae3fd1229664e8667ab074/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-copium', name: 'Copium', url: 'https://cdn.7tv.app/emote/60af9fdde5e3c23f8a6dea93/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-pepelaugh', name: 'PepeLaugh', url: 'https://cdn.7tv.app/emote/60aefc43ff8a9a15a6de5847/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-monkas', name: 'monkaS', url: 'https://cdn.7tv.app/emote/60b0d3c3daa8fb57cd62c5db/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-feelsgoodman', name: 'FeelsGoodMan', url: 'https://cdn.7tv.app/emote/60b0d3a7a5de6cf21b5ea83b/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-feelsbadman', name: 'FeelsBadMan', url: 'https://cdn.7tv.app/emote/60b0d3b5a5de6cf21b5ea842/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoHappy', name: 'peepoHappy', url: 'https://cdn.7tv.app/emote/60b0d53e77ccd81f2b78c1c0/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoSad', name: 'peepoSad', url: 'https://cdn.7tv.app/emote/60b0d577f0e6f5574632aad8/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-pepehands', name: 'PepeHands', url: 'https://cdn.7tv.app/emote/60ae4dc1229664e8667ab9d9/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-widehard', name: 'WideHard', url: 'https://cdn.7tv.app/emote/60af14f4e5e3c23f8a6dd802/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-hackermans', name: 'HACKERMANS', url: 'https://cdn.7tv.app/emote/60af3d5ee5e3c23f8a6ddc9e/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-waytoodank', name: 'WAYTOODANK', url: 'https://cdn.7tv.app/emote/60b04bc4daa8fb57cd61b38c/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-pepega', name: 'Pepega', url: 'https://cdn.7tv.app/emote/60af69b37e08e07de9d40f04/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-aware', name: 'Aware', url: 'https://cdn.7tv.app/emote/60af1b9eaa0d72dc39f1ea0f/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-booba', name: 'BOOBA', url: 'https://cdn.7tv.app/emote/60b076aea64e9d892a82d9f1/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-trihard', name: 'TriHard', url: 'https://cdn.7tv.app/emote/60b0d3df77ccd81f2b78b963/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-monkaw', name: 'monkaW', url: 'https://cdn.7tv.app/emote/60b0d42e77ccd81f2b78ba2d/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-forsencd', name: 'forsenCD', url: 'https://cdn.7tv.app/emote/60b0d43b77ccd81f2b78ba37/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-pausechamp', name: 'PauseChamp', url: 'https://cdn.7tv.app/emote/60af3bfc77ccd81f2b76a2c3/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-coolcat', name: 'CoolCat', url: 'https://cdn.7tv.app/emote/60af2d01aa0d72dc39f1c470/2x', animated: true, source: 'soundchain' },
               // More SC favorites - MASSIVE expansion!
-              { id: 'sc-gigachad', name: 'GIGACHAD', url: 'https://cdn.7tv.app/emote/60ae7be1ff8a9a15a6de0e3e/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-clueless', name: 'Clueless', url: 'https://cdn.7tv.app/emote/60ae9f49ff8a9a15a6de5f93/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-bedge', name: 'Bedge', url: 'https://cdn.7tv.app/emote/60ae37d7229664e8667ab051/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-modcheck', name: 'modCheck', url: 'https://cdn.7tv.app/emote/60af7df477ccd81f2b77196d/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-stare', name: 'Stare', url: 'https://cdn.7tv.app/emote/60b0bca1e5e3c23f8a6e24f1/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-based', name: 'BASED', url: 'https://cdn.7tv.app/emote/60b09eb777ccd81f2b78dbd9/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-despair', name: 'DESPAIR', url: 'https://cdn.7tv.app/emote/60b09c1477ccd81f2b78db76/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-susge', name: 'Susge', url: 'https://cdn.7tv.app/emote/60b0a9aba64e9d892a82dd3b/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-noted', name: 'NOTED', url: 'https://cdn.7tv.app/emote/60b09e93e5e3c23f8a6e1f48/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-caught', name: 'CAUGHT', url: 'https://cdn.7tv.app/emote/60b0952ee5e3c23f8a6e1cfe/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-feelsstrongman', name: 'FeelsStrongMan', url: 'https://cdn.7tv.app/emote/60b0bfd6e5e3c23f8a6e25f7/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peepoarrive', name: 'peepoArrive', url: 'https://cdn.7tv.app/emote/60b109e077ccd81f2b78fc0c/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peepoleave', name: 'peepoLeave', url: 'https://cdn.7tv.app/emote/60b10a61a64e9d892a83081b/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peeporiot', name: 'peepoRiot', url: 'https://cdn.7tv.app/emote/60b11106a64e9d892a830d7c/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peeposit', name: 'peepoSit', url: 'https://cdn.7tv.app/emote/60b112648ed8b373e42210b5/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peepogiggles', name: 'peepoGiggles', url: 'https://cdn.7tv.app/emote/60b1195d6a76e2db2da56e83/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-peepoblush', name: 'peepoBlush', url: 'https://cdn.7tv.app/emote/60b11b38e5e3c23f8a6e340a/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-poggers', name: 'POGGERS', url: 'https://cdn.7tv.app/emote/60b0d50b8ed8b373e421e7c1/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-weirdchamp', name: 'WeirdChamp', url: 'https://cdn.7tv.app/emote/60b0d51c8ed8b373e421e7c5/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-pepepains', name: 'Pepepains', url: 'https://cdn.7tv.app/emote/60b0d4e0daa8fb57cd62c638/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-icant', name: 'ICANT', url: 'https://cdn.7tv.app/emote/60b0d4cba5de6cf21b5ea87e/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-okayge', name: 'Okayge', url: 'https://cdn.7tv.app/emote/60b0d4b3a5de6cf21b5ea877/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-noidontthinkso', name: 'NOIDONTTHINKSO', url: 'https://cdn.7tv.app/emote/60b0d49a77ccd81f2b78babb/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-xqcl', name: 'xqcL', url: 'https://cdn.7tv.app/emote/60b0d464daa8fb57cd62c609/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-letsgo', name: 'LETSGO', url: 'https://cdn.7tv.app/emote/60b0d44fdaa8fb57cd62c5fe/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-madge', name: 'Madge', url: 'https://cdn.7tv.app/emote/60b0d4188ed8b373e421e7a8/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-pepepls', name: 'Pepepls', url: 'https://cdn.7tv.app/emote/60b0d401daa8fb57cd62c5f2/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-petthe', name: 'PETTHE', url: 'https://cdn.7tv.app/emote/60b0d3be77ccd81f2b78b950/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-chatting', name: 'Chatting', url: 'https://cdn.7tv.app/emote/60b0bb0f8ed8b373e421cf47/2x.gif', animated: true, source: 'soundchain' },
-              { id: 'sc-lebronjam', name: 'lebronJAM', url: 'https://cdn.7tv.app/emote/60b0c0ce8ed8b373e421e68d/2x.gif', animated: true, source: 'soundchain' },
+              { id: 'sc-gigachad', name: 'GIGACHAD', url: 'https://cdn.7tv.app/emote/60ae7be1ff8a9a15a6de0e3e/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-clueless', name: 'Clueless', url: 'https://cdn.7tv.app/emote/60ae9f49ff8a9a15a6de5f93/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-bedge', name: 'Bedge', url: 'https://cdn.7tv.app/emote/60ae37d7229664e8667ab051/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-modcheck', name: 'modCheck', url: 'https://cdn.7tv.app/emote/60af7df477ccd81f2b77196d/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-stare', name: 'Stare', url: 'https://cdn.7tv.app/emote/60b0bca1e5e3c23f8a6e24f1/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-based', name: 'BASED', url: 'https://cdn.7tv.app/emote/60b09eb777ccd81f2b78dbd9/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-despair', name: 'DESPAIR', url: 'https://cdn.7tv.app/emote/60b09c1477ccd81f2b78db76/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-susge', name: 'Susge', url: 'https://cdn.7tv.app/emote/60b0a9aba64e9d892a82dd3b/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-noted', name: 'NOTED', url: 'https://cdn.7tv.app/emote/60b09e93e5e3c23f8a6e1f48/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-caught', name: 'CAUGHT', url: 'https://cdn.7tv.app/emote/60b0952ee5e3c23f8a6e1cfe/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-feelsstrongman', name: 'FeelsStrongMan', url: 'https://cdn.7tv.app/emote/60b0bfd6e5e3c23f8a6e25f7/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoarrive', name: 'peepoArrive', url: 'https://cdn.7tv.app/emote/60b109e077ccd81f2b78fc0c/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoleave', name: 'peepoLeave', url: 'https://cdn.7tv.app/emote/60b10a61a64e9d892a83081b/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peeporiot', name: 'peepoRiot', url: 'https://cdn.7tv.app/emote/60b11106a64e9d892a830d7c/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peeposit', name: 'peepoSit', url: 'https://cdn.7tv.app/emote/60b112648ed8b373e42210b5/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peepogiggles', name: 'peepoGiggles', url: 'https://cdn.7tv.app/emote/60b1195d6a76e2db2da56e83/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-peepoblush', name: 'peepoBlush', url: 'https://cdn.7tv.app/emote/60b11b38e5e3c23f8a6e340a/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-poggers', name: 'POGGERS', url: 'https://cdn.7tv.app/emote/60b0d50b8ed8b373e421e7c1/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-weirdchamp', name: 'WeirdChamp', url: 'https://cdn.7tv.app/emote/60b0d51c8ed8b373e421e7c5/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-pepepains', name: 'Pepepains', url: 'https://cdn.7tv.app/emote/60b0d4e0daa8fb57cd62c638/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-icant', name: 'ICANT', url: 'https://cdn.7tv.app/emote/60b0d4cba5de6cf21b5ea87e/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-okayge', name: 'Okayge', url: 'https://cdn.7tv.app/emote/60b0d4b3a5de6cf21b5ea877/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-noidontthinkso', name: 'NOIDONTTHINKSO', url: 'https://cdn.7tv.app/emote/60b0d49a77ccd81f2b78babb/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-xqcl', name: 'xqcL', url: 'https://cdn.7tv.app/emote/60b0d464daa8fb57cd62c609/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-letsgo', name: 'LETSGO', url: 'https://cdn.7tv.app/emote/60b0d44fdaa8fb57cd62c5fe/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-madge', name: 'Madge', url: 'https://cdn.7tv.app/emote/60b0d4188ed8b373e421e7a8/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-pepepls', name: 'Pepepls', url: 'https://cdn.7tv.app/emote/60b0d401daa8fb57cd62c5f2/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-petthe', name: 'PETTHE', url: 'https://cdn.7tv.app/emote/60b0d3be77ccd81f2b78b950/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-chatting', name: 'Chatting', url: 'https://cdn.7tv.app/emote/60b0bb0f8ed8b373e421cf47/2x', animated: true, source: 'soundchain' },
+              { id: 'sc-lebronjam', name: 'lebronJAM', url: 'https://cdn.7tv.app/emote/60b0c0ce8ed8b373e421e68d/2x', animated: true, source: 'soundchain' },
             ]
             loadedEmotes = scEmotes
             break
@@ -692,29 +688,38 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
                   className="w-7 h-7 object-contain"
                   loading="lazy"
                   onError={(e) => {
-                    // Fallback chain: gif -> webp -> png -> text
+                    // 7TV CDN works without extensions - don't add them
                     const img = e.target as HTMLImageElement
                     const url = img.src
-                    if (url.includes('.gif')) {
-                      // gif failed, try webp
-                      img.src = url.replace('.gif', '.webp')
-                    } else if (url.includes('.webp')) {
-                      // webp failed, try png
-                      img.src = url.replace('.webp', '.png')
-                    } else if (url.includes('.png')) {
-                      // All formats failed - show emoji as text fallback
-                      img.style.display = 'none'
-                      const parent = img.parentElement
-                      if (parent) {
-                        parent.classList.add('bg-neutral-700/50')
-                        const span = document.createElement('span')
-                        span.className = 'text-[8px] text-cyan-400 font-medium'
-                        span.textContent = emote.name.slice(0, 5)
-                        parent.appendChild(span)
+                    const is7TV = url.includes('cdn.7tv.app')
+
+                    if (is7TV) {
+                      // 7TV: strip any extension, CDN auto-serves correct format
+                      const baseUrl = url.replace(/\.(gif|webp|png)$/, '')
+                      if (url !== baseUrl) {
+                        img.src = baseUrl
+                        return
                       }
                     } else {
-                      // Unknown format, try webp
-                      img.src = url + '.webp'
+                      // Non-7TV: fallback chain
+                      if (url.includes('.gif')) {
+                        img.src = url.replace('.gif', '.webp')
+                        return
+                      } else if (url.includes('.webp')) {
+                        img.src = url.replace('.webp', '.png')
+                        return
+                      }
+                    }
+
+                    // All failed - show text fallback
+                    img.style.display = 'none'
+                    const parent = img.parentElement
+                    if (parent) {
+                      parent.classList.add('bg-neutral-700/50')
+                      const span = document.createElement('span')
+                      span.className = 'text-[8px] text-cyan-400 font-medium'
+                      span.textContent = emote.name.slice(0, 5)
+                      parent.appendChild(span)
                     }
                   }}
                 />

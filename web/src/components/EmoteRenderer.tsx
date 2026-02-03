@@ -70,25 +70,39 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
           const target = e.target as HTMLImageElement
           const currentSrc = target.src
 
-          // Try different formats: base -> .webp -> .gif -> .png -> text fallback
-          // 7TV and other CDNs often support multiple formats
-          if (!currentSrc.includes('.webp') && !currentSrc.includes('.gif') && !currentSrc.includes('.png')) {
-            // Base URL failed, try .webp
-            target.src = currentSrc + '.webp'
-          } else if (currentSrc.endsWith('.webp')) {
-            // .webp failed, try .gif
-            target.src = currentSrc.replace('.webp', '.gif')
-          } else if (currentSrc.endsWith('.gif')) {
-            // .gif failed, try .png
-            target.src = currentSrc.replace('.gif', '.png')
+          // 7TV CDN works best without extensions - strip them first
+          // Pattern: https://cdn.7tv.app/emote/ID/2x or https://cdn.7tv.app/emote/ID/2x.ext
+          const is7TV = currentSrc.includes('cdn.7tv.app')
+
+          if (is7TV) {
+            // For 7TV: strip any extension and let CDN auto-serve
+            const baseUrl = currentSrc.replace(/\.(gif|webp|png)$/, '')
+            if (currentSrc !== baseUrl) {
+              // Had an extension, try without it
+              target.src = baseUrl
+              return
+            }
+            // Already tried without extension, show fallback
           } else {
-            // All formats failed - show text fallback
-            target.style.display = 'none'
-            const fallback = document.createElement('span')
-            fallback.className = 'inline-block px-1 py-0.5 text-xs bg-neutral-700 rounded text-cyan-400'
-            fallback.textContent = `:${emoteName}:`
-            target.parentNode?.insertBefore(fallback, target.nextSibling)
+            // Non-7TV: try different formats
+            if (!currentSrc.includes('.webp') && !currentSrc.includes('.gif') && !currentSrc.includes('.png')) {
+              target.src = currentSrc + '.webp'
+              return
+            } else if (currentSrc.endsWith('.webp')) {
+              target.src = currentSrc.replace('.webp', '.gif')
+              return
+            } else if (currentSrc.endsWith('.gif')) {
+              target.src = currentSrc.replace('.gif', '.png')
+              return
+            }
           }
+
+          // All formats failed - show text fallback
+          target.style.display = 'none'
+          const fallback = document.createElement('span')
+          fallback.className = 'inline-block px-1 py-0.5 text-xs bg-neutral-700 rounded text-cyan-400'
+          fallback.textContent = `:${emoteName}:`
+          target.parentNode?.insertBefore(fallback, target.nextSibling)
         }}
       />
     )
