@@ -42,6 +42,7 @@ import { SCidResolver } from './SCidResolver';
 import { BookmarkResolver } from './BookmarkResolver';
 import { TrackCommentResolver } from './TrackCommentResolver';
 import { DeveloperResolver } from './DeveloperResolver';
+import { StoryResolver } from './StoryResolver';
 
 export const resolvers = [
   ActivityResolver,
@@ -88,4 +89,5 @@ export const resolvers = [
   BookmarkResolver,
   TrackCommentResolver,
   DeveloperResolver,
+  StoryResolver,
 ] as const;

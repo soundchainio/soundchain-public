@@ -1,4 +1,4 @@
-import { MusicalNoteIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
+import { MusicalNoteIcon, VideoCameraIcon, PhotoIcon } from '@heroicons/react/24/outline'
 import Picker from '@emoji-mart/react'
 
 // Extended Emoji type with native property from emoji-mart picker callback
@@ -27,6 +27,8 @@ interface PostBarProps {
   values: FormValues
   postLink: string
   setPostLink: (val: string) => void
+  onMediaUploadClick?: () => void
+  hasMedia?: boolean
 }
 
 export const PostBar = ({
@@ -39,6 +41,8 @@ export const PostBar = ({
   values,
   postLink,
   setPostLink,
+  onMediaUploadClick,
+  hasMedia,
 }: PostBarProps) => {
   const [showAddMusicLink, setShowAddMusicLink] = useState(false)
   const [showAddVideoLink, setShowAddVideoLink] = useState(false)
@@ -87,15 +91,24 @@ export const PostBar = ({
       </div>
       {!isRepost && (
         <>
+          {onMediaUploadClick && (
+            <button
+              className="w-12 cursor-pointer text-center"
+              aria-label="Upload photo or video"
+              onClick={onMediaUploadClick}
+            >
+              <PhotoIcon className={`m-auto w-5 ${hasMedia ? 'text-cyan-400' : 'text-gray-400'}`} />
+            </button>
+          )}
           <button
-            className="w-16 cursor-pointer text-center"
+            className="w-12 cursor-pointer text-center"
             aria-label="Embed a song to your post"
             onClick={onAddMusicClick}
           >
             <MusicalNoteIcon className="m-auto w-5 text-gray-400" />
           </button>
           <button
-            className="w-16 cursor-pointer text-center"
+            className="w-12 cursor-pointer text-center"
             aria-label="Embed a video to your post"
             onClick={onAddVideoClick}
           >

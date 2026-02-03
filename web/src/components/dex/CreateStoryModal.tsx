@@ -197,39 +197,33 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
 
   return (
     <>
-      {/* Backdrop - translucent */}
+      {/* Backdrop - no blur */}
       <div
-        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] bg-black/50"
         onClick={onClose}
       />
 
-      {/* Slim dropdown modal - cyberpunk style like compose button */}
-      <div className="fixed z-[101] top-20 left-1/2 -translate-x-1/2 w-[90vw] max-w-sm animate-in slide-in-from-top-4 duration-200">
-        <div className="relative bg-black/80 backdrop-blur-xl border border-cyan-500/30 rounded-2xl shadow-[0_0_40px_rgba(6,182,212,0.2)] overflow-hidden">
-          {/* Glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-purple-500/10 pointer-events-none" />
-
-          {/* Header */}
-          <div className="relative flex items-center justify-between px-4 py-3 border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
-              <span className="text-sm font-medium text-white">Create Story</span>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
+      {/* Ultra-slim modal */}
+      <div className="fixed z-[101] top-16 left-1/2 -translate-x-1/2 w-[92vw] max-w-xs animate-in slide-in-from-top-2 duration-150">
+        <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl">
+          {/* Compact header */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-800">
+            <span className="text-xs font-medium text-white flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-cyan-400" />
+              Story
+            </span>
+            <button onClick={onClose} className="text-neutral-500 hover:text-white">
+              <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="relative p-4">
+          <div className="p-2">
             {!mediaPreview ? (
-              /* Upload area - compact */
+              /* Ultra-compact upload */
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center gap-3 p-6 rounded-xl border border-dashed border-cyan-500/30 bg-cyan-500/5 hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all cursor-pointer"
+                className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-neutral-700 hover:border-cyan-500/50 hover:bg-cyan-500/5 cursor-pointer transition-all"
               >
                 <input
                   ref={fileInputRef}
@@ -238,122 +232,63 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                   onChange={handleFileSelect}
                   className="hidden"
                 />
-
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/30 to-purple-500/30 flex items-center justify-center border border-cyan-500/30">
-                  <Upload className="w-5 h-5 text-cyan-400" />
+                <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                  <Upload className="w-4 h-4 text-cyan-400" />
                 </div>
-
-                <div className="text-center">
-                  <p className="text-white text-sm font-medium">Tap to upload</p>
-                  <p className="text-white/40 text-xs mt-0.5">or drag and drop</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-xs font-medium">Tap to upload</p>
+                  <p className="text-neutral-500 text-[10px]">
+                    {isLoggedIn ? '10min • 1GB' : '30sec • 10MB'} • 24h
+                  </p>
                 </div>
-
-                <div className="flex items-center gap-3 text-white/40 text-xs">
-                  <div className="flex items-center gap-1">
-                    <ImageIcon className="w-3 h-3" />
-                    <span>Images</span>
-                  </div>
-                  <span className="text-white/20">|</span>
-                  <div className="flex items-center gap-1">
-                    <Video className="w-3 h-3" />
-                    <span>Videos</span>
-                  </div>
-                </div>
-
-                {/* Compression progress */}
-                {isCompressing && compressionProgress && (
-                  <div className="w-full mt-2">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Loader2 className="w-3 h-3 text-cyan-400 animate-spin" />
-                      <span className="text-cyan-400 text-xs">{compressionProgress.message}</span>
-                    </div>
-                    <div className="w-full h-1 bg-black/50 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 to-purple-500"
-                        style={{ width: `${compressionProgress.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {uploadError && (
-                  <p className="text-red-400 text-xs mt-1">{uploadError}</p>
-                )}
               </div>
             ) : (
-              /* Preview - compact */
-              <div className="space-y-3">
-                <div className="relative aspect-video rounded-xl overflow-hidden bg-black">
+              /* Compact preview */
+              <div className="space-y-2">
+                <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-black">
                   {mediaType === 'image' ? (
-                    <img src={mediaPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={mediaPreview} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <video src={mediaPreview} className="w-full h-full object-cover" autoPlay loop muted playsInline />
                   )}
-
-                  {/* File info overlay */}
-                  <div className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/70 backdrop-blur-sm text-[10px] text-white/70">
-                    {videoDuration > 0 && (
-                      <>
-                        <Clock className="w-3 h-3" />
-                        <span>{formatDuration(videoDuration)}</span>
-                        <span className="text-white/30">•</span>
-                      </>
-                    )}
-                    <HardDrive className="w-3 h-3" />
-                    <span>{formatFileSize(mediaFile?.size || 0)}</span>
-                  </div>
-
-                  {wasCompressed && (
-                    <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-[10px] text-green-400">
-                      <CheckCircle className="w-3 h-3" />
-                      <span>Optimized</span>
+                  <button
+                    onClick={handleClear}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center text-white/70 hover:text-white"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  {videoDuration > 0 && (
+                    <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 text-[9px] text-white/70">
+                      {formatDuration(videoDuration)}
                     </div>
                   )}
                 </div>
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleClear}
-                    className="flex-1 py-2 rounded-lg bg-white/10 text-white/70 text-sm font-medium hover:bg-white/15 transition-colors"
-                  >
-                    Clear
-                  </button>
-                  <button
-                    onClick={handlePublish}
-                    disabled={isUploading}
-                    className="flex-1 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm font-medium hover:from-cyan-400 hover:to-purple-400 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Uploading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4" />
-                        <span>Share</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  onClick={handlePublish}
+                  disabled={isUploading}
+                  className="w-full py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-medium disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  {isUploading ? 'Uploading...' : 'Share Story'}
+                </button>
               </div>
             )}
-          </div>
 
-          {/* Footer info */}
-          <div className="relative px-4 py-2 border-t border-white/5 flex items-center justify-center gap-4 text-[10px] text-white/30">
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              <span>{isLoggedIn ? 'Up to 10 min' : 'Up to 30 sec'}</span>
-            </div>
-            <span className="text-white/10">•</span>
-            <div className="flex items-center gap-1">
-              <HardDrive className="w-3 h-3" />
-              <span>{isLoggedIn ? 'Max 1 GB' : 'Max 10 MB'}</span>
-            </div>
-            <span className="text-white/10">•</span>
-            <span>24h expiry</span>
+            {/* Compression progress - inline */}
+            {isCompressing && compressionProgress && (
+              <div className="mt-2 flex items-center gap-2 text-[10px] text-cyan-400">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>{compressionProgress.message}</span>
+              </div>
+            )}
+
+            {uploadError && (
+              <p className="mt-2 text-red-400 text-[10px]">{uploadError}</p>
+            )}
           </div>
         </div>
       </div>

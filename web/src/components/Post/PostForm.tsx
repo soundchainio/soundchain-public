@@ -20,6 +20,8 @@ import { PostBar } from './PostBar'
 import { PostBodyField } from './PostBodyField'
 import { setMaxInputLength } from './PostModal'
 import { RepostPreview } from './RepostPreview'
+import { PostMediaUploader } from './PostMediaUploader'
+import { useMe } from 'hooks/useMe'
 
 interface InitialValues {
   body: string
@@ -59,7 +61,12 @@ const newPostSchema: yup.Schema<FormValues> = yup.object().shape({
 const defaultInitialValues = { body: '' }
 
 export const PostForm = ({ ...props }: PostFormProps) => {
+  const me = useMe()
   const [isEmojiPickerVisible, setEmojiPickerVisible] = useState(false)
+  const [showMediaUploader, setShowMediaUploader] = useState(false)
+  const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | undefined>()
+  const [uploadedMediaType, setUploadedMediaType] = useState<'image' | 'video' | 'audio' | undefined>()
+  const [uploadedMediaThumbnail, setUploadedMediaThumbnail] = useState<string | undefined>()
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
   const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] })
   const [editPost] = useUpdatePostMutation()
@@ -104,6 +111,15 @@ export const PostForm = ({ ...props }: PostFormProps) => {
 
           if (props.trackId) {
             newPostParams.trackId = props.trackId
+          }
+
+          // Add uploaded media if present
+          if (uploadedMediaUrl && uploadedMediaType) {
+            (newPostParams as any).uploadedMediaUrl = uploadedMediaUrl;
+            (newPostParams as any).uploadedMediaType = uploadedMediaType;
+            if (uploadedMediaThumbnail) {
+              (newPostParams as any).uploadedMediaThumbnail = uploadedMediaThumbnail;
+            }
           }
 
           await createPost({ variables: { input: newPostParams } })
@@ -356,6 +372,25 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               </div>
             )
           })()}
+          {/* Media Uploader - shown when user clicks photo icon */}
+          {(showMediaUploader || uploadedMediaUrl) && props.type === PostFormType.NEW && (
+            <PostMediaUploader
+              onMediaSelected={(url, type, thumbnailUrl) => {
+                setUploadedMediaUrl(url)
+                setUploadedMediaType(type)
+                setUploadedMediaThumbnail(thumbnailUrl)
+              }}
+              onMediaRemoved={() => {
+                setUploadedMediaUrl(undefined)
+                setUploadedMediaType(undefined)
+                setUploadedMediaThumbnail(undefined)
+                setShowMediaUploader(false)
+              }}
+              currentUrl={uploadedMediaUrl}
+              currentType={uploadedMediaType}
+              isGuest={!me}
+            />
+          )}
           <PostBar
             onEmojiPickerClick={onEmojiPickerClick}
             isEmojiPickerVisible={isEmojiPickerVisible}
@@ -366,6 +401,8 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             values={values}
             postLink={props.postLink || ''}
             setPostLink={props.setPostLink}
+            onMediaUploadClick={() => setShowMediaUploader(!showMediaUploader)}
+            hasMedia={!!uploadedMediaUrl}
           />
         </Form>
       )}

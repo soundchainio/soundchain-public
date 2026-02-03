@@ -135,7 +135,7 @@ export const PostModal = () => {
     <ModalsPortal>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+        className="fixed inset-0 z-50 bg-black/60 animate-in fade-in duration-200"
         onClick={() => clearState()}
       />
 
