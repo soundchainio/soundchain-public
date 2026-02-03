@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Plus, ChevronLeft, ChevronRight, Lock, Sparkles } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
@@ -6,6 +6,31 @@ import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
 import { StoryViewer } from './StoryViewer'
 import { CreateStoryModal } from './CreateStoryModal'
+import { gql, useQuery } from '@apollo/client'
+
+// GraphQL query for public stories
+const PUBLIC_STORIES = gql`
+  query publicStories($limit: Int) {
+    publicStories(limit: $limit) {
+      id
+      profileId
+      mediaUrl
+      mediaType
+      caption
+      duration
+      createdAt
+      expiresAt
+      isPermanent
+      viewCount
+      profile {
+        id
+        handle
+        displayName
+        avatarUrl
+      }
+    }
+  }
+`
 
 interface Story {
   id: string
@@ -23,18 +48,6 @@ interface StoriesBarProps {
   onViewStory?: (profileId: string) => void
 }
 
-// Mock data for now - will be replaced with GraphQL query
-const mockStories: Story[] = [
-  { id: '1', profileId: 'p1', displayName: 'Ye', userHandle: 'ye', hasUnwatched: true, isPermanent: true, storyCount: 3, profilePicture: '' },
-  { id: '2', profileId: 'p2', displayName: 'fern_dev', userHandle: 'fern_dev', hasUnwatched: true, storyCount: 1, profilePicture: '' },
-  { id: '3', profileId: 'p3', displayName: 'DJ Shadow', userHandle: 'djshadow', hasUnwatched: false, storyCount: 2, profilePicture: '' },
-  { id: '4', profileId: 'p4', displayName: 'Crypto Kid', userHandle: 'cryptokid', hasUnwatched: true, storyCount: 1, profilePicture: '' },
-  { id: '5', profileId: 'p5', displayName: 'Bass Queen', userHandle: 'bassqueen', hasUnwatched: true, isPermanent: true, storyCount: 5, profilePicture: '' },
-  { id: '6', profileId: 'p6', displayName: 'Vinyl Vibes', userHandle: 'vinylvibes', hasUnwatched: false, storyCount: 1, profilePicture: '' },
-  { id: '7', profileId: 'p7', displayName: 'Beat Master', userHandle: 'beatmaster', hasUnwatched: true, storyCount: 2, profilePicture: '' },
-  { id: '8', profileId: 'p8', displayName: 'Lo-Fi Luna', userHandle: 'lofiluna', hasUnwatched: true, storyCount: 1, profilePicture: '' },
-]
-
 export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
   const meData = useMe()
   const me = meData?.me
@@ -46,6 +59,40 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
   const [showCreateStory, setShowCreateStory] = useState(false)
   const [selectedUserId, setSelectedUserId] = useState<string | undefined>()
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
+
+  // Fetch real stories from API
+  const { data: storiesData, loading: storiesLoading } = useQuery(PUBLIC_STORIES, {
+    variables: { limit: 20 },
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Transform API data to Story format, grouped by profile
+  const stories: Story[] = useMemo(() => {
+    if (!storiesData?.publicStories) return []
+
+    // Group stories by profileId
+    const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
+      const pid = story.profileId
+      if (!acc[pid]) {
+        acc[pid] = {
+          id: story.id,
+          profileId: pid,
+          profilePicture: story.profile?.avatarUrl,
+          displayName: story.profile?.displayName,
+          userHandle: story.profile?.handle || 'user',
+          hasUnwatched: true, // TODO: track viewed stories
+          isPermanent: story.isPermanent,
+          storyCount: 1,
+        }
+      } else {
+        acc[pid].storyCount++
+        if (story.isPermanent) acc[pid].isPermanent = true
+      }
+      return acc
+    }, {})
+
+    return Object.values(grouped) as Story[]
+  }, [storiesData])
 
   // Set up portal container on mount (client-side only)
   useEffect(() => {
@@ -146,7 +193,7 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
         </button>
 
         {/* Other users' stories */}
-        {mockStories.map((story) => (
+        {stories.map((story) => (
           <button
             key={story.id}
             onClick={() => handleViewStory(story)}
@@ -231,6 +278,10 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
         <CreateStoryModal
           isOpen={showCreateStory}
           onClose={() => setShowCreateStory(false)}
+          onPublish={() => {
+            // Refetch stories after publishing
+            setShowCreateStory(false)
+          }}
         />,
         portalContainer
       )}

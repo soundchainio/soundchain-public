@@ -2,6 +2,23 @@ import { useState, useRef, useCallback } from 'react'
 import { X, Image as ImageIcon, Video, Upload, Clock, HardDrive, Loader2, CheckCircle, Sparkles } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 import { smartCompress, needsCompression, CompressionProgress } from 'lib/mediaCompression'
+import { useUpload } from 'hooks/useUpload'
+import { usePinToIpfsMutation } from 'lib/graphql'
+import { toast } from 'react-toastify'
+import { gql, useMutation } from '@apollo/client'
+
+// GraphQL mutation for creating story (until codegen runs)
+const CREATE_STORY = gql`
+  mutation createStory($mediaUrl: String!, $mediaType: String!, $caption: String, $duration: Int) {
+    createStory(mediaUrl: $mediaUrl, mediaType: $mediaType, caption: $caption, duration: $duration) {
+      id
+      mediaUrl
+      mediaType
+      createdAt
+      expiresAt
+    }
+  }
+`
 
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {
@@ -30,6 +47,13 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const isLoggedIn = !!me?.profile
   const maxDuration = isLoggedIn ? STORY_CONSTRAINTS.MAX_DURATION_MEMBER : STORY_CONSTRAINTS.MAX_DURATION_GUEST
   const maxFileSize = isLoggedIn ? STORY_CONSTRAINTS.MAX_FILE_SIZE_MEMBER : STORY_CONSTRAINTS.MAX_FILE_SIZE_GUEST
+
+  // Upload hooks
+  const { upload } = useUpload(undefined, undefined, !isLoggedIn)
+  const [pinToIPFS] = usePinToIpfsMutation()
+  const [createStory] = useMutation(CREATE_STORY, {
+    refetchQueries: ['publicStories', 'myFollowingStories'],
+  })
 
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
@@ -162,19 +186,57 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const handlePublish = async () => {
     if (!mediaFile || !mediaPreview || !mediaType) return
     setIsUploading(true)
+    setUploadError(null)
 
     try {
-      // TODO: Upload to IPFS
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // Step 1: Upload to S3
+      const s3Url = await upload([mediaFile])
+      if (!s3Url) {
+        throw new Error('Failed to upload file')
+      }
+
+      // Step 2: Pin to IPFS
+      const fileKey = s3Url.substring(s3Url.lastIndexOf('/') + 1)
+      const { data: pinResult } = await pinToIPFS({
+        variables: {
+          input: {
+            fileKey,
+            fileName: `story-${Date.now()}`,
+          },
+        },
+      })
+
+      if (!pinResult?.pinToIPFS?.cid) {
+        throw new Error('Failed to pin to IPFS')
+      }
+
+      const ipfsUrl = `ipfs://${pinResult.pinToIPFS.cid}`
+
+      // Step 3: Create story in database (for logged in users)
+      if (isLoggedIn) {
+        await createStory({
+          variables: {
+            mediaUrl: ipfsUrl,
+            mediaType,
+            duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
+          },
+        })
+        toast.success('Story shared!')
+      } else {
+        // Guest users - just show success, story won't persist in DB
+        toast.success('Story uploaded! Login to save permanently.')
+      }
 
       if (onPublish) {
-        onPublish(mediaPreview, mediaType)
+        onPublish(ipfsUrl, mediaType)
       }
 
       handleClear()
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to publish:', error)
+      setUploadError(error?.message || 'Upload failed. Try again.')
+      toast.error('Failed to share story')
     } finally {
       setIsUploading(false)
     }
