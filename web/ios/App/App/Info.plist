@@ -78,14 +78,55 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>SoundChain uses Face ID to securely authorize wallet transactions and protect your account.</string>
 
-	<!-- App Transport Security - Allow IPFS gateways -->
+	<!-- App Transport Security - Allow IPFS gateways and emote CDNs -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSExceptionDomains</key>
 		<dict>
+			<!-- IPFS Gateway for media -->
 			<key>soundchain.mypinata.cloud</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<!-- 7TV Emote CDN -->
+			<key>7tv.app</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<!-- 7TV API -->
+			<key>7tv.io</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<!-- BetterTTV Emote CDN and API -->
+			<key>betterttv.net</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<!-- FrankerFaceZ API and CDN -->
+			<key>frankerfacez.com</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+			<!-- Twitch Emote CDN -->
+			<key>jtvnw.net</key>
 			<dict>
 				<key>NSExceptionAllowsInsecureHTTPLoads</key>
 				<false/>

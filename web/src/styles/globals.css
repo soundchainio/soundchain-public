@@ -193,15 +193,45 @@ html.capacitor-app {
 }
 
 html.capacitor-app body {
-  /* Add top padding for notch/Dynamic Island/status bar */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
+  /* NO body padding - let header/footer handle safe areas */
+  padding-top: 0;
+  padding-bottom: 0;
   /* Ensure content doesn't go behind status bar */
   min-height: 100vh;
   min-height: -webkit-fill-available;
   /* Reset any zoom/scale */
   zoom: 1;
   -webkit-text-size-adjust: 100%;
+}
+
+/* Capacitor: Header respects top safe area (notch/Dynamic Island) */
+html.capacitor-app header.sticky {
+  padding-top: env(safe-area-inset-top);
+  /* Match safe area bg to header */
+  background-color: rgba(0, 0, 0, 0.95);
+}
+
+/* Capacitor: Bottom nav respects home indicator safe area */
+html.capacitor-app #bottom-nav-bar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Slim down bottom nav for Capacitor - more compact icons */
+html.capacitor-app #bottom-nav-bar {
+  padding-top: 0.5rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+/* Smaller nav icons in Capacitor for sleek look */
+html.capacitor-app #bottom-nav-bar svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Tighter gap between icons in Capacitor */
+html.capacitor-app #bottom-nav-bar > div > div {
+  gap: 0.125rem;
 }
 
 /* Capacitor WebView specific fixes */
@@ -221,14 +251,26 @@ html.capacitor-app button {
 /* iOS standalone mode (PWA/Capacitor) */
 @media all and (display-mode: standalone) {
   body {
+    /* Header and footer handle safe areas */
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* PWA header safe area */
+  header.sticky {
     padding-top: env(safe-area-inset-top);
+  }
+
+  /* PWA bottom nav safe area */
+  #bottom-nav-bar {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
 /* When running in Capacitor WebView */
 body.capacitor-ios {
-  padding-top: env(safe-area-inset-top);
+  /* Header handles safe area, not body */
+  padding-top: 0;
 }
 
 body.capacitor-android {
