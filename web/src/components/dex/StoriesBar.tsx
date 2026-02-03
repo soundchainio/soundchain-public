@@ -3,6 +3,8 @@ import { Plus, ChevronLeft, ChevronRight, Lock, Sparkles } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
 import { useMe } from 'hooks/useMe'
 import { useRouter } from 'next/router'
+import { StoryViewer } from './StoryViewer'
+import { CreateStoryModal } from './CreateStoryModal'
 
 interface Story {
   id: string
@@ -38,6 +40,9 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
+  const [showStoryViewer, setShowStoryViewer] = useState(false)
+  const [showCreateStory, setShowCreateStory] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>()
 
   const handleScroll = () => {
     if (!scrollRef.current) return
@@ -59,9 +64,7 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
     if (onCreateStory) {
       onCreateStory()
     } else {
-      // Default: open create modal with story tab
-      // For now, just log
-      console.log('Create story clicked')
+      setShowCreateStory(true)
     }
   }
 
@@ -69,8 +72,8 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
     if (onViewStory) {
       onViewStory(story.profileId)
     } else {
-      // Default: navigate to story view
-      router.push(`/dex/story/${story.userHandle}`)
+      setSelectedUserId(story.profileId)
+      setShowStoryViewer(true)
     }
   }
 
@@ -203,6 +206,20 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
 
       {/* Subtle bottom glow line */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
+
+      {/* Story Viewer Modal */}
+      <StoryViewer
+        isOpen={showStoryViewer}
+        onClose={() => setShowStoryViewer(false)}
+        initialUserId={selectedUserId}
+        users={[]}
+      />
+
+      {/* Create Story Modal */}
+      <CreateStoryModal
+        isOpen={showCreateStory}
+        onClose={() => setShowCreateStory(false)}
+      />
     </div>
   )
 }
