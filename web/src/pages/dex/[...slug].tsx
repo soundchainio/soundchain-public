@@ -3636,11 +3636,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         </div>
         )}
 
-        {/* Main Content - Tight spacing for app feel */}
-        <div className="max-w-screen-2xl mx-auto px-3 pt-2 pb-2 relative">
-          {/* Ultra-compact nav row: dropdown + view toggle inline */}
-          <div className="flex items-center gap-2 mb-2">
-            {/* Minimal Nav Dropdown */}
+        {/* Main Content - Floats on cover art background */}
+        <div className="max-w-screen-2xl mx-auto px-3 pt-1 relative">
+          {/* Floating nav - no background, sits on cover art */}
+          <div className="flex items-center gap-1.5 mb-1">
             {(() => {
               const navItems = [
                 { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', textColor: 'text-cyan-400' },
@@ -3655,21 +3654,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               return (
                 <div className="relative">
-                  {/* Ultra-slim trigger - just icon + text + chevron */}
                   <button
                     onClick={() => setShowNavMenu(!showNavMenu)}
-                    className="flex items-center gap-1 px-2 py-1 rounded-md hover:bg-white/5 transition-all"
+                    className="flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity"
                   >
                     <CurrentIcon className={`w-3.5 h-3.5 ${currentNav.textColor}`} />
                     <span className={`text-xs font-medium ${currentNav.textColor}`}>{currentNav.label}</span>
-                    <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-150 ${showNavMenu ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-2.5 h-2.5 text-gray-500 transition-transform duration-150 ${showNavMenu ? 'rotate-180' : ''}`} />
                   </button>
 
-                  {/* Micro dropdown */}
                   {showNavMenu && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
-                      <div className="absolute left-0 top-full mt-0.5 w-28 bg-black/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                      <div className="absolute left-0 top-full mt-1 w-24 bg-black/90 backdrop-blur-xl border border-white/10 rounded-lg shadow-xl z-50">
                         {navItems.map((item) => {
                           const Icon = item.icon
                           const isActive = selectedView === item.id
@@ -3680,11 +3677,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 router.push(item.route, undefined, { shallow: false })
                                 setShowNavMenu(false)
                               }}
-                              className={`w-full flex items-center gap-1.5 px-2 py-1.5 text-[11px] transition-all ${
-                                isActive ? `${item.textColor} bg-white/5` : 'text-gray-400 hover:text-white hover:bg-white/5'
+                              className={`w-full flex items-center gap-1.5 px-2 py-1.5 text-[10px] transition-all ${
+                                isActive ? `${item.textColor}` : 'text-gray-400 hover:text-white'
                               }`}
                             >
-                              <Icon className="w-3 h-3" />
+                              <Icon className="w-2.5 h-2.5" />
                               <span>{item.label}</span>
                             </button>
                           )
@@ -3695,20 +3692,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </div>
               )
             })()}
-
-            {/* Inline view toggle - right next to nav */}
-            <div className="flex items-center gap-0.5 ml-1">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-1 rounded transition-all ${viewMode === 'list' ? 'text-white' : 'text-gray-600 hover:text-gray-400'}`}
-              >
-                <List className="w-3 h-3" />
+            {/* View toggle - minimal */}
+            <div className="flex items-center gap-0.5 opacity-60">
+              <button onClick={() => setViewMode('list')} className={`p-0.5 ${viewMode === 'list' ? 'text-white opacity-100' : 'text-gray-500'}`}>
+                <List className="w-2.5 h-2.5" />
               </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1 rounded transition-all ${viewMode === 'grid' ? 'text-white' : 'text-gray-600 hover:text-gray-400'}`}
-              >
-                <Grid className="w-3 h-3" />
+              <button onClick={() => setViewMode('grid')} className={`p-0.5 ${viewMode === 'grid' ? 'text-white opacity-100' : 'text-gray-500'}`}>
+                <Grid className="w-2.5 h-2.5" />
               </button>
             </div>
           </div>
