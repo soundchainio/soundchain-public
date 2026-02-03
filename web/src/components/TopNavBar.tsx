@@ -218,9 +218,9 @@ export const TopNavBar = ({
   const isCreateAccount = router.pathname === '/create-account'
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* Main Header Bar - Clean & Modern */}
-      <div className="relative z-10 flex h-16 items-center justify-between bg-black/95 backdrop-blur-md border-b border-white/5 px-4">
+      <div className="relative z-10 flex h-14 items-center justify-between bg-black/95 backdrop-blur-md border-b border-white/5 px-4">
         {/* Mobile Logo */}
         <Link href="/dex" className="flex items-center gap-2 md:hidden" passHref>
           <Logo id="logo_mobile" className="h-8 w-auto" />

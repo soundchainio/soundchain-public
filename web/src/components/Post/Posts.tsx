@@ -10,7 +10,6 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, VariableSizeList as List, FixedSizeGrid as Grid } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
-import { PostFormTimeline } from './PostFormTimeline'
 import { PostSkeleton } from './PostSkeleton'
 import { LayoutGrid, List as ListIcon, X, MessageCircle } from 'lucide-react'
 import { Comments } from '../Comment/Comments'
@@ -351,13 +350,6 @@ export const Posts = ({ profileId, disableVirtualization }: PostsProps) => {
 
   return (
     <>
-      {/* Post Form - Centered like Instagram */}
-      <div className="flex justify-center px-4 mb-4">
-        <div className="w-full max-w-[614px]">
-          <PostFormTimeline />
-        </div>
-      </div>
-
       {/* View Mode Toggle & Now Playing Tracker */}
       <div className="flex justify-center px-4 mb-3">
         <div className="w-full max-w-[614px] flex justify-between items-center">

@@ -70,7 +70,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss, Gift
+  Radio, MapPin, Download, Smartphone, Rss, Gift, Feather
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 
@@ -3637,86 +3637,41 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         {/* Main Content */}
         <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 py-8 relative">
-          {/* View Tabs - LEGACY UI PATTERN WITH GRADIENT TEXT */}
-          {/* Order: Feed, Dashboard, Users first, then rest */}
-          {/* Added backdrop-blur and bg-black/50 for readability on any cover image */}
-          <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide py-3 px-4 backdrop-blur-md bg-black/60 rounded-xl shadow-lg border border-white/10">
-            <Button
-              variant="ghost"
+          {/* View Tabs - Slim, app-style navigation */}
+          <div className="flex items-center gap-1 mb-4 overflow-x-auto scrollbar-hide py-2 px-2 backdrop-blur-md bg-black/80 rounded-full shadow-lg border border-white/5 mx-2">
+            <button
               onClick={() => router.push('/dex/feed', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${selectedView === 'feed' ? 'bg-green-500/10' : ''}`}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'feed' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
             >
-              <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'feed' ? 'text-green-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'feed' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Feed
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
+              <MessageCircle className="w-3.5 h-3.5" />
+              Feed
+            </button>
+            <button
               onClick={() => router.push('/dex/announcements', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-cyan-500/10 ${selectedView === 'announcements' ? 'bg-cyan-500/10' : ''}`}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'announcements' ? 'bg-purple-500/20 text-purple-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
             >
-              <Rocket className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'announcements' ? 'text-cyan-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'announcements' ? 'cyan-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Announcements
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/dex/dashboard', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${selectedView === 'dashboard' ? 'bg-yellow-500/10' : ''}`}
-            >
-              <Home className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'dashboard' ? 'text-yellow-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'dashboard' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Dashboard
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/dex/staking', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${selectedView === 'staking' ? 'bg-yellow-500/10' : ''}`}
-            >
-              <Coins className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'staking' ? 'text-yellow-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'staking' ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Stake
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/dex/users', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-indigo-500/10 ${selectedView === 'users' || selectedView === 'profile' ? 'bg-indigo-500/10' : ''}`}
-            >
-              <Users className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'users' || selectedView === 'profile' ? 'text-indigo-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'users' || selectedView === 'profile' ? 'indigo-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Users
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/dex/marketplace', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-purple-500/10 ${selectedView === 'marketplace' ? 'bg-purple-500/10' : ''}`}
-            >
-              <ShoppingBag className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'marketplace' ? 'text-purple-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'marketplace' ? 'purple-green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Marketplace
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
+              <Rocket className="w-3.5 h-3.5" />
+              News
+            </button>
+            <button
               onClick={() => router.push('/dex/explore', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-orange-500/10 ${selectedView === 'explore' ? 'bg-orange-500/10' : ''}`}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'explore' ? 'bg-orange-500/20 text-orange-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
             >
-              <Compass className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'explore' ? 'text-orange-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'explore' ? 'orange-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Explore
-              </span>
-            </Button>
-            <Button
-              variant="ghost"
+              <Compass className="w-3.5 h-3.5" />
+              Explore
+            </button>
+            <button
+              onClick={() => router.push('/dex/marketplace', undefined, { shallow: false })}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'marketplace' ? 'bg-green-500/20 text-green-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              Shop
+            </button>
+            <button
               onClick={() => router.push('/dex/library', undefined, { shallow: false })}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-blue-500/10 ${selectedView === 'library' ? 'bg-blue-500/10' : ''}`}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${selectedView === 'library' ? 'bg-blue-500/20 text-blue-400' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
             >
-              <Library className={`w-4 h-4 mr-2 transition-colors duration-300 ${selectedView === 'library' ? 'text-blue-400' : 'text-gray-400'}`} />
+              <Library className="w-3.5 h-3.5" />
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'library' ? 'blue-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Library
               </span>
@@ -3730,17 +3685,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <span className={`text-sm font-black transition-all duration-300 ${selectedView === 'playlist' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                 Playlist
               </span>
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setShowTop100Modal(true)}
-              className={`flex-shrink-0 transition-all duration-300 hover:bg-yellow-500/10 ${showTop100Modal ? 'bg-yellow-500/10' : ''}`}
-            >
-              <Trophy className={`w-4 h-4 mr-2 transition-colors duration-300 ${showTop100Modal ? 'text-yellow-400' : 'text-gray-400'}`} />
-              <span className={`text-sm font-black transition-all duration-300 ${showTop100Modal ? 'yellow-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                Top 100
-              </span>
-            </Button>
+              Library
+            </button>
           </div>
 
           {/* Dashboard View - Genres & Leaderboards Only */}
@@ -4272,17 +4218,26 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className="flex justify-center gap-4 xl:gap-6 bg-black min-h-screen py-4 -mx-4 px-4">
+            <div className="relative flex justify-center gap-4 xl:gap-6 bg-black min-h-screen py-4 -mx-4 px-4">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
-              {/* Main Feed - Posts only (announcements moved to dedicated tab) */}
+              {/* Main Feed - Posts lead, clean and content-first */}
               <div className="flex-1 max-w-full md:max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
                 <Posts />
               </div>
 
               {/* Right Sidebar - Desktop only */}
               <RightSidebar />
+
+              {/* Floating Compose Button - Instagram/Twitter style */}
+              <button
+                onClick={() => me ? dispatchShowCreateModal(true, 'post') : router.push('/login')}
+                className="fixed bottom-24 right-4 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-110 active:scale-95 transition-all duration-200 md:bottom-8 md:right-8"
+                aria-label="Create post"
+              >
+                <Feather className="w-6 h-6 text-white" />
+              </button>
             </div>
           )}
 
@@ -7118,13 +7073,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
         </div>
 
-        {/* Footer - Fixed at bottom with solid background */}
-        <footer className="fixed bottom-0 left-0 right-0 border-t border-cyan-500/30 bg-black py-3 z-40">
-          <div className="max-w-screen-2xl mx-auto px-4 text-center">
-            <div className="retro-json text-sm mb-0.5">powered_by: "SoundChain × ZetaChain"</div>
-            <div className="text-xs text-gray-500">DEX Dashboard • CarPlay Ready • Amazon Fire TV Ready • All Devices</div>
-          </div>
-        </footer>
+        {/* Footer removed for cleaner app experience */}
       </div>
 
       {/* Modals */}

@@ -9,7 +9,6 @@ import AutoSizer from 'react-virtualized-auto-sizer'
 import { areEqual, ListChildComponentProps, VariableSizeList as List } from 'react-window'
 import InfiniteLoader from 'react-window-infinite-loader'
 import { NoResultFound } from './NoResultFound'
-import { PostFormTimeline } from './Post/PostFormTimeline'
 import { PostSkeleton } from './Post/PostSkeleton'
 
 interface FeedProps {
@@ -108,7 +107,6 @@ export const Feed = ({ pageSize }: FeedProps) => {
         isItemLoaded,
       }}
     >
-      <PostFormTimeline />
       <PullToRefresh onRefresh={refetch}>
         <AutoSizer>
           {({ height, width }) => (
