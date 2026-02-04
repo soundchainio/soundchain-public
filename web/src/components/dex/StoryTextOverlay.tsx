@@ -259,10 +259,13 @@ const DraggableText = ({
       {/* Selection border */}
       {isSelected && !isEditing && (
         <div className="absolute -inset-2 border-2 border-cyan-500 border-dashed rounded-lg pointer-events-none">
-          {/* Delete button */}
+          {/* Delete button - MUST stop all pointer/mouse events to prevent drag */}
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors"
+            onMouseDown={(e) => { e.stopPropagation(); }}
+            onPointerDown={(e) => { e.stopPropagation(); }}
+            onTouchStart={(e) => { e.stopPropagation(); }}
+            className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-colors pointer-events-auto z-50"
           >
             <Trash2 className="w-3 h-3" />
           </button>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, MoreHorizontal, Sparkles, Volume2, VolumeX, Pause, Play, Share2, Link2, Twitter, Copy, Check, Music2 } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, MoreHorizontal, Sparkles, Volume2, VolumeX, Pause, Play, Share2, Link2, Twitter, Copy, Check, Music2, Repeat2, Download, Bookmark, Eye } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
@@ -628,66 +628,197 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
         {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 pointer-events-none" />
 
-        {/* Bottom section */}
-        <div className="absolute bottom-0 left-0 right-0 z-40 p-4 space-y-3">
-          {/* View count and reactions */}
-          <div className="flex items-center justify-between">
-            <span className="text-white/60 text-xs">{currentStory.viewCount.toLocaleString()} views</span>
+        {/* Premium Interaction Bar */}
+        <div className="absolute bottom-0 left-0 right-0 z-40 p-4 space-y-3" onClick={(e) => e.stopPropagation()}>
+          {/* Stats Row - Views and reactions */}
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-1.5 text-white/70">
+              <Eye className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">{currentStory.viewCount.toLocaleString()}</span>
+            </div>
             {currentStory.reactions.length > 0 && (
-              <div className="flex items-center gap-1">
-                {currentStory.reactions.map((r, i) => (
-                  <span key={i} className="text-sm">{r.emoji} <span className="text-white/60 text-xs">{r.count}</span></span>
+              <div className="flex items-center gap-2">
+                {currentStory.reactions.slice(0, 3).map((r, i) => (
+                  <div key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-sm">
+                    <span className="text-sm">{r.emoji}</span>
+                    <span className="text-white/70 text-xs font-medium">{r.count}</span>
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Reply input */}
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <div className="flex-1 relative">
+          {/* Main Interaction Bar - Premium Glass Design */}
+          <div className="relative">
+            {/* Glow effect behind bar */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-xl rounded-2xl" />
+
+            {/* Main bar container */}
+            <div className="relative flex items-center justify-between gap-2 px-3 py-2.5 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+              {/* Left side - Primary actions */}
+              <div className="flex items-center gap-1">
+                {/* Like Button - Animated */}
+                <button
+                  onClick={() => handleReaction('❤️')}
+                  className="group relative flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-white/10 transition-all duration-300"
+                >
+                  <div className="relative">
+                    <Heart className="w-5 h-5 text-white group-hover:text-pink-400 group-hover:scale-110 transition-all duration-300 group-active:scale-90" />
+                    {/* Pulse effect on hover */}
+                    <div className="absolute inset-0 rounded-full bg-pink-500/50 scale-0 group-hover:scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500 blur-md" />
+                  </div>
+                  <span className="text-white/80 text-xs font-medium group-hover:text-white transition-colors">
+                    {currentStory.reactions.find(r => r.emoji === '❤️')?.count || 0}
+                  </span>
+                </button>
+
+                {/* Comment/Reply Button */}
+                <button
+                  onClick={() => document.getElementById('story-reply-input')?.focus()}
+                  className="group flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-white/10 transition-all duration-300"
+                >
+                  <MessageCircle className="w-5 h-5 text-white group-hover:text-cyan-400 group-hover:scale-110 transition-all duration-300" />
+                </button>
+
+                {/* Repost Button */}
+                <button
+                  onClick={() => { console.log('Repost story:', currentStory?.id); toast.info('Repost coming soon!') }}
+                  className="group flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-white/10 transition-all duration-300"
+                >
+                  <Repeat2 className="w-5 h-5 text-white group-hover:text-green-400 group-hover:scale-110 group-hover:rotate-180 transition-all duration-500" />
+                </button>
+
+                {/* Share Button */}
+                <button
+                  onClick={() => setShowShareMenu(!showShareMenu)}
+                  className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-300 ${
+                    showShareMenu ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-white/10 text-white'
+                  }`}
+                >
+                  <Share2 className="w-5 h-5 group-hover:scale-110 transition-all duration-300" />
+                </button>
+              </div>
+
+              {/* Center - Quick Reactions */}
+              <div className="flex items-center gap-0.5 px-2 py-1 rounded-full bg-white/5 border border-white/5">
+                {['🔥', '🚀', '😂', '💯'].map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => handleReaction(emoji)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-125 active:scale-90 transition-all duration-200 text-base"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              {/* Right side - Secondary actions */}
+              <div className="flex items-center gap-1">
+                {/* Bookmark/Save */}
+                <button
+                  onClick={() => toast.info('Save feature coming soon!')}
+                  className="group flex items-center px-2 py-2 rounded-xl hover:bg-white/10 transition-all duration-300"
+                >
+                  <Bookmark className="w-5 h-5 text-white group-hover:text-amber-400 group-hover:scale-110 transition-all duration-300" />
+                </button>
+
+                {/* Download (if permanent) */}
+                {currentStory.isPermanent && (
+                  <button
+                    onClick={() => {
+                      window.open(currentStory.mediaUrl, '_blank')
+                      toast.success('Opening media...')
+                    }}
+                    className="group flex items-center px-2 py-2 rounded-xl hover:bg-white/10 transition-all duration-300"
+                  >
+                    <Download className="w-5 h-5 text-white group-hover:text-purple-400 group-hover:scale-110 group-hover:translate-y-0.5 transition-all duration-300" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Reply Input - Sleek Design */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 relative group">
               <input
+                id="story-reply-input"
                 type="text"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleReply()}
-                placeholder="Reply to story..."
-                className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-500/50"
+                placeholder="Send a message..."
+                className="w-full bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2.5 text-white text-sm placeholder-white/40 focus:outline-none focus:border-cyan-500/50 focus:bg-white/15 focus:shadow-[0_0_20px_rgba(6,182,212,0.15)] transition-all duration-300"
               />
+              {/* Input glow on focus */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-500/0 via-cyan-500/10 to-purple-500/0 opacity-0 group-focus-within:opacity-100 transition-opacity duration-500 blur-md -z-10" />
             </div>
 
-            {/* Quick reactions */}
-            <div className="flex items-center gap-1">
-              {['❤️', '🔥', '🚀', '😂'].map((emoji) => (
-                <button
-                  key={emoji}
-                  onClick={() => handleReaction(emoji)}
-                  className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-colors text-lg"
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-
-            {/* Send */}
-            {replyText && (
-              <button
-                onClick={handleReply}
-                className="w-9 h-9 rounded-full bg-cyan-500 flex items-center justify-center hover:bg-cyan-400 transition-colors"
-              >
-                <Send className="w-4 h-4 text-white" />
-              </button>
-            )}
+            {/* Send Button - Animated */}
+            <button
+              onClick={handleReply}
+              disabled={!replyText.trim()}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                replyText.trim()
+                  ? 'bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 active:scale-95'
+                  : 'bg-white/10 text-white/30 cursor-not-allowed'
+              }`}
+            >
+              <Send className={`w-4 h-4 transition-transform duration-300 ${replyText.trim() ? 'text-white translate-x-0.5' : ''}`} />
+            </button>
           </div>
 
-          {/* Make Permanent CTA - if not already permanent */}
+          {/* Make Permanent CTA - Premium Gold Design */}
           {!currentStory.isPermanent && (
             <button
               onClick={(e) => { e.stopPropagation(); handleMakePermanent() }}
-              className="w-full py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-400 text-sm font-medium flex items-center justify-center gap-2 hover:from-amber-500/30 hover:to-orange-500/30 transition-all"
+              className="group relative w-full py-2.5 rounded-xl overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-[0.98]"
             >
-              <Sparkles className="w-4 h-4" />
-              Make This Reel Permanent
+              {/* Animated gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/30 via-orange-500/30 to-amber-500/30 animate-gradient-x" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
+              {/* Border glow */}
+              <div className="absolute inset-0 rounded-xl border border-amber-500/40 group-hover:border-amber-400/60 transition-colors" />
+
+              {/* Content */}
+              <div className="relative flex items-center justify-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400 group-hover:animate-pulse" />
+                <span className="text-amber-400 text-sm font-semibold tracking-wide">Make This Reel Permanent</span>
+                <Sparkles className="w-4 h-4 text-amber-400 group-hover:animate-pulse" />
+              </div>
             </button>
+          )}
+
+          {/* Share Menu Dropdown - Positioned above interaction bar */}
+          {showShareMenu && (
+            <div className="absolute bottom-full left-4 right-4 mb-2 p-2 bg-black/90 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
+              <button
+                onClick={handleShareNative}
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/90 hover:bg-white/10 transition-colors text-sm"
+              >
+                <Share2 className="w-4 h-4 text-cyan-400" />
+                Share Story
+              </button>
+              <button
+                onClick={handleCopyLink}
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/90 hover:bg-white/10 transition-colors text-sm"
+              >
+                {linkCopied ? (
+                  <Check className="w-4 h-4 text-green-400" />
+                ) : (
+                  <Link2 className="w-4 h-4 text-purple-400" />
+                )}
+                {linkCopied ? 'Copied!' : 'Copy Link'}
+              </button>
+              <button
+                onClick={handleShareTwitter}
+                className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-white/90 hover:bg-white/10 transition-colors text-sm"
+              >
+                <Twitter className="w-4 h-4 text-blue-400" />
+                Share to X
+              </button>
+            </div>
           )}
         </div>
       </div>
