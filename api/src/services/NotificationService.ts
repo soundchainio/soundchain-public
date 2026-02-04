@@ -752,4 +752,60 @@ export class NotificationService extends ModelService<typeof Notification> {
       console.error('[NotificationService] Error in notifyStoryView:', err);
     }
   }
+
+  /**
+   * Notify a user when they are @mentioned in a story or post
+   */
+  async notifyMention(params: {
+    mentionedProfileId: string;
+    mentionerProfileId: string;
+    storyId?: string;
+    postId?: string;
+    type: 'story' | 'post';
+  }): Promise<void> {
+    const { mentionedProfileId, mentionerProfileId, storyId, postId, type } = params;
+
+    // Don't notify yourself
+    if (mentionedProfileId === mentionerProfileId) return;
+
+    try {
+      const mentionerProfile = await this.context.profileService.getProfile(mentionerProfileId);
+      if (!mentionerProfile) return;
+
+      const notification = new NotificationModel({
+        type: NotificationType.Mention,
+        profileId: mentionedProfileId,
+        metadata: {
+          mentionerName: mentionerProfile.displayName || mentionerProfile.userHandle || 'Someone',
+          mentionerPicture: mentionerProfile.profilePicture,
+          mentionerProfileId,
+          storyId,
+          postId,
+          mentionType: type,
+        },
+      });
+
+      await notification.save();
+      await this.incrementNotificationCount(mentionedProfileId);
+
+      // Web push notification
+      const mentionerName = mentionerProfile.displayName || mentionerProfile.userHandle || 'Someone';
+      await this.context.webPushService.sendNotification(
+        mentionedProfileId,
+        `${mentionerName} mentioned you`,
+        `You were mentioned in a ${type}`,
+        type === 'story' && storyId ? `/dex/story/${storyId}` : postId ? `/dex/post/${postId}` : '/dex/feed'
+      );
+
+      // Nostr notification
+      await this.sendNostrNotification(mentionedProfileId, 'mention', {
+        mentionerName,
+        storyId,
+        postId,
+        type,
+      });
+    } catch (err) {
+      console.error('[NotificationService] Error in notifyMention:', err);
+    }
+  }
 }

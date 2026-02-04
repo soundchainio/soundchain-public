@@ -91,10 +91,10 @@ export class StoryService extends ModelService<typeof Story> {
         if (track) {
           trackDetails = {
             attachedTrackId: new mongoose.Types.ObjectId(attachedTrackId),
-            attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.audio,
+            attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.assetUrl,
             attachedTrackTitle: track.title,
-            attachedTrackArtist: track.artistName,
-            attachedTrackCoverUrl: track.coverArtwork,
+            attachedTrackArtist: track.artist,
+            attachedTrackCoverUrl: track.artworkUrl,
           };
         }
       } catch (err) {
@@ -442,10 +442,10 @@ export class StoryService extends ModelService<typeof Story> {
         if (track) {
           trackDetails = {
             attachedTrackId: new mongoose.Types.ObjectId(attachedTrackId),
-            attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.audio,
+            attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.assetUrl,
             attachedTrackTitle: track.title,
-            attachedTrackArtist: track.artistName,
-            attachedTrackCoverUrl: track.coverArtwork,
+            attachedTrackArtist: track.artist,
+            attachedTrackCoverUrl: track.artworkUrl,
           };
         }
       } catch (err) {
@@ -580,10 +580,10 @@ export class StoryService extends ModelService<typeof Story> {
 
     const updateData: any = {
       attachedTrackId: new mongoose.Types.ObjectId(trackId),
-      attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.audio,
+      attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.assetUrl,
       attachedTrackTitle: track.title,
-      attachedTrackArtist: track.artistName,
-      attachedTrackCoverUrl: track.coverArtwork,
+      attachedTrackArtist: track.artist,
+      attachedTrackCoverUrl: track.artworkUrl,
     };
 
     if (trackEditionId) {
