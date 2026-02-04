@@ -183,6 +183,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const [isCompressing, setIsCompressing] = useState(false)
   const [wasCompressed, setWasCompressed] = useState(false)
   const [originalSize, setOriginalSize] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Music state
@@ -340,6 +341,34 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
       setVideoDuration(0)
     }
   }, [maxFileSize, maxDuration, isLoggedIn])
+
+  // Drag and drop handlers
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      // Create a synthetic event to reuse handleFileSelect logic
+      const syntheticEvent = {
+        target: { files }
+      } as React.ChangeEvent<HTMLInputElement>
+      handleFileSelect(syntheticEvent)
+    }
+  }, [handleFileSelect])
 
   const handleSelectNftTrack = (track: Track) => {
     setSelectedNftTrack(track)
@@ -640,13 +669,18 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
             {/* Media Tab */}
             {activeTab === 'media' && (
               <>
-                {/* Upload area */}
+                {/* Upload area - supports drag & drop */}
                 <div
                   onClick={() => !mediaPreview && fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
                   className={`flex items-center gap-3 p-3 rounded-xl border border-dashed transition-all ${
-                    mediaPreview
-                      ? 'border-cyan-500/30 bg-cyan-500/5'
-                      : 'border-neutral-700 hover:border-cyan-500/50 hover:bg-cyan-500/5 cursor-pointer'
+                    isDragging
+                      ? 'border-cyan-400 bg-cyan-500/20 scale-[1.02]'
+                      : mediaPreview
+                        ? 'border-cyan-500/30 bg-cyan-500/5'
+                        : 'border-neutral-700 hover:border-cyan-500/50 hover:bg-cyan-500/5 cursor-pointer'
                   }`}
                 >
                   <input
@@ -665,7 +699,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">
-                      {mediaPreview ? (mediaFile?.name || 'Media selected') : 'Add photo or video'}
+                      {isDragging ? 'Drop to upload!' : mediaPreview ? (mediaFile?.name || 'Media selected') : 'Drag & drop or tap to add'}
                     </p>
                     <p className="text-neutral-500 text-xs">
                       {mediaPreview && videoDuration > 0 ? formatDuration(videoDuration) + ' • ' : ''}
