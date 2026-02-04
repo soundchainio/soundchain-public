@@ -3527,8 +3527,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </div>
               )
             })()}
+            {/* Bio toggle button - shows profile info panel */}
+            {me?.profile && (
+              <button
+                onClick={() => setIsBioExpanded(!isBioExpanded)}
+                className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${isBioExpanded ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                title="View profile info"
+              >
+                <FileText className="w-4 h-4" />
+              </button>
+            )}
+
             {/* View toggle - tap-friendly */}
-            <div className="flex items-center">
+            <div className="flex items-center ml-auto">
               <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${viewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
                 <List className="w-4 h-4" />
               </button>
@@ -3537,6 +3548,76 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </button>
             </div>
           </div>
+
+          {/* Bio Panel - Collapsible profile info */}
+          {isBioExpanded && me?.profile && (
+            <div className="px-3 pb-3 animate-in slide-in-from-top-2 duration-200">
+              <div className="bg-black/60 backdrop-blur-xl rounded-xl p-4 border border-white/10">
+                {/* Header with close button */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    {me.profile.profilePicture ? (
+                      <img src={me.profile.profilePicture} alt="" className="w-12 h-12 rounded-full object-cover border-2 border-cyan-500/30" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center">
+                        <span className="text-lg font-bold text-white">{me.profile.displayName?.charAt(0) || '?'}</span>
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-white font-semibold">{me.profile.displayName || 'Anonymous'}</h3>
+                      <p className="text-gray-400 text-sm">@{me.profile.userHandle || 'user'}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsBioExpanded(false)}
+                    className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Bio text */}
+                {me.profile.bio && (
+                  <p className="text-gray-300 text-sm mb-4 whitespace-pre-wrap">{me.profile.bio}</p>
+                )}
+
+                {/* Stats row */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="text-center">
+                    <p className="text-white font-semibold">{me.profile.followerCount || 0}</p>
+                    <p className="text-gray-500 text-xs">Followers</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white font-semibold">{me.profile.followingCount || 0}</p>
+                    <p className="text-gray-500 text-xs">Following</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white font-semibold">{userData?.me?.tracksCount || 0}</p>
+                    <p className="text-gray-500 text-xs">Tracks</p>
+                  </div>
+                </div>
+
+                {/* Wallet address */}
+                {(me.magicWalletAddress || me.googleWalletAddress) && (
+                  <div className="flex items-center gap-2 p-2 bg-white/5 rounded-lg">
+                    <Wallet className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                    <span className="text-cyan-400 text-xs font-mono truncate">
+                      {me.magicWalletAddress || me.googleWalletAddress}
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(me.magicWalletAddress || me.googleWalletAddress || '')
+                        toast.success('Wallet address copied!')
+                      }}
+                      className="p-1 hover:bg-white/10 rounded transition-colors ml-auto flex-shrink-0"
+                    >
+                      <Copy className="w-3 h-3 text-gray-400" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* 24hr Stories/Reels Bar - BELOW feed tabs */}
           {(selectedView === 'feed' || selectedView === 'explore') && (

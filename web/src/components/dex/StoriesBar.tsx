@@ -26,7 +26,7 @@ const PUBLIC_STORIES = gql`
       walletAddress
       profile {
         id
-        handle
+        userHandle
         displayName
         profilePicture
       }
@@ -34,20 +34,6 @@ const PUBLIC_STORIES = gql`
   }
 `
 
-// GraphQL query to fetch actual users for featured stories bar
-const FEATURED_PROFILES = gql`
-  query FeaturedProfiles($page: Page) {
-    exploreUsers(page: $page) {
-      nodes {
-        id
-        displayName
-        userHandle
-        profilePicture
-        verified
-      }
-    }
-  }
-`
 
 interface Story {
   id: string
@@ -87,86 +73,51 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
 
   // Fetch real stories from API
-  const { data: storiesData, loading: storiesLoading } = useQuery(PUBLIC_STORIES, {
-    variables: { limit: 20 },
-    fetchPolicy: 'cache-and-network',
+  const { data: storiesData, loading: storiesLoading, refetch: refetchStories } = useQuery(PUBLIC_STORIES, {
+    variables: { limit: 50 },
+    fetchPolicy: 'network-only',  // Always fetch fresh data
   })
 
-  // Fetch actual user profiles for the featured bar when no stories exist
-  const { data: profilesData } = useQuery(FEATURED_PROFILES, {
-    variables: { page: { first: 50 } },
-    fetchPolicy: 'cache-first',
-  })
 
   // Transform API data to Story format, grouped by profile
-  // Falls back to real user profiles to keep the bar looking alive with actual avatars
+  // Only shows REAL stories - no placeholders
   const stories: Story[] = useMemo(() => {
-    // First, process any real stories
-    let realStories: Story[] = []
+    if (!storiesData?.publicStories || storiesData.publicStories.length === 0) {
+      return []
+    }
 
-    if (storiesData?.publicStories && storiesData.publicStories.length > 0) {
-      // Group stories by profileId (or walletAddress for guests)
-      const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
-        // For guest stories, use walletAddress as key; for registered users, use profileId
-        const isGuest = story.isGuest || !story.profileId
-        const key = isGuest ? `guest-${story.walletAddress}` : story.profileId
+    // Group stories by profileId (or walletAddress for guests)
+    const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
+      // For guest stories, use walletAddress as key; for registered users, use profileId
+      const isGuest = story.isGuest || !story.profileId
+      const key = isGuest ? `guest-${story.walletAddress}` : story.profileId
 
-        if (!acc[key]) {
-          acc[key] = {
-            id: story.id,
-            profileId: key, // Use the key as profileId for consistency
-            profilePicture: isGuest ? undefined : story.profile?.profilePicture,
-            displayName: isGuest
-              ? `${story.walletAddress?.slice(0, 6)}...${story.walletAddress?.slice(-4)}`
-              : story.profile?.displayName,
-            userHandle: isGuest
-              ? story.walletAddress?.slice(0, 8) || 'guest'
-              : story.profile?.handle || 'user',
-            hasUnwatched: true, // TODO: track viewed stories
-            isPermanent: story.isPermanent,
-            storyCount: 1,
-            isGuest,
-            walletAddress: story.walletAddress,
-          }
-        } else {
-          acc[key].storyCount++
-          if (story.isPermanent) acc[key].isPermanent = true
+      if (!acc[key]) {
+        acc[key] = {
+          id: story.id,
+          profileId: key, // Use the key as profileId for consistency
+          profilePicture: isGuest ? undefined : story.profile?.profilePicture,
+          displayName: isGuest
+            ? `${story.walletAddress?.slice(0, 6)}...${story.walletAddress?.slice(-4)}`
+            : story.profile?.displayName,
+          userHandle: isGuest
+            ? story.walletAddress?.slice(0, 8) || 'guest'
+            : story.profile?.userHandle || 'user',
+          hasUnwatched: true, // TODO: track viewed stories
+          isPermanent: story.isPermanent,
+          storyCount: 1,
+          isGuest,
+          walletAddress: story.walletAddress,
         }
-        return acc
-      }, {})
-      realStories = Object.values(grouped) as Story[]
-    }
+      } else {
+        acc[key].storyCount++
+        if (story.isPermanent) acc[key].isPermanent = true
+      }
+      return acc
+    }, {})
 
-    // If we have enough real stories, return them
-    if (realStories.length >= 20) {
-      return realStories
-    }
-
-    // Fill remaining slots with REAL user profiles from database only
-    const existingIds = new Set(realStories.map(s => s.profileId))
-    const featuredUsers: Story[] = []
-
-    if (profilesData?.exploreUsers?.nodes) {
-      profilesData.exploreUsers.nodes.forEach((profile: any, index: number) => {
-        if (!existingIds.has(profile.id) && featuredUsers.length < (50 - realStories.length)) {
-          featuredUsers.push({
-            id: `featured-${profile.id}`,
-            profileId: profile.id,
-            profilePicture: profile.profilePicture,
-            displayName: profile.displayName,
-            userHandle: profile.userHandle || profile.handle,
-            hasUnwatched: Math.random() > 0.3, // Simulate unwatched for visual variety
-            isPermanent: profile.verified, // Verified users get the special badge
-            storyCount: 1,
-            _gradientClass: GRADIENT_COLORS[index % GRADIENT_COLORS.length], // Fallback gradient if no picture
-          } as Story & { _gradientClass: string })
-        }
-      })
-    }
-
-    // Return only real users from database - no fake placeholders
-    return [...realStories, ...featuredUsers]
-  }, [storiesData, profilesData])
+    return Object.values(grouped) as Story[]
+  }, [storiesData])
 
   // Set up portal container on mount (client-side only)
   useEffect(() => {
@@ -363,6 +314,8 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
           onPublish={() => {
             // Refetch stories after publishing
             setShowCreateStory(false)
+            // Refetch stories after a short delay to ensure server has processed
+            setTimeout(() => refetchStories(), 1000)
           }}
         />,
         portalContainer
