@@ -277,18 +277,43 @@ export default function LoginPage() {
         scope: ['openid'],
       });
 
-      console.log('[OAuth] Popup result:', result);
+      console.log('[OAuth] Popup result:', JSON.stringify(result, null, 2));
 
-      if (result?.magic?.idToken) {
-        const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+      // Try to get token from popup result
+      let idToken = result?.magic?.idToken;
+
+      // Mobile fallback: If popup completed but no token in result,
+      // try getting it directly from Magic SDK (user may be authenticated)
+      if (!idToken) {
+        console.log('[OAuth] No idToken in popup result, trying Magic SDK fallback...');
+        try {
+          // Check if user is now logged in via Magic
+          const isLoggedIn = await magic.user.isLoggedIn();
+          console.log('[OAuth] Magic isLoggedIn:', isLoggedIn);
+
+          if (isLoggedIn) {
+            idToken = await magic.user.getIdToken();
+            console.log('[OAuth] Got token from Magic SDK fallback');
+          }
+        } catch (fallbackErr: any) {
+          console.log('[OAuth] Fallback token fetch failed:', fallbackErr?.message);
+        }
+      }
+
+      if (idToken) {
+        console.log('[OAuth] Proceeding with idToken');
+        const loginResult = await login({ variables: { input: { token: idToken } } });
         if (loginResult.data?.login.jwt) {
           await setJwt(loginResult.data.login.jwt);
-          localStorage.setItem('didToken', result.magic.idToken);
+          localStorage.setItem('didToken', idToken);
           const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
           router.push(redirectUrl);
           return;
         }
       }
+
+      // Log what we got for debugging
+      console.log('[OAuth] Final failure - result keys:', result ? Object.keys(result) : 'null');
       throw new Error('OAuth login failed - no token received');
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
