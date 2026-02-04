@@ -1,6 +1,6 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import mongoose from 'mongoose';
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType, Float } from 'type-graphql';
 import { Model } from './Model';
 
 @ObjectType()
@@ -16,6 +16,74 @@ export class StoryReaction {
   @Field(() => Date)
   @prop({ default: () => new Date() })
   createdAt!: Date;
+}
+
+// Overlay types for Reels 2.0
+@ObjectType()
+export class StoryOverlay {
+  @Field(() => String)
+  @prop({ required: true })
+  type!: 'text' | 'hashtag' | 'mention' | 'sticker' | 'nft_badge';
+
+  @Field(() => String)
+  @prop({ required: true })
+  content!: string;
+
+  @Field(() => Float)
+  @prop({ required: true })
+  positionX!: number; // 0-100 percentage
+
+  @Field(() => Float)
+  @prop({ required: true })
+  positionY!: number; // 0-100 percentage
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  fontFamily?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  color?: string;
+
+  @Field(() => Float, { nullable: true })
+  @prop({ required: false })
+  fontSize?: number;
+
+  @Field(() => Float, { nullable: true })
+  @prop({ required: false })
+  rotation?: number; // degrees
+
+  @Field(() => ID, { nullable: true })
+  @prop({ type: mongoose.Types.ObjectId, required: false })
+  mentionedUserId?: mongoose.Types.ObjectId; // For @mentions
+}
+
+// Viewer watch record for SCID rewards
+@ObjectType()
+export class StoryWatchRecord {
+  @Field(() => ID, { nullable: true })
+  @prop({ type: mongoose.Types.ObjectId, required: false })
+  viewerProfileId?: mongoose.Types.ObjectId;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  viewerWalletAddress?: string;
+
+  @Field(() => Float)
+  @prop({ required: true })
+  watchDurationSeconds!: number;
+
+  @Field(() => Boolean)
+  @prop({ default: false })
+  qualifiedForReward!: boolean; // 30+ seconds watched
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  viewerScid?: string; // SCID code for viewer rewards
+
+  @Field(() => Date)
+  @prop({ default: () => new Date() })
+  watchedAt!: Date;
 }
 
 @ObjectType()
@@ -90,6 +158,65 @@ export class Story extends Model {
   @Field(() => Boolean)
   @prop({ default: false })
   deleted!: boolean;
+
+  // ============================================
+  // REELS 2.0: Overlays, NFT Music, SCID Rewards
+  // ============================================
+
+  // Overlays (text, hashtags, mentions, stickers)
+  @Field(() => [StoryOverlay], { nullable: true })
+  @prop({ type: () => [StoryOverlay], default: [] })
+  overlays?: StoryOverlay[];
+
+  // Attached NFT track for music
+  @Field(() => ID, { nullable: true })
+  @prop({ type: mongoose.Types.ObjectId, required: false, index: true })
+  attachedTrackId?: mongoose.Types.ObjectId;
+
+  @Field(() => ID, { nullable: true })
+  @prop({ type: mongoose.Types.ObjectId, required: false })
+  attachedTrackEditionId?: mongoose.Types.ObjectId;
+
+  // Track IPFS URL (denormalized for fast access)
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  attachedTrackIpfsUrl?: string;
+
+  // Track artist info (denormalized)
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  attachedTrackTitle?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  attachedTrackArtist?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  attachedTrackCoverUrl?: string;
+
+  // SCID streaming rewards tracking
+  @Field(() => Boolean)
+  @prop({ default: false })
+  scidEligible!: boolean; // True when permanent + has attached track
+
+  @Field(() => Number)
+  @prop({ default: 0 })
+  totalQualifiedViews!: number; // Views that watched 30+ seconds
+
+  @Field(() => [StoryWatchRecord], { nullable: true })
+  @prop({ type: () => [StoryWatchRecord], default: [] })
+  watchRecords?: StoryWatchRecord[];
+
+  // Hashtags extracted from overlays (for search/discovery)
+  @Field(() => [String], { nullable: true })
+  @prop({ type: () => [String], default: [] })
+  hashtags?: string[];
+
+  // Mentioned users extracted from overlays (for notifications)
+  @Field(() => [ID], { nullable: true })
+  @prop({ type: () => [mongoose.Types.ObjectId], default: [] })
+  mentionedUserIds?: mongoose.Types.ObjectId[];
 
   @Field(() => Date)
   createdAt!: Date;

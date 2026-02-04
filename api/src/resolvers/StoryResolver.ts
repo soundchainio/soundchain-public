@@ -1,11 +1,53 @@
-import { Arg, Authorized, Ctx, FieldResolver, Int, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { Arg, Authorized, Ctx, FieldResolver, Float, InputType, Int, Field, Mutation, ObjectType, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
-import { Story } from '../models/Story';
+import { Story, StoryOverlay } from '../models/Story';
 import { Profile } from '../models/Profile';
+import { Track } from '../models/Track';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { MakeStoryPermanentInput } from '../types/MakeStoryPermanentInput';
 import { MakeStoryPermanentResult } from '../types/MakeStoryPermanentResult';
+
+// Input type for overlays
+@InputType()
+class OverlayInput {
+  @Field(() => String)
+  type!: 'text' | 'hashtag' | 'mention' | 'sticker' | 'nft_badge';
+
+  @Field(() => String)
+  content!: string;
+
+  @Field(() => Float)
+  positionX!: number;
+
+  @Field(() => Float)
+  positionY!: number;
+
+  @Field(() => String, { nullable: true })
+  fontFamily?: string;
+
+  @Field(() => String, { nullable: true })
+  color?: string;
+
+  @Field(() => Float, { nullable: true })
+  fontSize?: number;
+
+  @Field(() => Float, { nullable: true })
+  rotation?: number;
+
+  @Field(() => String, { nullable: true })
+  mentionedUserId?: string;
+}
+
+// Result type for watch recording
+@ObjectType()
+class RecordWatchResult {
+  @Field(() => Boolean)
+  qualified!: boolean;
+
+  @Field(() => String, { nullable: true })
+  viewerScid?: string;
+}
 
 @Resolver(Story)
 export class StoryResolver {
@@ -38,6 +80,25 @@ export class StoryResolver {
   @FieldResolver(() => Int)
   reactionCount(@Root() story: Story): number {
     return story.reactions?.length || 0;
+  }
+
+  @FieldResolver(() => Track, { nullable: true })
+  async attachedTrack(@Ctx() { trackService }: Context, @Root() story: Story): Promise<Track | null> {
+    if (!story.attachedTrackId) {
+      return null;
+    }
+    try {
+      const track = await trackService.getTrack(story.attachedTrackId.toString());
+      return track || null;
+    } catch (error) {
+      console.error(`Failed to load attached track ${story.attachedTrackId} for story ${story._id}:`, error);
+      return null;
+    }
+  }
+
+  @FieldResolver(() => Int)
+  qualifiedViewCount(@Root() story: Story): number {
+    return story.totalQualifiedViews || 0;
   }
 
   // ============================================
@@ -260,5 +321,164 @@ export class StoryResolver {
     }
 
     return storyService.deleteGuestStory(storyId, walletAddress.toLowerCase());
+  }
+
+  // ============================================
+  // REELS 2.0: Overlays, NFT Music, SCID Rewards
+  // ============================================
+
+  /**
+   * Create story with overlays and optional attached track
+   */
+  @Mutation(() => Story)
+  @Authorized()
+  async createStoryWithOverlays(
+    @Ctx() { storyService }: Context,
+    @Arg('mediaUrl') mediaUrl: string,
+    @Arg('mediaType') mediaType: string,
+    @Arg('overlays', () => [OverlayInput], { nullable: true }) overlays: OverlayInput[],
+    @Arg('attachedTrackId', { nullable: true }) attachedTrackId: string,
+    @Arg('caption', { nullable: true }) caption: string,
+    @Arg('duration', () => Int, { nullable: true }) duration: number,
+    @CurrentUser() { profileId }: User
+  ): Promise<Story> {
+    return storyService.create({
+      profileId: profileId.toString(),
+      mediaUrl,
+      mediaType,
+      caption,
+      duration,
+      overlays: overlays || [],
+      attachedTrackId,
+    });
+  }
+
+  /**
+   * Attach an NFT track to an existing story
+   */
+  @Mutation(() => Story)
+  @Authorized()
+  async attachTrackToStory(
+    @Ctx() { storyService }: Context,
+    @Arg('storyId') storyId: string,
+    @Arg('trackId') trackId: string,
+    @Arg('trackEditionId', { nullable: true }) trackEditionId: string,
+    @CurrentUser() { profileId }: User
+  ): Promise<Story> {
+    // Verify ownership first
+    const story = await storyService.getById(storyId);
+    if (story.profileId?.toString() !== profileId.toString()) {
+      throw new Error("You don't have permission to modify this story");
+    }
+
+    return storyService.attachTrack({
+      storyId,
+      trackId,
+      trackEditionId,
+    });
+  }
+
+  /**
+   * Update story overlays
+   */
+  @Mutation(() => Story)
+  @Authorized()
+  async updateStoryOverlays(
+    @Ctx() { storyService }: Context,
+    @Arg('storyId') storyId: string,
+    @Arg('overlays', () => [OverlayInput]) overlays: OverlayInput[],
+    @CurrentUser() { profileId }: User
+  ): Promise<Story> {
+    return storyService.updateOverlays(storyId, overlays, profileId.toString());
+  }
+
+  /**
+   * Record watch time for SCID rewards
+   * Called when viewer watches for 30+ seconds
+   */
+  @Mutation(() => RecordWatchResult)
+  async recordStoryWatch(
+    @Ctx() { storyService }: Context,
+    @Arg('storyId') storyId: string,
+    @Arg('watchDurationSeconds', () => Float) watchDurationSeconds: number,
+    @Arg('viewerProfileId', { nullable: true }) viewerProfileId: string,
+    @Arg('viewerWalletAddress', { nullable: true }) viewerWalletAddress: string
+  ): Promise<{ qualified: boolean; viewerScid?: string }> {
+    return storyService.recordWatch({
+      storyId,
+      viewerProfileId,
+      viewerWalletAddress,
+      watchDurationSeconds,
+    });
+  }
+
+  /**
+   * Search stories by hashtag
+   */
+  @Query(() => [Story])
+  async searchStoriesByHashtag(
+    @Ctx() { storyService }: Context,
+    @Arg('hashtag') hashtag: string,
+    @Arg('limit', () => Int, { nullable: true, defaultValue: 20 }) limit: number
+  ): Promise<Story[]> {
+    return storyService.searchByHashtag(hashtag, limit);
+  }
+
+  /**
+   * Get stories using a specific track
+   */
+  @Query(() => [Story])
+  async storiesWithTrack(
+    @Ctx() { storyService }: Context,
+    @Arg('trackId') trackId: string,
+    @Arg('limit', () => Int, { nullable: true, defaultValue: 50 }) limit: number
+  ): Promise<Story[]> {
+    return storyService.getStoriesWithTrack(trackId, limit);
+  }
+
+  /**
+   * Get trending stories
+   */
+  @Query(() => [Story])
+  async trendingStories(
+    @Ctx() { storyService }: Context,
+    @Arg('limit', () => Int, { nullable: true, defaultValue: 20 }) limit: number
+  ): Promise<Story[]> {
+    return storyService.getTrending(limit);
+  }
+
+  /**
+   * Guest create story with overlays
+   */
+  @Mutation(() => Story)
+  async guestCreateStoryWithOverlays(
+    @Ctx() { storyService }: Context,
+    @Arg('mediaUrl') mediaUrl: string,
+    @Arg('mediaType') mediaType: string,
+    @Arg('walletAddress') walletAddress: string,
+    @Arg('overlays', () => [OverlayInput], { nullable: true }) overlays: OverlayInput[],
+    @Arg('attachedTrackId', { nullable: true }) attachedTrackId: string,
+    @Arg('caption', { nullable: true }) caption?: string,
+    @Arg('duration', () => Int, { nullable: true }) duration?: number
+  ): Promise<Story> {
+    // Generate random wallet if invalid
+    if (!walletAddress || !/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) {
+      const hexChars = '0123456789abcdef';
+      let addressBody = '';
+      for (let i = 0; i < 40; i++) {
+        addressBody += hexChars[Math.floor(Math.random() * 16)];
+      }
+      walletAddress = `0x${addressBody}`;
+    }
+
+    return storyService.createGuestStory({
+      walletAddress: walletAddress.toLowerCase(),
+      mediaUrl,
+      mediaType,
+      caption,
+      duration,
+      overlays: overlays || [],
+      attachedTrackId,
+    });
   }
 }

@@ -1,29 +1,78 @@
-import { useState, useRef, useCallback } from 'react'
-import { X, Image as ImageIcon, Video, Upload, Clock, HardDrive, Loader2, CheckCircle, Sparkles } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import {
+  X, Image as ImageIcon, Video, Upload, Loader2, Sparkles,
+  Music2, Type, Link2, ChevronDown, Check, Play, Pause
+} from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 import { smartCompress, needsCompression, CompressionProgress } from 'lib/mediaCompression'
 import { useUpload } from 'hooks/useUpload'
-import { usePinToIpfsMutation } from 'lib/graphql'
+import { usePinToIpfsMutation, Track } from 'lib/graphql'
 import { toast } from 'react-toastify'
 import { gql, useMutation } from '@apollo/client'
+import { NFTMusicPicker } from './NFTMusicPicker'
+import StoryTextOverlay, { TextLayer } from './StoryTextOverlay'
+import { getIpfsUrl } from 'utils/ipfs'
+import { getNormalizedLink, IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { MediaProvider } from 'types/MediaProvider'
 
-// GraphQL mutation for creating story (until codegen runs)
-const CREATE_STORY = gql`
-  mutation createStory($mediaUrl: String!, $mediaType: String!, $caption: String, $duration: Int) {
-    createStory(mediaUrl: $mediaUrl, mediaType: $mediaType, caption: $caption, duration: $duration) {
+// GraphQL mutation for creating story WITH overlays and attached track
+const CREATE_STORY_WITH_OVERLAYS = gql`
+  mutation createStoryWithOverlays(
+    $mediaUrl: String!
+    $mediaType: String!
+    $overlays: [OverlayInput!]
+    $attachedTrackId: String
+    $caption: String
+    $duration: Int
+  ) {
+    createStoryWithOverlays(
+      mediaUrl: $mediaUrl
+      mediaType: $mediaType
+      overlays: $overlays
+      attachedTrackId: $attachedTrackId
+      caption: $caption
+      duration: $duration
+    ) {
       id
       mediaUrl
       mediaType
       createdAt
       expiresAt
+      overlays {
+        type
+        content
+        positionX
+        positionY
+        fontFamily
+        color
+        fontSize
+        rotation
+      }
+      attachedTrackId
     }
   }
 `
 
-// GraphQL mutation for guest story (no login required)
-const GUEST_CREATE_STORY = gql`
-  mutation guestCreateStory($mediaUrl: String!, $mediaType: String!, $walletAddress: String!, $caption: String, $duration: Int) {
-    guestCreateStory(mediaUrl: $mediaUrl, mediaType: $mediaType, walletAddress: $walletAddress, caption: $caption, duration: $duration) {
+// Guest version with overlays
+const GUEST_CREATE_STORY_WITH_OVERLAYS = gql`
+  mutation guestCreateStoryWithOverlays(
+    $mediaUrl: String!
+    $mediaType: String!
+    $walletAddress: String!
+    $overlays: [OverlayInput!]
+    $attachedTrackId: String
+    $caption: String
+    $duration: Int
+  ) {
+    guestCreateStoryWithOverlays(
+      mediaUrl: $mediaUrl
+      mediaType: $mediaType
+      walletAddress: $walletAddress
+      overlays: $overlays
+      attachedTrackId: $attachedTrackId
+      caption: $caption
+      duration: $duration
+    ) {
       id
       mediaUrl
       mediaType
@@ -58,6 +107,17 @@ const STORY_CONSTRAINTS = {
   SUPPORTED_VIDEO_TYPES: ['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'],
 }
 
+// External embed platforms
+const EMBED_PLATFORMS = [
+  { id: MediaProvider.SPOTIFY, name: 'Spotify', icon: '🎵', placeholder: 'https://open.spotify.com/track/...' },
+  { id: MediaProvider.YOUTUBE, name: 'YouTube', icon: '▶️', placeholder: 'https://youtube.com/watch?v=...' },
+  { id: MediaProvider.SOUNDCLOUD, name: 'SoundCloud', icon: '☁️', placeholder: 'https://soundcloud.com/...' },
+  { id: MediaProvider.BANDCAMP, name: 'Bandcamp', icon: '🎸', placeholder: 'https://artist.bandcamp.com/...' },
+]
+
+type MusicSource = 'none' | 'nft' | 'embed'
+type EditorTab = 'media' | 'music' | 'text'
+
 interface CreateStoryModalProps {
   isOpen: boolean
   onClose: () => void
@@ -76,14 +136,14 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const { upload } = useUpload(undefined, undefined, !isLoggedIn)
   const [pinToIPFS] = usePinToIpfsMutation()
   const [guestPinToIPFS] = useMutation(GUEST_PIN_TO_IPFS)
-  const [createStory] = useMutation(CREATE_STORY, {
+  const [createStoryWithOverlays] = useMutation(CREATE_STORY_WITH_OVERLAYS, {
     refetchQueries: ['publicStories', 'myFollowingStories'],
   })
-
-  const [guestCreateStory] = useMutation(GUEST_CREATE_STORY, {
+  const [guestCreateStoryWithOverlays] = useMutation(GUEST_CREATE_STORY_WITH_OVERLAYS, {
     refetchQueries: ['publicStories'],
   })
 
+  // Media state
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null)
@@ -95,6 +155,46 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const [wasCompressed, setWasCompressed] = useState(false)
   const [originalSize, setOriginalSize] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Music state
+  const [musicSource, setMusicSource] = useState<MusicSource>('none')
+  const [selectedNftTrack, setSelectedNftTrack] = useState<Track | null>(null)
+  const [embedUrl, setEmbedUrl] = useState('')
+  const [normalizedEmbedUrl, setNormalizedEmbedUrl] = useState<string | null>(null)
+  const [embedPlatform, setEmbedPlatform] = useState<MediaProvider | null>(null)
+  const [showMusicPicker, setShowMusicPicker] = useState(false)
+
+  // Overlay state
+  const [textLayers, setTextLayers] = useState<TextLayer[]>([])
+  const [isEditingText, setIsEditingText] = useState(false)
+  const previewContainerRef = useRef<HTMLDivElement>(null)
+
+  // Editor state
+  const [activeTab, setActiveTab] = useState<EditorTab>('media')
+  const [showEmbedInput, setShowEmbedInput] = useState(false)
+
+  // Process embed URL when changed
+  useEffect(() => {
+    const processEmbed = async () => {
+      if (!embedUrl.trim()) {
+        setNormalizedEmbedUrl(null)
+        setEmbedPlatform(null)
+        return
+      }
+
+      const source = IdentifySource(embedUrl)
+      if (source.type) {
+        setEmbedPlatform(source.type)
+        const normalized = await getNormalizedLink(embedUrl)
+        if (normalized) {
+          setNormalizedEmbedUrl(normalized)
+        }
+      }
+    }
+
+    const timeout = setTimeout(processEmbed, 500)
+    return () => clearTimeout(timeout)
+  }, [embedUrl])
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`
@@ -212,6 +312,93 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
     }
   }, [maxFileSize, maxDuration, isLoggedIn])
 
+  const handleSelectNftTrack = (track: Track) => {
+    setSelectedNftTrack(track)
+    setMusicSource('nft')
+    setEmbedUrl('')
+    setNormalizedEmbedUrl(null)
+    setShowMusicPicker(false)
+  }
+
+  const handleEmbedUrlChange = (url: string) => {
+    setEmbedUrl(url)
+    if (url.trim()) {
+      setMusicSource('embed')
+      setSelectedNftTrack(null)
+    }
+  }
+
+  const clearMusic = () => {
+    setMusicSource('none')
+    setSelectedNftTrack(null)
+    setEmbedUrl('')
+    setNormalizedEmbedUrl(null)
+    setEmbedPlatform(null)
+  }
+
+  // Convert text layers to overlay format for API
+  const convertLayersToOverlays = () => {
+    const overlays: any[] = []
+
+    // Add text overlays
+    textLayers.forEach(layer => {
+      // Check for hashtags in text
+      const hashtagMatches = layer.text.match(/#\w+/g) || []
+      hashtagMatches.forEach(hashtag => {
+        overlays.push({
+          type: 'hashtag',
+          content: hashtag,
+          positionX: layer.x,
+          positionY: layer.y,
+          color: layer.color,
+          fontSize: layer.fontSize,
+        })
+      })
+
+      // Check for mentions in text
+      const mentionMatches = layer.text.match(/@\w+/g) || []
+      mentionMatches.forEach(mention => {
+        overlays.push({
+          type: 'mention',
+          content: mention,
+          positionX: layer.x,
+          positionY: layer.y,
+          color: layer.color,
+          fontSize: layer.fontSize,
+        })
+      })
+
+      // Add the text overlay itself
+      overlays.push({
+        type: 'text',
+        content: layer.text,
+        positionX: layer.x,
+        positionY: layer.y,
+        fontFamily: layer.fontId,
+        color: layer.color,
+        fontSize: layer.fontSize,
+        rotation: layer.rotation,
+      })
+    })
+
+    // Add NFT badge overlay if track is selected
+    if (selectedNftTrack && musicSource === 'nft') {
+      overlays.push({
+        type: 'nft_badge',
+        content: JSON.stringify({
+          trackId: selectedNftTrack.id,
+          title: selectedNftTrack.title,
+          artist: selectedNftTrack.artist,
+          artworkUrl: selectedNftTrack.artworkUrl,
+        }),
+        positionX: 50,
+        positionY: 90, // Bottom center
+      })
+    }
+
+    return overlays
+  }
+
   const handlePublish = async () => {
     if (!mediaFile || !mediaPreview || !mediaType) return
     setIsUploading(true)
@@ -224,7 +411,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         throw new Error('Failed to upload file')
       }
 
-      // Step 2: Pin to IPFS (use guest mutation if not logged in)
+      // Step 2: Pin to IPFS
       const fileKey = s3Url.substring(s3Url.lastIndexOf('/') + 1)
       let ipfsCid: string
 
@@ -258,18 +445,23 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
 
       const ipfsUrl = `ipfs://${ipfsCid}`
 
-      // Step 3: Create story in database
+      // Prepare overlays
+      const overlays = convertLayersToOverlays()
+
+      // Step 3: Create story with overlays
       if (isLoggedIn) {
-        await createStory({
+        await createStoryWithOverlays({
           variables: {
             mediaUrl: ipfsUrl,
             mediaType,
             duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
+            overlays: overlays.length > 0 ? overlays : null,
+            attachedTrackId: selectedNftTrack?.id || null,
+            caption: normalizedEmbedUrl || null, // Use caption field for embed URL
           },
         })
-        toast.success('Story shared!')
+        toast.success(selectedNftTrack ? 'Reel shared with NFT music! SCID rewards enabled.' : 'Story shared!')
       } else {
-        // Guest users - create guest story with anonymous wallet address
         const hexChars = '0123456789abcdef'
         let addressBody = ''
         for (let i = 0; i < 40; i++) {
@@ -277,15 +469,18 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         }
         const anonymousAddress = `0x${addressBody}`
 
-        await guestCreateStory({
+        await guestCreateStoryWithOverlays({
           variables: {
             mediaUrl: ipfsUrl,
             mediaType,
             walletAddress: anonymousAddress,
             duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
+            overlays: overlays.length > 0 ? overlays : null,
+            attachedTrackId: selectedNftTrack?.id || null,
+            caption: normalizedEmbedUrl || null,
           },
         })
-        toast.success('Story shared! Login to keep permanently.')
+        toast.success('Story shared! Login to earn SCID rewards.')
       }
 
       if (onPublish) {
@@ -314,115 +509,399 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
     setWasCompressed(false)
     setOriginalSize(0)
     setUploadError(null)
+    setTextLayers([])
+    clearMusic()
   }
 
   if (!isOpen) return null
 
   return (
     <>
-      {/* Backdrop - no blur */}
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[100] bg-black/50"
+        className="fixed inset-0 z-[100] bg-black/60"
         onClick={onClose}
       />
 
-      {/* Ultra-slim modal - positioned at top below header */}
-      <div className="fixed z-[101] top-14 sm:top-16 left-1/2 -translate-x-1/2 w-[94vw] max-w-sm animate-in slide-in-from-top-2 duration-150">
-        <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl">
-          {/* Compact header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-800">
-            <span className="text-xs font-medium text-white flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-cyan-400" />
-              Story
+      {/* Modal - expanded for Reels 2.0 features */}
+      <div className="fixed z-[101] top-4 sm:top-8 left-1/2 -translate-x-1/2 w-[96vw] max-w-md animate-in slide-in-from-top-2 duration-150">
+        <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl max-h-[90vh] flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
+            <span className="text-sm font-semibold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              Create Reel
             </span>
             <button onClick={onClose} className="text-neutral-500 hover:text-white">
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Content */}
-          <div className="p-2 space-y-2">
-            {/* Always visible upload area - slim inline style */}
-            <div
-              onClick={() => !mediaPreview && fileInputRef.current?.click()}
-              className={`flex items-center gap-2 p-2 rounded-lg border border-dashed transition-all ${
-                mediaPreview
-                  ? 'border-cyan-500/30 bg-cyan-500/5'
-                  : 'border-neutral-700 hover:border-cyan-500/50 hover:bg-cyan-500/5 cursor-pointer'
-              }`}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.m4v,image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/webm,video/x-m4v"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
-                {mediaPreview ? (
-                  mediaType === 'image' ? <ImageIcon className="w-3.5 h-3.5 text-cyan-400" /> : <Video className="w-3.5 h-3.5 text-cyan-400" />
-                ) : (
-                  <Upload className="w-3.5 h-3.5 text-cyan-400" />
+          {/* Editor tabs */}
+          <div className="flex border-b border-neutral-800">
+            {[
+              { id: 'media' as EditorTab, icon: ImageIcon, label: 'Media' },
+              { id: 'music' as EditorTab, icon: Music2, label: 'Music' },
+              { id: 'text' as EditorTab, icon: Type, label: 'Text' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-500/5'
+                    : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Content area - scrollable */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+            {/* Media Tab */}
+            {activeTab === 'media' && (
+              <>
+                {/* Upload area */}
+                <div
+                  onClick={() => !mediaPreview && fileInputRef.current?.click()}
+                  className={`flex items-center gap-3 p-3 rounded-xl border border-dashed transition-all ${
+                    mediaPreview
+                      ? 'border-cyan-500/30 bg-cyan-500/5'
+                      : 'border-neutral-700 hover:border-cyan-500/50 hover:bg-cyan-500/5 cursor-pointer'
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.gif,.webp,.mp4,.mov,.webm,.m4v,image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/webm,video/x-m4v"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center flex-shrink-0">
+                    {mediaPreview ? (
+                      mediaType === 'image' ? <ImageIcon className="w-5 h-5 text-cyan-400" /> : <Video className="w-5 h-5 text-cyan-400" />
+                    ) : (
+                      <Upload className="w-5 h-5 text-cyan-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-sm font-medium truncate">
+                      {mediaPreview ? (mediaFile?.name || 'Media selected') : 'Add photo or video'}
+                    </p>
+                    <p className="text-neutral-500 text-xs">
+                      {mediaPreview && videoDuration > 0 ? formatDuration(videoDuration) + ' • ' : ''}
+                      {isLoggedIn ? '10min • 1GB' : '30sec • 10MB'} • 24h
+                    </p>
+                  </div>
+                  {mediaPreview && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleClear() }}
+                      className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-red-500/20"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Preview with overlays */}
+                {mediaPreview && (
+                  <div
+                    ref={previewContainerRef}
+                    className="relative aspect-[9/16] rounded-xl overflow-hidden bg-black"
+                  >
+                    {mediaType === 'image' ? (
+                      <img src={mediaPreview} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <video src={mediaPreview} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                    )}
+
+                    {/* Text overlays */}
+                    <StoryTextOverlay
+                      layers={textLayers}
+                      onLayersChange={setTextLayers}
+                      containerRef={previewContainerRef}
+                      isEditing={isEditingText}
+                      onEditingChange={setIsEditingText}
+                    />
+
+                    {/* NFT Music badge */}
+                    {selectedNftTrack && musicSource === 'nft' && (
+                      <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 p-2 rounded-lg bg-black/60 backdrop-blur-sm">
+                        <img
+                          src={getIpfsUrl(selectedNftTrack.artworkUrl, '/default-pictures/album-artwork.png')}
+                          alt=""
+                          className="w-10 h-10 rounded object-cover"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-medium truncate">{selectedNftTrack.title}</p>
+                          <p className="text-neutral-400 text-[10px] truncate">{selectedNftTrack.artist}</p>
+                        </div>
+                        <div className="px-1.5 py-0.5 rounded bg-purple-500 text-[9px] font-bold text-white">
+                          SCID
+                        </div>
+                      </div>
+                    )}
+
+                    {/* External embed indicator */}
+                    {normalizedEmbedUrl && musicSource === 'embed' && (
+                      <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2 p-2 rounded-lg bg-black/60 backdrop-blur-sm">
+                        <div className="w-10 h-10 rounded bg-neutral-800 flex items-center justify-center text-lg">
+                          {EMBED_PLATFORMS.find(p => p.id === embedPlatform)?.icon || '🎵'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-medium">
+                            {EMBED_PLATFORMS.find(p => p.id === embedPlatform)?.name || 'External'} Music
+                          </p>
+                          <p className="text-neutral-400 text-[10px] truncate">{embedUrl}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Compression progress */}
+                {isCompressing && compressionProgress && (
+                  <div className="flex items-center gap-2 text-xs text-cyan-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{compressionProgress.message}</span>
+                  </div>
+                )}
+
+                {uploadError && (
+                  <p className="text-red-400 text-xs">{uploadError}</p>
+                )}
+              </>
+            )}
+
+            {/* Music Tab */}
+            {activeTab === 'music' && (
+              <div className="space-y-3">
+                <p className="text-neutral-400 text-xs">Add background music to your reel</p>
+
+                {/* NFT Music option */}
+                <div
+                  onClick={() => setShowMusicPicker(true)}
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                    musicSource === 'nft'
+                      ? 'border-purple-500 bg-purple-500/10'
+                      : 'border-neutral-700 hover:border-purple-500/50'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <Music2 className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white text-sm font-medium">NFT Music Library</p>
+                    <p className="text-neutral-500 text-xs">Use our tracks - earn SCID rewards!</p>
+                  </div>
+                  {selectedNftTrack ? (
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-purple-400" />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); clearMusic() }}
+                        className="text-neutral-500 hover:text-red-400"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-neutral-500" />
+                  )}
+                </div>
+
+                {/* Selected NFT track preview */}
+                {selectedNftTrack && musicSource === 'nft' && (
+                  <div className="flex items-center gap-3 p-2 rounded-lg bg-neutral-800">
+                    <img
+                      src={getIpfsUrl(selectedNftTrack.artworkUrl, '/default-pictures/album-artwork.png')}
+                      alt=""
+                      className="w-12 h-12 rounded object-cover"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{selectedNftTrack.title}</p>
+                      <p className="text-neutral-400 text-xs truncate">{selectedNftTrack.artist}</p>
+                    </div>
+                    <div className="px-2 py-1 rounded bg-gradient-to-r from-purple-500 to-cyan-500 text-[10px] font-bold text-white">
+                      SCID ENABLED
+                    </div>
+                  </div>
+                )}
+
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-neutral-800" />
+                  <span className="text-neutral-600 text-xs">or</span>
+                  <div className="flex-1 h-px bg-neutral-800" />
+                </div>
+
+                {/* External embed option */}
+                <div
+                  onClick={() => setShowEmbedInput(!showEmbedInput)}
+                  className={`flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                    musicSource === 'embed'
+                      ? 'border-cyan-500 bg-cyan-500/10'
+                      : 'border-neutral-700 hover:border-cyan-500/50'
+                  }`}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                    <Link2 className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white text-sm font-medium">External Music</p>
+                    <p className="text-neutral-500 text-xs">Spotify, YouTube, SoundCloud, Bandcamp</p>
+                  </div>
+                  {normalizedEmbedUrl ? (
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-cyan-400" />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); clearMusic() }}
+                        className="text-neutral-500 hover:text-red-400"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <ChevronDown className={`w-4 h-4 text-neutral-500 transition-transform ${showEmbedInput ? 'rotate-180' : ''}`} />
+                  )}
+                </div>
+
+                {/* Embed URL input */}
+                {showEmbedInput && (
+                  <div className="space-y-2 pl-2">
+                    <input
+                      type="text"
+                      placeholder="Paste Spotify, YouTube, or SoundCloud link..."
+                      value={embedUrl}
+                      onChange={(e) => handleEmbedUrlChange(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-cyan-500/50"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      {EMBED_PLATFORMS.map((platform) => (
+                        <span
+                          key={platform.id}
+                          className={`px-2 py-1 rounded text-[10px] ${
+                            embedPlatform === platform.id
+                              ? 'bg-cyan-500/20 text-cyan-400'
+                              : 'bg-neutral-800 text-neutral-500'
+                          }`}
+                        >
+                          {platform.icon} {platform.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white text-[11px] font-medium truncate">
-                  {mediaPreview ? (mediaFile?.name || 'Media selected') : 'Add photo or video'}
+            )}
+
+            {/* Text Tab */}
+            {activeTab === 'text' && (
+              <div className="space-y-3">
+                <p className="text-neutral-400 text-xs">
+                  Add text, hashtags, and mentions to your reel
                 </p>
-                <p className="text-neutral-500 text-[9px]">
-                  {mediaPreview && videoDuration > 0 ? formatDuration(videoDuration) + ' • ' : ''}
-                  {isLoggedIn ? '10min • 1GB' : '30sec • 10MB'} • 24h
-                </p>
+
+                {mediaPreview ? (
+                  <>
+                    <p className="text-white text-sm">
+                      Use the <span className="text-cyan-400">+</span> button on the preview to add text layers.
+                      Double-tap text to edit. Drag to reposition.
+                    </p>
+                    <div className="p-3 rounded-lg bg-neutral-800/50 space-y-2">
+                      <p className="text-xs text-neutral-400">
+                        <span className="text-cyan-400">#hashtags</span> - Link to hashtag search
+                      </p>
+                      <p className="text-xs text-neutral-400">
+                        <span className="text-purple-400">@mentions</span> - Tag SoundChain users
+                      </p>
+                    </div>
+                    {textLayers.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-neutral-500">{textLayers.length} text layer{textLayers.length !== 1 ? 's' : ''}</p>
+                        {textLayers.map((layer, i) => (
+                          <div
+                            key={layer.id}
+                            className="flex items-center gap-2 p-2 rounded bg-neutral-800/50"
+                          >
+                            <span className="text-xs text-neutral-500">#{i + 1}</span>
+                            <span className="text-sm text-white truncate flex-1">{layer.text || '(empty)'}</span>
+                            <button
+                              onClick={() => setTextLayers(prev => prev.filter(l => l.id !== layer.id))}
+                              className="text-neutral-500 hover:text-red-400"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-4 rounded-lg bg-neutral-800/50 text-center">
+                    <p className="text-neutral-500 text-sm">Upload media first to add text overlays</p>
+                  </div>
+                )}
               </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-3 border-t border-neutral-800 space-y-2">
+            {/* Summary badges */}
+            <div className="flex flex-wrap gap-2">
               {mediaPreview && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleClear() }}
-                  className="w-6 h-6 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-red-500/20"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                <span className="px-2 py-1 rounded-full bg-neutral-800 text-neutral-300 text-[10px] flex items-center gap-1">
+                  {mediaType === 'image' ? <ImageIcon className="w-3 h-3" /> : <Video className="w-3 h-3" />}
+                  Media
+                </span>
+              )}
+              {selectedNftTrack && (
+                <span className="px-2 py-1 rounded-full bg-purple-500/20 text-purple-400 text-[10px] flex items-center gap-1">
+                  <Music2 className="w-3 h-3" />
+                  NFT Music
+                </span>
+              )}
+              {normalizedEmbedUrl && (
+                <span className="px-2 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-[10px] flex items-center gap-1">
+                  <Link2 className="w-3 h-3" />
+                  Embed
+                </span>
+              )}
+              {textLayers.length > 0 && (
+                <span className="px-2 py-1 rounded-full bg-neutral-800 text-neutral-300 text-[10px] flex items-center gap-1">
+                  <Type className="w-3 h-3" />
+                  {textLayers.length} text
+                </span>
               )}
             </div>
 
-            {/* Preview - only when media selected */}
-            {mediaPreview && (
-              <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-black">
-                {mediaType === 'image' ? (
-                  <img src={mediaPreview} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <video src={mediaPreview} className="w-full h-full object-cover" autoPlay loop muted playsInline />
-                )}
-              </div>
-            )}
-
-            {/* Share button - always visible */}
+            {/* Share button */}
             <button
               onClick={handlePublish}
               disabled={isUploading || !mediaPreview}
-              className="w-full py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-xs font-medium disabled:opacity-50 disabled:from-neutral-700 disabled:to-neutral-700 flex items-center justify-center gap-1.5"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-sm font-semibold disabled:opacity-50 disabled:from-neutral-700 disabled:to-neutral-700 flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               {isUploading ? (
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Sparkles className="w-3 h-3" />
+                <Sparkles className="w-4 h-4" />
               )}
-              {isUploading ? 'Uploading...' : 'Share Story'}
+              {isUploading ? 'Uploading...' : selectedNftTrack ? 'Share Reel (SCID Enabled)' : 'Share Reel'}
             </button>
-
-            {/* Compression progress - inline */}
-            {isCompressing && compressionProgress && (
-              <div className="mt-2 flex items-center gap-2 text-[10px] text-cyan-400">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                <span>{compressionProgress.message}</span>
-              </div>
-            )}
-
-            {uploadError && (
-              <p className="mt-2 text-red-400 text-[10px]">{uploadError}</p>
-            )}
           </div>
         </div>
       </div>
+
+      {/* NFT Music Picker Modal */}
+      <NFTMusicPicker
+        isOpen={showMusicPicker}
+        onClose={() => setShowMusicPicker(false)}
+        onSelect={handleSelectNftTrack}
+        selectedTrackId={selectedNftTrack?.id}
+      />
     </>
   )
 }

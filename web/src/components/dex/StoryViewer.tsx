@@ -1,9 +1,29 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, MoreHorizontal, Sparkles, Volume2, VolumeX, Pause, Play, Share2, Link2, Twitter, Copy, Check } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, MoreHorizontal, Sparkles, Volume2, VolumeX, Pause, Play, Share2, Link2, Twitter, Copy, Check, Music2 } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 import { MakeStoryPermanentModal } from './MakeStoryPermanentModal'
+import { ReelSCidTracker } from './ReelSCidTracker'
+import { getIpfsUrl } from 'utils/ipfs'
+
+interface StoryOverlay {
+  type: 'text' | 'hashtag' | 'mention' | 'sticker' | 'nft_badge'
+  content: string
+  positionX: number
+  positionY: number
+  fontFamily?: string
+  color?: string
+  fontSize?: number
+  rotation?: number
+}
+
+interface AttachedTrack {
+  id: string
+  title?: string
+  artist?: string
+  artworkUrl?: string
+}
 
 interface StoryItem {
   id: string
@@ -11,9 +31,12 @@ interface StoryItem {
   mediaType: 'image' | 'video'
   createdAt: string
   isPermanent?: boolean
+  scidEligible?: boolean
   viewCount: number
   reactions: { emoji: string; count: number }[]
   mediaSize?: number // bytes - for pricing calculation
+  overlays?: StoryOverlay[]
+  attachedTrack?: AttachedTrack
 }
 
 interface StoryUser {
@@ -511,6 +534,96 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
             onEnded={goToNextStory}
           />
         )}
+
+        {/* Text overlays from Reels 2.0 */}
+        {currentStory.overlays && currentStory.overlays.length > 0 && (
+          <div className="absolute inset-0 pointer-events-none z-20">
+            {currentStory.overlays.map((overlay, index) => {
+              if (overlay.type === 'nft_badge') {
+                // Parse NFT badge content
+                try {
+                  const badgeData = JSON.parse(overlay.content)
+                  return (
+                    <div
+                      key={index}
+                      className="absolute left-4 right-4 flex items-center gap-2 p-2 rounded-lg bg-black/60 backdrop-blur-sm pointer-events-auto"
+                      style={{
+                        left: `${overlay.positionX}%`,
+                        top: `${overlay.positionY}%`,
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                    >
+                      <img
+                        src={getIpfsUrl(badgeData.artworkUrl, '/default-pictures/album-artwork.png')}
+                        alt=""
+                        className="w-10 h-10 rounded object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-xs font-medium truncate">{badgeData.title}</p>
+                        <p className="text-neutral-400 text-[10px] truncate">{badgeData.artist}</p>
+                      </div>
+                      <div className="px-1.5 py-0.5 rounded bg-purple-500 text-[9px] font-bold text-white">
+                        SCID
+                      </div>
+                    </div>
+                  )
+                } catch {
+                  return null
+                }
+              }
+
+              // Text overlay
+              return (
+                <div
+                  key={index}
+                  className="absolute whitespace-pre-wrap"
+                  style={{
+                    left: `${overlay.positionX}%`,
+                    top: `${overlay.positionY}%`,
+                    transform: `translate(-50%, -50%) rotate(${overlay.rotation || 0}deg)`,
+                    fontSize: overlay.fontSize || 24,
+                    color: overlay.color || '#FFFFFF',
+                    fontFamily: overlay.fontFamily || 'sans-serif',
+                    textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {overlay.type === 'hashtag' ? (
+                    <span className="text-cyan-400 font-semibold">{overlay.content}</span>
+                  ) : overlay.type === 'mention' ? (
+                    <span className="text-purple-400 font-semibold">{overlay.content}</span>
+                  ) : (
+                    overlay.content
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Attached track badge (if has NFT music) */}
+        {currentStory.attachedTrack && (
+          <div className="absolute bottom-32 left-4 right-4 z-30 flex items-center gap-2 p-2 rounded-lg bg-black/60 backdrop-blur-sm">
+            <img
+              src={getIpfsUrl(currentStory.attachedTrack.artworkUrl, '/default-pictures/album-artwork.png')}
+              alt=""
+              className="w-10 h-10 rounded object-cover"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xs font-medium truncate">{currentStory.attachedTrack.title || 'Unknown Track'}</p>
+              <p className="text-neutral-400 text-[10px] truncate">{currentStory.attachedTrack.artist || 'Unknown Artist'}</p>
+            </div>
+            <Music2 className="w-4 h-4 text-purple-400" />
+          </div>
+        )}
+
+        {/* SCID Reward Tracker */}
+        <ReelSCidTracker
+          storyId={currentStory.id}
+          isPermanent={currentStory.isPermanent || false}
+          isScidEligible={currentStory.scidEligible || false}
+          isPaused={isPaused}
+          onQualified={(scid) => console.log('[StoryViewer] SCID earned:', scid)}
+        />
 
         {/* Gradient overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70 pointer-events-none" />

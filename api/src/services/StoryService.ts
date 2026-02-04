@@ -1,8 +1,21 @@
 import mongoose from 'mongoose';
 import { UserInputError } from 'apollo-server-express';
-import { Story, StoryModel } from '../models/Story';
+import { Story, StoryModel, StoryOverlay, StoryWatchRecord } from '../models/Story';
 import { Context } from '../types/Context';
 import { ModelService } from './ModelService';
+
+// Overlay input type
+interface OverlayInput {
+  type: 'text' | 'hashtag' | 'mention' | 'sticker' | 'nft_badge';
+  content: string;
+  positionX: number;
+  positionY: number;
+  fontFamily?: string;
+  color?: string;
+  fontSize?: number;
+  rotation?: number;
+  mentionedUserId?: string;
+}
 
 interface CreateStoryParams {
   profileId: string;
@@ -10,6 +23,8 @@ interface CreateStoryParams {
   mediaType: string;
   caption?: string;
   duration?: number;
+  overlays?: OverlayInput[];
+  attachedTrackId?: string;
 }
 
 interface CreateGuestStoryParams {
@@ -18,6 +33,21 @@ interface CreateGuestStoryParams {
   mediaType: string;
   caption?: string;
   duration?: number;
+  overlays?: OverlayInput[];
+  attachedTrackId?: string;
+}
+
+interface AttachTrackParams {
+  storyId: string;
+  trackId: string;
+  trackEditionId?: string;
+}
+
+interface RecordWatchParams {
+  storyId: string;
+  viewerProfileId?: string;
+  viewerWalletAddress?: string;
+  watchDurationSeconds: number;
 }
 
 interface AddReactionParams {
@@ -42,12 +72,35 @@ export class StoryService extends ModelService<typeof Story> {
 
   /**
    * Create a new story with 24hr expiry
+   * Supports overlays and attached NFT tracks for Reels 2.0
    */
   async create(params: CreateStoryParams): Promise<Story> {
-    const { profileId, mediaUrl, mediaType, caption, duration } = params;
+    const { profileId, mediaUrl, mediaType, caption, duration, overlays, attachedTrackId } = params;
 
     // Calculate expiry time (24 hours from now)
     const expiresAt = new Date(Date.now() + STORY_EXPIRY_HOURS * 60 * 60 * 1000);
+
+    // Process overlays to extract hashtags and mentions
+    const { processedOverlays, hashtags, mentionedUserIds } = this.processOverlays(overlays || []);
+
+    // If track is attached, fetch track details
+    let trackDetails: any = {};
+    if (attachedTrackId) {
+      try {
+        const track = await this.context.trackService.getTrack(attachedTrackId);
+        if (track) {
+          trackDetails = {
+            attachedTrackId: new mongoose.Types.ObjectId(attachedTrackId),
+            attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.audio,
+            attachedTrackTitle: track.title,
+            attachedTrackArtist: track.artistName,
+            attachedTrackCoverUrl: track.coverArtwork,
+          };
+        }
+      } catch (err) {
+        console.error('[StoryService] Failed to fetch attached track:', err);
+      }
+    }
 
     const story = new StoryModel({
       profileId: new mongoose.Types.ObjectId(profileId),
@@ -61,6 +114,14 @@ export class StoryService extends ModelService<typeof Story> {
       reactions: [],
       viewerIds: [],
       deleted: false,
+      // Reels 2.0 fields
+      overlays: processedOverlays,
+      hashtags,
+      mentionedUserIds,
+      ...trackDetails,
+      scidEligible: false,
+      totalQualifiedViews: 0,
+      watchRecords: [],
     });
 
     await story.save();
@@ -362,12 +423,35 @@ export class StoryService extends ModelService<typeof Story> {
   /**
    * Create a guest story (no account required, wallet-only)
    * Guest stories still expire in 24 hours and can be uploaded to IPFS
+   * Supports overlays and attached tracks for Reels 2.0
    */
   async createGuestStory(params: CreateGuestStoryParams): Promise<Story> {
-    const { walletAddress, mediaUrl, mediaType, caption, duration } = params;
+    const { walletAddress, mediaUrl, mediaType, caption, duration, overlays, attachedTrackId } = params;
 
     // Calculate expiry time (24 hours from now)
     const expiresAt = new Date(Date.now() + STORY_EXPIRY_HOURS * 60 * 60 * 1000);
+
+    // Process overlays to extract hashtags and mentions
+    const { processedOverlays, hashtags, mentionedUserIds } = this.processOverlays(overlays || []);
+
+    // If track is attached, fetch track details
+    let trackDetails: any = {};
+    if (attachedTrackId) {
+      try {
+        const track = await this.context.trackService.getTrack(attachedTrackId);
+        if (track) {
+          trackDetails = {
+            attachedTrackId: new mongoose.Types.ObjectId(attachedTrackId),
+            attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.audio,
+            attachedTrackTitle: track.title,
+            attachedTrackArtist: track.artistName,
+            attachedTrackCoverUrl: track.coverArtwork,
+          };
+        }
+      } catch (err) {
+        console.error('[StoryService] Failed to fetch attached track for guest story:', err);
+      }
+    }
 
     const story = new StoryModel({
       // Guest stories don't have a profileId - use wallet address for identification
@@ -383,6 +467,14 @@ export class StoryService extends ModelService<typeof Story> {
       reactions: [],
       viewerIds: [],
       deleted: false,
+      // Reels 2.0 fields
+      overlays: processedOverlays,
+      hashtags,
+      mentionedUserIds,
+      ...trackDetails,
+      scidEligible: false,
+      totalQualifiedViews: 0,
+      watchRecords: [],
     });
 
     await story.save();
@@ -409,5 +501,275 @@ export class StoryService extends ModelService<typeof Story> {
     }
 
     return story as unknown as Story;
+  }
+
+  // ============================================
+  // REELS 2.0: Overlays, NFT Music, SCID Rewards
+  // ============================================
+
+  /**
+   * Process overlays to extract hashtags and mentioned users
+   */
+  private processOverlays(overlays: OverlayInput[]): {
+    processedOverlays: StoryOverlay[];
+    hashtags: string[];
+    mentionedUserIds: mongoose.Types.ObjectId[];
+  } {
+    const hashtags: string[] = [];
+    const mentionedUserIds: mongoose.Types.ObjectId[] = [];
+    const processedOverlays: StoryOverlay[] = [];
+
+    for (const overlay of overlays) {
+      const processed: any = {
+        type: overlay.type,
+        content: overlay.content,
+        positionX: overlay.positionX,
+        positionY: overlay.positionY,
+        fontFamily: overlay.fontFamily,
+        color: overlay.color,
+        fontSize: overlay.fontSize,
+        rotation: overlay.rotation,
+      };
+
+      // Extract hashtags
+      if (overlay.type === 'hashtag') {
+        const tag = overlay.content.startsWith('#') ? overlay.content.slice(1) : overlay.content;
+        if (tag && !hashtags.includes(tag.toLowerCase())) {
+          hashtags.push(tag.toLowerCase());
+        }
+      }
+
+      // Extract mentions
+      if (overlay.type === 'mention' && overlay.mentionedUserId) {
+        processed.mentionedUserId = new mongoose.Types.ObjectId(overlay.mentionedUserId);
+        if (!mentionedUserIds.find(id => id.toString() === overlay.mentionedUserId)) {
+          mentionedUserIds.push(new mongoose.Types.ObjectId(overlay.mentionedUserId));
+        }
+      }
+
+      // Also extract hashtags from text overlays
+      if (overlay.type === 'text') {
+        const hashtagMatches = overlay.content.match(/#(\w+)/g);
+        if (hashtagMatches) {
+          for (const match of hashtagMatches) {
+            const tag = match.slice(1).toLowerCase();
+            if (!hashtags.includes(tag)) {
+              hashtags.push(tag);
+            }
+          }
+        }
+      }
+
+      processedOverlays.push(processed as StoryOverlay);
+    }
+
+    return { processedOverlays, hashtags, mentionedUserIds };
+  }
+
+  /**
+   * Attach an NFT track to a story
+   */
+  async attachTrack(params: AttachTrackParams): Promise<Story> {
+    const { storyId, trackId, trackEditionId } = params;
+
+    // Fetch track details
+    const track = await this.context.trackService.getTrack(trackId);
+    if (!track) {
+      throw new UserInputError('Track not found');
+    }
+
+    const updateData: any = {
+      attachedTrackId: new mongoose.Types.ObjectId(trackId),
+      attachedTrackIpfsUrl: track.ipfsCid ? `ipfs://${track.ipfsCid}` : track.audio,
+      attachedTrackTitle: track.title,
+      attachedTrackArtist: track.artistName,
+      attachedTrackCoverUrl: track.coverArtwork,
+    };
+
+    if (trackEditionId) {
+      updateData.attachedTrackEditionId = new mongoose.Types.ObjectId(trackEditionId);
+    }
+
+    const story = await StoryModel.findByIdAndUpdate(
+      storyId,
+      { $set: updateData },
+      { new: true }
+    ).lean();
+
+    if (!story) {
+      throw new UserInputError('Story not found');
+    }
+
+    return story as unknown as Story;
+  }
+
+  /**
+   * Update story overlays
+   */
+  async updateOverlays(storyId: string, overlays: OverlayInput[], profileId: string): Promise<Story> {
+    // Verify ownership
+    const existingStory = await StoryModel.findById(storyId).lean();
+    if (!existingStory || existingStory.profileId?.toString() !== profileId) {
+      throw new UserInputError("Story not found or you don't have permission to edit it");
+    }
+
+    const { processedOverlays, hashtags, mentionedUserIds } = this.processOverlays(overlays);
+
+    const story = await StoryModel.findByIdAndUpdate(
+      storyId,
+      {
+        $set: {
+          overlays: processedOverlays,
+          hashtags,
+          mentionedUserIds,
+        },
+      },
+      { new: true }
+    ).lean();
+
+    if (!story) {
+      throw new UserInputError('Story not found');
+    }
+
+    // Send notifications to mentioned users
+    for (const mentionedId of mentionedUserIds) {
+      try {
+        await this.context.notificationService.notifyMention({
+          mentionedProfileId: mentionedId.toString(),
+          mentionerProfileId: profileId,
+          storyId,
+          type: 'story',
+        });
+      } catch (err) {
+        console.error('[StoryService] Failed to send mention notification:', err);
+      }
+    }
+
+    return story as unknown as Story;
+  }
+
+  /**
+   * Record a watch session for SCID rewards
+   * Viewers who watch 30+ seconds qualify for rewards
+   */
+  async recordWatch(params: RecordWatchParams): Promise<{ qualified: boolean; viewerScid?: string }> {
+    const { storyId, viewerProfileId, viewerWalletAddress, watchDurationSeconds } = params;
+    const MINIMUM_WATCH_SECONDS = 30;
+
+    const story = await StoryModel.findById(storyId).lean();
+    if (!story) {
+      throw new UserInputError('Story not found');
+    }
+
+    // Only generate SCID if story is permanent and SCID-eligible
+    const qualified = watchDurationSeconds >= MINIMUM_WATCH_SECONDS && story.scidEligible && story.isPermanent;
+    let viewerScid: string | undefined;
+
+    if (qualified) {
+      // Generate viewer SCID
+      viewerScid = await this.generateViewerScid(storyId, viewerProfileId || viewerWalletAddress || 'anon');
+    }
+
+    const watchRecord: any = {
+      watchDurationSeconds,
+      qualifiedForReward: qualified,
+      viewerScid,
+      watchedAt: new Date(),
+    };
+
+    if (viewerProfileId) {
+      watchRecord.viewerProfileId = new mongoose.Types.ObjectId(viewerProfileId);
+    }
+    if (viewerWalletAddress) {
+      watchRecord.viewerWalletAddress = viewerWalletAddress.toLowerCase();
+    }
+
+    const updateOps: any = {
+      $push: { watchRecords: watchRecord },
+    };
+
+    if (qualified) {
+      updateOps.$inc = { totalQualifiedViews: 1 };
+    }
+
+    await StoryModel.findByIdAndUpdate(storyId, updateOps);
+
+    return { qualified, viewerScid };
+  }
+
+  /**
+   * Generate a viewer SCID for reel watching rewards
+   * Format: SRV-POL-XXXX-XXXXXX (Story Reel Viewer)
+   */
+  private async generateViewerScid(storyId: string, viewerId: string): Promise<string> {
+    const storyHash = storyId.slice(-4).toUpperCase();
+    const viewerHash = viewerId.slice(-4).toUpperCase();
+    const timestamp = Date.now().toString(36).toUpperCase();
+    return `SRV-POL-${storyHash}-${viewerHash}${timestamp}`;
+  }
+
+  /**
+   * Search stories by hashtag
+   */
+  async searchByHashtag(hashtag: string, limit: number = 20): Promise<Story[]> {
+    const tag = hashtag.startsWith('#') ? hashtag.slice(1) : hashtag;
+    const now = new Date();
+
+    const stories = await StoryModel.find({
+      hashtags: tag.toLowerCase(),
+      deleted: false,
+      $or: [
+        { expiresAt: { $gt: now } },
+        { isPermanent: true },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return stories as unknown as Story[];
+  }
+
+  /**
+   * Get stories that use a specific track (for artist dashboard)
+   */
+  async getStoriesWithTrack(trackId: string, limit: number = 50): Promise<Story[]> {
+    const now = new Date();
+
+    const stories = await StoryModel.find({
+      attachedTrackId: new mongoose.Types.ObjectId(trackId),
+      deleted: false,
+      $or: [
+        { expiresAt: { $gt: now } },
+        { isPermanent: true },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return stories as unknown as Story[];
+  }
+
+  /**
+   * Get trending stories (by view count and qualified views)
+   */
+  async getTrending(limit: number = 20): Promise<Story[]> {
+    const now = new Date();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const stories = await StoryModel.find({
+      deleted: false,
+      createdAt: { $gte: oneDayAgo },
+      $or: [
+        { expiresAt: { $gt: now } },
+        { isPermanent: true },
+      ],
+    })
+      .sort({ viewCount: -1, totalQualifiedViews: -1 })
+      .limit(limit)
+      .lean();
+
+    return stories as unknown as Story[];
   }
 }
