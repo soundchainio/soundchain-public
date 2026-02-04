@@ -772,11 +772,13 @@ export class NotificationService extends ModelService<typeof Notification> {
       const mentionerProfile = await this.context.profileService.getProfile(mentionerProfileId);
       if (!mentionerProfile) return;
 
+      const mentionerName = mentionerProfile.displayName || 'Someone';
+
       const notification = new NotificationModel({
         type: NotificationType.Mention,
         profileId: mentionedProfileId,
         metadata: {
-          mentionerName: mentionerProfile.displayName || mentionerProfile.userHandle || 'Someone',
+          mentionerName,
           mentionerPicture: mentionerProfile.profilePicture,
           mentionerProfileId,
           storyId,
@@ -789,21 +791,14 @@ export class NotificationService extends ModelService<typeof Notification> {
       await this.incrementNotificationCount(mentionedProfileId);
 
       // Web push notification
-      const mentionerName = mentionerProfile.displayName || mentionerProfile.userHandle || 'Someone';
-      await this.context.webPushService.sendNotification(
-        mentionedProfileId,
-        `${mentionerName} mentioned you`,
-        `You were mentioned in a ${type}`,
-        type === 'story' && storyId ? `/dex/story/${storyId}` : postId ? `/dex/post/${postId}` : '/dex/feed'
-      );
-
-      // Nostr notification
-      await this.sendNostrNotification(mentionedProfileId, 'mention', {
-        mentionerName,
-        storyId,
-        postId,
-        type,
+      const mentionUrl = type === 'story' && storyId ? `/dex/story/${storyId}` : postId ? `/dex/post/${postId}` : '/dex/feed';
+      await this.context.webPushService.sendNotification(mentionedProfileId, {
+        title: `${mentionerName} mentioned you`,
+        body: `You were mentioned in a ${type}`,
+        data: { url: mentionUrl, type: 'mention' }
       });
+
+      // Note: Nostr notification not sent for mentions (no handler in sendNostrNotification)
     } catch (err) {
       console.error('[NotificationService] Error in notifyMention:', err);
     }
