@@ -120,20 +120,31 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
                 </div>
               </div>
 
-              {/* Stats Row */}
-              <div className="flex items-center gap-6 mt-4">
-                <button className="group" onClick={onFollowers}>
-                  <span className="block text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
-                    <Number value={me.profile.followerCount} />
-                  </span>
-                  <span className="text-xs text-gray-500">Followers</span>
-                </button>
-                <button className="group" onClick={onFollowing}>
-                  <span className="block text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
-                    <Number value={me.profile.followingCount} />
-                  </span>
-                  <span className="text-xs text-gray-500">Following</span>
-                </button>
+              {/* Stats Row - relative container for dropdown */}
+              <div className="relative">
+                <div className="flex items-center gap-6 mt-4">
+                  <button className="group" onClick={onFollowers}>
+                    <span className="block text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                      <Number value={me.profile.followerCount} />
+                    </span>
+                    <span className="text-xs text-gray-500">Followers</span>
+                  </button>
+                  <button className="group" onClick={onFollowing}>
+                    <span className="block text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                      <Number value={me.profile.followingCount} />
+                    </span>
+                    <span className="text-xs text-gray-500">Following</span>
+                  </button>
+                </div>
+
+                {/* Inline Dropdown Modal */}
+                <FollowModal
+                  show={showModal}
+                  profileId={me.profile.id}
+                  modalType={followModalType as FollowModalType}
+                  onClose={onCloseModal}
+                  dropdown={true}
+                />
               </div>
             </div>
 
@@ -232,14 +243,6 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
         </div>
       </div>
 
-      {me && (
-        <FollowModal
-          show={showModal}
-          profileId={me.profile.id}
-          modalType={followModalType as FollowModalType}
-          onClose={onCloseModal}
-        />
-      )}
     </>
   )
 }

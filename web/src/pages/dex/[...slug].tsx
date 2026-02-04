@@ -3588,51 +3588,53 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 )}
 
                 {/* Stats row - clickable for followers/following modals */}
-                <div className="flex items-center gap-4 mb-4">
-                  <button
-                    onClick={() => {
-                      setBioFollowModalType(FollowModalType.FOLLOWERS)
-                      setShowBioFollowModal(true)
-                    }}
-                    className="text-center hover:bg-white/10 px-3 py-2 rounded-lg transition-colors group"
-                  >
-                    <p className="text-white font-semibold group-hover:text-cyan-400 transition-colors">{me.profile.followerCount || 0}</p>
-                    <p className="text-gray-500 text-xs group-hover:text-gray-300 transition-colors">Followers</p>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setBioFollowModalType(FollowModalType.FOLLOWING)
-                      setShowBioFollowModal(true)
-                    }}
-                    className="text-center hover:bg-white/10 px-3 py-2 rounded-lg transition-colors group"
-                  >
-                    <p className="text-white font-semibold group-hover:text-cyan-400 transition-colors">{me.profile.followingCount || 0}</p>
-                    <p className="text-gray-500 text-xs group-hover:text-gray-300 transition-colors">Following</p>
-                  </button>
-                  <button
-                    onClick={() => {
-                      // Navigate to own profile music tab
-                      if (me.profile.userHandle) {
-                        router.push(`/dex/users/${me.profile.userHandle}?tab=music`)
-                      }
-                    }}
-                    className="text-center hover:bg-white/10 px-3 py-2 rounded-lg transition-colors group"
-                  >
-                    <p className="text-white font-semibold group-hover:text-cyan-400 transition-colors">{userData?.me?.tracksCount || 0}</p>
-                    <p className="text-gray-500 text-xs group-hover:text-gray-300 transition-colors">Tracks</p>
-                  </button>
-                </div>
+                <div className="relative mb-4">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => {
+                        setBioFollowModalType(FollowModalType.FOLLOWERS)
+                        setShowBioFollowModal(true)
+                      }}
+                      className="text-center hover:bg-white/10 px-3 py-2 rounded-lg transition-colors group"
+                    >
+                      <p className="text-white font-semibold group-hover:text-cyan-400 transition-colors">{me.profile.followerCount || 0}</p>
+                      <p className="text-gray-500 text-xs group-hover:text-gray-300 transition-colors">Followers</p>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBioFollowModalType(FollowModalType.FOLLOWING)
+                        setShowBioFollowModal(true)
+                      }}
+                      className="text-center hover:bg-white/10 px-3 py-2 rounded-lg transition-colors group"
+                    >
+                      <p className="text-white font-semibold group-hover:text-cyan-400 transition-colors">{me.profile.followingCount || 0}</p>
+                      <p className="text-gray-500 text-xs group-hover:text-gray-300 transition-colors">Following</p>
+                    </button>
+                    <button
+                      onClick={() => {
+                        // Navigate to own profile music tab
+                        if (me.profile.userHandle) {
+                          router.push(`/dex/users/${me.profile.userHandle}?tab=music`)
+                        }
+                      }}
+                      className="text-center hover:bg-white/10 px-3 py-2 rounded-lg transition-colors group"
+                    >
+                      <p className="text-white font-semibold group-hover:text-cyan-400 transition-colors">{userData?.me?.tracksCount || 0}</p>
+                      <p className="text-gray-500 text-xs group-hover:text-gray-300 transition-colors">Tracks</p>
+                    </button>
+                  </div>
 
-                {/* Bio Follow Modal - compact grid view */}
-                {me.profile.id && (
-                  <FollowModal
-                    show={showBioFollowModal}
-                    profileId={me.profile.id}
-                    modalType={bioFollowModalType}
-                    onClose={() => setShowBioFollowModal(false)}
-                    compact
-                  />
-                )}
+                  {/* Bio Follow Modal - dropdown that opens downward */}
+                  {me.profile.id && (
+                    <FollowModal
+                      show={showBioFollowModal}
+                      profileId={me.profile.id}
+                      modalType={bioFollowModalType}
+                      onClose={() => setShowBioFollowModal(false)}
+                      dropdown
+                    />
+                  )}
+                </div>
 
                 {/* Wallet address */}
                 {(me.magicWalletAddress || me.googleWalletAddress) && (

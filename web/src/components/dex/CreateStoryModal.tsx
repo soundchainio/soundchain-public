@@ -115,9 +115,10 @@ const fileToBase64 = (file: File): Promise<string> => {
   })
 }
 
-// Use direct upload for files under 50MB (faster, skips S3)
-// Compression ensures most files stay under this threshold
-const DIRECT_UPLOAD_THRESHOLD = 50 * 1024 * 1024 // 50MB
+// Use direct upload for files under 25MB (faster, skips S3)
+// Base64 encoding adds ~33% overhead, so 25MB becomes ~33MB payload
+// Keeping under GraphQL payload limits to prevent 60% upload failures
+const DIRECT_UPLOAD_THRESHOLD = 25 * 1024 * 1024 // 25MB
 
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {

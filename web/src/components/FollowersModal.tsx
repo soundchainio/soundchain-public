@@ -1,7 +1,7 @@
 import { X } from 'lucide-react'
 import { Avatar } from 'components/Avatar'
 import { Profile, useFollowersLazyQuery, useFollowingLazyQuery } from 'lib/graphql'
-import { useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { FollowModalType } from 'types/FollowModalType'
 import { LoaderAnimation } from 'components/LoaderAnimation'
 import Link from 'next/link'
@@ -12,9 +12,11 @@ interface FollowersModal {
   modalType: FollowModalType
   onClose: () => void
   compact?: boolean // New: compact grid mode for bio panel
+  anchorRef?: React.RefObject<HTMLElement> // Anchor element for dropdown positioning
+  dropdown?: boolean // New: dropdown mode that opens downward from anchor
 }
 
-export const FollowModal = ({ show, profileId, modalType, onClose, compact = false }: FollowersModal) => {
+export const FollowModal = ({ show, profileId, modalType, onClose, compact = false, anchorRef, dropdown = false }: FollowersModal) => {
   const [followers, { data: followersData, fetchMore: fetchMoreFollowers, loading: followersLoading }] = useFollowersLazyQuery({
     variables: { profileId },
   })
@@ -47,6 +49,98 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
   const hasData = modalType === FollowModalType.FOLLOWERS ? !!followersData : !!followingData
 
   if (!show) return null
+
+  // Dropdown mode - accordion style that opens downward from trigger
+  if (dropdown) {
+    return (
+      <>
+        {/* Light backdrop - allows clicking elsewhere to close */}
+        <div
+          className="fixed inset-0 z-[300]"
+          onClick={onClose}
+        />
+
+        {/* Dropdown Panel - positioned below trigger */}
+        <div className="absolute left-0 right-0 top-full mt-2 z-[301] animate-in slide-in-from-top-2 duration-150">
+          <div className="bg-neutral-900/95 backdrop-blur-md border border-neutral-700 rounded-xl overflow-hidden shadow-2xl mx-2">
+            {/* Header */}
+            <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-800">
+              <span className="text-xs font-semibold text-white">{getTitle()}</span>
+              <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors p-1">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-3 max-h-[280px] overflow-y-auto">
+              {isLoading && !hasData && (
+                <div className="flex items-center justify-center py-6">
+                  <LoaderAnimation loadingMessage={`Loading...`} />
+                </div>
+              )}
+
+              {hasData && profiles.length === 0 && (
+                <p className="text-center text-neutral-500 py-6 text-sm">
+                  {modalType === FollowModalType.FOLLOWERS ? 'No followers yet' : 'Not following anyone'}
+                </p>
+              )}
+
+              {/* Avatar Grid - consistent 40px avatars */}
+              {profiles.length > 0 && (
+                <div className="grid grid-cols-5 gap-2">
+                  {profiles.slice(0, 15).map((profile) => (
+                    <Link
+                      key={profile.id}
+                      href={`/dex/users/${profile.userHandle}`}
+                      onClick={onClose}
+                      className="flex flex-col items-center gap-1 group"
+                    >
+                      <Avatar
+                        linkToProfile={false}
+                        pixels={40}
+                        className="ring-2 ring-transparent group-hover:ring-cyan-500 transition-all"
+                        profile={profile}
+                      />
+                      <span className="text-[9px] text-neutral-400 group-hover:text-white truncate max-w-[40px] text-center transition-colors">
+                        {profile.displayName?.split(' ')[0] || profile.userHandle}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* View All link if more than 15 */}
+              {profiles.length > 15 && (
+                <button
+                  onClick={onClose}
+                  className="w-full mt-3 py-2 text-xs text-cyan-400 hover:text-cyan-300 transition-colors border-t border-neutral-800"
+                >
+                  View all {profiles.length}...
+                </button>
+              )}
+
+              {/* Load More */}
+              {((modalType === FollowModalType.FOLLOWERS && followersData?.followers.pageInfo.hasNextPage) ||
+                (modalType === FollowModalType.FOLLOWING && followingData?.following.pageInfo.hasNextPage)) && profiles.length <= 15 && (
+                <button
+                  onClick={() => {
+                    if (modalType === FollowModalType.FOLLOWERS && fetchMoreFollowers) {
+                      fetchMoreFollowers({ variables: { profileId, page: { after: followersData?.followers.pageInfo.endCursor } } })
+                    } else if (fetchMoreFollowing) {
+                      fetchMoreFollowing({ variables: { profileId, page: { after: followingData?.following.pageInfo.endCursor } } })
+                    }
+                  }}
+                  className="w-full mt-3 py-2 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  Load more...
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   // Compact mode - small popover with avatar grid
   if (compact) {
