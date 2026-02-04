@@ -115,8 +115,8 @@ const fileToBase64 = (file: File): Promise<string> => {
   })
 }
 
-// Use direct upload for files under 50MB (faster, skips S3)
-const DIRECT_UPLOAD_THRESHOLD = 50 * 1024 * 1024 // 50MB
+// Use direct upload for files under 100MB (faster, skips S3)
+const DIRECT_UPLOAD_THRESHOLD = 100 * 1024 * 1024 // 100MB
 
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {
