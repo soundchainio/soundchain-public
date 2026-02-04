@@ -70,7 +70,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft
+  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
@@ -877,6 +877,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // Profile tab state (Feed | Music | Playlists)
   const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'playlists'>('myfeed')
+
+  // Bio accordion state - collapsible bio panel for own profile
+  const [isBioExpanded, setIsBioExpanded] = useState(false)
 
   // Announcements state (from /v1/feed API)
   const [announcements, setAnnouncements] = useState<any[]>([])
@@ -6779,7 +6782,43 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           Playlists
                         </span>
                       </Button>
+
+                      {/* Bio Accordion Toggle - Only shown when viewing own profile */}
+                      {isViewingOwnProfile && (me?.profile?.bio || userData?.me?.profile?.bio) && (
+                        <button
+                          onClick={() => setIsBioExpanded(!isBioExpanded)}
+                          className={`flex-shrink-0 ml-auto p-2 rounded-lg transition-all duration-300 hover:bg-white/5 ${isBioExpanded ? 'bg-white/5 text-cyan-400' : 'text-gray-400 hover:text-white'}`}
+                          title="View my bio"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
+
+                    {/* Bio Accordion Content - Expandable bio panel for own profile */}
+                    {isViewingOwnProfile && isBioExpanded && (me?.profile?.bio || userData?.me?.profile?.bio) && (
+                      <div className="mb-4 animate-in slide-in-from-top-2 duration-200">
+                        <div className="bg-black/40 backdrop-blur-xl rounded-xl p-4 border border-white/10">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-cyan-500/10">
+                              <FileText className="w-4 h-4 text-cyan-400" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-semibold text-white mb-1">My Bio</h4>
+                              <p className="text-sm text-gray-300 whitespace-pre-wrap break-words">
+                                {me?.profile?.bio || userData?.me?.profile?.bio}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => setIsBioExpanded(false)}
+                              className="p-1 rounded hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Tab Content */}
                     <div className="min-h-[400px] bg-black/40 backdrop-blur-xl rounded-xl p-2 border border-white/10">
