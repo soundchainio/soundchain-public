@@ -95,7 +95,9 @@ export class ProfileService extends ModelService<typeof Profile> {
   async getUserHandle(profileId: string): Promise<string> {
     const user = await UserModel.findOne({ profileId });
     if (!user) {
-      throw new Error(`Profile ${profileId} is missing a user account!`);
+      // Log warning but don't throw - orphaned profiles shouldn't break the app
+      console.warn(`Profile ${profileId} is missing a user account!`);
+      return 'user';  // Return fallback handle
     }
     return user.handle;
   }
