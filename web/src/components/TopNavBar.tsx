@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Avatar } from 'components/Avatar'
 import { Bell } from 'icons/Bell'
 import { Logo } from 'icons/Logo'
+import { SubtleGlowLogo } from 'icons/GlowingLogo'
 import { getJwt } from 'lib/apollo'
 import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
@@ -221,9 +222,9 @@ export const TopNavBar = ({
     <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       {/* Main Header Bar - Clean & Modern */}
       <div className="relative z-10 flex h-14 items-center justify-between bg-black/95 backdrop-blur-md border-b border-white/5 px-4">
-        {/* Mobile Logo */}
+        {/* Mobile Logo - with energy glow */}
         <Link href="/dex" className="flex items-center gap-2 md:hidden" passHref>
-          <Logo id="logo_mobile" className="h-8 w-auto" />
+          <SubtleGlowLogo width={32} height={32} />
         </Link>
 
         {/* Desktop Navigation */}
@@ -236,7 +237,7 @@ export const TopNavBar = ({
           !isCreateAccount && (
             <div className="hidden md:flex items-center gap-3">
               <Link href="/" passHref className="flex items-center gap-2">
-                <Logo className="h-8 w-auto" />
+                <SubtleGlowLogo width={32} height={32} />
                 <span className="text-white font-semibold text-lg">SoundChain</span>
               </Link>
             </div>
