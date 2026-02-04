@@ -3623,13 +3623,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </button>
                 </div>
 
-                {/* Bio Follow Modal */}
+                {/* Bio Follow Modal - compact grid view */}
                 {me.profile.id && (
                   <FollowModal
                     show={showBioFollowModal}
                     profileId={me.profile.id}
                     modalType={bioFollowModalType}
                     onClose={() => setShowBioFollowModal(false)}
+                    compact
                   />
                 )}
 
