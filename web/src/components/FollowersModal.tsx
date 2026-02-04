@@ -25,14 +25,14 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
   })
 
   useEffect(() => {
-    if (show) {
+    if (show && profileId) {
       if (modalType === FollowModalType.FOLLOWERS) {
-        followers()
+        followers({ variables: { profileId } })
       } else {
-        following()
+        following({ variables: { profileId } })
       }
     }
-  }, [show, modalType])
+  }, [show, modalType, profileId, followers, following])
 
   const getTitle = () => {
     if (modalType === FollowModalType.FOLLOWERS) {
@@ -54,15 +54,15 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
   if (dropdown) {
     return (
       <>
-        {/* Light backdrop - allows clicking elsewhere to close */}
+        {/* Backdrop - fixed to cover entire screen */}
         <div
-          className="fixed inset-0 z-[300]"
+          className="fixed inset-0 z-[9998] bg-black/40"
           onClick={onClose}
         />
 
-        {/* Dropdown Panel - positioned below trigger */}
-        <div className="absolute left-0 right-0 top-full mt-2 z-[301] animate-in slide-in-from-top-2 duration-150">
-          <div className="bg-neutral-900/95 backdrop-blur-md border border-neutral-700 rounded-xl overflow-hidden shadow-2xl mx-2">
+        {/* Dropdown Panel - fixed positioning to escape parent stacking context */}
+        <div className="fixed left-4 right-4 top-1/3 z-[9999] animate-in zoom-in-95 duration-150">
+          <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-800">
               <span className="text-xs font-semibold text-white">{getTitle()}</span>
