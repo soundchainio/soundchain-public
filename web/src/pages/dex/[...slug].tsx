@@ -3465,166 +3465,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </div>
         </nav>
 
-        {/* Profile Header - Only shown when logged in on feed view */}
-        {user && selectedView === 'feed' && (
-        <div className="relative z-10 pt-8 pb-6">
-          {/* Dark gradient overlay for text readability on any cover image */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-transparent pointer-events-none" />
-          <div className="max-w-screen-2xl mx-auto px-4 lg:px-6 relative">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-              {/* User Profile */}
-              <div className="flex flex-col lg:flex-row gap-6 items-start">
-                <div className="relative">
-                  <div className="w-40 lg:w-48 h-40 lg:h-48 rounded-3xl overflow-hidden analog-glow bg-gradient-to-br from-purple-900 to-cyan-900">
-                    {user?.profilePicture && !profileImageError ? (
-                      <img
-                        src={user.profilePicture}
-                        alt={user.displayName || 'Profile'}
-                        className="w-full h-full object-cover"
-                        onError={() => {
-                          console.error('❌ Profile image failed to load:', user.profilePicture)
-                          setProfileImageError(true)
-                        }}
-                        onLoad={() => console.log('✅ Profile image loaded successfully')}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-6xl text-white font-bold">
-                        {(user?.displayName || user?.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-cyan-400 rounded-full border-4 border-black/50 flex items-center justify-center">
-                    <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-                  </div>
-                </div>
-
-                <div className="flex-1 space-y-4 rounded-2xl p-4 -ml-2 lg:ml-0 border border-cyan-500/30" style={{ backgroundColor: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(16px)' }}>
-                  <div className="space-y-2">
-                    {/* Username with inline badges - EXACT legacy UI */}
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-2xl lg:text-3xl font-bold text-white" style={{ fontFamily: "'Space Mono', 'JetBrains Mono', monospace" }}>
-                        {userLoading ? 'Loading...' : (user?.displayName || user?.userHandle || 'User')}
-                      </h1>
-                      {/* Team Member Badge (Gold SoundChain Logo) */}
-                      {user?.teamMember && (
-                        <SoundchainGoldLogo className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="SoundChain Team Member" />
-                      )}
-                      {/* Verified Badge */}
-                      {!user?.teamMember && user?.verified && (
-                        <VerifiedIcon className="flex-shrink-0" style={{ width: '34px', height: '34px' }} aria-label="Verified user" />
-                      )}
-                      {/* POAP Badges - MATCH 34x34 */}
-                      {user?.badges?.map((badge, index) => (
-                        <div key={index} className="flex-shrink-0" style={{ width: '34px', height: '34px' }}>
-                          <Image alt="badge" src={`/badges/badge-01.svg`} width={34} height={34} style={{ width: '34px', height: '34px' }} />
-                        </div>
-                      ))}
-                    </div>
-                    <p className="retro-json text-sm">@{user?.userHandle || 'user'}</p>
-                    <p className="text-gray-300 text-sm max-w-md">{user?.bio || 'Welcome to SoundChain DEX Dashboard'}</p>
-                    {!userLoading && !user && (
-                      <p className="text-red-400 text-xs mt-2">⚠️ User data failed to load. Check console for errors.</p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    {/* Tracks - Clickable to show NFT collection + Favorites */}
-                    <button
-                      onClick={() => setShowTracksCollectionModal(true)}
-                      className="metadata-section p-4 text-center cursor-pointer hover:bg-cyan-500/10 transition-colors group"
-                    >
-                      <div className="retro-text text-xl group-hover:text-cyan-400 transition-colors">
-                        {myCreatedTracks.length + (favoriteTracksData?.favoriteTracks?.nodes?.length || 0)}
-                      </div>
-                      <div className="metadata-label text-xs group-hover:text-cyan-300">Tracks</div>
-                      <div className="text-[10px] text-gray-500 mt-1">
-                        {myCreatedTracks.length} owned · {favoriteTracksData?.favoriteTracks?.nodes?.length || 0} ❤️
-                      </div>
-                    </button>
-                    {/* Followers - Clickable to show follower grid */}
-                    <button
-                      onClick={() => setShowFollowersModal(true)}
-                      className="metadata-section p-4 text-center cursor-pointer hover:bg-purple-500/10 transition-colors group"
-                    >
-                      <div className="retro-text text-xl group-hover:text-purple-400 transition-colors">
-                        {user?.followerCount?.toLocaleString() || 0}
-                      </div>
-                      <div className="metadata-label text-xs group-hover:text-purple-300">Followers</div>
-                    </button>
-                    {/* Following - Clickable to show following grid */}
-                    <button
-                      onClick={() => setShowFollowingModal(true)}
-                      className="metadata-section p-4 text-center cursor-pointer hover:bg-green-500/10 transition-colors group"
-                    >
-                      <div className="retro-text text-xl group-hover:text-green-400 transition-colors">
-                        {user?.followingCount?.toLocaleString() || 0}
-                      </div>
-                      <div className="metadata-label text-xs group-hover:text-green-300">Following</div>
-                    </button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    {/* This is the user's OWN profile on feed - show Edit Profile, not Follow */}
-                    <Button className="retro-button" onClick={() => setSelectedView('settings')}>
-                      <Settings className="w-4 h-4 mr-2" />Edit Profile
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="border-cyan-500/50 hover:bg-cyan-500/20"
-                      onClick={async () => {
-                        const profileUrl = `${window.location.origin}/profiles/${user?.userHandle}`
-                        if (navigator.share && navigator.canShare?.({ url: profileUrl })) {
-                          try {
-                            await navigator.share({
-                              title: `${user?.displayName || user?.userHandle} on SoundChain`,
-                              text: 'Check out my profile on SoundChain!',
-                              url: profileUrl
-                            })
-                          } catch (err) {
-                            if ((err as Error).name !== 'AbortError') {
-                              navigator.clipboard.writeText(profileUrl)
-                              toast.success('Profile link copied!')
-                            }
-                          }
-                        } else {
-                          navigator.clipboard.writeText(profileUrl)
-                          toast.success('Profile link copied! Share it on social media.')
-                        }
-                      }}
-                    >
-                      <Share2 className="w-4 h-4 mr-2" />Share Profile
-                    </Button>
-                  </div>
-
-                  {userWallet && (
-                    <Card className="retro-card p-3 w-fit">
-                      <div className="flex items-center gap-3">
-                        <Wallet className="w-4 h-4 text-orange-400" />
-                        {/* Full address on desktop (lg+), truncated on mobile */}
-                        <span className="retro-json text-sm hidden lg:inline font-mono">{userWallet}</span>
-                        <span className="retro-json text-sm lg:hidden font-mono">{userWallet.slice(0, 6)}...{userWallet.slice(-4)}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={copyAddress}
-                          className="p-1 hover:bg-cyan-500/20"
-                          title="Copy address"
-                        >
-                          <Copy className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </Card>
-                  )}
-
-                  {/* Badges are now displayed inline next to username above */}
-                </div>
-              </div>
-
-              {/* Portfolio Panel - Moved to protected wallet page for privacy */}
-            </div>
-          </div>
-        </div>
-        )}
+        {/* Profile Header removed - Feed/Stories bar stays at top for clean layout */}
 
         {/* Main Content - Floats on cover art background */}
         <div className="max-w-screen-2xl mx-auto relative">
@@ -4244,7 +4085,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className="relative flex justify-center gap-4 xl:gap-6 bg-black min-h-screen py-4 -mx-4 px-4">
+            <div className="relative flex justify-center gap-4 xl:gap-6 min-h-screen py-4 -mx-4 px-4">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
@@ -4274,7 +4115,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Single Post View - /dex/post/[id] for shared links */}
           {selectedView === 'post' && routeId && (
-            <div className="flex justify-center gap-6 px-0 md:px-4 bg-black min-h-screen py-4">
+            <div className="flex justify-center gap-6 px-0 md:px-4 min-h-screen py-4">
               {/* Left Sidebar - Desktop only */}
               <LeftSidebar />
 
@@ -6592,7 +6433,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Profile View - /dex/profile/[handle] or /dex/me */}
           {selectedView === 'profile' && (routeId || isExplicitOwnProfileRoute) && router.isReady && (
             <ProfileErrorBoundary>
-            <div className="relative pb-32 overflow-y-auto min-h-screen bg-black" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="relative pb-32 overflow-y-auto min-h-screen" style={{ WebkitOverflowScrolling: 'touch' }}>
               {/* Dynamic SEO for profile sharing - 8K quality avatar card */}
               {viewingProfile && (
                 <Head>
@@ -6796,7 +6637,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {viewingProfile.magicWalletAddress && (
                     <div className="px-4 mt-3">
                       <div className="max-w-screen-lg mx-auto flex items-center gap-2 flex-wrap">
-                        <div className="flex items-center gap-2 bg-gray-900/50 rounded-lg px-3 py-1.5 text-sm">
+                        <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 text-sm border border-white/10">
                           <Wallet className="w-4 h-4 text-orange-400" />
                           <span className="text-gray-400 font-mono">{viewingProfile.magicWalletAddress.slice(0, 6)}...{viewingProfile.magicWalletAddress.slice(-4)}</span>
                           <button
@@ -6941,7 +6782,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
 
                     {/* Tab Content */}
-                    <div className="min-h-[400px] bg-black rounded-xl p-2">
+                    <div className="min-h-[400px] bg-black/40 backdrop-blur-xl rounded-xl p-2 border border-white/10">
                       {/* My Feed - Full social feed (posts from people you follow + your own) */}
                       {profileTab === 'myfeed' && isViewingOwnProfile && (
                         <Posts disableVirtualization viewMode={viewMode} />
