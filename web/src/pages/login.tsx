@@ -268,24 +268,9 @@ export default function LoginPage() {
       setError(null);
       localStorage.removeItem('didToken');
 
-      // Detect mobile - use redirect on mobile (popups unreliable), popup on desktop
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-      if (isMobile) {
-        // Mobile: Use redirect flow - more reliable than popup
-        console.log('[OAuth] Using REDIRECT for mobile', provider);
-        const redirectUri = `${window.location.origin}/login`;
-        await (magic as any).oauth2.loginWithRedirect({
-          provider,
-          scope: ['openid'],
-          redirectURI: redirectUri,
-        });
-        // Page will redirect, no code after this
-        return;
-      }
-
-      // Desktop: Use popup
-      console.log('[OAuth] Using popup for desktop', provider);
+      // Always use popup - Magic SDK handles mobile internally with pseudo-popup
+      // Redirect flow causes page refresh issues on Chrome mobile
+      console.log('[OAuth] Using popup for all platforms', provider);
 
       const result = await (magic as any).oauth2.loginWithPopup({
         provider,
@@ -307,7 +292,19 @@ export default function LoginPage() {
       throw new Error('OAuth login failed - no token received');
     } catch (error: any) {
       console.error('[OAuth2] Error:', error);
-      setError(error.message || `${provider} login failed. Please try again.`);
+
+      // Provide helpful error message based on error type
+      let userMessage = `${provider} login failed. Please try again.`;
+
+      if (error.message?.includes('SERVER_ERROR') || error.message?.includes('500') || error.message?.includes('network')) {
+        userMessage = `${provider} login temporarily unavailable. Try again in a moment, or use Email login.`;
+      } else if (error.message?.includes('timeout')) {
+        userMessage = `${provider} login timed out. Check your internet connection and try again.`;
+      } else if (error.message?.includes('cancelled') || error.message?.includes('denied') || error.message?.includes('closed')) {
+        userMessage = 'Login cancelled. Please try again.';
+      }
+
+      setError(userMessage);
       setLoggingIn(false);
     }
   };
@@ -584,12 +581,15 @@ export default function LoginPage() {
         console.log('[Auth] Processing magic_credential callback - trying OAuth first');
 
         // Try OAuth with timeout to prevent infinite hanging
+        // Longer timeout for mobile networks (cellular can be slow)
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const timeoutMs = isMobile ? 30000 : 15000;
         let oauthResult = null;
         let oauthError: any = null;
         try {
           const oauthPromise = (magic as any).oauth2.getRedirectResult();
           const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('OAuth timeout after 10s')), 10000)
+            setTimeout(() => reject(new Error(`OAuth timeout after ${timeoutMs/1000}s`)), timeoutMs)
           );
           oauthResult = await Promise.race([oauthPromise, timeoutPromise]);
           console.log('[OAuth] getRedirectResult returned:', oauthResult);

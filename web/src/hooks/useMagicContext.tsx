@@ -43,17 +43,15 @@ interface MagicProviderProps {
 }
 
 // Create client-side Magic instance with OAuth extension
-// Note: Using network config WITH OAuth works fine with loginWithRedirect
+// IMPORTANT: Do NOT set network config here - it causes OAuth timeouts on mobile Safari
+// Network config is handled via magic.rpcProvider when Web3 is created
 const createMagic = (magicPublicKey: string): MagicInstance => {
   try {
     if (typeof window === 'undefined') return null;
 
     const magicInstance = new Magic(magicPublicKey, {
-      network: {
-        rpcUrl: network.rpc,
-        chainId: network.id,
-      },
       extensions: [new OAuthExtension()],
+      // Network will be set via rpcProvider - don't set here or OAuth breaks on mobile
     });
 
     return magicInstance as MagicInstance;
