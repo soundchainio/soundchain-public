@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Search, Grid3X3, List, Play, Pause, Music2, Check, X, Loader2, ChevronRight } from 'lucide-react'
-import { useTracksQuery, Track } from 'lib/graphql'
-import { useAudioPlayer } from 'hooks/useAudioPlayer'
+import { useExploreTracksQuery, Track } from 'lib/graphql'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { getIpfsUrl } from 'utils/ipfs'
 import { useDebounce } from 'hooks/useDebounce'
 
@@ -29,18 +29,18 @@ export const NFTMusicPicker = ({
 
   const debouncedSearch = useDebounce(search, 300)
 
-  const { play, isCurrentSong, isPlaying, togglePlay } = useAudioPlayer()
+  const { play, isCurrentSong, isPlaying, togglePlay } = useAudioPlayerContext()
 
-  // Query tracks
-  const { data, loading } = useTracksQuery({
+  // Query tracks using explore query which supports search
+  const { data, loading } = useExploreTracksQuery({
     variables: {
       search: debouncedSearch || undefined,
-      page: { limit: 50 },
+      page: { first: 50 },
     },
     skip: !isOpen,
   })
 
-  const tracks = data?.tracks || []
+  const tracks = data?.exploreTracks?.nodes || []
 
   // Handle 15-second preview
   const handlePreview = useCallback((track: Track) => {
