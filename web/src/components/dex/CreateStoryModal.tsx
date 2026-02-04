@@ -115,8 +115,9 @@ const fileToBase64 = (file: File): Promise<string> => {
   })
 }
 
-// Use direct upload for files under 100MB (faster, skips S3)
-const DIRECT_UPLOAD_THRESHOLD = 100 * 1024 * 1024 // 100MB
+// Use direct upload for files under 50MB (faster, skips S3)
+// Compression ensures most files stay under this threshold
+const DIRECT_UPLOAD_THRESHOLD = 50 * 1024 * 1024 // 50MB
 
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {
@@ -563,8 +564,9 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
       onClose()
     } catch (error: any) {
       console.error('Failed to publish:', error)
-      setUploadError(error?.message || 'Upload failed. Try again.')
-      toast.error('Failed to share story')
+      const errorMsg = error?.graphQLErrors?.[0]?.message || error?.message || 'Upload failed. Try again.'
+      setUploadError(errorMsg)
+      toast.error(`Failed: ${errorMsg}`)
     } finally {
       setIsUploading(false)
       setUploadStep(null)

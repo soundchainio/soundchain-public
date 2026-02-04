@@ -7,27 +7,27 @@
  * Easter egg: Users don't see size limits - compression just works! 🔥
  */
 
-// Target constraints (hidden from users)
+// Target constraints - optimized for 50MB threshold to save Pinata storage costs
 const COMPRESSION_CONFIG = {
-  // Story/Reel constraints
+  // Story/Reel constraints - target under 50MB for fast direct upload
   story: {
-    maxFileSize: 1024 * 1024 * 1024, // 1 GB
+    maxFileSize: 45 * 1024 * 1024, // 45 MB target (buffer under 50MB threshold)
     maxDuration: 600, // 10 minutes
-    targetBitrate: 8000000, // 8 Mbps for high quality
-    minBitrate: 2000000, // 2 Mbps minimum
+    targetBitrate: 4000000, // 4 Mbps - good quality, smaller files
+    minBitrate: 1500000, // 1.5 Mbps minimum - still watchable
   },
   // Post media constraints
   post: {
-    maxImageSize: 10 * 1024 * 1024, // 10 MB for images
-    maxVideoSize: 100 * 1024 * 1024, // 100 MB for post videos
-    targetBitrate: 5000000, // 5 Mbps
+    maxImageSize: 5 * 1024 * 1024, // 5 MB for images
+    maxVideoSize: 45 * 1024 * 1024, // 45 MB for post videos
+    targetBitrate: 3000000, // 3 Mbps
   },
   // Image quality settings
   image: {
-    maxWidth: 4096,
-    maxHeight: 4096,
-    quality: 0.92, // High quality JPEG
-    minQuality: 0.7, // Don't go below this
+    maxWidth: 2048, // Reduced from 4096 - still high quality
+    maxHeight: 2048,
+    quality: 0.85, // Good quality JPEG
+    minQuality: 0.6, // Can go lower for size
   }
 }
 
@@ -446,21 +446,22 @@ export async function smartCompress(
 
 /**
  * Quick check if file needs compression
- * OPTIMIZED: Only compress videos over 100MB to avoid slow real-time transcoding
+ * Target: Keep files under 45MB for fast direct upload + lower Pinata costs
+ * NOTE: Video compression runs in REAL-TIME (1 min video = 1 min to compress)
  */
 export function needsCompression(file: File, type: 'story' | 'post' = 'post'): boolean {
   const isImage = file.type.startsWith('image/')
   const isVideo = file.type.startsWith('video/')
 
   if (isImage) {
-    // Only compress images over 10MB
-    return file.size > 10 * 1024 * 1024
+    // Compress images over 5MB
+    return file.size > 5 * 1024 * 1024
   }
 
   if (isVideo) {
-    // IMPORTANT: Video compression runs in REAL-TIME (1 min video = 1 min to compress)
-    // Only compress videos over 100MB to avoid frustrating delays
-    return file.size > 100 * 1024 * 1024
+    // Compress videos over 45MB to stay under 50MB threshold
+    // This triggers real-time transcoding, but saves storage costs
+    return file.size > 45 * 1024 * 1024
   }
 
   return false
