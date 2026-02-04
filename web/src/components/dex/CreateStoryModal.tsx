@@ -93,6 +93,31 @@ const GUEST_PIN_TO_IPFS = gql`
   }
 `
 
+// FAST DIRECT UPLOAD - Skips S3, pins directly to IPFS (use for files < 50MB)
+const DIRECT_PIN_TO_IPFS = gql`
+  mutation directPinToIPFS($input: DirectPinInput!) {
+    directPinToIPFS(input: $input) {
+      cid
+    }
+  }
+`
+
+// Helper to convert file to base64
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(',')[1] // Remove data URL prefix
+      resolve(base64)
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+// Use direct upload for files under 50MB (faster, skips S3)
+const DIRECT_UPLOAD_THRESHOLD = 50 * 1024 * 1024 // 50MB
+
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {
   MIN_DURATION: 1,
@@ -136,6 +161,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const { upload } = useUpload(undefined, undefined, !isLoggedIn)
   const [pinToIPFS] = usePinToIpfsMutation()
   const [guestPinToIPFS] = useMutation(GUEST_PIN_TO_IPFS)
+  const [directPinToIPFS] = useMutation(DIRECT_PIN_TO_IPFS)
   const [createStoryWithOverlays] = useMutation(CREATE_STORY_WITH_OVERLAYS, {
     refetchQueries: ['publicStories', 'myFollowingStories'],
   })
@@ -148,6 +174,8 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const [mediaPreview, setMediaPreview] = useState<string | null>(null)
   const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadStep, setUploadStep] = useState<'uploading' | 'pinning' | 'creating' | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [videoDuration, setVideoDuration] = useState(0)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [compressionProgress, setCompressionProgress] = useState<CompressionProgress | null>(null)
@@ -403,44 +431,83 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
     if (!mediaFile || !mediaPreview || !mediaType) return
     setIsUploading(true)
     setUploadError(null)
+    setUploadProgress(0)
 
     try {
-      // Step 1: Upload to S3
-      const s3Url = await upload([mediaFile])
-      if (!s3Url) {
-        throw new Error('Failed to upload file')
-      }
-
-      // Step 2: Pin to IPFS
-      const fileKey = s3Url.substring(s3Url.lastIndexOf('/') + 1)
       let ipfsCid: string
+      const useDirectUpload = mediaFile.size < DIRECT_UPLOAD_THRESHOLD
 
-      if (isLoggedIn) {
-        const { data: pinResult } = await pinToIPFS({
+      if (useDirectUpload) {
+        // 🚀 FAST PATH: Direct upload to IPFS (skips S3 entirely!)
+        // One network transfer instead of two = ~2x faster
+        setUploadStep('uploading')
+        setUploadProgress(20)
+
+        const base64Data = await fileToBase64(mediaFile)
+        setUploadProgress(50)
+
+        setUploadStep('pinning')
+        setUploadProgress(60)
+
+        const { data: pinResult } = await directPinToIPFS({
           variables: {
             input: {
-              fileKey,
-              fileName: `story-${Date.now()}`,
+              fileName: `story-${Date.now()}-${mediaFile.name}`,
+              base64Data,
+              mimeType: mediaFile.type,
             },
           },
         })
-        if (!pinResult?.pinToIPFS?.cid) {
+
+        if (!pinResult?.directPinToIPFS?.cid) {
           throw new Error('Failed to pin to IPFS')
         }
-        ipfsCid = pinResult.pinToIPFS.cid
+        ipfsCid = pinResult.directPinToIPFS.cid
+        setUploadProgress(85)
       } else {
-        const { data: pinResult } = await guestPinToIPFS({
-          variables: {
-            input: {
-              fileKey,
-              fileName: `guest-story-${Date.now()}`,
-            },
-          },
-        })
-        if (!pinResult?.guestPinToIPFS?.cid) {
-          throw new Error('Failed to pin to IPFS')
+        // Standard path for larger files (>50MB): S3 → IPFS
+        setUploadStep('uploading')
+        setUploadProgress(10)
+
+        const s3Url = await upload([mediaFile])
+        if (!s3Url) {
+          throw new Error('Failed to upload file')
         }
-        ipfsCid = pinResult.guestPinToIPFS.cid
+        setUploadProgress(50)
+
+        setUploadStep('pinning')
+        setUploadProgress(60)
+
+        const fileKey = s3Url.substring(s3Url.lastIndexOf('/') + 1)
+
+        if (isLoggedIn) {
+          const { data: pinResult } = await pinToIPFS({
+            variables: {
+              input: {
+                fileKey,
+                fileName: `story-${Date.now()}`,
+              },
+            },
+          })
+          if (!pinResult?.pinToIPFS?.cid) {
+            throw new Error('Failed to pin to IPFS')
+          }
+          ipfsCid = pinResult.pinToIPFS.cid
+        } else {
+          const { data: pinResult } = await guestPinToIPFS({
+            variables: {
+              input: {
+                fileKey,
+                fileName: `guest-story-${Date.now()}`,
+              },
+            },
+          })
+          if (!pinResult?.guestPinToIPFS?.cid) {
+            throw new Error('Failed to pin to IPFS')
+          }
+          ipfsCid = pinResult.guestPinToIPFS.cid
+        }
+        setUploadProgress(85)
       }
 
       const ipfsUrl = `ipfs://${ipfsCid}`
@@ -449,6 +516,9 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
       const overlays = convertLayersToOverlays()
 
       // Step 3: Create story with overlays
+      setUploadStep('creating')
+      setUploadProgress(90)
+
       if (isLoggedIn) {
         await createStoryWithOverlays({
           variables: {
@@ -483,6 +553,8 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         toast.success('Story shared! Login to earn SCID rewards.')
       }
 
+      setUploadProgress(100)
+
       if (onPublish) {
         onPublish(ipfsUrl, mediaType)
       }
@@ -495,6 +567,8 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
       toast.error('Failed to share story')
     } finally {
       setIsUploading(false)
+      setUploadStep(null)
+      setUploadProgress(0)
     }
   }
 
@@ -878,6 +952,26 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
               )}
             </div>
 
+            {/* Upload progress bar */}
+            {isUploading && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-cyan-400 font-medium">
+                    {uploadStep === 'uploading' && '📤 Uploading media...'}
+                    {uploadStep === 'pinning' && '🔗 Pinning to IPFS...'}
+                    {uploadStep === 'creating' && '✨ Creating reel...'}
+                  </span>
+                  <span className="text-neutral-500">{uploadProgress}%</span>
+                </div>
+                <div className="h-1.5 bg-neutral-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Share button */}
             <button
               onClick={handlePublish}
@@ -889,7 +983,9 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
               ) : (
                 <Sparkles className="w-4 h-4" />
               )}
-              {isUploading ? 'Uploading...' : selectedNftTrack ? 'Share Reel (SCID Enabled)' : 'Share Reel'}
+              {isUploading
+                ? (uploadStep === 'uploading' ? 'Uploading...' : uploadStep === 'pinning' ? 'Pinning...' : 'Saving...')
+                : selectedNftTrack ? 'Share Reel (SCID Enabled)' : 'Share Reel'}
             </button>
           </div>
         </div>

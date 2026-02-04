@@ -446,23 +446,21 @@ export async function smartCompress(
 
 /**
  * Quick check if file needs compression
+ * OPTIMIZED: Only compress videos over 100MB to avoid slow real-time transcoding
  */
 export function needsCompression(file: File, type: 'story' | 'post' = 'post'): boolean {
   const isImage = file.type.startsWith('image/')
   const isVideo = file.type.startsWith('video/')
 
   if (isImage) {
-    const maxSize = type === 'story'
-      ? COMPRESSION_CONFIG.story.maxFileSize
-      : COMPRESSION_CONFIG.post.maxImageSize
-    return file.size > maxSize
+    // Only compress images over 10MB
+    return file.size > 10 * 1024 * 1024
   }
 
   if (isVideo) {
-    const maxSize = type === 'story'
-      ? COMPRESSION_CONFIG.story.maxFileSize
-      : COMPRESSION_CONFIG.post.maxVideoSize
-    return file.size > maxSize
+    // IMPORTANT: Video compression runs in REAL-TIME (1 min video = 1 min to compress)
+    // Only compress videos over 100MB to avoid frustrating delays
+    return file.size > 100 * 1024 * 1024
   }
 
   return false
