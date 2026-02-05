@@ -791,4 +791,45 @@ export class StoryService extends ModelService<typeof Story> {
 
     return stories as unknown as Story[];
   }
+
+  /**
+   * Get stories that need backfill (have profileId but missing creator details)
+   */
+  async getStoriesNeedingBackfill(): Promise<Story[]> {
+    const stories = await StoryModel.find({
+      profileId: { $exists: true, $ne: null },
+      $or: [
+        { creatorDisplayName: { $exists: false } },
+        { creatorDisplayName: null },
+        { creatorDisplayName: '' },
+      ],
+      deleted: false,
+    }).lean();
+
+    return stories as unknown as Story[];
+  }
+
+  /**
+   * Update creator details for a story (helix pattern backfill)
+   */
+  async updateCreatorDetails(
+    storyId: string,
+    details: {
+      creatorDisplayName?: string;
+      creatorUserHandle?: string;
+      creatorAvatarUrl?: string;
+    }
+  ): Promise<Story> {
+    const story = await StoryModel.findByIdAndUpdate(
+      storyId,
+      { $set: details },
+      { new: true }
+    ).lean();
+
+    if (!story) {
+      throw new UserInputError('Story not found');
+    }
+
+    return story as unknown as Story;
+  }
 }

@@ -448,6 +448,46 @@ export class StoryResolver {
   }
 
   /**
+   * Backfill creator details for stories missing helix data
+   * This fixes stories that were created as "guest" when user was actually logged in
+   * Admin-only mutation
+   */
+  @Mutation(() => Int)
+  @Authorized()
+  async backfillStoryCreatorDetails(
+    @Ctx() { storyService, profileService, userService }: Context,
+    @CurrentUser() user: User
+  ): Promise<number> {
+    // Get all stories with profileId but missing creator details
+    const stories = await storyService.getStoriesNeedingBackfill();
+    let updatedCount = 0;
+
+    for (const story of stories) {
+      if (!story.profileId) continue;
+
+      try {
+        const profile = await profileService.getProfile(story.profileId.toString());
+        if (!profile) continue;
+
+        // Get user to get the handle
+        const profileUser = await userService.getUserByProfileId(story.profileId.toString());
+
+        await storyService.updateCreatorDetails(story._id.toString(), {
+          creatorDisplayName: profile.displayName,
+          creatorUserHandle: profileUser?.handle || profile.displayName,
+          creatorAvatarUrl: profile.profilePicture,
+        });
+        updatedCount++;
+      } catch (err) {
+        console.error(`[StoryResolver] Failed to backfill story ${story._id}:`, err);
+      }
+    }
+
+    console.log(`[StoryResolver] Backfilled ${updatedCount} stories with creator details`);
+    return updatedCount;
+  }
+
+  /**
    * Guest create story with overlays
    */
   @Mutation(() => Story)
