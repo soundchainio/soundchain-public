@@ -101,26 +101,31 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
 
     // Group stories by profileId (or walletAddress for guests)
     const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
-      // For guest stories, use walletAddress as key; for registered users, use profileId
-      const isGuest = story.isGuest || !story.profileId
-      const key = isGuest ? `guest-${story.walletAddress}` : story.profileId
+      // Prefer denormalized creator fields (helix pattern), fallback to profile field resolver
+      const avatarUrl = story.creatorAvatarUrl || story.profile?.profilePicture
+      const displayName = story.creatorDisplayName || story.profile?.displayName
+      const userHandle = story.creatorUserHandle || story.profile?.userHandle
+
+      // Determine if this is a guest story:
+      // - Must have isGuest=true AND no profileId
+      // - OR no profileId AND no profile data (truly anonymous)
+      // If we have profileId OR profile data, it's a registered user's story
+      const hasProfileData = !!story.profileId || !!story.profile?.id
+      const hasCreatorInfo = !!(displayName || userHandle)
+      const isGuest = (story.isGuest && !hasProfileData) || (!hasProfileData && !hasCreatorInfo)
+      const key = isGuest ? `guest-${story.walletAddress}` : (story.profileId || story.profile?.id || `guest-${story.walletAddress}`)
 
       if (!acc[key]) {
-        // Prefer denormalized creator fields (helix pattern), fallback to profile field resolver
-        const avatarUrl = story.creatorAvatarUrl || story.profile?.profilePicture
-        const displayName = story.creatorDisplayName || story.profile?.displayName
-        const userHandle = story.creatorUserHandle || story.profile?.userHandle
-
         acc[key] = {
           id: story.id,
           profileId: key, // Use the key as profileId for consistency
-          profilePicture: isGuest ? undefined : avatarUrl,
+          profilePicture: avatarUrl || undefined,
           displayName: isGuest
             ? `${story.walletAddress?.slice(0, 6)}...${story.walletAddress?.slice(-4)}`
-            : displayName,
+            : (displayName || userHandle || 'user'),
           userHandle: isGuest
             ? story.walletAddress?.slice(0, 8) || 'guest'
-            : userHandle || 'user',
+            : (userHandle || displayName || 'user'),
           hasUnwatched: true, // TODO: track viewed stories
           isPermanent: story.isPermanent,
           storyCount: 1,
@@ -145,24 +150,27 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
 
     // Group raw story data by profileId for the viewer
     const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
-      const isGuest = story.isGuest || !story.profileId
-      const key = isGuest ? `guest-${story.walletAddress}` : story.profileId
-
       // Prefer denormalized creator fields (helix pattern), fallback to profile field resolver
       const avatarUrl = story.creatorAvatarUrl || story.profile?.profilePicture
       const displayName = story.creatorDisplayName || story.profile?.displayName
       const userHandle = story.creatorUserHandle || story.profile?.userHandle
 
+      // Determine if this is a guest story (same logic as above)
+      const hasProfileData = !!story.profileId || !!story.profile?.id
+      const hasCreatorInfo = !!(displayName || userHandle)
+      const isGuest = (story.isGuest && !hasProfileData) || (!hasProfileData && !hasCreatorInfo)
+      const key = isGuest ? `guest-${story.walletAddress}` : (story.profileId || story.profile?.id || `guest-${story.walletAddress}`)
+
       if (!acc[key]) {
         acc[key] = {
           profileId: key,
-          profilePicture: isGuest ? undefined : avatarUrl,
+          profilePicture: avatarUrl || undefined,
           displayName: isGuest
             ? `${story.walletAddress?.slice(0, 6)}...${story.walletAddress?.slice(-4)}`
-            : displayName || userHandle,
+            : (displayName || userHandle || 'user'),
           userHandle: isGuest
             ? story.walletAddress?.slice(0, 8) || 'guest'
-            : userHandle || 'user',
+            : (userHandle || displayName || 'user'),
           stories: [],
         }
       }
