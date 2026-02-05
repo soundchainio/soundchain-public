@@ -58,6 +58,16 @@ const GRADIENT_COLORS = [
   'from-indigo-500 to-purple-500', 'from-teal-500 to-cyan-500', 'from-amber-500 to-yellow-500',
 ]
 
+// Generate avatar URL - uses profile picture if available, otherwise dicebear identicon
+const getAvatarUrl = (story: Story): string => {
+  if (story.profilePicture && story.profilePicture.length > 0) {
+    return story.profilePicture
+  }
+  // Use dicebear identicon as fallback - seed from profileId or walletAddress
+  const seed = story.walletAddress || story.profileId || story.userHandle || 'default'
+  return `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}&backgroundColor=0f0f0f`
+}
+
 interface StoriesBarProps {
   onCreateStory?: () => void
   onViewStory?: (profileId: string) => void
@@ -298,9 +308,15 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
                     {/* Avatar */}
                     <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden bg-neutral-900">
                       <img
-                        src={story.profilePicture || `https://api.dicebear.com/7.x/identicon/svg?seed=${story.profileId || story.walletAddress || 'default'}&backgroundColor=0f0f0f`}
-                        alt={story.displayName}
+                        src={getAvatarUrl(story)}
+                        alt={story.displayName || 'Story'}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback if image fails to load
+                          const target = e.target as HTMLImageElement
+                          const seed = story.walletAddress || story.profileId || 'fallback'
+                          target.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(seed)}&backgroundColor=0f0f0f`
+                        }}
                       />
                     </div>
                   </div>
