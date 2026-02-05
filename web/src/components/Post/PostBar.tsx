@@ -1,4 +1,4 @@
-import { MusicalNoteIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
+import { MusicalNoteIcon, VideoCameraIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
 import Picker from '@emoji-mart/react'
 
 // Extended Emoji type with native property from emoji-mart picker callback
@@ -11,8 +11,6 @@ interface Emoji {
   shortcodes: string
 }
 import { useState } from 'react'
-import { PostLinkType } from 'types/PostLinkType'
-import { LinksModal } from '../LinksModal'
 import { StickerPicker } from '../StickerPicker'
 import { FormValues } from './PostForm'
 import { getBodyCharacterCount, maxLength } from './PostModal'
@@ -28,6 +26,11 @@ interface PostBarProps {
   postLink: string
   setPostLink: (val: string) => void
   hasMedia?: boolean
+  // Accordion state
+  showMusicAccordion?: boolean
+  setShowMusicAccordion?: (val: boolean) => void
+  showVideoAccordion?: boolean
+  setShowVideoAccordion?: (val: boolean) => void
 }
 
 export const PostBar = ({
@@ -41,9 +44,11 @@ export const PostBar = ({
   postLink,
   setPostLink,
   hasMedia,
+  showMusicAccordion,
+  setShowMusicAccordion,
+  showVideoAccordion,
+  setShowVideoAccordion,
 }: PostBarProps) => {
-  const [showAddMusicLink, setShowAddMusicLink] = useState(false)
-  const [showAddVideoLink, setShowAddVideoLink] = useState(false)
   const [isStickerPickerVisible, setStickerPickerVisible] = useState(false)
   const charCounter = `${getBodyCharacterCount(values.body)} / ${maxLength}`
 
@@ -72,59 +77,59 @@ export const PostBar = ({
   }
 
   const onAddMusicClick = () => {
-    setShowAddMusicLink(!showAddMusicLink)
+    if (setShowMusicAccordion) {
+      setShowMusicAccordion(!showMusicAccordion)
+      // Close video accordion if open
+      if (setShowVideoAccordion && showVideoAccordion) {
+        setShowVideoAccordion(false)
+      }
+    }
   }
 
   const onAddVideoClick = () => {
-    setShowAddVideoLink(!showAddVideoLink)
+    if (setShowVideoAccordion) {
+      setShowVideoAccordion(!showVideoAccordion)
+      // Close music accordion if open
+      if (setShowMusicAccordion && showMusicAccordion) {
+        setShowMusicAccordion(false)
+      }
+    }
   }
 
   return (
     <div className="flex items-center p-4 border-t border-neutral-800" style={{ backgroundColor: '#262626' }}>
-      <div className="w-16 cursor-pointer text-center" onClick={onEmojiPickerClick}>
+      <div className="w-12 cursor-pointer text-center" onClick={onEmojiPickerClick}>
         {isEmojiPickerVisible ? '❌' : '😃'}
       </div>
-      <div className="w-16 cursor-pointer text-center" onClick={onStickerPickerClick}>
+      <div className="w-12 cursor-pointer text-center" onClick={onStickerPickerClick}>
         {isStickerPickerVisible ? '❌' : '🎵'}
       </div>
-      {!isRepost && (
+      {!isRepost && showNewPost && (
         <>
           <button
-            className="w-12 cursor-pointer text-center"
+            className={`w-12 cursor-pointer text-center flex items-center justify-center gap-0.5 ${showMusicAccordion ? 'text-cyan-400' : ''}`}
             aria-label="Embed a song to your post"
             onClick={onAddMusicClick}
           >
-            <MusicalNoteIcon className="m-auto w-5 text-gray-400" />
+            <MusicalNoteIcon className="w-5" />
+            {showMusicAccordion ? (
+              <ChevronUpIcon className="w-3 h-3" />
+            ) : (
+              <ChevronDownIcon className="w-3 h-3" />
+            )}
           </button>
           <button
-            className="w-12 cursor-pointer text-center"
+            className={`w-12 cursor-pointer text-center flex items-center justify-center gap-0.5 ${showVideoAccordion ? 'text-cyan-400' : ''}`}
             aria-label="Embed a video to your post"
             onClick={onAddVideoClick}
           >
-            <VideoCameraIcon className="m-auto w-5 text-gray-400" />
+            <VideoCameraIcon className="w-5" />
+            {showVideoAccordion ? (
+              <ChevronUpIcon className="w-3 h-3" />
+            ) : (
+              <ChevronDownIcon className="w-3 h-3" />
+            )}
           </button>
-        </>
-      )}
-      {showNewPost && !isRepost && (
-        <>
-          <LinksModal
-            show={showAddMusicLink}
-            setShow={setShowAddMusicLink}
-            setOriginalLink={setOriginalLink}
-            onClose={onAddMusicClick}
-            type={PostLinkType.MUSIC}
-            postLink={postLink}
-            setPostLink={setPostLink}
-          />
-          <LinksModal
-            show={showAddVideoLink}
-            setShow={setShowAddVideoLink}
-            setOriginalLink={setOriginalLink}
-            onClose={onAddVideoClick}
-            type={PostLinkType.VIDEO}
-            postLink={postLink}
-            setPostLink={setPostLink}
-          />
         </>
       )}
       <div className="flex-1 justify-self-end text-right text-gray-400">{charCounter}</div>

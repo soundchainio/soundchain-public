@@ -21,6 +21,7 @@ import { PostBodyField } from './PostBodyField'
 import { setMaxInputLength } from './PostModal'
 import { RepostPreview } from './RepostPreview'
 import { PostMediaUploader } from './PostMediaUploader'
+import { InlineEmbedPicker } from './InlineEmbedPicker'
 import { useMe } from 'hooks/useMe'
 
 interface InitialValues {
@@ -67,6 +68,8 @@ export const PostForm = ({ ...props }: PostFormProps) => {
   const [uploadedMediaUrl, setUploadedMediaUrl] = useState<string | undefined>()
   const [uploadedMediaType, setUploadedMediaType] = useState<'image' | 'video' | 'audio' | undefined>()
   const [uploadedMediaThumbnail, setUploadedMediaThumbnail] = useState<string | undefined>()
+  const [showMusicAccordion, setShowMusicAccordion] = useState(false)
+  const [showVideoAccordion, setShowVideoAccordion] = useState(false)
   const [createPost] = useCreatePostMutation({ refetchQueries: ['Posts', 'Feed'] })
   const [createRepost] = useCreateRepostMutation({ refetchQueries: ['Posts', 'Feed'] })
   const [editPost] = useUpdatePostMutation()
@@ -401,7 +404,26 @@ export const PostForm = ({ ...props }: PostFormProps) => {
             postLink={props.postLink || ''}
             setPostLink={props.setPostLink}
             hasMedia={!!uploadedMediaUrl}
+            showMusicAccordion={showMusicAccordion}
+            setShowMusicAccordion={setShowMusicAccordion}
+            showVideoAccordion={showVideoAccordion}
+            setShowVideoAccordion={setShowVideoAccordion}
           />
+          {/* Inline Embed Accordions - attached to PostBar */}
+          {showMusicAccordion && props.type !== PostFormType.REPOST && (
+            <InlineEmbedPicker
+              type="music"
+              onLinkChange={(link) => props.setOriginalLink(link)}
+              currentLink={props.originalLink}
+            />
+          )}
+          {showVideoAccordion && props.type !== PostFormType.REPOST && (
+            <InlineEmbedPicker
+              type="video"
+              onLinkChange={(link) => props.setOriginalLink(link)}
+              currentLink={props.originalLink}
+            />
+          )}
         </Form>
       )}
     </Formik>
