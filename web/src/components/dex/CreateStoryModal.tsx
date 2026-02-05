@@ -115,10 +115,11 @@ const fileToBase64 = (file: File): Promise<string> => {
   })
 }
 
-// Use direct upload for files under 25MB (faster, skips S3)
-// Base64 encoding adds ~33% overhead, so 25MB becomes ~33MB payload
-// Keeping under GraphQL payload limits to prevent 60% upload failures
-const DIRECT_UPLOAD_THRESHOLD = 25 * 1024 * 1024 // 25MB
+// Use direct upload for files under 5.9MB (faster, skips S3)
+// Base64 encoding adds ~33% overhead, so 5.9MB becomes ~7.85MB payload
+// API Gateway has 10MB payload limit - this gives 2MB+ buffer for safety
+// Files >5.9MB go through reliable S3 → IPFS path (no size limit issues)
+const DIRECT_UPLOAD_THRESHOLD = 5.9 * 1024 * 1024 // 5.9MB
 
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {

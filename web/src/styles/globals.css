@@ -571,8 +571,8 @@ input:focus,
 textarea:focus,
 select:focus {
   background-color: inherit !important;
-  color: inherit !important;
-  -webkit-text-fill-color: inherit !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Style native dropdown options for better contrast */
