@@ -144,6 +144,8 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
   const listRef = useRef<any>(null)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const gridRef = useRef<any>(null)
+  // Ref for infinite scroll trigger in simple mode - MUST be before conditional returns
+  const loadMoreRef = useRef<HTMLDivElement>(null)
   // Track scroll position to preserve when switching views
   const scrollPositionRef = useRef<{ list: number; grid: number }>({ list: 0, grid: 0 })
   // Default height increased to 900 to prevent video posts from being cropped
@@ -204,6 +206,39 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     }
   }, [playingPostId, activePostId, nodes, findPostIndex, scrollToPostIndex])
 
+  // Get pageInfo safely for hooks that need it - MUST be before conditional returns
+  const pageInfo = data?.posts?.pageInfo
+
+  // Load more callback for infinite scroll - MUST be before conditional returns
+  const loadMore = useCallback(() => {
+    if (loading || !pageInfo?.endCursor) return
+    fetchMore({
+      variables: {
+        page: {
+          first: pageSize,
+          after: pageInfo?.endCursor,
+        },
+      },
+    })
+  }, [fetchMore, pageInfo?.endCursor, loading])
+
+  // Auto-load more when scrolling near bottom (infinite scroll for simple mode) - MUST be before conditional returns
+  useEffect(() => {
+    if (!useSimpleMode || !loadMoreRef.current || !pageInfo?.hasNextPage || loading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && pageInfo?.hasNextPage && !loading) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    )
+
+    observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [useSimpleMode, pageInfo?.hasNextPage, loading, loadMore])
+
   if (loading) {
     return (
       <div className="space-y-2">
@@ -236,23 +271,9 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     return <NoResultFound type="posts" />
   }
 
-  const { pageInfo } = data.posts
-
-  const loadMore = useCallback(() => {
-    if (loading) return
-    fetchMore({
-      variables: {
-        page: {
-          first: pageSize,
-          after: pageInfo.endCursor,
-        },
-      },
-    })
-  }, [fetchMore, pageInfo.endCursor, loading])
-
   const loadMoreItems = loading ? () => null : loadMore
-  const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes!.length
-  const postsCount = pageInfo.hasNextPage ? nodes!.length + 1 : nodes!.length
+  const isItemLoaded = (index: number) => !pageInfo?.hasNextPage || index < nodes!.length
+  const postsCount = pageInfo?.hasNextPage ? nodes!.length + 1 : nodes!.length
 
   const handleOnPlayClicked = (trackId: string) => {
     if (nodes) {
@@ -290,26 +311,6 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     return 5                        // Desktop: 5 columns for tight stacking
   }
 
-  // Ref for infinite scroll trigger in simple mode
-  const loadMoreRef = useRef<HTMLDivElement>(null)
-
-  // Auto-load more when scrolling near bottom (infinite scroll feel for simple mode)
-  useEffect(() => {
-    if (!useSimpleMode || !loadMoreRef.current || !pageInfo.hasNextPage || loading) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && pageInfo.hasNextPage && !loading) {
-          loadMore()
-        }
-      },
-      { threshold: 0.1, rootMargin: '200px' }
-    )
-
-    observer.observe(loadMoreRef.current)
-    return () => observer.disconnect()
-  }, [useSimpleMode, pageInfo.hasNextPage, loading, loadMore])
-
   // Simple mode rendering for profile pages (no virtualization)
   // This avoids AutoSizer issues when Posts is inside a parent with its own scroll
   if (useSimpleMode) {
@@ -329,7 +330,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
 
           {/* Auto-load trigger + fallback button */}
           <div ref={loadMoreRef} className="flex justify-center py-8">
-            {pageInfo.hasNextPage && (
+            {pageInfo?.hasNextPage && (
               <button
                 onClick={loadMore}
                 disabled={loading}
@@ -348,7 +349,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
           </div>
 
           {/* End of feed indicator */}
-          {!pageInfo.hasNextPage && simpleNodes.length > 0 && (
+          {!pageInfo?.hasNextPage && simpleNodes.length > 0 && (
             <div className="text-center py-8 text-neutral-500 text-sm">
               You've reached the end
             </div>
