@@ -27,7 +27,7 @@ export const config = {
   mintFeePerNft: parseFloat(process.env.NEXT_PUBLIC_MINT_FEE_PER_NFT || '0.01'),
   // SoundChain Safe treasury address for collecting platform fees (lowercase for compatibility)
   treasuryAddress: process.env.NEXT_PUBLIC_SOUNDCHAIN_TREASURY || '0x519bed3fe32272fa8f1aecaf86dbfbd674ee703b',
-  tokenStakeContractAddress: process.env.NEXT_PUBLIC_OGUN_STAKE_CONTRACT_ADDRESS,
+  tokenStakeContractAddress: process.env.NEXT_PUBLIC_TOKEN_STAKE_CONTRACT_ADDRESS || process.env.NEXT_PUBLIC_OGUN_STAKE_CONTRACT_ADDRESS,
   appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '2.1.1',
   airdropStatus: process.env.NEXT_PUBLIC_AIRDROP_STATUS === 'true',
   sentryUrl: process.env.NEXT_PUBLIC_SENTRY_URL,
