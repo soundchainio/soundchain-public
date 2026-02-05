@@ -498,7 +498,8 @@ export const AudioEngine = () => {
 
   function handleTimeUpdate() {
     if (audioRef.current?.currentTime) {
-      setProgressState(Math.floor(audioRef.current.currentTime))
+      // Use actual time (not floored) for smoother slider updates
+      setProgressState(audioRef.current.currentTime)
 
       // Log stream at 30-second mark of play time
       if (
