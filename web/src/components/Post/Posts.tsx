@@ -238,7 +238,8 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
 
   const { pageInfo } = data.posts
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
+    if (loading) return
     fetchMore({
       variables: {
         page: {
@@ -247,7 +248,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
         },
       },
     })
-  }
+  }, [fetchMore, pageInfo.endCursor, loading])
 
   const loadMoreItems = loading ? () => null : loadMore
   const isItemLoaded = (index: number) => !pageInfo.hasNextPage || index < nodes!.length
@@ -289,6 +290,26 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     return 5                        // Desktop: 5 columns for tight stacking
   }
 
+  // Ref for infinite scroll trigger in simple mode
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  // Auto-load more when scrolling near bottom (infinite scroll feel for simple mode)
+  useEffect(() => {
+    if (!useSimpleMode || !loadMoreRef.current || !pageInfo.hasNextPage || loading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && pageInfo.hasNextPage && !loading) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1, rootMargin: '200px' }
+    )
+
+    observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [useSimpleMode, pageInfo.hasNextPage, loading, loadMore])
+
   // Simple mode rendering for profile pages (no virtualization)
   // This avoids AutoSizer issues when Posts is inside a parent with its own scroll
   if (useSimpleMode) {
@@ -306,9 +327,9 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
             </div>
           ))}
 
-          {/* Load more button */}
-          {pageInfo.hasNextPage && (
-            <div className="flex justify-center py-8">
+          {/* Auto-load trigger + fallback button */}
+          <div ref={loadMoreRef} className="flex justify-center py-8">
+            {pageInfo.hasNextPage && (
               <button
                 onClick={loadMore}
                 disabled={loading}
@@ -323,8 +344,8 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
                   'Load more'
                 )}
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* End of feed indicator */}
           {!pageInfo.hasNextPage && simpleNodes.length > 0 && (
