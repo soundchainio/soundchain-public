@@ -91,7 +91,6 @@ export class StoryService extends ModelService<typeof Story> {
       console.log('[StoryService] Profile fetched:', profile ? {
         id: profile._id,
         displayName: profile.displayName,
-        userHandle: profile.userHandle,
         profilePicture: profile.profilePicture?.substring(0, 50)
       } : 'null');
 
@@ -101,8 +100,8 @@ export class StoryService extends ModelService<typeof Story> {
         console.log('[StoryService] User fetched:', user ? { id: user._id, handle: user.handle } : 'null');
 
         creatorDetails = {
-          creatorDisplayName: profile.displayName || profile.userHandle,
-          creatorUserHandle: user?.handle || profile.userHandle || profile.displayName,
+          creatorDisplayName: profile.displayName,
+          creatorUserHandle: user?.handle || profile.displayName,
           creatorAvatarUrl: profile.profilePicture,
         };
         console.log('[StoryService] Creator details to save:', creatorDetails);
