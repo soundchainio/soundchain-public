@@ -2527,27 +2527,30 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Radio className="w-5 h-5 text-green-400" />
                   </Button>
 
-                  {/* Nearby Dropdown - Mobile (compact accordion style) */}
+                  {/* Nearby Dropdown - Mobile (fixed centered) */}
                   {showNearbyModal && (
-                    <Card className="absolute left-0 top-12 w-80 z-50 shadow-2xl border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900 max-h-[70vh] overflow-hidden">
-                      <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-cyan-900/50">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
-                            <Radio className="w-5 h-5 text-white" />
+                    <>
+                      <div className="fixed inset-0 z-[98]" onClick={(e) => { e.stopPropagation(); setShowNearbyModal(false); }} />
+                      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-[20rem] z-[99] shadow-2xl border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900 max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-cyan-900/50">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
+                              <Radio className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400">Nearby</h3>
+                              <p className="text-[10px] text-green-300/80">Chat via Bitchat</p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400">Nearby</h3>
-                            <p className="text-[10px] text-green-300/80">Chat via Bitchat</p>
-                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => setShowNearbyModal(false)} className="w-6 h-6 p-0 hover:bg-green-500/20">
+                            <X className="w-4 h-4 text-green-400" />
+                          </Button>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => setShowNearbyModal(false)} className="w-6 h-6 p-0 hover:bg-green-500/20">
-                          <X className="w-4 h-4 text-green-400" />
-                        </Button>
-                      </div>
-                      <div className="max-h-[calc(70vh-60px)] overflow-y-auto">
-                        <ConcertChat showBitchatPromo={true} compact={true} />
-                      </div>
-                    </Card>
+                        <div className="max-h-[calc(70vh-60px)] overflow-y-auto">
+                          <ConcertChat showBitchatPromo={true} compact={true} />
+                        </div>
+                      </Card>
+                    </>
                   )}
                 </div>
 
@@ -2563,9 +2566,12 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <PiggyBank className="w-5 h-5 text-pink-400" />
                   </Button>
 
-                  {/* WIN-WIN Accordion Dropdown - Centered under button */}
+                  {/* WIN-WIN Accordion Dropdown - Fixed centered on mobile for proper positioning */}
                   {showWinWinStatsModal && (
-                    <Card className="absolute left-1/2 -translate-x-1/2 top-12 w-72 z-50 shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900">
+                    <>
+                      {/* Transparent backdrop - pointer-events-none to not interfere with media playback */}
+                      <div className="fixed inset-0 z-[98]" onClick={(e) => { e.stopPropagation(); setShowWinWinStatsModal(false); }} />
+                      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-[18rem] z-[99] shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900" onClick={(e) => e.stopPropagation()}>
                       {/* Header */}
                       <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-gradient-to-r from-orange-900/50 to-yellow-900/50">
                         <div className="flex items-center gap-2">
@@ -2731,6 +2737,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </p>
                       </div>
                     </Card>
+                    </>
                   )}
                 </div>
 
@@ -2746,9 +2753,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Users className="w-5 h-5 text-purple-400" />
                   </Button>
 
-                  {/* Vibes Dropdown Modal - Centered under button */}
+                  {/* Vibes Dropdown Modal - Fixed centered on mobile */}
                   {showVibesModal && (
-                    <Card className="absolute left-1/2 -translate-x-1/2 top-12 w-64 z-50 shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900">
+                    <>
+                      <div className="fixed inset-0 z-[98]" onClick={(e) => { e.stopPropagation(); setShowVibesModal(false); }} />
+                      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-[16rem] z-[99] shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900" onClick={(e) => e.stopPropagation()}>
                       {/* Header */}
                       <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-cyan-900/50">
                         <div className="flex items-center gap-2">
@@ -2819,6 +2828,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <p className="text-[9px] text-gray-500">SOUNDCHAIN · THE FUTURE OF MUSIC</p>
                       </div>
                     </Card>
+                    </>
                   )}
                 </div>
 
