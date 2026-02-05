@@ -46,3 +46,4 @@ request.json
 temp_yarn.lock
 .claude/
 soundchain-agent/
+.env.vercel-check

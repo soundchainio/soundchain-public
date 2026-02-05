@@ -119,6 +119,48 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
     return Object.values(grouped) as Story[]
   }, [storiesData])
 
+  // Transform stories into StoryUser format for StoryViewer
+  const storyUsersForViewer = useMemo(() => {
+    if (!storiesData?.publicStories || storiesData.publicStories.length === 0) {
+      return []
+    }
+
+    // Group raw story data by profileId for the viewer
+    const grouped = storiesData.publicStories.reduce((acc: any, story: any) => {
+      const isGuest = story.isGuest || !story.profileId
+      const key = isGuest ? `guest-${story.walletAddress}` : story.profileId
+
+      if (!acc[key]) {
+        acc[key] = {
+          profileId: key,
+          profilePicture: isGuest ? undefined : story.profile?.profilePicture,
+          displayName: isGuest
+            ? `${story.walletAddress?.slice(0, 6)}...${story.walletAddress?.slice(-4)}`
+            : story.profile?.displayName || story.profile?.userHandle,
+          userHandle: isGuest
+            ? story.walletAddress?.slice(0, 8) || 'guest'
+            : story.profile?.userHandle || 'user',
+          stories: [],
+        }
+      }
+
+      // Add the story to this user's stories array
+      acc[key].stories.push({
+        id: story.id,
+        mediaUrl: story.mediaUrl,
+        mediaType: story.mediaType || 'image',
+        createdAt: story.createdAt,
+        isPermanent: story.isPermanent,
+        viewCount: story.viewCount || 0,
+        reactions: [],
+      })
+
+      return acc
+    }, {})
+
+    return Object.values(grouped)
+  }, [storiesData])
+
   // Set up portal container on mount (client-side only)
   useEffect(() => {
     setPortalContainer(document.body)
@@ -301,7 +343,7 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
           isOpen={showStoryViewer}
           onClose={() => setShowStoryViewer(false)}
           initialUserId={selectedUserId}
-          users={[]}
+          users={storyUsersForViewer as any}
         />,
         portalContainer
       )}
