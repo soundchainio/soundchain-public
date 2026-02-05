@@ -296,20 +296,12 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
                   {/* Inner black ring */}
                   <div className="w-full h-full rounded-full p-[2px] bg-black">
                     {/* Avatar */}
-                    <div className={`w-full h-full rounded-full flex items-center justify-center overflow-hidden ${
-                      story.profilePicture ? 'bg-neutral-900' : `bg-gradient-to-br ${gradientClass}`
-                    }`}>
-                      {story.profilePicture ? (
-                        <img
-                          src={story.profilePicture}
-                          alt={story.displayName}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-base sm:text-lg font-bold text-white drop-shadow-sm">
-                          {story.displayName?.charAt(0) || story.userHandle?.charAt(0) || '?'}
-                        </span>
-                      )}
+                    <div className="w-full h-full rounded-full flex items-center justify-center overflow-hidden bg-neutral-900">
+                      <img
+                        src={story.profilePicture || `https://api.dicebear.com/7.x/identicon/svg?seed=${story.profileId || story.walletAddress || 'default'}&backgroundColor=0f0f0f`}
+                        alt={story.displayName}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   </div>
                 </div>
