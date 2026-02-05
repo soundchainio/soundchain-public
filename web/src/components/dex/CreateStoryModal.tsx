@@ -115,11 +115,10 @@ const fileToBase64 = (file: File): Promise<string> => {
   })
 }
 
-// Use direct upload for files under 5.9MB (faster, skips S3)
-// Base64 encoding adds ~33% overhead, so 5.9MB becomes ~7.85MB payload
-// API Gateway has 10MB payload limit - this gives 2MB+ buffer for safety
-// Files >5.9MB go through reliable S3 → IPFS path (no size limit issues)
-const DIRECT_UPLOAD_THRESHOLD = 5.9 * 1024 * 1024 // 5.9MB
+// TEMPORARILY DISABLED: Direct upload causing 413 errors
+// Using S3 path for all uploads until root cause is identified
+// TODO: Debug why direct upload returns 413 for even small files
+const DIRECT_UPLOAD_THRESHOLD = 0 // Force all uploads through S3 path
 
 // Story/Reel constraints
 const STORY_CONSTRAINTS = {
@@ -497,7 +496,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         ipfsCid = pinResult.directPinToIPFS.cid
         setUploadProgress(85)
       } else {
-        // Standard path for larger files (>50MB): S3 → IPFS
+        // Reliable S3 → IPFS path: Upload to S3 first, then pin to IPFS
         setUploadStep('uploading')
         setUploadProgress(10)
 

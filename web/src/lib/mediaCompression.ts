@@ -7,11 +7,12 @@
  * Easter egg: Users don't see size limits - compression just works! 🔥
  */
 
-// Target constraints - optimized for 50MB threshold to save Pinata storage costs
+// Target constraints - optimized for API Gateway 10MB limit
+// Base64 encoding adds ~33% overhead, so we target 5MB to stay safely under limit
 const COMPRESSION_CONFIG = {
-  // Story/Reel constraints - target under 50MB for fast direct upload
+  // Story/Reel constraints - target under 5MB for safe base64 encoding
   story: {
-    maxFileSize: 45 * 1024 * 1024, // 45 MB target (buffer under 50MB threshold)
+    maxFileSize: 5 * 1024 * 1024, // 5 MB target (safe for direct upload after base64)
     maxDuration: 600, // 10 minutes
     targetBitrate: 4000000, // 4 Mbps - good quality, smaller files
     minBitrate: 1500000, // 1.5 Mbps minimum - still watchable
@@ -19,12 +20,12 @@ const COMPRESSION_CONFIG = {
   // Post media constraints
   post: {
     maxImageSize: 5 * 1024 * 1024, // 5 MB for images
-    maxVideoSize: 45 * 1024 * 1024, // 45 MB for post videos
+    maxVideoSize: 25 * 1024 * 1024, // 25 MB for post videos (via S3)
     targetBitrate: 3000000, // 3 Mbps
   },
   // Image quality settings
   image: {
-    maxWidth: 2048, // Reduced from 4096 - still high quality
+    maxWidth: 2048, // High quality but reasonable size
     maxHeight: 2048,
     quality: 0.85, // Good quality JPEG
     minQuality: 0.6, // Can go lower for size
