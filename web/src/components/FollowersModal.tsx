@@ -148,12 +148,12 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
       <>
         {/* Backdrop */}
         <div
-          className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm"
           onClick={onClose}
         />
 
         {/* Compact Modal */}
-        <div className="fixed z-[201] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-sm animate-in zoom-in-95 duration-150">
+        <div className="fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-sm animate-in zoom-in-95 duration-150">
           <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
@@ -238,12 +238,12 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="fixed z-[201] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-md animate-in zoom-in-95 duration-150">
+      <div className="fixed z-[9999] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-md animate-in zoom-in-95 duration-150">
         <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
