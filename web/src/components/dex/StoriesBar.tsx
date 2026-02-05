@@ -24,6 +24,9 @@ const PUBLIC_STORIES = gql`
       viewCount
       isGuest
       walletAddress
+      creatorDisplayName
+      creatorUserHandle
+      creatorAvatarUrl
       profile {
         id
         userHandle
@@ -93,16 +96,21 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
       const key = isGuest ? `guest-${story.walletAddress}` : story.profileId
 
       if (!acc[key]) {
+        // Prefer denormalized creator fields (helix pattern), fallback to profile field resolver
+        const avatarUrl = story.creatorAvatarUrl || story.profile?.profilePicture
+        const displayName = story.creatorDisplayName || story.profile?.displayName
+        const userHandle = story.creatorUserHandle || story.profile?.userHandle
+
         acc[key] = {
           id: story.id,
           profileId: key, // Use the key as profileId for consistency
-          profilePicture: isGuest ? undefined : story.profile?.profilePicture,
+          profilePicture: isGuest ? undefined : avatarUrl,
           displayName: isGuest
             ? `${story.walletAddress?.slice(0, 6)}...${story.walletAddress?.slice(-4)}`
-            : story.profile?.displayName,
+            : displayName,
           userHandle: isGuest
             ? story.walletAddress?.slice(0, 8) || 'guest'
-            : story.profile?.userHandle || 'user',
+            : userHandle || 'user',
           hasUnwatched: true, // TODO: track viewed stories
           isPermanent: story.isPermanent,
           storyCount: 1,
@@ -130,16 +138,21 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
       const isGuest = story.isGuest || !story.profileId
       const key = isGuest ? `guest-${story.walletAddress}` : story.profileId
 
+      // Prefer denormalized creator fields (helix pattern), fallback to profile field resolver
+      const avatarUrl = story.creatorAvatarUrl || story.profile?.profilePicture
+      const displayName = story.creatorDisplayName || story.profile?.displayName
+      const userHandle = story.creatorUserHandle || story.profile?.userHandle
+
       if (!acc[key]) {
         acc[key] = {
           profileId: key,
-          profilePicture: isGuest ? undefined : story.profile?.profilePicture,
+          profilePicture: isGuest ? undefined : avatarUrl,
           displayName: isGuest
             ? `${story.walletAddress?.slice(0, 6)}...${story.walletAddress?.slice(-4)}`
-            : story.profile?.displayName || story.profile?.userHandle,
+            : displayName || userHandle,
           userHandle: isGuest
             ? story.walletAddress?.slice(0, 8) || 'guest'
-            : story.profile?.userHandle || 'user',
+            : userHandle || 'user',
           stories: [],
         }
       }

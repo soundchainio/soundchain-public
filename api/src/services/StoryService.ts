@@ -83,6 +83,21 @@ export class StoryService extends ModelService<typeof Story> {
     // Process overlays to extract hashtags and mentions
     const { processedOverlays, hashtags, mentionedUserIds } = this.processOverlays(overlays || []);
 
+    // Fetch creator profile info (helix pattern - snapshot at creation)
+    let creatorDetails: any = {};
+    try {
+      const profile = await this.context.profileService.getProfile(profileId);
+      if (profile) {
+        creatorDetails = {
+          creatorDisplayName: profile.displayName,
+          creatorUserHandle: profile.userHandle,
+          creatorAvatarUrl: profile.profilePicture,
+        };
+      }
+    } catch (err) {
+      console.error('[StoryService] Failed to fetch creator profile:', err);
+    }
+
     // If track is attached, fetch track details
     let trackDetails: any = {};
     if (attachedTrackId) {
@@ -114,6 +129,8 @@ export class StoryService extends ModelService<typeof Story> {
       reactions: [],
       viewerIds: [],
       deleted: false,
+      // Creator info (helix snapshot)
+      ...creatorDetails,
       // Reels 2.0 fields
       overlays: processedOverlays,
       hashtags,

@@ -103,6 +103,22 @@ export class Story extends Model {
   @prop({ default: false })
   isGuest?: boolean; // True for guest-created stories
 
+  // ============================================
+  // CREATOR INFO (denormalized for fast access)
+  // Snapshot at creation time - helix pattern
+  // ============================================
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  creatorDisplayName?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  creatorUserHandle?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  creatorAvatarUrl?: string;
+
   @Field(() => String)
   @prop({ required: true })
   mediaUrl!: string;
