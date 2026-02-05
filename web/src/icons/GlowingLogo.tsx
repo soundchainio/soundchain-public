@@ -66,13 +66,12 @@ export const GlowingLogo = ({
 
       {/* Inner glow - breathing effect */}
       <div
-        className="absolute"
+        className="absolute animate-breathe"
         style={{
           width: width,
           height: height,
           background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%)',
           borderRadius: '50%',
-          animation: 'breathe 2s ease-in-out infinite',
         }}
       />
 
@@ -80,20 +79,6 @@ export const GlowingLogo = ({
       <div className="relative z-10" style={{ filter: `drop-shadow(0 0 ${glowSize.spread}px rgba(162,82,254,0.8)) drop-shadow(0 0 ${glowSize.spread * 2}px rgba(63,221,138,0.6))` }}>
         <Logo width={width} height={height} />
       </div>
-
-      {/* CSS for custom animation */}
-      <style jsx>{`
-        @keyframes breathe {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 0.5;
-          }
-          50% {
-            transform: scale(1.1);
-            opacity: 0.8;
-          }
-        }
-      `}</style>
     </div>
   )
 }
@@ -122,26 +107,9 @@ export const SubtleGlowLogo = ({
       />
 
       {/* The actual logo with drop shadow glow */}
-      <div
-        className="relative z-10"
-        style={{
-          filter: 'drop-shadow(0 0 8px rgba(162,82,254,0.6)) drop-shadow(0 0 15px rgba(63,221,138,0.4))',
-          animation: 'logoGlow 2s ease-in-out infinite',
-        }}
-      >
+      <div className="relative z-10 animate-logo-glow">
         <Logo width={width} height={height} />
       </div>
-
-      <style jsx>{`
-        @keyframes logoGlow {
-          0%, 100% {
-            filter: drop-shadow(0 0 8px rgba(162,82,254,0.6)) drop-shadow(0 0 15px rgba(63,221,138,0.4));
-          }
-          50% {
-            filter: drop-shadow(0 0 15px rgba(162,82,254,0.8)) drop-shadow(0 0 25px rgba(63,221,138,0.6)) drop-shadow(0 0 35px rgba(1,192,214,0.4));
-          }
-        }
-      `}</style>
     </div>
   )
 }
