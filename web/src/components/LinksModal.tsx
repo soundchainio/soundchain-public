@@ -18,7 +18,7 @@ interface AddLinkProps {
 }
 
 const baseClasses =
-  'fixed left-0 w-screen top-0 h-full bottom-0 duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
+  'fixed left-0 w-screen top-0 h-full bottom-0 z-[100] duration-500 bg-opacity-75 ease-in-out bg-black transform-gpu transform'
 
 export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, postLink, setPostLink }: AddLinkProps) => {
   const [link, setLink] = useState<MediaLink>()
@@ -82,11 +82,16 @@ export const LinksModal = ({ onClose, show, setShow, setOriginalLink, type, post
           {type === PostLinkType.VIDEO && (
             <>
               <div className="mt-4 mb-4 ml-auto mr-auto w-9/12 text-sm text-gray-400">
-                Paste a video link from Youtube or Vimeo to embed the video to your post.
+                Paste a video link from Youtube, Vimeo, TikTok, Twitch, Instagram, X, or Facebook to embed the video to your post.
               </div>
-              <div>
+              <div className="max-h-[60vh] overflow-y-auto">
                 <PostLinkInput type={MediaProvider.YOUTUBE} setLink={setLink} link={link} setPostLink={setPostLink} />
                 <PostLinkInput type={MediaProvider.VIMEO} setLink={setLink} link={link} setPostLink={setPostLink} />
+                <PostLinkInput type={MediaProvider.TIKTOK} setLink={setLink} link={link} setPostLink={setPostLink} />
+                <PostLinkInput type={MediaProvider.TWITCH} setLink={setLink} link={link} setPostLink={setPostLink} />
+                <PostLinkInput type={MediaProvider.INSTAGRAM} setLink={setLink} link={link} setPostLink={setPostLink} />
+                <PostLinkInput type={MediaProvider.X} setLink={setLink} link={link} setPostLink={setPostLink} />
+                <PostLinkInput type={MediaProvider.FACEBOOK} setLink={setLink} link={link} setPostLink={setPostLink} />
               </div>
             </>
           )}

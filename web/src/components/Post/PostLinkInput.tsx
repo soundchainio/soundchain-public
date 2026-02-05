@@ -9,6 +9,7 @@ import { TikTok } from 'icons/TikTok'
 import { Facebook } from 'icons/Facebook'
 import { XTwitter } from 'icons/XTwitter'
 import { CustomHTML } from 'icons/CustomHTML'
+import { Twitch } from 'icons/Twitch'
 import React, { useEffect, useState } from 'react'
 import { MediaProvider } from 'types/MediaProvider'
 
@@ -78,6 +79,12 @@ const mediaProviderOptions: Record<string, { name: string; example: string; tool
     example: 'https://twitter.com/.../status/... or x.com',
     tooltip: 'Paste X/Twitter post link or embed code',
     logo: <XTwitter />,
+  },
+  [MediaProvider.TWITCH]: {
+    name: 'Twitch',
+    example: 'https://twitch.tv/channel or clip link',
+    tooltip: 'Paste Twitch channel, video, or clip link',
+    logo: <Twitch />,
   },
   [MediaProvider.CUSTOM_HTML]: {
     name: '🌐 Custom Embed',
