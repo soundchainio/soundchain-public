@@ -155,7 +155,8 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   const meData = useMe()
   const me = meData?.me
 
-  const isLoggedIn = !!me?.profile
+  // More robust login check - check for user ID, profile, OR any OAuth wallet
+  const isLoggedIn = !!(me?.id || me?.profile || me?.magicWalletAddress || me?.googleWalletAddress)
   const maxDuration = isLoggedIn ? STORY_CONSTRAINTS.MAX_DURATION_MEMBER : STORY_CONSTRAINTS.MAX_DURATION_GUEST
   const maxFileSize = isLoggedIn ? STORY_CONSTRAINTS.MAX_FILE_SIZE_MEMBER : STORY_CONSTRAINTS.MAX_FILE_SIZE_GUEST
 
@@ -563,18 +564,22 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         })
         toast.success(selectedNftTrack ? 'Reel shared with NFT music! SCID rewards enabled.' : 'Story shared!')
       } else {
-        const hexChars = '0123456789abcdef'
-        let addressBody = ''
-        for (let i = 0; i < 40; i++) {
-          addressBody += hexChars[Math.floor(Math.random() * 16)]
+        // Use actual wallet if available, otherwise generate random
+        let walletAddress = me?.magicWalletAddress || me?.googleWalletAddress || me?.discordWalletAddress || me?.twitchWalletAddress
+        if (!walletAddress) {
+          const hexChars = '0123456789abcdef'
+          let addressBody = ''
+          for (let i = 0; i < 40; i++) {
+            addressBody += hexChars[Math.floor(Math.random() * 16)]
+          }
+          walletAddress = `0x${addressBody}`
         }
-        const anonymousAddress = `0x${addressBody}`
 
         await guestCreateStoryWithOverlays({
           variables: {
             mediaUrl: ipfsUrl,
             mediaType,
-            walletAddress: anonymousAddress,
+            walletAddress,
             duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
             overlays: overlays.length > 0 ? overlays : null,
             attachedTrackId: selectedNftTrack?.id || null,
