@@ -36,7 +36,8 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
     toggleLoop,
   } = useAudioPlayerContext()
 
-  const onSliderChange = (value: number) => {
+  // Called only when user releases the slider - this is when we actually seek the audio
+  const onSliderCommit = (value: number) => {
     setProgressStateFromSlider(value)
   }
 
@@ -98,7 +99,7 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
               duration={duration}
               className="mx-4 w-[500px] xl:w-[700px] 2xl:w-[900px]"
               barCount={120}
-              onClick={(p) => onSliderChange(p * duration)}
+              onClick={(p) => onSliderCommit(p * duration)}
             />
           ) : (
             <AudioSlider
@@ -106,7 +107,7 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
               min={0}
               max={duration}
               value={progress}
-              onChange={onSliderChange}
+              onCommit={onSliderCommit}
             />
           )}
           <div className="text-neutral-400 text-sm w-12">{remainingTime(progress, duration || 0)}</div>

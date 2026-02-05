@@ -127,7 +127,8 @@ export const AudioPlayerModal = () => {
     dispatchShowAudioPlayerModal(false)
   }
 
-  const onSliderChange = (value: number) => {
+  // Called only when user releases the slider - this is when we actually seek
+  const onSliderCommit = (value: number) => {
     setProgressStateFromSlider(value)
   }
 
@@ -251,7 +252,7 @@ export const AudioPlayerModal = () => {
                   onLikeComment={likeComment}
                   isPlaying={isPlaying}
                   currentTime={progress}
-                  onSeek={onSliderChange}
+                  onSeek={onSliderCommit}
                   onPlayPause={togglePlay}
                   variant="glass"
                 />

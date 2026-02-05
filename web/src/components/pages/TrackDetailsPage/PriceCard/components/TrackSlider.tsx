@@ -13,7 +13,8 @@ export const TrackSlider = (props: TrackSliderProps) => {
   const { song } = props
   const { duration, progress, play, isPlaying, setProgressStateFromSlider } = useAudioPlayerContext()
 
-  const onSliderChange = (value: number) => {
+  // Called only when user releases the slider - this is when we actually seek
+  const onSliderCommit = (value: number) => {
     setProgressStateFromSlider(value)
   }
 
@@ -34,7 +35,7 @@ export const TrackSlider = (props: TrackSliderProps) => {
       </PlayButton>
 
       <div className="text-neutral-400">{timeFromSecs(progress || 0)}</div>
-      <AudioSlider className="audio-player mx-4 w-full" min={0} max={duration} value={progress} onChange={onSliderChange} />
+      <AudioSlider className="audio-player mx-4 w-full" min={0} max={duration} value={progress} onCommit={onSliderCommit} />
       <div className="text-neutral-400">{remainingTime(progress, duration || 0)} </div>
     </Container>
   )

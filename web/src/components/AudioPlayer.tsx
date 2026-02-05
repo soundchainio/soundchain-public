@@ -41,7 +41,8 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
     }
   }
 
-  const onSliderChange = (value: number) => {
+  // Called only when user releases the slider - this is when we actually seek
+  const onSliderCommit = (value: number) => {
     setPlayState(value)
     if (audioRef.current) {
       audioRef.current.currentTime = value
@@ -136,7 +137,7 @@ export const AudioPlayer = ({ src, title, artist, art, trackId }: Song) => {
             </Link>
           </div>
           <div className="mt-2 flex flex-col text-white">
-            <AudioSlider className="audio-player ml-1" min={0} max={duration} value={playState} onChange={onSliderChange} />
+            <AudioSlider className="audio-player ml-1" min={0} max={duration} value={playState} onCommit={onSliderCommit} />
             <div className="mt-2 flex text-xs text-gray-80">
               <div className="flex-1">{timeFromSecs(playState || 0)}</div>
               <div className="flex-1 text-right">{remainingTime(playState, duration || 0)} </div>

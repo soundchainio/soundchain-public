@@ -6,17 +6,51 @@ interface AudioSliderProps {
   max?: number
   value?: number
   onChange?: (value: number) => void
+  onCommit?: (value: number) => void
   className?: string
   step?: number
 }
 
 // Wrapper for @radix-ui/react-slider with @reach/slider compatible API
+// Uses onValueCommit for actual seeking (on release) to prevent audio stuttering during drag
 export const AudioSlider = React.forwardRef<HTMLDivElement, AudioSliderProps>(
-  ({ className, min = 0, max = 100, value = 0, onChange, step = 1, ...props }, ref) => {
+  ({ className, min = 0, max = 100, value = 0, onChange, onCommit, step = 1, ...props }, ref) => {
+    // Track if user is currently dragging
+    const [isDragging, setIsDragging] = React.useState(false)
+    // Local preview value during drag (doesn't seek audio)
+    const [previewValue, setPreviewValue] = React.useState<number | null>(null)
+
+    // During drag, show preview value; otherwise show actual value
+    const displayValue = isDragging && previewValue !== null ? previewValue : value
+
+    // Called continuously during drag - only updates visual preview
     const handleValueChange = (newValue: number[]) => {
-      if (onChange && newValue[0] !== undefined) {
-        onChange(newValue[0])
+      if (newValue[0] !== undefined) {
+        setPreviewValue(newValue[0])
+        // If no onCommit provided, fall back to onChange during drag (legacy behavior)
+        if (!onCommit && onChange) {
+          onChange(newValue[0])
+        }
       }
+    }
+
+    // Called only when user releases the thumb - this is when we actually seek
+    const handleValueCommit = (newValue: number[]) => {
+      setIsDragging(false)
+      setPreviewValue(null)
+      if (newValue[0] !== undefined) {
+        if (onCommit) {
+          onCommit(newValue[0])
+        } else if (onChange) {
+          onChange(newValue[0])
+        }
+      }
+    }
+
+    // Detect drag start via pointer down on thumb or track
+    const handlePointerDown = () => {
+      setIsDragging(true)
+      setPreviewValue(value)
     }
 
     return (
@@ -25,8 +59,10 @@ export const AudioSlider = React.forwardRef<HTMLDivElement, AudioSliderProps>(
         min={min}
         max={max}
         step={step}
-        value={[value]}
+        value={[displayValue]}
         onValueChange={handleValueChange}
+        onValueCommit={handleValueCommit}
+        onPointerDown={handlePointerDown}
         className={`relative flex w-full select-none items-center cursor-pointer ${className || ''}`}
         {...props}
       >

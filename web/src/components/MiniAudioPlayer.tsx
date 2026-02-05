@@ -60,7 +60,8 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
     setIsSameSong(isCurrentSong(trackId))
   }, [isCurrentSong, isCurrentlyPlaying, setIsPlaying, setIsSameSong, trackId])
 
-  const onSliderChange = (value: number) => {
+  // Called only when user releases the slider - this is when we actually seek
+  const onSliderCommit = (value: number) => {
     setProgressStateFromSlider(value)
   }
 
@@ -144,7 +145,7 @@ export const MiniAudioPlayer = (props: MiniAudioPlayerProps) => {
                   min={0}
                   max={duration}
                   value={progress}
-                  onChange={onSliderChange}
+                  onCommit={onSliderCommit}
                 />
                 <div className="mt-2 flex text-xs text-gray-80">
                   <div className="flex-1">{timeFromSecs(progress || 0)}</div>
