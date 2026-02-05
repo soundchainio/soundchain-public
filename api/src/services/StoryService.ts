@@ -88,9 +88,11 @@ export class StoryService extends ModelService<typeof Story> {
     try {
       const profile = await this.context.profileService.getProfile(profileId);
       if (profile) {
+        // Also fetch user to get the handle (userHandle is on User, not Profile)
+        const user = await this.context.userService.getUserByProfileId(profileId);
         creatorDetails = {
           creatorDisplayName: profile.displayName,
-          creatorUserHandle: profile.userHandle,
+          creatorUserHandle: user?.handle || profile.displayName,
           creatorAvatarUrl: profile.profilePicture,
         };
       }
