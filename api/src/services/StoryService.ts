@@ -85,16 +85,29 @@ export class StoryService extends ModelService<typeof Story> {
 
     // Fetch creator profile info (helix pattern - snapshot at creation)
     let creatorDetails: any = {};
+    console.log('[StoryService] Creating story for profileId:', profileId);
     try {
       const profile = await this.context.profileService.getProfile(profileId);
+      console.log('[StoryService] Profile fetched:', profile ? {
+        id: profile._id,
+        displayName: profile.displayName,
+        userHandle: profile.userHandle,
+        profilePicture: profile.profilePicture?.substring(0, 50)
+      } : 'null');
+
       if (profile) {
         // Also fetch user to get the handle (userHandle is on User, not Profile)
         const user = await this.context.userService.getUserByProfileId(profileId);
+        console.log('[StoryService] User fetched:', user ? { id: user._id, handle: user.handle } : 'null');
+
         creatorDetails = {
-          creatorDisplayName: profile.displayName,
-          creatorUserHandle: user?.handle || profile.displayName,
+          creatorDisplayName: profile.displayName || profile.userHandle,
+          creatorUserHandle: user?.handle || profile.userHandle || profile.displayName,
           creatorAvatarUrl: profile.profilePicture,
         };
+        console.log('[StoryService] Creator details to save:', creatorDetails);
+      } else {
+        console.warn('[StoryService] No profile found for profileId:', profileId);
       }
     } catch (err) {
       console.error('[StoryService] Failed to fetch creator profile:', err);

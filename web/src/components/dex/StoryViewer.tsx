@@ -358,8 +358,16 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
 
   if (!isOpen || !currentUser || !currentStory) return null
 
+  // Generate identicon URL for wallet users without profile pictures
+  const getAvatarUrl = (user: StoryUser) => {
+    if (user.profilePicture) return user.profilePicture
+    // Use dicebear for wallet-based identicons
+    const seed = user.profileId || user.userHandle || 'default'
+    return `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}&backgroundColor=0f0f0f`
+  }
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center">
+    <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center">
       {/* Close button */}
       <button
         onClick={onClose}
@@ -412,19 +420,22 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
         {/* Header */}
         <div className="absolute top-6 left-0 right-0 z-40 flex items-center justify-between px-3">
           <div className="flex items-center gap-2">
-            {/* Avatar */}
+            {/* Avatar - uses identicon for wallet users */}
             <div
               className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 p-[2px] cursor-pointer"
               onClick={(e) => { e.stopPropagation(); router.push(`/dex/users/${currentUser.userHandle}`) }}
             >
-              <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
-                {currentUser.profilePicture ? (
-                  <img src={currentUser.profilePicture} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-sm font-bold text-white">
-                    {currentUser.displayName?.charAt(0) || currentUser.userHandle?.charAt(0)}
-                  </span>
-                )}
+              <div className="w-full h-full rounded-full bg-neutral-900 flex items-center justify-center overflow-hidden">
+                <img
+                  src={getAvatarUrl(currentUser)}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to letter if image fails
+                    e.currentTarget.style.display = 'none'
+                    e.currentTarget.parentElement!.innerHTML = `<span class="text-sm font-bold text-white">${currentUser.displayName?.charAt(0) || '?'}</span>`
+                  }}
+                />
               </div>
             </div>
             {/* Name and time */}
