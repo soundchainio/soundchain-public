@@ -12,13 +12,10 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { apolloClient } from 'lib/apollo'
 import { gql } from '@apollo/client'
 
-// GraphQL query to get NFT tracks
-const GET_NFT_TRACKS = gql`
-  query GetNFTTracksForRadio($limit: Int, $offset: Int) {
-    exploreTracks(
-      filter: { isNft: true }
-      page: { first: $limit, offset: $offset }
-    ) {
+// Query matching working tracks.ts pattern
+const GET_TRACKS_QUERY = gql`
+  query RadioTracks($search: String, $limit: Int) {
+    exploreTracks(search: $search, page: { first: $limit }) {
       nodes {
         id
         title
@@ -26,57 +23,18 @@ const GET_NFT_TRACKS = gql`
         album
         description
         artworkUrl
-        audioUrl
-        duration
         playbackCount
         favoriteCount
         createdAt
-        scid
-        isNft
-        genres
         owner {
           id
           userHandle
           displayName
-          profilePictureUrl
         }
       }
       pageInfo {
         totalCount
         hasNextPage
-      }
-    }
-  }
-`
-
-// Fallback query without isNft filter (in case that filter isn't supported)
-const GET_TRACKS_FALLBACK = gql`
-  query GetTracksForRadio($limit: Int) {
-    exploreTracks(page: { first: $limit }) {
-      nodes {
-        id
-        title
-        artist
-        album
-        description
-        artworkUrl
-        audioUrl
-        duration
-        playbackCount
-        favoriteCount
-        createdAt
-        scid
-        isNft
-        genres
-        owner {
-          id
-          userHandle
-          displayName
-          profilePictureUrl
-        }
-      }
-      pageInfo {
-        totalCount
       }
     }
   }
@@ -178,77 +136,38 @@ export default async function handler(
     // Fetch tracks if playlist is empty
     if (radioPlaylist.length === 0) {
       try {
-        let tracks: RadioTrack[] = []
+        // Query all tracks using working pattern
+        const { data } = await apolloClient.query({
+          query: GET_TRACKS_QUERY,
+          variables: { search: '', limit: 100 },
+          fetchPolicy: 'no-cache'
+        })
 
-        // Try NFT filter first
-        try {
-          const { data } = await apolloClient.query({
-            query: GET_NFT_TRACKS,
-            variables: { limit: 50, offset: 0 },
-            fetchPolicy: 'no-cache'
-          })
-
-          tracks = (data.exploreTracks?.nodes || [])
-            .filter((t: any) => t.isNft)
-            .map((track: any) => ({
-              id: track.id,
-              title: track.title,
-              artist: track.artist,
-              album: track.album,
-              description: track.description,
-              artwork_url: track.artworkUrl,
-              stream_url: track.audioUrl,
-              duration: track.duration,
-              play_count: track.playbackCount || 0,
-              scid: track.scid,
-              is_nft: true,
-              genres: track.genres || [],
-              owner: track.owner ? {
-                handle: track.owner.userHandle,
-                display_name: track.owner.displayName,
-                avatar: track.owner.profilePictureUrl
-              } : null,
-              licensing: {
-                type: 'nft' as const,
-                ogun_enabled: true,
-                streaming_rewards: true
-              }
-            }))
-        } catch (e) {
-          // Fallback to all tracks and filter client-side
-          const { data } = await apolloClient.query({
-            query: GET_TRACKS_FALLBACK,
-            variables: { limit: 100 },
-            fetchPolicy: 'no-cache'
-          })
-
-          tracks = (data.exploreTracks?.nodes || [])
-            .filter((t: any) => t.isNft || t.scid)
-            .map((track: any) => ({
-              id: track.id,
-              title: track.title,
-              artist: track.artist,
-              album: track.album,
-              description: track.description,
-              artwork_url: track.artworkUrl,
-              stream_url: track.audioUrl,
-              duration: track.duration,
-              play_count: track.playbackCount || 0,
-              scid: track.scid,
-              is_nft: track.isNft || false,
-              genres: track.genres || [],
-              owner: track.owner ? {
-                handle: track.owner.userHandle,
-                display_name: track.owner.displayName,
-                avatar: track.owner.profilePictureUrl
-              } : null,
-              licensing: {
-                type: track.isNft ? 'nft' as const : 'open' as const,
-                ogun_enabled: !!track.scid,
-                streaming_rewards: !!track.scid
-              }
-            }))
-        }
+        const tracks: RadioTrack[] = (data.exploreTracks?.nodes || [])
+          .map((track: any) => ({
+            id: track.id,
+            title: track.title || 'Untitled',
+            artist: track.artist || 'Unknown Artist',
+            album: track.album,
+            description: track.description,
+            artwork_url: track.artworkUrl,
+            stream_url: null,
+            duration: null,
+            play_count: track.playbackCount || 0,
+            scid: null,
+            is_nft: false,
+            genres: [],
+            owner: track.owner ? {
+              handle: track.owner.userHandle,
+              display_name: track.owner.displayName,
+              avatar: null
+            } : null,
+            licensing: {
+              type: 'open' as const,
+              ogun_enabled: false,
+              streaming_rewards: false
+            }
+          }))
 
         // Shuffle the tracks
         radioPlaylist = tracks.sort(() => Math.random() - 0.5)
