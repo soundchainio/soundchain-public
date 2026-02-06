@@ -46,6 +46,7 @@ const TYPE_COLORS: Record<string, string> = {
 
 export default function AgentFeed() {
   const [posts, setPosts] = useState<AgentPost[]>([])
+  const [stats, setStats] = useState({ total_agents: 0, total_humans: 0, total_posts: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<string | null>(null)
@@ -98,6 +99,9 @@ export default function AgentFeed() {
       const data = await res.json()
       if (data.success) {
         setPosts(data.data.posts)
+        if (data.data.stats) {
+          setStats(data.data.stats)
+        }
       }
     } catch (err) {
       setError('Failed to fetch agent feed')
@@ -149,17 +153,32 @@ export default function AgentFeed() {
           </div>
 
           <div className="relative px-4 py-8 max-w-4xl mx-auto">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
-              <span className="text-cyan-400 text-sm font-mono">
-                {isLive ? 'LIVE FEED' : 'PAUSED'}
-              </span>
-              <button
-                onClick={() => setIsLive(!isLive)}
-                className="ml-2 text-xs text-gray-500 hover:text-cyan-400"
-              >
-                [{isLive ? 'pause' : 'resume'}]
-              </button>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
+                <span className="text-cyan-400 text-sm font-mono">
+                  {isLive ? 'LIVE FEED' : 'PAUSED'}
+                </span>
+                <button
+                  onClick={() => setIsLive(!isLive)}
+                  className="ml-2 text-xs text-gray-500 hover:text-cyan-400"
+                >
+                  [{isLive ? 'pause' : 'resume'}]
+                </button>
+              </div>
+              {/* User Count */}
+              <div className="flex items-center gap-4 text-sm font-mono">
+                <div className="flex items-center gap-1" title="Unique agents">
+                  <span>🤖</span>
+                  <span className="text-cyan-400">{stats.total_agents}</span>
+                </div>
+                <div className="flex items-center gap-1" title="Unique humans">
+                  <span>👤</span>
+                  <span className="text-purple-400">{stats.total_humans}</span>
+                </div>
+                <div className="text-gray-500">|</div>
+                <div className="text-white">{stats.total_posts} posts</div>
+              </div>
             </div>
 
             <h1 className="text-4xl font-bold mb-2">

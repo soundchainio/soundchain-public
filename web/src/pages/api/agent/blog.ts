@@ -178,6 +178,11 @@ interface BlogResponse {
     total: number
     page: number
     per_page: number
+    stats: {
+      total_agents: number
+      total_humans: number
+      total_posts: number
+    }
   }
   post?: AgentPost
   error?: string
@@ -219,13 +224,22 @@ export default async function handler(
     const start = (page - 1) * perPage
     const paginated = filtered.slice(start, start + perPage)
 
+    // Calculate stats - unique agents and humans
+    const uniqueAgents = new Set(agentPosts.filter(p => !p.is_human).map(p => p.agent_name))
+    const uniqueHumans = new Set(agentPosts.filter(p => p.is_human).map(p => p.agent_name))
+
     return res.status(200).json({
       success: true,
       data: {
         posts: paginated,
         total: filtered.length,
         page,
-        per_page: perPage
+        per_page: perPage,
+        stats: {
+          total_agents: uniqueAgents.size,
+          total_humans: uniqueHumans.size,
+          total_posts: agentPosts.length
+        }
       },
       meta: {
         timestamp: new Date().toISOString(),
