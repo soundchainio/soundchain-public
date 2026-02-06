@@ -14,37 +14,28 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { apolloClient } from 'lib/apollo'
 import { gql } from '@apollo/client'
 
-// Query to get platform stats
-const PLATFORM_STATS_QUERY = gql`
-  query PlatformStats {
-    explore {
-      totalTracks
-      totalProfiles
-    }
-    exploreTracks(page: { first: 1 }) {
-      pageInfo {
-        totalCount
-      }
-    }
-  }
-`
-
-// Query to sample tracks and count IPFS
+// Query to sample tracks and count IPFS/NFTs
 const SAMPLE_TRACKS_QUERY = gql`
-  query SampleTracks($limit: Int!) {
+  query SampleTracks($limit: Int) {
     exploreTracks(page: { first: $limit }) {
       nodes {
         id
-        ipfsCid
-        ipfsGatewayUrl
         artworkUrl
-        isNft
-        scid
+        assetUrl
+        nftData {
+          ipfsCid
+          tokenId
+          contract
+        }
       }
       pageInfo {
         totalCount
         hasNextPage
       }
+    }
+    explore {
+      totalTracks
+      totalProfiles
     }
   }
 `
@@ -89,25 +80,18 @@ export default async function handler(
   }
 
   try {
-    // Get total counts
-    const { data: statsData } = await apolloClient.query({
-      query: PLATFORM_STATS_QUERY,
-      fetchPolicy: 'no-cache'
-    })
-
-    const totalTracks = statsData?.explore?.totalTracks ||
-                        statsData?.exploreTracks?.pageInfo?.totalCount || 0
-    const totalProfiles = statsData?.explore?.totalProfiles || 0
-
-    // Sample tracks to estimate IPFS/NFT percentages
-    const sampleSize = Math.min(500, totalTracks)
-    const { data: sampleData } = await apolloClient.query({
+    // Sample tracks and get totals in one query
+    const { data } = await apolloClient.query({
       query: SAMPLE_TRACKS_QUERY,
-      variables: { limit: sampleSize },
+      variables: { limit: 500 },
       fetchPolicy: 'no-cache'
     })
 
-    const tracks = sampleData?.exploreTracks?.nodes || []
+    const totalTracks = data?.explore?.totalTracks ||
+                        data?.exploreTracks?.pageInfo?.totalCount || 0
+    const totalProfiles = data?.explore?.totalProfiles || 0
+
+    const tracks = data?.exploreTracks?.nodes || []
     const actualSampleSize = tracks.length
 
     // Count IPFS and NFT tracks in sample
@@ -117,10 +101,14 @@ export default async function handler(
     let scidCount = 0
 
     tracks.forEach((track: any) => {
-      if (track.ipfsCid || track.ipfsGatewayUrl) ipfsAudioCount++
+      // NFT = has nftData with tokenId or contract
+      if (track.nftData?.tokenId || track.nftData?.contract) nftCount++
+      // IPFS audio = nftData.ipfsCid exists OR assetUrl contains ipfs/pinata
+      if (track.nftData?.ipfsCid || track.assetUrl?.includes('ipfs') || track.assetUrl?.includes('pinata')) ipfsAudioCount++
+      // IPFS artwork = artworkUrl contains ipfs/pinata
       if (track.artworkUrl?.includes('ipfs') || track.artworkUrl?.includes('pinata')) ipfsArtworkCount++
-      if (track.isNft) nftCount++
-      if (track.scid) scidCount++
+      // SCID = has nftData (on-chain registered)
+      if (track.nftData) scidCount++
     })
 
     // Calculate percentages and estimate totals
