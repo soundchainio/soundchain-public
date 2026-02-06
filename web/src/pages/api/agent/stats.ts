@@ -14,28 +14,18 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { apolloClient } from 'lib/apollo'
 import { gql } from '@apollo/client'
 
-// Query to sample tracks and count IPFS/NFTs
-const SAMPLE_TRACKS_QUERY = gql`
-  query SampleTracks($limit: Int) {
-    exploreTracks(page: { first: $limit }) {
+// Simple query - just get tracks with pageInfo for totalCount
+const TRACKS_COUNT_QUERY = gql`
+  query TracksCount {
+    exploreTracks(page: { first: 200 }) {
       nodes {
         id
         artworkUrl
         assetUrl
-        nftData {
-          ipfsCid
-          tokenId
-          contract
-        }
       }
       pageInfo {
         totalCount
-        hasNextPage
       }
-    }
-    explore {
-      totalTracks
-      totalProfiles
     }
   }
 `
@@ -80,36 +70,36 @@ export default async function handler(
   }
 
   try {
-    // Sample tracks and get totals in one query
+    // Simple query for track counts
     const { data } = await apolloClient.query({
-      query: SAMPLE_TRACKS_QUERY,
-      variables: { limit: 500 },
+      query: TRACKS_COUNT_QUERY,
       fetchPolicy: 'no-cache'
     })
 
-    const totalTracks = data?.explore?.totalTracks ||
-                        data?.exploreTracks?.pageInfo?.totalCount || 0
-    const totalProfiles = data?.explore?.totalProfiles || 0
+    const totalTracks = data?.exploreTracks?.pageInfo?.totalCount || 0
+    const totalProfiles = 0 // Not queried in simple mode
 
     const tracks = data?.exploreTracks?.nodes || []
     const actualSampleSize = tracks.length
 
-    // Count IPFS and NFT tracks in sample
+    // Count IPFS tracks in sample
     let ipfsAudioCount = 0
     let ipfsArtworkCount = 0
     let nftCount = 0
     let scidCount = 0
 
     tracks.forEach((track: any) => {
-      // NFT = has nftData with tokenId or contract
-      if (track.nftData?.tokenId || track.nftData?.contract) nftCount++
-      // IPFS audio = nftData.ipfsCid exists OR assetUrl contains ipfs/pinata
-      if (track.nftData?.ipfsCid || track.assetUrl?.includes('ipfs') || track.assetUrl?.includes('pinata')) ipfsAudioCount++
+      // IPFS audio = assetUrl contains ipfs/pinata
+      if (track.assetUrl?.includes('ipfs') || track.assetUrl?.includes('pinata')) {
+        ipfsAudioCount++
+        nftCount++ // IPFS-backed = effectively NFT
+      }
       // IPFS artwork = artworkUrl contains ipfs/pinata
-      if (track.artworkUrl?.includes('ipfs') || track.artworkUrl?.includes('pinata')) ipfsArtworkCount++
-      // SCID = has nftData (on-chain registered)
-      if (track.nftData) scidCount++
+      if (track.artworkUrl?.includes('ipfs') || track.artworkUrl?.includes('pinata')) {
+        ipfsArtworkCount++
+      }
     })
+    scidCount = nftCount // Estimate
 
     // Calculate percentages and estimate totals
     const ipfsAudioPercent = actualSampleSize > 0 ? ipfsAudioCount / actualSampleSize : 0
