@@ -7,10 +7,8 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { apolloClient } from 'lib/apollo'
-import { gql } from '@apollo/client'
 
-const SEARCH_TRACKS_QUERY = gql`
+const SEARCH_TRACKS_QUERY = `
   query AgentSearchTracks($search: String, $limit: Int) {
     exploreTracks(search: $search, page: { first: $limit }) {
       nodes {
@@ -40,6 +38,20 @@ const SEARCH_TRACKS_QUERY = gql`
     }
   }
 `
+
+// Direct GraphQL fetch for serverless compatibility
+async function fetchGraphQL(query: string, variables: Record<string, any>) {
+  // Use direct API Gateway URL - custom domain has issues
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables })
+  })
+
+  return response.json()
+}
 
 interface TrackSearchResponse {
   success: boolean
@@ -90,13 +102,10 @@ export default async function handler(
   }
 
   try {
-    const { data } = await apolloClient.query({
-      query: SEARCH_TRACKS_QUERY,
-      variables: { search: query, limit },
-      fetchPolicy: 'no-cache'
-    })
+    const result = await fetchGraphQL(SEARCH_TRACKS_QUERY, { search: query, limit })
+    const data = result.data
 
-    const tracks = (data.exploreTracks?.nodes || []).map((track: any) => ({
+    const tracks = (data?.exploreTracks?.nodes || []).map((track: any) => ({
       id: track.id,
       title: track.title,
       artist: track.artist,

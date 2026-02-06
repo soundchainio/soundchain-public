@@ -36,8 +36,8 @@ const TRACKS_QUERY = `
 
 // Direct GraphQL fetch for serverless
 async function fetchTracks(limit: number = 100) {
-  // Use the configured API URL with /graphql suffix
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
+  // Use direct API Gateway URL - custom domain has issues
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
 
   console.log('[OGUN Radio] Fetching from:', apiUrl)
 

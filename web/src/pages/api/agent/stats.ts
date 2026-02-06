@@ -31,7 +31,8 @@ const TRACKS_COUNT_QUERY = `
 
 // Direct GraphQL fetch for serverless
 async function fetchStats(limit: number = 200) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
+  // Use direct API Gateway URL - custom domain has issues
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
 
   console.log('[Agent Stats] Fetching from:', apiUrl)
 
