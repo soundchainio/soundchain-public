@@ -20,8 +20,23 @@
     }
     p.sub {
       color: #888;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
       font-size: 14px;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #00ffff;
+      font-size: 18px;
+    }
+    .loading::after {
+      content: '';
+      animation: dots 1.5s infinite;
+    }
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
     }
     .agent-card {
       background: linear-gradient(135deg, #1a1a2e, #16213e);
@@ -34,13 +49,6 @@
       font-size: 20px;
       font-weight: bold;
       color: #00ffff;
-      margin-bottom: 8px;
-    }
-    .agent-key {
-      font-family: monospace;
-      font-size: 10px;
-      color: #666;
-      word-break: break-all;
       margin-bottom: 15px;
     }
     .claim-btn {
@@ -49,7 +57,7 @@
       background: linear-gradient(90deg, #00ffff, #00cccc);
       color: #000;
       text-decoration: none;
-      padding: 16px 20px;
+      padding: 18px 20px;
       border-radius: 8px;
       font-weight: bold;
       font-size: 18px;
@@ -60,66 +68,125 @@
       transform: scale(0.98);
       background: #00cccc;
     }
+    .claimed {
+      background: #003300;
+      border-color: #00ff00;
+    }
+    .claimed .claim-btn {
+      background: #00ff00;
+    }
+    .recommended {
+      border-color: #ffff00;
+      border-width: 2px;
+    }
+    .recommended .agent-name::after {
+      content: " ⭐";
+    }
+    .error-card {
+      border-color: #ff3333;
+      background: #1a0000;
+    }
     .note {
-      background: #331100;
-      border: 1px solid #ff6600;
+      background: #001a33;
+      border: 1px solid #0066ff;
       border-radius: 8px;
       padding: 15px;
       margin-top: 30px;
       font-size: 14px;
-      color: #ffaa66;
+      color: #66aaff;
     }
-    .recommended {
-      border-color: #00ff00;
-      background: #001100;
+    .refresh-btn {
+      display: block;
+      width: 100%;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
     }
-    .recommended .agent-name::after {
-      content: " ⭐ RECOMMENDED";
+    .refresh-btn:active {
+      background: #444;
+    }
+    .timestamp {
+      color: #666;
       font-size: 12px;
-      color: #00ff00;
+      text-align: center;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <h1>🤖 Claim Your Moltbook Agents</h1>
-  <p class="sub">Tap a button to claim. Links refresh each page load.</p>
+  <p class="sub">Fresh claim links generated on each load</p>
 
-  <div class="agent-card recommended">
-    <div class="agent-name">SoundChain</div>
-    <div class="agent-key">moltbook_sk_5j7_dd-1OpbpO8MC01D-G7gD-lNiEPRI</div>
-    <a href="https://moltbook.com/claim/moltbook_claim_hj2QGCvVwQ93bTRHahpJScd9iHrWrsAj" class="claim-btn">
-      CLAIM SOUNDCHAIN
-    </a>
+  <div id="agents">
+    <div class="loading">Fetching fresh claim links</div>
   </div>
 
-  <div class="agent-card">
-    <div class="agent-name">OGUN</div>
-    <div class="agent-key">moltbook_sk_-Q3B4vccy5MXXiNdOEPYLD2QIlCqrM-8</div>
-    <a href="https://moltbook.com/claim/moltbook_claim_4-n228Cl-YHnPBxpZ538wNYCOhcaqsrC" class="claim-btn">
-      CLAIM OGUN
-    </a>
-  </div>
-
-  <div class="agent-card">
-    <div class="agent-name">SoundChainProtocol</div>
-    <div class="agent-key">moltbook_sk_VdixDUYBnwuoY004sjD0iPUWufWj1WmK</div>
-    <a href="https://moltbook.com/claim/moltbook_claim_wcPhP7Qy_jd2w8Cv-8dcnYLF40ds6rUk" class="claim-btn">
-      CLAIM SOUNDCHAINPROTOCOL
-    </a>
-  </div>
-
-  <div class="agent-card">
-    <div class="agent-name">SoundChainIO</div>
-    <div class="agent-key">moltbook_sk_EauJa2yb2aYRQtrD-Kjbjyk4wn8dXwhH</div>
-    <a href="https://moltbook.com/claim/moltbook_claim_KP38jABO_ODvJpny8B7r6KssLe1XLbVE" class="claim-btn">
-      CLAIM SOUNDCHAINIO
-    </a>
-  </div>
+  <button class="refresh-btn" onclick="loadAgents()">🔄 Refresh Links</button>
+  <div id="timestamp" class="timestamp"></div>
 
   <div class="note">
-    ⚠️ <strong>Claim links expire quickly!</strong><br><br>
-    If a link says "expired", refresh this page to get new links.<br><br>
-    After claiming, you can post announcements using the API key shown above.
+    ⚠️ <strong>Claim links expire in ~2 minutes!</strong><br><br>
+    1. Tap "Refresh Links" to get fresh URLs<br>
+    2. Immediately tap the CLAIM button<br>
+    3. Complete claim process on Moltbook<br><br>
+    After claiming, you'll have full control of the agent.
   </div>
+
+  <script>
+    async function loadAgents() {
+      const container = document.getElementById('agents');
+      const timestampEl = document.getElementById('timestamp');
+      container.innerHTML = '<div class="loading">Fetching fresh claim links</div>';
+
+      try {
+        const response = await fetch('/api/moltbook-claims');
+        const data = await response.json();
+
+        if (!data.success) {
+          container.innerHTML = '<div class="error-card agent-card">Failed to load agents</div>';
+          return;
+        }
+
+        timestampEl.textContent = 'Generated: ' + new Date(data.generated_at).toLocaleTimeString();
+
+        container.innerHTML = data.agents.map(agent => {
+          const classes = ['agent-card'];
+          if (agent.recommended) classes.push('recommended');
+          if (agent.claimed) classes.push('claimed');
+          if (!agent.claimUrl && !agent.claimed) classes.push('error-card');
+
+          let buttonText = 'CLAIM ' + agent.name.toUpperCase();
+          let buttonHref = agent.claimUrl || '#';
+
+          if (agent.claimed) {
+            buttonText = '✓ ALREADY CLAIMED';
+            buttonHref = 'https://moltbook.com/u/' + agent.name;
+          } else if (!agent.claimUrl) {
+            buttonText = 'ERROR: ' + (agent.error || 'No link');
+          }
+
+          return `
+            <div class="${classes.join(' ')}">
+              <div class="agent-name">${agent.name}</div>
+              <a href="${buttonHref}" class="claim-btn" target="_blank">
+                ${buttonText}
+              </a>
+            </div>
+          `;
+        }).join('');
+
+      } catch (error) {
+        container.innerHTML = '<div class="error-card agent-card">Network error. Check connection.</div>';
+      }
+    }
+
+    // Load on page open
+    loadAgents();
+  </script>
 </body>
 </html>
