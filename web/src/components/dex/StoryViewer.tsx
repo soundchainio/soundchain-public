@@ -527,17 +527,17 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
           </div>
         </div>
 
-        {/* Media */}
+        {/* Media - convert IPFS URLs to gateway URLs */}
         {currentStory.mediaType === 'image' ? (
           <img
-            src={currentStory.mediaUrl}
+            src={getIpfsUrl(currentStory.mediaUrl)}
             alt=""
             className="w-full h-full object-cover"
           />
         ) : (
           <video
             ref={videoRef}
-            src={currentStory.mediaUrl}
+            src={getIpfsUrl(currentStory.mediaUrl)}
             className="w-full h-full object-cover"
             autoPlay
             muted={isMuted}
