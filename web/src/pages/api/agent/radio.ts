@@ -10,10 +10,10 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// GraphQL query for radio tracks
+// GraphQL query for radio tracks - simplified without search variable
 const TRACKS_QUERY = `
-  query RadioTracks($search: String, $limit: Int) {
-    exploreTracks(search: $search, page: { first: $limit }) {
+  query RadioTracks($limit: Int) {
+    exploreTracks(page: { first: $limit }) {
       nodes {
         id
         title
@@ -46,7 +46,7 @@ async function fetchTracks(limit: number = 100) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query: TRACKS_QUERY,
-      variables: { search: '', limit }
+      variables: { limit }
     })
   })
 

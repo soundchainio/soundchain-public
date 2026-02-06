@@ -12,10 +12,10 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// Query matching working tracks.ts pattern
+// Query simplified - no search variable
 const TRACKS_COUNT_QUERY = `
-  query StatsTracksQuery($search: String, $limit: Int) {
-    exploreTracks(search: $search, page: { first: $limit }) {
+  query StatsTracksQuery($limit: Int) {
+    exploreTracks(page: { first: $limit }) {
       nodes {
         id
         artworkUrl
@@ -41,7 +41,7 @@ async function fetchStats(limit: number = 200) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query: TRACKS_COUNT_QUERY,
-      variables: { search: '', limit }
+      variables: { limit }
     })
   })
 
