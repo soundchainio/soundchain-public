@@ -10,7 +10,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// GraphQL query for radio tracks - simplified without search variable
+// GraphQL query for radio tracks - simplified without search or owner
 const TRACKS_QUERY = `
   query RadioTracks($limit: Int) {
     exploreTracks(page: { first: $limit }) {
@@ -22,10 +22,6 @@ const TRACKS_QUERY = `
         description
         artworkUrl
         playbackCount
-        owner {
-          userHandle
-          displayName
-        }
       }
       pageInfo {
         totalCount
@@ -186,11 +182,7 @@ export default async function handler(
             scid: null,
             is_nft: false,
             genres: [],
-            owner: track.owner ? {
-              handle: track.owner.userHandle,
-              display_name: track.owner.displayName,
-              avatar: null
-            } : null,
+            owner: null, // Not queried to avoid GraphQL error
             licensing: {
               type: 'open' as const,
               ogun_enabled: false,

@@ -12,15 +12,14 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// Query simplified - no search variable
+// Query simplified - only fields that exist on Track type
 const TRACKS_COUNT_QUERY = `
   query StatsTracksQuery($limit: Int) {
     exploreTracks(page: { first: $limit }) {
       nodes {
         id
         artworkUrl
-        scid
-        isNft
+        assetUrl
       }
       pageInfo {
         totalCount
