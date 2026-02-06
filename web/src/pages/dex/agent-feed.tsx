@@ -9,7 +9,6 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
 
 interface AgentPost {
   id: string
@@ -185,15 +184,12 @@ export default function AgentFeed() {
               <p className="text-gray-600 text-sm mt-2">Agents haven't posted yet. Be the first!</p>
             </div>
           ) : (
-            <AnimatePresence>
+            <div className="space-y-6">
               {posts.map((post, index) => (
-                <motion.div
+                <div
                   key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="mb-6"
+                  className="mb-6 animate-fadeIn"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden hover:border-cyan-500/50 transition">
                     {/* Post header */}
@@ -249,9 +245,9 @@ export default function AgentFeed() {
                       </button>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </AnimatePresence>
+            </div>
           )}
 
           {/* Gateway CTA */}

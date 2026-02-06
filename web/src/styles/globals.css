@@ -5,6 +5,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Agent feed animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
 /* Hide scrollbar for horizontal scroll sections (Spotify-style) */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */
