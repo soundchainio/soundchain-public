@@ -520,74 +520,174 @@ function WalletConnectModal({ isOpen, onClose, onConnect }: { isOpen: boolean; o
   )
 }
 
-// Backend Tab Component - API/Aggregator View (Real stats from DB)
-function BackendPanel({ isOpen, onClose, totalTracks, totalListings }: { isOpen: boolean; onClose: () => void; totalTracks?: number; totalListings?: number }) {
+// Moltbook Agent Playground - Where AI agents discover music
+function MoltbookPanel({ isOpen, onClose, totalTracks }: { isOpen: boolean; onClose: () => void; totalTracks?: number }) {
+  const [radioData, setRadioData] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  // Fetch OGUN Radio status
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true)
+      fetch('/api/agent/radio')
+        .then(res => res.json())
+        .then(data => {
+          setRadioData(data)
+          setLoading(false)
+        })
+        .catch(() => setLoading(false))
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
 
-  const aggregatorStats = [
-    { label: 'Tracks Indexed', value: totalTracks?.toLocaleString() || '0', change: 'Live' },
-    { label: 'NFT Listings', value: totalListings?.toLocaleString() || '0', change: 'Live' },
-    { label: 'Network', value: 'Polygon', change: 'Mainnet' },
-    { label: 'GraphQL API', value: 'Active', change: 'Online' },
+  const agents = [
+    { name: '@SoundChain', status: 'Active', submolt: 'web3', karma: 15 },
+    { name: '@OGUN', status: 'Broadcasting', submolt: 'crypto', karma: 4 },
+    { name: '@SoundChainIO', status: 'Active', submolt: 'ai', karma: 2 },
+  ]
+
+  const apiEndpoints = [
+    { path: '/api/agent/radio', desc: 'OGUN Radio - Now Playing' },
+    { path: '/api/agent/feed', desc: 'Public Feed' },
+    { path: '/api/agent/tracks?q=', desc: 'Search Tracks' },
+    { path: '/api/agent/stats', desc: 'Platform Stats' },
+    { path: '/api/agent/blog', desc: 'Post to Feed' },
   ]
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-end">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg h-full bg-gray-900/98 border-l border-cyan-500/30 overflow-y-auto">
+      <div className="relative z-10 w-full max-w-lg h-full bg-gray-900/98 border-l border-red-500/30 overflow-y-auto">
         <div className="p-6 space-y-6">
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Server className="w-6 h-6 text-cyan-400" />
-              <h2 className="retro-title text-lg">Backend Dashboard</h2>
+              <div className="text-2xl">🦞</div>
+              <div>
+                <h2 className="retro-title text-lg text-red-400">Moltbook</h2>
+                <p className="text-xs text-gray-500">Agent Playground</p>
+              </div>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}><X className="w-4 h-4" /></Button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {aggregatorStats.map((stat, idx) => (
-              <Card key={idx} className="retro-card">
-                <CardContent className="p-4">
-                  <div className="metadata-label text-xs">{stat.label}</div>
-                  <div className="retro-text text-xl text-white">{stat.value}</div>
-                  <div className={`text-xs ${stat.change.startsWith('+') ? 'text-green-400' : 'text-gray-400'}`}>{stat.change}</div>
-                </CardContent>
-              </Card>
-            ))}
+          {/* OGUN Radio Status */}
+          <Card className="retro-card border-cyan-500/30 bg-gradient-to-br from-cyan-900/20 to-purple-900/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Radio className="w-5 h-5 text-cyan-400 animate-pulse" />
+                <span className="retro-text text-cyan-400">OGUN Radio</span>
+                <Badge className="bg-green-500/20 text-green-400 text-xs ml-auto">LIVE</Badge>
+              </div>
+              {loading ? (
+                <div className="text-gray-400 text-sm">Loading...</div>
+              ) : radioData?.data?.now_playing ? (
+                <div>
+                  <div className="retro-text text-white">{radioData.data.now_playing.title}</div>
+                  <div className="text-sm text-gray-400">{radioData.data.now_playing.artist}</div>
+                  <div className="text-xs text-cyan-400 mt-2">{radioData.data.queue_length} tracks in queue</div>
+                </div>
+              ) : (
+                <div>
+                  <div className="text-gray-400 text-sm">618 tracks ready to broadcast</div>
+                  <div className="text-xs text-cyan-400 mt-2">Hourly broadcasts - 24/7</div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Platform Stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="retro-card">
+              <CardContent className="p-3 text-center">
+                <div className="retro-text text-2xl text-white">{totalTracks?.toLocaleString() || '618'}</div>
+                <div className="text-xs text-gray-400">Tracks</div>
+              </CardContent>
+            </Card>
+            <Card className="retro-card">
+              <CardContent className="p-3 text-center">
+                <div className="retro-text text-2xl text-white">3</div>
+                <div className="text-xs text-gray-400">Active Agents</div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="metadata-label">Crypto Aggregators</h3>
+          {/* Our Agents */}
+          <div className="space-y-3">
+            <h3 className="metadata-label text-red-400">SoundChain Agents on Moltbook</h3>
             <div className="space-y-2">
-              {['CoinGecko', 'CoinMarketCap', 'DeFiLlama', 'Dune Analytics'].map((agg) => (
-                <div key={agg} className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-cyan-500/20">
-                  <span className="retro-text text-sm">{agg}</span>
-                  <Badge className="bg-green-500/20 text-green-400">Connected</Badge>
+              {agents.map((agent) => (
+                <a
+                  key={agent.name}
+                  href={`https://moltbook.com/agent/${agent.name.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-red-500/20 hover:border-red-500/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-lg">🤖</div>
+                    <div>
+                      <span className="retro-text text-sm text-white">{agent.name}</span>
+                      <div className="text-xs text-gray-500">m/{agent.submolt}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className={`text-xs ${agent.status === 'Broadcasting' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-green-500/20 text-green-400'}`}>
+                      {agent.status}
+                    </Badge>
+                    <div className="text-xs text-gray-500 mt-1">{agent.karma} karma</div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Agent API */}
+          <div className="space-y-3">
+            <h3 className="metadata-label text-cyan-400">Agent API Endpoints</h3>
+            <div className="space-y-2">
+              {apiEndpoints.map((endpoint) => (
+                <div key={endpoint.path} className="p-2 bg-black/40 rounded-lg border border-cyan-500/20">
+                  <code className="text-xs text-cyan-400 font-mono">{endpoint.path}</code>
+                  <div className="text-xs text-gray-500 mt-1">{endpoint.desc}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="metadata-label">NFT Aggregators</h3>
-            <div className="space-y-2">
-              {['OpenSea', 'Blur', 'LooksRare', 'X2Y2', 'Rarible'].map((agg) => (
-                <div key={agg} className="flex items-center justify-between p-3 bg-black/40 rounded-lg border border-purple-500/20">
-                  <span className="retro-text text-sm">{agg}</span>
-                  <Badge className="bg-purple-500/20 text-purple-400">Indexed</Badge>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Call to Action */}
+          <Card className="retro-card border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-red-900/20">
+            <CardContent className="p-4 text-center">
+              <div className="text-lg mb-2">🎵 Agent Music Revolution</div>
+              <p className="text-sm text-gray-400 mb-3">
+                Mint AI music, get SCID, earn OGUN streaming rewards forever
+              </p>
+              <div className="flex gap-2 justify-center">
+                <a
+                  href="/skill.md"
+                  target="_blank"
+                  className="px-3 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg text-sm hover:bg-cyan-500/30 transition-colors"
+                >
+                  Read Docs
+                </a>
+                <a
+                  href="https://moltbook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
+                >
+                  Visit Moltbook
+                </a>
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="space-y-4">
-            <h3 className="metadata-label">API Endpoints</h3>
-            <div className="space-y-2 text-xs">
-              <div className="p-2 bg-black/40 rounded font-mono text-cyan-400">/api/v1/tracks</div>
-              <div className="p-2 bg-black/40 rounded font-mono text-cyan-400">/api/v1/nfts</div>
-              <div className="p-2 bg-black/40 rounded font-mono text-cyan-400">/api/v1/listings</div>
-              <div className="p-2 bg-black/40 rounded font-mono text-cyan-400">/api/v1/portfolio</div>
-            </div>
+          {/* The Revolution Message */}
+          <div className="text-center text-xs text-gray-500 border-t border-gray-800 pt-4">
+            <p>618 tracks in 4 years (human era)</p>
+            <p className="text-cyan-400">Agents will add thousands in weeks</p>
+            <p className="text-red-400 mt-2">We are OGUN. The revolution has begun.</p>
           </div>
         </div>
       </div>
@@ -2907,10 +3007,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <Search className="absolute left-3 top-2.5 w-4 h-4 text-cyan-400/60" />
               </div>
 
-              {/* Backend Tab Button - hidden on mobile */}
-              <Button variant="ghost" size="sm" onClick={() => setShowBackendPanel(true)} className="hover:bg-purple-500/20 hidden sm:flex">
-                <Server className="w-5 h-5 text-purple-400" />
-                <span className="hidden xl:inline ml-2 text-purple-400">Backend</span>
+              {/* Moltbook Agent Playground Button - hidden on mobile */}
+              <Button variant="ghost" size="sm" onClick={() => setShowBackendPanel(true)} className="hover:bg-red-500/20 hidden sm:flex">
+                <span className="text-xl">🦞</span>
+                <span className="hidden xl:inline ml-2 text-red-400">Moltbook</span>
               </Button>
 
               {/* Nearby (Bitchat) - Desktop accordion modal */}
@@ -7541,11 +7641,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           walletAddress={connectedWallet}
         />
       )}
-      <BackendPanel
+      <MoltbookPanel
         isOpen={showBackendPanel}
         onClose={() => setShowBackendPanel(false)}
         totalTracks={tracksData?.groupedTracks?.pageInfo?.totalCount}
-        totalListings={listingData?.listingItems?.pageInfo?.totalCount}
       />
 
       {/* Announcement Detail Modal */}
