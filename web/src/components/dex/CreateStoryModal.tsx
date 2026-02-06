@@ -500,49 +500,71 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         // Reliable S3 → IPFS path: Upload to S3 first, then pin to IPFS
         setUploadStep('uploading')
         setUploadProgress(10)
+        console.log('[CreateStoryModal] Step 1: Uploading to S3...', { isLoggedIn, fileSize: mediaFile.size, fileType: mediaFile.type })
 
-        const s3Url = await upload([mediaFile])
-        if (!s3Url) {
-          throw new Error('Failed to upload file')
+        let s3Url: string | undefined
+        try {
+          s3Url = await upload([mediaFile])
+        } catch (uploadErr: any) {
+          console.error('[CreateStoryModal] S3 upload failed:', uploadErr)
+          throw new Error(`S3 upload failed: ${uploadErr?.message || 'Unknown error'}`)
         }
+        if (!s3Url) {
+          throw new Error('Failed to upload file - no URL returned')
+        }
+        console.log('[CreateStoryModal] Step 1 complete: S3 URL =', s3Url)
         setUploadProgress(50)
 
         setUploadStep('pinning')
         setUploadProgress(60)
 
         const fileKey = s3Url.substring(s3Url.lastIndexOf('/') + 1)
+        console.log('[CreateStoryModal] Step 2: Pinning to IPFS...', { fileKey, isLoggedIn })
 
         if (isLoggedIn) {
-          const { data: pinResult } = await pinToIPFS({
-            variables: {
-              input: {
-                fileKey,
-                fileName: `story-${Date.now()}`,
+          try {
+            const { data: pinResult } = await pinToIPFS({
+              variables: {
+                input: {
+                  fileKey,
+                  fileName: `story-${Date.now()}`,
+                },
               },
-            },
-          })
-          if (!pinResult?.pinToIPFS?.cid) {
-            throw new Error('Failed to pin to IPFS')
+            })
+            if (!pinResult?.pinToIPFS?.cid) {
+              throw new Error('No CID returned from pinToIPFS')
+            }
+            ipfsCid = pinResult.pinToIPFS.cid
+            console.log('[CreateStoryModal] Step 2 complete: CID =', ipfsCid)
+          } catch (pinErr: any) {
+            console.error('[CreateStoryModal] pinToIPFS failed:', pinErr)
+            throw new Error(`IPFS pinning failed: ${pinErr?.message || 'Unknown error'}`)
           }
-          ipfsCid = pinResult.pinToIPFS.cid
         } else {
-          const { data: pinResult } = await guestPinToIPFS({
-            variables: {
-              input: {
-                fileKey,
-                fileName: `guest-story-${Date.now()}`,
+          try {
+            const { data: pinResult } = await guestPinToIPFS({
+              variables: {
+                input: {
+                  fileKey,
+                  fileName: `guest-story-${Date.now()}`,
+                },
               },
-            },
-          })
-          if (!pinResult?.guestPinToIPFS?.cid) {
-            throw new Error('Failed to pin to IPFS')
+            })
+            if (!pinResult?.guestPinToIPFS?.cid) {
+              throw new Error('No CID returned from guestPinToIPFS')
+            }
+            ipfsCid = pinResult.guestPinToIPFS.cid
+            console.log('[CreateStoryModal] Step 2 complete (guest): CID =', ipfsCid)
+          } catch (pinErr: any) {
+            console.error('[CreateStoryModal] guestPinToIPFS failed:', pinErr)
+            throw new Error(`IPFS pinning failed: ${pinErr?.message || 'Unknown error'}`)
           }
-          ipfsCid = pinResult.guestPinToIPFS.cid
         }
         setUploadProgress(85)
       }
 
       const ipfsUrl = `ipfs://${ipfsCid}`
+      console.log('[CreateStoryModal] IPFS URL ready:', ipfsUrl)
 
       // Prepare overlays
       const overlays = convertLayersToOverlays()
@@ -550,19 +572,26 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
       // Step 3: Create story with overlays
       setUploadStep('creating')
       setUploadProgress(90)
+      console.log('[CreateStoryModal] Step 3: Creating story...', { isLoggedIn, overlaysCount: overlays.length })
 
       if (isLoggedIn) {
-        await createStoryWithOverlays({
-          variables: {
-            mediaUrl: ipfsUrl,
-            mediaType,
-            duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
-            overlays: overlays.length > 0 ? overlays : null,
-            attachedTrackId: selectedNftTrack?.id || null,
-            caption: normalizedEmbedUrl || null, // Use caption field for embed URL
-          },
-        })
-        toast.success(selectedNftTrack ? 'Reel shared with NFT music! SCID rewards enabled.' : 'Story shared!')
+        try {
+          await createStoryWithOverlays({
+            variables: {
+              mediaUrl: ipfsUrl,
+              mediaType,
+              duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
+              overlays: overlays.length > 0 ? overlays : null,
+              attachedTrackId: selectedNftTrack?.id || null,
+              caption: normalizedEmbedUrl || null, // Use caption field for embed URL
+            },
+          })
+          console.log('[CreateStoryModal] Step 3 complete: Story created!')
+          toast.success(selectedNftTrack ? 'Reel shared with NFT music! SCID rewards enabled.' : 'Story shared!')
+        } catch (storyErr: any) {
+          console.error('[CreateStoryModal] createStoryWithOverlays failed:', storyErr)
+          throw new Error(`Story creation failed: ${storyErr?.message || 'Unknown error'}`)
+        }
       } else {
         // Use actual wallet if available, otherwise generate random
         let walletAddress = me?.magicWalletAddress || me?.googleWalletAddress || me?.discordWalletAddress || me?.twitchWalletAddress
