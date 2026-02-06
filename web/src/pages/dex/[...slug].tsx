@@ -2014,6 +2014,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }
 
   // Posts are now handled by the Posts component directly - no need for custom query
+  // Memoize Posts to prevent re-renders when modal state changes (prevents video/audio from stopping)
+  const MemoizedFeedPosts = useMemo(() => <Posts viewMode={viewMode} />, [viewMode])
+  const MemoizedMyFeedPosts = useMemo(() => <Posts disableVirtualization viewMode={viewMode} />, [viewMode])
 
   // Handle errors with useEffect (onError is deprecated in Apollo v3.14+)
   useEffect(() => {
@@ -4223,8 +4226,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <LeftSidebar />
 
               {/* Main Feed - Posts lead, clean and content-first */}
+              {/* Using memoized Posts to prevent re-renders when header modals open (keeps video/audio playing) */}
               <div className="flex-1 max-w-full md:max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-                <Posts viewMode={viewMode} />
+                {MemoizedFeedPosts}
               </div>
 
               {/* Right Sidebar - Desktop only */}
@@ -6953,8 +6957,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     {/* Tab Content */}
                     <div className="min-h-[400px] bg-black/40 backdrop-blur-xl rounded-xl p-2 border border-white/10">
                       {/* My Feed - Full social feed (posts from people you follow + your own) */}
+                      {/* Using memoized Posts to prevent re-renders when header modals open */}
                       {profileTab === 'myfeed' && isViewingOwnProfile && (
-                        <Posts disableVirtualization viewMode={viewMode} />
+                        MemoizedMyFeedPosts
                       )}
                       {/* Posts - Only this user's posts */}
                       {profileTab === 'posts' && (
