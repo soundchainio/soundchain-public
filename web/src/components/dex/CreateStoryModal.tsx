@@ -152,8 +152,8 @@ interface CreateStoryModalProps {
 }
 
 export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModalProps) => {
-  const meData = useMe()
-  const me = meData?.me
+  // useMe() returns the User object directly, not { me: User }
+  const me = useMe()
 
   // More robust login check - check for user ID, profile, OR any OAuth wallet
   const isLoggedIn = !!(me?.id || me?.profile || me?.magicWalletAddress || me?.googleWalletAddress)

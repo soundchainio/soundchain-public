@@ -41,8 +41,8 @@ export const ReelSCidTracker = ({
   isPaused,
   onQualified,
 }: ReelSCidTrackerProps) => {
-  const meData = useMe()
-  const me = meData?.me
+  // useMe() returns the User object directly, not { me: User }
+  const me = useMe()
   const profileId = me?.profile?.id
   const walletAddress = me?.magicWalletAddress || me?.googleWalletAddress
 

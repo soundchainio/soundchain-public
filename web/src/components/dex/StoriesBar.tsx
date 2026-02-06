@@ -74,8 +74,8 @@ interface StoriesBarProps {
 }
 
 export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
-  const meData = useMe()
-  const me = meData?.me
+  // useMe() returns the User object directly, not { me: User }
+  const me = useMe()
   const router = useRouter()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
