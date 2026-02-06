@@ -2534,7 +2534,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {showNearbyModal && (
                     <>
                       <div className="fixed inset-0 z-[98] pointer-events-none" />
-                      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-[20rem] z-[99] shadow-2xl border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900 max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                      <Card className="fixed left-1/2 top-16 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-[20rem] z-[99] shadow-2xl border-2 border-green-500/50 bg-gradient-to-b from-neutral-900 via-green-950/10 to-neutral-900 max-h-[70vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between p-3 border-b border-green-500/30 bg-gradient-to-r from-green-900/50 to-cyan-900/50">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-cyan-500 flex items-center justify-center">
@@ -2574,7 +2574,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <>
                       {/* Invisible backdrop - pointer-events-none so it NEVER interferes with media playback */}
                       <div className="fixed inset-0 z-[98] pointer-events-none" />
-                      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-[18rem] z-[99] shadow-2xl max-h-[80vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900" onClick={(e) => e.stopPropagation()}>
+                      <Card className="fixed left-1/2 top-16 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-[18rem] z-[99] shadow-2xl max-h-[75vh] overflow-hidden border-2 border-orange-500/50 bg-gradient-to-b from-neutral-900 via-orange-950/10 to-neutral-900" onClick={(e) => e.stopPropagation()}>
                       {/* Header */}
                       <div className="flex items-center justify-between p-3 border-b border-orange-500/30 bg-gradient-to-r from-orange-900/50 to-yellow-900/50">
                         <div className="flex items-center gap-2">
@@ -2760,7 +2760,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {showVibesModal && (
                     <>
                       <div className="fixed inset-0 z-[98] pointer-events-none" />
-                      <Card className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-[16rem] z-[99] shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900" onClick={(e) => e.stopPropagation()}>
+                      <Card className="fixed left-1/2 top-16 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-[16rem] z-[99] shadow-2xl border-2 border-purple-500/50 bg-gradient-to-b from-neutral-900 via-purple-950/10 to-neutral-900" onClick={(e) => e.stopPropagation()}>
                       {/* Header */}
                       <div className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gradient-to-r from-purple-900/50 to-cyan-900/50">
                         <div className="flex items-center gap-2">
