@@ -14,14 +14,15 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { apolloClient } from 'lib/apollo'
 import { gql } from '@apollo/client'
 
-// Simple query - just get tracks with pageInfo for totalCount
+// Query matching working tracks.ts pattern
 const TRACKS_COUNT_QUERY = gql`
-  query TracksCount {
-    exploreTracks(page: { first: 200 }) {
+  query StatsTracksQuery($search: String, $limit: Int) {
+    exploreTracks(search: $search, page: { first: $limit }) {
       nodes {
         id
         artworkUrl
-        assetUrl
+        scid
+        isNft
       }
       pageInfo {
         totalCount
@@ -70,9 +71,10 @@ export default async function handler(
   }
 
   try {
-    // Simple query for track counts
+    // Query with empty search to get all tracks
     const { data } = await apolloClient.query({
       query: TRACKS_COUNT_QUERY,
+      variables: { search: '', limit: 200 },
       fetchPolicy: 'no-cache'
     })
 
