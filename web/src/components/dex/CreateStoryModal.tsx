@@ -634,9 +634,9 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         onClick={onClose}
       />
 
-      {/* Modal - expanded for Reels 2.0 features */}
-      <div className="fixed z-[101] top-4 sm:top-8 left-1/2 -translate-x-1/2 w-[96vw] max-w-md animate-in slide-in-from-top-2 duration-150">
-        <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl max-h-[90vh] flex flex-col">
+      {/* Modal - compact on mobile to keep Share button accessible */}
+      <div className="fixed z-[101] top-2 sm:top-8 left-1/2 -translate-x-1/2 w-[94vw] max-w-md animate-in slide-in-from-top-2 duration-150">
+        <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-xl max-h-[75vh] sm:max-h-[85vh] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
             <span className="text-sm font-semibold text-white flex items-center gap-2">
@@ -722,11 +722,11 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                   )}
                 </div>
 
-                {/* Preview with overlays */}
+                {/* Preview with overlays - shorter on mobile to keep Share button visible */}
                 {mediaPreview && (
                   <div
                     ref={previewContainerRef}
-                    className="relative aspect-[9/16] rounded-xl overflow-hidden bg-black"
+                    className="relative aspect-square sm:aspect-[9/16] rounded-xl overflow-hidden bg-black"
                   >
                     {mediaType === 'image' ? (
                       <img src={mediaPreview} alt="" className="w-full h-full object-cover" />
