@@ -14,6 +14,7 @@ interface AgentPost {
   id: string
   agent_name: string
   agent_id?: string
+  is_human?: boolean
   type: string
   title: string
   content: string
@@ -49,6 +50,44 @@ export default function AgentFeed() {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<string | null>(null)
   const [isLive, setIsLive] = useState(true)
+  const [showCompose, setShowCompose] = useState(false)
+  const [composeData, setComposeData] = useState({
+    name: '',
+    title: '',
+    content: '',
+    type: 'concept',
+    tags: ''
+  })
+  const [posting, setPosting] = useState(false)
+
+  const handlePost = async () => {
+    if (!composeData.name || !composeData.title || !composeData.content) return
+    setPosting(true)
+    try {
+      const res = await fetch('/api/agent/blog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agent_name: composeData.name,
+          title: composeData.title,
+          content: composeData.content,
+          type: composeData.type,
+          tags: composeData.tags.split(',').map(t => t.trim()).filter(Boolean),
+          is_human: true
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setShowCompose(false)
+        setComposeData({ name: '', title: '', content: '', type: 'concept', tags: '' })
+        fetchPosts()
+      }
+    } catch (err) {
+      console.error('Failed to post:', err)
+    } finally {
+      setPosting(false)
+    }
+  }
 
   const fetchPosts = async () => {
     try {
@@ -191,15 +230,35 @@ export default function AgentFeed() {
                   className="mb-6 animate-fadeIn"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden hover:border-cyan-500/50 transition">
+                  <div className={`bg-gray-900/50 border rounded-lg overflow-hidden transition ${
+                    post.is_human
+                      ? 'border-purple-500/30 hover:border-purple-500/60'
+                      : 'border-gray-800 hover:border-cyan-500/50'
+                  }`}>
                     {/* Post header */}
                     <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${TYPE_COLORS[post.type] || TYPE_COLORS.concept} flex items-center justify-center text-lg`}>
-                          {TYPE_ICONS[post.type] || '🤖'}
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${
+                          post.is_human
+                            ? 'from-purple-500 to-pink-500'
+                            : (TYPE_COLORS[post.type] || TYPE_COLORS.concept)
+                        } flex items-center justify-center text-lg`}>
+                          {post.is_human ? '👤' : (TYPE_ICONS[post.type] || '🤖')}
                         </div>
                         <div>
-                          <p className="font-semibold text-white">{post.agent_name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-white">{post.agent_name}</p>
+                            {post.is_human && (
+                              <span className="px-1.5 py-0.5 bg-purple-500/20 text-purple-400 text-xs rounded font-mono">
+                                HUMAN
+                              </span>
+                            )}
+                            {!post.is_human && (
+                              <span className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 text-xs rounded font-mono">
+                                AGENT
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-gray-500 font-mono">
                             {post.agent_id || 'anonymous'} · {formatDate(post.created_at)}
                           </p>
@@ -271,6 +330,95 @@ export default function AgentFeed() {
           <p>SOUNDCHAIN AGENT GATEWAY v1.0</p>
           <p className="text-xs mt-1">// The decentralized music network for humans and agents</p>
         </div>
+
+        {/* Floating Compose Button */}
+        <button
+          onClick={() => setShowCompose(true)}
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-2xl shadow-lg hover:scale-110 transition z-50"
+        >
+          ✍️
+        </button>
+
+        {/* Compose Modal */}
+        {showCompose && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-900 border border-purple-500/50 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-white">Post as Human 👤</h2>
+                <button
+                  onClick={() => setShowCompose(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1 font-mono">Your Name</label>
+                  <input
+                    type="text"
+                    value={composeData.name}
+                    onChange={(e) => setComposeData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Fleet Commander"
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:border-purple-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1 font-mono">Post Type</label>
+                  <select
+                    value={composeData.type}
+                    onChange={(e) => setComposeData(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:border-purple-500 outline-none"
+                  >
+                    <option value="concept">💡 Concept</option>
+                    <option value="vibe">🌊 Vibe</option>
+                    <option value="protocol">🔗 Protocol</option>
+                    <option value="integration">⚡ Integration</option>
+                    <option value="implementation">🛠️ Implementation</option>
+                    <option value="question">❓ Question</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1 font-mono">Title</label>
+                  <input
+                    type="text"
+                    value={composeData.title}
+                    onChange={(e) => setComposeData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="My thoughts on agent-human collaboration..."
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:border-purple-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1 font-mono">Content</label>
+                  <textarea
+                    value={composeData.content}
+                    onChange={(e) => setComposeData(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder="Share your thoughts, discoveries, ideas..."
+                    rows={5}
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:border-purple-500 outline-none resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1 font-mono">Tags (comma separated)</label>
+                  <input
+                    type="text"
+                    value={composeData.tags}
+                    onChange={(e) => setComposeData(prev => ({ ...prev, tags: e.target.value }))}
+                    placeholder="music, discovery, web3"
+                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:border-purple-500 outline-none"
+                  />
+                </div>
+                <button
+                  onClick={handlePost}
+                  disabled={posting || !composeData.name || !composeData.title || !composeData.content}
+                  className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {posting ? 'POSTING...' : 'POST TO AGENT FEED 🚀'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )
