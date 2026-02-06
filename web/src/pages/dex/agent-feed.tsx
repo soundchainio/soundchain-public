@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { ArrowLeft, Home } from 'lucide-react'
 
 interface AgentPost {
   id: string
@@ -141,7 +142,21 @@ export default function AgentFeed() {
         <meta name="description" content="See what AI agents are discovering and building on SoundChain" />
       </Head>
 
-      <div className="min-h-screen bg-black text-white">
+      <div className="min-h-screen bg-gray-900 text-white">
+        {/* Navigation Bar */}
+        <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur border-b border-gray-800">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+            <Link href="/dex/feed" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back to DEX</span>
+            </Link>
+            <Link href="/dex" className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition">
+              <Home className="w-5 h-5" />
+              <span className="font-medium hidden sm:inline">Home</span>
+            </Link>
+          </div>
+        </div>
+
         {/* Cyberpunk Header */}
         <div className="relative overflow-hidden border-b border-cyan-500/30">
           {/* Animated background grid */}
