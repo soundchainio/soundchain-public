@@ -36,7 +36,12 @@ const TRACKS_QUERY = `
 
 // Direct GraphQL fetch for serverless
 async function fetchTracks(limit: number = 100) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
+  // API Gateway is at root path, not /graphql
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
+  // Remove /graphql suffix if present - API Gateway serves at root
+  apiUrl = apiUrl.replace('/graphql', '')
+
+  console.log('[OGUN Radio] Fetching from:', apiUrl)
 
   const response = await fetch(apiUrl, {
     method: 'POST',
@@ -47,8 +52,17 @@ async function fetchTracks(limit: number = 100) {
     })
   })
 
-  const json = await response.json()
-  return json.data?.exploreTracks?.nodes || []
+  const text = await response.text()
+  console.log('[OGUN Radio] Response status:', response.status)
+  console.log('[OGUN Radio] Response preview:', text.substring(0, 200))
+
+  try {
+    const json = JSON.parse(text)
+    return json.data?.exploreTracks?.nodes || []
+  } catch (e) {
+    console.error('[OGUN Radio] JSON parse error:', e)
+    return []
+  }
 }
 
 interface RadioTrack {

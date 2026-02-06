@@ -11,11 +11,9 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { apolloClient } from 'lib/apollo'
-import { gql } from '@apollo/client'
 
 // Query matching working tracks.ts pattern
-const TRACKS_COUNT_QUERY = gql`
+const TRACKS_COUNT_QUERY = `
   query StatsTracksQuery($search: String, $limit: Int) {
     exploreTracks(search: $search, page: { first: $limit }) {
       nodes {
@@ -30,6 +28,35 @@ const TRACKS_COUNT_QUERY = gql`
     }
   }
 `
+
+// Direct GraphQL fetch for serverless
+async function fetchStats(limit: number = 200) {
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
+  apiUrl = apiUrl.replace('/graphql', '')
+
+  console.log('[Agent Stats] Fetching from:', apiUrl)
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: TRACKS_COUNT_QUERY,
+      variables: { search: '', limit }
+    })
+  })
+
+  const text = await response.text()
+  console.log('[Agent Stats] Response status:', response.status)
+  console.log('[Agent Stats] Response preview:', text.substring(0, 200))
+
+  try {
+    const json = JSON.parse(text)
+    return json.data?.exploreTracks || { nodes: [], pageInfo: { totalCount: 0 } }
+  } catch (e) {
+    console.error('[Agent Stats] JSON parse error:', e)
+    return { nodes: [], pageInfo: { totalCount: 0 } }
+  }
+}
 
 interface StatsResponse {
   success: boolean
@@ -72,16 +99,12 @@ export default async function handler(
 
   try {
     // Query with empty search to get all tracks
-    const { data } = await apolloClient.query({
-      query: TRACKS_COUNT_QUERY,
-      variables: { search: '', limit: 200 },
-      fetchPolicy: 'no-cache'
-    })
+    const result = await fetchStats(200)
 
-    const totalTracks = data?.exploreTracks?.pageInfo?.totalCount || 0
+    const totalTracks = result?.pageInfo?.totalCount || 0
     const totalProfiles = 0 // Not queried in simple mode
 
-    const tracks = data?.exploreTracks?.nodes || []
+    const tracks = result?.nodes || []
     const actualSampleSize = tracks.length
 
     // Count IPFS tracks in sample
