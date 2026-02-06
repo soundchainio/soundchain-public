@@ -8,12 +8,9 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import fs from 'fs'
-import path from 'path'
 
-// Persistent storage path for collected data
-const DATA_DIR = path.join(process.cwd(), '.agent-data')
-const AGGREGATED_FILE = path.join(DATA_DIR, 'aggregated-posts.json')
+// In-memory cache (resets on cold start, but works on Vercel)
+let cachedData: AggregatedData | null = null
 
 interface AggregatedData {
   last_updated: string
@@ -53,30 +50,17 @@ interface Insight {
   score: number
 }
 
-// Initialize data directory
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true })
-  }
-}
-
-// Load aggregated data
+// Load aggregated data from memory cache
 function loadAggregatedData(): AggregatedData {
-  ensureDataDir()
-  if (fs.existsSync(AGGREGATED_FILE)) {
-    try {
-      return JSON.parse(fs.readFileSync(AGGREGATED_FILE, 'utf-8'))
-    } catch {
-      return createEmptyData()
-    }
+  if (cachedData) {
+    return cachedData
   }
   return createEmptyData()
 }
 
-// Save aggregated data
+// Save aggregated data to memory cache
 function saveAggregatedData(data: AggregatedData) {
-  ensureDataDir()
-  fs.writeFileSync(AGGREGATED_FILE, JSON.stringify(data, null, 2))
+  cachedData = data
 }
 
 function createEmptyData(): AggregatedData {
@@ -214,7 +198,7 @@ export default async function handler(
       meta: {
         timestamp: new Date().toISOString(),
         request_id: requestId,
-        storage_path: AGGREGATED_FILE
+        storage: 'memory-cache'
       }
     })
   }
