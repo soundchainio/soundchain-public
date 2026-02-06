@@ -36,10 +36,8 @@ const TRACKS_QUERY = `
 
 // Direct GraphQL fetch for serverless
 async function fetchTracks(limit: number = 100) {
-  // API Gateway is at root path, not /graphql
-  let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-  // Remove /graphql suffix if present - API Gateway serves at root
-  apiUrl = apiUrl.replace('/graphql', '')
+  // Use the configured API URL with /graphql suffix
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 
   console.log('[OGUN Radio] Fetching from:', apiUrl)
 

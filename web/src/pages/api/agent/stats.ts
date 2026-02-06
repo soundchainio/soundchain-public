@@ -31,8 +31,7 @@ const TRACKS_COUNT_QUERY = `
 
 // Direct GraphQL fetch for serverless
 async function fetchStats(limit: number = 200) {
-  let apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-  apiUrl = apiUrl.replace('/graphql', '')
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 
   console.log('[Agent Stats] Fetching from:', apiUrl)
 
