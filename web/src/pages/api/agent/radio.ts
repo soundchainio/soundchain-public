@@ -9,11 +9,9 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { apolloClient } from 'lib/apollo'
-import { gql } from '@apollo/client'
 
-// Query matching working tracks.ts pattern
-const GET_TRACKS_QUERY = gql`
+// GraphQL query for radio tracks
+const TRACKS_QUERY = `
   query RadioTracks($search: String, $limit: Int) {
     exploreTracks(search: $search, page: { first: $limit }) {
       nodes {
@@ -24,21 +22,34 @@ const GET_TRACKS_QUERY = gql`
         description
         artworkUrl
         playbackCount
-        favoriteCount
-        createdAt
         owner {
-          id
           userHandle
           displayName
         }
       }
       pageInfo {
         totalCount
-        hasNextPage
       }
     }
   }
 `
+
+// Direct GraphQL fetch for serverless
+async function fetchTracks(limit: number = 100) {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: TRACKS_QUERY,
+      variables: { search: '', limit }
+    })
+  })
+
+  const json = await response.json()
+  return json.data?.exploreTracks?.nodes || []
+}
 
 interface RadioTrack {
   id: string
@@ -136,14 +147,10 @@ export default async function handler(
     // Fetch tracks if playlist is empty
     if (radioPlaylist.length === 0) {
       try {
-        // Query all tracks using working pattern
-        const { data } = await apolloClient.query({
-          query: GET_TRACKS_QUERY,
-          variables: { search: '', limit: 100 },
-          fetchPolicy: 'no-cache'
-        })
+        // Fetch tracks via direct GraphQL
+        const rawTracks = await fetchTracks(100)
 
-        const tracks: RadioTrack[] = (data.exploreTracks?.nodes || [])
+        const tracks: RadioTrack[] = rawTracks
           .map((track: any) => ({
             id: track.id,
             title: track.title || 'Untitled',
