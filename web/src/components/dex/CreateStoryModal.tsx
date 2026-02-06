@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import {
   X, Image as ImageIcon, Video, Upload, Loader2, Sparkles,
-  Music2, Type, Link2, ChevronDown, Check, Play, Pause
+  Music2, Type, Link2, ChevronDown, Check, Play, Pause, Crop
 } from 'lucide-react'
 import { useMe } from 'hooks/useMe'
 import { smartCompress, needsCompression, CompressionProgress } from 'lib/mediaCompression'
@@ -10,6 +10,7 @@ import { usePinToIpfsMutation, Track } from 'lib/graphql'
 import { toast } from 'react-toastify'
 import { gql, useMutation } from '@apollo/client'
 import { NFTMusicPicker } from './NFTMusicPicker'
+import { MediaCropEditor } from './MediaCropEditor'
 import StoryTextOverlay, { TextLayer } from './StoryTextOverlay'
 import { getIpfsUrl } from 'utils/ipfs'
 import { getNormalizedLink, IdentifySource } from 'utils/NormalizeEmbedLinks'
@@ -204,6 +205,21 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
   // Editor state
   const [activeTab, setActiveTab] = useState<EditorTab>('media')
   const [showEmbedInput, setShowEmbedInput] = useState(false)
+
+  // Crop editor state
+  const [showCropEditor, setShowCropEditor] = useState(false)
+
+  // Handle crop result
+  const handleCropApply = useCallback((croppedFile: File) => {
+    // Update media file with cropped version
+    if (mediaPreview) {
+      URL.revokeObjectURL(mediaPreview)
+    }
+    setMediaFile(croppedFile)
+    setMediaPreview(URL.createObjectURL(croppedFile))
+    setShowCropEditor(false)
+    toast.success('Crop applied!')
+  }, [mediaPreview])
 
   // Process embed URL when changed
   useEffect(() => {
@@ -763,6 +779,14 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
                       <video src={mediaPreview} className="w-full h-full object-cover" autoPlay loop muted playsInline />
                     )}
 
+                    {/* Crop button overlay */}
+                    <button
+                      onClick={() => setShowCropEditor(true)}
+                      className="absolute top-2 right-2 z-30 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-colors"
+                    >
+                      <Crop className="w-4 h-4" />
+                    </button>
+
                     {/* Text overlays */}
                     <StoryTextOverlay
                       layers={textLayers}
@@ -1069,6 +1093,16 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
         onSelect={handleSelectNftTrack}
         selectedTrackId={selectedNftTrack?.id}
       />
+
+      {/* Media Crop Editor */}
+      {showCropEditor && mediaFile && mediaType && (
+        <MediaCropEditor
+          file={mediaFile}
+          mediaType={mediaType}
+          onApply={handleCropApply}
+          onCancel={() => setShowCropEditor(false)}
+        />
+      )}
     </>
   )
 }
