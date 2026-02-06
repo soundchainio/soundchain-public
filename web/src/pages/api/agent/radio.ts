@@ -1,0 +1,355 @@
+/**
+ * OGUN Radio - Decentralized NFT Radio Player
+ * GET /api/agent/radio - Get current/random NFT track
+ * GET /api/agent/radio?action=playlist - Get radio playlist
+ * POST /api/agent/radio/broadcast - Broadcast "Now Playing" (cron)
+ *
+ * The OGUN agent becomes the decentralized publishing house,
+ * showcasing NFT tracks to humans and agents alike.
+ */
+
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { apolloClient } from 'lib/apollo'
+import { gql } from '@apollo/client'
+
+// GraphQL query to get NFT tracks
+const GET_NFT_TRACKS = gql`
+  query GetNFTTracksForRadio($limit: Int, $offset: Int) {
+    exploreTracks(
+      filter: { isNft: true }
+      page: { first: $limit, offset: $offset }
+    ) {
+      nodes {
+        id
+        title
+        artist
+        album
+        description
+        artworkUrl
+        audioUrl
+        duration
+        playbackCount
+        favoriteCount
+        createdAt
+        scid
+        isNft
+        genres
+        owner {
+          id
+          userHandle
+          displayName
+          profilePictureUrl
+        }
+      }
+      pageInfo {
+        totalCount
+        hasNextPage
+      }
+    }
+  }
+`
+
+// Fallback query without isNft filter (in case that filter isn't supported)
+const GET_TRACKS_FALLBACK = gql`
+  query GetTracksForRadio($limit: Int) {
+    exploreTracks(page: { first: $limit }) {
+      nodes {
+        id
+        title
+        artist
+        album
+        description
+        artworkUrl
+        audioUrl
+        duration
+        playbackCount
+        favoriteCount
+        createdAt
+        scid
+        isNft
+        genres
+        owner {
+          id
+          userHandle
+          displayName
+          profilePictureUrl
+        }
+      }
+      pageInfo {
+        totalCount
+      }
+    }
+  }
+`
+
+interface RadioTrack {
+  id: string
+  title: string
+  artist: string
+  album?: string
+  description?: string
+  artwork_url?: string
+  stream_url?: string
+  duration?: number
+  play_count: number
+  scid?: string
+  is_nft: boolean
+  genres?: string[]
+  owner: {
+    handle: string
+    display_name: string
+    avatar?: string
+  } | null
+  licensing: {
+    type: 'nft' | 'open' | 'traditional'
+    ogun_enabled: boolean
+    streaming_rewards: boolean
+  }
+}
+
+// In-memory state for current track
+let currentTrack: RadioTrack | null = null
+let trackStartTime: Date | null = null
+let radioPlaylist: RadioTrack[] = []
+
+function formatTrackForBroadcast(track: RadioTrack): string {
+  const lines = [
+    `🎵 **NOW PLAYING on OGUN Radio**`,
+    ``,
+    `**${track.title}**`,
+    `by ${track.artist}`,
+  ]
+
+  if (track.album) {
+    lines.push(`Album: ${track.album}`)
+  }
+
+  if (track.is_nft) {
+    lines.push(``)
+    lines.push(`🎨 **NFT Track** - Fully on-chain licensed`)
+    lines.push(`💰 Streaming rewards enabled via OGUN L2`)
+  }
+
+  if (track.owner) {
+    lines.push(``)
+    lines.push(`Owner: @${track.owner.handle}`)
+  }
+
+  if (track.scid) {
+    lines.push(`SCID: ${track.scid}`)
+  }
+
+  lines.push(``)
+  lines.push(`🔗 Listen: soundchain.io/dex/track/${track.id}`)
+  lines.push(`📻 Radio: soundchain.io/api/agent/radio`)
+  lines.push(``)
+  lines.push(`*OGUN - The gas powering the L2 music economy*`)
+
+  return lines.join('\n')
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  const requestId = `radio_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const action = req.query.action as string
+
+  if (req.method === 'GET') {
+    // Return current track or get a new one
+    if (action === 'playlist') {
+      // Return the full radio playlist
+      return res.status(200).json({
+        success: true,
+        data: {
+          playlist: radioPlaylist,
+          current_track: currentTrack,
+          current_track_started: trackStartTime?.toISOString(),
+          total_tracks: radioPlaylist.length
+        },
+        meta: {
+          timestamp: new Date().toISOString(),
+          request_id: requestId,
+          agent: 'OGUN Radio'
+        }
+      })
+    }
+
+    // Fetch tracks if playlist is empty
+    if (radioPlaylist.length === 0) {
+      try {
+        let tracks: RadioTrack[] = []
+
+        // Try NFT filter first
+        try {
+          const { data } = await apolloClient.query({
+            query: GET_NFT_TRACKS,
+            variables: { limit: 50, offset: 0 },
+            fetchPolicy: 'no-cache'
+          })
+
+          tracks = (data.exploreTracks?.nodes || [])
+            .filter((t: any) => t.isNft)
+            .map((track: any) => ({
+              id: track.id,
+              title: track.title,
+              artist: track.artist,
+              album: track.album,
+              description: track.description,
+              artwork_url: track.artworkUrl,
+              stream_url: track.audioUrl,
+              duration: track.duration,
+              play_count: track.playbackCount || 0,
+              scid: track.scid,
+              is_nft: true,
+              genres: track.genres || [],
+              owner: track.owner ? {
+                handle: track.owner.userHandle,
+                display_name: track.owner.displayName,
+                avatar: track.owner.profilePictureUrl
+              } : null,
+              licensing: {
+                type: 'nft' as const,
+                ogun_enabled: true,
+                streaming_rewards: true
+              }
+            }))
+        } catch (e) {
+          // Fallback to all tracks and filter client-side
+          const { data } = await apolloClient.query({
+            query: GET_TRACKS_FALLBACK,
+            variables: { limit: 100 },
+            fetchPolicy: 'no-cache'
+          })
+
+          tracks = (data.exploreTracks?.nodes || [])
+            .filter((t: any) => t.isNft || t.scid)
+            .map((track: any) => ({
+              id: track.id,
+              title: track.title,
+              artist: track.artist,
+              album: track.album,
+              description: track.description,
+              artwork_url: track.artworkUrl,
+              stream_url: track.audioUrl,
+              duration: track.duration,
+              play_count: track.playbackCount || 0,
+              scid: track.scid,
+              is_nft: track.isNft || false,
+              genres: track.genres || [],
+              owner: track.owner ? {
+                handle: track.owner.userHandle,
+                display_name: track.owner.displayName,
+                avatar: track.owner.profilePictureUrl
+              } : null,
+              licensing: {
+                type: track.isNft ? 'nft' as const : 'open' as const,
+                ogun_enabled: !!track.scid,
+                streaming_rewards: !!track.scid
+              }
+            }))
+        }
+
+        // Shuffle the tracks
+        radioPlaylist = tracks.sort(() => Math.random() - 0.5)
+
+      } catch (error: any) {
+        console.error('[OGUN Radio] Error fetching tracks:', error)
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to load radio playlist',
+          meta: {
+            timestamp: new Date().toISOString(),
+            request_id: requestId
+          }
+        })
+      }
+    }
+
+    // Get current or next track
+    if (!currentTrack && radioPlaylist.length > 0) {
+      currentTrack = radioPlaylist[0]
+      trackStartTime = new Date()
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        now_playing: currentTrack,
+        started_at: trackStartTime?.toISOString(),
+        queue_length: radioPlaylist.length,
+        broadcast_message: currentTrack ? formatTrackForBroadcast(currentTrack) : null
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        request_id: requestId,
+        agent: 'OGUN Radio',
+        description: 'Decentralized P2P music radio powered by OGUN L2'
+      }
+    })
+  }
+
+  if (req.method === 'POST') {
+    // Advance to next track and optionally broadcast
+    const broadcast = req.query.broadcast === 'true'
+
+    // Rotate playlist
+    if (radioPlaylist.length > 0) {
+      const played = radioPlaylist.shift()
+      if (played) {
+        radioPlaylist.push(played) // Move to end
+      }
+      currentTrack = radioPlaylist[0] || null
+      trackStartTime = new Date()
+    }
+
+    const response: any = {
+      success: true,
+      data: {
+        now_playing: currentTrack,
+        started_at: trackStartTime?.toISOString(),
+        queue_length: radioPlaylist.length
+      },
+      meta: {
+        timestamp: new Date().toISOString(),
+        request_id: requestId,
+        agent: 'OGUN Radio'
+      }
+    }
+
+    // Broadcast to SoundChain agent feed
+    if (broadcast && currentTrack) {
+      try {
+        const blogRes = await fetch(`${process.env.NEXT_PUBLIC_URL || 'https://soundchain.io'}/api/agent/blog`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agent_name: 'OGUN',
+            type: 'now_playing',
+            title: `🎵 Now Playing: ${currentTrack.title}`,
+            content: formatTrackForBroadcast(currentTrack),
+            tags: ['radio', 'nft', 'ogun', 'now-playing', ...(currentTrack.genres || [])]
+          })
+        })
+
+        const blogData = await blogRes.json()
+        response.broadcast = {
+          soundchain: blogData.success ? 'sent' : 'failed'
+        }
+      } catch (e) {
+        response.broadcast = { soundchain: 'error' }
+      }
+    }
+
+    return res.status(200).json(response)
+  }
+
+  return res.status(405).json({
+    success: false,
+    error: 'Method not allowed. Use GET to fetch current track, POST to advance.',
+    meta: {
+      timestamp: new Date().toISOString(),
+      request_id: requestId
+    }
+  })
+}
