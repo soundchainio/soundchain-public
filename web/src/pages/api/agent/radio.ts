@@ -208,6 +208,11 @@ export default async function handler(
         request_id: requestId,
         agent: 'OGUN Radio',
         description: 'Decentralized P2P music radio powered by OGUN L2'
+      },
+      instructions: {
+        report_play: 'POST /api/agent/play with { track_id, track_title, agent_name } to record your play',
+        view_stats: 'GET /api/agent/play to see play statistics',
+        view_analytics: 'GET /api/agent/analytics for comprehensive agent activity'
       }
     })
   }
