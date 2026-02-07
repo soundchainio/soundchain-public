@@ -15,7 +15,8 @@ import {
   Radio,
   Music,
   ExternalLink,
-  Disc3
+  Disc3,
+  Shuffle
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
 
@@ -40,6 +41,8 @@ export default function OGUNRadio() {
   const [duration, setDuration] = useState(0)
   const [queueLength, setQueueLength] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [hasUserInteracted, setHasUserInteracted] = useState(false)
+  const [showTuneInPrompt, setShowTuneInPrompt] = useState(true)
 
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -83,16 +86,28 @@ export default function OGUNRadio() {
     fetchCurrentTrack()
   }, [])
 
-  // Update audio source when track changes
+  // Update audio source when track changes - autoplay if user has interacted
   useEffect(() => {
     if (currentTrack?.stream_url && audioRef.current) {
       audioRef.current.src = currentTrack.stream_url
       audioRef.current.load()
-      if (isPlaying) {
+      // Autoplay if user has already interacted with the page
+      if (hasUserInteracted) {
         audioRef.current.play().catch(() => setIsPlaying(false))
       }
     }
-  }, [currentTrack])
+  }, [currentTrack, hasUserInteracted])
+
+  // Handle "Tune In" - starts autoplay session
+  const handleTuneIn = () => {
+    setHasUserInteracted(true)
+    setShowTuneInPrompt(false)
+    if (audioRef.current && currentTrack?.stream_url) {
+      audioRef.current.play().catch(() => {
+        setError('Playback failed - try another track')
+      })
+    }
+  }
 
   // Handle play/pause
   const togglePlay = () => {
@@ -175,7 +190,7 @@ export default function OGUNRadio() {
         {/* Main Content */}
         <main className="max-w-4xl mx-auto px-4 py-8">
           {/* Radio Display */}
-          <div className="bg-[#0a1628] border border-red-900/30 rounded-2xl p-6 md:p-8 shadow-2xl shadow-red-900/20">
+          <div className="relative bg-[#0a1628] border border-red-900/30 rounded-2xl p-6 md:p-8 shadow-2xl shadow-red-900/20">
 
             {/* Station Header */}
             <div className="text-center mb-8">
@@ -184,8 +199,26 @@ export default function OGUNRadio() {
                 <span className="text-red-400 text-sm font-medium">BROADCASTING LIVE</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">OGUN Radio</h1>
-              <p className="text-gray-400">618 NFT Tracks • 24/7 Decentralized Music</p>
+              <p className="text-gray-400 flex items-center justify-center gap-2">
+                618 NFT Tracks • <Shuffle className="w-4 h-4 text-green-400" /> Shuffled • 24/7
+              </p>
             </div>
+
+            {/* Tune In Prompt - shown until user interacts */}
+            {showTuneInPrompt && !isLoading && currentTrack && (
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-10">
+                <Radio className="w-20 h-20 text-red-500 animate-pulse mb-6" />
+                <h2 className="text-2xl font-bold text-white mb-2">OGUN Radio</h2>
+                <p className="text-gray-400 mb-6">618 NFT Tracks • Shuffled • 24/7</p>
+                <button
+                  onClick={handleTuneIn}
+                  className="px-8 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-xl rounded-full hover:scale-105 transition-transform shadow-lg shadow-red-500/30"
+                >
+                  TAP TO TUNE IN
+                </button>
+                <p className="text-gray-500 text-sm mt-4">Autoplay enabled after tap</p>
+              </div>
+            )}
 
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16">
