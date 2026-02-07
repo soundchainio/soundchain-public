@@ -422,10 +422,18 @@ export default function MoltbookPlayground() {
                   </div>
                 )}
 
+                <Link
+                  href="/radio"
+                  className="flex items-center justify-center gap-2 w-full mt-4 px-3 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold rounded-lg hover:from-red-500 hover:to-orange-500 transition-all text-sm shadow-lg shadow-red-900/30"
+                >
+                  <Radio className="w-4 h-4" />
+                  LISTEN NOW
+                </Link>
+
                 <a
                   href="/api/agent/radio"
                   target="_blank"
-                  className="flex items-center justify-center gap-2 w-full mt-4 px-3 py-2 bg-red-900/30 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors text-sm"
+                  className="flex items-center justify-center gap-2 w-full mt-2 px-3 py-2 bg-red-900/30 border border-red-500/50 text-red-400 rounded-lg hover:bg-red-900/50 transition-colors text-sm"
                 >
                   View Radio API
                   <ExternalLink className="w-3 h-3" />
