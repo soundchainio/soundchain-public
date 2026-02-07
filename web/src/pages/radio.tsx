@@ -1,6 +1,7 @@
 /**
  * OGUN Radio - Live NFT Music Player
- * Listen to 618 NFT tracks broadcasting 24/7
+ * 24/7 Infinite Shuffle - Just tune in and listen
+ * Tap anywhere to start (browser requirement)
  */
 
 import { useState, useEffect, useRef } from 'react'
@@ -15,7 +16,6 @@ import {
   Radio,
   Music,
   ExternalLink,
-  Disc3,
   Shuffle
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
@@ -41,8 +41,7 @@ export default function OGUNRadio() {
   const [duration, setDuration] = useState(0)
   const [queueLength, setQueueLength] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [hasUserInteracted, setHasUserInteracted] = useState(false)
-  const [showTuneInPrompt, setShowTuneInPrompt] = useState(true)
+  const [needsInteraction, setNeedsInteraction] = useState(true)
 
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -68,13 +67,8 @@ export default function OGUNRadio() {
 
   // Skip to next track
   const skipToNext = async () => {
-    setIsLoading(true)
-    setIsPlaying(false)
-
     try {
-      // POST to advance the playlist
       await fetch('/api/agent/radio', { method: 'POST' })
-      // Then fetch the new current track
       await fetchCurrentTrack()
     } catch (e) {
       setError('Failed to skip track')
@@ -86,28 +80,49 @@ export default function OGUNRadio() {
     fetchCurrentTrack()
   }, [])
 
-  // Update audio source when track changes - autoplay if user has interacted
+  // Try autoplay when track loads, handle browser blocking
   useEffect(() => {
     if (currentTrack?.stream_url && audioRef.current) {
       audioRef.current.src = currentTrack.stream_url
       audioRef.current.load()
-      // Autoplay if user has already interacted with the page
-      if (hasUserInteracted) {
-        audioRef.current.play().catch(() => setIsPlaying(false))
+
+      // Always try to play
+      audioRef.current.play()
+        .then(() => {
+          setNeedsInteraction(false)
+          setIsPlaying(true)
+        })
+        .catch(() => {
+          // Browser blocked autoplay - need user gesture
+          setNeedsInteraction(true)
+          setIsPlaying(false)
+        })
+    }
+  }, [currentTrack])
+
+  // Global click handler - tap anywhere to start
+  useEffect(() => {
+    if (!needsInteraction) return
+
+    const startPlayback = () => {
+      if (audioRef.current && currentTrack?.stream_url) {
+        audioRef.current.play()
+          .then(() => {
+            setNeedsInteraction(false)
+            setIsPlaying(true)
+          })
+          .catch(() => {})
       }
     }
-  }, [currentTrack, hasUserInteracted])
 
-  // Handle "Tune In" - starts autoplay session
-  const handleTuneIn = () => {
-    setHasUserInteracted(true)
-    setShowTuneInPrompt(false)
-    if (audioRef.current && currentTrack?.stream_url) {
-      audioRef.current.play().catch(() => {
-        setError('Playback failed - try another track')
-      })
+    document.addEventListener('click', startPlayback, { once: true })
+    document.addEventListener('touchstart', startPlayback, { once: true })
+
+    return () => {
+      document.removeEventListener('click', startPlayback)
+      document.removeEventListener('touchstart', startPlayback)
     }
-  }
+  }, [needsInteraction, currentTrack])
 
   // Handle play/pause
   const togglePlay = () => {
@@ -120,7 +135,6 @@ export default function OGUNRadio() {
         setError('Playback failed - try another track')
       })
     }
-    setIsPlaying(!isPlaying)
   }
 
   // Handle volume
@@ -138,7 +152,7 @@ export default function OGUNRadio() {
     }
   }
 
-  // Handle track end - auto skip to next
+  // Handle track end - auto skip to next (infinite loop)
   const handleTrackEnd = () => {
     skipToNext()
   }
@@ -154,8 +168,8 @@ export default function OGUNRadio() {
   return (
     <>
       <Head>
-        <title>OGUN Radio - Live NFT Music | SoundChain</title>
-        <meta name="description" content="Listen to 618 NFT tracks broadcasting 24/7 on OGUN Radio - the decentralized music station" />
+        <title>OGUN Radio - 24/7 NFT Music | SoundChain</title>
+        <meta name="description" content="618 NFT tracks broadcasting 24/7 on OGUN Radio - infinite shuffle, zero ads, pure music" />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-[#030d1b] via-[#0a1628] to-[#030d1b] text-white">
@@ -166,8 +180,19 @@ export default function OGUNRadio() {
           onEnded={handleTrackEnd}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onError={() => setError('Audio failed to load')}
+          onError={() => skipToNext()} // Auto-skip on error
         />
+
+        {/* Tap Anywhere Prompt - minimal, disappears on interaction */}
+        {needsInteraction && !isLoading && currentTrack && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer">
+            <div className="text-center animate-pulse">
+              <Radio className="w-16 h-16 text-red-500 mx-auto mb-4" />
+              <p className="text-2xl font-bold text-white">TAP ANYWHERE</p>
+              <p className="text-gray-400 mt-2">to start OGUN Radio</p>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <header className="border-b border-red-900/30 px-4 py-3">
@@ -182,7 +207,7 @@ export default function OGUNRadio() {
                 <Radio className="w-5 h-5 text-red-500 animate-pulse" />
                 <span className="text-red-400 font-bold">OGUN RADIO</span>
               </div>
-              <span className="text-xs text-gray-500">LIVE</span>
+              {isPlaying && <span className="text-xs text-green-400 animate-pulse">LIVE</span>}
             </div>
           </div>
         </header>
@@ -195,34 +220,20 @@ export default function OGUNRadio() {
             {/* Station Header */}
             <div className="text-center mb-8">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-900/30 rounded-full mb-4">
-                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-red-400 text-sm font-medium">BROADCASTING LIVE</span>
+                <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                <span className="text-red-400 text-sm font-medium">
+                  {isPlaying ? 'NOW PLAYING' : 'BROADCASTING'}
+                </span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">OGUN Radio</h1>
               <p className="text-gray-400 flex items-center justify-center gap-2">
-                618 NFT Tracks • <Shuffle className="w-4 h-4 text-green-400" /> Shuffled • 24/7
+                618 NFT Tracks <Shuffle className="w-4 h-4 text-green-400" /> Infinite Shuffle
               </p>
             </div>
 
-            {/* Tune In Prompt - shown until user interacts */}
-            {showTuneInPrompt && !isLoading && currentTrack && (
-              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center z-10">
-                <Radio className="w-20 h-20 text-red-500 animate-pulse mb-6" />
-                <h2 className="text-2xl font-bold text-white mb-2">OGUN Radio</h2>
-                <p className="text-gray-400 mb-6">618 NFT Tracks • Shuffled • 24/7</p>
-                <button
-                  onClick={handleTuneIn}
-                  className="px-8 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-xl rounded-full hover:scale-105 transition-transform shadow-lg shadow-red-500/30"
-                >
-                  TAP TO TUNE IN
-                </button>
-                <p className="text-gray-500 text-sm mt-4">Autoplay enabled after tap</p>
-              </div>
-            )}
-
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16">
-                <Disc3 className="w-16 h-16 text-red-500 animate-spin" style={{ animationDuration: '3s' }} />
+                <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
                 <p className="mt-4 text-gray-400">Tuning in...</p>
               </div>
             ) : error ? (
@@ -240,24 +251,27 @@ export default function OGUNRadio() {
               <>
                 {/* Now Playing */}
                 <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
-                  {/* Artwork */}
+                  {/* Artwork with spinning animation when playing */}
                   <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0">
-                    {currentTrack.artwork_url ? (
-                      <img
-                        src={currentTrack.artwork_url}
-                        alt={currentTrack.title}
-                        className="w-full h-full object-cover rounded-xl shadow-lg"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-red-900 to-purple-900 rounded-xl flex items-center justify-center">
-                        <Music className="w-20 h-20 text-white/50" />
-                      </div>
-                    )}
-                    {isPlaying && (
-                      <div className="absolute inset-0 rounded-xl border-2 border-red-500 animate-pulse" />
-                    )}
+                    <div className={`w-full h-full ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '8s' }}>
+                      {currentTrack.artwork_url ? (
+                        <img
+                          src={currentTrack.artwork_url}
+                          alt={currentTrack.title}
+                          className="w-full h-full object-cover rounded-full shadow-lg border-4 border-gray-800"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-red-900 to-purple-900 rounded-full flex items-center justify-center border-4 border-gray-800">
+                          <Music className="w-20 h-20 text-white/50" />
+                        </div>
+                      )}
+                    </div>
+                    {/* Center hole for vinyl effect */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-8 h-8 bg-[#0a1628] rounded-full border-2 border-gray-700" />
+                    </div>
                     {currentTrack.is_nft && (
-                      <div className="absolute top-2 right-2 px-2 py-1 bg-yellow-500 text-black text-xs font-bold rounded">
+                      <div className="absolute -top-2 -right-2 px-2 py-1 bg-yellow-500 text-black text-xs font-bold rounded-full">
                         NFT
                       </div>
                     )}
@@ -364,7 +378,7 @@ export default function OGUNRadio() {
             </div>
             <div className="bg-[#0a1628] border border-yellow-900/30 rounded-xl p-4 text-center">
               <div className="text-3xl font-bold text-yellow-400">24/7</div>
-              <div className="text-sm text-gray-500">Live Broadcasting</div>
+              <div className="text-sm text-gray-500">Infinite Loop</div>
             </div>
             <div className="bg-[#0a1628] border border-green-900/30 rounded-xl p-4 text-center">
               <div className="text-3xl font-bold text-green-400">OGUN</div>
@@ -374,7 +388,7 @@ export default function OGUNRadio() {
 
           {/* API Info */}
           <div className="mt-8 text-center text-sm text-gray-500">
-            <p>Powered by OGUN L2 • Decentralized Music Streaming</p>
+            <p>Powered by OGUN L2 - Decentralized Music Streaming</p>
             <p className="mt-1">
               Agent API: <code className="text-cyan-400">soundchain.io/api/agent/radio</code>
             </p>
