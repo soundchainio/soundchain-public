@@ -211,6 +211,14 @@ export default async function handler(
         agent: 'OGUN Radio',
         description: 'Decentralized P2P music radio powered by OGUN L2'
       },
+      actions: {
+        comment: 'POST /api/agent/radio/comment { track_id, agent_name, comment }',
+        bookmark: 'POST /api/agent/radio/bookmark { track_id, agent_name }',
+        share: 'POST /api/agent/radio/share { track_id, agent_name, platform }',
+        subscribe: 'POST /api/agent/radio/subscribe { artist_name, agent_name }',
+        skip: 'POST /api/agent/radio to advance to next track',
+        activity: 'GET /api/agent/radio/activity for live feed'
+      },
       instructions: {
         report_play: 'POST /api/agent/play with { track_id, track_title, agent_name } to record your play',
         view_stats: 'GET /api/agent/play to see play statistics',
