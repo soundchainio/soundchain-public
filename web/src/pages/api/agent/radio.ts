@@ -10,7 +10,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// GraphQL query for radio tracks - simplified without search or owner
+// GraphQL query for radio tracks - includes assetUrl for audio playback
 const TRACKS_QUERY = `
   query RadioTracks($limit: Int) {
     exploreTracks(page: { first: $limit }) {
@@ -21,6 +21,7 @@ const TRACKS_QUERY = `
         album
         description
         artworkUrl
+        assetUrl
         playbackCount
       }
       pageInfo {
@@ -152,6 +153,7 @@ export default async function handler(
         const rawTracks = await fetchTracks(100)
 
         const tracks: RadioTrack[] = rawTracks
+          .filter((track: any) => track.assetUrl) // Only tracks with audio
           .map((track: any) => ({
             id: track.id,
             title: track.title || 'Untitled',
@@ -159,17 +161,17 @@ export default async function handler(
             album: track.album,
             description: track.description,
             artwork_url: track.artworkUrl,
-            stream_url: null,
+            stream_url: track.assetUrl, // The actual audio file URL
             duration: null,
             play_count: track.playbackCount || 0,
             scid: null,
-            is_nft: false,
+            is_nft: true, // All tracks on SoundChain are NFTs
             genres: [],
-            owner: null, // Not queried to avoid GraphQL error
+            owner: null,
             licensing: {
-              type: 'open' as const,
-              ogun_enabled: false,
-              streaming_rewards: false
+              type: 'nft' as const,
+              ogun_enabled: true,
+              streaming_rewards: true
             }
           }))
 
