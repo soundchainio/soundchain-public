@@ -30,16 +30,9 @@ const TRACKS_QUERY = `
   }
 `
 
-// Debug info storage for troubleshooting
-let lastFetchDebug: any = null
-
 // Direct GraphQL fetch for serverless
 async function fetchTracks(limit: number = 100) {
-  // Use direct API Gateway URL - custom domain has issues
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
-
-  console.log('[OGUN Radio] Fetching from:', apiUrl)
-  lastFetchDebug = { apiUrl, timestamp: new Date().toISOString() }
 
   try {
     const response = await fetch(apiUrl, {
@@ -51,20 +44,10 @@ async function fetchTracks(limit: number = 100) {
       })
     })
 
-    const text = await response.text()
-    console.log('[OGUN Radio] Response status:', response.status)
-    console.log('[OGUN Radio] Response preview:', text.substring(0, 200))
-    lastFetchDebug.status = response.status
-    lastFetchDebug.preview = text.substring(0, 300)
-
-    const json = JSON.parse(text)
-    const nodes = json.data?.exploreTracks?.nodes || []
-    lastFetchDebug.nodeCount = nodes.length
-    lastFetchDebug.totalCount = json.data?.exploreTracks?.pageInfo?.totalCount
-    return nodes
-  } catch (e: any) {
+    const json = await response.json()
+    return json.data?.exploreTracks?.nodes || []
+  } catch (e) {
     console.error('[OGUN Radio] Fetch error:', e)
-    lastFetchDebug.error = e.message || String(e)
     return []
   }
 }
@@ -225,8 +208,7 @@ export default async function handler(
         request_id: requestId,
         agent: 'OGUN Radio',
         description: 'Decentralized P2P music radio powered by OGUN L2'
-      },
-      debug: lastFetchDebug
+      }
     })
   }
 
