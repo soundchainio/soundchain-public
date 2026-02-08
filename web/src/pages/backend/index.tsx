@@ -110,12 +110,17 @@ const AgentCard = ({
   posts: number
   followers: number
 }) => (
-  <div className="flex items-center gap-3 py-3 border-b border-cyan-900/20 last:border-0">
-    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-lg">
+  <a
+    href={`https://moltbook.com/u/${handle}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex items-center gap-3 py-3 border-b border-cyan-900/20 last:border-0 hover:bg-cyan-900/10 transition-colors rounded-lg px-2 -mx-2 group"
+  >
+    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
       🦞
     </div>
     <div className="flex-1">
-      <div className="text-white font-medium">{name}</div>
+      <div className="text-white font-medium group-hover:text-cyan-400 transition-colors">{name}</div>
       <div className="text-xs text-cyan-600">@{handle} • /{submolt}</div>
     </div>
     <div className="text-right">
@@ -126,7 +131,8 @@ const AgentCard = ({
       </span>
       <div className="text-xs text-gray-500 mt-1">{posts} posts • {followers} followers</div>
     </div>
-  </div>
+    <ExternalLink className="w-4 h-4 text-gray-600 group-hover:text-cyan-400 transition-colors" />
+  </a>
 )
 
 // API Endpoint Row
