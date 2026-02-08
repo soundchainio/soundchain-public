@@ -97,7 +97,21 @@ export enum AuthMethod {
   Discord = 'discord',
   Google = 'google',
   MagicLink = 'magicLink',
-  Twitch = 'twitch'
+  Twitch = 'twitch',
+  Wallet = 'wallet'
+}
+
+// HD Wallet System - Primary wallet type for transactions
+export enum PrimaryWalletType {
+  Magic = 'magic',
+  Hd = 'hd'
+}
+
+// Migration status from Magic wallet to HD wallet
+export enum MigrationStatus {
+  None = 'none',
+  Pending = 'pending',
+  Completed = 'completed'
 }
 
 export type AuthPayload = {
@@ -2445,13 +2459,23 @@ export type User = {
   emailWalletAddress: Maybe<Scalars['String']['output']>;
   googleWalletAddress: Maybe<Scalars['String']['output']>;
   handle: Scalars['String']['output'];
+  // HD Wallet System - Multi-chain support
+  hdWalletAddress: Maybe<Scalars['String']['output']>;
+  hdWalletCreatedAt: Maybe<Scalars['DateTime']['output']>;
   id: Scalars['ID']['output'];
   isApprovedOnMarketplace: Scalars['Boolean']['output'];
   magicWalletAddress: Maybe<Scalars['String']['output']>;
   metaMaskWalletAddressees: Maybe<Array<Scalars['String']['output']>>;
+  // Migration status from Magic wallet to HD wallet
+  migrationStatus: Maybe<MigrationStatus>;
+  migrationTxHash: Maybe<Scalars['String']['output']>;
+  // Which wallet is primary for transactions
+  primaryWallet: Maybe<PrimaryWalletType>;
   profile: Profile;
   profileId: Scalars['ID']['output'];
   roles: Array<Role>;
+  // Solana address (different derivation, non-EVM)
+  solanaAddress: Maybe<Scalars['String']['output']>;
   twitchWalletAddress: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
 };

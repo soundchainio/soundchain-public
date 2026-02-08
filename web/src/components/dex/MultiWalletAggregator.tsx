@@ -1,6 +1,11 @@
 /**
  * Multi-Wallet Aggregator - Connect and view multiple wallets inline
  * Unique feature: View NFTs from all connected wallets in one place
+ *
+ * HD Wallet Support (Feb 2026):
+ * - Shows HD wallet as primary for new users
+ * - Shows migration banner for legacy users with Magic wallet only
+ * - HD wallet works across ALL EVM chains (Polygon, Ethereum, Base, etc.)
  */
 
 import React, { useState, useEffect, useCallback } from 'react'
@@ -15,21 +20,26 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
-  Loader2
+  Loader2,
+  Sparkles,
+  ArrowRight,
+  Globe,
+  Zap
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
+import { useMe } from 'hooks/useMe'
 import { config } from 'config'
 import Web3 from 'web3'
 import { AbiItem } from 'web3-utils'
 import SoundchainOGUN20 from 'contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
 import MetaMaskOnboarding from '@metamask/onboarding'
-import { useGroupedTracksLazyQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import { useGroupedTracksLazyQuery, SortTrackField, SortOrder, PrimaryWalletType, MigrationStatus } from 'lib/graphql'
 
 interface ConnectedWallet {
   id: string
-  type: 'magic' | 'metamask' | 'walletconnect' | 'coinbase' | 'web3modal' | 'rainbow' | 'base'
+  type: 'magic' | 'metamask' | 'walletconnect' | 'coinbase' | 'web3modal' | 'rainbow' | 'base' | 'hd'
   address: string
   chainName: string
   chainId?: number
@@ -38,6 +48,8 @@ interface ConnectedWallet {
   nfts: NFTTrack[]
   isActive: boolean
   icon?: string
+  isPrimary?: boolean  // HD wallet can be marked as primary
+  isMultiChain?: boolean  // HD wallet works on all EVM chains
 }
 
 interface NFTTrack {
@@ -106,6 +118,9 @@ export function MultiWalletAggregator({
     disconnectExternalWallet
   } = useMagicContext()
 
+  // Get current user info for HD wallet
+  const me = useMe()
+
   // Web3Modal / Unified Wallet integration
   const {
     activeWalletType,
@@ -120,6 +135,16 @@ export function MultiWalletAggregator({
     connectedExternalWallets,
     removeExternalWallet,
   } = useUnifiedWallet()
+
+  // HD Wallet state
+  const hdWalletAddress = me?.hdWalletAddress
+  const primaryWallet = me?.primaryWallet
+  const migrationStatus = me?.migrationStatus
+  const hasLegacyMagicWallet = !!(me?.magicWalletAddress || me?.googleWalletAddress || me?.discordWalletAddress || me?.twitchWalletAddress)
+  const isLegacyUser = hasLegacyMagicWallet && !hdWalletAddress
+  const [hdWalletBalance, setHdWalletBalance] = useState<string>('0')
+  const [hdWalletOgunBalance, setHdWalletOgunBalance] = useState<string>('0')
+  const [isLoadingHdBalance, setIsLoadingHdBalance] = useState(false)
 
   const [connectedWallets, setConnectedWallets] = useState<ConnectedWallet[]>([])
   const [expandedWallets, setExpandedWallets] = useState<Set<string>>(new Set(['magic']))
@@ -142,6 +167,30 @@ export function MultiWalletAggregator({
       setIsMetaMaskInstalled(MetaMaskOnboarding.isMetaMaskInstalled())
     }
   }, [])
+
+  // Fetch HD wallet balance (works on Polygon via public RPC)
+  useEffect(() => {
+    const fetchHdWalletBalance = async () => {
+      if (!hdWalletAddress) return
+
+      setIsLoadingHdBalance(true)
+      try {
+        const web3 = new Web3('https://polygon.llamarpc.com')
+        const balance = await web3.eth.getBalance(hdWalletAddress)
+        setHdWalletBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(4))
+
+        // Fetch OGUN balance
+        const ogun = await getOgunBalance(web3, hdWalletAddress)
+        setHdWalletOgunBalance(ogun)
+      } catch (err) {
+        console.error('HD wallet balance fetch error:', err)
+      } finally {
+        setIsLoadingHdBalance(false)
+      }
+    }
+
+    fetchHdWalletBalance()
+  }, [hdWalletAddress])
 
   // Connect MetaMask directly
   const connectMetaMask = useCallback(async () => {
@@ -240,8 +289,35 @@ export function MultiWalletAggregator({
       walletConnectedAddress,
     })
 
-    // Magic Wallet (always first if user is logged in)
-    if (userWallet) {
+    // HD Wallet (PRIMARY for new users - multi-chain support)
+    if (hdWalletAddress) {
+      const isHdPrimary = primaryWallet === PrimaryWalletType.Hd
+      wallets.push({
+        id: 'hd',
+        type: 'hd',
+        address: hdWalletAddress,
+        chainName: 'Multi-Chain',  // Works on ALL EVM chains
+        chainId: 137,  // Default to Polygon for balance display
+        balance: hdWalletBalance,
+        ogunBalance: hdWalletOgunBalance,
+        nfts: isHdPrimary ? ownedTracks.map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          artist: t.artist || t.profile?.displayName || 'Unknown',
+          artworkUrl: t.artworkUrl,
+          audioUrl: t.playbackUrl,
+          tokenId: t.tokenId,
+        })) : [],  // NFTs only shown if HD is primary
+        isActive: isHdPrimary,
+        isPrimary: isHdPrimary,
+        isMultiChain: true,
+        icon: '🌐'
+      })
+    }
+
+    // Magic/OAuth Wallet (legacy users - still shown for backwards compatibility)
+    if (userWallet && userWallet !== hdWalletAddress) {
+      const isMagicPrimary = primaryWallet !== PrimaryWalletType.Hd
       wallets.push({
         id: 'magic',
         type: 'magic',
@@ -250,15 +326,16 @@ export function MultiWalletAggregator({
         chainId: 137,
         balance: maticBalance || '0',
         ogunBalance: ogunBalance || '0',
-        nfts: ownedTracks.map((t: any) => ({
+        nfts: isMagicPrimary ? ownedTracks.map((t: any) => ({
           id: t.id,
           title: t.title,
           artist: t.artist || t.profile?.displayName || 'Unknown',
           artworkUrl: t.artworkUrl,
           audioUrl: t.playbackUrl,
           tokenId: t.tokenId,
-        })),
-        isActive: !walletConnectedAddress && !metamaskAddress && !isWeb3ModalConnected,
+        })) : [],  // NFTs only shown if Magic is primary
+        isActive: isMagicPrimary && !walletConnectedAddress && !metamaskAddress && !isWeb3ModalConnected,
+        isPrimary: isMagicPrimary,
         icon: '✨'
       })
     }
@@ -356,7 +433,7 @@ export function MultiWalletAggregator({
     }
 
     setConnectedWallets(wallets)
-  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType, directWalletSubtype, externalWalletNfts, connectedExternalWallets])
+  }, [userWallet, maticBalance, ogunBalance, ownedTracks, metamaskAddress, metamaskBalance, metamaskOgunBalance, walletConnectedAddress, isWeb3ModalConnected, web3ModalAddress, web3ModalBalance, web3ModalOgunBalance, web3ModalChainName, activeWalletType, directWalletSubtype, externalWalletNfts, connectedExternalWallets, hdWalletAddress, hdWalletBalance, hdWalletOgunBalance, primaryWallet])
 
   const toggleExpanded = (walletId: string) => {
     setExpandedWallets(prev => {
@@ -374,6 +451,7 @@ export function MultiWalletAggregator({
     if (icon) return icon
     switch (type) {
       case 'magic': return '✨'
+      case 'hd': return '🌐'  // HD wallet = multi-chain globe
       case 'metamask': return '🦊'
       case 'walletconnect': return '🔗'
       case 'web3modal': return '🌐'
@@ -386,7 +464,8 @@ export function MultiWalletAggregator({
 
   const getWalletName = (type: string) => {
     switch (type) {
-      case 'magic': return 'SoundChain Wallet'
+      case 'magic': return 'OAuth Wallet'
+      case 'hd': return 'Multi-Chain Wallet'  // HD wallet name
       case 'metamask': return 'MetaMask'
       case 'walletconnect': return 'WalletConnect'
       case 'web3modal': return 'External Wallet'
@@ -416,6 +495,46 @@ export function MultiWalletAggregator({
 
   return (
     <div className="space-y-4">
+      {/* HD Wallet Upgrade Banner for Legacy Users */}
+      {isLegacyUser && (
+        <Card className="retro-card p-4 border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-cyan-500/10">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+              <Globe className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="text-white font-bold text-sm">Upgrade to Multi-Chain Wallet</h4>
+                <Badge className="bg-green-500/20 text-green-400 text-[10px]">FREE</Badge>
+              </div>
+              <p className="text-gray-400 text-xs mb-3">
+                Get a wallet that works on <span className="text-cyan-400">ALL EVM chains</span> - Polygon, Ethereum, Base, Arbitrum, Optimism & more. Same address everywhere!
+              </p>
+              <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div className="flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-yellow-400" />
+                  <span>24 Token Support</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-purple-400" />
+                  <span>Zero Cost</span>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="mt-3 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white text-xs"
+                onClick={() => {
+                  // TODO: Implement HD wallet generation for legacy users
+                  console.log('Generate HD wallet for legacy user')
+                }}
+              >
+                Generate HD Wallet <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Connected Wallets with NFT Collections */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -440,8 +559,25 @@ export function MultiWalletAggregator({
               key={wallet.id}
               className={`retro-card overflow-hidden transition-all ${
                 wallet.isActive ? 'border-cyan-500/50' : ''
-              }`}
+              } ${wallet.type === 'hd' ? 'border-gradient-to-r from-cyan-500/30 to-purple-500/30' : ''}`}
             >
+              {/* HD Wallet Multi-Chain Banner */}
+              {wallet.type === 'hd' && wallet.isMultiChain && (
+                <div className="bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-cyan-500/20 px-4 py-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-cyan-400" />
+                    <span className="text-xs text-cyan-400 font-medium">Works on ALL EVM Chains</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {['Polygon', 'Ethereum', 'Base', 'Arbitrum', 'Optimism'].map(chain => (
+                      <div key={chain} className="w-4 h-4 rounded-full bg-gray-700/50 flex items-center justify-center" title={chain}>
+                        <span className="text-[8px]">{chain[0]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Wallet Header - Clickable to expand */}
               <button
                 className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
@@ -449,6 +585,7 @@ export function MultiWalletAggregator({
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
+                    wallet.type === 'hd' ? 'bg-gradient-to-br from-cyan-500/30 via-purple-500/30 to-cyan-600/20 border border-cyan-500/30' :
                     wallet.type === 'magic' ? 'bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 border border-cyan-500/30' :
                     wallet.type === 'metamask' ? 'bg-gradient-to-br from-orange-500/30 to-orange-600/20 border border-orange-500/30' :
                     wallet.type === 'web3modal' ? 'bg-gradient-to-br from-purple-500/30 to-purple-600/20 border border-purple-500/30' :
@@ -459,23 +596,33 @@ export function MultiWalletAggregator({
                   <div className="text-left">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-cyan-400 font-bold">{formatAddress(wallet.address)}</span>
-                      {wallet.isActive && (
+                      {wallet.isPrimary && (
+                        <Badge className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 text-[10px] px-1.5 border border-cyan-500/30">Primary</Badge>
+                      )}
+                      {wallet.isActive && !wallet.isPrimary && (
                         <Badge className="bg-green-500/20 text-green-400 text-[10px] px-1.5">Active</Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-gray-400">{getWalletName(wallet.type)}</span>
-                      <Badge className={`text-[10px] px-1.5 ${
-                        wallet.chainName === 'Polygon' ? 'bg-purple-500/20 text-purple-400' :
-                        wallet.chainName === 'Ethereum' ? 'bg-blue-500/20 text-blue-400' :
-                        wallet.chainName === 'Base' ? 'bg-blue-500/20 text-blue-400' :
-                        wallet.chainName === 'ZetaChain' ? 'bg-green-500/20 text-green-400' :
-                        wallet.chainName === 'Arbitrum' ? 'bg-blue-500/20 text-blue-400' :
-                        wallet.chainName === 'Optimism' ? 'bg-red-500/20 text-red-400' :
-                        'bg-gray-500/20 text-gray-400'
-                      }`}>
-                        {wallet.chainName}
-                      </Badge>
+                      {wallet.type === 'hd' ? (
+                        <Badge className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 text-[10px] px-1.5 flex items-center gap-1">
+                          <Globe className="w-2.5 h-2.5" />
+                          Multi-Chain
+                        </Badge>
+                      ) : (
+                        <Badge className={`text-[10px] px-1.5 ${
+                          wallet.chainName === 'Polygon' ? 'bg-purple-500/20 text-purple-400' :
+                          wallet.chainName === 'Ethereum' ? 'bg-blue-500/20 text-blue-400' :
+                          wallet.chainName === 'Base' ? 'bg-blue-500/20 text-blue-400' :
+                          wallet.chainName === 'ZetaChain' ? 'bg-green-500/20 text-green-400' :
+                          wallet.chainName === 'Arbitrum' ? 'bg-blue-500/20 text-blue-400' :
+                          wallet.chainName === 'Optimism' ? 'bg-red-500/20 text-red-400' :
+                          'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {wallet.chainName}
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </div>
