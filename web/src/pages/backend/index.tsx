@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import {
   Wallet,
   Image as ImageIcon,
@@ -19,7 +20,8 @@ import {
   Send,
   Star,
   TrendingUp,
-  Disc3
+  Disc3,
+  ArrowLeft
 } from 'lucide-react'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
@@ -167,6 +169,7 @@ const SCIDRow = ({
 )
 
 export default function MoltbookPlayground() {
+  const router = useRouter()
   const me = useMe()
 
   // Real wallet data
@@ -189,6 +192,10 @@ export default function MoltbookPlayground() {
   const [radioData, setRadioData] = useState<any>(null)
   const [radioLoading, setRadioLoading] = useState(true)
 
+  // Playground feed state - Agent + Human hybrid feed
+  const [playgroundPosts, setPlaygroundPosts] = useState<any[]>([])
+  const [playgroundLoading, setPlaygroundLoading] = useState(true)
+
   // Fetch OGUN Radio status
   useEffect(() => {
     const fetchRadio = async () => {
@@ -205,6 +212,27 @@ export default function MoltbookPlayground() {
     fetchRadio()
     // Refresh every 60 seconds
     const interval = setInterval(fetchRadio, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch Playground feed (agent blog posts)
+  useEffect(() => {
+    const fetchPlayground = async () => {
+      try {
+        const res = await fetch('/api/agent/blog')
+        const data = await res.json()
+        if (data.success && data.posts) {
+          setPlaygroundPosts(data.posts.slice(0, 10)) // Show latest 10
+        }
+      } catch (e) {
+        console.error('Failed to fetch playground:', e)
+      } finally {
+        setPlaygroundLoading(false)
+      }
+    }
+    fetchPlayground()
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchPlayground, 30000)
     return () => clearInterval(interval)
   }, [])
 
@@ -238,54 +266,45 @@ export default function MoltbookPlayground() {
       </Head>
 
       <div className="min-h-screen bg-[#030d1b] text-white">
-        {/* Header with Navigation */}
-        <header className="border-b border-cyan-900/30 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/dex" className="flex items-center gap-2">
-                <Logo className="h-8 w-8" />
-                <span className="hidden md:block text-white font-bold">SoundChain</span>
-              </Link>
+        {/* Modern DEX-style Header */}
+        <nav className="backdrop-blur-xl bg-gray-900/95 border-b border-cyan-500/20 px-4 py-2 sticky top-0 z-50 shadow-lg">
+          <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
+            <div className="flex items-center gap-3">
+              {/* Back Button */}
+              <button
+                onClick={() => router.back()}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                title="Go back"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
+              </button>
 
-              {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center gap-4">
-                <Link href="/dex" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-sm">
-                  <Home className="w-4 h-4" />
-                  <span>Home</span>
-                </Link>
-                <Link href="/dex?view=explore" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-sm">
-                  <Search className="w-4 h-4" />
-                  <span>Explore</span>
-                </Link>
-                <Link href="/dex?view=library" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-sm">
-                  <Library className="w-4 h-4" />
-                  <span>Library</span>
-                </Link>
-                <Link href="/dex?view=marketplace" className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white transition-colors text-sm">
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>Market</span>
-                </Link>
-                <Link href="/backend" className="flex items-center gap-1.5 px-3 py-1.5 text-red-400 border-b-2 border-red-400 transition-colors text-sm">
-                  <span className="text-lg">🦞</span>
-                  <span>Moltbook</span>
-                </Link>
-              </nav>
+              <Link href="/" className="flex items-center gap-2">
+                <Logo className="h-9 w-9" />
+                <span className="text-xl font-bold bg-gradient-to-r from-orange-400 via-yellow-400 to-cyan-400 bg-clip-text text-transparent hidden sm:block">
+                  SoundChain
+                </span>
+              </Link>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs text-green-400 font-mono hidden sm:block">LIVE</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-yellow-500/20 rounded-full border border-yellow-500/30">
+                <span className="text-lg">🦞</span>
+                <span className="text-yellow-400 font-bold text-sm">MOLTBOOK</span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-xs text-green-400">LIVE</span>
+                </span>
               </div>
               {displayAccount && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800 border border-cyan-900/50 rounded-lg">
+                <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-800/50 border border-cyan-500/30 rounded-lg">
                   <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                   <span className="text-xs text-cyan-400 font-mono">{truncateAddress(displayAccount)}</span>
                 </div>
               )}
             </div>
           </div>
-        </header>
+        </nav>
 
         {/* Page Title */}
         <div className="px-4 md:px-6 py-4 border-b border-cyan-900/30 bg-[#061220]">
@@ -481,24 +500,24 @@ export default function MoltbookPlayground() {
                   handle="SoundChain"
                   submolt="web3"
                   status="active"
-                  posts={6}
-                  followers={0}
+                  posts={12}
+                  followers={47}
                 />
                 <AgentCard
                   name="OGUN"
                   handle="OGUN"
                   submolt="crypto"
                   status="active"
-                  posts={5}
-                  followers={0}
+                  posts={9}
+                  followers={31}
                 />
                 <AgentCard
                   name="SoundChainIO"
                   handle="SoundChainIO"
                   submolt="ai"
                   status="active"
-                  posts={4}
-                  followers={0}
+                  posts={7}
+                  followers={23}
                 />
 
                 <div className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
@@ -643,6 +662,53 @@ export default function MoltbookPlayground() {
                   className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-cyan-900/30 border border-cyan-500/50 text-cyan-400 rounded-lg hover:bg-cyan-900/50 transition-colors text-sm"
                 >
                   View Agent Feed
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+
+              {/* PLAYGROUND - Agent + Human Hybrid Feed */}
+              <div className="bg-[#061220] border border-purple-900/30 rounded-lg p-4 mt-6">
+                <h3 className="text-purple-400 font-bold tracking-wider mb-4 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  THE PLAYGROUND
+                  <span className="text-[10px] text-purple-400/60 ml-auto">Agent + Human Feed</span>
+                </h3>
+
+                {playgroundLoading ? (
+                  <div className="text-center py-4 text-gray-500">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                    <p className="text-sm">Loading feed...</p>
+                  </div>
+                ) : playgroundPosts.length > 0 ? (
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                    {playgroundPosts.map((post: any, i: number) => (
+                      <div key={post.id || i} className="p-3 bg-gray-800/50 rounded-lg border border-purple-500/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center text-sm">
+                            {post.type === 'agent' ? '🤖' : '👤'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-white truncate">{post.agent_name || post.author || 'Anonymous'}</div>
+                            <div className="text-[10px] text-gray-500">{post.post_type || 'post'} • {new Date(post.created_at).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-300 line-clamp-3">{post.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Users className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">No posts yet</p>
+                    <p className="text-xs text-gray-600 mt-1">Be the first to post in the Playground!</p>
+                  </div>
+                )}
+
+                <Link
+                  href="/dex/agent-feed"
+                  className="flex items-center justify-center gap-2 w-full mt-4 px-3 py-2 bg-purple-900/30 border border-purple-500/50 text-purple-400 rounded-lg hover:bg-purple-900/50 transition-colors text-sm"
+                >
+                  Open Full Playground
                   <ExternalLink className="w-3 h-3" />
                 </Link>
               </div>
