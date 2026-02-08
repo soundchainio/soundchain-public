@@ -11,9 +11,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 // GraphQL query for radio tracks - includes assetUrl for audio playback
+// Uses cursor-based pagination with 'after' for fetching all tracks
 const TRACKS_QUERY = `
-  query RadioTracks($limit: Int) {
-    exploreTracks(page: { first: $limit }) {
+  query RadioTracks($limit: Int, $after: String) {
+    exploreTracks(page: { first: $limit, after: $after }) {
       nodes {
         id
         title
@@ -26,43 +27,66 @@ const TRACKS_QUERY = `
       }
       pageInfo {
         totalCount
+        hasNextPage
+        endCursor
       }
     }
   }
 `
 
-// Direct GraphQL fetch for serverless - fetches ALL tracks
+// Page size - API has hidden limit around 200-250, so we use 200 to be safe
+const PAGE_SIZE = 200
+
+// Direct GraphQL fetch for serverless - fetches ALL tracks via pagination
 async function fetchAllTracks() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
 
   try {
-    // First, get total count
-    const countResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: TRACKS_QUERY,
-        variables: { limit: 1 }
+    let allTracks: any[] = []
+    let hasNextPage = true
+    let cursor: string | null = null
+    let totalCount = 0
+
+    // Paginate through all tracks
+    while (hasNextPage) {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: TRACKS_QUERY,
+          variables: {
+            limit: PAGE_SIZE,
+            after: cursor
+          }
+        })
       })
-    })
 
-    const countJson = await countResponse.json()
-    const totalCount = countJson.data?.exploreTracks?.pageInfo?.totalCount || 1000
+      const json = await response.json()
+      const pageData = json.data?.exploreTracks
 
-    // Now fetch ALL tracks
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: TRACKS_QUERY,
-        variables: { limit: totalCount }
-      })
-    })
+      if (!pageData || !pageData.nodes) {
+        console.error('[OGUN Radio] Invalid response:', json)
+        break
+      }
 
-    const json = await response.json()
-    const tracks = json.data?.exploreTracks?.nodes || []
-    console.log(`[OGUN Radio] Fetched ${tracks.length} of ${totalCount} total tracks`)
-    return { tracks, totalCount }
+      const tracks = pageData.nodes
+      allTracks = allTracks.concat(tracks)
+
+      // Update pagination info
+      totalCount = pageData.pageInfo?.totalCount || allTracks.length
+      hasNextPage = pageData.pageInfo?.hasNextPage || false
+      cursor = pageData.pageInfo?.endCursor || null
+
+      console.log(`[OGUN Radio] Fetched page: ${tracks.length} tracks (total so far: ${allTracks.length}/${totalCount})`)
+
+      // Safety: prevent infinite loops
+      if (allTracks.length >= totalCount || !cursor) {
+        hasNextPage = false
+      }
+    }
+
+    console.log(`[OGUN Radio] Fetched ALL ${allTracks.length} of ${totalCount} total tracks`)
+    return { tracks: allTracks, totalCount }
   } catch (e) {
     console.error('[OGUN Radio] Fetch error:', e)
     return { tracks: [], totalCount: 0 }
