@@ -40,6 +40,7 @@ export default function OGUNRadio() {
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
   const [queueLength, setQueueLength] = useState(0)
+  const [totalTracks, setTotalTracks] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [needsInteraction, setNeedsInteraction] = useState(true)
 
@@ -54,6 +55,7 @@ export default function OGUNRadio() {
       if (data.success && data.data?.now_playing) {
         setCurrentTrack(data.data.now_playing)
         setQueueLength(data.data.queue_length || 0)
+        setTotalTracks(data.data.total_tracks || data.data.queue_length || 0)
         setError(null)
       } else {
         setError('No tracks available')
@@ -227,7 +229,7 @@ export default function OGUNRadio() {
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">OGUN Radio</h1>
               <p className="text-gray-400 flex items-center justify-center gap-2">
-                618 NFT Tracks <Shuffle className="w-4 h-4 text-green-400" /> Infinite Shuffle
+                {totalTracks || queueLength || '...'} NFT Tracks <Shuffle className="w-4 h-4 text-green-400" /> Infinite Shuffle
               </p>
             </div>
 
@@ -291,7 +293,7 @@ export default function OGUNRadio() {
                         <Play className="w-4 h-4" />
                         {currentTrack.play_count} plays
                       </span>
-                      <span>Queue: {queueLength} tracks</span>
+                      <span>{totalTracks || queueLength} NFT Tracks</span>
                     </div>
                   </div>
                 </div>
@@ -373,7 +375,7 @@ export default function OGUNRadio() {
           {/* Info Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
             <div className="bg-[#0a1628] border border-cyan-900/30 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-cyan-400">618</div>
+              <div className="text-3xl font-bold text-cyan-400">{totalTracks || queueLength || '...'}</div>
               <div className="text-sm text-gray-500">NFT Tracks</div>
             </div>
             <div className="bg-[#0a1628] border border-yellow-900/30 rounded-xl p-4 text-center">

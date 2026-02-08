@@ -31,25 +31,41 @@ const TRACKS_QUERY = `
   }
 `
 
-// Direct GraphQL fetch for serverless
-async function fetchTracks(limit: number = 100) {
+// Direct GraphQL fetch for serverless - fetches ALL tracks
+async function fetchAllTracks() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
 
   try {
+    // First, get total count
+    const countResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: TRACKS_QUERY,
+        variables: { limit: 1 }
+      })
+    })
+
+    const countJson = await countResponse.json()
+    const totalCount = countJson.data?.exploreTracks?.pageInfo?.totalCount || 1000
+
+    // Now fetch ALL tracks
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: TRACKS_QUERY,
-        variables: { limit }
+        variables: { limit: totalCount }
       })
     })
 
     const json = await response.json()
-    return json.data?.exploreTracks?.nodes || []
+    const tracks = json.data?.exploreTracks?.nodes || []
+    console.log(`[OGUN Radio] Fetched ${tracks.length} of ${totalCount} total tracks`)
+    return { tracks, totalCount }
   } catch (e) {
     console.error('[OGUN Radio] Fetch error:', e)
-    return []
+    return { tracks: [], totalCount: 0 }
   }
 }
 
@@ -82,6 +98,9 @@ interface RadioTrack {
 let currentTrack: RadioTrack | null = null
 let trackStartTime: Date | null = null
 let radioPlaylist: RadioTrack[] = []
+let totalTracksInDatabase: number = 0
+let lastFetchTime: Date | null = null
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000 // Refresh every 5 minutes to catch new mints
 
 function formatTrackForBroadcast(track: RadioTrack): string {
   const lines = [
@@ -129,6 +148,32 @@ export default async function handler(
   if (req.method === 'GET') {
     // Return current track or get a new one
     if (action === 'playlist') {
+      // Ensure we have the full playlist
+      if (radioPlaylist.length === 0) {
+        const { tracks: rawTracks, totalCount } = await fetchAllTracks()
+        totalTracksInDatabase = totalCount
+        radioPlaylist = rawTracks
+          .filter((track: any) => track.assetUrl)
+          .map((track: any) => ({
+            id: track.id,
+            title: track.title || 'Untitled',
+            artist: track.artist || 'Unknown Artist',
+            album: track.album,
+            description: track.description,
+            artwork_url: track.artworkUrl,
+            stream_url: track.assetUrl,
+            duration: null,
+            play_count: track.playbackCount || 0,
+            scid: null,
+            is_nft: true,
+            genres: [],
+            owner: null,
+            licensing: { type: 'nft' as const, ogun_enabled: true, streaming_rewards: true }
+          }))
+          .sort(() => Math.random() - 0.5)
+        lastFetchTime = new Date()
+      }
+
       // Return the full radio playlist
       return res.status(200).json({
         success: true,
@@ -136,21 +181,27 @@ export default async function handler(
           playlist: radioPlaylist,
           current_track: currentTrack,
           current_track_started: trackStartTime?.toISOString(),
-          total_tracks: radioPlaylist.length
+          total_tracks: totalTracksInDatabase || radioPlaylist.length,
+          playable_tracks: radioPlaylist.length,
+          last_refresh: lastFetchTime?.toISOString()
         },
         meta: {
           timestamp: new Date().toISOString(),
           request_id: requestId,
-          agent: 'OGUN Radio'
+          agent: 'OGUN Radio',
+          note: 'Playlist refreshes every 5 minutes to include new NFT mints'
         }
       })
     }
 
-    // Fetch tracks if playlist is empty
-    if (radioPlaylist.length === 0) {
+    // Fetch tracks if playlist is empty OR if it's time to refresh (to catch new mints)
+    const needsRefresh = !lastFetchTime || (Date.now() - lastFetchTime.getTime() > REFRESH_INTERVAL_MS)
+
+    if (radioPlaylist.length === 0 || needsRefresh) {
       try {
-        // Fetch tracks via direct GraphQL
-        const rawTracks = await fetchTracks(100)
+        // Fetch ALL tracks via direct GraphQL
+        const { tracks: rawTracks, totalCount } = await fetchAllTracks()
+        totalTracksInDatabase = totalCount
 
         const tracks: RadioTrack[] = rawTracks
           .filter((track: any) => track.assetUrl) // Only tracks with audio
@@ -175,19 +226,37 @@ export default async function handler(
             }
           }))
 
+        // If we have a current track, preserve its position
+        const currentTrackId = currentTrack?.id
+
         // Shuffle the tracks
         radioPlaylist = tracks.sort(() => Math.random() - 0.5)
 
+        // If we had a current track, make sure it's still at the front
+        if (currentTrackId) {
+          const currentIdx = radioPlaylist.findIndex(t => t.id === currentTrackId)
+          if (currentIdx > 0) {
+            const [track] = radioPlaylist.splice(currentIdx, 1)
+            radioPlaylist.unshift(track)
+          }
+        }
+
+        lastFetchTime = new Date()
+        console.log(`[OGUN Radio] Loaded ${radioPlaylist.length} playable tracks (${totalTracksInDatabase} total in DB)`)
+
       } catch (error: any) {
         console.error('[OGUN Radio] Error fetching tracks:', error)
-        return res.status(500).json({
-          success: false,
-          error: 'Failed to load radio playlist',
-          meta: {
-            timestamp: new Date().toISOString(),
-            request_id: requestId
-          }
-        })
+        // Only fail if we have no playlist at all
+        if (radioPlaylist.length === 0) {
+          return res.status(500).json({
+            success: false,
+            error: 'Failed to load radio playlist',
+            meta: {
+              timestamp: new Date().toISOString(),
+              request_id: requestId
+            }
+          })
+        }
       }
     }
 
@@ -203,13 +272,17 @@ export default async function handler(
         now_playing: currentTrack,
         started_at: trackStartTime?.toISOString(),
         queue_length: radioPlaylist.length,
-        broadcast_message: currentTrack ? formatTrackForBroadcast(currentTrack) : null
+        total_tracks: totalTracksInDatabase || radioPlaylist.length,
+        broadcast_message: currentTrack ? formatTrackForBroadcast(currentTrack) : null,
+        last_refresh: lastFetchTime?.toISOString(),
+        next_refresh_in: lastFetchTime ? Math.max(0, REFRESH_INTERVAL_MS - (Date.now() - lastFetchTime.getTime())) : 0
       },
       meta: {
         timestamp: new Date().toISOString(),
         request_id: requestId,
         agent: 'OGUN Radio',
-        description: 'Decentralized P2P music radio powered by OGUN L2'
+        description: 'Decentralized P2P music radio powered by OGUN L2',
+        note: 'New NFT mints automatically join the queue every 5 minutes'
       },
       actions: {
         comment: 'POST /api/agent/radio/comment { track_id, agent_name, comment }',
