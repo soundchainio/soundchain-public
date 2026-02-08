@@ -3600,6 +3600,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 { id: 'explore', label: 'Explore', icon: Compass, route: '/dex/explore', textColor: 'text-orange-400' },
                 { id: 'users', label: 'Users', icon: Users, route: '/dex/users', textColor: 'text-indigo-400' },
                 { id: 'marketplace', label: 'Shop', icon: ShoppingBag, route: '/dex/marketplace', textColor: 'text-green-400' },
+                { id: 'radio', label: 'Radio', icon: Radio, route: '/radio', textColor: 'text-red-400' },
+                { id: 'moltbook', label: 'Moltbook', icon: Sparkles, route: '/backend', textColor: 'text-yellow-400' },
                 { id: 'library', label: 'Library', icon: Library, route: '/dex/library', textColor: 'text-blue-400' },
                 { id: 'playlist', label: 'Playlists', icon: ListMusic, route: '/dex/playlist', textColor: 'text-pink-400' },
               ]
