@@ -1,10 +1,25 @@
 import { getModelForClass, prop } from '@typegoose/typegoose';
 import mongoose from 'mongoose';
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType, registerEnumType } from 'type-graphql';
 import { AuthMethod } from '../types/AuthMethod';
 import { DefaultWallet } from '../types/DefaultWallet';
 import { Role } from '../types/Role';
 import { Model } from './Model';
+
+// HD Wallet System - Multi-chain support
+export enum PrimaryWalletType {
+  MAGIC = 'magic',
+  HD = 'hd'
+}
+
+export enum MigrationStatus {
+  NONE = 'none',
+  PENDING = 'pending',
+  COMPLETED = 'completed'
+}
+
+registerEnumType(PrimaryWalletType, { name: 'PrimaryWalletType' });
+registerEnumType(MigrationStatus, { name: 'MigrationStatus' });
 
 @ObjectType()
 export class User extends Model {
@@ -47,6 +62,42 @@ export class User extends Model {
   @Field(() => [String], { nullable: true })
   @prop({ type: [String], required: false })
   metaMaskWalletAddressees: string[];
+
+  // ============================================
+  // HD WALLET SYSTEM - Multi-Chain Support
+  // ============================================
+
+  // HD-derived wallet address (works on ALL EVM chains: Polygon, Ethereum, Base, etc.)
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  hdWalletAddress?: string;
+
+  // When the HD wallet was generated
+  @Field(() => Date, { nullable: true })
+  @prop({ required: false })
+  hdWalletCreatedAt?: Date;
+
+  // Which wallet is primary for transactions
+  @Field(() => PrimaryWalletType, { nullable: true })
+  @prop({ type: String, enum: PrimaryWalletType, default: PrimaryWalletType.MAGIC })
+  primaryWallet?: PrimaryWalletType;
+
+  // Migration status from Magic wallet to HD wallet
+  @Field(() => MigrationStatus, { nullable: true })
+  @prop({ type: String, enum: MigrationStatus, default: MigrationStatus.NONE })
+  migrationStatus?: MigrationStatus;
+
+  // Transaction hash of the migration (NFT/token transfers)
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  migrationTxHash?: string;
+
+  // Solana address (different derivation path, non-EVM)
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  solanaAddress?: string;
+
+  // ============================================
 
   @Field(() => DefaultWallet)
   @prop({ type: String, enum: DefaultWallet, default: DefaultWallet.Soundchain })

@@ -1,12 +1,13 @@
 import { ethers } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import { ProfileModel } from '../models/Profile';
-import { User, UserModel } from '../models/User';
+import { User, UserModel, PrimaryWalletType, MigrationStatus } from '../models/User';
 import { AuthMethod } from '../types/AuthMethod';
 import { Role } from '../types/Role';
 import { validateUniqueIdentifiers } from '../utils/Validation';
 import { Service } from './Service';
 import { generateNostrKeypair } from '../utils/nostrKeygen';
+import { deriveHumanEvmWallet, isHdWalletSystemReady } from '../utils/hdWallet';
 
 export class AuthService extends Service {
   async register(
@@ -50,12 +51,29 @@ export class AuthService extends Service {
     const nostrKeypair = generateNostrKeypair();
     console.log('[Auth] Generated Nostr identity for new user:', nostrKeypair.publicKey.slice(0, 16) + '...');
 
+    // Auto-generate HD wallet for multi-chain support (Polygon, Ethereum, Base, etc.)
+    // This is FREE ($0) vs Magic.link per-user costs
+    let hdWalletFields: Record<string, any> = {};
+    if (isHdWalletSystemReady()) {
+      const hdWallet = deriveHumanEvmWallet(profile._id.toString());
+      if (hdWallet) {
+        hdWalletFields = {
+          hdWalletAddress: hdWallet.address,
+          hdWalletCreatedAt: new Date(),
+          primaryWallet: PrimaryWalletType.HD, // New users default to HD wallet
+          migrationStatus: MigrationStatus.NONE,
+        };
+        console.log('[Auth] Generated HD wallet for new user:', hdWallet.address.slice(0, 10) + '...');
+      }
+    }
+
     const user = new UserModel({
       email,
       handle,
       profileId: profile._id,
       emailVerificationToken,
       ...walletFields,
+      ...hdWalletFields, // Add HD wallet fields
       authMethod: oauthProvider || AuthMethod.magicLink,
       // Auto-enable Nostr notifications with generated keypair
       nostrPubkey: nostrKeypair.publicKey,
@@ -141,6 +159,22 @@ export class AuthService extends Service {
     const nostrKeypair = generateNostrKeypair();
     console.log('[Auth] Generated Nostr identity for wallet user:', nostrKeypair.publicKey.slice(0, 16) + '...');
 
+    // Auto-generate HD wallet for multi-chain support
+    let hdWalletFields: Record<string, any> = {};
+    if (isHdWalletSystemReady()) {
+      const hdWallet = deriveHumanEvmWallet(profile._id.toString());
+      if (hdWallet) {
+        hdWalletFields = {
+          hdWalletAddress: hdWallet.address,
+          hdWalletCreatedAt: new Date(),
+          // Wallet-only users: their connected wallet is primary, HD is secondary
+          primaryWallet: PrimaryWalletType.MAGIC,
+          migrationStatus: MigrationStatus.NONE,
+        };
+        console.log('[Auth] Generated HD wallet for wallet user:', hdWallet.address.slice(0, 10) + '...');
+      }
+    }
+
     // Create user with wallet as primary identifier
     const user = new UserModel({
       email: syntheticEmail,
@@ -149,6 +183,7 @@ export class AuthService extends Service {
       emailVerificationToken,
       magicWalletAddress: walletAddress, // Store in magic field for compatibility
       metaMaskWalletAddressees: [walletAddress], // Also store in MetaMask array
+      ...hdWalletFields, // Add HD wallet fields
       authMethod: AuthMethod.wallet,
       isApprovedOnMarketplace: false, // Explicit default for wallet-only users
       // Auto-enable Nostr notifications with generated keypair

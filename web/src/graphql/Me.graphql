@@ -22,6 +22,11 @@ query Me {
     notifyOnDM
     nostrPubkey
     notifyViaNostr
+    hdWalletAddress
+    hdWalletCreatedAt
+    primaryWallet
+    migrationStatus
+    solanaAddress
     profile {
       ...ProfileComponentFields
     }
