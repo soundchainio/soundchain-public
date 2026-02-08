@@ -126,6 +126,8 @@ provider:
     NFT_MULTIPLE_EDITION_ADDRESS: ${env:NFT_MULTIPLE_EDITION_ADDRESS}
     MARKETPLACE_MULTIPLE_EDITION_ADDRESS: ${env:MARKETPLACE_MULTIPLE_EDITION_ADDRESS}
     SERVERLESS_ACCESS_KEY: ${env:SERVERLESS_ACCESS_KEY}
+    # HD Wallet System - Multi-chain support for human users
+    HUMAN_WALLET_SEED: ${env:HUMAN_WALLET_SEED}
   iam:
     role:
       statements:

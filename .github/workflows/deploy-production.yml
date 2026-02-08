@@ -118,6 +118,7 @@ jobs:
           POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY }}
           MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          HUMAN_WALLET_SEED: ${{ secrets.HUMAN_WALLET_SEED }}
           GRAPHQL_IMAGE_URI: ${{ env.GRAPHQL_IMAGE_URI }}
           HELLO_IMAGE_URI: ${{ env.HELLO_IMAGE_URI }}
           MIGRATE_IMAGE_URI: ${{ env.MIGRATE_IMAGE_URI }}
