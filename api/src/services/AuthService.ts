@@ -25,45 +25,53 @@ export class AuthService extends Service {
 
     const emailVerificationToken = uuidv4();
 
-    // Determine which wallet field to populate based on OAuth provider
-    const walletFields: Record<string, string> = {
-      magicWalletAddress, // Always set the default Magic wallet
-    };
-
-    // Also save to provider-specific wallet field
-    switch (oauthProvider) {
-      case AuthMethod.google:
-        walletFields.googleWalletAddress = magicWalletAddress;
-        break;
-      case AuthMethod.discord:
-        walletFields.discordWalletAddress = magicWalletAddress;
-        break;
-      case AuthMethod.twitch:
-        walletFields.twitchWalletAddress = magicWalletAddress;
-        break;
-      case AuthMethod.magicLink:
-      default:
-        walletFields.emailWalletAddress = magicWalletAddress;
-        break;
-    }
-
     // Auto-generate Nostr keypair for decentralized notifications
     const nostrKeypair = generateNostrKeypair();
     console.log('[Auth] Generated Nostr identity for new user:', nostrKeypair.publicKey.slice(0, 16) + '...');
 
-    // Auto-generate HD wallet for multi-chain support (Polygon, Ethereum, Base, etc.)
-    // This is FREE ($0) vs Magic.link per-user costs
+    // HD WALLET FIRST: Generate HD wallet for multi-chain support
+    // This is FREE ($0) vs Magic.link per-user wallet costs
     let hdWalletFields: Record<string, any> = {};
+    let walletFields: Record<string, string> = {};
+
     if (isHdWalletSystemReady()) {
       const hdWallet = deriveHumanEvmWallet(profile._id.toString());
       if (hdWallet) {
         hdWalletFields = {
           hdWalletAddress: hdWallet.address,
           hdWalletCreatedAt: new Date(),
-          primaryWallet: PrimaryWalletType.HD, // New users default to HD wallet
+          primaryWallet: PrimaryWalletType.HD,
           migrationStatus: MigrationStatus.NONE,
         };
         console.log('[Auth] Generated HD wallet for new user:', hdWallet.address.slice(0, 10) + '...');
+        console.log('[Auth] SKIPPING Magic wallet storage - using HD wallet only ($0 cost)');
+
+        // DON'T save Magic wallet - use HD wallet as the primary wallet
+        // Magic still handles OAuth auth, but we don't need their wallet
+        // This keeps us in the free tier!
+      }
+    }
+
+    // FALLBACK: Only save Magic wallet if HD wallet generation failed
+    if (!hdWalletFields.hdWalletAddress) {
+      console.log('[Auth] HD wallet not available, falling back to Magic wallet');
+      walletFields = { magicWalletAddress };
+
+      // Save to provider-specific wallet field
+      switch (oauthProvider) {
+        case AuthMethod.google:
+          walletFields.googleWalletAddress = magicWalletAddress;
+          break;
+        case AuthMethod.discord:
+          walletFields.discordWalletAddress = magicWalletAddress;
+          break;
+        case AuthMethod.twitch:
+          walletFields.twitchWalletAddress = magicWalletAddress;
+          break;
+        case AuthMethod.magicLink:
+        default:
+          walletFields.emailWalletAddress = magicWalletAddress;
+          break;
       }
     }
 
@@ -72,8 +80,8 @@ export class AuthService extends Service {
       handle,
       profileId: profile._id,
       emailVerificationToken,
-      ...walletFields,
-      ...hdWalletFields, // Add HD wallet fields
+      ...walletFields,      // Only populated if HD wallet failed
+      ...hdWalletFields,    // HD wallet fields (primary)
       authMethod: oauthProvider || AuthMethod.magicLink,
       // Auto-enable Nostr notifications with generated keypair
       nostrPubkey: nostrKeypair.publicKey,
