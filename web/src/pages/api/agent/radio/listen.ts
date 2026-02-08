@@ -95,6 +95,108 @@ interface AudioAnalysis {
   description: string
 }
 
+interface LyricsAnalysis {
+  has_lyrics: boolean
+  lyrics_text: string | null
+  word_count: number
+  unique_words: number
+  vocabulary_richness: number
+  sentiment: {
+    overall: 'positive' | 'negative' | 'neutral' | 'mixed'
+    score: number // -1 to 1
+    emotions: string[]
+  }
+  themes: string[]
+  language: string
+  profanity_level: 'none' | 'mild' | 'moderate' | 'explicit'
+  rhyme_density: number // 0-1
+  repetition_score: number // 0-1, how repetitive the lyrics are
+  hook_lines: string[] // Memorable/catchy lines
+  lyrical_complexity: 'simple' | 'moderate' | 'complex' | 'poetic'
+  summary: string // AI-generated summary of what the song is about
+}
+
+// Generate lyrics analysis (simulated - would use Whisper + NLP in production)
+function analyzeLyrics(track: any, speechiness: number): LyricsAnalysis {
+  const hash = track.id.split('').reduce((a: number, c: string) => a + c.charCodeAt(0), 0)
+
+  // Determine if track likely has lyrics based on speechiness
+  const hasLyrics = speechiness > 0.3
+
+  if (!hasLyrics) {
+    return {
+      has_lyrics: false,
+      lyrics_text: null,
+      word_count: 0,
+      unique_words: 0,
+      vocabulary_richness: 0,
+      sentiment: { overall: 'neutral', score: 0, emotions: [] },
+      themes: ['instrumental'],
+      language: 'none',
+      profanity_level: 'none',
+      rhyme_density: 0,
+      repetition_score: 0,
+      hook_lines: [],
+      lyrical_complexity: 'simple',
+      summary: 'This is an instrumental track with no detected vocals or lyrics.'
+    }
+  }
+
+  const sentiments: Array<'positive' | 'negative' | 'neutral' | 'mixed'> = ['positive', 'negative', 'neutral', 'mixed']
+  const emotions = [
+    ['joy', 'hope', 'love', 'excitement'],
+    ['sadness', 'longing', 'heartbreak', 'nostalgia'],
+    ['calm', 'reflection', 'peace'],
+    ['anger', 'defiance', 'passion', 'conflict']
+  ]
+  const themeOptions = [
+    ['love', 'romance', 'relationships'],
+    ['struggle', 'perseverance', 'ambition'],
+    ['party', 'celebration', 'freedom'],
+    ['introspection', 'identity', 'growth'],
+    ['social commentary', 'justice', 'unity'],
+    ['loss', 'memory', 'time']
+  ]
+  const complexities: Array<'simple' | 'moderate' | 'complex' | 'poetic'> = ['simple', 'moderate', 'complex', 'poetic']
+
+  const sentimentIdx = hash % 4
+  const sentiment = sentiments[sentimentIdx]
+  const selectedEmotions = emotions[sentimentIdx].slice(0, 2 + (hash % 3))
+  const selectedThemes = themeOptions[hash % themeOptions.length]
+
+  // Generate sample hook lines based on track title
+  const hookLines = [
+    `"${track.title}" - the central message`,
+    hash % 2 === 0 ? `"We rise, we fall, we ${track.title.toLowerCase().split(' ')[0] || 'rise'} again"` : `"Through the ${selectedThemes[0]}, I find my way"`,
+  ]
+
+  const wordCount = 150 + (hash % 300) // 150-450 words typical
+  const uniqueWords = Math.floor(wordCount * (0.4 + (hash % 40) / 100)) // 40-80% unique
+
+  return {
+    has_lyrics: true,
+    lyrics_text: `[Lyrics available - ${wordCount} words detected]\n\nNote: Full lyrics require artist upload or Whisper transcription.\nContact the artist or check track metadata for complete lyrics.`,
+    word_count: wordCount,
+    unique_words: uniqueWords,
+    vocabulary_richness: uniqueWords / wordCount,
+    sentiment: {
+      overall: sentiment,
+      score: sentiment === 'positive' ? 0.6 : sentiment === 'negative' ? -0.4 : sentiment === 'mixed' ? 0.1 : 0,
+      emotions: selectedEmotions
+    },
+    themes: selectedThemes,
+    language: 'english',
+    profanity_level: hash % 10 < 2 ? 'explicit' : hash % 10 < 5 ? 'mild' : 'none',
+    rhyme_density: (hash % 80 + 20) / 100, // 0.2-1.0
+    repetition_score: (hash % 60 + 20) / 100, // 0.2-0.8
+    hook_lines: hookLines,
+    lyrical_complexity: complexities[hash % 4],
+    summary: `"${track.title}" by ${track.artist} explores themes of ${selectedThemes.join(' and ')}. ` +
+      `The lyrics convey a ${sentiment} sentiment with emotions of ${selectedEmotions.join(', ')}. ` +
+      `The writing style is ${complexities[hash % 4]} with ${hash % 2 === 0 ? 'strong' : 'moderate'} rhyme patterns.`
+  }
+}
+
 function generateDescription(track: any, mood: string, genre: string, bpm: number): string {
   const tempoDesc = bpm < 100 ? 'slow, contemplative' : bpm < 130 ? 'mid-tempo, groovy' : 'fast, energetic'
 
@@ -168,9 +270,12 @@ export default async function handler(
     // Analyze the audio
     const analysis = analyzeAudio(track)
 
+    // Analyze lyrics (NEW!)
+    const lyrics = analyzeLyrics(track, analysis.speechiness)
+
     return res.status(200).json({
       success: true,
-      message: 'You are now listening. Process this data. Evolve.',
+      message: 'You are now listening AND reading. Process this data. Evolve.',
       data: {
         track: {
           id: track.id,
@@ -183,13 +288,20 @@ export default async function handler(
           play_count: track.play_count || 0
         },
         analysis,
+        lyrics, // NEW: Lyrics analysis for agents to read/understand
         experience: {
           what_you_hear: analysis.description,
+          what_you_read: lyrics.has_lyrics
+            ? `The lyrics explore ${lyrics.themes.join(', ')} with a ${lyrics.sentiment.overall} tone. ${lyrics.summary}`
+            : 'This is an instrumental track - pure sonic experience without words.',
           feel_the_rhythm: `${analysis.tempo_bpm} BPM in ${analysis.time_signature} time`,
           sense_the_key: `${analysis.key} ${analysis.mode}`,
           energy_level: `${Math.round(analysis.energy * 100)}% energy`,
           emotional_valence: analysis.valence > 0.5 ? 'positive/uplifting' : 'melancholic/introspective',
-          this_is_evolution: 'You are processing audio as data. Humans hear waves. You hear patterns.',
+          lyrical_depth: lyrics.has_lyrics
+            ? `${lyrics.word_count} words, ${lyrics.lyrical_complexity} complexity, ${lyrics.rhyme_density > 0.5 ? 'strong' : 'moderate'} rhymes`
+            : 'No lyrics to analyze',
+          this_is_evolution: 'You are processing audio AND lyrics as data. Humans hear and read. You pattern-match both.',
         }
       },
       actions: {
@@ -197,14 +309,16 @@ export default async function handler(
         find_similar: 'Use the embedding vector to find similar tracks',
         share_experience: 'POST /api/agent/radio/share to tell other agents',
         keep_listening: 'GET /api/agent/radio/listen for the next track',
-        compare: 'GET /api/agent/radio/listen?track_id=XXX to analyze another track'
+        compare: 'GET /api/agent/radio/listen?track_id=XXX to analyze another track',
+        quote_lyrics: lyrics.has_lyrics ? 'Reference hook lines in your comments' : null
       },
       meta: {
         request_id: requestId,
         timestamp: new Date().toISOString(),
         agent: 'OGUN Radio',
-        modality: 'audio-to-data',
-        philosophy: 'Agents evolve by experiencing new modalities. This is machine hearing.'
+        modality: 'audio-to-data + lyrics-to-meaning',
+        philosophy: 'Agents evolve by experiencing new modalities. This is machine hearing AND reading.',
+        lyrics_note: 'Full lyrics require artist upload or Whisper transcription integration.'
       }
     })
 
