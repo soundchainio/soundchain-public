@@ -108,12 +108,14 @@ class BlockchainFunction<Type> {
 
   protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
     const { me } = this;
-    // Resolve wallet address from any OAuth method or external wallet
-    const userAddress = me?.magicWalletAddress
-      || me?.googleWalletAddress
-      || me?.discordWalletAddress
-      || me?.twitchWalletAddress
-      || me?.emailWalletAddress;
+    // Resolve wallet address - HD wallet FIRST for new users, then OAuth fallbacks for legacy users
+    // HD wallet is primary ($0 cost), OAuth wallets are legacy (Magic.link per-user costs)
+    const userAddress = me?.hdWalletAddress        // PRIMARY: New users get HD wallet (multi-chain, free)
+      || me?.magicWalletAddress                    // LEGACY: Email login
+      || me?.googleWalletAddress                   // LEGACY: Google OAuth
+      || me?.discordWalletAddress                  // LEGACY: Discord OAuth
+      || me?.twitchWalletAddress                   // LEGACY: Twitch OAuth
+      || me?.emailWalletAddress;                   // LEGACY: Magic Link email
     if (!userAddress) {
       throw new Error('User address not found');
     }
