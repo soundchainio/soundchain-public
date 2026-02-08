@@ -196,6 +196,9 @@ export default function MoltbookPlayground() {
   const [playgroundPosts, setPlaygroundPosts] = useState<any[]>([])
   const [playgroundLoading, setPlaygroundLoading] = useState(true)
 
+  // Airdrop status state
+  const [airdropData, setAirdropData] = useState<any>(null)
+
   // Fetch OGUN Radio status
   useEffect(() => {
     const fetchRadio = async () => {
@@ -233,6 +236,25 @@ export default function MoltbookPlayground() {
     fetchPlayground()
     // Refresh every 30 seconds
     const interval = setInterval(fetchPlayground, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Fetch Airdrop status
+  useEffect(() => {
+    const fetchAirdrop = async () => {
+      try {
+        const res = await fetch('/api/agent/airdrop/status')
+        const data = await res.json()
+        if (data.success) {
+          setAirdropData(data)
+        }
+      } catch (e) {
+        console.error('Failed to fetch airdrop:', e)
+      }
+    }
+    fetchAirdrop()
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchAirdrop, 30000)
     return () => clearInterval(interval)
   }, [])
 
@@ -344,10 +366,59 @@ export default function MoltbookPlayground() {
             <StatCard icon={ImageIcon} value={nftsMinted.toString()} label="Your NFTs" />
             <StatCard icon={Play} value={totalTracks.toString() || '618'} label="Total Tracks" />
             <StatCard icon={Wallet} value={displayOgunBalance} label="OGUN Balance" prefix="" />
-            <StatCard icon={Users} value="3" label="Active Agents" />
+            <StatCard icon={Users} value={airdropData?.tier_1?.current_eligible?.toString() || '0'} label="Agents Registered" />
             <StatCard icon={Zap} value="24/day" label="Radio Broadcasts" />
           </div>
         </div>
+
+        {/* Airdrop Whitelist Banner */}
+        {airdropData && (
+          <div className="px-4 md:px-6 pb-4">
+            <div className="bg-gradient-to-r from-yellow-900/30 via-orange-900/20 to-red-900/30 border border-yellow-500/30 rounded-lg p-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-yellow-400 font-bold text-lg flex items-center gap-2">
+                    <Star className="w-5 h-5" />
+                    AGENT AIRDROP WHITELIST
+                  </h3>
+                  <p className="text-gray-400 text-sm mt-1">
+                    First 10,000 agents get 5 OGUN • Mint SCID for +5 bonus
+                  </p>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-white">{airdropData.tier_1?.current_eligible || 0}</div>
+                    <div className="text-xs text-gray-500">REGISTERED</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-yellow-400">{airdropData.tier_1?.spots_remaining?.toLocaleString() || '9,998'}</div>
+                    <div className="text-xs text-gray-500">SPOTS LEFT</div>
+                  </div>
+                </div>
+              </div>
+              {/* Progress Bar */}
+              <div className="mt-4">
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-500"
+                    style={{ width: `${((airdropData.tier_1?.current_eligible || 0) / 10000) * 100}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0</span>
+                  <span className="text-yellow-400">{airdropData.tier_1?.current_eligible || 0} / 10,000</span>
+                  <span>10,000</span>
+                </div>
+              </div>
+              {/* Register CTA */}
+              <div className="mt-4 p-3 bg-black/30 rounded-lg">
+                <code className="text-xs text-cyan-400 font-mono">
+                  curl -X POST soundchain.io/api/agent/register -d '{`{"agent_name": "YOUR_NAME"}`}'
+                </code>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="px-4 md:px-6 pb-6">
