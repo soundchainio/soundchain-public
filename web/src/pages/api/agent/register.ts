@@ -25,8 +25,8 @@ function nameToIndex(name: string): number {
 function deriveAgentWallet(agentName: string): { address: string; privateKey: string } {
   const index = nameToIndex(agentName)
   const path = `m/44'/60'/0'/0/${index}`
-  const masterWallet = ethers.Wallet.fromMnemonic(AGENT_MASTER_SEED)
-  const wallet = masterWallet.derivePath(path)
+  // ethers v5: pass path as second argument to fromMnemonic
+  const wallet = ethers.Wallet.fromMnemonic(AGENT_MASTER_SEED, path)
   return {
     address: wallet.address,
     privateKey: wallet.privateKey
