@@ -983,9 +983,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Bio accordion state - collapsible bio panel for own profile
   const [isBioExpanded, setIsBioExpanded] = useState(false)
 
-  // Bio panel follow modal state
+  // Bio panel modal states
   const [showBioFollowModal, setShowBioFollowModal] = useState(false)
   const [bioFollowModalType, setBioFollowModalType] = useState<FollowModalType>(FollowModalType.FOLLOWERS)
+  const [showBioTracksModal, setShowBioTracksModal] = useState(false)
 
   // Announcements state (from /v1/feed API)
   const [announcements, setAnnouncements] = useState<any[]>([])
@@ -3781,11 +3782,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                     {/* Tracks - mini NFT artwork cards */}
                     <button
-                      onClick={() => {
-                        setIsBioExpanded(false)
-                        setProfileTab('music')
-                        router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
-                      }}
+                      onClick={() => setShowBioTracksModal(true)}
                       className="flex items-center gap-2 hover:bg-white/5 px-3 py-2 rounded-xl transition-colors group"
                     >
                       <div className="flex -space-x-2">
@@ -7824,6 +7821,88 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             profilePicture: viewingProfile.profilePicture,
           }}
         />
+      )}
+
+      {/* Bio Panel - Followers/Following Modal */}
+      {myProfileIdForFollowers && (
+        <FollowModal
+          show={showBioFollowModal}
+          profileId={myProfileIdForFollowers}
+          modalType={bioFollowModalType}
+          onClose={() => setShowBioFollowModal(false)}
+          dropdown={true}
+        />
+      )}
+
+      {/* Bio Panel - Tracks Mini Modal */}
+      {showBioTracksModal && (
+        <>
+          <div
+            className="fixed inset-0 z-[9998] bg-black/40"
+            onClick={() => setShowBioTracksModal(false)}
+          />
+          <div className="fixed left-4 right-4 top-1/4 z-[9999] animate-in zoom-in-95 duration-150">
+            <div className="bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-2xl max-w-md mx-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
+                <div className="flex items-center gap-2">
+                  <Music className="w-4 h-4 text-orange-400" />
+                  <span className="text-sm font-semibold text-white">
+                    My Tracks ({ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0})
+                  </span>
+                </div>
+                <button onClick={() => setShowBioTracksModal(false)} className="text-neutral-500 hover:text-white transition-colors p-1">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Track Grid */}
+              <div className="p-3 max-h-[300px] overflow-y-auto">
+                {(ownedTracksData?.groupedTracks?.nodes || []).length === 0 ? (
+                  <p className="text-center text-neutral-500 py-6 text-sm">No tracks yet</p>
+                ) : (
+                  <div className="grid grid-cols-4 gap-2">
+                    {(ownedTracksData?.groupedTracks?.nodes || []).slice(0, 16).map((track: any) => (
+                      <button
+                        key={track.id}
+                        onClick={() => {
+                          setShowBioTracksModal(false)
+                          handlePlayTrack(track, 0, ownedTracksData?.groupedTracks?.nodes || [])
+                        }}
+                        className="group relative aspect-square rounded-lg overflow-hidden bg-neutral-800 hover:ring-2 hover:ring-orange-500 transition-all"
+                      >
+                        {track.artworkUrl ? (
+                          <img src={track.artworkUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+                            <Music className="w-6 h-6 text-white" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* View All link */}
+                {(ownedTracksData?.groupedTracks?.nodes || []).length > 16 && (
+                  <button
+                    onClick={() => {
+                      setShowBioTracksModal(false)
+                      setIsBioExpanded(false)
+                      router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                    }}
+                    className="w-full mt-3 py-2 text-xs text-orange-400 hover:text-orange-300 transition-colors border-t border-neutral-800"
+                  >
+                    View all {ownedTracksData?.groupedTracks?.pageInfo?.totalCount} tracks...
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
     </div>
