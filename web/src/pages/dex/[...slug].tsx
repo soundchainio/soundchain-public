@@ -3720,31 +3720,38 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
 
                   {/* Stats row */}
-                  <div className="flex items-center gap-6 mt-3">
+                  <div className="flex items-center gap-4 mt-3">
                     <button
                       onClick={() => {
                         setBioFollowModalType(FollowModalType.FOLLOWERS)
                         setShowBioFollowModal(true)
                       }}
-                      className="text-center hover:bg-white/5 px-2 py-1 rounded-lg transition-colors"
+                      className="text-center hover:bg-white/5 px-3 py-2 rounded-lg transition-colors"
                     >
-                      <span className="text-lg font-bold text-white">{me?.profile?.followerCount || userData?.me?.profile?.followerCount || 0}</span>
-                      <span className="text-xs text-gray-400 ml-1">followers</span>
+                      <span className="text-lg font-bold text-white block">{me?.profile?.followerCount || userData?.me?.profile?.followerCount || 0}</span>
+                      <span className="text-xs text-gray-400">followers</span>
                     </button>
                     <button
                       onClick={() => {
                         setBioFollowModalType(FollowModalType.FOLLOWING)
                         setShowBioFollowModal(true)
                       }}
-                      className="text-center hover:bg-white/5 px-2 py-1 rounded-lg transition-colors"
+                      className="text-center hover:bg-white/5 px-3 py-2 rounded-lg transition-colors"
                     >
-                      <span className="text-lg font-bold text-white">{me?.profile?.followingCount || userData?.me?.profile?.followingCount || 0}</span>
-                      <span className="text-xs text-gray-400 ml-1">following</span>
+                      <span className="text-lg font-bold text-white block">{me?.profile?.followingCount || userData?.me?.profile?.followingCount || 0}</span>
+                      <span className="text-xs text-gray-400">following</span>
                     </button>
-                    <div className="text-center px-2 py-1">
-                      <span className="text-lg font-bold text-cyan-400">{me?.profile?.tracksCount || userData?.me?.profile?.tracksCount || 0}</span>
-                      <span className="text-xs text-gray-400 ml-1">tracks</span>
-                    </div>
+                    <button
+                      onClick={() => {
+                        setIsBioExpanded(false)
+                        setProfileTab('music')
+                        router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                      }}
+                      className="text-center hover:bg-white/5 px-3 py-2 rounded-lg transition-colors"
+                    >
+                      <span className="text-lg font-bold text-cyan-400 block">{ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</span>
+                      <span className="text-xs text-gray-400">tracks</span>
+                    </button>
                   </div>
 
                   {/* Bio text */}
