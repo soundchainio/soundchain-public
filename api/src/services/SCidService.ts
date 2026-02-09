@@ -163,7 +163,13 @@ export class SCidService extends Service {
     });
     await scidRecord.save();
 
-    return scidRecord;
+    // Re-fetch to get a clean document that TypeGraphQL can serialize
+    // This avoids the "Symbol(mongoose#Document#scope)" serialization error
+    const savedScid = await SCidModel.findById(scidRecord._id).lean();
+    if (!savedScid) {
+      throw new Error(`SCid ${scid} not found after creation`);
+    }
+    return savedScid as SCid;
   }
 
   /**
