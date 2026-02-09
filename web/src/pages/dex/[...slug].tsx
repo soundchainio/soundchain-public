@@ -3719,38 +3719,97 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <p className="text-sm text-gray-400">@{me?.profile?.userHandle || userData?.me?.profile?.userHandle}</p>
                   </div>
 
-                  {/* Stats row */}
-                  <div className="flex items-center gap-4 mt-3">
+                  {/* Stats row - stacked avatars and mini NFT cards */}
+                  <div className="flex flex-wrap items-center gap-4 mt-4">
+                    {/* Followers - stacked avatars */}
                     <button
                       onClick={() => {
                         setBioFollowModalType(FollowModalType.FOLLOWERS)
                         setShowBioFollowModal(true)
                       }}
-                      className="text-center hover:bg-white/5 px-3 py-2 rounded-lg transition-colors"
+                      className="flex items-center gap-2 hover:bg-white/5 px-3 py-2 rounded-xl transition-colors group"
                     >
-                      <span className="text-lg font-bold text-white block">{me?.profile?.followerCount || userData?.me?.profile?.followerCount || 0}</span>
-                      <span className="text-xs text-gray-400">followers</span>
+                      <div className="flex -space-x-2">
+                        {myFollowersList.slice(0, 4).map((follower, i) => (
+                          <Avatar key={follower.id} className="w-7 h-7 border-2 border-black/50 ring-1 ring-purple-500/30" style={{ zIndex: 4 - i }}>
+                            {follower.avatar ? <AvatarImage src={follower.avatar} /> : null}
+                            <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-500 text-white text-xs">
+                              {follower.name?.charAt(0) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {myFollowersList.length === 0 && (
+                          <div className="w-7 h-7 rounded-full bg-gray-700/50 border-2 border-black/50 flex items-center justify-center">
+                            <Users className="w-3 h-3 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <span className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">{me?.profile?.followerCount || userData?.me?.profile?.followerCount || 0}</span>
+                        <span className="text-xs text-gray-500 ml-1">followers</span>
+                      </div>
                     </button>
+
+                    {/* Following - stacked avatars */}
                     <button
                       onClick={() => {
                         setBioFollowModalType(FollowModalType.FOLLOWING)
                         setShowBioFollowModal(true)
                       }}
-                      className="text-center hover:bg-white/5 px-3 py-2 rounded-lg transition-colors"
+                      className="flex items-center gap-2 hover:bg-white/5 px-3 py-2 rounded-xl transition-colors group"
                     >
-                      <span className="text-lg font-bold text-white block">{me?.profile?.followingCount || userData?.me?.profile?.followingCount || 0}</span>
-                      <span className="text-xs text-gray-400">following</span>
+                      <div className="flex -space-x-2">
+                        {myFollowingList.slice(0, 4).map((following, i) => (
+                          <Avatar key={following.id} className="w-7 h-7 border-2 border-black/50 ring-1 ring-cyan-500/30" style={{ zIndex: 4 - i }}>
+                            {following.avatar ? <AvatarImage src={following.avatar} /> : null}
+                            <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-500 text-white text-xs">
+                              {following.name?.charAt(0) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {myFollowingList.length === 0 && (
+                          <div className="w-7 h-7 rounded-full bg-gray-700/50 border-2 border-black/50 flex items-center justify-center">
+                            <Users className="w-3 h-3 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <span className="text-sm font-bold text-white group-hover:text-cyan-400 transition-colors">{me?.profile?.followingCount || userData?.me?.profile?.followingCount || 0}</span>
+                        <span className="text-xs text-gray-500 ml-1">following</span>
+                      </div>
                     </button>
+
+                    {/* Tracks - mini NFT artwork cards */}
                     <button
                       onClick={() => {
                         setIsBioExpanded(false)
                         setProfileTab('music')
                         router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
                       }}
-                      className="text-center hover:bg-white/5 px-3 py-2 rounded-lg transition-colors"
+                      className="flex items-center gap-2 hover:bg-white/5 px-3 py-2 rounded-xl transition-colors group"
                     >
-                      <span className="text-lg font-bold text-cyan-400 block">{ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</span>
-                      <span className="text-xs text-gray-400">tracks</span>
+                      <div className="flex -space-x-2">
+                        {(ownedTracksData?.groupedTracks?.nodes || []).slice(0, 4).map((track: any, i: number) => (
+                          <div key={track.id} className="w-7 h-7 rounded-md border-2 border-black/50 ring-1 ring-orange-500/30 overflow-hidden bg-gray-800" style={{ zIndex: 4 - i }}>
+                            {track.artworkUrl ? (
+                              <img src={track.artworkUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center">
+                                <Music className="w-3 h-3 text-white" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {(ownedTracksData?.groupedTracks?.nodes || []).length === 0 && (
+                          <div className="w-7 h-7 rounded-md bg-gray-700/50 border-2 border-black/50 flex items-center justify-center">
+                            <Music className="w-3 h-3 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <span className="text-sm font-bold text-white group-hover:text-orange-400 transition-colors">{ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</span>
+                        <span className="text-xs text-gray-500 ml-1">tracks</span>
+                      </div>
                     </button>
                   </div>
 
