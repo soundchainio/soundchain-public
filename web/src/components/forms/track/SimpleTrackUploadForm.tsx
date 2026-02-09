@@ -228,9 +228,15 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
         {/* IPFS Info */}
         <div className="bg-gray-800/50 rounded-lg p-4 w-full max-w-md text-left">
           <p className="text-sm font-bold text-gray-300 mb-2">IPFS Storage (Decentralized)</p>
-          <p className="text-xs text-gray-400 break-all">
-            <span className="text-gray-500">CID:</span> {result.ipfsCid}
-          </p>
+          {result.ipfsCid ? (
+            <p className="text-xs text-gray-400 break-all">
+              <span className="text-gray-500">CID:</span> {result.ipfsCid}
+            </p>
+          ) : (
+            <p className="text-xs text-cyan-400">
+              Pinning to IPFS in background... Your track is already registered!
+            </p>
+          )}
         </div>
 
         {/* Download Certificate Section */}

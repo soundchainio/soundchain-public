@@ -22,9 +22,10 @@ export interface SCidCertificateData {
   copyright?: string;
   genres?: string[];
 
-  // IPFS Info (decentralized storage proof)
-  ipfsCid: string;
-  ipfsGatewayUrl: string;
+  // IPFS Info (decentralized storage proof) - may be pending if async pinning
+  ipfsCid?: string;
+  ipfsGatewayUrl?: string;
+  ipfsStatus?: 'ready' | 'pinning' | 'pending';
 
   // Verification
   checksum?: string;
@@ -48,10 +49,13 @@ export function generateCertificate(data: {
   releaseYear?: number;
   copyright?: string;
   genres?: string[];
-  ipfsCid: string;
-  ipfsGatewayUrl: string;
+  ipfsCid?: string;
+  ipfsGatewayUrl?: string;
   checksum?: string;
 }): SCidCertificateData {
+  // Determine IPFS status based on whether CID is available
+  const hasIpfs = !!data.ipfsCid && data.ipfsCid.length > 0;
+
   return {
     scid: data.scid,
     chainCode: data.chainCode || 'POL',
@@ -64,8 +68,9 @@ export function generateCertificate(data: {
     releaseYear: data.releaseYear,
     copyright: data.copyright,
     genres: data.genres,
-    ipfsCid: data.ipfsCid,
-    ipfsGatewayUrl: data.ipfsGatewayUrl,
+    ipfsCid: data.ipfsCid || undefined,
+    ipfsGatewayUrl: data.ipfsGatewayUrl || undefined,
+    ipfsStatus: hasIpfs ? 'ready' : 'pinning',
     checksum: data.checksum,
     registeredAt: new Date().toISOString(),
     platform: 'SoundChain',
@@ -102,8 +107,9 @@ export function generateTextCertificate(cert: SCidCertificateData): string {
 
   IPFS STORAGE (DECENTRALIZED)
 
-  IPFS CID:       ${cert.ipfsCid}
-  Gateway URL:    ${cert.ipfsGatewayUrl}
+  IPFS CID:       ${cert.ipfsCid || 'Pinning in progress...'}
+  Gateway URL:    ${cert.ipfsGatewayUrl || 'Will be available after pinning'}
+  Status:         ${cert.ipfsStatus === 'ready' ? 'Ready' : 'Pinning to IPFS (background)'}
 
 ══════════════════════════════════════════════════════════════════
 
