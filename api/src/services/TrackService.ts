@@ -369,28 +369,18 @@ export class TrackService extends ModelService<typeof Track> {
   /**
    * Create a track using ONLY IPFS (no Mux)
    * Used for non-Web3/SCID-only uploads to save costs
+   *
+   * Flow: Save track → Register SCID → Pin to IPFS (non-blocking)
+   * This prevents serverless timeout on large files
    */
   async createTrackIPFSOnly(profileId: string, data: Partial<Track>, s3Key: string): Promise<Track> {
     const track = new this.model({ profileId, ...data });
 
-    // Pin to IPFS first (blocking for IPFS-only tracks)
-    try {
-      const pinResult = await this.context.pinningService.pinAudioToIPFS(
-        s3Key,
-        track._id.toString(),
-        data.title || 'Untitled'
-      );
-      track.ipfsCid = pinResult.ipfsCid;
-      track.ipfsGatewayUrl = pinResult.ipfsGatewayUrl;
-      console.log(`[IPFS] Track ${track._id} pinned: ${pinResult.ipfsCid}`);
-    } catch (error) {
-      console.error(`[IPFS] Failed to pin track ${track._id}:`, error);
-      throw new Error('Failed to upload audio to IPFS');
-    }
-
+    // Save track first (audio is on S3, IPFS pin happens in background)
     await track.save();
+    console.log(`[Track] Created track ${track._id} - ${data.title}`);
 
-    // Auto-generate SCid for the new track
+    // Auto-generate SCid for the new track (must happen before return)
     try {
       const walletAddress = data.nftData?.minter || data.nftData?.owner;
       await this.context.scidService.register({
@@ -404,7 +394,37 @@ export class TrackService extends ModelService<typeof Track> {
       console.error(`[SCid] Failed to auto-register SCid for track ${track._id}:`, scidError);
     }
 
+    // Pin to IPFS in background (non-blocking to prevent timeout)
+    // Track is already playable via S3, IPFS is supplementary decentralization
+    this.pinTrackToIPFSFromS3(track._id.toString(), s3Key, data.title || 'Untitled');
+
     return track;
+  }
+
+  /**
+   * Pin track audio to IPFS from S3 key (non-blocking background task)
+   */
+  private async pinTrackToIPFSFromS3(trackId: string, s3Key: string, title: string): Promise<void> {
+    try {
+      console.log(`[IPFS] Background pinning track ${trackId}...`);
+      const pinResult = await this.context.pinningService.pinAudioToIPFS(s3Key, trackId, title);
+
+      // Update track with IPFS CID
+      await this.model.updateOne(
+        { _id: new mongoose.Types.ObjectId(trackId) },
+        {
+          $set: {
+            ipfsCid: pinResult.ipfsCid,
+            ipfsGatewayUrl: pinResult.ipfsGatewayUrl,
+          },
+        }
+      );
+
+      console.log(`[IPFS] Track ${trackId} pinned successfully: ${pinResult.ipfsCid}`);
+    } catch (error) {
+      // Log but don't fail - IPFS pinning is supplementary, S3 streaming works
+      console.error(`[IPFS] Background pin failed for track ${trackId}:`, error);
+    }
   }
 
   async createMultipleTracks(profileId: string, data: { track: Partial<Track>; batchSize: number }): Promise<Track[]> {
