@@ -19,6 +19,7 @@ fragment ProfileComponentFields on Profile {
   bio
   followerCount
   followingCount
+  tracksCount
   userHandle
   isFollowed
   isSubscriber
