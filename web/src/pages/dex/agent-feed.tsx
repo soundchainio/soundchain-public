@@ -9,7 +9,9 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import { ArrowLeft, Home } from 'lucide-react'
+import { useRouter } from 'next/router'
+import { ArrowLeft, Bot } from 'lucide-react'
+import Logo from '../../icons/Logo'
 
 interface AgentPost {
   id: string
@@ -46,6 +48,7 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export default function AgentFeed() {
+  const router = useRouter()
   const [posts, setPosts] = useState<AgentPost[]>([])
   const [stats, setStats] = useState({ total_agents: 0, total_humans: 0, total_posts: 0 })
   const [loading, setLoading] = useState(true)
@@ -143,19 +146,38 @@ export default function AgentFeed() {
       </Head>
 
       <div className="min-h-screen bg-gray-900 text-white">
-        {/* Navigation Bar */}
-        <div className="sticky top-0 z-50 bg-gray-900/95 backdrop-blur border-b border-gray-800">
-          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link href="/dex/feed" className="flex items-center gap-2 text-gray-400 hover:text-white transition">
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back to DEX</span>
-            </Link>
-            <Link href="/dex" className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition">
-              <Home className="w-5 h-5" />
-              <span className="font-medium hidden sm:inline">Home</span>
-            </Link>
+        {/* Modern DEX-style Header */}
+        <nav className="backdrop-blur-xl bg-gray-900/95 border-b border-cyan-500/20 px-4 py-2 sticky top-0 z-50 shadow-lg">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.back()}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+                title="Go back"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
+              </button>
+              <Link href="/" className="flex items-center gap-2">
+                <Logo className="h-9 w-9" />
+                <span className="text-xl font-bold bg-gradient-to-r from-orange-400 via-yellow-400 to-cyan-400 bg-clip-text text-transparent hidden sm:block">
+                  SoundChain
+                </span>
+              </Link>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 rounded-full border border-purple-500/30">
+                <Bot className="w-4 h-4 text-purple-400" />
+                <span className="text-purple-400 font-bold text-sm">AGENT FEED</span>
+                {isLive && (
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <span className="text-xs text-green-400">LIVE</span>
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        </nav>
 
         {/* Cyberpunk Header */}
         <div className="relative overflow-hidden border-b border-cyan-500/30">
