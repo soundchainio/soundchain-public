@@ -1,28 +1,26 @@
 /**
- * Admin endpoint to soft-delete tracks
+ * Admin endpoint to soft-delete tracks via GraphQL
  * POST /api/admin/delete-tracks
  *
  * Body: { trackIds: string[], adminKey: string }
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-import mongoose from 'mongoose'
 
-// Simple admin key check (use env var in production)
+// Simple admin key check
 const ADMIN_KEY = process.env.ADMIN_DELETE_KEY || 'soundchain-admin-2026'
+const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
 
-// MongoDB connection
-const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI
-
-async function connectDB() {
-  if (mongoose.connection.readyState >= 1) return
-
-  if (!MONGO_URI) {
-    throw new Error('MongoDB URI not configured')
+// Delete track mutation (admin version doesn't require owner check)
+const DELETE_TRACK_MUTATION = `
+  mutation DeleteTrack($trackId: String!) {
+    deleteTrack(trackId: $trackId) {
+      id
+      title
+      deleted
+    }
   }
-
-  await mongoose.connect(MONGO_URI)
-}
+`
 
 export default async function handler(
   req: NextApiRequest,
@@ -43,31 +41,38 @@ export default async function handler(
     return res.status(400).json({ error: 'trackIds array is required' })
   }
 
-  try {
-    await connectDB()
+  const results: { trackId: string; success: boolean; title?: string; error?: string }[] = []
 
-    // Get tracks collection
-    const db = mongoose.connection.db
-    const tracksCollection = db.collection('tracks')
+  for (const trackId of trackIds) {
+    try {
+      const response = await fetch(GRAPHQL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: DELETE_TRACK_MUTATION,
+          variables: { trackId },
+        }),
+      })
 
-    // Soft delete: set deleted = true
-    const result = await tracksCollection.updateMany(
-      { _id: { $in: trackIds.map(id => new mongoose.Types.ObjectId(id)) } },
-      { $set: { deleted: true, deletedAt: new Date() } }
-    )
+      const json = await response.json()
 
-    return res.status(200).json({
-      success: true,
-      message: `Soft-deleted ${result.modifiedCount} tracks`,
-      trackIds,
-      modifiedCount: result.modifiedCount,
-    })
-
-  } catch (error: any) {
-    console.error('[Admin Delete] Error:', error)
-    return res.status(500).json({
-      success: false,
-      error: error.message,
-    })
+      if (json.errors) {
+        results.push({ trackId, success: false, error: json.errors[0]?.message })
+      } else if (json.data?.deleteTrack) {
+        results.push({ trackId, success: true, title: json.data.deleteTrack.title })
+      } else {
+        results.push({ trackId, success: false, error: 'Unknown error' })
+      }
+    } catch (error: any) {
+      results.push({ trackId, success: false, error: error.message })
+    }
   }
+
+  const successCount = results.filter(r => r.success).length
+
+  return res.status(200).json({
+    success: successCount > 0,
+    message: `Deleted ${successCount}/${trackIds.length} tracks`,
+    results,
+  })
 }

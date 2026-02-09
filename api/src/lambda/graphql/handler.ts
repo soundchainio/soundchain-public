@@ -480,6 +480,57 @@ const handleRestApi = async (event: APIGatewayProxyEvent): Promise<any> => {
     }
   }
 
+  // POST /v1/admin/delete-tracks - Soft-delete tracks (admin)
+  if (path === '/v1/admin/delete-tracks' && method === 'POST') {
+    const adminSecret = process.env.ADMIN_SECRET || 'soundchain-og-rewards-2026';
+    const providedSecret = event.headers?.['x-admin-secret'] || event.headers?.['X-Admin-Secret'];
+
+    if (providedSecret !== adminSecret) {
+      return {
+        statusCode: 401,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'Invalid admin secret', hint: 'Set X-Admin-Secret header' }),
+      };
+    }
+
+    const body = JSON.parse(event.body || '{}');
+    const { trackIds } = body;
+
+    if (!trackIds || !Array.isArray(trackIds) || trackIds.length === 0) {
+      return {
+        statusCode: 400,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: 'trackIds array is required' }),
+      };
+    }
+
+    try {
+      const TrackModel = mongoose.model('Track');
+
+      const result = await TrackModel.updateMany(
+        { _id: { $in: trackIds } },
+        { $set: { deleted: true, deletedAt: new Date() } }
+      );
+
+      return {
+        statusCode: 200,
+        headers: corsHeaders,
+        body: JSON.stringify({
+          success: true,
+          message: `Soft-deleted ${result.modifiedCount} tracks`,
+          trackIds,
+          modifiedCount: result.modifiedCount,
+        }),
+      };
+    } catch (err: any) {
+      return {
+        statusCode: 500,
+        headers: corsHeaders,
+        body: JSON.stringify({ error: err.message }),
+      };
+    }
+  }
+
   return { statusCode: 404, headers: corsHeaders, body: JSON.stringify({ error: 'Not found' }) };
 };
 
