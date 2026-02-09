@@ -3648,6 +3648,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </div>
               )
             })()}
+            {/* Bio toggle button - toggles bio accordion in profile tabs */}
+            {me?.profile && (
+              <button
+                onClick={() => setIsBioExpanded(!isBioExpanded)}
+                className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${isBioExpanded ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
+                title="View profile info"
+              >
+                <FileText className="w-4 h-4" />
+              </button>
+            )}
+
             {/* View toggle - tap-friendly */}
             <div className="flex items-center ml-auto">
               <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${viewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
