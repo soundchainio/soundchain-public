@@ -338,7 +338,7 @@ export class TrackService extends ModelService<typeof Track> {
     if (!savedTrack) {
       throw new Error(`Track ${track._id} not found after creation`);
     }
-    return savedTrack as Track;
+    return savedTrack as unknown as Track;
   }
 
   /**
@@ -410,7 +410,7 @@ export class TrackService extends ModelService<typeof Track> {
     if (!savedTrack) {
       throw new Error(`Track ${track._id} not found after creation`);
     }
-    return savedTrack as Track;
+    return savedTrack as unknown as Track;
   }
 
   /**

@@ -169,7 +169,7 @@ export class SCidService extends Service {
     if (!savedScid) {
       throw new Error(`SCid ${scid} not found after creation`);
     }
-    return savedScid as SCid;
+    return savedScid as unknown as SCid;
   }
 
   /**
