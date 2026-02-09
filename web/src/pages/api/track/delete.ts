@@ -1,0 +1,150 @@
+/**
+ * DELETE /api/track/delete - Soft-delete a track
+ *
+ * Removes track from radio, UI, and search.
+ * IPFS/Pinata data remains (blockchain integrity).
+ * SCID registration remains (permanent identifier).
+ *
+ * Requires: trackId or scid, plus authentication
+ */
+
+import type { NextApiRequest, NextApiResponse } from 'next'
+
+const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
+
+// Find track by SCID
+const FIND_BY_SCID_QUERY = `
+  query FindBySCID($scid: String!) {
+    scid(scid: $scid) {
+      trackId
+      scid
+      profileId
+    }
+  }
+`
+
+// Delete track mutation
+const DELETE_TRACK_MUTATION = `
+  mutation DeleteTrack($trackId: String!) {
+    deleteTrack(trackId: $trackId) {
+      id
+      title
+      deleted
+    }
+  }
+`
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  // Only allow POST or DELETE
+  if (req.method !== 'POST' && req.method !== 'DELETE') {
+    return res.status(405).json({
+      success: false,
+      error: 'Method not allowed. Use POST or DELETE.',
+    })
+  }
+
+  const { trackId, scid } = req.body
+
+  if (!trackId && !scid) {
+    return res.status(400).json({
+      success: false,
+      error: 'Either trackId or scid is required',
+      usage: {
+        trackId: 'MongoDB track ID',
+        scid: 'SoundChain ID (e.g., SC-POL-C381-2600893)',
+      },
+    })
+  }
+
+  // Forward auth cookie/header to GraphQL
+  const authHeader = req.headers.authorization || ''
+  const cookies = req.headers.cookie || ''
+
+  try {
+    let targetTrackId = trackId
+
+    // If SCID provided, look up the track ID
+    if (scid && !trackId) {
+      const scidResponse = await fetch(GRAPHQL_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader,
+          'Cookie': cookies,
+        },
+        body: JSON.stringify({
+          query: FIND_BY_SCID_QUERY,
+          variables: { scid },
+        }),
+      })
+
+      const scidResult = await scidResponse.json()
+
+      if (scidResult.errors) {
+        return res.status(400).json({
+          success: false,
+          error: 'Failed to find SCID',
+          details: scidResult.errors[0]?.message,
+        })
+      }
+
+      const scidData = scidResult.data?.scid
+      if (!scidData?.trackId) {
+        return res.status(404).json({
+          success: false,
+          error: `SCID not found: ${scid}`,
+        })
+      }
+
+      targetTrackId = scidData.trackId
+    }
+
+    // Delete the track
+    const deleteResponse = await fetch(GRAPHQL_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader,
+        'Cookie': cookies,
+      },
+      body: JSON.stringify({
+        query: DELETE_TRACK_MUTATION,
+        variables: { trackId: targetTrackId },
+      }),
+    })
+
+    const deleteResult = await deleteResponse.json()
+
+    if (deleteResult.errors) {
+      return res.status(400).json({
+        success: false,
+        error: 'Failed to delete track',
+        details: deleteResult.errors[0]?.message,
+      })
+    }
+
+    const deletedTrack = deleteResult.data?.deleteTrack
+
+    return res.status(200).json({
+      success: true,
+      message: 'Track soft-deleted successfully',
+      data: {
+        trackId: deletedTrack?.id,
+        title: deletedTrack?.title,
+        deleted: true,
+      },
+      note: 'Track removed from radio/UI. IPFS data and SCID registration remain for integrity.',
+    })
+
+  } catch (error: any) {
+    console.error('[Delete Track] Error:', error)
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      details: error.message,
+    })
+  }
+}
