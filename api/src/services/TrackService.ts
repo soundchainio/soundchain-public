@@ -226,6 +226,13 @@ export class TrackService extends ModelService<typeof Track> {
   }
 
   /**
+   * Count tracks by profileId (for profile stats)
+   */
+  async countByProfileId(profileId: string): Promise<number> {
+    return this.model.countDocuments({ profileId, deleted: false });
+  }
+
+  /**
    * Get tracks grouped by genre for the genre-browsing UI
    * Returns an object with genre keys and arrays of tracks
    * Only returns genres that have at least one track

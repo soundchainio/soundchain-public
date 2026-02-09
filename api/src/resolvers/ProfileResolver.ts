@@ -63,6 +63,11 @@ export class ProfileResolver {
     return profileService.isOnline(profile);
   }
 
+  @FieldResolver(() => Number)
+  async tracksCount(@Ctx() { trackService }: Context, @Root() profile: Profile): Promise<number> {
+    return trackService.countByProfileId(profile._id.toString());
+  }
+
   @Query(() => Profile)
   @Authorized()
   myProfile(@Ctx() { profileService }: Context, @CurrentUser() { profileId }: User): Promise<Profile> {
