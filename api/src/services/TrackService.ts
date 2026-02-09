@@ -332,13 +332,13 @@ export class TrackService extends ModelService<typeof Track> {
       console.error(`[SCid] Failed to auto-register SCid for track ${track._id}:`, scidError);
     }
 
-    // Re-fetch track from DB to get a clean document that TypeGraphQL can serialize
+    // Re-fetch track from DB using .lean() to get a plain object that TypeGraphQL can serialize
     // This avoids the "Symbol(mongoose#Document#scope)" serialization error
-    const savedTrack = await this.model.findById(track._id);
+    const savedTrack = await this.model.findById(track._id).lean();
     if (!savedTrack) {
       throw new Error(`Track ${track._id} not found after creation`);
     }
-    return savedTrack;
+    return savedTrack as Track;
   }
 
   /**
@@ -404,13 +404,13 @@ export class TrackService extends ModelService<typeof Track> {
     // Track is already playable via S3, IPFS is supplementary decentralization
     this.pinTrackToIPFSFromS3(track._id.toString(), s3Key, data.title || 'Untitled');
 
-    // Re-fetch track from DB to get a clean document that TypeGraphQL can serialize
+    // Re-fetch track from DB using .lean() to get a plain object that TypeGraphQL can serialize
     // This avoids the "Symbol(mongoose#Document#scope)" serialization error
-    const savedTrack = await this.model.findById(track._id);
+    const savedTrack = await this.model.findById(track._id).lean();
     if (!savedTrack) {
       throw new Error(`Track ${track._id} not found after creation`);
     }
-    return savedTrack;
+    return savedTrack as Track;
   }
 
   /**
