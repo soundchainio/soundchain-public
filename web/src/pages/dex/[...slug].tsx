@@ -3670,6 +3670,121 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </div>
           </div>
 
+          {/* Inline Profile Panel - Shows when bio icon is clicked */}
+          {isBioExpanded && me?.profile && (
+            <div className="mb-4 animate-in slide-in-from-top-2 duration-300">
+              <div className="bg-gradient-to-br from-black/60 to-purple-900/20 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                {/* Cover gradient */}
+                <div className="h-16 bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20" />
+
+                {/* Profile content */}
+                <div className="px-4 pb-4 -mt-8">
+                  {/* Avatar and close button row */}
+                  <div className="flex items-start justify-between">
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setIsBioExpanded(false)
+                        router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                      }}
+                    >
+                      <Avatar className="w-16 h-16 border-4 border-black/50 ring-2 ring-cyan-500/50">
+                        {(me?.profile?.profilePicture || userData?.me?.profile?.profilePicture) ? (
+                          <AvatarImage src={me?.profile?.profilePicture || userData?.me?.profile?.profilePicture} />
+                        ) : null}
+                        <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-purple-500 text-white text-lg font-bold">
+                          {(me?.profile?.displayName || userData?.me?.profile?.displayName || 'U').charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <button
+                      onClick={() => setIsBioExpanded(false)}
+                      className="mt-10 p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Name and handle */}
+                  <div className="mt-2">
+                    <h3
+                      className="text-lg font-bold text-white cursor-pointer hover:text-cyan-400 transition-colors"
+                      onClick={() => {
+                        setIsBioExpanded(false)
+                        router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                      }}
+                    >
+                      {me?.profile?.displayName || userData?.me?.profile?.displayName || 'Anonymous'}
+                    </h3>
+                    <p className="text-sm text-gray-400">@{me?.profile?.userHandle || userData?.me?.profile?.userHandle}</p>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="flex items-center gap-6 mt-3">
+                    <button
+                      onClick={() => {
+                        setBioFollowModalType(FollowModalType.FOLLOWERS)
+                        setShowBioFollowModal(true)
+                      }}
+                      className="text-center hover:bg-white/5 px-2 py-1 rounded-lg transition-colors"
+                    >
+                      <span className="text-lg font-bold text-white">{me?.profile?.followerCount || userData?.me?.profile?.followerCount || 0}</span>
+                      <span className="text-xs text-gray-400 ml-1">followers</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setBioFollowModalType(FollowModalType.FOLLOWING)
+                        setShowBioFollowModal(true)
+                      }}
+                      className="text-center hover:bg-white/5 px-2 py-1 rounded-lg transition-colors"
+                    >
+                      <span className="text-lg font-bold text-white">{me?.profile?.followingCount || userData?.me?.profile?.followingCount || 0}</span>
+                      <span className="text-xs text-gray-400 ml-1">following</span>
+                    </button>
+                    <div className="text-center px-2 py-1">
+                      <span className="text-lg font-bold text-cyan-400">{me?.profile?.tracksCount || userData?.me?.profile?.tracksCount || 0}</span>
+                      <span className="text-xs text-gray-400 ml-1">tracks</span>
+                    </div>
+                  </div>
+
+                  {/* Bio text */}
+                  {(me?.profile?.bio || userData?.me?.profile?.bio) && (
+                    <p className="mt-3 text-sm text-gray-300 whitespace-pre-wrap break-words line-clamp-3">
+                      {me?.profile?.bio || userData?.me?.profile?.bio}
+                    </p>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 mt-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 bg-white/5 border-white/10 hover:bg-white/10 text-white"
+                      onClick={() => {
+                        setIsBioExpanded(false)
+                        router.push(`/dex/users/${me?.profile?.userHandle || userData?.me?.profile?.userHandle}`)
+                      }}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      View Profile
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/20 text-cyan-400"
+                      onClick={() => {
+                        setIsBioExpanded(false)
+                        setShowEditProfileModal(true)
+                      }}
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 24hr Stories/Reels Bar - BELOW feed tabs */}
           {(selectedView === 'feed' || selectedView === 'explore') && (
             <StoriesBar />
