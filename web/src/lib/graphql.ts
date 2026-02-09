@@ -1473,6 +1473,7 @@ export type Profile = {
   favoriteGenres: Maybe<Array<Genre>>;
   followerCount: Scalars['Float']['output'];
   followingCount: Scalars['Float']['output'];
+  tracksCount: Scalars['Float']['output'];
   id: Scalars['ID']['output'];
   isFollowed: Scalars['Boolean']['output'];
   isSubscriber: Scalars['Boolean']['output'];
@@ -3054,7 +3055,7 @@ export type ProfileByHandleQueryVariables = Exact<{
 
 export type ProfileByHandleQuery = { __typename?: 'Query', profileByHandle: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } };
 
-export type ProfileComponentFieldsFragment = { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } };
+export type ProfileComponentFieldsFragment = { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, tracksCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } };
 
 export type ProfileDisplayNameQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -3789,6 +3790,7 @@ export const ProfileComponentFieldsFragmentDoc = gql`
   bio
   followerCount
   followingCount
+  tracksCount
   userHandle
   isFollowed
   isSubscriber
