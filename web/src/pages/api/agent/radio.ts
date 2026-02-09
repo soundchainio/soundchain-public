@@ -10,7 +10,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// GraphQL query for radio tracks - includes assetUrl for audio playback
+// GraphQL query for radio tracks - includes assetUrl for audio playback and SCID for streaming rewards
 // Uses cursor-based pagination with 'after' for fetching all tracks
 const TRACKS_QUERY = `
   query RadioTracks($limit: Int, $after: String) {
@@ -24,6 +24,11 @@ const TRACKS_QUERY = `
         artworkUrl
         assetUrl
         playbackCount
+        scid {
+          scid
+          streamCount
+          ogunRewardsEarned
+        }
       }
       pageInfo {
         totalCount
@@ -188,11 +193,11 @@ export default async function handler(
             stream_url: track.assetUrl,
             duration: null,
             play_count: track.playbackCount || 0,
-            scid: null,
+            scid: track.scid?.scid || null, // SCID code for streaming rewards
             is_nft: true,
             genres: [],
             owner: null,
-            licensing: { type: 'nft' as const, ogun_enabled: true, streaming_rewards: true }
+            licensing: { type: 'nft' as const, ogun_enabled: true, streaming_rewards: track.scid?.scid ? true : false }
           }))
           .sort(() => Math.random() - 0.5)
         lastFetchTime = new Date()
@@ -239,14 +244,14 @@ export default async function handler(
             stream_url: track.assetUrl, // The actual audio file URL
             duration: null,
             play_count: track.playbackCount || 0,
-            scid: null,
+            scid: track.scid?.scid || null, // SCID code for streaming rewards
             is_nft: true, // All tracks on SoundChain are NFTs
             genres: [],
             owner: null,
             licensing: {
               type: 'nft' as const,
               ogun_enabled: true,
-              streaming_rewards: true
+              streaming_rewards: track.scid?.scid ? true : false // Only if track has SCID
             }
           }))
 
