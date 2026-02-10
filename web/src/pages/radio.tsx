@@ -21,6 +21,11 @@ import {
   ArrowLeft
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
+import { useLogStream } from 'hooks/useLogStream'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { toast, ToastContainer } from 'react-toastify'
+import { OgunRewardToast, DailyLimitToast } from 'components/common/OgunRewardToast'
+import 'react-toastify/dist/ReactToastify.css'
 
 interface RadioTrack {
   id: string
@@ -48,6 +53,33 @@ export default function OGUNRadio() {
   const [needsInteraction, setNeedsInteraction] = useState(true)
 
   const audioRef = useRef<HTMLAudioElement>(null)
+  const streamLoggedForCurrentPlay = useRef(false)
+
+  // Wallet address for OGUN streaming rewards
+  const { account: walletAddress } = useMagicContext()
+
+  // OGUN Stream logging - WIN-WIN rewards for creators and listeners
+  const { logStream, startTracking } = useLogStream({
+    minDuration: 30,
+    onReward: (reward) => {
+      if (reward > 0) {
+        toast(<OgunRewardToast amount={reward} trackTitle={currentTrack?.title} />, {
+          position: 'bottom-right',
+          autoClose: 4000,
+          hideProgressBar: true,
+          className: 'ogun-reward-toast',
+          bodyClassName: 'ogun-reward-toast-body',
+        })
+      }
+    },
+    onDailyLimitReached: () => {
+      toast(<DailyLimitToast trackTitle={currentTrack?.title} />, {
+        position: 'bottom-right',
+        autoClose: 4000,
+        className: 'ogun-limit-toast',
+      })
+    },
+  })
 
   // Fetch current track from OGUN Radio
   const fetchCurrentTrack = async () => {
@@ -88,6 +120,12 @@ export default function OGUNRadio() {
   // Try autoplay when track loads, handle browser blocking
   useEffect(() => {
     if (currentTrack?.stream_url && audioRef.current) {
+      // Reset stream logging for new track
+      streamLoggedForCurrentPlay.current = false
+      if (currentTrack.id) {
+        startTracking(currentTrack.id)
+      }
+
       audioRef.current.src = currentTrack.stream_url
       audioRef.current.load()
 
@@ -149,16 +187,29 @@ export default function OGUNRadio() {
     }
   }, [volume, isMuted])
 
-  // Update progress
+  // Update progress + OGUN stream logging at 30s mark
   const handleTimeUpdate = () => {
     if (audioRef.current) {
       setProgress(audioRef.current.currentTime)
       setDuration(audioRef.current.duration || 0)
+
+      // Log stream at 30-second mark for OGUN rewards
+      if (
+        !streamLoggedForCurrentPlay.current &&
+        currentTrack?.id &&
+        audioRef.current.currentTime >= 30
+      ) {
+        streamLoggedForCurrentPlay.current = true
+        const playDuration = Math.floor(audioRef.current.currentTime)
+        logStream(currentTrack.id, playDuration, walletAddress || undefined)
+          .catch(err => console.warn('[OGUN Radio] Failed to log stream:', err))
+      }
     }
   }
 
-  // Handle track end - auto skip to next (infinite loop)
+  // Handle track end - reset stream flag and auto skip to next (infinite loop)
   const handleTrackEnd = () => {
+    streamLoggedForCurrentPlay.current = false
     skipToNext()
   }
 
@@ -418,6 +469,25 @@ export default function OGUNRadio() {
           </div>
         </main>
       </div>
+
+      {/* Toast container for OGUN reward notifications */}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={4000}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss={false}
+        draggable
+        pauseOnHover
+        theme="dark"
+        toastStyle={{
+          background: 'rgba(10, 22, 40, 0.95)',
+          border: '1px solid rgba(234, 179, 8, 0.3)',
+          borderRadius: '12px',
+          backdropFilter: 'blur(8px)',
+        }}
+      />
     </>
   )
 }
