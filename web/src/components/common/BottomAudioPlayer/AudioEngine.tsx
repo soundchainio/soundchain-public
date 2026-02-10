@@ -509,7 +509,7 @@ export const AudioEngine = () => {
       ) {
         streamLoggedForCurrentPlay.current = true
         const playDuration = Math.floor(audioRef.current.currentTime)
-        logStream(previousSongRef.current.trackId, playDuration, walletAddress || undefined)
+        logStream(previousSongRef.current.trackId, playDuration, walletAddress || undefined, me?.profile?.id)
           .catch(err => console.warn('[OGUN] Failed to log stream at 30s mark:', err))
       }
 

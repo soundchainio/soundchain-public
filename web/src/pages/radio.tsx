@@ -277,7 +277,7 @@ export default function OGUNRadio() {
       ) {
         streamLoggedForCurrentPlay.current = true
         const playDuration = Math.floor(audioRef.current.currentTime)
-        logStream(currentTrack.id, playDuration, walletAddress || undefined)
+        logStream(currentTrack.id, playDuration, walletAddress || undefined, me?.profile?.id)
           .catch(err => console.warn('[OGUN Radio] Failed to log stream:', err))
       }
     }
