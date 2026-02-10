@@ -21,7 +21,10 @@ import {
   Star,
   TrendingUp,
   Disc3,
-  ArrowLeft
+  ArrowLeft,
+  Waves,
+  Download,
+  Volume2
 } from 'lucide-react'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { useMe } from 'hooks/useMe'
@@ -204,6 +207,16 @@ export default function MoltbookPlayground() {
 
   // Airdrop status state
   const [airdropData, setAirdropData] = useState<any>(null)
+
+  // Swarm Composer state
+  const [swarmLoading, setSwarmLoading] = useState(false)
+  const [swarmResult, setSwarmResult] = useState<any>(null)
+  const [swarmParams, setSwarmParams] = useState({
+    tempo: 120,
+    key: 'D',
+    mode: 'minor',
+    bars: 8
+  })
 
   // Fetch OGUN Radio status
   useEffect(() => {
@@ -713,6 +726,159 @@ export default function MoltbookPlayground() {
                   <Zap className="w-4 h-4" />
                   MINT YOUR FIRST TRACK
                 </Link>
+              </div>
+
+              {/* 🎼 SWARM MUSIC COMPOSER */}
+              <div className="bg-gradient-to-br from-purple-900/40 to-cyan-900/40 border border-purple-500/50 rounded-lg p-4 mt-6">
+                <h3 className="text-purple-400 font-bold tracking-wider mb-3 flex items-center gap-2">
+                  <Waves className="w-4 h-4" />
+                  SWARM MUSIC COMPOSER
+                  <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded ml-auto">NEW</span>
+                </h3>
+                <div className="text-sm text-gray-300 mb-4">
+                  Multi-agent music composition using Kuramoto oscillator synchronization. Agents collaborate to create synchronized melodies.
+                </div>
+
+                {/* Quick Params */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  <div>
+                    <label className="text-[10px] text-gray-500 block mb-1">Tempo</label>
+                    <select
+                      value={swarmParams.tempo}
+                      onChange={(e) => setSwarmParams({...swarmParams, tempo: parseInt(e.target.value)})}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                    >
+                      <option value="80">80</option>
+                      <option value="100">100</option>
+                      <option value="120">120</option>
+                      <option value="140">140</option>
+                      <option value="160">160</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-500 block mb-1">Key</label>
+                    <select
+                      value={swarmParams.key}
+                      onChange={(e) => setSwarmParams({...swarmParams, key: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                    >
+                      {['C', 'D', 'E', 'F', 'G', 'A', 'B'].map(k => (
+                        <option key={k} value={k}>{k}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-500 block mb-1">Mode</label>
+                    <select
+                      value={swarmParams.mode}
+                      onChange={(e) => setSwarmParams({...swarmParams, mode: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                    >
+                      <option value="major">Major</option>
+                      <option value="minor">Minor</option>
+                      <option value="dorian">Dorian</option>
+                      <option value="pentatonic">Pentatonic</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-500 block mb-1">Bars</label>
+                    <select
+                      value={swarmParams.bars}
+                      onChange={(e) => setSwarmParams({...swarmParams, bars: parseInt(e.target.value)})}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+                    >
+                      <option value="4">4</option>
+                      <option value="8">8</option>
+                      <option value="16">16</option>
+                      <option value="32">32</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Generate Button */}
+                <button
+                  onClick={async () => {
+                    setSwarmLoading(true)
+                    try {
+                      const res = await fetch(`/api/agent/swarm/demo?tempo=${swarmParams.tempo}&key=${swarmParams.key}&mode=${swarmParams.mode}&bars=${swarmParams.bars}`)
+                      const data = await res.json()
+                      if (data.success) {
+                        setSwarmResult(data.data)
+                      }
+                    } catch (e) {
+                      console.error('Swarm composition failed:', e)
+                    } finally {
+                      setSwarmLoading(false)
+                    }
+                  }}
+                  disabled={swarmLoading}
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-bold rounded-lg hover:from-purple-400 hover:to-cyan-400 transition-colors disabled:opacity-50"
+                >
+                  {swarmLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Composing...
+                    </>
+                  ) : (
+                    <>
+                      <Waves className="w-4 h-4" />
+                      Generate Swarm Composition
+                    </>
+                  )}
+                </button>
+
+                {/* Results */}
+                {swarmResult && (
+                  <div className="mt-4 p-3 bg-black/30 rounded-lg border border-purple-500/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-purple-400 font-bold text-sm">{swarmResult.title}</span>
+                      <span className="text-xs text-gray-500">{swarmResult.stats?.total_notes} notes</span>
+                    </div>
+
+                    {/* Agent Contributions */}
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      {swarmResult.contributions?.map((agent: any, i: number) => (
+                        <div key={i} className="text-xs bg-gray-800/50 rounded p-2">
+                          <span className="text-cyan-400">{agent.name}</span>
+                          <span className="text-gray-500 ml-1">({agent.role})</span>
+                          <div className="text-gray-400">{agent.notes} notes</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Sync Metrics */}
+                    <div className="flex items-center gap-3 text-xs mb-3">
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-500">Sync:</span>
+                        <span className="text-green-400">{(swarmResult.stats?.final_sync_order * 100).toFixed(1)}%</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-500">Duration:</span>
+                        <span className="text-white">{swarmResult.stats?.duration_seconds}s</span>
+                      </div>
+                    </div>
+
+                    {/* Download MIDI */}
+                    <a
+                      href={swarmResult.downloads?.midi_data_url}
+                      download={`swarm-${swarmParams.key}-${swarmParams.mode}.mid`}
+                      className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-purple-900/30 border border-purple-500/50 text-purple-400 rounded-lg hover:bg-purple-900/50 transition-colors text-sm"
+                    >
+                      <Download className="w-3 h-3" />
+                      Download MIDI
+                    </a>
+                  </div>
+                )}
+
+                {/* API Link */}
+                <a
+                  href="/api/agent/swarm/compose"
+                  target="_blank"
+                  className="flex items-center justify-center gap-2 w-full mt-3 px-3 py-2 bg-gray-800/50 border border-gray-700 text-gray-400 rounded-lg hover:bg-gray-800 transition-colors text-xs"
+                >
+                  View Swarm API Docs
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               </div>
 
               {/* Agent Feed CTA */}
