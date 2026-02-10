@@ -27,9 +27,9 @@ export const FollowModal = ({ show, profileId, modalType, onClose, compact = fal
   useEffect(() => {
     if (show && profileId) {
       if (modalType === FollowModalType.FOLLOWERS) {
-        followers({ variables: { profileId } })
+        followers({ variables: { profileId, page: { first: 100 } } })
       } else {
-        following({ variables: { profileId } })
+        following({ variables: { profileId, page: { first: 100 } } })
       }
     }
   }, [show, modalType, profileId, followers, following])

@@ -3804,7 +3804,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         )}
                       </div>
                       <div className="text-left">
-                        <span className="text-sm font-bold text-white group-hover:text-orange-400 transition-colors">{ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</span>
+                        <span className="text-sm font-bold text-white group-hover:text-orange-400 transition-colors">{me?.profile?.tracksCount || userData?.me?.profile?.tracksCount || 0}</span>
                         <span className="text-xs text-gray-500 ml-1">tracks</span>
                       </div>
                     </button>
@@ -7848,7 +7848,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <div className="flex items-center gap-2">
                   <Music className="w-4 h-4 text-orange-400" />
                   <span className="text-sm font-semibold text-white">
-                    My Tracks ({ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0})
+                    My Tracks ({me?.profile?.tracksCount || userData?.me?.profile?.tracksCount || 0})
                   </span>
                 </div>
                 <button onClick={() => setShowBioTracksModal(false)} className="text-neutral-500 hover:text-white transition-colors p-1">
@@ -7896,7 +7896,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     }}
                     className="w-full mt-3 py-2 text-xs text-orange-400 hover:text-orange-300 transition-colors border-t border-neutral-800"
                   >
-                    View all {ownedTracksData?.groupedTracks?.pageInfo?.totalCount} tracks...
+                    View all {me?.profile?.tracksCount || userData?.me?.profile?.tracksCount || 0} tracks...
                   </button>
                 )}
               </div>
