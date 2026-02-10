@@ -8,8 +8,8 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { composeSwarmMusic, exportToJSON, compositionToMidiBase64 } from '@/lib/swarm';
-import { SwarmComposeRequest, SwarmApiResponse, SwarmComposition } from '@/lib/swarm/types';
+import { composeSwarmMusic, exportToJSON, compositionToMidiBase64 } from 'lib/swarm';
+import { SwarmComposeRequest, SwarmApiResponse, SwarmComposition } from 'lib/swarm/types';
 
 // In-memory storage for compositions (replace with MongoDB in production)
 const compositions = new Map<string, SwarmComposition>();

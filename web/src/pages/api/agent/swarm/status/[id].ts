@@ -7,7 +7,7 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { SwarmApiResponse } from '@/lib/swarm/types';
+import { SwarmApiResponse } from 'lib/swarm/types';
 import { compositions } from '../compose';
 
 export default async function handler(

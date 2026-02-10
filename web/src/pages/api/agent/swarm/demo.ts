@@ -8,8 +8,8 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { composeSwarmMusic, exportToJSON, compositionToMidiBase64, generateTitle } from '@/lib/swarm';
-import { SwarmApiResponse, SwarmComposeRequest, MusicalMode } from '@/lib/swarm/types';
+import { composeSwarmMusic, exportToJSON, compositionToMidiBase64, generateTitle } from 'lib/swarm';
+import { SwarmApiResponse, SwarmComposeRequest, MusicalMode } from 'lib/swarm/types';
 
 // Demo agent configurations
 const DEMO_AGENTS = [

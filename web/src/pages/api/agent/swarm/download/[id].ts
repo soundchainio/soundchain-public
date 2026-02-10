@@ -7,7 +7,7 @@
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { compositionToMidi, exportToJSON } from '@/lib/swarm';
+import { compositionToMidi, exportToJSON } from 'lib/swarm';
 import { compositions } from '../compose';
 
 export default async function handler(
