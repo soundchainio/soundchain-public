@@ -9,16 +9,15 @@ import { useLayoutContext } from 'hooks/useLayoutContext';
 import { useMagicContext } from 'hooks/useMagicContext';
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext';
 import { Google } from 'icons/Google';
-import { Discord } from 'icons/Discord';
-import { Twitch } from 'icons/Twitch';
 import { LeftArrow } from 'icons/LeftArrow';
 import { LogoAndText } from 'icons/LogoAndText';
 import { UserWarning } from 'icons/UserWarning';
 import { setJwt } from 'lib/apollo';
 import { AuthMethod, useLoginMutation, useMeQuery, useUserByWalletLazyQuery } from 'lib/graphql';
+import { CREATE_HD_ACCOUNT_MUTATION } from 'lib/graphql/mutations';
 import NextLink from 'next/link';
 import { useRouter } from 'next/router';
-import { isApolloError } from '@apollo/client';
+import { isApolloError, useMutation } from '@apollo/client';
 import styled from 'styled-components';
 import Web3 from 'web3';
 import { useWalletLogin, generateLoginMessage } from 'hooks/useWalletLogin';
@@ -146,6 +145,18 @@ export default function LoginPage() {
   const [signedSignature, setSignedSignature] = useState<string | null>(null);
   const [selectedWalletType, setSelectedWalletType] = useState<'metamask' | 'walletconnect' | null>(null);
 
+  // Login mode: 'login' (existing OAuth/wallet) or 'create' (new HD wallet account)
+  const [loginMode, setLoginMode] = useState<'login' | 'create'>('login');
+
+  // Create Account (HD wallet) state
+  const [createEmail, setCreateEmail] = useState('');
+  const [createHandle, setCreateHandle] = useState('');
+  const [createDisplayName, setCreateDisplayName] = useState('');
+  const [createTermsAccepted, setCreateTermsAccepted] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [createdWalletAddress, setCreatedWalletAddress] = useState<string | null>(null);
+  const [createHdAccountMutation] = useMutation(CREATE_HD_ACCOUNT_MUTATION);
+
   useEffect(() => {
     setIsClient(true);
     // Detect in-app browser and warn user
@@ -175,7 +186,7 @@ export default function LoginPage() {
         const authMethodFromError = error.graphQLErrors?.find((err) => err.extensions?.with)?.extensions?.with as AuthMethod | undefined;
         setAuthMethod(authMethodFromError ? [authMethodFromError] : undefined);
       } else if (error.message.toLowerCase().includes('invalid credentials')) {
-        router.push('/create-account');
+        setLoginMode('create');
       } else {
         setError(error.message || 'An unexpected error occurred during login');
         console.error('Login error message:', error.message);
@@ -335,8 +346,6 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => handleSocialLogin('google');
-  const handleDiscordLogin = () => handleSocialLogin('discord');
-  const handleTwitchLogin = () => handleSocialLogin('twitch');
 
   // Wallet signature login - works natively in wallet browsers
   // This calls the backend loginWithWallet mutation to get a real JWT and create/find user
@@ -588,6 +597,65 @@ export default function LoginPage() {
     }
   };
 
+  // Handle HD wallet account creation (no external wallet or Magic OAuth needed)
+  const handleCreateHdAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!createEmail.trim()) {
+      setError('Please enter your email address');
+      return;
+    }
+    if (!createHandle.trim()) {
+      setError('Please enter a username');
+      return;
+    }
+    if (!createTermsAccepted) {
+      setError('Please accept the Terms & Conditions');
+      return;
+    }
+
+    setCreateLoading(true);
+
+    try {
+      console.log('[CreateHdAccount] Creating account:', createEmail, createHandle);
+
+      const { data } = await createHdAccountMutation({
+        variables: {
+          input: {
+            email: createEmail.trim().toLowerCase(),
+            handle: createHandle.trim(),
+            displayName: createDisplayName.trim() || undefined,
+          },
+        },
+      });
+
+      if (data?.createHdAccount?.jwt) {
+        const { jwt, hdWalletAddress, handle } = data.createHdAccount;
+
+        console.log('[CreateHdAccount] Account created! Wallet:', hdWalletAddress);
+        setCreatedWalletAddress(hdWalletAddress);
+
+        // Set JWT and redirect
+        await setJwt(jwt);
+
+        // Brief delay to show success state
+        setTimeout(() => {
+          const redirectUrl = router.query.callbackUrl?.toString() ?? config.redirectUrlPostLogin;
+          router.push(redirectUrl);
+        }, 1500);
+      } else {
+        throw new Error('Account creation failed - no response from server');
+      }
+    } catch (err: any) {
+      console.error('[CreateHdAccount] Error:', err);
+      // Extract meaningful error message
+      const message = err?.graphQLErrors?.[0]?.message || err?.message || 'Account creation failed. Please try again.';
+      setError(message);
+      setCreateLoading(false);
+    }
+  };
+
   // Unified handler for magic_credential callbacks (OAuth and Email Magic Links)
   // Uses ref to prevent multiple concurrent runs (state is async, ref is sync)
   useEffect(() => {
@@ -663,7 +731,7 @@ export default function LoginPage() {
           const authMethodFromError = error.graphQLErrors?.find((err: any) => err.extensions?.with)?.extensions?.with;
           if (authMethodFromError) setAuthMethod([authMethodFromError]);
         } else if (error.message?.toLowerCase().includes('invalid credentials')) {
-          router.push('/create-account');
+          setLoginMode('create');
         } else {
           setError(error.message || 'Login failed. Please try again.');
         }
@@ -787,25 +855,6 @@ export default function LoginPage() {
     </button>
   );
 
-  const DiscordButton = () => (
-    <button
-      className="flex items-center justify-center gap-2 rounded-md bg-white/5 px-3 py-2 text-xs font-medium text-white w-full transition-all hover:bg-white/10 hover:text-[#5865F2]"
-      onClick={handleDiscordLogin}
-    >
-      <Discord className="h-4 w-4" />
-      <span>Discord</span>
-    </button>
-  );
-
-  const TwitchButton = () => (
-    <button
-      className="flex items-center justify-center gap-2 rounded-md bg-white/5 px-3 py-2 text-xs font-medium text-white w-full transition-all hover:bg-white/10 hover:text-[#9146FF]"
-      onClick={handleTwitchLogin}
-    >
-      <Twitch className="h-4 w-4" />
-      <span>Twitch</span>
-    </button>
-  );
 
   if (!isClient) {
     return null;
@@ -852,18 +901,17 @@ export default function LoginPage() {
             If you wish to login to an existing account, you must use the same method previously:
           </div>
           {authMethod.includes(AuthMethod.Google) && <GoogleButton />}
-          {(authMethod as any).includes('discord') && <DiscordButton />}
-          {(authMethod as any).includes('twitch') && <TwitchButton />}
           {authMethod.includes(AuthMethod.MagicLink) && <LoginForm handleMagicLogin={handleSubmit} />}
           <div className="flex h-full flex-col justify-between">
             <div className="py-4 text-center text-sm text-white font-semibold">
               Or create a new account with the same email.
             </div>
-            <NextLink href="/create-account">
-              <HoverableButton variant="rainbow" borderColor="bg-purple-gradient">
-                CREATE NEW ACCOUNT
-              </HoverableButton>
-            </NextLink>
+            <button
+              onClick={() => { setAuthMethod(undefined); setLoginMode('create'); }}
+              className="w-full py-3 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-bold rounded-lg transition-all"
+            >
+              CREATE NEW ACCOUNT
+            </button>
           </div>
         </ContentContainer>
       </>
@@ -893,8 +941,151 @@ export default function LoginPage() {
         </div>
         <Overlay />
         <ContentContainer>
+          {/* Login / Create Account Tab Toggle */}
+          {walletLoginStep === 'idle' && !createdWalletAddress && (
+            <div className="flex w-full rounded-lg bg-black/40 border border-gray-700/50 p-0.5 mb-3 backdrop-blur-sm">
+              <button
+                onClick={() => { setLoginMode('login'); setError(null); }}
+                className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${
+                  loginMode === 'login'
+                    ? 'bg-white/10 text-white'
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Log In
+              </button>
+              <button
+                onClick={() => { setLoginMode('create'); setError(null); }}
+                className={`flex-1 py-2 text-xs font-semibold rounded-md transition-all ${
+                  loginMode === 'create'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 border border-cyan-500/30'
+                    : 'text-gray-500 hover:text-gray-300'
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+          )}
+
+          {/* ========== CREATE ACCOUNT (HD Wallet) ========== */}
+          {loginMode === 'create' && walletLoginStep === 'idle' && !createdWalletAddress && (
+            <div className="w-full rounded-xl bg-black/40 border border-cyan-500/30 p-4 backdrop-blur-sm">
+              <div className="text-center mb-3">
+                <div className="text-2xl mb-1">🔐</div>
+                <p className="text-sm font-semibold text-white">Create Your Account</p>
+                <p className="text-[10px] text-cyan-300 mt-0.5">Multi-chain HD wallet generated automatically</p>
+              </div>
+
+              {/* Error */}
+              {error && (
+                <div className="mb-3 py-2 px-3 rounded-md bg-red-500/20 border border-red-500/50 text-center text-xs text-red-400">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleCreateHdAccount} className="space-y-2.5">
+                <div>
+                  <label className="text-[10px] text-gray-400 mb-0.5 block">Email *</label>
+                  <input
+                    type="email"
+                    value={createEmail}
+                    onChange={(e) => setCreateEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full bg-black/50 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
+                    disabled={createLoading}
+                  />
+                  <p className="text-[9px] text-gray-600 mt-0.5">Used for login - you'll use Email OTP to sign in</p>
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-gray-400 mb-0.5 block">Username *</label>
+                  <input
+                    type="text"
+                    value={createHandle}
+                    onChange={(e) => setCreateHandle(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                    placeholder="username"
+                    maxLength={24}
+                    className="w-full bg-black/50 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
+                    disabled={createLoading}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-gray-400 mb-0.5 block">Display Name</label>
+                  <input
+                    type="text"
+                    value={createDisplayName}
+                    onChange={(e) => setCreateDisplayName(e.target.value)}
+                    placeholder="Your Name (optional)"
+                    className="w-full bg-black/50 border border-white/10 rounded-md px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-cyan-400 focus:outline-none"
+                    disabled={createLoading}
+                  />
+                </div>
+
+                <label className="flex items-start gap-2 text-[10px] text-gray-400 pt-1">
+                  <input
+                    type="checkbox"
+                    checked={createTermsAccepted}
+                    onChange={(e) => setCreateTermsAccepted(e.target.checked)}
+                    className="h-3 w-3 mt-0.5 rounded border-cyan-500 bg-black text-cyan-500"
+                    disabled={createLoading}
+                  />
+                  <span>
+                    I agree to the <a href="/terms-and-conditions" className="text-cyan-400" target="_blank">Terms</a> & <a href="/privacy-policy" className="text-cyan-400" target="_blank">Privacy Policy</a>
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={!createEmail.trim() || !createHandle.trim() || !createTermsAccepted || createLoading}
+                  className={`w-full py-2.5 rounded-md text-sm font-semibold transition-all ${
+                    createEmail.trim() && createHandle.trim() && createTermsAccepted && !createLoading
+                      ? 'bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white shadow-lg shadow-cyan-500/20'
+                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {createLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                      Creating Account...
+                    </span>
+                  ) : (
+                    'Create Account'
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-3 pt-3 border-t border-gray-700/50">
+                <div className="flex items-center gap-2 text-[9px] text-gray-500">
+                  <span className="text-cyan-400">⬡</span>
+                  <span>Your wallet works on Polygon, Ethereum, Base, Arbitrum & more</span>
+                </div>
+                <div className="flex items-center gap-2 text-[9px] text-gray-500 mt-1">
+                  <span className="text-green-400">✓</span>
+                  <span>No browser extension needed. No gas fees to create.</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* HD Account Created Success */}
+          {createdWalletAddress && (
+            <div className="w-full rounded-xl bg-green-500/10 border border-green-500/30 p-4 text-center backdrop-blur-sm">
+              <div className="text-3xl mb-2">✅</div>
+              <p className="text-green-400 font-semibold text-sm">Account Created!</p>
+              <p className="text-[10px] text-gray-400 mt-1">Your HD Wallet</p>
+              <p className="text-[10px] text-cyan-300 font-mono mt-0.5 break-all">{createdWalletAddress}</p>
+              <div className="mt-3">
+                <div className="animate-spin w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full mx-auto"></div>
+                <p className="text-[10px] text-gray-400 mt-1">Redirecting to feed...</p>
+              </div>
+            </div>
+          )}
+
+          {/* ========== EXISTING LOGIN FLOWS (unchanged) ========== */}
+
           {/* VIP Wallet Login - Compact */}
-          {walletLoginStep !== 'success' && (
+          {loginMode === 'login' && walletLoginStep !== 'success' && (
             <div className="mb-3 rounded-xl bg-black/40 border border-purple-500/30 p-3 text-center backdrop-blur-sm w-full">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <span className="text-lg">{walletBrowserInfo.walletName === 'MetaMask' ? '🦊' : '💎'}</span>
@@ -1028,7 +1219,7 @@ export default function LoginPage() {
           )}
 
           {/* Divider */}
-          {walletLoginStep === 'idle' && (
+          {loginMode === 'login' && walletLoginStep === 'idle' && (
             <div className="flex items-center gap-2 my-2 w-full">
               <div className="flex-1 h-px bg-gray-700"></div>
               <span className="text-gray-600 text-[10px]">OR</span>
@@ -1037,40 +1228,38 @@ export default function LoginPage() {
           )}
 
           {/* Logo - compact */}
-          {walletLoginStep === 'idle' && (
+          {loginMode === 'login' && walletLoginStep === 'idle' && (
             <div className="mb-2 flex h-12 items-center justify-center">
               <LogoAndText className="text-white h-8" />
             </div>
           )}
 
-          {/* Error */}
-          {error && (
+          {/* Error (login mode only - create mode has its own error display) */}
+          {loginMode === 'login' && error && (
             <div className="mb-2 py-2 px-3 rounded-md bg-red-500/20 border border-red-500/50 text-center text-xs text-red-400 w-full">
               {error}
             </div>
           )}
 
           {/* In-app warning */}
-          {inAppBrowserWarning && !hasWallet && walletLoginStep === 'idle' && (
+          {loginMode === 'login' && inAppBrowserWarning && !hasWallet && walletLoginStep === 'idle' && (
             <div className="mb-2 rounded-md bg-yellow-500/10 border border-yellow-500/30 p-2 text-center w-full">
               <p className="text-[10px] text-yellow-400">In-app browser detected. Open in Safari/Chrome for Google.</p>
             </div>
           )}
 
           {/* OTP */}
-          {waitingForOtp && (
+          {loginMode === 'login' && waitingForOtp && (
             <div className="mb-2 rounded-md bg-cyan-500/10 border border-cyan-500/30 p-2 text-center animate-pulse w-full">
               <p className="text-xs text-cyan-400">Check email for code</p>
             </div>
           )}
 
-          {/* OAuth + Email */}
-          {walletLoginStep === 'idle' && (
+          {/* OAuth + Email (Legacy: Google + Email only) */}
+          {loginMode === 'login' && walletLoginStep === 'idle' && (
             <div className="w-full">
-              <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="mb-2">
                 <GoogleButton />
-                <DiscordButton />
-                <TwitchButton />
               </div>
 
               <div className="flex items-center gap-2 my-2">

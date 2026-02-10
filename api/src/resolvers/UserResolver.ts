@@ -11,6 +11,8 @@ import { AuthPayload } from '../types/AuthPayload';
 import { Context } from '../types/Context';
 import { LoginInput } from '../types/LoginInput';
 import { LoginWithWalletInput } from '../types/LoginWithWalletInput';
+import { CreateHdAccountInput } from '../types/CreateHdAccountInput';
+import { HdAccountPayload } from '../types/HdAccountPayload';
 import { RegisterInput } from '../types/RegisterInput';
 import { UpdateDefaultWalletInput } from '../types/UpdateDefaultWalletInput';
 import { UpdateDefaultWalletPayload } from '../types/UpdateDefaultWalletPayload';
@@ -244,6 +246,33 @@ export class UserResolver {
       return { jwt };
     } catch (error) {
       console.error('loginWithWallet mutation error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new account with HD wallet (no external wallet or Magic OAuth required)
+   * User provides email + handle. Backend generates HD wallet.
+   * Future logins use email OTP on the login page.
+   */
+  @Mutation(() => HdAccountPayload)
+  async createHdAccount(
+    @Ctx() { authService, jwtService }: Context,
+    @Arg('input') { email, handle, displayName }: CreateHdAccountInput,
+  ): Promise<HdAccountPayload> {
+    console.log('createHdAccount mutation called:', email, handle);
+
+    try {
+      const { user, hdWalletAddress } = await authService.registerHdAccount(email, handle, displayName);
+
+      console.log('HD account created:', user._id.toString(), hdWalletAddress);
+
+      // Create JWT
+      const jwt = jwtService.create(user);
+
+      return { jwt, hdWalletAddress, handle: user.handle };
+    } catch (error) {
+      console.error('createHdAccount mutation error:', error);
       throw error;
     }
   }

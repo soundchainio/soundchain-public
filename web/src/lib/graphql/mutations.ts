@@ -9,6 +9,17 @@ export const LOGIN_WITH_WALLET_MUTATION = gql`
   }
 `;
 
+// Create HD wallet account (no Magic OAuth, no external wallet required)
+export const CREATE_HD_ACCOUNT_MUTATION = gql`
+  mutation CreateHdAccount($input: CreateHdAccountInput!) {
+    createHdAccount(input: $input) {
+      jwt
+      hdWalletAddress
+      handle
+    }
+  }
+`;
+
 // Make Post Permanent mutation
 export const MAKE_POST_PERMANENT_MUTATION = gql`
   mutation MakePostPermanent($input: MakePostPermanentInput!) {
