@@ -38,6 +38,8 @@ import { Card } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import 'react-toastify/dist/ReactToastify.css'
+import { ReactElement } from 'react'
+import { CustomLayout } from './_app'
 
 // GraphQL queries for PiggyBank rewards data
 const PROFILE_STREAMING_REWARDS_QUERY = gql`
@@ -901,3 +903,6 @@ export default function OGUNRadio() {
     </>
   )
 }
+
+// Custom layout - radio page is standalone, no default Layout wrapper
+OGUNRadio.getLayout = ((page: ReactElement) => page) as CustomLayout
