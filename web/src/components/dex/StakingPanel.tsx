@@ -120,7 +120,8 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   )
 
   // Claim streaming rewards mutation
-  const [claimStreamingRewardsMutation, { loading: claimLoading }] = useMutation(CLAIM_STREAMING_REWARDS)
+  const [claimStreamingRewardsMutation] = useMutation(CLAIM_STREAMING_REWARDS)
+  const [claimLoading, setClaimLoading] = useState(false)
 
   // Calculate streaming totals
   const scids = streamingData?.scidsByProfile || []
@@ -875,6 +876,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               <div className="mt-3 text-center">
                 <p className="text-xs text-green-400">
                   All {streamingStats.totalOgunEarned.toFixed(2)} OGUN rewards have been claimed!
+                </p>
+              </div>
+            )}
+            {streamingStats.totalOgunEarned === 0 && !streamingLoading && (
+              <div className="mt-3 text-center">
+                <p className="text-xs text-gray-500">
+                  No streaming rewards yet. Rewards accumulate when others stream your tracks for 30+ seconds.
                 </p>
               </div>
             )}

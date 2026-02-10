@@ -129,6 +129,7 @@ const PROFILE_STREAMING_REWARDS_QUERY = gql`
       scid
       streamCount
       ogunRewardsEarned
+      ogunRewardsClaimed
     }
   }
 `
@@ -1254,6 +1255,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     if (!myStreamingRewardsData?.scidsByProfile) return 0
     return myStreamingRewardsData.scidsByProfile.reduce((total: number, scid: any) => {
       return total + (scid.streamCount || 0)
+    }, 0)
+  }, [myStreamingRewardsData])
+
+  const myTotalUnclaimed = React.useMemo(() => {
+    if (!myStreamingRewardsData?.scidsByProfile) return 0
+    return myStreamingRewardsData.scidsByProfile.reduce((total: number, scid: any) => {
+      const earned = scid.ogunRewardsEarned || 0
+      const claimed = scid.ogunRewardsClaimed || 0
+      return total + Math.max(0, earned - claimed)
     }, 0)
   }, [myStreamingRewardsData])
 
@@ -2816,18 +2826,37 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                       </div>
 
+                      {/* Unclaimed Amount */}
+                      {myTotalUnclaimed > 0 && (
+                        <div className="px-3 pt-2 text-center">
+                          <p className="text-xs text-yellow-400 font-semibold">
+                            {myTotalUnclaimed.toFixed(2)} OGUN unclaimed
+                          </p>
+                        </div>
+                      )}
+
                       {/* Action Buttons */}
                       <div className="p-3 grid grid-cols-2 gap-2">
                         <button
                           onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
-                          className="py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold rounded-lg text-sm flex items-center justify-center gap-1"
+                          disabled={myTotalUnclaimed <= 0}
+                          className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
+                            myTotalUnclaimed > 0
+                              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black'
+                              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          }`}
                         >
                           <Wallet className="w-3 h-3" />
                           Claim
                         </button>
                         <button
                           onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
-                          className="py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-1"
+                          disabled={myTotalUnclaimed <= 0}
+                          className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
+                            myTotalUnclaimed > 0
+                              ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white'
+                              : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          }`}
                         >
                           <Zap className="w-3 h-3" />
                           Stake
@@ -2837,7 +2866,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {/* Footer */}
                       <div className="px-3 pb-2 text-center">
                         <p className="text-[9px] text-gray-500">
-                          Creator 70% · Listener 30% · 30sec min · Polygon
+                          {myTotalUnclaimed <= 0 ? 'Stream tracks to earn OGUN · ' : ''}Creator 70% · Listener 30% · 30sec min · Polygon
                         </p>
                       </div>
                     </Card>
@@ -3202,23 +3231,51 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       </div>
                     </div>
 
+                    {/* Unclaimed Amount */}
+                    {myTotalUnclaimed > 0 && (
+                      <div className="px-3 pt-2 text-center">
+                        <p className="text-xs text-yellow-400 font-semibold">
+                          {myTotalUnclaimed.toFixed(2)} OGUN unclaimed
+                        </p>
+                      </div>
+                    )}
+
                     {/* Action Buttons */}
                     <div className="p-3 grid grid-cols-2 gap-2">
                       <button
                         onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
-                        className="py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold rounded-lg text-sm flex items-center justify-center gap-1"
+                        disabled={myTotalUnclaimed <= 0}
+                        className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
+                          myTotalUnclaimed > 0
+                            ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black'
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        }`}
                       >
                         <Wallet className="w-3 h-3" />
                         Claim
                       </button>
                       <button
                         onClick={() => { setShowWinWinStatsModal(false); router.push('/dex/staking') }}
-                        className="py-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold rounded-lg text-sm flex items-center justify-center gap-1"
+                        disabled={myTotalUnclaimed <= 0}
+                        className={`py-2 font-bold rounded-lg text-sm flex items-center justify-center gap-1 transition-all ${
+                          myTotalUnclaimed > 0
+                            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white'
+                            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        }`}
                       >
                         <Zap className="w-3 h-3" />
                         Stake
                       </button>
                     </div>
+
+                    {/* Footer */}
+                    {myTotalUnclaimed <= 0 && (
+                      <div className="px-3 pb-2 text-center">
+                        <p className="text-[9px] text-gray-500">
+                          Stream tracks to earn OGUN · Creator 70% · Listener 30%
+                        </p>
+                      </div>
+                    )}
                   </Card>
                 )}
               </div>
