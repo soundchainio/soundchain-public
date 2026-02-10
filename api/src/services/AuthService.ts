@@ -308,7 +308,7 @@ export class AuthService extends Service {
       profileId: profile._id,
       emailVerificationToken,
       ...hdWalletFields,
-      authMethod: AuthMethod.MagicLink, // Email OTP for future logins
+      authMethod: AuthMethod.magicLink, // Email OTP for future logins
       isApprovedOnMarketplace: false,
       nostrPubkey: nostrKeypair.publicKey,
       nostrPrivateKey: nostrKeypair.privateKey,
