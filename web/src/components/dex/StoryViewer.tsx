@@ -85,6 +85,7 @@ interface StoryViewerProps {
   isOpen: boolean
   onClose: () => void
   initialUserId?: string
+  initialStoryId?: string
   users: StoryUser[]
 }
 
@@ -131,7 +132,7 @@ const mockStoryUsers: StoryUser[] = [
   },
 ]
 
-export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryUsers }: StoryViewerProps) => {
+export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, users = mockStoryUsers }: StoryViewerProps) => {
   const router = useRouter()
   const [currentUserIndex, setCurrentUserIndex] = useState(0)
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0)
@@ -201,13 +202,25 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
     }
   }, [currentStoryIndex, currentUserIndex, users])
 
-  // Find initial user index
+  // Find initial user and story index (for deep links)
   useEffect(() => {
-    if (initialUserId && users.length > 0) {
+    if (users.length === 0) return
+    if (initialStoryId) {
+      // Deep link: find the user and story by story ID
+      for (let ui = 0; ui < users.length; ui++) {
+        const si = users[ui].stories.findIndex(s => s.id === initialStoryId)
+        if (si !== -1) {
+          setCurrentUserIndex(ui)
+          setCurrentStoryIndex(si)
+          return
+        }
+      }
+    }
+    if (initialUserId) {
       const index = users.findIndex(u => u.profileId === initialUserId)
       if (index !== -1) setCurrentUserIndex(index)
     }
-  }, [initialUserId, users])
+  }, [initialUserId, initialStoryId, users])
 
   // Keyboard navigation
   useEffect(() => {

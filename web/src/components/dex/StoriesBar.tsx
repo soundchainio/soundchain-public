@@ -76,9 +76,11 @@ const getAvatarUrl = (story: Story): string => {
 interface StoriesBarProps {
   onCreateStory?: () => void
   onViewStory?: (profileId: string) => void
+  deepLinkStoryId?: string
+  deepLinkUserHandle?: string
 }
 
-export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
+export const StoriesBar = ({ onCreateStory, onViewStory, deepLinkStoryId, deepLinkUserHandle }: StoriesBarProps) => {
   // useMe() returns the User object directly, not { me: User }
   const me = useMe()
   const router = useRouter()
@@ -211,6 +213,21 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
   useEffect(() => {
     setPortalContainer(document.body)
   }, [])
+
+  // Auto-open StoryViewer for deep links (/dex/story/handle/storyId)
+  useEffect(() => {
+    if (!deepLinkStoryId || !storyUsersForViewer.length) return
+    // Find the user by handle or by searching for the story ID
+    for (const user of storyUsersForViewer as any[]) {
+      const found = user.stories?.some((s: any) => s.id === deepLinkStoryId)
+      if (found) {
+        setSelectedUserId(user.profileId)
+        setShowStoryViewer(true)
+        return
+      }
+    }
+    // Story not found in current data - might be expired or invalid
+  }, [deepLinkStoryId, storyUsersForViewer])
 
   const handleScroll = () => {
     if (!scrollRef.current) return
@@ -387,6 +404,7 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
           isOpen={showStoryViewer}
           onClose={() => setShowStoryViewer(false)}
           initialUserId={selectedUserId}
+          initialStoryId={deepLinkStoryId}
           users={storyUsersForViewer as any}
         />,
         portalContainer

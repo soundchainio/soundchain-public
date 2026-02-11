@@ -860,6 +860,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       case 'feedback': return 'feedback'
       case 'admin': return 'admin'
       case 'users': return routeId ? 'profile' : 'users' // /dex/users/handle -> profile view
+      case 'story': return 'feed' // /dex/story/handle/id -> feed with auto-open story viewer
       case 'nearby': return 'nearby' // /dex/nearby -> Location-based Bitchat integration
       case 'home': return 'feed' // Default /dex to feed
       default: return 'feed' // Feed is the default landing view
@@ -3907,7 +3908,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* 24hr Stories/Reels Bar - BELOW feed tabs */}
           {(selectedView === 'feed' || selectedView === 'explore') && (
-            <StoriesBar />
+            <StoriesBar
+              deepLinkStoryId={routeType === 'story' ? (slug?.[2] || undefined) : undefined}
+              deepLinkUserHandle={routeType === 'story' ? (routeId || undefined) : undefined}
+            />
           )}
 
           {/* Dashboard View - Genres & Leaderboards Only */}
