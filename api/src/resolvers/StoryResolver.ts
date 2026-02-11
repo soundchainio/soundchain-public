@@ -413,6 +413,21 @@ export class StoryResolver {
   }
 
   /**
+   * Get a single story by ID (public, for OG meta/deep links)
+   */
+  @Query(() => Story, { nullable: true })
+  async story(
+    @Ctx() { storyService }: Context,
+    @Arg('id') id: string
+  ): Promise<Story | null> {
+    try {
+      return await storyService.getById(id);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Search stories by hashtag
    */
   @Query(() => [Story])

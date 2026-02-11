@@ -765,7 +765,7 @@ const linkifyText = (text: string) => {
 // Props from getServerSideProps for OG meta tags
 interface DEXDashboardProps {
   ogData?: {
-    type: 'track' | 'profile' | 'playlist' | null
+    type: 'track' | 'profile' | 'playlist' | 'story' | null
     title?: string
     description?: string
     image?: string
@@ -8021,7 +8021,7 @@ DEXDashboard.getLayout = (page: ReactElement) => {
 // Fetches track/profile data so crawlers see rich preview cards
 export const getServerSideProps: GetServerSideProps = async (context) => {
   // Default empty OG data - page will still load even if data fetch fails
-  const emptyOgData = { type: null as 'track' | 'profile' | 'playlist' | null }
+  const emptyOgData = { type: null as 'track' | 'profile' | 'playlist' | 'story' | null }
 
   // Detect social media crawlers/bots for SSR-only rendering
   const userAgent = context.req.headers['user-agent'] || ''
@@ -8044,8 +8044,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const routeType = slug?.[0]
     const routeId = slug?.[1]
 
-    // Only fetch OG data for track, profile, and playlist pages
-    if (!routeType || !routeId || (routeType !== 'track' && routeType !== 'users' && routeType !== 'playlist')) {
+    // Only fetch OG data for track, profile, playlist, and story pages
+    if (!routeType || !routeId || (routeType !== 'track' && routeType !== 'users' && routeType !== 'playlist' && routeType !== 'story')) {
       return { props: { ogData: emptyOgData, isBot } }
     }
 
@@ -8161,6 +8161,67 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
         }
       } catch (playlistError) {
         console.error('Playlist OG fetch error:', playlistError)
+      }
+    }
+
+    // Story page: /dex/story/[handle]/[storyId]
+    if (routeType === 'story') {
+      const storyId = slug?.[2]
+      if (storyId) {
+        try {
+          const { gql: gqlTag } = await import('@apollo/client')
+          const { data } = await apolloClient.query({
+            query: gqlTag`
+              query StoryOG($id: String!) {
+                story(id: $id) {
+                  id
+                  mediaUrl
+                  mediaType
+                  caption
+                  creatorDisplayName
+                  creatorUserHandle
+                  attachedTrackTitle
+                  attachedTrackArtist
+                  attachedTrackCoverUrl
+                }
+              }
+            `,
+            variables: { id: storyId },
+            errorPolicy: 'all',
+          })
+
+          if (data?.story) {
+            const story = data.story
+            const domainUrl = process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'
+            const fallbackImage = `${domainUrl}/soundchain-meta-logo.png`
+            // For stories with attached tracks, use the track cover art
+            // Otherwise use the story media (image stories)
+            let ogImage = story.attachedTrackCoverUrl || (story.mediaType === 'image' ? story.mediaUrl : null) || fallbackImage
+            if (ogImage && !ogImage.startsWith('http')) {
+              ogImage = `${domainUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`
+            }
+            const creatorName = story.creatorDisplayName || story.creatorUserHandle || routeId
+            const title = story.attachedTrackTitle
+              ? `${story.attachedTrackTitle} by ${story.attachedTrackArtist || 'Unknown'} | ${creatorName} on SoundChain`
+              : `${creatorName}'s Story | SoundChain`
+            const description = story.caption
+              || (story.attachedTrackTitle ? `Listen to "${story.attachedTrackTitle}" shared by ${creatorName} on SoundChain` : `View ${creatorName}'s story on SoundChain`)
+            return {
+              props: {
+                ogData: {
+                  type: 'story' as const,
+                  title,
+                  description,
+                  image: ogImage,
+                  url: `/dex/story/${routeId}/${storyId}`,
+                },
+                isBot,
+              },
+            }
+          }
+        } catch (storyError) {
+          console.error('Story OG fetch error:', storyError)
+        }
       }
     }
   } catch (error) {
