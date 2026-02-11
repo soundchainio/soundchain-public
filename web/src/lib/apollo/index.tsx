@@ -104,9 +104,34 @@ export function createApolloClient(context?: GetServerSidePropsContext) {
 
 export const apolloClient = createApolloClient()
 
-// Alias for SSR usage in getServerSideProps
+// SSR-specific Apollo client with hardcoded production URL
+// This ensures SSR always hits the correct API endpoint
 export function initializeApollo() {
-  return createApolloClient()
+  const ssrApiUrl = 'https://api.soundchain.io/graphql'
+  const ssrHttpLink = createHttpLink({ uri: ssrApiUrl, fetch })
+
+  const errorLink = onError(({ graphQLErrors, networkError }) => {
+    if (graphQLErrors) {
+      graphQLErrors.forEach(({ message }) => {
+        console.error('[SSR Apollo] GraphQL error:', message)
+      })
+    }
+    if (networkError) {
+      console.error('[SSR Apollo] Network error:', networkError)
+    }
+  })
+
+  return new ApolloClient({
+    link: errorLink.concat(ssrHttpLink),
+    cache: new InMemoryCache(cacheConfig),
+    ssrMode: true,
+    defaultOptions: {
+      query: {
+        fetchPolicy: 'no-cache', // Don't cache SSR queries
+        errorPolicy: 'all',
+      },
+    },
+  })
 }
 
 export function getJwt() {
