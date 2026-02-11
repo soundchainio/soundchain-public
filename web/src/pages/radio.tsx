@@ -10,7 +10,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { GetServerSideProps } from 'next'
 import { initializeApollo } from 'lib/apollo'
-import { gql } from '@apollo/client'
 import {
   Play,
   Pause,
