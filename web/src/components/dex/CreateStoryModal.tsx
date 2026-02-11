@@ -228,6 +228,23 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
     const track = prefillTrack
     if (!track) return
 
+    // Check if artwork image can be drawn without tainting the canvas
+    let canUseArtwork = false
+    if (artworkImg) {
+      const testCanvas = document.createElement('canvas')
+      testCanvas.width = 1
+      testCanvas.height = 1
+      const testCtx = testCanvas.getContext('2d')!
+      testCtx.drawImage(artworkImg, 0, 0, 1, 1)
+      try {
+        testCtx.getImageData(0, 0, 1, 1)
+        canUseArtwork = true
+      } catch (e) {
+        console.warn('[CreateStoryModal] Canvas tainted by cross-origin artwork, using fallback')
+        canUseArtwork = false
+      }
+    }
+
     // Dark background
     const bg = ctx.createLinearGradient(0, 0, 0, 1920)
     bg.addColorStop(0, '#030d1b')
@@ -236,7 +253,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
     ctx.fillStyle = bg
     ctx.fillRect(0, 0, 1080, 1920)
 
-    if (artworkImg) {
+    if (artworkImg && canUseArtwork) {
       // Draw artwork large and centered
       const size = Math.min(artworkImg.width, artworkImg.height)
       const sx = (artworkImg.width - size) / 2
@@ -352,18 +369,27 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
     } as Track)
     setMusicSource('nft')
 
-    // Try to load artwork via Image element (handles CORS better than fetch)
+    // Load artwork - try crossOrigin first (clean canvas), then without (taint-checked in generateRadioCard)
     if (prefillTrack.artworkUrl) {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => generateRadioCard(img)
-      img.onerror = () => {
-        console.warn('[CreateStoryModal] Artwork CORS blocked, generating card without artwork')
-        generateRadioCard() // Fallback: styled card without artwork
+      const artUrl = getIpfsUrl(prefillTrack.artworkUrl)
+
+      // Attempt 1: With CORS headers (allows clean canvas export)
+      const img1 = new Image()
+      img1.crossOrigin = 'anonymous'
+      img1.onload = () => generateRadioCard(img1)
+      img1.onerror = () => {
+        // Attempt 2: Without CORS (image loads, canvas may be tainted - handled in generateRadioCard)
+        const img2 = new Image()
+        img2.onload = () => generateRadioCard(img2)
+        img2.onerror = () => {
+          console.warn('[CreateStoryModal] Artwork failed to load entirely, using vinyl fallback')
+          generateRadioCard()
+        }
+        img2.src = artUrl
       }
-      img.src = prefillTrack.artworkUrl
+      img1.src = artUrl
     } else {
-      generateRadioCard() // No artwork URL at all
+      generateRadioCard()
     }
   }, [isOpen, prefillTrack, generateRadioCard])
 
@@ -761,7 +787,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
             variables: {
               mediaUrl: ipfsUrl,
               mediaType,
-              duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
+              duration: mediaType === 'video' ? Math.floor(videoDuration) : (prefillTrack ? 59 : 60),
               overlays: overlays.length > 0 ? overlays : null,
               attachedTrackId: selectedNftTrack?.id || null,
               caption: normalizedEmbedUrl || null, // Use caption field for embed URL
@@ -790,7 +816,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
             mediaUrl: ipfsUrl,
             mediaType,
             walletAddress,
-            duration: mediaType === 'video' ? Math.floor(videoDuration) : 60,
+            duration: mediaType === 'video' ? Math.floor(videoDuration) : (prefillTrack ? 59 : 60),
             overlays: overlays.length > 0 ? overlays : null,
             attachedTrackId: selectedNftTrack?.id || null,
             caption: normalizedEmbedUrl || null,
