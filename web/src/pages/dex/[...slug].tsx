@@ -42,6 +42,7 @@ import { BundleCard } from 'components/dex/BundleCard'
 import { Card, CardContent } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { Badge } from 'components/ui/badge'
+import { BadgeVerifiedOnChain } from 'components/common/Badges/BadgeVerifiedOnChain'
 import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
@@ -6542,8 +6543,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <div className="flex-shrink-0 w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                               <span className="text-purple-400 font-mono text-sm">SC</span>
                             </div>
-                            <div>
-                              <p className="text-xs text-gray-400 uppercase tracking-wider">SoundChain ID</p>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs text-gray-400 uppercase tracking-wider">SoundChain ID</p>
+                                <BadgeVerifiedOnChain scid={scidData.scidByTrack.scid} compact />
+                              </div>
                               <p className="text-white font-mono text-sm">{scidData.scidByTrack.scid}</p>
                               {scidData.scidByTrack.streamCount > 0 && (
                                 <p className="text-xs text-cyan-400 mt-0.5">
