@@ -24,7 +24,8 @@ import {
   Sparkles,
   ArrowRight,
   Globe,
-  Zap
+  Zap,
+  KeyRound
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -578,24 +579,24 @@ export function MultiWalletAggregator({
                 </div>
               )}
 
-              {/* Wallet Header - Clickable to expand */}
+              {/* Wallet Header - Prioritize balances, minimize address display */}
               <button
                 className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
                 onClick={() => toggleExpanded(wallet.id)}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-lg ${
                     wallet.type === 'hd' ? 'bg-gradient-to-br from-cyan-500/30 via-purple-500/30 to-cyan-600/20 border border-cyan-500/30' :
                     wallet.type === 'magic' ? 'bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 border border-cyan-500/30' :
                     wallet.type === 'metamask' ? 'bg-gradient-to-br from-orange-500/30 to-orange-600/20 border border-orange-500/30' :
                     wallet.type === 'web3modal' ? 'bg-gradient-to-br from-purple-500/30 to-purple-600/20 border border-purple-500/30' :
                     'bg-gradient-to-br from-blue-500/30 to-blue-600/20 border border-blue-500/30'
                   }`}>
-                    <span className="text-2xl">{getWalletIcon(wallet.type, wallet.icon)}</span>
+                    <span className="text-xl">{getWalletIcon(wallet.type, wallet.icon)}</span>
                   </div>
                   <div className="text-left">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-cyan-400 font-bold">{formatAddress(wallet.address)}</span>
+                      <span className="text-white font-bold text-sm">{getWalletName(wallet.type)}</span>
                       {wallet.isPrimary && (
                         <Badge className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 text-[10px] px-1.5 border border-cyan-500/30">Primary</Badge>
                       )}
@@ -603,8 +604,7 @@ export function MultiWalletAggregator({
                         <Badge className="bg-green-500/20 text-green-400 text-[10px] px-1.5">Active</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-gray-400">{getWalletName(wallet.type)}</span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
                       {wallet.type === 'hd' ? (
                         <Badge className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 text-[10px] px-1.5 flex items-center gap-1">
                           <Globe className="w-2.5 h-2.5" />
@@ -614,108 +614,109 @@ export function MultiWalletAggregator({
                         <Badge className={`text-[10px] px-1.5 ${
                           wallet.chainName === 'Polygon' ? 'bg-purple-500/20 text-purple-400' :
                           wallet.chainName === 'Ethereum' ? 'bg-blue-500/20 text-blue-400' :
-                          wallet.chainName === 'Base' ? 'bg-blue-500/20 text-blue-400' :
-                          wallet.chainName === 'ZetaChain' ? 'bg-green-500/20 text-green-400' :
-                          wallet.chainName === 'Arbitrum' ? 'bg-blue-500/20 text-blue-400' :
-                          wallet.chainName === 'Optimism' ? 'bg-red-500/20 text-red-400' :
                           'bg-gray-500/20 text-gray-400'
                         }`}>
                           {wallet.chainName}
                         </Badge>
                       )}
+                      <Badge className="bg-purple-500/20 text-purple-400 text-[10px] px-1.5">
+                        {wallet.nfts.length} NFTs
+                      </Badge>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                {/* Balances prominently displayed */}
+                <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <p className="text-white font-bold text-sm">{wallet.balance} {getChainCurrency(wallet.chainName)}</p>
-                    <p className="text-xs text-purple-400">{wallet.ogunBalance} OGUN</p>
+                    <p className="text-white font-bold">{wallet.balance} <span className="text-gray-400 text-xs">{getChainCurrency(wallet.chainName)}</span></p>
+                    <p className="text-purple-400 font-semibold text-sm">{wallet.ogunBalance} <span className="text-purple-400/70 text-xs">OGUN</span></p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">
-                      {wallet.nfts.length} NFTs
-                    </Badge>
-                    {expandedWallets.has(wallet.id) ? (
-                      <ChevronUp className="w-4 h-4 text-gray-400" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
-                    )}
-                  </div>
+                  {expandedWallets.has(wallet.id) ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  )}
                 </div>
               </button>
 
               {/* Expanded NFT Collection */}
               {expandedWallets.has(wallet.id) && (
                 <div className="border-t border-cyan-500/20 p-4 bg-black/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <Badge className="bg-purple-500/20 text-purple-400 text-xs">
+                  {/* Compact address row - only visible when expanded */}
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-800/50">
+                    <span className="text-[10px] text-gray-500 font-mono">{formatAddress(wallet.address)}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigator.clipboard.writeText(wallet.address)
+                      }}
+                      className="text-gray-600 hover:text-cyan-400 transition-colors"
+                      title="Copy full address"
+                    >
+                      <Copy className="w-2.5 h-2.5" />
+                    </button>
+                    <a
+                      href={`${config.polygonscan}address/${wallet.address}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-gray-600 hover:text-cyan-400 transition-colors"
+                      title="View on Polygonscan"
+                    >
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                    <div className="flex-1" />
+                    <Badge className="bg-purple-500/20 text-purple-400 text-[10px]">
                       NFT COLLECTION
                     </Badge>
-                    <div className="flex items-center gap-2">
+                  </div>
+                  {/* Action buttons for wallet management */}
+                  <div className="flex items-center justify-end gap-2 mb-3">
+                    {/* Reveal Secret Phrase - Magic/OAuth Wallets Only */}
+                    {wallet.type === 'magic' && (
                       <a
-                        href={`${config.polygonscan}address/${wallet.address}`}
+                        href="https://reveal.magic.link/soundchain"
                         target="_blank"
                         rel="noreferrer"
-                        className="text-gray-500 hover:text-cyan-400 transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs text-yellow-500/70 hover:text-yellow-400 transition-colors flex items-center gap-1"
+                        title="Reveal Secret Phrase / Private Key"
                       >
-                        <ExternalLink className="w-3 h-3" />
+                        <KeyRound className="w-3 h-3" />
+                        <span>Export Key</span>
                       </a>
+                    )}
+                    {wallet.type === 'metamask' && (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigator.clipboard.writeText(wallet.address)
-                        }}
-                        className="text-gray-500 hover:text-cyan-400 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); disconnectMetaMask() }}
+                        className="text-xs text-red-500/70 hover:text-red-400 transition-colors"
                       >
-                        <Copy className="w-3 h-3" />
+                        Disconnect
                       </button>
-                      {wallet.type === 'metamask' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            disconnectMetaMask()
-                          }}
-                          className="text-gray-500 hover:text-red-400 transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                      {(wallet.type === 'walletconnect' || wallet.id === 'magic-external') && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            disconnectExternalWallet()
-                          }}
-                          className="text-gray-500 hover:text-red-400 transition-colors"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                      {wallet.type === 'web3modal' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            disconnectWeb3Modal()
-                          }}
-                          className="text-gray-500 hover:text-red-400 transition-colors"
-                          title="Disconnect wallet"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                      {wallet.id.startsWith('ext-') && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            removeExternalWallet(wallet.type)
-                          }}
-                          className="text-gray-500 hover:text-red-400 transition-colors"
-                          title="Remove wallet"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
+                    )}
+                    {(wallet.type === 'walletconnect' || wallet.id === 'magic-external') && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); disconnectExternalWallet() }}
+                        className="text-xs text-red-500/70 hover:text-red-400 transition-colors"
+                      >
+                        Disconnect
+                      </button>
+                    )}
+                    {wallet.type === 'web3modal' && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); disconnectWeb3Modal() }}
+                        className="text-xs text-red-500/70 hover:text-red-400 transition-colors"
+                      >
+                        Disconnect
+                      </button>
+                    )}
+                    {wallet.id.startsWith('ext-') && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeExternalWallet(wallet.type) }}
+                        className="text-xs text-red-500/70 hover:text-red-400 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
                   </div>
 
                   {loadingNfts[wallet.address] ? (
@@ -768,6 +769,32 @@ export function MultiWalletAggregator({
                           </button>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* Reveal Secret Phrase Section - Magic/OAuth Wallets Only */}
+                  {wallet.type === 'magic' && (
+                    <div className="mt-4 pt-4 border-t border-yellow-500/20">
+                      <a
+                        href="https://reveal.magic.link/soundchain"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                            <KeyRound className="w-4 h-4 text-yellow-400" />
+                          </div>
+                          <div>
+                            <p className="text-yellow-400 font-medium text-sm">Reveal Secret Phrase</p>
+                            <p className="text-gray-500 text-xs">Export your private key for external use</p>
+                          </div>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-yellow-400 opacity-50 group-hover:opacity-100 transition-opacity" />
+                      </a>
+                      <p className="text-[10px] text-gray-600 mt-2 px-1">
+                        ⚠️ Never share your secret phrase. Anyone with it has full control of your wallet.
+                      </p>
                     </div>
                   )}
                 </div>

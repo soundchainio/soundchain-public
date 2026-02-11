@@ -8,6 +8,9 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { GetServerSideProps } from 'next'
+import { initializeApollo } from 'lib/apollo'
+import { gql } from '@apollo/client'
 import {
   Play,
   Pause,
@@ -81,7 +84,75 @@ interface RadioTrack {
   is_nft: boolean
 }
 
-export default function OGUNRadio() {
+// GraphQL query for fetching track data server-side (for OG previews)
+const GET_TRACK_FOR_OG = gql`
+  query GetTrackForOG($trackId: String!) {
+    track(id: $trackId) {
+      id
+      title
+      artworkUrl
+      playbackUrl
+      profile {
+        displayName
+        handle
+      }
+    }
+  }
+`
+
+interface OGUNRadioProps {
+  initialTrack?: {
+    id: string
+    title: string
+    artist: string
+    artwork_url: string
+  } | null
+  trackId?: string
+}
+
+// Server-side props for OG meta tags - social crawlers need this!
+export const getServerSideProps: GetServerSideProps<OGUNRadioProps> = async (context) => {
+  const trackId = context.query.track as string | undefined
+
+  if (!trackId) {
+    return { props: { initialTrack: null } }
+  }
+
+  try {
+    const apolloClient = initializeApollo()
+    const { data } = await apolloClient.query({
+      query: GET_TRACK_FOR_OG,
+      variables: { trackId },
+    })
+
+    if (data?.track) {
+      const track = data.track
+      // Transform IPFS URLs to HTTPS gateway URLs for OG images
+      let artworkUrl = track.artworkUrl || ''
+      if (artworkUrl.startsWith('ipfs://')) {
+        artworkUrl = `https://soundchain.mypinata.cloud/ipfs/${artworkUrl.replace('ipfs://', '')}`
+      }
+
+      return {
+        props: {
+          initialTrack: {
+            id: track.id,
+            title: track.title || 'Unknown Track',
+            artist: track.profile?.displayName || track.profile?.handle || 'Unknown Artist',
+            artwork_url: artworkUrl,
+          },
+          trackId,
+        },
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch track for OG:', err)
+  }
+
+  return { props: { initialTrack: null, trackId } }
+}
+
+export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGUNRadioProps) {
   const router = useRouter()
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -344,23 +415,52 @@ export default function OGUNRadio() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  // Use initialTrack (SSR) for OG meta, fallback to currentTrack (client)
+  const ogTrack = initialTrack || currentTrack
+  const ogTitle = ogTrack ? `${ogTrack.title} - ${ogTrack.artist}` : 'OGUN Radio - 24/7 NFT Music'
+  const ogDescription = ogTrack
+    ? `🎵 ${ogTrack.title} by ${ogTrack.artist}\n\n🔊 Stream Now on SoundChain\n📍 Protocol: IPFS/Pinata P2P\n⛓️ Network: Polygon`
+    : `${totalTracks || 618} NFT tracks streaming 24/7 on decentralized IPFS`
+  // Ensure artwork URL is a proper HTTPS URL for social previews
+  let ogImage = ogTrack?.artwork_url || 'https://soundchain.io/soundchain-meta-logo.png'
+  if (ogImage.startsWith('ipfs://')) {
+    ogImage = `https://soundchain.mypinata.cloud/ipfs/${ogImage.replace('ipfs://', '')}`
+  }
+
   return (
     <>
       <Head>
-        <title>{currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music | SoundChain'}</title>
-        <meta name="description" content={currentTrack ? `Now playing: "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio - ${totalTracks || 618} NFT tracks streaming 24/7` : `${totalTracks || 618} NFT tracks broadcasting 24/7 on OGUN Radio - infinite shuffle, zero ads, pure music`} />
-        <meta property="og:title" content={currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music'} />
-        <meta property="og:description" content={currentTrack ? `Listen to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio` : `${totalTracks || 618} NFT tracks streaming 24/7`} />
-        <meta property="og:image" content={currentTrack?.artwork_url || 'https://soundchain.io/soundchain-meta-logo.png'} />
+        <title>{ogTrack ? `${ogTrack.title} - ${ogTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music | SoundChain'}</title>
+        <meta name="description" content={ogDescription} />
+
+        {/* OpenGraph - Rich previews for Discord, iMessage, Facebook, etc. */}
+        <meta property="og:type" content="music.song" />
+        <meta property="og:title" content={ogTitle} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:image" content={ogImage} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="1200" />
-        <meta property="og:url" content="https://soundchain.io/radio" />
-        <meta property="og:site_name" content="SoundChain" />
+        <meta property="og:image:alt" content={ogTrack ? `${ogTrack.title} album artwork` : 'OGUN Radio'} />
+        <meta property="og:url" content={`https://soundchain.io/radio${ogTrack ? `?track=${ogTrack.id}` : ''}`} />
+        <meta property="og:site_name" content="SoundChain | Decentralized Music NFTs" />
+        {ogTrack && (
+          <>
+            <meta property="music:musician" content={ogTrack.artist} />
+            <meta property="og:audio" content={currentTrack?.stream_url || ''} />
+            <meta property="og:audio:type" content="audio/mpeg" />
+          </>
+        )}
+
+        {/* Twitter Card - Rich preview for Twitter/X */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music'} />
-        <meta name="twitter:description" content={currentTrack ? `Listen to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio` : `${totalTracks || 618} NFT tracks streaming 24/7`} />
-        <meta name="twitter:image" content={currentTrack?.artwork_url || 'https://soundchain.io/soundchain-meta-logo.png'} />
+        <meta name="twitter:title" content={ogTitle} />
+        <meta name="twitter:description" content={ogTrack ? `Stream "${ogTrack.title}" by ${ogTrack.artist} on OGUN Radio 🎶` : `${totalTracks || 618} NFT tracks streaming 24/7`} />
+        <meta name="twitter:image" content={ogImage} />
         <meta name="twitter:site" content="@SoundChainFM" />
+        <meta name="twitter:creator" content="@SoundChainFM" />
+
+        {/* Discord-specific (uses OG but prefers these) */}
+        <meta name="theme-color" content="#FF6B00" />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-[#030d1b] via-[#0a1628] to-[#030d1b] text-white">
