@@ -7,7 +7,10 @@ import { useModalDispatch } from 'contexts/ModalContext'
 import { CheckmarkFilled } from 'icons/CheckmarkFilled'
 import NextLink, { LinkProps } from 'next/link'
 import { useRouter } from 'next/router'
-import React from 'react'
+import React, { useState } from 'react'
+import { Users, ArrowRightLeft } from 'lucide-react'
+import { ManageRoyaltySplitterModal } from 'components/modals/ManageRoyaltySplitterModal'
+import { BridgeNFTModal } from 'components/modals/BridgeNFTModal'
 
 interface HandleNFTProps {
   isOwner: boolean
@@ -25,6 +28,11 @@ interface HandleNFTProps {
   wasCancel?: boolean
   isPaymentOGUN?: boolean
   multipleEdition?: boolean
+  // L2 Props
+  tokenId?: string
+  trackTitle?: string
+  imageUrl?: string
+  editionId?: string
 }
 
 export const HandleNFT = ({
@@ -43,8 +51,15 @@ export const HandleNFT = ({
   wasCancel,
   isPaymentOGUN,
   multipleEdition = false,
+  tokenId,
+  trackTitle,
+  imageUrl,
+  editionId,
 }: HandleNFTProps) => {
   const router = useRouter()
+  const [showRoyaltyModal, setShowRoyaltyModal] = useState(false)
+  const [showBridgeModal, setShowBridgeModal] = useState(false)
+
   if (isOwner) {
     if (!canList) {
       return (
@@ -89,10 +104,56 @@ export const HandleNFT = ({
       )
     }
     return (
-      <ListingAction href={{ pathname: `${router.pathname}/list`, query: router.query }} action="LIST NFT">
-        <CheckmarkFilled />
-        You own this NFT
-      </ListingAction>
+      <>
+        <PlayerAwareBottomBar>
+          <div className="flex flex-1 items-center gap-2 pl-4 text-sm font-bold">
+            <CheckmarkFilled />
+            You own this NFT
+          </div>
+          <div className="flex items-center gap-2">
+            {/* L2 Buttons */}
+            <button
+              onClick={() => setShowRoyaltyModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-400 text-sm font-medium hover:bg-purple-500/30 transition-colors"
+              title="Manage Royalty Splits"
+            >
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Royalties</span>
+            </button>
+            <button
+              onClick={() => setShowBridgeModal(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-sm font-medium hover:bg-cyan-500/30 transition-colors"
+              title="Bridge to Other Chains"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Bridge</span>
+            </button>
+            <NextLink href={{ pathname: `${router.pathname}/list`, query: router.query }}>
+              <Button variant="list-nft">
+                <div className="px-4 font-bold">LIST NFT</div>
+              </Button>
+            </NextLink>
+          </div>
+        </PlayerAwareBottomBar>
+
+        {/* L2 Modals */}
+        <ManageRoyaltySplitterModal
+          isOpen={showRoyaltyModal}
+          onClose={() => setShowRoyaltyModal(false)}
+          editionId={editionId || ''}
+          trackTitle={trackTitle || 'Unknown Track'}
+        />
+        <BridgeNFTModal
+          isOpen={showBridgeModal}
+          onClose={() => setShowBridgeModal(false)}
+          nft={{
+            tokenId: tokenId || '0',
+            title: trackTitle || 'Unknown Track',
+            imageUrl,
+            editionId,
+          }}
+        />
+      </>
     )
     // not the owner
   } else {
