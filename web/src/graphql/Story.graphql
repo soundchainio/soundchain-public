@@ -12,6 +12,11 @@ fragment StoryFields on Story {
   isPermanent
   permanentTxHash
   viewCount
+  attachedTrackId
+  attachedTrackIpfsUrl
+  attachedTrackTitle
+  attachedTrackArtist
+  attachedTrackCoverUrl
   reactions {
     profileId
     emoji

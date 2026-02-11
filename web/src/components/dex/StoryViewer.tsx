@@ -23,6 +23,7 @@ interface AttachedTrack {
   title?: string
   artist?: string
   artworkUrl?: string
+  audioUrl?: string
 }
 
 interface StoryItem {
@@ -30,6 +31,7 @@ interface StoryItem {
   mediaUrl: string
   mediaType: 'image' | 'video'
   createdAt: string
+  duration?: number // seconds - story display duration
   isPermanent?: boolean
   scidEligible?: boolean
   viewCount: number
@@ -102,7 +104,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const [currentUserIndex, setCurrentUserIndex] = useState(0)
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
+  const [isMuted, setIsMuted] = useState(false)
   const [progress, setProgress] = useState(0)
   const [replyText, setReplyText] = useState('')
   const [showReactions, setShowReactions] = useState(false)
@@ -111,6 +113,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const [showPermanentModal, setShowPermanentModal] = useState(false)
   const progressInterval = useRef<NodeJS.Timeout | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const audioRef = useRef<HTMLAudioElement>(null)
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
 
@@ -118,11 +121,19 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const currentStory = currentUser?.stories[currentStoryIndex]
   const [videoDuration, setVideoDuration] = useState(15000) // Default 15s for video
   const imageDuration = 5000 // 5s for images
-  const storyDuration = currentStory?.mediaType === 'video' ? videoDuration : imageDuration
+  const hasTrackAudio = !!(currentStory?.attachedTrack?.audioUrl)
+  // For stories with attached track audio: use story duration (59s from radio) or default 59s
+  // For video: use detected video duration
+  // For plain images: 5s
+  const storyDuration = hasTrackAudio
+    ? (currentStory?.duration ? currentStory.duration * 1000 : 59000)
+    : currentStory?.mediaType === 'video' ? videoDuration : imageDuration
 
   // IMPORTANT: Define navigation callbacks BEFORE useEffects that reference them (TDZ fix)
   const goToNextStory = useCallback(() => {
     setProgress(0)
+    // Stop track audio before navigating
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0 }
     if (currentStoryIndex < (currentUser?.stories?.length || 1) - 1) {
       // Next story from same user
       setCurrentStoryIndex(prev => prev + 1)
@@ -138,6 +149,8 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
 
   const goToPrevStory = useCallback(() => {
     setProgress(0)
+    // Stop track audio before navigating
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0 }
     if (currentStoryIndex > 0) {
       // Previous story from same user
       setCurrentStoryIndex(prev => prev - 1)
@@ -176,7 +189,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
           setIsPaused(prev => !prev)
           break
         case 'm':
-          if (currentStory?.mediaType === 'video') {
+          if (currentStory?.mediaType === 'video' || hasTrackAudio) {
             setIsMuted(prev => !prev)
           }
           break
@@ -214,6 +227,43 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
       }
     }
   }, [isPaused, currentStory?.mediaType])
+
+  // Play/pause attached track audio
+  useEffect(() => {
+    if (!audioRef.current) return
+    if (hasTrackAudio) {
+      if (isPaused) {
+        audioRef.current.pause()
+      } else {
+        audioRef.current.play().catch(() => {})
+      }
+    }
+  }, [isPaused, hasTrackAudio])
+
+  // Load and auto-play track audio when story changes
+  useEffect(() => {
+    if (!audioRef.current) return
+    if (hasTrackAudio) {
+      const audioUrl = getIpfsUrl(currentStory!.attachedTrack!.audioUrl!)
+      audioRef.current.src = audioUrl
+      audioRef.current.muted = isMuted
+      audioRef.current.load()
+      if (!isPaused) {
+        audioRef.current.play().catch(() => {})
+      }
+    } else {
+      // No track audio for this story - stop any playing audio
+      audioRef.current.pause()
+      audioRef.current.src = ''
+    }
+  }, [currentStory?.id, hasTrackAudio])
+
+  // Sync mute state to audio element
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.muted = isMuted
+    }
+  }, [isMuted])
 
   // Progress bar timer
   useEffect(() => {
@@ -356,6 +406,14 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
     }
   }
 
+  // Stop audio when viewer closes
+  useEffect(() => {
+    if (!isOpen && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+    }
+  }, [isOpen])
+
   if (!isOpen || !currentUser || !currentStory) return null
 
   // Generate identicon URL for wallet users without profile pictures
@@ -459,8 +517,8 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
             >
               {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
             </button>
-            {/* Mute - for video */}
-            {currentStory.mediaType === 'video' && (
+            {/* Mute - for video or stories with attached track audio */}
+            {(currentStory.mediaType === 'video' || hasTrackAudio) && (
               <button
                 onClick={(e) => { e.stopPropagation(); setIsMuted(prev => !prev) }}
                 className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white/80 hover:text-white"
@@ -546,6 +604,9 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
           />
         )}
 
+        {/* Hidden audio element for attached track playback */}
+        <audio ref={audioRef} preload="auto" style={{ display: 'none' }} />
+
         {/* Text overlays from Reels 2.0 */}
         {currentStory.overlays && currentStory.overlays.length > 0 && (
           <div className="absolute inset-0 pointer-events-none z-20">
@@ -613,17 +674,42 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
 
         {/* Attached track badge (if has NFT music) */}
         {currentStory.attachedTrack && (
-          <div className="absolute bottom-32 left-4 right-4 z-30 flex items-center gap-2 p-2 rounded-lg bg-black/60 backdrop-blur-sm">
-            <img
-              src={getIpfsUrl(currentStory.attachedTrack.artworkUrl, '/default-pictures/album-artwork.png')}
-              alt=""
-              className="w-10 h-10 rounded object-cover"
-            />
+          <div
+            className="absolute bottom-32 left-4 right-4 z-30 flex items-center gap-2 p-2 rounded-lg bg-black/60 backdrop-blur-sm cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (hasTrackAudio) setIsMuted(prev => !prev)
+            }}
+          >
+            <div className="relative">
+              <img
+                src={getIpfsUrl(currentStory.attachedTrack.artworkUrl, '/default-pictures/album-artwork.png')}
+                alt=""
+                className="w-10 h-10 rounded object-cover"
+              />
+              {hasTrackAudio && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded">
+                  {isMuted ? (
+                    <VolumeX className="w-4 h-4 text-white/80" />
+                  ) : (
+                    <Volume2 className="w-4 h-4 text-cyan-400" />
+                  )}
+                </div>
+              )}
+            </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-xs font-medium truncate">{currentStory.attachedTrack.title || 'Unknown Track'}</p>
               <p className="text-neutral-400 text-[10px] truncate">{currentStory.attachedTrack.artist || 'Unknown Artist'}</p>
             </div>
-            <Music2 className="w-4 h-4 text-purple-400" />
+            {hasTrackAudio && !isMuted ? (
+              <div className="flex items-center gap-0.5">
+                <div className="w-0.5 h-3 bg-cyan-400 rounded-full animate-pulse" />
+                <div className="w-0.5 h-4 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '0.15s' }} />
+                <div className="w-0.5 h-2 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+              </div>
+            ) : (
+              <Music2 className="w-4 h-4 text-purple-400" />
+            )}
           </div>
         )}
 

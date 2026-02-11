@@ -27,6 +27,11 @@ const PUBLIC_STORIES = gql`
       creatorDisplayName
       creatorUserHandle
       creatorAvatarUrl
+      attachedTrackId
+      attachedTrackIpfsUrl
+      attachedTrackTitle
+      attachedTrackArtist
+      attachedTrackCoverUrl
       profile {
         id
         userHandle
@@ -181,9 +186,19 @@ export const StoriesBar = ({ onCreateStory, onViewStory }: StoriesBarProps) => {
         mediaUrl: story.mediaUrl,
         mediaType: story.mediaType || 'image',
         createdAt: story.createdAt,
+        duration: story.duration || undefined,
         isPermanent: story.isPermanent,
         viewCount: story.viewCount || 0,
         reactions: [],
+        ...(story.attachedTrackId ? {
+          attachedTrack: {
+            id: story.attachedTrackId,
+            title: story.attachedTrackTitle,
+            artist: story.attachedTrackArtist,
+            artworkUrl: story.attachedTrackCoverUrl,
+            audioUrl: story.attachedTrackIpfsUrl,
+          }
+        } : {}),
       })
 
       return acc
