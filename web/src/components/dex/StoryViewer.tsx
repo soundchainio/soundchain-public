@@ -3,9 +3,41 @@ import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Send, MoreHorizonta
 import { Avatar } from 'components/Avatar'
 import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
+import { gql, useMutation } from '@apollo/client'
 import { MakeStoryPermanentModal } from './MakeStoryPermanentModal'
 import { ReelSCidTracker } from './ReelSCidTracker'
 import { getIpfsUrl } from 'utils/ipfs'
+
+const REACT_TO_STORY = gql`
+  mutation reactToStory($storyId: ID!, $emoji: String!) {
+    reactToStory(storyId: $storyId, emoji: $emoji) {
+      id
+      reactions {
+        profileId
+        emoji
+        createdAt
+      }
+    }
+  }
+`
+
+const VIEW_STORY = gql`
+  mutation viewStory($storyId: ID!) {
+    viewStory(storyId: $storyId) {
+      id
+      viewCount
+    }
+  }
+`
+
+const RECORD_STORY_WATCH = gql`
+  mutation recordStoryWatch($storyId: ID!, $watchDurationSeconds: Float!) {
+    recordStoryWatch(storyId: $storyId, watchDurationSeconds: $watchDurationSeconds) {
+      qualified
+      totalQualifiedViews
+    }
+  }
+`
 
 interface StoryOverlay {
   type: 'text' | 'hashtag' | 'mention' | 'sticker' | 'nft_badge'
@@ -111,6 +143,14 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
   const [showPermanentModal, setShowPermanentModal] = useState(false)
+  const [reactedEmojis, setReactedEmojis] = useState<Set<string>>(new Set())
+  const viewedStories = useRef<Set<string>>(new Set())
+  const storyStartTime = useRef<number>(Date.now())
+
+  const [reactToStory] = useMutation(REACT_TO_STORY)
+  const [viewStory] = useMutation(VIEW_STORY)
+  const [recordStoryWatch] = useMutation(RECORD_STORY_WATCH)
+
   const progressInterval = useRef<NodeJS.Timeout | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -265,6 +305,27 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
     }
   }, [isMuted])
 
+  // Track story views + reset reactions on story change
+  useEffect(() => {
+    if (!currentStory?.id) return
+    // Reset reacted emojis for new story
+    setReactedEmojis(new Set())
+    // Record start time for watch duration
+    storyStartTime.current = Date.now()
+    // Track view (only once per story per session)
+    if (!viewedStories.current.has(currentStory.id)) {
+      viewedStories.current.add(currentStory.id)
+      viewStory({ variables: { storyId: currentStory.id } }).catch(() => {})
+    }
+    // Record watch duration when leaving this story
+    return () => {
+      const watchSeconds = (Date.now() - storyStartTime.current) / 1000
+      if (watchSeconds >= 1 && currentStory?.id) {
+        recordStoryWatch({ variables: { storyId: currentStory.id, watchDurationSeconds: watchSeconds } }).catch(() => {})
+      }
+    }
+  }, [currentStory?.id])
+
   // Progress bar timer
   useEffect(() => {
     if (!isOpen || isPaused) {
@@ -341,17 +402,40 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
     touchStartY.current = null
   }
 
-  const handleReaction = (emoji: string) => {
-    console.log('Reaction:', emoji, 'on story:', currentStory?.id)
+  const handleReaction = async (emoji: string) => {
+    if (!currentStory?.id) return
+    // Optimistic UI - show reacted immediately
+    setReactedEmojis(prev => new Set(prev).add(emoji))
     setShowReactions(false)
-    // TODO: Send reaction via GraphQL mutation
+    try {
+      await reactToStory({ variables: { storyId: currentStory.id, emoji } })
+      toast.success(`${emoji}`, { autoClose: 1000, hideProgressBar: true })
+    } catch (err: any) {
+      // Remove optimistic reaction on error
+      setReactedEmojis(prev => { const next = new Set(prev); next.delete(emoji); return next })
+      if (err?.message?.includes('Unauthorized') || err?.message?.includes('not authenticated')) {
+        toast.info('Sign in to react')
+      } else {
+        toast.error('Could not react')
+      }
+    }
   }
 
-  const handleReply = () => {
-    if (!replyText.trim()) return
-    console.log('Reply:', replyText, 'to story:', currentStory?.id)
+  const handleReply = async () => {
+    if (!replyText.trim() || !currentStory?.id) return
+    const message = replyText.trim()
     setReplyText('')
-    // TODO: Send reply via GraphQL mutation
+    // Send reply as a text reaction (emoji = the message text)
+    try {
+      await reactToStory({ variables: { storyId: currentStory.id, emoji: `💬 ${message}` } })
+      toast.success('Reply sent!', { autoClose: 1500 })
+    } catch (err: any) {
+      if (err?.message?.includes('Unauthorized') || err?.message?.includes('not authenticated')) {
+        toast.info('Sign in to reply')
+      } else {
+        toast.error('Could not send reply')
+      }
+    }
   }
 
   const handleMakePermanent = () => {
@@ -757,15 +841,21 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
                 {/* Like Button - Animated */}
                 <button
                   onClick={() => handleReaction('❤️')}
-                  className="group relative flex items-center gap-1.5 px-3 py-2 rounded-xl hover:bg-white/10 transition-all duration-300"
+                  className={`group relative flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all duration-300 ${
+                    reactedEmojis.has('❤️') ? 'bg-pink-500/20' : 'hover:bg-white/10'
+                  }`}
                 >
                   <div className="relative">
-                    <Heart className="w-5 h-5 text-white group-hover:text-pink-400 group-hover:scale-110 transition-all duration-300 group-active:scale-90" />
+                    <Heart className={`w-5 h-5 transition-all duration-300 group-active:scale-90 ${
+                      reactedEmojis.has('❤️') ? 'text-pink-400 fill-pink-400 scale-110' : 'text-white group-hover:text-pink-400 group-hover:scale-110'
+                    }`} />
                     {/* Pulse effect on hover */}
                     <div className="absolute inset-0 rounded-full bg-pink-500/50 scale-0 group-hover:scale-150 opacity-0 group-hover:opacity-100 transition-all duration-500 blur-md" />
                   </div>
-                  <span className="text-white/80 text-xs font-medium group-hover:text-white transition-colors">
-                    {currentStory.reactions.find(r => r.emoji === '❤️')?.count || 0}
+                  <span className={`text-xs font-medium transition-colors ${
+                    reactedEmojis.has('❤️') ? 'text-pink-400' : 'text-white/80 group-hover:text-white'
+                  }`}>
+                    {(currentStory.reactions.find(r => r.emoji === '❤️')?.count || 0) + (reactedEmojis.has('❤️') ? 1 : 0)}
                   </span>
                 </button>
 
@@ -802,7 +892,9 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
                   <button
                     key={emoji}
                     onClick={() => handleReaction(emoji)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 hover:scale-125 active:scale-90 transition-all duration-200 text-base"
+                    className={`w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-all duration-200 text-base ${
+                      reactedEmojis.has(emoji) ? 'bg-white/30 scale-125 ring-1 ring-white/30' : 'hover:bg-white/20 hover:scale-125'
+                    }`}
                   >
                     {emoji}
                   </button>
