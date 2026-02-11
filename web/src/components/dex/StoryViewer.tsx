@@ -865,8 +865,8 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, users = mockStoryU
             </button>
           </div>
 
-          {/* Make Permanent CTA - Premium Gold Design */}
-          {!currentStory.isPermanent && (
+          {/* Make Permanent CTA - Hidden for radio-shared NFT stories (copyright) */}
+          {!currentStory.isPermanent && !currentStory.attachedTrack && (
             <button
               onClick={(e) => { e.stopPropagation(); handleMakePermanent() }}
               className="group relative w-full py-2.5 rounded-xl overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-[0.98]"

@@ -369,7 +369,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
     } as Track)
     setMusicSource('nft')
 
-    // Load artwork - try crossOrigin first (clean canvas), then without (taint-checked in generateRadioCard)
+    // Load artwork - try crossOrigin first, then proxy, then vinyl fallback
     if (prefillTrack.artworkUrl) {
       const artUrl = getIpfsUrl(prefillTrack.artworkUrl)
 
@@ -378,14 +378,16 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
       img1.crossOrigin = 'anonymous'
       img1.onload = () => generateRadioCard(img1)
       img1.onerror = () => {
-        // Attempt 2: Without CORS (image loads, canvas may be tainted - handled in generateRadioCard)
+        // Attempt 2: Proxy through our API (bypasses CORS for S3 artwork)
+        const proxyUrl = `/api/image-proxy?url=${encodeURIComponent(artUrl)}`
         const img2 = new Image()
+        img2.crossOrigin = 'anonymous'
         img2.onload = () => generateRadioCard(img2)
         img2.onerror = () => {
-          console.warn('[CreateStoryModal] Artwork failed to load entirely, using vinyl fallback')
+          console.warn('[CreateStoryModal] Artwork proxy failed, using vinyl fallback')
           generateRadioCard()
         }
-        img2.src = artUrl
+        img2.src = proxyUrl
       }
       img1.src = artUrl
     } else {
