@@ -219,6 +219,125 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
   const [showCropEditor, setShowCropEditor] = useState(false)
   const prefillApplied = useRef(false)
 
+  // Generate a radio story card using canvas (always works, no CORS issues)
+  const generateRadioCard = useCallback((artworkImg?: HTMLImageElement) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1080
+    canvas.height = 1920 // 9:16 story ratio
+    const ctx = canvas.getContext('2d')!
+    const track = prefillTrack
+    if (!track) return
+
+    // Dark background
+    const bg = ctx.createLinearGradient(0, 0, 0, 1920)
+    bg.addColorStop(0, '#030d1b')
+    bg.addColorStop(0.5, '#0a1628')
+    bg.addColorStop(1, '#030d1b')
+    ctx.fillStyle = bg
+    ctx.fillRect(0, 0, 1080, 1920)
+
+    if (artworkImg) {
+      // Draw artwork large and centered
+      const size = Math.min(artworkImg.width, artworkImg.height)
+      const sx = (artworkImg.width - size) / 2
+      const sy = (artworkImg.height - size) / 2
+      ctx.drawImage(artworkImg, sx, sy, size, size, 40, 340, 1000, 1000)
+
+      // Bottom gradient overlay for text readability
+      const grad = ctx.createLinearGradient(0, 1050, 0, 1920)
+      grad.addColorStop(0, 'rgba(3, 13, 27, 0)')
+      grad.addColorStop(0.3, 'rgba(3, 13, 27, 0.85)')
+      grad.addColorStop(1, 'rgba(3, 13, 27, 1)')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 1050, 1080, 870)
+
+      // Top gradient overlay
+      const topGrad = ctx.createLinearGradient(0, 0, 0, 420)
+      topGrad.addColorStop(0, 'rgba(3, 13, 27, 1)')
+      topGrad.addColorStop(1, 'rgba(3, 13, 27, 0)')
+      ctx.fillStyle = topGrad
+      ctx.fillRect(0, 0, 1080, 420)
+    } else {
+      // No artwork - draw a vinyl record graphic
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.15)'
+      ctx.beginPath()
+      ctx.arc(540, 760, 280, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'
+      ctx.lineWidth = 2
+      ctx.stroke()
+      // Inner rings
+      for (let r = 220; r > 40; r -= 40) {
+        ctx.beginPath()
+        ctx.arc(540, 760, r, 0, Math.PI * 2)
+        ctx.strokeStyle = `rgba(239, 68, 68, ${0.1 + (220 - r) * 0.001})`
+        ctx.stroke()
+      }
+      // Center hole
+      ctx.fillStyle = '#030d1b'
+      ctx.beginPath()
+      ctx.arc(540, 760, 30, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    ctx.textAlign = 'center'
+
+    // OGUN RADIO header with red dot
+    ctx.fillStyle = '#ef4444'
+    ctx.font = 'bold 38px -apple-system, BlinkMacSystemFont, sans-serif'
+    ctx.fillText('\u{1F534} OGUN RADIO', 540, 180)
+
+    // NOW PLAYING
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
+    ctx.font = '600 26px -apple-system, BlinkMacSystemFont, sans-serif'
+    ctx.letterSpacing = '4px'
+    ctx.fillText('NOW PLAYING', 540, 240)
+
+    // Track title (word-wrapped)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 54px -apple-system, BlinkMacSystemFont, sans-serif'
+    const title = track.title || 'Unknown Track'
+    const titleWords = title.split(' ')
+    let line = ''
+    let y = artworkImg ? 1440 : 1150
+    for (const word of titleWords) {
+      const test = line + word + ' '
+      if (ctx.measureText(test).width > 920 && line) {
+        ctx.fillText(line.trim(), 540, y)
+        line = word + ' '
+        y += 68
+      } else {
+        line = test
+      }
+    }
+    ctx.fillText(line.trim(), 540, y)
+
+    // Artist
+    ctx.fillStyle = '#9ca3af'
+    ctx.font = '38px -apple-system, BlinkMacSystemFont, sans-serif'
+    ctx.fillText(track.artist || 'Unknown Artist', 540, y + 70)
+
+    // NFT badge
+    ctx.fillStyle = '#eab308'
+    ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, sans-serif'
+    ctx.fillText('\u2666 NFT TRACK \u2022 EARNING OGUN', 540, y + 130)
+
+    // Watermark
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'
+    ctx.font = '22px -apple-system, BlinkMacSystemFont, sans-serif'
+    ctx.fillText('soundchain.io/radio', 540, 1860)
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], 'radio-story.jpg', { type: 'image/jpeg' })
+        setMediaFile(file)
+        setMediaPreview(URL.createObjectURL(file))
+        setMediaType('image')
+        setActiveTab('text')
+      }
+    }, 'image/jpeg', 0.92)
+  }, [prefillTrack])
+
   // Pre-fill from radio track when modal opens
   useEffect(() => {
     if (!isOpen || !prefillTrack || prefillApplied.current) return
@@ -233,20 +352,20 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
     } as Track)
     setMusicSource('nft')
 
-    // Fetch artwork as image file for the story media
+    // Try to load artwork via Image element (handles CORS better than fetch)
     if (prefillTrack.artworkUrl) {
-      fetch(prefillTrack.artworkUrl)
-        .then(res => res.blob())
-        .then(blob => {
-          const file = new File([blob], 'radio-artwork.jpg', { type: blob.type || 'image/jpeg' })
-          setMediaFile(file)
-          setMediaPreview(URL.createObjectURL(file))
-          setMediaType('image')
-          setActiveTab('text') // Jump to text tab so user can add caption
-        })
-        .catch(err => console.warn('[CreateStoryModal] Failed to fetch radio artwork:', err))
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => generateRadioCard(img)
+      img.onerror = () => {
+        console.warn('[CreateStoryModal] Artwork CORS blocked, generating card without artwork')
+        generateRadioCard() // Fallback: styled card without artwork
+      }
+      img.src = prefillTrack.artworkUrl
+    } else {
+      generateRadioCard() // No artwork URL at all
     }
-  }, [isOpen, prefillTrack])
+  }, [isOpen, prefillTrack, generateRadioCard])
 
   // Reset prefill flag when modal closes
   useEffect(() => {
