@@ -3,6 +3,7 @@ import { InputField } from 'components/InputField'
 import MaxGasFee from 'components/MaxGasFee'
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
 import { SoundchainFee } from 'components/SoundchainFee'
+import { TokenSelector } from 'components/dex/TokenSelector'
 import { Form, Formik, FormikHelpers, FormikProps } from 'formik'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useWalletContext } from 'hooks/useWalletContext'
@@ -12,8 +13,10 @@ import { useEffect, useState } from 'react'
 import ReactDatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { date, number, object, Schema, string } from 'yup'
-import Web3 from 'web3' // Added Web3 import
+import Web3 from 'web3'
 import { CurrencyType } from 'types/CurrenctyType'
+import { Token, TOKEN_INFO, getDisplaySymbol } from 'constants/tokens'
+import { Zap, Info } from 'lucide-react'
 
 export interface ListNFTBuyNowFormValues {
   salePrice: number
@@ -51,6 +54,8 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
     startTime: initialValues?.startTime || getMinutesToDate(minStartMinutes + bufferTime),
   }
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyType>('OGUN')
+  const [selectedToken, setSelectedToken] = useState<Token>('OGUN')
+  const [showAdvancedTokens, setShowAdvancedTokens] = useState(false)
 
   const isMatic = selectedCurrency === 'MATIC'
   const { web3 } = useWalletContext()
@@ -65,6 +70,16 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
     }
     fetchRewardRate()
   }, [setRewardsRatePercentage, getRewardsRate, web3])
+
+  const handleTokenSelect = (token: Token) => {
+    setSelectedToken(token)
+    // Map token to currency type for backwards compatibility
+    if (token === 'OGUN') {
+      setSelectedCurrency('OGUN')
+    } else {
+      setSelectedCurrency('MATIC') // Default to MATIC for other tokens until L2 integration complete
+    }
+  }
 
   return (
     <div className="mb-2">
@@ -84,16 +99,16 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                     What currency do you want to list your NFT in?
                   </label>
                 </div>
+
+                {/* Quick Select: OGUN or POL */}
                 <div className="mt-1 mb-3 flex h-16 w-full items-center justify-center gap-3">
                   <div
                     className={
                       'flex h-full w-2/5 flex-col ' +
-                      'items-center justify-center rounded-sm border-2 bg-gray-15 ' +
-                      (isMatic ? 'border-gray-30' : 'border-[#FDEE6E]')
+                      'items-center justify-center rounded-sm border-2 bg-gray-15 cursor-pointer transition-all ' +
+                      (selectedToken === 'OGUN' ? 'border-[#FDEE6E] shadow-[0_0_10px_rgba(253,238,110,0.3)]' : 'border-gray-30 hover:border-gray-50')
                     }
-                    onClick={() => {
-                      setSelectedCurrency('OGUN')
-                    }}
+                    onClick={() => handleTokenSelect('OGUN')}
                   >
                     <div>
                       <Logo height="15" width="18" fill="yellow" className="inline-block" />
@@ -106,19 +121,48 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                   <div
                     className={
                       'flex h-full w-2/5 flex-col items-center justify-center ' +
-                      'rounded-sm border-2 bg-gray-15 ' +
-                      (isMatic ? 'border-[#2BBDF7]' : 'border-gray-30')
+                      'rounded-sm border-2 bg-gray-15 cursor-pointer transition-all ' +
+                      (selectedToken === 'MATIC' ? 'border-[#2BBDF7] shadow-[0_0_10px_rgba(43,189,247,0.3)]' : 'border-gray-30 hover:border-gray-50')
                     }
-                    onClick={() => {
-                      setSelectedCurrency('MATIC')
-                    }}
+                    onClick={() => handleTokenSelect('MATIC')}
                   >
                     <div>
                       <Matic height="15" width="18" fill="yellow" className="inline-block" />
-                      <span className="ml-1 inline-block font-bold text-gray-80">MATIC</span>
+                      <span className="ml-1 inline-block font-bold text-gray-80">POL</span>
                     </div>
                   </div>
                 </div>
+
+                {/* L2 Multi-Token Expansion */}
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedTokens(!showAdvancedTokens)}
+                  className="flex items-center gap-2 text-xs text-cyan-400 hover:text-cyan-300 transition-colors mb-2"
+                >
+                  <Zap className="w-3 h-3" />
+                  <span>{showAdvancedTokens ? 'Hide' : 'Show'} L2 Multi-Token Options</span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-[10px]">24 Tokens</span>
+                </button>
+
+                {showAdvancedTokens && (
+                  <div className="w-full px-4 pb-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-white/5">
+                      <div className="flex items-start gap-2 mb-3">
+                        <Info className="w-4 h-4 text-cyan-400 mt-0.5" />
+                        <p className="text-xs text-gray-400">
+                          L2 tokens are converted via ZetaChain at time of purchase.
+                          Buyers can pay in their preferred token.
+                        </p>
+                      </div>
+                      <TokenSelector
+                        selectedToken={selectedToken}
+                        onSelectToken={handleTokenSelect}
+                        showBalance={false}
+                        compact={false}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-between bg-gray-15 py-3 px-5">
                 <label htmlFor="priceOGUN" className="flex-shrink-0 text-xs font-bold uppercase text-gray-80 ">
