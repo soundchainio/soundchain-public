@@ -8193,10 +8193,15 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           if (data?.story) {
             const story = data.story
             const domainUrl = process.env.NEXT_PUBLIC_DOMAIN_URL || 'https://www.soundchain.io'
+            const ipfsGateway = process.env.NEXT_PUBLIC_IPFS_GATEWAY || 'https://soundchain.mypinata.cloud/ipfs/'
             const fallbackImage = `${domainUrl}/soundchain-meta-logo.png`
             // For stories with attached tracks, use the track cover art
             // Otherwise use the story media (image stories)
             let ogImage = story.attachedTrackCoverUrl || (story.mediaType === 'image' ? story.mediaUrl : null) || fallbackImage
+            // Convert ipfs:// protocol URLs to gateway URLs for social crawlers
+            if (ogImage && ogImage.startsWith('ipfs://')) {
+              ogImage = `${ipfsGateway}${ogImage.replace('ipfs://', '')}`
+            }
             if (ogImage && !ogImage.startsWith('http')) {
               ogImage = `${domainUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`
             }

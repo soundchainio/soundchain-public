@@ -26,7 +26,10 @@ import {
   Headphones,
   Wallet,
   Zap,
-  Share2
+  Share2,
+  Link2,
+  Check,
+  Twitter
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
 import { useLogStream } from 'hooks/useLogStream'
@@ -99,6 +102,8 @@ export default function OGUNRadio() {
   const [winWinRewardsTab, setWinWinRewardsTab] = useState<'catalog' | 'listener'>('catalog')
 
   const [showShareStoryModal, setShowShareStoryModal] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const streamLoggedForCurrentPlay = useRef(false)
@@ -293,6 +298,44 @@ export default function OGUNRadio() {
     skipToNext()
   }
 
+  // Share handlers
+  const getShareUrl = () => {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.io'
+    return currentTrack ? `${base}/radio?track=${currentTrack.id}` : `${base}/radio`
+  }
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getShareUrl())
+      setLinkCopied(true)
+      toast.success('Link copied!')
+      setTimeout(() => setLinkCopied(false), 2000)
+    } catch { toast.error('Failed to copy link') }
+  }
+
+  const handleShareTwitter = () => {
+    const text = currentTrack
+      ? `Listening to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio 🔴 ${totalTracks || 618} NFT tracks streaming 24/7`
+      : `Tune in to OGUN Radio 🔴 ${totalTracks || 618} NFT tracks streaming 24/7`
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(getShareUrl())}`, '_blank')
+    setShowShareMenu(false)
+  }
+
+  const handleShareNative = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music',
+          text: currentTrack ? `Listen to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio` : 'Tune in to OGUN Radio - 618 NFT tracks streaming 24/7',
+          url: getShareUrl(),
+        })
+      } catch { /* user cancelled */ }
+    } else {
+      handleCopyLink()
+    }
+    setShowShareMenu(false)
+  }
+
   // Format time
   const formatTime = (seconds: number) => {
     if (!seconds || isNaN(seconds)) return '0:00'
@@ -304,8 +347,20 @@ export default function OGUNRadio() {
   return (
     <>
       <Head>
-        <title>OGUN Radio - 24/7 NFT Music | SoundChain</title>
-        <meta name="description" content="618 NFT tracks broadcasting 24/7 on OGUN Radio - infinite shuffle, zero ads, pure music" />
+        <title>{currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music | SoundChain'}</title>
+        <meta name="description" content={currentTrack ? `Now playing: "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio - ${totalTracks || 618} NFT tracks streaming 24/7` : `${totalTracks || 618} NFT tracks broadcasting 24/7 on OGUN Radio - infinite shuffle, zero ads, pure music`} />
+        <meta property="og:title" content={currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music'} />
+        <meta property="og:description" content={currentTrack ? `Listen to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio` : `${totalTracks || 618} NFT tracks streaming 24/7`} />
+        <meta property="og:image" content={currentTrack?.artwork_url || 'https://soundchain.io/soundchain-meta-logo.png'} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="1200" />
+        <meta property="og:url" content="https://soundchain.io/radio" />
+        <meta property="og:site_name" content="SoundChain" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music'} />
+        <meta name="twitter:description" content={currentTrack ? `Listen to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio` : `${totalTracks || 618} NFT tracks streaming 24/7`} />
+        <meta name="twitter:image" content={currentTrack?.artwork_url || 'https://soundchain.io/soundchain-meta-logo.png'} />
+        <meta name="twitter:site" content="@SoundChainFM" />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-b from-[#030d1b] via-[#0a1628] to-[#030d1b] text-white">
@@ -846,8 +901,8 @@ export default function OGUNRadio() {
                   />
                 </div>
 
-                {/* Track Link + Share to Story */}
-                <div className="mt-8 flex items-center justify-center gap-3">
+                {/* Track Link + Share Options */}
+                <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
                   <Link
                     href={`/dex/track/${currentTrack.id}`}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
@@ -862,6 +917,40 @@ export default function OGUNRadio() {
                     <Share2 className="w-4 h-4" />
                     Share to Story
                   </button>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowShareMenu(!showShareMenu)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 rounded-lg text-sm text-cyan-400 font-medium transition-all"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Share
+                    </button>
+                    {showShareMenu && (
+                      <div className="absolute bottom-full mb-2 right-0 w-52 bg-black/95 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden shadow-2xl z-50">
+                        <button
+                          onClick={handleShareNative}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-sm text-white"
+                        >
+                          <Share2 className="w-4 h-4 text-cyan-400" />
+                          Share Radio
+                        </button>
+                        <button
+                          onClick={handleCopyLink}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-sm text-white"
+                        >
+                          {linkCopied ? <Check className="w-4 h-4 text-green-400" /> : <Link2 className="w-4 h-4 text-cyan-400" />}
+                          {linkCopied ? 'Copied!' : 'Copy Link'}
+                        </button>
+                        <button
+                          onClick={handleShareTwitter}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-sm text-white"
+                        >
+                          <Twitter className="w-4 h-4 text-blue-400" />
+                          Share to X
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </>
             ) : null}
