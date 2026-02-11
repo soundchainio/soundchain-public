@@ -25,7 +25,8 @@ import {
   Coins,
   Headphones,
   Wallet,
-  Zap
+  Zap,
+  Share2
 } from 'lucide-react'
 import { Logo } from 'icons/Logo'
 import { useLogStream } from 'hooks/useLogStream'
@@ -40,6 +41,7 @@ import { ConcertChat } from 'components/dex/ConcertChat'
 import 'react-toastify/dist/ReactToastify.css'
 import { ReactElement } from 'react'
 import { CustomLayout } from './_app'
+import { CreateStoryModal } from 'components/dex/CreateStoryModal'
 
 // GraphQL queries for PiggyBank rewards data
 const PROFILE_STREAMING_REWARDS_QUERY = gql`
@@ -95,6 +97,8 @@ export default function OGUNRadio() {
   const [showVibesModal, setShowVibesModal] = useState(false)
   const [showNearbyModal, setShowNearbyModal] = useState(false)
   const [winWinRewardsTab, setWinWinRewardsTab] = useState<'catalog' | 'listener'>('catalog')
+
+  const [showShareStoryModal, setShowShareStoryModal] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const streamLoggedForCurrentPlay = useRef(false)
@@ -842,8 +846,8 @@ export default function OGUNRadio() {
                   />
                 </div>
 
-                {/* Track Link */}
-                <div className="mt-8 text-center">
+                {/* Track Link + Share to Story */}
+                <div className="mt-8 flex items-center justify-center gap-3">
                   <Link
                     href={`/dex/track/${currentTrack.id}`}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
@@ -851,6 +855,13 @@ export default function OGUNRadio() {
                     View Track Details
                     <ExternalLink className="w-4 h-4" />
                   </Link>
+                  <button
+                    onClick={() => setShowShareStoryModal(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg text-sm text-white font-medium transition-all shadow-lg shadow-purple-500/20"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share to Story
+                  </button>
                 </div>
               </>
             ) : null}
@@ -881,6 +892,18 @@ export default function OGUNRadio() {
           </div>
         </main>
       </div>
+
+      {/* Share to Story Modal */}
+      <CreateStoryModal
+        isOpen={showShareStoryModal}
+        onClose={() => setShowShareStoryModal(false)}
+        prefillTrack={currentTrack ? {
+          trackId: currentTrack.id,
+          title: currentTrack.title,
+          artist: currentTrack.artist,
+          artworkUrl: currentTrack.artwork_url,
+        } : null}
+      />
 
       {/* Toast container for OGUN reward notifications */}
       <ToastContainer

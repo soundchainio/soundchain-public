@@ -146,13 +146,22 @@ const EMBED_PLATFORMS = [
 type MusicSource = 'none' | 'nft' | 'embed'
 type EditorTab = 'media' | 'music' | 'text'
 
+interface RadioTrackPrefill {
+  trackId: string
+  title: string
+  artist: string
+  artworkUrl?: string
+}
+
 interface CreateStoryModalProps {
   isOpen: boolean
   onClose: () => void
   onPublish?: (mediaUrl: string, mediaType: 'image' | 'video') => void
+  /** Pre-fill with a radio/NFT track (artwork as media + track attached) */
+  prefillTrack?: RadioTrackPrefill | null
 }
 
-export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModalProps) => {
+export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: CreateStoryModalProps) => {
   // useMe() returns the User object directly, not { me: User }
   const me = useMe()
 
@@ -208,6 +217,43 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish }: CreateStoryModa
 
   // Crop editor state
   const [showCropEditor, setShowCropEditor] = useState(false)
+  const prefillApplied = useRef(false)
+
+  // Pre-fill from radio track when modal opens
+  useEffect(() => {
+    if (!isOpen || !prefillTrack || prefillApplied.current) return
+    prefillApplied.current = true
+
+    // Set the track as attached NFT music
+    setSelectedNftTrack({
+      id: prefillTrack.trackId,
+      title: prefillTrack.title,
+      artist: prefillTrack.artist,
+      artworkUrl: prefillTrack.artworkUrl || '',
+    } as Track)
+    setMusicSource('nft')
+
+    // Fetch artwork as image file for the story media
+    if (prefillTrack.artworkUrl) {
+      fetch(prefillTrack.artworkUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const file = new File([blob], 'radio-artwork.jpg', { type: blob.type || 'image/jpeg' })
+          setMediaFile(file)
+          setMediaPreview(URL.createObjectURL(file))
+          setMediaType('image')
+          setActiveTab('text') // Jump to text tab so user can add caption
+        })
+        .catch(err => console.warn('[CreateStoryModal] Failed to fetch radio artwork:', err))
+    }
+  }, [isOpen, prefillTrack])
+
+  // Reset prefill flag when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      prefillApplied.current = false
+    }
+  }, [isOpen])
 
   // Handle crop result
   const handleCropApply = useCallback((croppedFile: File) => {
