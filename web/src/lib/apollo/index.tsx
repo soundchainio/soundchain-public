@@ -104,6 +104,11 @@ export function createApolloClient(context?: GetServerSidePropsContext) {
 
 export const apolloClient = createApolloClient()
 
+// Alias for SSR usage in getServerSideProps
+export function initializeApollo() {
+  return createApolloClient()
+}
+
 export function getJwt() {
   if (isBrowser) {
     // Try cookie first
