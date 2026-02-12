@@ -125,47 +125,64 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
     }
   }, [track.id, track.title, track.artist])
 
-  // List view - simple row
+  // List view - compact OpenSea/Blur style row
   if (listView) {
     return (
-      <Card className="retro-card transition-all duration-200 hover:border-cyan-400/50">
-        <div className="p-4">
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex items-center space-x-4 flex-1">
-              <div className="w-16 h-16 bg-gray-700 rounded-lg overflow-hidden flex-shrink-0 relative group">
-                <img src={displayImage} alt={track.title} className="w-full h-full object-cover" onError={() => setImageError(true)} />
-                <Button
-                  onClick={(e) => { e.stopPropagation(); onPlay() }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  {isPlaying && isCurrentTrack ? <Pause className="w-6 h-6 text-cyan-400" /> : <Play className="w-6 h-6 text-cyan-400" />}
-                </Button>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="retro-text text-white truncate">{track.title}</h3>
-                  <Badge className={rarity.color}>{rarity.label}</Badge>
-                </div>
-                <div className="text-sm text-gray-300 truncate">{track.artist}</div>
-                <div className="text-xs text-cyan-400">{track.playbackCountFormatted || '0'} plays</div>
-              </div>
-            </div>
-            {hasListing && (
-              <div className="text-right">
-                <div className="retro-text text-white">{price} {currency}</div>
-              </div>
-            )}
-            <Button
-              variant="ghost"
-              onClick={(e) => { e.stopPropagation(); onFavorite?.() }}
-              className="min-w-[44px] min-h-[44px] p-2"
-              aria-label={track.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-            >
-              <Heart className={`w-5 h-5 ${track.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
-            </Button>
-          </div>
+      <div className="flex items-center gap-3 px-3 py-2 bg-gray-900/50 hover:bg-gray-800/50 border-b border-gray-800/50 transition-colors group cursor-pointer"
+           onClick={() => router.push(`/dex/track/${track.id}`)}>
+        {/* Rank/Index placeholder */}
+        <span className="w-6 text-xs text-gray-500 text-center flex-shrink-0">#</span>
+
+        {/* Compact thumbnail with play */}
+        <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0 relative">
+          <img src={displayImage} alt={track.title} className="w-full h-full object-cover" onError={() => setImageError(true)} />
+          <button
+            onClick={(e) => { e.stopPropagation(); onPlay() }}
+            className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            {isPlaying && isCurrentTrack ? <Pause className="w-4 h-4 text-cyan-400" /> : <Play className="w-4 h-4 text-cyan-400" />}
+          </button>
         </div>
-      </Card>
+
+        {/* Title & Artist - compact */}
+        <div className="flex-1 min-w-0">
+          <div className="text-sm text-white truncate font-medium">{track.title}</div>
+          <div className="text-xs text-gray-400 truncate">{track.artist}</div>
+        </div>
+
+        {/* Stats - inline */}
+        <div className="hidden sm:flex items-center gap-4 text-xs text-gray-400 flex-shrink-0">
+          <span className="w-16 text-right">{track.playbackCountFormatted || '0'}</span>
+          <span className="w-12 text-right">{formatDuration(track.duration)}</span>
+        </div>
+
+        {/* Price */}
+        <div className="w-20 text-right flex-shrink-0">
+          {hasListing ? (
+            <span className="text-sm font-semibold text-green-400">{price} {currency}</span>
+          ) : (
+            <span className="text-xs text-gray-500">—</span>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={(e) => { e.stopPropagation(); onFavorite?.() }}
+            className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+          >
+            <Heart className={`w-4 h-4 ${track.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
+          </button>
+          {hasListing && (
+            <button
+              onClick={(e) => { e.stopPropagation(); router.push(`/dex/track/${track.id}/buy-now`) }}
+              className="px-2 py-1 bg-green-500 hover:bg-green-600 text-black text-xs font-semibold rounded transition-colors"
+            >
+              Buy
+            </button>
+          )}
+        </div>
+      </div>
     )
   }
 

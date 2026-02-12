@@ -4117,18 +4117,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
                 <div className="relative z-10">
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <Badge className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-[10px] px-2 py-0.5">
-                      <Zap className="w-3 h-3 mr-1" /> L2 POWERED
-                    </Badge>
-                  </div>
-                  <h1 className="retro-title text-3xl md:text-4xl lg:text-5xl text-center mb-3">
-                    <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
-                      THE DOPEST MARKET IN WEB3
-                    </span>
-                  </h1>
-                  <p className="text-center text-gray-300 text-sm md:text-base mb-6">Trade NFTs, Tokens & Bundles with OGUN Gas</p>
-
                   {/* Stats Row */}
                   <div className="flex justify-center gap-6 md:gap-12 mb-6">
                     <div className="text-center">
@@ -4218,6 +4206,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       )
                     })}
                   </div>
+                  {/* Price Sort Dropdown */}
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-black/50 border border-cyan-500/30 rounded-lg px-3 py-2 text-xs text-gray-300 flex-shrink-0"
+                  >
+                    <option value="recent">Recently Listed</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="ending_soon">Ending Soon</option>
+                  </select>
                 </div>
               </Card>
 
@@ -4230,7 +4229,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <span className="ml-3 text-gray-400">Loading marketplace...</span>
                     </div>
                   ) : filteredMarketTracks.filter((t: any) => t.listingItem).length > 0 ? (
-                    <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
+                    <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'bg-gray-900/30 rounded-lg overflow-hidden border border-gray-800/50'}>
+                      {/* List View Header */}
+                      {viewMode === 'list' && (
+                        <div className="flex items-center gap-3 px-3 py-2 bg-gray-800/50 border-b border-gray-700/50 text-xs text-gray-500 font-medium">
+                          <span className="w-6 text-center">#</span>
+                          <span className="w-10"></span>
+                          <span className="flex-1">Item</span>
+                          <span className="hidden sm:block w-16 text-right">Plays</span>
+                          <span className="hidden sm:block w-12 text-right">Time</span>
+                          <span className="w-20 text-right">Price</span>
+                          <span className="w-16"></span>
+                        </div>
+                      )}
                       {filteredMarketTracks
                         .filter((t: any) => t.listingItem)
                         .map((track: any, index: number) => (
@@ -4294,9 +4305,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             Token Marketplace
                           </span>
                         </h3>
-                        <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">
-                          List and trade OGUN, meme coins, and music tokens with L2-powered transactions.
+                        <p className="text-gray-400 text-sm mb-4 max-w-md mx-auto">
+                          List any of our 24 supported tokens for sale. Set your price in OGUN or POL and choose which currencies you accept.
                         </p>
+                        <div className="text-xs text-gray-500 mb-6 max-w-lg mx-auto">
+                          <p className="font-semibold text-gray-400 mb-2">What you can list:</p>
+                          <div className="grid grid-cols-2 gap-1 text-left">
+                            <span>• <span className="text-cyan-400">POL, OGUN</span> - Native tokens</span>
+                            <span>• <span className="text-cyan-400">ETH, BTC, LTC</span> - Blue chips</span>
+                            <span>• <span className="text-cyan-400">USDC, USDT</span> - Stablecoins</span>
+                            <span>• <span className="text-cyan-400">SOL, SUI, HBAR</span> - L1 tokens</span>
+                            <span>• <span className="text-cyan-400">DOGE, SHIB, PEPE</span> - Meme coins</span>
+                            <span>• <span className="text-cyan-400">BONK, PENGU</span> - Community tokens</span>
+                          </div>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                           <Button
                             onClick={() => setShowCreateTokenModal(true)}
@@ -4362,9 +4384,26 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             Bundle Marketplace
                           </span>
                         </h3>
-                        <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">
-                          Create and trade NFT + Token bundles with real-world perks like concert tickets and vinyl.
+                        <p className="text-gray-400 text-sm mb-4 max-w-md mx-auto">
+                          Combine your NFTs, tokens, and real-world perks into valuable bundles. Perfect for artist drops and exclusive fan packages.
                         </p>
+                        <div className="text-xs text-gray-500 mb-6 max-w-lg mx-auto">
+                          <p className="font-semibold text-gray-400 mb-2">Bundle components:</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-left">
+                            <div>
+                              <span className="text-purple-400 font-semibold">NFTs</span>
+                              <p>Music NFTs, Art, Collectibles from your collection</p>
+                            </div>
+                            <div>
+                              <span className="text-cyan-400 font-semibold">Tokens</span>
+                              <p>Add OGUN, POL or any supported token allocation</p>
+                            </div>
+                            <div>
+                              <span className="text-pink-400 font-semibold">Real-World Perks</span>
+                              <p>Concert tix, vinyl, merch, meet & greets</p>
+                            </div>
+                          </div>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                           <Button
                             onClick={() => setShowCreateBundleModal(true)}
@@ -4382,8 +4421,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             Learn More
                           </Button>
                         </div>
-                        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-gray-500 max-w-md mx-auto">
-                          {['🎫 Concert Tix', '🎵 Vinyl', '👕 Merch', '🎮 Digital'].map((perk) => (
+                        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-gray-500 max-w-lg mx-auto">
+                          {[
+                            '🎫 Concert Tickets',
+                            '🎬 Movie Premieres',
+                            '🏆 Sporting Events',
+                            '📀 Vinyl Records',
+                            '🏠 Real Estate',
+                            '🚗 Vehicles',
+                            '👕 Clothing/Merch',
+                            '🎮 Digital Goods'
+                          ].map((perk) => (
                             <span key={perk} className="px-2 py-1 rounded-full bg-white/5 border border-white/10">
                               {perk}
                             </span>

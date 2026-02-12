@@ -60,34 +60,42 @@ export const BundleCard: React.FC<BundleCardProps> = ({ bundle, onPurchase, list
 
   if (listView) {
     return (
-      <Card className="retro-card transition-all duration-200 hover:border-cyan-400/50">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex items-center space-x-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-2xl analog-glow">
-                {getAssetIcon()}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="retro-text text-white">Bundle #{bundle.id}</h3>
-                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                    <Package className="w-3 h-3 mr-1" />Bundle
-                  </Badge>
-                </div>
-                <div className="text-sm text-gray-400">
-                  {bundle.nftIds.length} NFTs • {bundle.privateAsset} • {chainNames[bundle.chainId]}
-                </div>
-                <div className="retro-json text-xs">ISRC: {bundle.ISRC}</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="retro-text text-white">{formatNumber(bundle.price.value)} {bundle.price.currency}</div>
-              <div className="text-sm text-gray-400">≈ ${formatNumber(bundle.usdPrice)}</div>
-            </div>
-            <Button onClick={() => onPurchase(bundle.id)} size="sm" className="retro-button">Buy Bundle</Button>
+      <div className="flex items-center gap-3 px-3 py-2 bg-gray-900/50 hover:bg-gray-800/50 border-b border-gray-800/50 transition-colors group">
+        {/* Bundle Icon */}
+        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+          {getAssetIcon()}
+        </div>
+
+        {/* Bundle Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-white">Bundle #{bundle.id}</span>
+            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px] px-1.5 py-0">
+              <Package className="w-2.5 h-2.5 mr-0.5" />{bundle.nftIds.length} NFTs
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-xs text-gray-400 capitalize">{bundle.privateAsset || 'No perks'}</div>
+        </div>
+
+        {/* Token allocation - hidden on mobile */}
+        <div className="hidden sm:block w-24 text-xs text-gray-400 text-right flex-shrink-0">
+          {bundle.tokenAmount > 0 ? `${formatNumber(bundle.tokenAmount)} ${bundle.tokenSymbol}` : '—'}
+        </div>
+
+        {/* Price */}
+        <div className="w-24 text-right flex-shrink-0">
+          <div className="text-sm font-semibold text-green-400">{formatNumber(bundle.price.value)} {bundle.price.currency}</div>
+          <div className="text-[10px] text-gray-500">≈ ${formatNumber(bundle.usdPrice)}</div>
+        </div>
+
+        {/* Buy Button */}
+        <button
+          onClick={() => onPurchase(bundle.id)}
+          className="px-3 py-1.5 bg-purple-500 hover:bg-purple-600 text-white text-xs font-semibold rounded transition-colors flex-shrink-0"
+        >
+          Buy
+        </button>
+      </div>
     )
   }
 

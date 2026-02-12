@@ -56,37 +56,43 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onPurchase, isWalle
 
   if (listView) {
     return (
-      <Card className="retro-card transition-all duration-200 hover:border-cyan-400/50">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between space-x-4">
-            <div className="flex items-center space-x-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center retro-text font-bold">
-                {token.tokenSymbol.substring(0, 2)}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="retro-text text-white">{token.tokenSymbol}</h3>
-                  <Badge className={getSaleTypeColor(token.saleType)}>
-                    {getSaleTypeIcon(token.saleType)}
-                    <span className="ml-1 capitalize">{token.saleType}</span>
-                  </Badge>
-                </div>
-                <div className="text-sm text-gray-400">
-                  {formatNumber(token.tokenAmount)} tokens • {chainNames[token.chainId] || `Chain ${token.chainId}`}
-                </div>
-                <div className="retro-json text-xs">ISRC: {token.ISRC}</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="retro-text text-white">{formatNumber(token.price.value)} {token.price.currency}</div>
-              <div className="text-sm text-gray-400">≈ ${formatNumber(token.usdPrice)}</div>
-            </div>
-            <Button onClick={() => onPurchase(token.id)} disabled={!isWalletConnected} size="sm" className="retro-button">
-              {isWalletConnected ? 'Buy Now' : 'Connect'}
-            </Button>
+      <div className="flex items-center gap-3 px-3 py-2 bg-gray-900/50 hover:bg-gray-800/50 border-b border-gray-800/50 transition-colors group">
+        {/* Token Icon */}
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+          {token.tokenSymbol.substring(0, 2)}
+        </div>
+
+        {/* Token Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-white">{token.tokenSymbol}</span>
+            <Badge className={`${getSaleTypeColor(token.saleType)} text-[10px] px-1.5 py-0`}>
+              {token.saleType}
+            </Badge>
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-xs text-gray-400">{formatNumber(token.tokenAmount)} tokens</div>
+        </div>
+
+        {/* Chain - hidden on mobile */}
+        <div className="hidden sm:block w-20 text-xs text-gray-400 text-right flex-shrink-0">
+          {chainNames[token.chainId] || `Chain ${token.chainId}`}
+        </div>
+
+        {/* Price */}
+        <div className="w-24 text-right flex-shrink-0">
+          <div className="text-sm font-semibold text-green-400">{formatNumber(token.price.value)} {token.price.currency}</div>
+          <div className="text-[10px] text-gray-500">≈ ${formatNumber(token.usdPrice)}</div>
+        </div>
+
+        {/* Buy Button */}
+        <button
+          onClick={() => onPurchase(token.id)}
+          disabled={!isWalletConnected}
+          className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-600 text-black text-xs font-semibold rounded transition-colors flex-shrink-0"
+        >
+          {isWalletConnected ? 'Buy' : 'Connect'}
+        </button>
+      </div>
     )
   }
 
