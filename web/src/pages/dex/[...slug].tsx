@@ -4119,7 +4119,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               onPlay={(track, index, playlist) => handlePlayTrack(track, index, playlist)}
               isPlaying={isPlaying}
               currentTrackId={currentSong?.trackId}
-              account={account}
+              account={walletAccount}
               onCreateTokenListing={() => setShowCreateTokenModal(true)}
               onCreateBundleListing={() => setShowCreateBundleModal(true)}
             />
