@@ -108,10 +108,15 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onPurchase, isWalle
                     <p className="retro-json text-xs">{chainNames[token.chainId] || `Chain ${token.chainId}`}</p>
                   </div>
                 </div>
-                <Badge className={getSaleTypeColor(token.saleType)}>
-                  {getSaleTypeIcon(token.saleType)}
-                  <span className="ml-1 capitalize">{token.saleType}</span>
-                </Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge className={getSaleTypeColor(token.saleType)}>
+                    {getSaleTypeIcon(token.saleType)}
+                    <span className="ml-1 capitalize">{token.saleType}</span>
+                  </Badge>
+                  <Badge className="bg-gradient-to-r from-cyan-500/80 to-purple-500/80 text-white text-[8px] px-1.5 py-0.5">
+                    <Zap className="w-2 h-2 mr-0.5" /> L2
+                  </Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="pt-0">

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Card, CardContent, CardHeader } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { Package, RotateCcw, ShoppingBag, Database } from 'lucide-react'
+import { Package, RotateCcw, ShoppingBag, Database, Zap } from 'lucide-react'
 
 interface BundleCardProps {
   bundle: {
@@ -109,9 +109,14 @@ export const BundleCard: React.FC<BundleCardProps> = ({ bundle, onPurchase, list
                     <p className="retro-json text-xs">{chainNames[bundle.chainId]}</p>
                   </div>
                 </div>
-                <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                  <Package className="w-3 h-3 mr-1" />Bundle
-                </Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                    <Package className="w-3 h-3 mr-1" />Bundle
+                  </Badge>
+                  <Badge className="bg-gradient-to-r from-cyan-500/80 to-purple-500/80 text-white text-[8px] px-1.5 py-0.5">
+                    <Zap className="w-2 h-2 mr-0.5" /> L2
+                  </Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="pt-0">

@@ -101,6 +101,8 @@ const NotificationSettingsForm = dynamic(() => import('components/forms/Notifica
 const HandleForm = dynamic(() => import('components/forms/profile/HandleForm').then(mod => ({ default: mod.HandleForm })), { ssr: false })
 const DisplayNameForm = dynamic(() => import('components/forms/profile/DisplayNameForm').then(mod => ({ default: mod.DisplayNameForm })), { ssr: false })
 const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr: false })
+const CreateTokenListingModal = dynamic(() => import('components/modals/CreateTokenListingModal').then(mod => ({ default: mod.CreateTokenListingModal })), { ssr: false })
+const CreateBundleListingModal = dynamic(() => import('components/modals/CreateBundleListingModal').then(mod => ({ default: mod.CreateBundleListingModal })), { ssr: false })
 
 // Staking contract helper for fetching staked OGUN balance
 const tokenStakeContractAddress = config.tokenStakeContractAddress as string
@@ -885,6 +887,33 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showNearbyModal, setShowNearbyModal] = useState(false)
   const [showTracksCollectionModal, setShowTracksCollectionModal] = useState(false)
   const [showFollowersModal, setShowFollowersModal] = useState(false)
+  const [showCreateTokenModal, setShowCreateTokenModal] = useState(false)
+  const [showCreateBundleModal, setShowCreateBundleModal] = useState(false)
+
+  // Token and Bundle listing states (mock data for now - will be GraphQL later)
+  const [tokenListings, setTokenListings] = useState<Array<{
+    id: string
+    tokenSymbol: Token
+    tokenAmount: number
+    chainId: number
+    price: { value: number; currency: string }
+    usdPrice: number
+    seller: string
+    createdAt: Date
+  }>>([])
+
+  const [bundleListings, setBundleListings] = useState<Array<{
+    id: string
+    nftIds: string[]
+    tokenSymbol: Token
+    tokenAmount: number
+    chainId: number
+    privateAsset?: string
+    price: { value: number; currency: string }
+    usdPrice: number
+    seller: string
+    createdAt: Date
+  }>>([])
   const [showFollowingModal, setShowFollowingModal] = useState(false)
   const [tracksCollectionTab, setTracksCollectionTab] = useState<'owned' | 'favorites'>('owned')
   const [winWinRewardsTab, setWinWinRewardsTab] = useState<'catalog' | 'listener'>('catalog')
@@ -4082,6 +4111,58 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Marketplace View */}
           {selectedView === 'marketplace' && (
             <div className="space-y-6">
+              {/* L2 Marketplace Hero Section */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-900/40 via-purple-900/40 to-pink-900/40 p-6 md:p-8 border border-cyan-500/20">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(6,182,212,0.15),transparent_70%)]" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Badge className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white text-[10px] px-2 py-0.5">
+                      <Zap className="w-3 h-3 mr-1" /> L2 POWERED
+                    </Badge>
+                  </div>
+                  <h1 className="retro-title text-3xl md:text-4xl lg:text-5xl text-center mb-3">
+                    <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 text-transparent bg-clip-text">
+                      THE DOPEST MARKET IN WEB3
+                    </span>
+                  </h1>
+                  <p className="text-center text-gray-300 text-sm md:text-base mb-6">Trade NFTs, Tokens & Bundles with OGUN Gas</p>
+
+                  {/* Stats Row */}
+                  <div className="flex justify-center gap-6 md:gap-12 mb-6">
+                    <div className="text-center">
+                      <span className="text-2xl md:text-3xl font-bold text-cyan-400">{SUPPORTED_TOKENS.length}</span>
+                      <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Tokens</p>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-2xl md:text-3xl font-bold text-green-400">0.05%</span>
+                      <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Fees</p>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-2xl md:text-3xl font-bold text-purple-400">
+                        <Zap className="w-6 h-6 md:w-7 md:h-7 inline" />
+                      </span>
+                      <p className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wider">Gas Burns</p>
+                    </div>
+                  </div>
+
+                  {/* Scrolling Token Ticker */}
+                  <div className="overflow-hidden relative">
+                    <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/60 to-transparent z-10" />
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/60 to-transparent z-10" />
+                    <div className="flex gap-3 animate-marquee whitespace-nowrap">
+                      {[...SUPPORTED_TOKENS, ...SUPPORTED_TOKENS].map((token, i) => (
+                        <span key={`${token}-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300">
+                          <span>{TOKEN_INFO[token]?.icon || '•'}</span>
+                          <span>{getDisplaySymbol(token)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                 <h2 className="retro-title text-2xl">Marketplace</h2>
                 <div className="flex items-center gap-3">
@@ -4180,19 +4261,138 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               )}
 
               {selectedPurchaseType === 'token' && (
-                <Card className="retro-card p-8 text-center">
-                  <Coins className="w-12 h-12 mx-auto mb-4 text-green-400 opacity-50" />
-                  <h3 className="retro-title mb-2">Token Marketplace Coming Soon</h3>
-                  <p className="text-gray-400 text-sm">OGUN and music token trading will be available here.</p>
-                </Card>
+                <>
+                  {tokenListings.length > 0 ? (
+                    <div className={viewMode === 'grid'
+                      ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3'
+                      : 'space-y-2'}>
+                      {tokenListings.map((token) => (
+                        <TokenCard
+                          key={token.id}
+                          token={token}
+                          onPurchase={(tokenId: string) => {
+                            if (!account) {
+                              toast.info('Connect wallet to purchase tokens')
+                              return
+                            }
+                            router.push(`/dex/token/${tokenId}/buy`)
+                          }}
+                          isWalletConnected={!!account}
+                          listView={viewMode === 'list'}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="retro-card p-8 text-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-cyan-500/5" />
+                      <div className="relative z-10">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-500/20 to-cyan-500/20 flex items-center justify-center">
+                          <Coins className="w-8 h-8 text-green-400" />
+                        </div>
+                        <h3 className="retro-title mb-2 text-xl">
+                          <span className="bg-gradient-to-r from-green-400 to-cyan-400 text-transparent bg-clip-text">
+                            Token Marketplace
+                          </span>
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">
+                          List and trade OGUN, meme coins, and music tokens with L2-powered transactions.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                          <Button
+                            onClick={() => setShowCreateTokenModal(true)}
+                            className="bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white font-semibold"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            List Tokens
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                            onClick={() => toast.info('Token trading coming with full L2 integration')}
+                          >
+                            <Zap className="w-4 h-4 mr-2" />
+                            Learn More
+                          </Button>
+                        </div>
+                        <div className="mt-6 flex items-center justify-center gap-4 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Badge className="bg-green-500/20 text-green-400 text-[10px]">{SUPPORTED_TOKENS.length} Tokens</Badge>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Badge className="bg-cyan-500/20 text-cyan-400 text-[10px]">0.05% Fees</Badge>
+                          </span>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </>
               )}
 
               {selectedPurchaseType === 'bundle' && (
-                <Card className="retro-card p-8 text-center">
-                  <Package className="w-12 h-12 mx-auto mb-4 text-cyan-400 opacity-50" />
-                  <h3 className="retro-title mb-2">Bundle Marketplace Coming Soon</h3>
-                  <p className="text-gray-400 text-sm">NFT + Token bundles will be tradeable here.</p>
-                </Card>
+                <>
+                  {bundleListings.length > 0 ? (
+                    <div className={viewMode === 'grid'
+                      ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3'
+                      : 'space-y-2'}>
+                      {bundleListings.map((bundle) => (
+                        <BundleCard
+                          key={bundle.id}
+                          bundle={bundle}
+                          privateAssetOptions={['concert tickets', 'movie tickets', 'sporting event tickets', 'vinyl', 'homes', 'cars', 'clothing', 'digital download']}
+                          onPurchase={(bundleId: string) => {
+                            if (!account) {
+                              toast.info('Connect wallet to purchase bundles')
+                              return
+                            }
+                            router.push(`/dex/bundle/${bundleId}/buy`)
+                          }}
+                          listView={viewMode === 'list'}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="retro-card p-8 text-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5" />
+                      <div className="relative z-10">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
+                          <Package className="w-8 h-8 text-cyan-400" />
+                        </div>
+                        <h3 className="retro-title mb-2 text-xl">
+                          <span className="bg-gradient-to-r from-cyan-400 to-purple-400 text-transparent bg-clip-text">
+                            Bundle Marketplace
+                          </span>
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">
+                          Create and trade NFT + Token bundles with real-world perks like concert tickets and vinyl.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                          <Button
+                            onClick={() => setShowCreateBundleModal(true)}
+                            className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white font-semibold"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create Bundle
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                            onClick={() => toast.info('Bundle creation coming with full L2 integration')}
+                          >
+                            <Gift className="w-4 h-4 mr-2" />
+                            Learn More
+                          </Button>
+                        </div>
+                        <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-gray-500 max-w-md mx-auto">
+                          {['🎫 Concert Tix', '🎵 Vinyl', '👕 Merch', '🎮 Digital'].map((perk) => (
+                            <span key={perk} className="px-2 py-1 rounded-full bg-white/5 border border-white/10">
+                              {perk}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </>
               )}
 
             </div>
@@ -7969,6 +8169,26 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           </div>
         </>
       )}
+
+      {/* Create Token Listing Modal */}
+      <CreateTokenListingModal
+        isOpen={showCreateTokenModal}
+        onClose={() => setShowCreateTokenModal(false)}
+        onSuccess={(listing) => {
+          setTokenListings(prev => [listing, ...prev])
+          setShowCreateTokenModal(false)
+        }}
+      />
+
+      {/* Create Bundle Listing Modal */}
+      <CreateBundleListingModal
+        isOpen={showCreateBundleModal}
+        onClose={() => setShowCreateBundleModal(false)}
+        onSuccess={(listing) => {
+          setBundleListings(prev => [listing, ...prev])
+          setShowCreateBundleModal(false)
+        }}
+      />
 
     </div>
     </>

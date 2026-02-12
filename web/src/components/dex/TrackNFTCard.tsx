@@ -5,7 +5,7 @@ import { useRouter } from 'next/router'
 import { Card } from '../ui/card'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { Play, Pause, Heart, RotateCcw, X, Maximize2, Share2, ShoppingCart, ExternalLink, Music2 } from 'lucide-react'
+import { Play, Pause, Heart, RotateCcw, X, Maximize2, Share2, ShoppingCart, ExternalLink, Music2, Zap } from 'lucide-react'
 import { toast } from 'react-toastify'
 import { config } from 'config'
 import { getIpfsUrl } from 'utils/ipfs'
@@ -429,6 +429,11 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
                   FOR SALE
                 </Badge>
               )}
+
+              {/* L2 Badge - shows on all NFTs */}
+              <Badge className="bg-gradient-to-r from-cyan-500/80 to-purple-500/80 text-white absolute bottom-1.5 left-1.5 text-[7px] px-1 py-0.5 uppercase font-bold tracking-wide backdrop-blur-sm shadow-sm flex items-center gap-0.5">
+                <Zap className="w-2 h-2" /> L2
+              </Badge>
 
               {/* Fullscreen button - larger touch target for mobile */}
               <Button
