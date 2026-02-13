@@ -133,10 +133,15 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
       if (acceptedCurrencies.length === 0) return true
 
       // Check if listing accepts any of the selected currencies
+      // A listing accepts OGUN if it has an OGUNPricePerItem set
+      // A listing accepts POL/MATIC if it has a pricePerItem set
       const listing = t.listingItem
-      if (acceptedCurrencies.includes('OGUN') && listing.acceptsOGUN) return true
-      if (acceptedCurrencies.includes('POL') && listing.acceptsMATIC) return true
-      if (acceptedCurrencies.includes('MATIC') && listing.acceptsMATIC) return true
+      const hasOGUNPrice = listing.OGUNPricePerItem && parseFloat(listing.OGUNPricePerItem) > 0
+      const hasMATICPrice = listing.pricePerItem && parseFloat(listing.pricePerItem) > 0
+
+      if (acceptedCurrencies.includes('OGUN') && hasOGUNPrice) return true
+      if (acceptedCurrencies.includes('POL') && hasMATICPrice) return true
+      if (acceptedCurrencies.includes('MATIC') && hasMATICPrice) return true
 
       // If user selected currencies but this listing doesn't match, exclude it
       return false
