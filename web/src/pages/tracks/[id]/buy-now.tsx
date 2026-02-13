@@ -170,8 +170,8 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       ? listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItem
       : listingPayload.buyNowItem?.buyNowItem?.pricePerItem) ?? '0'
   const priceToShow = isPaymentOGUN
-    ? listingPayload.buyNowItem.buyNowItem?.OGUNPricePerItemToShow ?? 0
-    : listingPayload.buyNowItem.buyNowItem?.pricePerItemToShow ?? 0
+    ? listingPayload.buyNowItem?.buyNowItem?.OGUNPricePerItemToShow ?? 0
+    : listingPayload.buyNowItem?.buyNowItem?.pricePerItemToShow ?? 0
   const startTime = listingPayload.buyNowItem?.buyNowItem?.startingTime ?? 0
   const hasStarted = startTime <= new Date().getTime() / 1000
 
@@ -261,7 +261,7 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
       listingPayload.buyNowItem?.buyNowItem?.owner,
       isPaymentOGUN,
       salePrice,
-      { nft: track.nftData?.contract, marketplace: listingPayload.buyNowItem.buyNowItem.contract },
+      { nft: track.nftData?.contract, marketplace: listingPayload.buyNowItem?.buyNowItem?.contract },
     )
       .onReceipt(onReceipt)
       .onError(cause => toast.error(cause.message))

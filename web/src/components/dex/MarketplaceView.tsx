@@ -51,6 +51,7 @@ interface MarketplaceViewProps {
   account?: string
   onCreateTokenListing: () => void
   onCreateBundleListing: () => void
+  onSweepClick?: () => void
 }
 
 // Collapsible Filter Section
@@ -101,6 +102,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
   account,
   onCreateTokenListing,
   onCreateBundleListing,
+  onSweepClick,
 }) => {
   // View state
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -122,10 +124,24 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
     return token
   }
 
-  // Filter tracks that have listings
+  // Filter tracks that have listings and match currency filters
   const listedTracks = useMemo(() => {
-    return tracks.filter(t => t.listingItem)
-  }, [tracks])
+    return tracks.filter(t => {
+      if (!t.listingItem) return false
+
+      // If no currency filters selected, show all
+      if (acceptedCurrencies.length === 0) return true
+
+      // Check if listing accepts any of the selected currencies
+      const listing = t.listingItem
+      if (acceptedCurrencies.includes('OGUN') && listing.acceptsOGUN) return true
+      if (acceptedCurrencies.includes('POL') && listing.acceptsMATIC) return true
+      if (acceptedCurrencies.includes('MATIC') && listing.acceptsMATIC) return true
+
+      // If user selected currencies but this listing doesn't match, exclude it
+      return false
+    })
+  }, [tracks, acceptedCurrencies])
 
   // Calculate stats
   const stats = useMemo(() => ({
@@ -616,11 +632,20 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
                     </div>
                     <h3 className="font-mono text-white text-lg mb-2">Sweep Mode</h3>
                     <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
-                      Bulk purchase multiple NFTs in a single transaction. Coming soon.
+                      Bulk purchase multiple NFTs in a single transaction. Select NFTs from the grid and sweep them all at once!
                     </p>
-                    <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                      <Clock className="w-3 h-3 mr-1" /> Coming Soon
-                    </Badge>
+                    {onSweepClick ? (
+                      <Button
+                        onClick={onSweepClick}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-mono"
+                      >
+                        <Layers className="w-4 h-4 mr-2" /> Open Sweep Panel
+                      </Button>
+                    ) : (
+                      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                        <Clock className="w-3 h-3 mr-1" /> Coming Soon
+                      </Badge>
+                    )}
                   </div>
                 )}
               </>

@@ -12,9 +12,9 @@ interface TokenCardProps {
     chainId: number
     price: { value: number; currency: string }
     usdPrice: number
-    ISRC: string
-    saleType: 'fixed' | 'auction' | 'bundle'
-    acceptedCurrencies: string[]
+    ISRC?: string
+    saleType?: 'fixed' | 'auction' | 'bundle'
+    acceptedCurrencies?: string[]
   }
   onPurchase: (tokenId: string) => void
   isWalletConnected: boolean
@@ -66,8 +66,8 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onPurchase, isWalle
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-white">{token.tokenSymbol}</span>
-            <Badge className={`${getSaleTypeColor(token.saleType)} text-[10px] px-1.5 py-0`}>
-              {token.saleType}
+            <Badge className={`${getSaleTypeColor(token.saleType || 'fixed')} text-[10px] px-1.5 py-0`}>
+              {token.saleType || 'fixed'}
             </Badge>
           </div>
           <div className="text-xs text-gray-400">{formatNumber(token.tokenAmount)} tokens</div>
@@ -115,9 +115,9 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onPurchase, isWalle
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <Badge className={getSaleTypeColor(token.saleType)}>
-                    {getSaleTypeIcon(token.saleType)}
-                    <span className="ml-1 capitalize">{token.saleType}</span>
+                  <Badge className={getSaleTypeColor(token.saleType || 'fixed')}>
+                    {getSaleTypeIcon(token.saleType || 'fixed')}
+                    <span className="ml-1 capitalize">{token.saleType || 'fixed'}</span>
                   </Badge>
                   <Badge className="bg-gradient-to-r from-cyan-500/80 to-purple-500/80 text-white text-[8px] px-1.5 py-0.5">
                     <Zap className="w-2 h-2 mr-0.5" /> L2
@@ -136,21 +136,25 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onPurchase, isWalle
                   <div className="metadata-value">{formatNumber(token.price.value)} {token.price.currency}</div>
                   <div className="text-sm text-gray-400">≈ ${formatNumber(token.usdPrice)} USD</div>
                 </div>
-                <div className="metadata-section">
-                  <div className="metadata-label">ISRC</div>
-                  <div className="retro-json text-xs">{token.ISRC}</div>
-                </div>
-                <div className="metadata-section">
-                  <div className="metadata-label">Accepted</div>
-                  <div className="flex flex-wrap gap-1">
-                    {token.acceptedCurrencies.slice(0, 3).map((currency) => (
-                      <span key={currency} className="metadata-attribute">{currency}</span>
-                    ))}
-                    {token.acceptedCurrencies.length > 3 && (
-                      <span className="metadata-attribute">+{token.acceptedCurrencies.length - 3}</span>
-                    )}
+                {token.ISRC && (
+                  <div className="metadata-section">
+                    <div className="metadata-label">ISRC</div>
+                    <div className="retro-json text-xs">{token.ISRC}</div>
                   </div>
-                </div>
+                )}
+                {token.acceptedCurrencies && token.acceptedCurrencies.length > 0 && (
+                  <div className="metadata-section">
+                    <div className="metadata-label">Accepted</div>
+                    <div className="flex flex-wrap gap-1">
+                      {token.acceptedCurrencies.slice(0, 3).map((currency) => (
+                        <span key={currency} className="metadata-attribute">{currency}</span>
+                      ))}
+                      {token.acceptedCurrencies.length > 3 && (
+                        <span className="metadata-attribute">+{token.acceptedCurrencies.length - 3}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <Button onClick={(e) => { e.stopPropagation(); onPurchase(token.id) }} disabled={!isWalletConnected} className="w-full retro-button">
                   {isWalletConnected ? 'Buy Now' : 'Connect Wallet'}
                 </Button>
@@ -176,19 +180,21 @@ export const TokenCard: React.FC<TokenCardProps> = ({ token, onPurchase, isWalle
               <div className="metadata-section">
                 <div className="metadata-label">TRADING_DATA</div>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs"><span className="text-gray-400">SALE TYPE:</span><span className="metadata-value uppercase">{token.saleType}</span></div>
+                  <div className="flex justify-between text-xs"><span className="text-gray-400">SALE TYPE:</span><span className="metadata-value uppercase">{token.saleType || 'fixed'}</span></div>
                   <div className="flex justify-between text-xs"><span className="text-gray-400">AMOUNT:</span><span className="metadata-value">{formatNumber(token.tokenAmount)}</span></div>
                   <div className="flex justify-between text-xs"><span className="text-gray-400">USD VALUE:</span><span className="metadata-value">${formatNumber(token.usdPrice)}</span></div>
                 </div>
               </div>
-              <div className="metadata-section">
-                <div className="metadata-label">ACCEPTED_CURRENCIES</div>
-                <div className="flex flex-wrap gap-1">
-                  {token.acceptedCurrencies.map((currency) => (
-                    <span key={currency} className="metadata-attribute">{currency}</span>
-                  ))}
+              {token.acceptedCurrencies && token.acceptedCurrencies.length > 0 && (
+                <div className="metadata-section">
+                  <div className="metadata-label">ACCEPTED_CURRENCIES</div>
+                  <div className="flex flex-wrap gap-1">
+                    {token.acceptedCurrencies.map((currency) => (
+                      <span key={currency} className="metadata-attribute">{currency}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="metadata-section">
                 <div className="metadata-label">SECURITY_STATUS</div>
                 <div className="flex items-center space-x-2">

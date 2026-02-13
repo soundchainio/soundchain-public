@@ -4122,6 +4122,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               account={walletAccount}
               onCreateTokenListing={() => setShowCreateTokenModal(true)}
               onCreateBundleListing={() => setShowCreateBundleModal(true)}
+              onSweepClick={() => setShowSweepPanel(true)}
             />
           )}
 
