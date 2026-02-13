@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Search, Filter, Grid, List, ChevronDown, ChevronUp, X, Zap,
   TrendingUp, Clock, DollarSign, Layers, Globe, Shield, Activity,
@@ -123,6 +123,23 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
     if (token === 'MATIC') return 'POL'
     return token
   }
+
+  // Debug: Log OGUN price data to help troubleshoot filtering
+  useEffect(() => {
+    if (acceptedCurrencies.includes('OGUN')) {
+      const ogunListings = tracks.filter(t => t.listingItem?.OGUNPricePerItem)
+      console.log('🔍 OGUN Filter Debug:', {
+        totalTracks: tracks.length,
+        tracksWithListings: tracks.filter(t => t.listingItem).length,
+        tracksWithOGUNPrice: ogunListings.length,
+        ogunPrices: ogunListings.map(t => ({
+          title: t.title,
+          OGUNPricePerItem: t.listingItem?.OGUNPricePerItem,
+          pricePerItem: t.listingItem?.pricePerItem,
+        }))
+      })
+    }
+  }, [tracks, acceptedCurrencies])
 
   // Filter tracks that have listings and match currency filters
   const listedTracks = useMemo(() => {
