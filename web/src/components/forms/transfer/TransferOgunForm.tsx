@@ -6,8 +6,19 @@ import useBlockchain, { gas } from 'hooks/useBlockchain'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { Logo } from 'icons/IconSvgDirectory'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import * as yup from 'yup'
+import Web3 from 'web3'
+import { mainNetwork } from 'lib/blockchainNetworks'
+
+// Fallback Web3 instance using public RPC for gas estimation
+const createFallbackWeb3 = () => {
+  try {
+    return new Web3(mainNetwork.rpc)
+  } catch {
+    return null
+  }
+}
 
 export interface FormValues {
   recipient: string
@@ -34,14 +45,25 @@ interface Props {
 
 export const TransferOgunForm = ({ handleSubmit }: Props) => {
   const me = useMe()
-  const { web3, OGUNBalance } = useWalletContext()
+  const { web3: walletWeb3, OGUNBalance } = useWalletContext()
   const { getCurrentGasPrice } = useBlockchain()
   const [gasPrice, setGasPrice] = useState<string>('')
 
+  // Use wallet web3 if available, otherwise use fallback public RPC
+  const fallbackWeb3 = useMemo(() => createFallbackWeb3(), [])
+  const web3 = walletWeb3 || fallbackWeb3
+
   useEffect(() => {
-    const gasCheck = () => {
+    const gasCheck = async () => {
       if (web3) {
-        getCurrentGasPrice(web3).then(price => setGasPrice(price))
+        try {
+          const price = await getCurrentGasPrice(web3)
+          setGasPrice(price)
+        } catch (err) {
+          console.error('[TransferOgunForm] Gas price fetch failed:', err)
+          // Set fallback gas price (~30 gwei on Polygon)
+          setGasPrice('30')
+        }
       }
     }
     gasCheck()
