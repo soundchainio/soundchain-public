@@ -12,7 +12,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 // GraphQL endpoint
 const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 
-// Query marketplace listings
+// Query marketplace listings with OGUN price data
 const LISTINGS_QUERY = `
   query AgentMarketplaceListings($page: PageInput, $sort: SortListingItemInput) {
     listingItems(page: $page, sort: $sort) {
@@ -34,6 +34,14 @@ const LISTINGS_QUERY = `
         trackEditionId
         editionSize
         profileId
+        listingItem {
+          pricePerItem
+          pricePerItemToShow
+          OGUNPricePerItem
+          OGUNPricePerItemToShow
+          acceptsOGUN
+          acceptsMATIC
+        }
       }
       pageInfo {
         hasNextPage
@@ -70,13 +78,14 @@ export default async function handler(
         query: LISTINGS_QUERY,
         variables: {
           page: { first: Math.min(parseInt(limit as string) || 20, 50) },
+          // Sort uses field + order (not direction) per GraphQL schema
           sort: sort === 'popular'
-            ? { field: 'PLAYBACK_COUNT', direction: 'DESC' }
+            ? { field: 'PLAYBACK_COUNT', order: 'DESC' }
             : sort === 'price_low'
-            ? { field: 'PRICE', direction: 'ASC' }
+            ? { field: 'PRICE', order: 'ASC' }
             : sort === 'price_high'
-            ? { field: 'PRICE', direction: 'DESC' }
-            : { field: 'CREATED_AT', direction: 'DESC' }
+            ? { field: 'PRICE', order: 'DESC' }
+            : { field: 'CREATED_AT', order: 'DESC' }
         }
       })
     })
@@ -96,10 +105,15 @@ export default async function handler(
     const listings = data.data?.listingItems?.nodes || []
     const totalCount = data.data?.listingItems?.pageInfo?.totalCount || 0
 
-    // Transform to agent-friendly format
+    // Transform to agent-friendly format with OGUN pricing
     const agentListings = listings.map((listing: any) => {
       const priceValue = listing.price?.value || '0'
       const priceCurrency = listing.price?.currency || 'MATIC'
+      const listingItem = listing.listingItem || {}
+
+      // Determine actual pricing from listingItem
+      const hasOGUNPrice = listingItem.OGUNPricePerItem && parseFloat(listingItem.OGUNPricePerItem) > 0
+      const hasMATICPrice = listingItem.pricePerItem && parseFloat(listingItem.pricePerItem) > 0
 
       return {
         // Identifiers
@@ -116,12 +130,22 @@ export default async function handler(
         artwork_url: listing.artworkUrl,
         preview_url: listing.playbackUrl,
 
-        // Pricing
+        // Pricing - show both OGUN and POL prices if available
         price: {
           amount: priceValue,
           currency: priceCurrency,
           display: `${priceValue} ${priceCurrency}`
         },
+        ogun_price: hasOGUNPrice ? {
+          wei: listingItem.OGUNPricePerItem,
+          display: listingItem.OGUNPricePerItemToShow || 0,
+          accepts_ogun: true
+        } : null,
+        pol_price: hasMATICPrice ? {
+          wei: listingItem.pricePerItem,
+          display: listingItem.pricePerItemToShow || 0,
+          accepts_pol: true
+        } : null,
 
         // Stats
         plays: listing.playbackCount || 0,
@@ -130,8 +154,11 @@ export default async function handler(
 
         // Purchase info
         sale_type: listing.saleType || 'FIXED',
-        can_buy_with_ogun: true,
-        can_buy_with_pol: true,
+        can_buy_with_ogun: hasOGUNPrice || listingItem.acceptsOGUN,
+        can_buy_with_pol: hasMATICPrice || listingItem.acceptsMATIC,
+
+        // Raw listing data for debugging
+        _raw_listing_item: listingItem,
 
         // Links
         view_url: `https://soundchain.io/dex/track/${listing.id}`,
