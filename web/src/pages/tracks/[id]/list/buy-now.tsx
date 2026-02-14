@@ -8,7 +8,6 @@ import useBlockchainV2 from 'hooks/useBlockchainV2'
 import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
-import { cacheFor } from 'lib/apollo'
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
 import { useRouter } from 'next/router'
@@ -46,7 +45,11 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true }
   }
 
-  return cacheFor(ListBuyNowPage, { track: data.track }, context, apolloClient)
+  return {
+    props: {
+      track: data.track,
+    },
+  }
 })
 
 export default function ListBuyNowPage({ track }: TrackPageProps) {
