@@ -1,22 +1,34 @@
+import { MarketplaceNav } from 'components/MarketplaceNav'
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/pages/details-NFT/ListNFTBuyNow'
 import { Track } from 'components/Track'
-import { useModalDispatch, useModalState } from 'contexts/ModalContext'
+import { ModalProvider, useModalDispatch, useModalState } from 'contexts/ModalContext'
+import { StateProvider } from 'contexts'
 import { FormikHelpers } from 'formik'
 import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
+import { AudioPlayerProvider } from 'hooks/useAudioPlayer'
+import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
+import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
+import { TrackProvider } from 'hooks/useTrack'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { useMagicContext } from 'hooks/useMagicContext'
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
+import { Tag, Wallet, Copy, Check } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
-import { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import { ReactElement, useEffect, useState } from 'react'
+import { toast, ToastContainer } from 'react-toastify'
 import { SaleType } from 'lib/graphql'
 import SEO from '../../../../components/SEO'
-import { ArrowLeft, Tag, Wallet, Copy, Check } from 'lucide-react'
-import Link from 'next/link'
+
+const ApproveModal = dynamic(import('../../../../components/modals/ApproveModal'))
+const AudioEngine = dynamic(import('components/common/BottomAudioPlayer/AudioEngine'))
+const MobileBottomAudioPlayer = dynamic(import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
+const DesktopBottomAudioPlayer = dynamic(import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
+
 export interface TrackPageProps {
   track: TrackQuery['track']
 }
@@ -184,21 +196,11 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         canonicalUrl={router.asPath}
       />
 
+      {/* DEX-style navigation */}
+      <MarketplaceNav title="List for Sale" icon={<Tag className="w-5 h-5 text-purple-400" />} />
+
       {/* Content area */}
       <div className="max-w-4xl mx-auto px-4 py-4">
-        {/* Page header with back button */}
-        <div className="flex items-center gap-3 mb-4">
-          <button
-            onClick={() => router.back()}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          <div className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-purple-400" />
-            <h1 className="text-xl font-bold text-white">List for Sale</h1>
-          </div>
-        </div>
 
         {/* Connected Wallet & Balances */}
         {walletAddress && (
@@ -244,5 +246,40 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
         </div>
       </div>
     </div>
+  )
+}
+
+// Custom layout to bypass default Layout component (uses DEX-style nav instead of legacy TopNavBar)
+ListBuyNowPage.getLayout = (page: ReactElement) => {
+  return (
+    <ModalProvider>
+      <StateProvider>
+        <HideBottomNavBarProvider>
+          <LayoutContextProvider>
+            <AudioPlayerProvider>
+              <TrackProvider>
+                {page}
+                <AudioEngine />
+                <MobileBottomAudioPlayer />
+                <DesktopBottomAudioPlayer />
+                <ToastContainer
+                  position="top-center"
+                  autoClose={6 * 1000}
+                  toastStyle={{
+                    backgroundColor: '#202020',
+                    color: 'white',
+                    fontSize: '12px',
+                    textAlign: 'center',
+                  }}
+                />
+                <div id="modals">
+                  <ApproveModal />
+                </div>
+              </TrackProvider>
+            </AudioPlayerProvider>
+          </LayoutContextProvider>
+        </HideBottomNavBarProvider>
+      </StateProvider>
+    </ModalProvider>
   )
 }

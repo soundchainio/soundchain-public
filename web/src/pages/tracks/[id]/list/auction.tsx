@@ -1,22 +1,32 @@
+import { MarketplaceNav } from 'components/MarketplaceNav'
 import { ListNFTAuction, ListNFTAuctionFormValues } from 'components/pages/details-NFT/ListNFTAuction'
-import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
-import { useModalDispatch, useModalState } from 'contexts/ModalContext'
+import { ModalProvider, useModalDispatch, useModalState } from 'contexts/ModalContext'
+import { StateProvider } from 'contexts'
 import { FormikHelpers } from 'formik'
 import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
-import { useLayoutContext } from 'hooks/useLayoutContext'
+import { AudioPlayerProvider } from 'hooks/useAudioPlayer'
+import { HideBottomNavBarProvider } from 'hooks/useHideBottomNavBar'
+import { LayoutContextProvider } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
+import { TrackProvider } from 'hooks/useTrack'
 import { useWalletContext } from 'hooks/useWalletContext'
-import { cacheFor } from 'lib/apollo'
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
+import { Gavel } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import { ParsedUrlQuery } from 'querystring'
-import { useEffect, useState } from 'react'
-import { toast } from 'react-toastify'
+import { ReactElement, useEffect, useState } from 'react'
+import { toast, ToastContainer } from 'react-toastify'
 import { SaleType } from 'lib/graphql'
 import SEO from '../../../../components/SEO'
+
+const ApproveModal = dynamic(import('../../../../components/modals/ApproveModal'))
+const AudioEngine = dynamic(import('components/common/BottomAudioPlayer/AudioEngine'))
+const MobileBottomAudioPlayer = dynamic(import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
+const DesktopBottomAudioPlayer = dynamic(import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 
 export interface TrackPageProps {
   track: TrackQuery['track']
@@ -24,10 +34,6 @@ export interface TrackPageProps {
 
 interface TrackPageParams extends ParsedUrlQuery {
   id: string
-}
-
-const topNavBarProps: TopNavBarProps = {
-  title: 'List for Auction',
 }
 
 export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
@@ -47,7 +53,11 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
     return { notFound: true }
   }
 
-  return cacheFor(AuctionPage, { track: data.track }, context, apolloClient)
+  return {
+    props: {
+      track: data.track,
+    },
+  }
 })
 
 export default function AuctionPage({ track }: TrackPageProps) {
@@ -61,7 +71,6 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const { dispatchShowApproveModal } = useModalDispatch()
   const [isOwner, setIsOwner] = useState(false)
   const [isApproved, setIsApproved] = useState(false)
-  const { setTopNavBarProps } = useLayoutContext()
 
   const nftData = track.nftData
   const tokenId = nftData?.tokenId ?? -1
@@ -72,10 +81,6 @@ export default function AuctionPage({ track }: TrackPageProps) {
   const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
     variables: { input: { tokenId, contractAddress } },
   })
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps])
 
   useEffect(() => {
     const fetchIsOwner = async () => {
@@ -152,16 +157,63 @@ export default function AuctionPage({ track }: TrackPageProps) {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-black">
       <SEO
         title={`List track | SoundChain`}
         description={'List your track as an auction item on SoundChain'}
         canonicalUrl={router.asPath}
       />
-      <div className="m-4">
-        <Track track={track} />
+
+      {/* DEX-style navigation */}
+      <MarketplaceNav title="List for Auction" icon={<Gavel className="w-5 h-5 text-purple-400" />} />
+
+      {/* Content area */}
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        {/* Track preview card */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-4">
+          <Track track={track} />
+        </div>
+
+        {/* Auction form */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+          <ListNFTAuction handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
+        </div>
       </div>
-      <ListNFTAuction handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
-    </>
+    </div>
+  )
+}
+
+// Custom layout to bypass default Layout component (uses DEX-style nav instead of legacy TopNavBar)
+AuctionPage.getLayout = (page: ReactElement) => {
+  return (
+    <ModalProvider>
+      <StateProvider>
+        <HideBottomNavBarProvider>
+          <LayoutContextProvider>
+            <AudioPlayerProvider>
+              <TrackProvider>
+                {page}
+                <AudioEngine />
+                <MobileBottomAudioPlayer />
+                <DesktopBottomAudioPlayer />
+                <ToastContainer
+                  position="top-center"
+                  autoClose={6 * 1000}
+                  toastStyle={{
+                    backgroundColor: '#202020',
+                    color: 'white',
+                    fontSize: '12px',
+                    textAlign: 'center',
+                  }}
+                />
+                <div id="modals">
+                  <ApproveModal />
+                </div>
+              </TrackProvider>
+            </AudioPlayerProvider>
+          </LayoutContextProvider>
+        </HideBottomNavBarProvider>
+      </StateProvider>
+    </ModalProvider>
   )
 }
