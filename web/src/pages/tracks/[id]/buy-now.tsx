@@ -5,18 +5,16 @@ import { Matic } from 'components/Matic'
 import { Ogun } from 'components/Ogun'
 import PlayerAwareBottomBar from 'components/PlayerAwareBottomBar'
 import SEO from 'components/SEO'
-import { TopNavBarProps } from 'components/TopNavBar'
 import { TotalPrice } from 'components/TotalPrice'
 import { Track } from 'components/Track'
 import { Timer } from 'components/pages/TrackDetailsPage'
 import { config } from 'config'
 import { Form, Formik } from 'formik'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
-import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
+import { useMagicContext } from 'hooks/useMagicContext'
 import { Locker } from 'icons/Locker'
-import { cacheFor } from 'lib/apollo'
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql'
 import { protectPage } from 'lib/protectPage'
 import { useRouter } from 'next/router'
@@ -31,6 +29,7 @@ import { Contract } from 'web3-eth-contract'
 import { AbiItem } from 'web3-utils'
 import * as yup from 'yup'
 import SoundchainOGUN20 from '../../../contract/SoundchainOGUN20.sol/SoundchainOGUN20.json'
+import { ArrowLeft, ShoppingCart, Wallet, Copy, Check } from 'lucide-react'
 
 // Define a type compatible with Web3.js v4.x receipt event, making contractAddress optional
 interface Web3Receipt {
@@ -90,22 +89,45 @@ export const getServerSideProps = protectPage<BuyNowTrackProps, TrackPageParams>
     return { notFound: true }
   }
 
-  return cacheFor(BuyNowPage, { track: data.track, isPaymentOGUN: isPaymentOGUN === 'true' }, context, apolloClient)
+  return {
+    props: {
+      track: data.track,
+      isPaymentOGUN: isPaymentOGUN === 'true',
+    },
+  }
 })
-
-const topNavBarProps: TopNavBarProps = {
-  title: 'Confirm Purchase',
-}
 
 export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   const { buyItem } = useBlockchainV2()
   const { account, web3, balance } = useWalletContext()
+  const { account: magicAccount, balance: magicBalance, ogunBalance: magicOgunBalance } = useMagicContext()
   const [trackUpdate] = useUpdateTrackMutation()
   const [loading, setLoading] = useState(true)
   const [OGUNBalance, setOGUNBalance] = useState<string>('0')
   const router = useRouter()
   const me = useMe()
-  const { setTopNavBarProps } = useLayoutContext()
+  const [copied, setCopied] = useState(false)
+
+  // Resolve wallet address and balances
+  const walletAddress = account || magicAccount
+  const polBalance = balance || magicBalance || '0'
+  const ogunBal = OGUNBalance || magicOgunBalance || '0'
+
+  const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
+  const formatBal = (bal: string | undefined) => {
+    const num = Number(bal) || 0
+    if (num < 0.001) return '0'
+    if (num < 1) return num.toFixed(4)
+    if (num < 1000) return num.toFixed(2)
+    return `${(num / 1000).toFixed(1)}K`
+  }
+
+  const handleCopyAddress = async () => {
+    if (!walletAddress) return
+    await navigator.clipboard.writeText(walletAddress)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const nftData = track.nftData
   const tokenId = nftData?.tokenId ?? -1
@@ -125,10 +147,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
     const formattedBalance = web3.utils.fromWei(validBalance, 'ether')
     setOGUNBalance(formattedBalance)
   }
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps])
 
   useEffect(() => {
     getBuyNowItem()
@@ -282,14 +300,61 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
   })
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-black">
       <SEO
         title={`Buy now | SoundChain`}
         description={`Buy now ${track.title} - song by ${track.artist}.`}
         canonicalUrl={`/tracks/${track.id}/buy-now/`}
         image={track.artworkUrl}
       />
-      <div className="flex min-h-full flex-col">
+      <div className="max-w-4xl mx-auto px-4 py-4">
+        {/* Page header with back button */}
+        <div className="flex items-center gap-3 mb-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="w-5 h-5 text-green-400" />
+            <h1 className="text-xl font-bold text-white">Confirm Purchase</h1>
+          </div>
+        </div>
+
+        {/* Connected Wallet & Balances */}
+        {walletAddress && (
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-green-500/10">
+                  <Wallet className="w-4 h-4 text-green-400" />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-400 mb-0.5">Paying Wallet</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-white font-mono">{truncateAddress(walletAddress)}</span>
+                    <button onClick={handleCopyAddress} className="p-1 hover:bg-white/10 rounded transition-colors">
+                      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-gray-400" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className="text-xs text-gray-400">POL</div>
+                  <div className="text-sm text-white font-semibold">{formatBal(polBalance)}</div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="text-right">
+                  <div className="text-xs text-gray-400">OGUN</div>
+                  <div className="text-sm text-cyan-400 font-semibold">{formatBal(ogunBal)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -297,11 +362,14 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
         >
           {({ values, handleChange, ...formikProps }) => (
             <Form autoComplete="off" className="flex flex-1 flex-col justify-between" {...(formikProps as any)}>
-              <div>
-                <div className="m-4">
-                  <Track track={track} />
-                </div>
-                <div className="bg-[#112011]">
+              {/* Track preview card */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-4">
+                <Track track={track} />
+              </div>
+
+              {/* Price card */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden mb-4">
+                <div className="bg-green-500/10 border-b border-white/10">
                   <div className="flex items-center justify-between px-4 py-3">
                     <div className="text-sm font-bold text-white">BUY NOW PRICE</div>
                     {isPaymentOGUN ? <Ogun value={priceToShow} /> : <Matic value={priceToShow} />}
@@ -315,18 +383,19 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
                     </div>
                   </div>
                 )}
+
+                {(me as any)?.otpSecret && (
+                  <div className="flex items-center px-4 py-3 border-t border-white/10 uppercase">
+                    <p className="w-full text-xs font-bold text-gray-400">
+                      <Locker className="mr-2 inline h-4 w-4" fill="#303030" /> Two-factor validation
+                    </p>
+                    <div className="w-1/2">
+                      <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" value={values.token} onChange={handleChange} />
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {(me as any)?.otpSecret && (
-                <div className="flex items-center bg-gray-20 px-4 py-3 uppercase">
-                  <p className="w-full text-xs font-bold text-gray-80">
-                    <Locker className="mr-2 inline h-4 w-4" fill="#303030" /> Two-factor validation
-                  </p>
-                  <div className="w-1/2">
-                    <InputField name="token" type="text" maxLength={6} pattern="[0-9]*" inputMode="numeric" value={values.token} onChange={handleChange} />
-                  </div>
-                </div>
-              )}
               {priceToShow && account && (
                 <BuyNow
                   price={priceToShow}
@@ -355,6 +424,6 @@ export default function BuyNowPage({ track, isPaymentOGUN }: BuyNowTrackProps) {
           )}
         </Formik>
       </div>
-    </>
+    </div>
   )
 }
