@@ -53,7 +53,7 @@ export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(a
 })
 
 export default function ListBuyNowPage({ track }: TrackPageProps) {
-  const { isTokenOwner, isApprovedMarketplace: checkIsApproved } = useBlockchain()
+  const { isApprovedMarketplace: checkIsApproved } = useBlockchain()
   const { listItem } = useBlockchainV2()
   const router = useRouter()
   const me = useMe()
@@ -78,16 +78,16 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     setTopNavBarProps(topNavBarProps)
   }, [setTopNavBarProps])
 
+  // Check ownership via address comparison (more reliable than contract call)
   useEffect(() => {
-    const fetchIsOwner = async () => {
-      if (!account || !web3 || nftData?.tokenId === null || nftData?.tokenId === undefined || !isTokenOwner) {
-        return
-      }
-      const isTokenOwnerRes = await isTokenOwner(web3, nftData.tokenId, account, { nft: nftData.contract })
-      setIsOwner(isTokenOwnerRes)
+    if (!account || !nftData?.owner) {
+      setIsOwner(false)
+      return
     }
-    fetchIsOwner()
-  }, [account, web3, nftData, isTokenOwner])
+    // Compare addresses case-insensitively
+    const ownerMatch = nftData.owner.toLowerCase() === account.toLowerCase()
+    setIsOwner(ownerMatch)
+  }, [account, nftData?.owner])
 
   useEffect(() => {
     getBuyNowItem()
