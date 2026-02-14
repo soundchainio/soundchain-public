@@ -1,11 +1,9 @@
 import { ListNFTBuyNow, ListNFTBuyNowFormValues } from 'components/pages/details-NFT/ListNFTBuyNow'
-import { TopNavBarProps } from 'components/TopNavBar'
 import { Track } from 'components/Track'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { FormikHelpers } from 'formik'
 import useBlockchain from 'hooks/useBlockchain'
 import useBlockchainV2 from 'hooks/useBlockchainV2'
-import { useLayoutContext } from 'hooks/useLayoutContext'
 import { useMe } from 'hooks/useMe'
 import { useWalletContext } from 'hooks/useWalletContext'
 import { PendingRequest, TrackDocument, TrackQuery, useBuyNowItemLazyQuery, useUpdateTrackMutation } from 'lib/graphql'
@@ -16,16 +14,14 @@ import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import { SaleType } from 'lib/graphql'
 import SEO from '../../../../components/SEO'
+import { ArrowLeft, Tag } from 'lucide-react'
+import Link from 'next/link'
 export interface TrackPageProps {
   track: TrackQuery['track']
 }
 
 interface TrackPageParams extends ParsedUrlQuery {
   id: string
-}
-
-const topNavBarProps: TopNavBarProps = {
-  title: 'List for Sale',
 }
 
 export const getServerSideProps = protectPage<TrackPageProps, TrackPageParams>(async (context, apolloClient) => {
@@ -63,7 +59,6 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const { dispatchShowApproveModal } = useModalDispatch()
   const [isOwner, setIsOwner] = useState(false)
   const [isApproved, setIsApproved] = useState(false)
-  const { setTopNavBarProps } = useLayoutContext()
 
   const nftData = track.nftData
   const tokenId = track.nftData?.tokenId ?? -1
@@ -73,10 +68,6 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const [getBuyNowItem, { data: buyNowItem }] = useBuyNowItemLazyQuery({
     variables: { input: { tokenId, contractAddress } },
   })
-
-  useEffect(() => {
-    setTopNavBarProps(topNavBarProps)
-  }, [setTopNavBarProps])
 
   // Check ownership via address comparison (more reliable than contract call)
   useEffect(() => {
@@ -161,16 +152,43 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-black to-black">
       <SEO
         title={`List track | SoundChain`}
         description={'List your track as a buy now item on SoundChain'}
         canonicalUrl={router.asPath}
       />
-      <div className="m-4">
-        <Track track={track} />
+
+      {/* DEX-style page header */}
+      <div className="sticky top-0 z-40 backdrop-blur-xl bg-black/80 border-b border-white/10">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.back()}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-white" />
+            </button>
+            <div className="flex items-center gap-2">
+              <Tag className="w-5 h-5 text-purple-400" />
+              <h1 className="text-xl font-bold text-white">List for Sale</h1>
+            </div>
+          </div>
+        </div>
       </div>
-      <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
-    </>
+
+      {/* Content area */}
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Track preview card */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-4 mb-6">
+          <Track track={track} />
+        </div>
+
+        {/* Listing form */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+          <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
+        </div>
+      </div>
+    </div>
   )
 }
