@@ -74,7 +74,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText
+  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText, Tag
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
@@ -6530,6 +6530,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               Buy NFT
                             </Button>
                           )}
+                          {/* List for Sale button - only shown if user owns this NFT */}
+                          {trackDetailData.track.nftData?.owner &&
+                           allMyAddresses.has(trackDetailData.track.nftData.owner.toLowerCase()) && (
+                            <Button
+                              className="bg-purple-500 hover:bg-purple-600 text-white font-bold"
+                              onClick={() => router.push(`/tracks/${trackDetailData.track.id}/list/buy-now`)}
+                            >
+                              <Tag className="w-4 h-4 mr-2" />
+                              List for Sale
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -6686,15 +6697,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           {trackDetailData.track.nftData.owner && (
                             <div className="flex flex-col md:flex-row md:justify-between py-2 border-b border-gray-800">
                               <span className="text-gray-400 mb-1 md:mb-0">Current Owner</span>
-                              <a
-                                href={`${config.polygonscan}address/${trackDetailData.track.nftData.owner}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-mono text-sm"
-                              >
-                                {trackDetailData.track.nftData.owner.slice(0, 8)}...{trackDetailData.track.nftData.owner.slice(-6)}
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
+                              <div className="flex items-center gap-2">
+                                {allMyAddresses.has(trackDetailData.track.nftData.owner.toLowerCase()) && (
+                                  <Badge className="bg-green-500/20 text-green-400 text-xs">You own this</Badge>
+                                )}
+                                <a
+                                  href={`${config.polygonscan}address/${trackDetailData.track.nftData.owner}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-mono text-sm"
+                                >
+                                  {trackDetailData.track.nftData.owner.slice(0, 8)}...{trackDetailData.track.nftData.owner.slice(-6)}
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              </div>
                             </div>
                           )}
                           <div className="flex justify-between py-2">
