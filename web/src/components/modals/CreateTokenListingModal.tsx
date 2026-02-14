@@ -37,7 +37,7 @@ export const CreateTokenListingModal = ({
   const [pricePerToken, setPricePerToken] = useState('')
   const [priceCurrency, setPriceCurrency] = useState<'OGUN' | 'POL'>('POL')
   const [showTokenDropdown, setShowTokenDropdown] = useState(false)
-  const [acceptedTokens, setAcceptedTokens] = useState<Token[]>(['OGUN', 'MATIC'])
+  const [acceptedTokens, setAcceptedTokens] = useState<Token[]>(['OGUN', 'MATIC', 'USDC'])
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { account: magicAccount, ogunBalance } = useMagicContext()

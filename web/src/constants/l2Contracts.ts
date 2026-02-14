@@ -16,7 +16,7 @@ export const L2_CONTRACTS = {
   // On-chain track identity registry
   SCID_REGISTRY: '0x823F90438f262A70D74c6D4e782677256f39150a',
 
-  // Multi-token marketplace (24 tokens supported)
+  // Multi-token marketplace (USDC, POL, OGUN + 21 more via L2)
   MULTI_TOKEN_MARKETPLACE: '0xbd5B6A16809f5a67450CBa98Ee2C9ecF8E5ebF21',
 
   // Streaming rewards distributor (5M OGUN funded)

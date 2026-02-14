@@ -514,7 +514,7 @@ export function MultiWalletAggregator({
               <div className="flex items-center gap-4 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-yellow-400" />
-                  <span>24 Token Support</span>
+                  <span>USDC + Multi-Token</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-purple-400" />

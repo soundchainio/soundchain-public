@@ -19,8 +19,8 @@ interface TokenSelectorProps {
   className?: string
 }
 
-// Tokens that are currently working (have liquidity/contracts deployed)
-const ACTIVE_TOKENS: Token[] = ['MATIC', 'OGUN', 'ETH', 'USDC', 'USDT']
+// Tokens that are currently working (have liquidity/contracts deployed on Polygon)
+const ACTIVE_TOKENS: Token[] = ['MATIC', 'OGUN', 'USDC', 'USDT']
 
 // Coming soon tokens (contracts deployed but need whitelisting)
 const COMING_SOON_TOKENS: Token[] = SUPPORTED_TOKENS.filter(

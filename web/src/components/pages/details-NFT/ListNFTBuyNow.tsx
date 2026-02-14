@@ -141,7 +141,7 @@ export const ListNFTBuyNow = ({ initialValues, maxGasFee, submitLabel, handleSub
                 >
                   <Zap className="w-3 h-3" />
                   <span>{showAdvancedTokens ? 'Hide' : 'Show'} L2 Multi-Token Options</span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-[10px]">24 Tokens</span>
+                  <span className="px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 text-[10px]">USDC + POL + OGUN</span>
                 </button>
 
                 {showAdvancedTokens && (

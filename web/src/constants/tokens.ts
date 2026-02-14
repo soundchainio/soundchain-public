@@ -7,10 +7,10 @@
 export const SUPPORTED_TOKENS = [
   'MATIC',
   'OGUN',
-  'PENGU',
-  'ETH',
   'USDC',
   'USDT',
+  'ETH',
+  'PENGU',
   'SOL',
   'BNB',
   'DOGE',
