@@ -38,7 +38,7 @@ const SocialIcon = () => (
 
 // Enhanced Wallet Button - OpenSea/Rarible style
 const WalletButton = () => {
-  const { connectWallet, walletConnectedAddress, isConnectingWallet, account, polBalance, ogunBalance } = useMagicContext()
+  const { connectWallet, walletConnectedAddress, isConnectingWallet, account, balance: polBalance, ogunBalance } = useMagicContext()
   const [showDropdown, setShowDropdown] = useState(false)
   const [copied, setCopied] = useState(false)
   const [selectedChain, setSelectedChain] = useState(CHAINS[0])
@@ -55,7 +55,8 @@ const WalletButton = () => {
 
   const formatBalance = (bal: number | string | undefined) => {
     const num = Number(bal) || 0
-    if (num < 0.001) return '0'
+    if (num === 0) return '0'
+    if (num < 0.0001) return '< 0.0001'
     if (num < 1) return num.toFixed(4)
     if (num < 1000) return num.toFixed(2)
     return `${(num / 1000).toFixed(1)}K`

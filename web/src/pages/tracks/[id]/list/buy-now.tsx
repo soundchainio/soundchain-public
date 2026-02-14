@@ -71,7 +71,8 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
   const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
   const formatBalance = (bal: string | undefined) => {
     const num = Number(bal) || 0
-    if (num < 0.001) return '0'
+    if (num === 0) return '0'
+    if (num < 0.0001) return '< 0.0001'
     if (num < 1) return num.toFixed(4)
     if (num < 1000) return num.toFixed(2)
     return `${(num / 1000).toFixed(1)}K`
