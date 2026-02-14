@@ -2599,8 +2599,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
             )}
           </>
-        ) : user?.coverPicture && !coverImageError ? (
-          /* Own profile / other views - show logged-in user's cover (image or video) */
+        ) : user?.coverPicture && !coverImageError && !['wallet', 'settings', 'messages', 'notifications', 'admin'].includes(selectedView) ? (
+          /* Own profile / social views - show logged-in user's cover (image or video) */
+          /* Utility views (wallet, settings, etc.) use clean gradient for better readability */
           <>
             {console.log('🎬 Rendering user cover:', user.coverPicture, 'isVideo:', /\.(mp4|mov|webm|avi|mkv)$/i.test(user.coverPicture))}
             {/\.(mp4|mov|webm|avi|mkv)$/i.test(user.coverPicture) ? (
