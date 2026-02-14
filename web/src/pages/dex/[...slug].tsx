@@ -5137,8 +5137,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {/* Multi-Wallet Aggregator - Connect & View All Wallets */}
               <MultiWalletAggregator
                 userWallet={userWallet}
-                maticBalance={maticBalance}
-                ogunBalance={ogunBalance}
+                maticBalance={activeBalance || maticBalance}
+                ogunBalance={activeOgunBalance || ogunBalance}
                 ownedTracks={ownedTracks}
                 onPlayTrack={(track, index) => handlePlayTrack(track, index, ownedTracks)}
                 onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
@@ -5191,7 +5191,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
                   <div>
                     <span className="text-gray-400 text-xs uppercase tracking-wide">POL</span>
-                    <p className="text-purple-400 font-mono">{maticBalance || '0.00'}</p>
+                    <p className="text-purple-400 font-mono">{activeBalance || maticBalance || '0.00'}</p>
                   </div>
                   <div>
                     <span className="text-gray-400 text-xs uppercase tracking-wide">NFTs</span>
@@ -5199,7 +5199,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
                   <div>
                     <span className="text-gray-400 text-xs uppercase tracking-wide">VALUE</span>
-                    <p className="text-green-400 font-mono">${maticUsdData?.maticUsd ? (Number(maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
+                    <p className="text-green-400 font-mono">${maticUsdData?.maticUsd ? (Number(activeBalance || maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
                   </div>
                 </div>
               </div>
@@ -5392,65 +5392,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 </div>
               </div>
 
-              {/* Your NFT Collection - Figma-style Connected Wallets Design */}
-              {ownedTracksLoading ? (
-                <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-6">
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
-                    <span className="ml-3 text-gray-400">Loading your NFTs...</span>
-                  </div>
-                </div>
-              ) : ownedTracksError ? (
-                <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-6">
-                  <div className="text-center py-8">
-                    <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-                    <p className="text-red-400 text-sm font-medium mb-2">Failed to load NFTs</p>
-                    <p className="text-gray-500 text-xs mb-4">{ownedTracksError.message || 'Network error'}</p>
-                    <Button
-                      onClick={() => window.location.reload()}
-                      className="retro-button"
-                      size="sm"
-                    >
-                      <RefreshCcw className="w-4 h-4 mr-2" />
-                      Retry
-                    </Button>
-                  </div>
-                </div>
-              ) : ownedTracks.length > 0 ? (
-                <WalletNFTCollection
-                  walletAddress={userWallet || ''}
-                  balance={maticBalance || '0'}
-                  currency="MATIC"
-                  chainName="Polygon"
-                  nfts={ownedTracks.map((track: any) => ({
-                    id: track.id,
-                    title: track.title,
-                    artist: track.artist || track.profile?.displayName || 'Unknown Artist',
-                    artworkUrl: track.artworkUrl,
-                    audioUrl: track.playbackUrl,
-                    tokenId: track.nftData?.tokenId || track.tokenId,
-                  }))}
-                  onPlayTrack={(nft, index) => {
-                    const track = ownedTracks.find((t: any) => t.id === nft.id)
-                    if (track) handlePlayTrack(track, index, ownedTracks)
-                  }}
-                  onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
-                  currentTrackId={currentSong?.trackId}
-                  isPlaying={isPlaying}
-                />
-              ) : (
-                <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-6">
-                  <div className="text-center py-8">
-                    <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400 text-sm">No NFTs owned yet</p>
-                    <p className="text-gray-500 text-xs mt-1">Wallet: {userWallet?.slice(0, 8)}...{userWallet?.slice(-6)}</p>
-                    <Button onClick={() => setSelectedView('marketplace')} className="mt-3 retro-button" size="sm">
-                      <ShoppingBag className="w-4 h-4 mr-2" />
-                      Browse Marketplace
-                    </Button>
-                  </div>
-                </div>
-              )}
+              {/* NFT Collection is rendered inside MultiWalletAggregator above */}
 
               {/* Transfer Tokens Section */}
               <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
