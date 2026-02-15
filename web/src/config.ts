@@ -7,12 +7,12 @@ export const config = {
   magicKey: process.env.NEXT_PUBLIC_MAGIC_KEY,
   web3: {
     contractsV1: {
-      marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '0xD772ccf784Df67E14186AA6E512c1A1bd32F394f',
+      marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS || '0x27302E3ff5287a5973d8D5328C4cEFCd752778f2',
       auctionAddress: process.env.NEXT_PUBLIC_AUCTION_ADDRESS || '0x903ea5B8f1BE6EdC74e66dd89565A1d537824A2F',
     },
     contractsV2: {
       auctionAddress: process.env.NEXT_PUBLIC_AUCTION_V2_ADDRESS || '0x35f662bD7d418fd7B19518A22aF3D54ea99e7bf0',
-      contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xF0287926D495719b239340Fc31d268b76bAD8B42',
+      contractAddress: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xf01D323bdAc88ee39543CbBc568C6Fc76258FfE0',
       marketplaceAddress: process.env.NEXT_PUBLIC_MARKETPLACE_MUTIPLE_EDITION_ADDRESS || '0x7EfC9A7F3381A4B28a2113EA99E2d80832589239',
     },
   },
