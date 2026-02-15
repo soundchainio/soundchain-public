@@ -4,6 +4,7 @@ query ExploreUsers($search: String, $page: PageInput) {
       ...ProfileComponentFields
     }
     pageInfo {
+      totalCount
       hasNextPage
       endCursor
     }

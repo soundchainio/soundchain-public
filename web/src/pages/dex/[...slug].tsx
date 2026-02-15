@@ -1373,8 +1373,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
   // Fetch USER-OWNED NFTs for wallet page AND library - filter by wallet address
   // FIX: defaultWallet is an ENUM (Soundchain/MetaMask), NOT the actual 0x address!
-  // Must use magicWalletAddress for the actual blockchain address
-  const walletAddress = userData?.me?.magicWalletAddress
+  // Must use actual blockchain address - check HD wallet first (new users), then OAuth wallets
+  const walletAddress = userData?.me?.hdWalletAddress
+    || userData?.me?.magicWalletAddress
+    || userData?.me?.googleWalletAddress
+    || userData?.me?.discordWalletAddress
+    || userData?.me?.twitchWalletAddress
+    || userData?.me?.emailWalletAddress
   const { data: ownedTracksData, loading: ownedTracksLoading, error: ownedTracksError } = useGroupedTracksQuery({
     variables: {
       filter: walletAddress ? { nftData: { owner: walletAddress } } : {},
@@ -2212,14 +2217,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // User profile from GraphQL - REAL DATA
   const user = userData?.me?.profile
   // FIX: defaultWallet is ENUM, check ALL OAuth wallet addresses + external wallets
-  const userWallet = userData?.me?.magicWalletAddress
+  const userWallet = userData?.me?.hdWalletAddress
+    || userData?.me?.magicWalletAddress
     || userData?.me?.googleWalletAddress
     || userData?.me?.discordWalletAddress
     || userData?.me?.twitchWalletAddress
     || userData?.me?.emailWalletAddress
     || activeAddress // fallback to UnifiedWallet (MetaMask/Web3Modal)
   const userTracks = tracksData?.groupedTracks?.nodes || []
-  const ownedTracks = ownedTracksData?.groupedTracks?.nodes || [] // User-owned NFTs for wallet page
+  // Deduplicate owned NFTs - backend groups by trackEditionId but legacy tracks
+  // without that field show as individual copies. Collapse by title+artwork combo.
+  const ownedTracksRaw = ownedTracksData?.groupedTracks?.nodes || []
+  const ownedTracks = ownedTracksRaw.reduce((acc: any[], track: any) => {
+    const key = `${track.title || ''}::${track.artworkUrl || track.id}`
+    if (!acc.some((t: any) => `${t.title || ''}::${t.artworkUrl || t.id}` === key)) {
+      acc.push(track)
+    }
+    return acc
+  }, [])
   const marketTracks = listingData?.listingItems?.nodes || []
 
   // Sweep toggle helpers
@@ -4574,215 +4589,172 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Explore View - Deep Search for Tracks AND Users */}
           {selectedView === 'explore' && (
-            <div className="space-y-6">
-              {/* Search Bar */}
-              <Card className="retro-card p-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search tracks, artists, users..."
-                      value={exploreSearchQuery}
-                      onChange={(e) => setExploreSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 retro-text"
-                    />
-                  </div>
-                </div>
-                {/* Tabs */}
-                <div className="flex space-x-2 mt-4">
-                  <Button
-                    onClick={() => setExploreTab('users')}
-                    className={`px-4 py-2 rounded-lg transition-all ${exploreTab === 'users' ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    Users ({exploreUsersData?.exploreUsers?.nodes?.length || 0})
-                  </Button>
-                  <Button
-                    onClick={() => setExploreTab('tracks')}
-                    className={`px-4 py-2 rounded-lg transition-all ${exploreTab === 'tracks' ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                  >
-                    <Music className="w-4 h-4 mr-2" />
-                    Tracks ({exploreTracksData?.exploreTracks?.nodes?.length || 0})
-                  </Button>
-                </div>
-              </Card>
+            <div className="space-y-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Search tracks, artists, users..."
+                  value={exploreSearchQuery}
+                  onChange={(e) => setExploreSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                />
+              </div>
 
-              {/* Users Results */}
-              {exploreTab === 'users' && (
-                <div className="space-y-4">
-                  {exploreUsersLoading && (
-                    <div className="text-center py-8">
-                      <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                      <p className="text-gray-400">Searching users...</p>
+              {/* Genre Pills - horizontal scroll */}
+              <div className="overflow-x-auto scrollbar-hide">
+                <div className="flex gap-1.5 min-w-max pb-1">
+                  {[
+                    { label: 'All', value: '' },
+                    { label: 'Hip-Hop', value: 'HIP_HOP' },
+                    { label: 'R&B', value: 'R_AND_B' },
+                    { label: 'Electronic', value: 'ELECTRONIC' },
+                    { label: 'Pop', value: 'POP' },
+                    { label: 'Lofi', value: 'LOFI' },
+                    { label: 'House', value: 'HOUSE' },
+                    { label: 'Reggae', value: 'REGGAE' },
+                    { label: 'Jazz', value: 'JAZZ' },
+                    { label: 'Soul/Funk', value: 'SOUL_FUNK' },
+                    { label: 'Latin', value: 'LATIN' },
+                    { label: 'Ambient', value: 'AMBIENT' },
+                    { label: 'Indie', value: 'INDIE' },
+                    { label: 'Gospel', value: 'GOSPEL' },
+                    { label: 'Classical', value: 'CLASSICAL' },
+                    { label: 'Techno', value: 'TECHNO' },
+                    { label: 'Acoustic', value: 'ACOUSTIC' },
+                    { label: 'World', value: 'WORLD' },
+                  ].map((g) => (
+                    <button
+                      key={g.value}
+                      onClick={() => setExploreSearchQuery(g.value ? g.label : '')}
+                      className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                        (g.value === '' && !exploreSearchQuery) || exploreSearchQuery === g.label
+                          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                      }`}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Nav Row */}
+              <div className="grid grid-cols-4 gap-2">
+                <button onClick={() => router.push('/dex/marketplace')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition-all">
+                  <Flame className="w-5 h-5 text-orange-400" />
+                  <span className="text-[10px] text-gray-400">Shop</span>
+                </button>
+                <button onClick={() => router.push('/radio')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition-all">
+                  <Zap className="w-5 h-5 text-cyan-400" />
+                  <span className="text-[10px] text-gray-400">Radio</span>
+                </button>
+                <button onClick={() => router.push('/dex/users')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition-all">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                  <span className="text-[10px] text-gray-400">Artists</span>
+                </button>
+                <button onClick={() => router.push('/dex/playlist')} className="flex flex-col items-center gap-1 p-3 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition-all">
+                  <Music className="w-5 h-5 text-purple-400" />
+                  <span className="text-[10px] text-gray-400">Playlists</span>
+                </button>
+              </div>
+
+              {/* New Artists - compact avatar row */}
+              {(exploreUsersData?.exploreUsers?.nodes?.length ?? 0) > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold text-white">New Artists</h3>
+                    <button onClick={() => router.push('/dex/users')} className="text-xs text-cyan-400 hover:text-cyan-300">See all</button>
+                  </div>
+                  <div className="overflow-x-auto scrollbar-hide">
+                    <div className="flex gap-3 min-w-max pb-1">
+                      {exploreUsersData?.exploreUsers?.nodes
+                        ?.filter((p: any, i: number, self: any[]) => p.userHandle && self.findIndex((u: any) => u.id === p.id) === i)
+                        ?.slice(0, 20)
+                        ?.map((profile: any) => (
+                        <Link key={profile.id} href={`/dex/users/${profile.userHandle}`}>
+                          <div className="flex flex-col items-center gap-1 w-14">
+                            <div className="w-12 h-12 rounded-full overflow-hidden ring-1 ring-white/10 hover:ring-cyan-500/50 transition-all">
+                              {profile.profilePicture ? (
+                                <img src={profile.profilePicture} alt={profile.displayName} className="w-full h-full object-cover" loading="lazy" />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                                  {(profile.displayName || profile.userHandle)?.charAt(0)?.toUpperCase() || 'U'}
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-gray-500 truncate w-full text-center">@{profile.userHandle}</span>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
-                  )}
-                  {!exploreUsersLoading && exploreUsersData?.exploreUsers?.nodes?.length === 0 && (
-                    <Card className="retro-card p-8 text-center">
-                      <Users className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-                      <h3 className="text-white font-bold mb-2">No users found</h3>
-                      <p className="text-gray-400 text-sm">Try a different search term</p>
-                    </Card>
-                  )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Deduplicate users by ID to prevent duplicate avatars */}
-                    {exploreUsersData?.exploreUsers?.nodes
-                      ?.filter((user: any, index: number, self: any[]) =>
-                        self.findIndex((u: any) => u.id === user.id) === index
-                      )
-                      ?.map((user: any) => (
-                      <Card key={user.id} className="retro-card p-4 hover:border-cyan-500/50 transition-all">
-                        <div className="flex items-start gap-4">
-                          {/* Avatar with Online Status */}
-                          <div className="relative flex-shrink-0">
-                            {user.userHandle ? (
-                              <Link href={`/dex/users/${user.userHandle}`}>
-                                <Avatar className="w-16 h-16 border-2 border-cyan-500/30">
-                                  <AvatarImage src={user.profilePicture || '/default-avatar.png'} alt={user.displayName} className="object-cover" />
-                                  <AvatarFallback className="bg-gray-700 text-white">{user.displayName?.charAt(0) || '?'}</AvatarFallback>
-                                </Avatar>
-                              </Link>
-                            ) : (
-                              <Avatar className="w-16 h-16 border-2 border-cyan-500/30">
-                                <AvatarImage src={user.profilePicture || '/default-avatar.png'} alt={user.displayName} className="object-cover" />
-                                <AvatarFallback className="bg-gray-700 text-white">{user.displayName?.charAt(0) || '?'}</AvatarFallback>
-                              </Avatar>
-                            )}
-                            {/* Online Status Indicator (Green Dot) */}
-                            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-gray-900 rounded-full" title="Online"></div>
-                          </div>
-                          {/* User Info */}
-                          <div className="flex-1 min-w-0">
-                            {user.userHandle ? (
-                              <Link href={`/dex/users/${user.userHandle}`}>
-                                <h3 className="text-white font-bold truncate hover:text-cyan-400 transition-colors flex items-center gap-1">
-                                  {user.displayName || 'Unknown User'}
-                                  {user.isVerified && <BadgeCheck className="w-4 h-4 text-cyan-400" />}
-                                </h3>
-                              </Link>
-                            ) : (
-                              <h3 className="text-white font-bold truncate flex items-center gap-1">
-                                {user.displayName || 'Unknown User'}
-                                {user.isVerified && <BadgeCheck className="w-4 h-4 text-cyan-400" />}
-                              </h3>
-                            )}
-                            <p className="text-gray-400 text-sm truncate">@{user.userHandle || user.id?.slice(0, 8)}</p>
-                            <p className="text-gray-500 text-xs mt-1">{user.followerCount || 0} followers</p>
-                          </div>
-                        </div>
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 mt-4">
-                          {me?.profile?.id !== user.id && (
-                            <>
-                              <Button
-                                onClick={() => handleFollowToggle(user.id, user.isFollowed, user.userHandle || '')}
-                                disabled={followLoading || unfollowLoading}
-                                className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${user.isFollowed ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-cyan-500 text-black hover:bg-cyan-600'}`}
-                              >
-                                {user.isFollowed ? 'Following' : 'Follow'}
-                              </Button>
-                              <Link href={me ? '/messages' : '/login'} className="flex-1">
-                                <Button className="w-full py-2 rounded-lg text-sm bg-gray-700 text-white hover:bg-gray-600">
-                                  <MessageCircle className="w-4 h-4 mr-1" />
-                                  Message
-                                </Button>
-                              </Link>
-                            </>
-                          )}
-                          {me?.profile?.id === user.id && (
-                            <Badge className="bg-cyan-500/20 text-cyan-400 px-3 py-1">You</Badge>
-                          )}
-                        </div>
-                      </Card>
-                    ))}
                   </div>
                 </div>
               )}
 
-              {/* Tracks Results */}
-              {exploreTab === 'tracks' && (
-                <div className="space-y-4">
-                  {exploreTracksLoading && (
-                    <div className="text-center py-8">
-                      <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full mx-auto mb-2"></div>
-                      <p className="text-gray-400">Searching tracks...</p>
-                    </div>
-                  )}
-                  {!exploreTracksLoading && exploreTracksData?.exploreTracks?.nodes?.length === 0 && (
-                    <Card className="retro-card p-8 text-center">
-                      <Music className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-                      <h3 className="text-white font-bold mb-2">No tracks found</h3>
-                      <p className="text-gray-400 text-sm">Try a different search term</p>
-                    </Card>
-                  )}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {/* Tracks Grid */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-white">
+                    {exploreSearchQuery ? `Results for "${exploreSearchQuery}"` : 'Discover Tracks'}
+                  </h3>
+                  <span className="text-xs text-gray-500">{exploreTracksData?.exploreTracks?.nodes?.length || 0} tracks</span>
+                </div>
+                {exploreTracksLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
+                  </div>
+                ) : (exploreTracksData?.exploreTracks?.nodes?.length ?? 0) > 0 ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                     {exploreTracksData?.exploreTracks?.nodes?.map((track: any, index: number) => {
                       const isCurrentTrack = currentSong.trackId === track.id
                       const isTrackPlaying = isPlaying && isCurrentTrack
                       const exploreTracks = exploreTracksData?.exploreTracks?.nodes || []
                       return (
-                        <Card key={track.id} className="retro-card overflow-hidden hover:border-cyan-500/50 transition-all group">
-                          <div className="relative aspect-square">
+                        <div key={track.id} className="group cursor-pointer" onClick={() => router.push(`/dex/track/${track.id}`)}>
+                          <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-800">
                             <img
-                              src={track.artworkUrl || track.nft?.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop'}
+                              src={track.artworkUrl || track.nft?.imageUrl || '/default-pictures/album-artwork.png'}
                               alt={track.title}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              loading="lazy"
                             />
-                            <Button
-                              onClick={() => {
-                                if (isCurrentTrack) {
-                                  togglePlay()
-                                } else {
-                                  // Set up full playlist for continuous autoplay
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (isCurrentTrack) { togglePlay() }
+                                else {
                                   const playlist: Song[] = exploreTracks.map((t: any) => ({
-                                    trackId: t.id,
-                                    src: t.audioUrl || t.playbackUrl || '',
-                                    title: t.title || 'Untitled',
-                                    artist: t.nft?.creator?.profile?.displayName || 'Unknown',
-                                    art: t.artworkUrl || t.nft?.imageUrl || '',
-                                    isFavorite: t.isFavorite,
+                                    trackId: t.id, src: t.audioUrl || t.playbackUrl || '',
+                                    title: t.title || 'Untitled', artist: t.nft?.creator?.profile?.displayName || 'Unknown',
+                                    art: t.artworkUrl || t.nft?.imageUrl || '', isFavorite: t.isFavorite,
                                   }))
                                   playlistState(playlist, index)
                                 }
                               }}
-                              className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              {isTrackPlaying ? <Pause className="w-10 h-10 text-white" /> : <Play className="w-10 h-10 text-white" />}
-                            </Button>
+                              {isTrackPlaying ? <Pause className="w-8 h-8 text-white" /> : <Play className="w-8 h-8 text-white ml-0.5" />}
+                            </button>
+                            {isTrackPlaying && (
+                              <div className="absolute bottom-0.5 left-0.5 right-0.5">
+                                <div className="h-0.5 bg-cyan-400 rounded-full animate-pulse" />
+                              </div>
+                            )}
                           </div>
-                          <div className="p-3">
-                            <h3 className="text-white text-sm font-bold truncate">{track.title || 'Untitled'}</h3>
-                            <p className="text-gray-400 text-xs truncate">{track.nft?.creator?.profile?.displayName || 'Unknown Artist'}</p>
-                            <p className="text-cyan-400 text-xs mt-1">{track.playbackCountFormatted || '0'} plays</p>
-                          </div>
-                        </Card>
+                          <p className="text-xs text-white font-medium truncate mt-1">{track.title || 'Untitled'}</p>
+                          <p className="text-[10px] text-gray-500 truncate">{track.nft?.creator?.profile?.displayName || track.artist || 'Unknown'}</p>
+                        </div>
                       )
                     })}
                   </div>
-                </div>
-              )}
-
-              {/* Quick Discovery Section */}
-              <Card className="retro-card p-4">
-                <h3 className="retro-title text-lg mb-4">Quick Discovery</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="metadata-section p-4 hover:border-orange-500/50 transition-all cursor-pointer">
-                    <Flame className="w-8 h-8 text-orange-400 mb-2" />
-                    <h3 className="font-bold text-white">Trending</h3>
-                    <p className="text-xs text-gray-400">Hot tracks this week</p>
-                  </Card>
-                  <Card className="metadata-section p-4 hover:border-cyan-500/50 transition-all cursor-pointer">
-                    <Rocket className="w-8 h-8 text-cyan-400 mb-2" />
-                    <h3 className="font-bold text-white">New Releases</h3>
-                    <p className="text-xs text-gray-400">Fresh drops from artists</p>
-                  </Card>
-                  <Card className="metadata-section p-4 hover:border-purple-500/50 transition-all cursor-pointer">
-                    <Trophy className="w-8 h-8 text-purple-400 mb-2" />
-                    <h3 className="font-bold text-white">Top Charts</h3>
-                    <p className="text-xs text-gray-400">Most played tracks</p>
-                  </Card>
-                </div>
-              </Card>
+                ) : !exploreTracksLoading && (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    {exploreSearchQuery ? 'No tracks found' : 'Loading tracks...'}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

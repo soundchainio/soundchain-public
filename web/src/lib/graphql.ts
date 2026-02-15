@@ -2747,7 +2747,7 @@ export type ExploreUsersQueryVariables = Exact<{
 }>;
 
 
-export type ExploreUsersQuery = { __typename?: 'Query', exploreUsers: { __typename?: 'ProfileConnection', nodes: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null } } };
+export type ExploreUsersQuery = { __typename?: 'Query', exploreUsers: { __typename?: 'ProfileConnection', nodes: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } }>, pageInfo: { __typename?: 'PageInfo', totalCount: number, hasNextPage: boolean, endCursor: string | null } } };
 
 export type FavoriteTracksQueryVariables = Exact<{
   sort?: InputMaybe<SortTrackInput>;
@@ -5090,6 +5090,7 @@ export const ExploreUsersDocument = gql`
       ...ProfileComponentFields
     }
     pageInfo {
+      totalCount
       hasNextPage
       endCursor
     }

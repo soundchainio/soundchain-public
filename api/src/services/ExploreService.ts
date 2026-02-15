@@ -43,7 +43,7 @@ export class ExploreService extends Service {
   }
 
   getExploreUsers(search?: string, page?: PageInput): Promise<PaginateResult<Profile>> {
-    // If no search query, return all users sorted by follower count (most popular first)
+    // Return all users sorted by newest first (createdAt DESC)
     // If search query provided, filter by displayName or userHandle
     const filter = search
       ? { $or: [{ displayName: new RegExp(search, 'i') }, { userHandle: new RegExp(search, 'i') }] }
@@ -51,7 +51,7 @@ export class ExploreService extends Service {
 
     return this.context.profileService.paginate({
       filter,
-      sort: { field: search ? 'createdAt' : 'followerCount', order: SortOrder.DESC },
+      sort: { field: 'createdAt', order: SortOrder.DESC },
       page,
     });
   }
