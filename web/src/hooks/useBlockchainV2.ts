@@ -16,7 +16,8 @@ import { SoundchainMarketplaceEditions } from 'types/web3-v2-contracts/Soundchai
 import Web3 from 'web3';
 import { PromiEvent, TransactionReceipt } from 'web3-core/types';
 import { AbiItem } from 'web3-utils';
-import BN from 'bn.js';
+// BN removed - Web3.js v4 validator rejects bn.js hex output for uint256 params
+// Use String() instead which Web3 v4 accepts as valid uint256
 import soundchainAuction from '../contract/Auction.sol/SoundchainAuction.json';
 import soundchainMarketplace from '../contract/Marketplace.sol/SoundchainMarketplace.json';
 import soundchainContract from '../contract/Soundchain721.sol/Soundchain721.json';
@@ -717,7 +718,7 @@ interface CreateAuctionParams extends TokenParams {
 class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, reservePrice, startTime, endTime } = this.params;
-    const totalPrice = new BN(reservePrice);
+    const totalPrice = String(reservePrice);
     this.web3 = web3;
 
     const auctionContractAddress = contractAddresses?.auction || auctionV2Address;
@@ -756,7 +757,7 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
 class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, reservePrice, startTime, endTime } = this.params;
-    const totalPrice = new BN(reservePrice);
+    const totalPrice = String(reservePrice);
     this.web3 = web3;
 
     const auctionContractAddress = contractAddresses?.auction || auctionV2Address;
@@ -828,8 +829,8 @@ interface ListItemParams extends TokenParams {
 class ListItem extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, price, priceOGUN, startTime } = this.params;
-    const totalPrice = new BN(price);
-    const totalOGUNPrice = new BN(priceOGUN);
+    const totalPrice = String(price);
+    const totalOGUNPrice = String(priceOGUN);
     this.web3 = web3;
     const acceptsMATIC = +price > 0;
     const acceptsOGUN = +priceOGUN > 0;
@@ -873,8 +874,8 @@ class ListItem extends BlockchainFunction<ListItemParams> {
 class UpdateListing extends BlockchainFunction<ListItemParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, from, tokenId, price, priceOGUN, startTime } = this.params;
-    const totalPrice = new BN(price);
-    const totalOGUNPrice = new BN(priceOGUN);
+    const totalPrice = String(price);
+    const totalOGUNPrice = String(priceOGUN);
     this.web3 = web3;
     const acceptsMATIC = +price > 0;
     const acceptsOGUN = +priceOGUN > 0;
@@ -1105,8 +1106,8 @@ interface ListEditionParams extends DefaultParam {
 class ListEdition extends BlockchainFunction<ListEditionParams> {
   execute = async (web3: Web3) => {
     const { contractAddresses, editionNumber, from, price, priceOGUN, startTime } = this.params;
-    const totalPrice = new BN(price);
-    const totalOGUNPrice = new BN(priceOGUN);
+    const totalPrice = String(price);
+    const totalOGUNPrice = String(priceOGUN);
     this.web3 = web3;
     const acceptsMATIC = +price > 0;
     const acceptsOGUN = +priceOGUN > 0;
@@ -1143,8 +1144,8 @@ export interface ListBatchParams extends DefaultParam {
 class ListBatch extends BlockchainFunction<ListBatchParams> {
   prepare = (web3: Web3) => {
     const { contractAddresses, tokenIds, price, priceOGUN, startTime } = this.params;
-    const totalPrice = new BN(price);
-    const totalOGUNPrice = new BN(priceOGUN);
+    const totalPrice = String(price);
+    const totalOGUNPrice = String(priceOGUN);
     const acceptsMATIC = +price > 0;
     const acceptsOGUN = +priceOGUN > 0;
 
