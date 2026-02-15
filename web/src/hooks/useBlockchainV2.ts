@@ -152,7 +152,84 @@ class BlockchainFunction<Type> {
     }
   }
 
-  protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
+  // Sign transaction with Magic's web3, broadcast via direct RPC.
+  // This bypasses Magic's proxy for broadcasting (which corrupts write responses).
+  // Magic only handles signing (where the private key lives).
+  protected async _signAndBroadcast(
+    txObject: any,
+    params: { from: string; gas: number; gasPrice: number | string; value?: string; nonce?: number },
+  ): Promise<void> {
+    const dWeb3 = getDirectWeb3();
+
+    // Get nonce from direct RPC if not provided
+    const nonce = params.nonce ?? await dWeb3.eth.getTransactionCount(params.from, 'pending');
+
+    const rawTx: any = {
+      from: params.from,
+      to: txObject._parent?._address || txObject._parent?.options?.address,
+      data: txObject.encodeABI(),
+      gas: params.gas,
+      gasPrice: params.gasPrice,
+      nonce,
+      chainId: 137,
+    };
+    if (params.value && params.value !== '0' && params.value !== '0x0' && params.value !== '0x00') {
+      rawTx.value = params.value;
+    }
+
+    // Sign with Magic's web3 (only signing, no broadcast through their proxy)
+    const signed = await this.web3!.eth.signTransaction(rawTx);
+    const rawTransaction = (signed as any).rawTransaction || (signed as any).raw;
+
+    if (!rawTransaction) {
+      throw new Error('signTransaction returned no raw transaction data');
+    }
+
+    // Broadcast via direct RPC (completely bypasses Magic's proxy)
+    return new Promise<void>((resolve, reject) => {
+      dWeb3.eth.sendSignedTransaction(rawTransaction)
+        .on('transactionHash', (hash: string) => {
+          this.transactionHash = hash;
+          this.onTransactionHashFunction && this.onTransactionHashFunction(hash);
+        })
+        .on('receipt', (receipt: TransactionReceipt) => {
+          this.receipt = receipt;
+          this.onReceiptFunction && this.onReceiptFunction(receipt);
+          resolve();
+        })
+        .on('error', (error: Error) => {
+          reject(error);
+        });
+    });
+  }
+
+  // Sign and broadcast a native ETH/POL transfer (not a contract call).
+  protected async _signAndBroadcastNative(
+    params: { from: string; to: string; value: string; gas: number | string; gasPrice: number | string; nonce?: number },
+  ): Promise<TransactionReceipt> {
+    const dWeb3 = getDirectWeb3();
+    const nonce = params.nonce ?? await dWeb3.eth.getTransactionCount(params.from, 'pending');
+
+    const rawTx = {
+      from: params.from,
+      to: params.to,
+      value: params.value,
+      gas: params.gas,
+      gasPrice: params.gasPrice,
+      nonce,
+      chainId: 137,
+    };
+
+    const signed = await this.web3!.eth.signTransaction(rawTx);
+    const rawTransaction = (signed as any).rawTransaction || (signed as any).raw;
+
+    return dWeb3.eth.sendSignedTransaction(rawTransaction);
+  }
+
+  protected async _execute(
+    lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>,
+    txData?: { txObject: any; from: string; gas: number; value?: string; nonce?: number },
+  ) {
     const { me } = this;
     // Resolve wallet address - HD wallet FIRST for new users, then OAuth fallbacks for legacy users
     const userAddress = me?.hdWalletAddress
@@ -188,6 +265,28 @@ class BlockchainFunction<Type> {
     // Gas price via direct RPC (not Magic's proxy)
     const gasPriceString = await this.getGasPriceDirect();
     const gasPrice = Math.floor(Number(gasPriceString) * gasPriceMultiplier) ?? fallbackGasPrice;
+
+    // Try sign-then-broadcast: sign with Magic, broadcast via direct RPC.
+    // This bypasses Magic's proxy for broadcasting (which returns HTML on writes).
+    if (txData && this.web3) {
+      try {
+        await this._signAndBroadcast(txData.txObject, {
+          from: txData.from,
+          gas: txData.gas,
+          gasPrice,
+          value: txData.value,
+          nonce: txData.nonce,
+        });
+        this.finallyFunction && this.finallyFunction();
+        return;
+      } catch (signErr: any) {
+        // signTransaction might not be supported by all providers (e.g., some Magic versions)
+        // Fall through to the original .send() approach
+        console.warn('Sign-broadcast failed, falling back to send():', signErr?.message);
+      }
+    }
+
+    // Fallback: original .send() through Magic's provider
     lambda(gasPrice)
       .on('transactionHash', transactionHash => {
         this.transactionHash = transactionHash;
@@ -262,7 +361,10 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
     }
 
     const gas = await this.estimateGasDirect(transactionObject, { from, value });
-    await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, value, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas, value },
+    );
 
     return this.receipt;
   };
@@ -284,7 +386,10 @@ class ClaimOgun extends BlockchainFunction<ClaimOgunParams> {
 
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
     return this.receipt;
   };
 }
@@ -325,24 +430,26 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
 
     // Step 1: Collect platform fee before purchase
     if (platformFee > 0 && treasuryAddress) {
-      console.log(`📤 Sending ${platformFee.toFixed(6)} ${isPaymentOGUN ? 'OGUN' : 'POL'} marketplace fee to treasury: ${treasuryAddress}`);
-      if (isPaymentOGUN) {
-        // Fee in OGUN
-        const ogunContract = new web3.eth.Contract(ogunAbi as AbiItem[], ogunAddress);
-        const feeTx = ogunContract.methods.transfer(treasuryAddress, feeWei);
-        const feeGas = await this.estimateGasDirect(feeTx, { from });
-        await feeTx.send({ from, gas: feeGas, gasPrice });
-      } else {
-        // Fee in POL
-        await web3.eth.sendTransaction({
-          from,
-          to: treasuryAddress,
-          value: feeWei,
-          gas: '21000',
-          gasPrice,
-        });
+      try {
+        if (isPaymentOGUN) {
+          const ogunContract = new web3.eth.Contract(ogunAbi as AbiItem[], ogunAddress);
+          const feeTx = ogunContract.methods.transfer(treasuryAddress, feeWei);
+          const feeGas = await this.estimateGasDirect(feeTx, { from });
+          try {
+            await this._signAndBroadcast(feeTx, { from, gas: feeGas, gasPrice });
+          } catch {
+            await feeTx.send({ from, gas: feeGas, gasPrice });
+          }
+        } else {
+          try {
+            await this._signAndBroadcastNative({ from, to: treasuryAddress, value: feeWei, gas: 21000, gasPrice });
+          } catch {
+            await web3.eth.sendTransaction({ from, to: treasuryAddress, value: feeWei, gas: '21000', gasPrice });
+          }
+        }
+      } catch (feeErr: any) {
+        console.warn('Fee collection failed, proceeding with purchase:', feeErr?.message);
       }
-      console.log('✅ Platform fee sent to treasury');
     }
 
     // Step 2: Execute the purchase
@@ -366,8 +473,10 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
     }
     const gas = await this.estimateGasDirect(transactionObject, { from, value: (!isPaymentOGUN && value) || undefined });
 
-    await this._execute(gasPrice =>
-      transactionObject.send({ from, gas, value: (!isPaymentOGUN && value) || undefined, gasPrice }) as PromiEvent<TransactionReceipt>
+    const txValue = (!isPaymentOGUN && value) || undefined;
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, value: txValue, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas, value: txValue },
     );
 
     return this.receipt;
@@ -385,7 +494,10 @@ class ApproveMarketplace extends BlockchainFunction<DefaultParam> {
     );
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -402,7 +514,10 @@ class ApproveAuction extends BlockchainFunction<DefaultParam> {
     );
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -420,7 +535,10 @@ class BurnNft extends BlockchainFunction<TokenParams> {
     const transactionObject = nftContract(web3, contractAddresses?.nft).methods.burn(tokenId);
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -449,7 +567,10 @@ class CancelAuction extends BlockchainFunction<TokenParams> {
 
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -477,7 +598,10 @@ class CancelListing extends BlockchainFunction<TokenParams> {
     }
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -519,7 +643,10 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
 
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -556,7 +683,10 @@ class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
 
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -579,7 +709,10 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
 
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -627,7 +760,10 @@ class ListItem extends BlockchainFunction<ListItemParams> {
 
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -666,7 +802,10 @@ class UpdateListing extends BlockchainFunction<ListItemParams> {
     }
 
     const gas = await this.estimateGasDirect(transactionObject, { from });
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -691,7 +830,10 @@ class MintNft extends BlockchainFunction<MintNftParams> {
     );
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -707,17 +849,23 @@ class SendMatic extends BlockchainFunction<SendMaticParams> {
     const { from, to, amount } = this.params;
     const amountWei = web3.utils.toWei(amount, 'ether');
     this.web3 = web3;
-    const gas = 1200000;
+    const gasPrice = await this.getGasPriceDirect();
+    const adjustedGasPrice = Math.floor(Number(gasPrice) * gasPriceMultiplier) || fallbackGasPrice;
 
-    await this._execute(gasPrice =>
-      web3.eth.sendTransaction({
-        from: from,
-        to: to,
-        value: amountWei,
-        gas,
-        gasPrice,
-      }) as unknown as PromiEvent<TransactionReceipt> // Enhanced type assertion
-    );
+    try {
+      // Sign with Magic, broadcast via direct RPC
+      const receipt = await this._signAndBroadcastNative({
+        from, to, value: amountWei, gas: 21000, gasPrice: adjustedGasPrice,
+      });
+      this.receipt = receipt;
+      this.onReceiptFunction && this.onReceiptFunction(receipt);
+    } catch (signErr: any) {
+      console.warn('Sign-broadcast failed for SendMatic, falling back:', signErr?.message);
+      // Fallback to original
+      await this._execute(gasPrice =>
+        web3.eth.sendTransaction({ from, to, value: amountWei, gas: 21000, gasPrice }) as unknown as PromiEvent<TransactionReceipt>
+      );
+    }
 
     return this.receipt;
   };
@@ -746,25 +894,23 @@ class SendOgun extends BlockchainFunction<SendOgunParams> {
 
     // Step 1: Send platform fee to treasury (in OGUN)
     if (platformFee > 0 && treasuryAddress) {
-      console.log(`📤 Sending ${platformFee.toFixed(8)} OGUN tip fee to treasury: ${treasuryAddress}`);
       const feeTx = contract.methods.transfer(treasuryAddress, feeWei);
       const feeGas = await this.estimateGasDirect(feeTx, { from });
-      await feeTx.send({ from, gas: feeGas, gasPrice });
-      console.log('✅ Tip platform fee sent to treasury');
+      try {
+        await this._signAndBroadcast(feeTx, { from, gas: feeGas, gasPrice });
+      } catch {
+        // Fallback to direct send
+        await feeTx.send({ from, gas: feeGas, gasPrice });
+      }
     }
 
     // Step 2: Send OGUN to recipient
-    const data = await contract.methods.transfer(to, amountWei).encodeABI();
+    const transferTx = contract.methods.transfer(to, amountWei);
+    const transferGas = await this.estimateGasDirect(transferTx, { from });
 
-    await this._execute(gasPrice =>
-      web3.eth.sendTransaction({
-        from: from,
-        to: tokenAddress,
-        value: '0x00',
-        gas,
-        gasPrice,
-        data: data,
-      }) as unknown as PromiEvent<TransactionReceipt> // Enhanced type assertion
+    await this._execute(
+      gasPrice => transferTx.send({ from, gas: transferGas, gasPrice }) as unknown as PromiEvent<TransactionReceipt>,
+      { txObject: transferTx, from, gas: transferGas },
     );
     return this.receipt;
   };
@@ -795,7 +941,10 @@ class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionPa
     const transactionObject = this.prepare(web3);
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas, nonce },
+    );
 
     return this.receipt;
   };
@@ -824,7 +973,10 @@ class CreateEdition extends BlockchainFunction<CreateEditionParams> {
     const transactionObject = this.prepare(web3);
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas, nonce },
+    );
 
     return this.receipt;
   };
@@ -858,7 +1010,10 @@ class ListEdition extends BlockchainFunction<ListEditionParams> {
 
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -902,7 +1057,10 @@ class ListBatch extends BlockchainFunction<ListBatchParams> {
     const transactionObject = this.prepare(web3);
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas, nonce },
+    );
 
     return this.receipt;
   };
@@ -929,7 +1087,10 @@ class CancelListingBatch extends BlockchainFunction<CancelListingBatchParams> {
     const transactionObject = this.prepare(web3);
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas, nonce },
+    );
 
     return this.receipt;
   };
@@ -950,7 +1111,10 @@ class CancelEditionListing extends BlockchainFunction<CancelEditionListingParams
     );
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
@@ -967,9 +1131,10 @@ class TransferNftToken extends BlockchainFunction<TransferNftTokenParams> {
     const transactionObject = nftContract(web3, contractAddresses?.nft).methods.transferFrom(from, to, tokenId);
     const gas = await this.estimateGasDirect(transactionObject, { from });
 
-    await this._execute(gasPrice => {
-      return transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>;
-    });
+    await this._execute(
+      gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>,
+      { txObject: transactionObject, from, gas },
+    );
 
     return this.receipt;
   };
