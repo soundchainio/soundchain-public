@@ -39,7 +39,6 @@ export const ListNFTModal = ({
   const [isApproved, setIsApproved] = useState(false)
   const [approveExpanded, setApproveExpanded] = useState(false)
   const [approveLoading, setApproveLoading] = useState(false)
-  const [pendingFormValues, setPendingFormValues] = useState<{ values: ListNFTBuyNowFormValues; helper: FormikHelpers<ListNFTBuyNowFormValues> } | null>(null)
   const [copied, setCopied] = useState(false)
 
   const nftData = track?.nftData
@@ -96,42 +95,19 @@ export const ListNFTModal = ({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  // Handle the approve marketplace action
-  const handleApprove = useCallback(() => {
-    if (!web3 || !walletAddress) return
-    setApproveLoading(true)
-
-    approveMarketplace(walletAddress, { nft: nftData?.contract })
-      .onReceipt(() => {
-        setIsApproved(true)
-        setApproveLoading(false)
-        setApproveExpanded(false)
-        toast.success('Marketplace approved! You can now list your NFT.')
-        // If there was a pending submission, execute it now
-        if (pendingFormValues) {
-          handleListSingleNft(pendingFormValues.values, pendingFormValues.helper)
-          setPendingFormValues(null)
-        }
-      })
-      .onError((cause: any) => {
-        toast.error(cause.message)
-        setApproveLoading(false)
-      })
-      .finally(() => setApproveLoading(false))
-      .execute(web3)
-  }, [web3, walletAddress, approveMarketplace, nftData, pendingFormValues])
-
-  // Handle listing the NFT
+  // Handle listing the NFT (defined first - used by handleApprove)
   const handleListSingleNft = useCallback((
     { salePrice, selectedCurrency, startTime }: ListNFTBuyNowFormValues,
     helper: FormikHelpers<ListNFTBuyNowFormValues>,
   ) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !walletAddress || !web3) {
+      helper.setSubmitting(false)
       return
     }
 
     if (salePrice <= 0) {
       toast('NFT needs a price higher than 0 on OGUN or MATIC.')
+      helper.setSubmitting(false)
       return
     }
 
@@ -162,6 +138,38 @@ export const ListNFTModal = ({
       .execute(web3)
   }, [web3, walletAddress, nftData, track, listItem, trackUpdate, onClose])
 
+  // Handle the approve marketplace action
+  // Optional params: pass form values directly to avoid stale closure issues
+  const handleApprove = useCallback((
+    formValues?: ListNFTBuyNowFormValues,
+    formHelper?: FormikHelpers<ListNFTBuyNowFormValues>,
+  ) => {
+    if (!web3 || !walletAddress) {
+      formHelper?.setSubmitting(false)
+      return
+    }
+    setApproveLoading(true)
+
+    approveMarketplace(walletAddress, { nft: nftData?.contract })
+      .onReceipt(() => {
+        setIsApproved(true)
+        setApproveLoading(false)
+        setApproveExpanded(false)
+        toast.success('Marketplace approved! You can now list your NFT.')
+        // Auto-list if form values were passed directly
+        if (formValues && formHelper) {
+          handleListSingleNft(formValues, formHelper)
+        }
+      })
+      .onError((cause: any) => {
+        toast.error(cause.message)
+        setApproveLoading(false)
+        formHelper?.setSubmitting(false)
+      })
+      .finally(() => setApproveLoading(false))
+      .execute(web3)
+  }, [web3, walletAddress, approveMarketplace, nftData, handleListSingleNft])
+
   // Main form submit handler
   const handleList = useCallback((values: ListNFTBuyNowFormValues, helper: FormikHelpers<ListNFTBuyNowFormValues>) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !walletAddress || !web3) {
@@ -172,10 +180,9 @@ export const ListNFTModal = ({
     if (isApproved) {
       handleListSingleNft(values, helper)
     } else {
-      // Save form values then directly trigger approval (auto-lists after approval)
-      setPendingFormValues({ values, helper })
+      // Pass form values directly to avoid stale closure - approve then auto-list
       setApproveExpanded(true)
-      handleApprove()
+      handleApprove(values, helper)
     }
   }, [isApproved, walletAddress, web3, nftData, handleListSingleNft, handleApprove])
 
@@ -319,7 +326,7 @@ export const ListNFTModal = ({
                         Cancel
                       </Button>
                       <Button
-                        onClick={handleApprove}
+                        onClick={() => handleApprove()}
                         disabled={approveLoading}
                         className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white font-semibold disabled:opacity-50"
                       >
