@@ -24,6 +24,7 @@ const TRACKS_QUERY = `
         artworkUrl
         assetUrl
         playbackCount
+        genres
         scid {
           scid
           streamCount
@@ -167,12 +168,46 @@ function formatTrackForBroadcast(track: RadioTrack): string {
   return lines.join('\n')
 }
 
+// Genre display labels for the radio UI
+const GENRE_LABELS: Record<string, string> = {
+  acoustic: 'Acoustic', alternative: 'Alternative', ambient: 'Ambient', americana: 'Americana',
+  blues: 'Blues', cannabis: 'Cannabis', c_pop: 'C-Pop', christian: 'Christian',
+  classic_rock: 'Classic Rock', classical: 'Classical', country: 'Country', dance: 'Dance',
+  devotional: 'Devotional', electronic: 'Electronic', experimental: 'Experimental', gospel: 'Gospel',
+  hard_rock: 'Hard Rock', hip_hop: 'Hip-Hop', house: 'House', indie: 'Indie',
+  instrumental: 'Instrumental', jazz: 'Jazz', k_pop: 'K-Pop', kids_and_family: 'Kids & Family',
+  latin: 'Latin', lo_fi: 'LoFi', metal: 'Metal', musica_mexicana: 'Musica Mexicana',
+  musica_tropical: 'Musica Tropical', podcasts: 'Podcasts', pop: 'Pop', pop_latino: 'Pop Latino',
+  punk: 'Punk', r_and_b: 'R&B', reggae: 'Reggae', reggaeton: 'Reggaeton', salsa: 'Salsa',
+  samples: 'Samples', soul_funk: 'Soul/Funk', soundbath: 'SoundBath', soundtrack: 'Soundtrack',
+  spoken: 'Spoken', urban_latino: 'Urban Latino', world: 'World', techno: 'Techno',
+  bpm: 'BPM', deep_house: 'Deep House', jungle: 'Jungle',
+}
+
+function getAvailableGenres(): { key: string; label: string; count: number }[] {
+  const genreCounts: Record<string, number> = {}
+  for (const track of radioPlaylist) {
+    for (const g of (track.genres || [])) {
+      genreCounts[g] = (genreCounts[g] || 0) + 1
+    }
+  }
+  return Object.entries(genreCounts)
+    .map(([key, count]) => ({ key, label: GENRE_LABELS[key] || key, count }))
+    .sort((a, b) => b.count - a.count)
+}
+
+function getFilteredPlaylist(genre?: string): RadioTrack[] {
+  if (!genre || genre === 'all') return radioPlaylist
+  return radioPlaylist.filter(t => (t.genres || []).includes(genre))
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const requestId = `radio_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   const action = req.query.action as string
+  const genreFilter = req.query.genre as string | undefined
 
   if (req.method === 'GET') {
     // Return current track or get a new one
@@ -195,7 +230,7 @@ export default async function handler(
             play_count: track.playbackCount || 0,
             scid: track.scid?.scid || null, // SCID code for streaming rewards
             is_nft: true,
-            genres: [],
+            genres: track.genres || [],
             owner: null,
             licensing: { type: 'nft' as const, ogun_enabled: true, streaming_rewards: track.scid?.scid ? true : false }
           }))
@@ -246,7 +281,7 @@ export default async function handler(
             play_count: track.playbackCount || 0,
             scid: track.scid?.scid || null, // SCID code for streaming rewards
             is_nft: true, // All tracks on SoundChain are NFTs
-            genres: [],
+            genres: track.genres || [],
             owner: null,
             licensing: {
               type: 'nft' as const,
@@ -295,14 +330,27 @@ export default async function handler(
       trackStartTime = new Date()
     }
 
+    // Genre filtering: if genre param specified, return a random track from that genre
+    const availableGenres = getAvailableGenres()
+    let nowPlaying = currentTrack
+    if (genreFilter && genreFilter !== 'all') {
+      const filtered = getFilteredPlaylist(genreFilter)
+      if (filtered.length > 0) {
+        nowPlaying = filtered[Math.floor(Math.random() * filtered.length)]
+      }
+    }
+
     return res.status(200).json({
       success: true,
       data: {
-        now_playing: currentTrack,
+        now_playing: nowPlaying,
         started_at: trackStartTime?.toISOString(),
         queue_length: radioPlaylist.length,
         total_tracks: totalTracksInDatabase || radioPlaylist.length,
-        broadcast_message: currentTrack ? formatTrackForBroadcast(currentTrack) : null,
+        genre_filter: genreFilter || 'all',
+        genre_track_count: genreFilter ? getFilteredPlaylist(genreFilter).length : radioPlaylist.length,
+        available_genres: availableGenres,
+        broadcast_message: nowPlaying ? formatTrackForBroadcast(nowPlaying) : null,
         last_refresh: lastFetchTime?.toISOString(),
         next_refresh_in: lastFetchTime ? Math.max(0, REFRESH_INTERVAL_MS - (Date.now() - lastFetchTime.getTime())) : 0
       },

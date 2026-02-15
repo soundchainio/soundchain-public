@@ -81,6 +81,13 @@ interface RadioTrack {
   stream_url?: string
   play_count: number
   is_nft: boolean
+  genres?: string[]
+}
+
+interface RadioGenre {
+  key: string
+  label: string
+  count: number
 }
 
 // GraphQL query for fetching track data server-side (for OG previews)
@@ -175,6 +182,11 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const [showShareMenu, setShowShareMenu] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
 
+  // Genre channels (XM Radio style)
+  const [selectedGenre, setSelectedGenre] = useState<string>('all')
+  const [availableGenres, setAvailableGenres] = useState<RadioGenre[]>([])
+  const [genreTrackCount, setGenreTrackCount] = useState(0)
+
   const audioRef = useRef<HTMLAudioElement>(null)
   const streamLoggedForCurrentPlay = useRef(false)
 
@@ -237,15 +249,19 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   })
 
   // Fetch current track from OGUN Radio
-  const fetchCurrentTrack = async () => {
+  const fetchCurrentTrack = async (genre?: string) => {
     try {
-      const res = await fetch('/api/agent/radio')
+      const genreParam = genre || selectedGenre
+      const url = genreParam && genreParam !== 'all' ? `/api/agent/radio?genre=${genreParam}` : '/api/agent/radio'
+      const res = await fetch(url)
       const data = await res.json()
 
       if (data.success && data.data?.now_playing) {
         setCurrentTrack(data.data.now_playing)
         setQueueLength(data.data.queue_length || 0)
         setTotalTracks(data.data.total_tracks || data.data.queue_length || 0)
+        if (data.data.available_genres) setAvailableGenres(data.data.available_genres)
+        if (data.data.genre_track_count !== undefined) setGenreTrackCount(data.data.genre_track_count)
         setError(null)
       } else {
         setError('No tracks available')
@@ -257,11 +273,17 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
     }
   }
 
-  // Skip to next track
+  // Skip to next track (genre-aware)
   const skipToNext = async () => {
     try {
-      await fetch('/api/agent/radio', { method: 'POST' })
-      await fetchCurrentTrack()
+      if (selectedGenre && selectedGenre !== 'all') {
+        // Genre mode: just fetch a new track from the genre
+        await fetchCurrentTrack(selectedGenre)
+      } else {
+        // All tracks mode: advance the global playlist
+        await fetch('/api/agent/radio', { method: 'POST' })
+        await fetchCurrentTrack()
+      }
     } catch (e) {
       setError('Failed to skip track')
     }
@@ -366,6 +388,12 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const handleTrackEnd = () => {
     streamLoggedForCurrentPlay.current = false
     skipToNext()
+  }
+
+  // Genre channel change
+  const handleGenreChange = (genre: string) => {
+    setSelectedGenre(genre)
+    fetchCurrentTrack(genre)
   }
 
   // Share handlers
@@ -926,7 +954,23 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 line-clamp-2">
                       {currentTrack.title}
                     </h2>
-                    <p className="text-xl text-gray-400 mb-4">{currentTrack.artist}</p>
+                    <p className="text-xl text-gray-400 mb-2">{currentTrack.artist}</p>
+                    {currentTrack.genres && currentTrack.genres.length > 0 && (
+                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 mb-3">
+                        {currentTrack.genres.slice(0, 3).map((g) => {
+                          const genreInfo = availableGenres.find(ag => ag.key === g)
+                          return (
+                            <button
+                              key={g}
+                              onClick={() => handleGenreChange(g)}
+                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-cyan-900/40 text-cyan-400 border border-cyan-800/30 hover:bg-cyan-800/50 transition-colors"
+                            >
+                              {genreInfo?.label || g}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
                     {currentTrack.album && (
                       <p className="text-sm text-gray-500 mb-2">Album: {currentTrack.album}</p>
                     )}
@@ -1054,6 +1098,44 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
               </>
             ) : null}
           </div>
+
+          {/* Genre Channels - XM Radio Style */}
+          {availableGenres.length > 0 && (
+            <div className="mt-8">
+              <div className="flex items-center gap-2 mb-3">
+                <Radio className="w-4 h-4 text-red-500" />
+                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Channels</h3>
+                {selectedGenre !== 'all' && (
+                  <span className="text-xs text-cyan-400 ml-auto">{genreTrackCount} tracks</span>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleGenreChange('all')}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                    selectedGenre === 'all'
+                      ? 'bg-red-600 text-white shadow-lg shadow-red-500/20'
+                      : 'bg-gray-800/80 text-gray-400 hover:bg-gray-700 hover:text-white'
+                  }`}
+                >
+                  All {totalTracks || ''}
+                </button>
+                {availableGenres.slice(0, 20).map((genre) => (
+                  <button
+                    key={genre.key}
+                    onClick={() => handleGenreChange(genre.key)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      selectedGenre === genre.key
+                        ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/20'
+                        : 'bg-gray-800/80 text-gray-400 hover:bg-gray-700 hover:text-white'
+                    }`}
+                  >
+                    {genre.label} <span className="opacity-60">{genre.count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Info Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
