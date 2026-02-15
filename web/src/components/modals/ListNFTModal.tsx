@@ -136,6 +136,11 @@ export const ListNFTModal = ({
       .onError((cause: any) => toast.error(cause.message))
       .finally(() => helper.setSubmitting(false))
       .execute(web3)
+      .catch((err: any) => {
+        console.error('List execute error:', err)
+        toast.error(err?.message || 'Listing failed. Please try again.')
+        helper.setSubmitting(false)
+      })
   }, [web3, walletAddress, nftData, track, listItem, trackUpdate, onClose])
 
   // Handle the approve marketplace action
@@ -168,6 +173,13 @@ export const ListNFTModal = ({
       })
       .finally(() => setApproveLoading(false))
       .execute(web3)
+      .catch((err: any) => {
+        // Catch estimateGas/RPC errors that bypass .onError()
+        console.error('Approve execute error:', err)
+        toast.error(err?.message || 'Transaction failed. Please try again.')
+        setApproveLoading(false)
+        formHelper?.setSubmitting(false)
+      })
   }, [web3, walletAddress, approveMarketplace, nftData, handleListSingleNft])
 
   // Main form submit handler
