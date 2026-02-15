@@ -46,8 +46,9 @@ interface MagicProviderProps {
 // Network config REQUIRED - without it, Magic routes ALL RPC through their relay server.
 // When relay has issues, every transaction fails with "Failed to fetch" [-32603].
 // With custom RPC, only signing goes through Magic; blockchain calls use Polygon RPC directly.
-// NOTE: Use Ankr RPC for Magic - publicnode returns HTML errors through Magic's SDK proxy.
-const MAGIC_RPC_URL = 'https://rpc.ankr.com/polygon';
+// NOTE: publicnode returns HTML errors through Magic's SDK proxy. Ankr requires API key.
+// LlamaNodes is free, no auth, and works through Magic's proxy.
+const MAGIC_RPC_URL = 'https://polygon.llamarpc.com';
 
 const createMagic = (magicPublicKey: string): MagicInstance => {
   try {
