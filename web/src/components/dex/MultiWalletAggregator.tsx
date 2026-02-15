@@ -25,7 +25,10 @@ import {
   ArrowRight,
   Globe,
   Zap,
-  KeyRound
+  KeyRound,
+  Info,
+  Shield,
+  Bolt
 } from 'lucide-react'
 import { WalletNFTCollection } from './WalletNFTCollection'
 import { useMagicContext } from 'hooks/useMagicContext'
@@ -149,6 +152,7 @@ export function MultiWalletAggregator({
 
   const [connectedWallets, setConnectedWallets] = useState<ConnectedWallet[]>([])
   const [expandedWallets, setExpandedWallets] = useState<Set<string>>(new Set(['magic']))
+  const [hdInfoExpanded, setHdInfoExpanded] = useState(false)
   const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false)
   const [metamaskAddress, setMetamaskAddress] = useState<string | null>(null)
   const [metamaskBalance, setMetamaskBalance] = useState<string>('0')
@@ -496,43 +500,75 @@ export function MultiWalletAggregator({
 
   return (
     <div className="space-y-4">
-      {/* HD Wallet Upgrade Banner for Legacy Users */}
+      {/* HD Wallet Info Panel - Collapsible "i" tooltip */}
       {isLegacyUser && (
-        <Card className="retro-card p-4 border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-cyan-500/10">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-              <Globe className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h4 className="text-white font-bold text-sm">Upgrade to Multi-Chain Wallet</h4>
-                <Badge className="bg-green-500/20 text-green-400 text-[10px]">FREE</Badge>
+        <Card className="retro-card border-cyan-500/20 bg-gray-900/80 overflow-hidden">
+          <button
+            onClick={() => setHdInfoExpanded(!hdInfoExpanded)}
+            className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                <Info className="w-3.5 h-3.5 text-cyan-400" />
               </div>
-              <p className="text-gray-400 text-xs mb-3">
-                Get a wallet that works on <span className="text-cyan-400">ALL EVM chains</span> - Polygon, Ethereum, Base, Arbitrum, Optimism & more. Same address everywhere!
+              <span className="text-sm font-medium text-white">HD Wallet Upgrade</span>
+              <Badge className="bg-cyan-500/10 text-cyan-400 text-[10px]">Coming Soon</Badge>
+            </div>
+            {hdInfoExpanded ? (
+              <ChevronUp className="w-4 h-4 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            )}
+          </button>
+
+          {hdInfoExpanded && (
+            <div className="px-3 pb-3 space-y-3 border-t border-white/5 pt-3">
+              <p className="text-gray-400 text-xs">
+                Your current wallet is managed by Magic (OAuth login). An <span className="text-cyan-400">HD Wallet</span> gives you a self-custody wallet that works across all EVM chains.
               </p>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Zap className="w-3 h-3 text-yellow-400" />
-                  <span>24 Token Support</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-purple-400" />
-                  <span>Zero Cost</span>
+
+              <div className="space-y-2">
+                <h5 className="text-white text-xs font-semibold flex items-center gap-1.5">
+                  <Bolt className="w-3 h-3 text-yellow-400" />
+                  Benefits
+                </h5>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="flex items-start gap-1.5 text-gray-400">
+                    <Globe className="w-3 h-3 text-cyan-400 mt-0.5 flex-shrink-0" />
+                    <span>Works on Polygon, Ethereum, Base, Arbitrum, Optimism</span>
+                  </div>
+                  <div className="flex items-start gap-1.5 text-gray-400">
+                    <Shield className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
+                    <span>Direct blockchain TX - no relay middleman</span>
+                  </div>
+                  <div className="flex items-start gap-1.5 text-gray-400">
+                    <Zap className="w-3 h-3 text-yellow-400 mt-0.5 flex-shrink-0" />
+                    <span>Faster, more reliable transactions</span>
+                  </div>
+                  <div className="flex items-start gap-1.5 text-gray-400">
+                    <Sparkles className="w-3 h-3 text-purple-400 mt-0.5 flex-shrink-0" />
+                    <span>Same address on every chain - zero cost</span>
+                  </div>
                 </div>
               </div>
-              <Button
-                size="sm"
-                className="mt-3 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white text-xs"
-                onClick={() => {
-                  // TODO: Implement HD wallet generation for legacy users
-                  console.log('Generate HD wallet for legacy user')
-                }}
-              >
-                Generate HD Wallet <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
+
+              <div className="space-y-2">
+                <h5 className="text-white text-xs font-semibold flex items-center gap-1.5">
+                  <ArrowRight className="w-3 h-3 text-cyan-400" />
+                  Migration Path
+                </h5>
+                <div className="text-[11px] text-gray-400 space-y-1">
+                  <p>1. Generate your HD wallet (one click, free)</p>
+                  <p>2. Send NFTs from Magic wallet to HD wallet</p>
+                  <p>3. Send POL & OGUN to HD wallet</p>
+                  <p>4. Set HD wallet as primary</p>
+                </div>
+                <p className="text-[10px] text-gray-500 italic">
+                  Your Magic wallet stays active - migrate at your own pace.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </Card>
       )}
 
