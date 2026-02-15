@@ -57,7 +57,7 @@ export const BuyNow = ({ price, priceOGUN, isPaymentOGUN, ownerAddressAccount, s
         <div className="flex items-center gap-2 mb-3">
           <Zap className="w-4 h-4 text-cyan-400" />
           <span className="text-sm font-medium text-white">Pay with L2 Token</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400">USDC + POL + OGUN</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400">24 Tokens</span>
         </div>
         <TokenSelector
           selectedToken={selectedToken}

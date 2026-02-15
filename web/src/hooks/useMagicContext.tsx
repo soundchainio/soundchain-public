@@ -348,14 +348,28 @@ export function MagicProvider({ children }: MagicProviderProps) {
       }
 
       // Try Magic's web3 first, then fallback to public RPC on failure
-      const rpcUrl = 'https://polygon-rpc.com'
+      const rpcUrl = 'https://polygon.llamarpc.com'
+
+      // Helper to safely convert balance (handles BigInt from web3.js v4)
+      const parseBalance = (raw: any, w3: Web3): string => {
+        let balStr: string
+        if (typeof raw === 'bigint') {
+          balStr = raw.toString()
+        } else if (typeof raw === 'string' || typeof raw === 'number') {
+          balStr = String(raw)
+        } else {
+          console.log('💰 Unexpected balance type:', typeof raw, raw)
+          balStr = '0'
+        }
+        return Number(w3.utils.fromWei(balStr, 'ether')).toFixed(6)
+      }
 
       // First try Magic web3 if available
       if (web3) {
         try {
           console.log('💰 Fetching POL balance for account:', account, 'using RPC: Magic web3')
           const maticBalance = await web3.eth.getBalance(account)
-          const balanceEther = Number(web3.utils.fromWei(maticBalance, 'ether')).toFixed(6)
+          const balanceEther = parseBalance(maticBalance, web3)
           console.log('💰 POL balance result:', balanceEther)
           setMaticBalance(balanceEther)
           return // Success with Magic, no need for fallback
@@ -368,7 +382,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
       console.log('💰 Fetching POL balance for account:', account, 'using RPC:', rpcUrl)
       const fallbackWeb3 = new Web3(rpcUrl)
       const maticBalance = await fallbackWeb3.eth.getBalance(account)
-      const balanceEther = Number(fallbackWeb3.utils.fromWei(maticBalance, 'ether')).toFixed(6)
+      const balanceEther = parseBalance(maticBalance, fallbackWeb3)
       console.log('💰 POL balance result (fallback):', balanceEther)
       setMaticBalance(balanceEther)
     } catch (error) {
@@ -415,7 +429,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
         return tokenAmountInEther
       }
 
-      const rpcUrl = 'https://polygon-rpc.com'
+      const rpcUrl = 'https://polygon.llamarpc.com'
 
       // First try Magic web3 if available
       if (web3) {

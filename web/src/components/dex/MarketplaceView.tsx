@@ -498,7 +498,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
                       </Badge>
                     </div>
                     <h2 className="font-mono text-white font-bold">OGUN Gas Economy</h2>
-                    <p className="text-xs text-gray-400">0.05% fees • Deflationary burns • USDC + POL + OGUN</p>
+                    <p className="text-xs text-gray-400">0.05% fees • Deflationary burns • 24 token support</p>
                   </div>
                 </div>
                 <div className="hidden md:flex items-center gap-6">
@@ -598,7 +598,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
                         </div>
                         <h3 className="font-mono text-white text-lg mb-2">Token Marketplace</h3>
                         <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
-                          Trade USDC, POL, OGUN and {SUPPORTED_TOKENS.length - 3}+ tokens with 0.05% fees
+                          List and trade any of our {SUPPORTED_TOKENS.length} supported tokens with 0.05% fees
                         </p>
                         <Button
                           onClick={onCreateTokenListing}

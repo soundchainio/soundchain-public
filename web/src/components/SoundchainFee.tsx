@@ -15,6 +15,8 @@ interface Props {
 
 export const SoundchainFee = ({ price, isPaymentOGUN, rewardRatePercentage, showSoundChainFee = true }: Props) => {
   const [showOgunTip, setShowOgunTip] = useState(false)
+  // Guard: fee should be 0.0005 (0.05%). If env var is misconfigured (e.g. 0.05 = 5%), cap it.
+  const fee = config.soundchainFee > 0.01 ? 0.0005 : config.soundchainFee
   let ogunBonus = null
   if (isPaymentOGUN && rewardRatePercentage) {
     ogunBonus = Math.min(fixedDecimals(price * (parseFloat(rewardRatePercentage) / 100)), 1000)
@@ -54,11 +56,11 @@ export const SoundchainFee = ({ price, isPaymentOGUN, rewardRatePercentage, show
           {showSoundChainFee && (
             <div className="flex text-gray-80">
               <p className="md-text-sm flex flex-shrink-0 items-center justify-start text-xs font-bold uppercase">
-                <Soundchain className="mr-2" /> OGUN SoundChain fee ({config.soundchainFee * 100}%)
+                <Soundchain className="mr-2" /> OGUN SoundChain fee ({fee * 100}%)
               </p>
               <div className="flex w-full justify-end">
                 <Ogun
-                  value={fixedDecimals(price * config.soundchainFee)}
+                  value={fixedDecimals(price * fee)}
                   variant="currency"
                   rewardRatePercentage={rewardRatePercentage}
                 />
@@ -71,10 +73,10 @@ export const SoundchainFee = ({ price, isPaymentOGUN, rewardRatePercentage, show
           {showSoundChainFee && (
             <div className="flex text-gray-80">
               <p className="md-text-sm flex flex-shrink-0 items-center justify-start text-xs font-bold uppercase">
-                <Soundchain className="mr-2" /> MATIC SoundChain fee ({config.soundchainFee * 100}%)
+                <Soundchain className="mr-2" /> MATIC SoundChain fee ({fee * 100}%)
               </p>
               <div className="flex w-full justify-end">
-                <Matic value={fixedDecimals(price * config.soundchainFee)} variant="currency-inline" />
+                <Matic value={fixedDecimals(price * fee)} variant="currency-inline" />
               </div>
             </div>
           )}
