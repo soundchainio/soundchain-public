@@ -348,7 +348,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
       }
 
       // Try Magic's web3 first, then fallback to public RPC on failure
-      const rpcUrl = 'https://polygon.llamarpc.com'
+      const rpcUrl = 'https://polygon-bor-rpc.publicnode.com'
 
       // Helper to safely convert balance (handles BigInt from web3.js v4)
       const parseBalance = (raw: any, w3: Web3): string => {
@@ -429,7 +429,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
         return tokenAmountInEther
       }
 
-      const rpcUrl = 'https://polygon.llamarpc.com'
+      const rpcUrl = 'https://polygon-bor-rpc.publicnode.com'
 
       // First try Magic web3 if available
       if (web3) {

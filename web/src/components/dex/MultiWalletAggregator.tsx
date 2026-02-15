@@ -176,7 +176,7 @@ export function MultiWalletAggregator({
 
       setIsLoadingHdBalance(true)
       try {
-        const web3 = new Web3('https://polygon.llamarpc.com')
+        const web3 = new Web3('https://polygon-bor-rpc.publicnode.com')
         const balance = await web3.eth.getBalance(hdWalletAddress)
         setHdWalletBalance(Number(web3.utils.fromWei(balance, 'ether')).toFixed(4))
 
