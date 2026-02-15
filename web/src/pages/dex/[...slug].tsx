@@ -3684,80 +3684,53 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
         {/* Main Content - Floats on cover art background */}
         <div className="max-w-screen-2xl mx-auto relative">
-          {/* Floating nav - tap-friendly sizes */}
-          <div className="flex items-center gap-2 mb-1 px-3 pt-1">
-            {(() => {
-              const navItems = [
-                { id: 'feed', label: 'Feed', icon: MessageCircle, route: '/dex/feed', textColor: 'text-cyan-400' },
-                { id: 'announcements', label: 'News', icon: Rocket, route: '/dex/announcements', textColor: 'text-purple-400' },
-                { id: 'explore', label: 'Explore', icon: Compass, route: '/dex/explore', textColor: 'text-orange-400' },
-                { id: 'users', label: 'Users', icon: Users, route: '/dex/users', textColor: 'text-indigo-400' },
-                { id: 'marketplace', label: 'Shop', icon: ShoppingBag, route: '/dex/marketplace', textColor: 'text-green-400' },
-                { id: 'radio', label: 'Radio', icon: Radio, route: '/radio', textColor: 'text-red-400' },
-                { id: 'moltbook', label: 'Moltbook', icon: Sparkles, route: '/backend', textColor: 'text-yellow-400' },
-                { id: 'library', label: 'Library', icon: Library, route: '/dex/library', textColor: 'text-blue-400' },
-                { id: 'playlist', label: 'Playlists', icon: ListMusic, route: '/dex/playlist', textColor: 'text-pink-400' },
-              ]
-              const currentNav = navItems.find(item => item.id === selectedView) || navItems[0]
-              const CurrentIcon = currentNav.icon
+          {/* Horizontal scrolling nav pills */}
+          <div className="flex items-center gap-1.5 mb-1 px-3 pt-1">
+            <div className="flex-1 overflow-x-auto scrollbar-hide">
+              <div className="flex items-center gap-1.5 min-w-max">
+                {[
+                  { id: 'feed', label: 'Feed', route: '/dex/feed' },
+                  { id: 'announcements', label: 'News', route: '/dex/announcements' },
+                  { id: 'explore', label: 'Explore', route: '/dex/explore' },
+                  { id: 'users', label: 'Users', route: '/dex/users' },
+                  { id: 'marketplace', label: 'Shop', route: '/dex/marketplace' },
+                  { id: 'radio', label: 'Radio', route: '/radio' },
+                  { id: 'moltbook', label: 'Moltbook', route: '/backend' },
+                  { id: 'library', label: 'Library', route: '/dex/library' },
+                  { id: 'playlist', label: 'Playlists', route: '/dex/playlist' },
+                  ...(me?.profile ? [{ id: 'profile', label: 'Profile', route: `/dex/users/${me?.profile?.userHandle}` }] : []),
+                ].map((item) => {
+                  const isActive = selectedView === item.id || (item.id === 'profile' && isBioExpanded)
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        if (item.id === 'profile') {
+                          setIsBioExpanded(!isBioExpanded)
+                        } else {
+                          setIsBioExpanded(false)
+                          router.push(item.route, undefined, { shallow: false })
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                        isActive
+                          ? 'bg-white/15 text-white border border-white/20'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
-              return (
-                <div className="relative">
-                  <button
-                    onClick={() => setShowNavMenu(!showNavMenu)}
-                    className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all min-h-[36px]"
-                  >
-                    <CurrentIcon className={`w-4 h-4 ${currentNav.textColor}`} />
-                    <span className={`text-sm font-medium ${currentNav.textColor}`}>{currentNav.label}</span>
-                    <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-150 ${showNavMenu ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {showNavMenu && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowNavMenu(false)} />
-                      <div className="absolute left-0 top-full mt-1 w-32 bg-black/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-xl z-50">
-                        {navItems.map((item) => {
-                          const Icon = item.icon
-                          const isActive = selectedView === item.id
-                          return (
-                            <button
-                              key={item.id}
-                              onClick={() => {
-                                router.push(item.route, undefined, { shallow: false })
-                                setShowNavMenu(false)
-                              }}
-                              className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs transition-all min-h-[40px] ${
-                                isActive ? `${item.textColor}` : 'text-gray-400 hover:text-white hover:bg-white/5'
-                              }`}
-                            >
-                              <Icon className="w-4 h-4" />
-                              <span>{item.label}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )
-            })()}
-            {/* Bio toggle button - toggles bio accordion in profile tabs */}
-            {me?.profile && (
-              <button
-                onClick={() => setIsBioExpanded(!isBioExpanded)}
-                className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${isBioExpanded ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'}`}
-                title="View profile info"
-              >
-                <FileText className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* View toggle - tap-friendly */}
-            <div className="flex items-center ml-auto">
-              <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${viewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
+            {/* View toggle */}
+            <div className="flex items-center flex-shrink-0 ml-1">
+              <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
                 <List className="w-4 h-4" />
               </button>
-              <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${viewMode === 'grid' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
+              <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'text-cyan-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'}`}>
                 <Grid className="w-4 h-4" />
               </button>
             </div>
