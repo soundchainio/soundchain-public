@@ -316,7 +316,6 @@ export function MagicProvider({ children }: MagicProviderProps) {
                    me?.emailWalletAddress ||
                    null
 
-    console.log('💳 getUserWalletAddress - selected wallet:', wallet)
     return wallet
   }, [me?.hdWalletAddress, me?.magicWalletAddress, me?.googleWalletAddress, me?.discordWalletAddress, me?.twitchWalletAddress, me?.emailWalletAddress, me?.authMethod])
 
@@ -326,24 +325,16 @@ export function MagicProvider({ children }: MagicProviderProps) {
         const [accountFromWeb3] = await web3.eth.getAccounts()
 
         if (accountFromWeb3) {
-          console.log('💳 Magic: Got account from web3:', accountFromWeb3)
           setAccount(accountFromWeb3)
         } else {
-          // Fallback: Try all OAuth wallet addresses
           const fallbackWallet = getUserWalletAddress()
-          if (fallbackWallet) {
-            console.log('💳 Magic: Using fallback OAuth wallet:', fallbackWallet)
-            setAccount(fallbackWallet)
-          } else {
-            console.log('💳 Magic: No account available from web3 or user profile')
-          }
+          if (fallbackWallet) setAccount(fallbackWallet)
         }
       }
     } catch (error) {
       // Even on error, try to use fallback addresses
       const fallbackWallet = getUserWalletAddress()
       if (fallbackWallet) {
-        console.log('💳 Magic: Error getting account, using fallback OAuth wallet:', fallbackWallet)
         setAccount(fallbackWallet)
       } else {
         handleError(error as Error | { code: number })
@@ -353,115 +344,34 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
   const handleSetBalance = useCallback(async () => {
     try {
-      if (!account) {
-        console.log('💰 No account set, cannot fetch POL balance')
-        return
-      }
+      if (!account) return
 
-      // Try Magic's web3 first, then fallback to public RPC on failure
-      const rpcUrl = 'https://polygon-bor-rpc.publicnode.com'
-
-      // Helper to safely convert balance (handles BigInt from web3.js v4)
+      // Parse balance safely (handles BigInt from web3.js v4)
       const parseBalance = (raw: any, w3: Web3): string => {
-        let balStr: string
-        if (typeof raw === 'bigint') {
-          balStr = raw.toString()
-        } else if (typeof raw === 'string' || typeof raw === 'number') {
-          balStr = String(raw)
-        } else {
-          console.log('💰 Unexpected balance type:', typeof raw, raw)
-          balStr = '0'
-        }
+        const balStr = typeof raw === 'bigint' ? raw.toString() : String(raw || '0')
         return Number(w3.utils.fromWei(balStr, 'ether')).toFixed(6)
       }
 
-      // First try Magic web3 if available
-      if (web3) {
-        try {
-          console.log('💰 Fetching POL balance for account:', account, 'using RPC: Magic web3')
-          const maticBalance = await web3.eth.getBalance(account)
-          const balanceEther = parseBalance(maticBalance, web3)
-          console.log('💰 POL balance result:', balanceEther)
-          setMaticBalance(balanceEther)
-          return // Success with Magic, no need for fallback
-        } catch (magicError: any) {
-          console.warn('💰 Magic RPC failed, trying public RPC fallback:', magicError?.message || magicError)
-        }
-      }
-
-      // Fallback to public RPC (either Magic wasn't available or it failed)
-      console.log('💰 Fetching POL balance for account:', account, 'using RPC:', rpcUrl)
-      const fallbackWeb3 = new Web3(rpcUrl)
-      const maticBalance = await fallbackWeb3.eth.getBalance(account)
-      const balanceEther = parseBalance(maticBalance, fallbackWeb3)
-      console.log('💰 POL balance result (fallback):', balanceEther)
-      setMaticBalance(balanceEther)
+      // Use direct RPC (bypasses Magic's proxy which can corrupt responses)
+      const directWeb3 = new Web3('https://polygon-bor-rpc.publicnode.com')
+      const maticBalance = await directWeb3.eth.getBalance(account)
+      setMaticBalance(parseBalance(maticBalance, directWeb3))
     } catch (error) {
-      console.error('💰 Balance fetch error:', error)
-      // Don't propagate error - just log it
+      console.error('Balance fetch error:', error)
     }
-  }, [account, web3])
+  }, [account])
 
   const handleSetOgunBalance = useCallback(async () => {
     try {
       const ogunAddress = config.ogunTokenAddress
+      if (!ogunAddress || !account) return
 
-      if (!ogunAddress) {
-        console.log('💎 No OGUN token address in config, skipping balance fetch')
-        setOgunBalance(prev => prev || '0')
-        return
-      }
-
-      if (!account) {
-        console.log('💎 No account set, cannot fetch OGUN balance')
-        return
-      }
-
-      // Helper to fetch OGUN balance with a given web3 instance
-      const fetchOgunWithWeb3 = async (web3Instance: Web3, label: string) => {
-        console.log('💎 Fetching OGUN balance for account:', account, 'using RPC:', label)
-        const ogunContract = new web3Instance.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
-        const tokenAmount = await ogunContract.methods.balanceOf(account).call()
-        console.log('💎 Raw OGUN balance:', tokenAmount, 'type:', typeof tokenAmount)
-
-        // Handle BigInt, string, or number from web3.js (v4 returns BigInt)
-        let validTokenAmount: string
-        if (typeof tokenAmount === 'bigint') {
-          validTokenAmount = tokenAmount.toString()
-        } else if (typeof tokenAmount === 'string' || typeof tokenAmount === 'number') {
-          validTokenAmount = String(tokenAmount)
-        } else {
-          console.log('💎 Unexpected token amount type:', typeof tokenAmount, tokenAmount)
-          validTokenAmount = '0'
-        }
-
-        const tokenAmountInEther = Number(web3Instance.utils.fromWei(validTokenAmount, 'ether')).toFixed(6)
-        console.log('💎 OGUN balance in ether:', tokenAmountInEther)
-        return tokenAmountInEther
-      }
-
-      const rpcUrl = 'https://polygon-bor-rpc.publicnode.com'
-
-      // First try Magic web3 if available
-      if (web3) {
-        try {
-          const balance = await fetchOgunWithWeb3(web3, 'Magic web3')
-          setOgunBalance(balance)
-          return // Success with Magic, no need for fallback
-        } catch (magicError: any) {
-          console.warn('💎 Magic RPC failed for OGUN, trying public RPC fallback:', magicError?.message || magicError)
-        }
-      }
-
-      // Fallback to public RPC (either Magic wasn't available or it failed)
-      try {
-        const fallbackWeb3 = new Web3(rpcUrl)
-        const balance = await fetchOgunWithWeb3(fallbackWeb3, rpcUrl)
-        setOgunBalance(balance)
-      } catch (fallbackErr: any) {
-        console.error('💎 OGUN contract call failed (fallback):', fallbackErr?.message || fallbackErr)
-        setOgunBalance(prev => prev || '0')
-      }
+      // Use direct RPC (bypasses Magic's proxy)
+      const directWeb3 = new Web3('https://polygon-bor-rpc.publicnode.com')
+      const ogunContract = new directWeb3.eth.Contract(SoundchainOGUN20.abi as AbiItem[], ogunAddress)
+      const tokenAmount = await ogunContract.methods.balanceOf(account).call()
+      const balStr = typeof tokenAmount === 'bigint' ? tokenAmount.toString() : String(tokenAmount || '0')
+      setOgunBalance(Number(directWeb3.utils.fromWei(balStr, 'ether')).toFixed(6))
     } catch (error: any) {
       console.error('💎 OGUN balance fetch failed:', error?.message || error)
       setOgunBalance(prev => prev || '0')

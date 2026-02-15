@@ -28,6 +28,17 @@ import soundchainMarketplaceEditions from '../contract/v2/SoundchainMarketplaceE
 
 export const gas = 1200000;
 
+// Direct RPC Web3 - bypasses Magic's SDK proxy entirely.
+// Magic's proxy corrupts RPC responses (returns HTML on writes).
+// This instance is used for ALL read operations: estimateGas, getGasPrice, etc.
+// Magic's web3 is ONLY used for send() which requires signing.
+const DIRECT_POLYGON_RPC = 'https://polygon-bor-rpc.publicnode.com';
+let _directWeb3: Web3 | null = null;
+const getDirectWeb3 = (): Web3 => {
+  if (!_directWeb3) _directWeb3 = new Web3(DIRECT_POLYGON_RPC);
+  return _directWeb3;
+};
+
 const claimOgunAddress = config.claimOgunAddress as string;
 export const gasPriceMultiplier = 1.2; // 20% safety buffer (was 1.5)
 
@@ -101,21 +112,55 @@ class BlockchainFunction<Type> {
   }
 
   protected async validateAddress(address: string) {
-    if (!this.web3?.utils.isAddress(address)) {
+    const dWeb3 = getDirectWeb3();
+    if (!dWeb3.utils.isAddress(address)) {
       throw new Error(`Invalid address: ${address}`);
+    }
+  }
+
+  // Estimate gas via DIRECT RPC (bypasses Magic's proxy which corrupts responses).
+  // Uses encodeABI() to extract call data, then calls eth_estimateGas on direct RPC.
+  protected async estimateGasDirect(
+    txObject: any,
+    params: { from: string; value?: string; nonce?: number },
+  ): Promise<number> {
+    const dWeb3 = getDirectWeb3();
+    try {
+      const data = txObject.encodeABI();
+      const to = txObject._parent?._address;
+      const estimate = await dWeb3.eth.estimateGas({
+        from: params.from,
+        to,
+        data,
+        ...(params.value ? { value: params.value } : {}),
+      });
+      return Number(estimate);
+    } catch (directErr) {
+      // Direct RPC also failed - use safe fallback gas
+      console.warn('estimateGas failed on direct RPC, using fallback:', (directErr as any)?.message);
+      return 300000;
+    }
+  }
+
+  // Get gas price via DIRECT RPC (bypasses Magic's proxy)
+  protected async getGasPriceDirect(): Promise<string | number> {
+    const dWeb3 = getDirectWeb3();
+    try {
+      return await dWeb3.eth.getGasPrice();
+    } catch {
+      return fallbackGasPrice;
     }
   }
 
   protected async _execute(lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>) {
     const { me } = this;
     // Resolve wallet address - HD wallet FIRST for new users, then OAuth fallbacks for legacy users
-    // HD wallet is primary ($0 cost), OAuth wallets are legacy (Magic.link per-user costs)
-    const userAddress = me?.hdWalletAddress        // PRIMARY: New users get HD wallet (multi-chain, free)
-      || me?.magicWalletAddress                    // LEGACY: Email login
-      || me?.googleWalletAddress                   // LEGACY: Google OAuth
-      || me?.discordWalletAddress                  // LEGACY: Discord OAuth
-      || me?.twitchWalletAddress                   // LEGACY: Twitch OAuth
-      || me?.emailWalletAddress;                   // LEGACY: Magic Link email
+    const userAddress = me?.hdWalletAddress
+      || me?.magicWalletAddress
+      || me?.googleWalletAddress
+      || me?.discordWalletAddress
+      || me?.twitchWalletAddress
+      || me?.emailWalletAddress;
     if (!userAddress) {
       throw new Error('User address not found');
     }
@@ -140,8 +185,8 @@ class BlockchainFunction<Type> {
         return;
       }
     }
-    // For external wallets (MetaMask, WalletConnect, etc.), skip Magic checks entirely
-    const gasPriceString = await this.web3?.eth.getGasPrice();
+    // Gas price via direct RPC (not Magic's proxy)
+    const gasPriceString = await this.getGasPriceDirect();
     const gasPrice = Math.floor(Number(gasPriceString) * gasPriceMultiplier) ?? fallbackGasPrice;
     lambda(gasPrice)
       .on('transactionHash', transactionHash => {
@@ -216,7 +261,7 @@ class PlaceBid extends BlockchainFunction<PlaceBidParams> {
       );
     }
 
-    const gas = await transactionObject.estimateGas({ from, value });
+    const gas = await this.estimateGasDirect(transactionObject, { from, value });
     await this._execute(gasPrice => transactionObject.send({ from, gas, value, gasPrice }) as PromiEvent<TransactionReceipt>);
 
     return this.receipt;
@@ -237,7 +282,7 @@ class ClaimOgun extends BlockchainFunction<ClaimOgunParams> {
 
     const transactionObject = claimOgunContract(web3).methods.claim(to, amount, proof);
 
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
     return this.receipt;
@@ -276,7 +321,7 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
     const platformFee = purchaseValue * platformFeeRate;
     const feeWei = web3.utils.toWei(platformFee.toFixed(18), 'ether');
     const treasuryAddress = config.treasuryAddress;
-    const gasPrice = await web3.eth.getGasPrice();
+    const gasPrice = await this.getGasPriceDirect();
 
     // Step 1: Collect platform fee before purchase
     if (platformFee > 0 && treasuryAddress) {
@@ -285,7 +330,7 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
         // Fee in OGUN
         const ogunContract = new web3.eth.Contract(ogunAbi as AbiItem[], ogunAddress);
         const feeTx = ogunContract.methods.transfer(treasuryAddress, feeWei);
-        const feeGas = await feeTx.estimateGas({ from });
+        const feeGas = await this.estimateGasDirect(feeTx, { from });
         await feeTx.send({ from, gas: feeGas, gasPrice });
       } else {
         // Fee in POL
@@ -319,7 +364,7 @@ class BuyItem extends BlockchainFunction<BuyItemParams> {
         owner,
       );
     }
-    const gas = await transactionObject.estimateGas({ from, value: (!isPaymentOGUN && value) || undefined });
+    const gas = await this.estimateGasDirect(transactionObject, { from, value: (!isPaymentOGUN && value) || undefined });
 
     await this._execute(gasPrice =>
       transactionObject.send({ from, gas, value: (!isPaymentOGUN && value) || undefined, gasPrice }) as PromiEvent<TransactionReceipt>
@@ -338,7 +383,7 @@ class ApproveMarketplace extends BlockchainFunction<DefaultParam> {
       marketplaceEditionsAddress,
       true,
     );
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -355,7 +400,7 @@ class ApproveAuction extends BlockchainFunction<DefaultParam> {
       auctionV2Address,
       true,
     );
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -373,7 +418,7 @@ class BurnNft extends BlockchainFunction<TokenParams> {
     this.web3 = web3;
 
     const transactionObject = nftContract(web3, contractAddresses?.nft).methods.burn(tokenId);
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -402,7 +447,7 @@ class CancelAuction extends BlockchainFunction<TokenParams> {
       );
     }
 
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -430,7 +475,7 @@ class CancelListing extends BlockchainFunction<TokenParams> {
         tokenId,
       );
     }
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -472,7 +517,7 @@ class CreateAuction extends BlockchainFunction<CreateAuctionParams> {
       );
     }
 
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -509,7 +554,7 @@ class UpdateAuction extends BlockchainFunction<CreateAuctionParams> {
       );
     }
 
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -532,7 +577,7 @@ class ResultAuction extends BlockchainFunction<TokenParams> {
       transactionObject = auctionContract(web3).methods.resultAuction(contractAddresses?.nft || nftAddress, tokenId);
     }
 
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -580,7 +625,7 @@ class ListItem extends BlockchainFunction<ListItemParams> {
       );
     }
 
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -620,7 +665,7 @@ class UpdateListing extends BlockchainFunction<ListItemParams> {
       );
     }
 
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
     return this.receipt;
@@ -644,7 +689,7 @@ class MintNft extends BlockchainFunction<MintNftParams> {
       uri,
       royaltyPercentage,
     );
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -697,13 +742,13 @@ class SendOgun extends BlockchainFunction<SendOgunParams> {
     const feeWei = web3.utils.toWei(platformFee.toFixed(18), 'ether');
     const amountWei = web3.utils.toWei(amount, 'ether');
     const treasuryAddress = config.treasuryAddress;
-    const gasPrice = await web3.eth.getGasPrice();
+    const gasPrice = await this.getGasPriceDirect();
 
     // Step 1: Send platform fee to treasury (in OGUN)
     if (platformFee > 0 && treasuryAddress) {
       console.log(`📤 Sending ${platformFee.toFixed(8)} OGUN tip fee to treasury: ${treasuryAddress}`);
       const feeTx = contract.methods.transfer(treasuryAddress, feeWei);
-      const feeGas = await feeTx.estimateGas({ from });
+      const feeGas = await this.estimateGasDirect(feeTx, { from });
       await feeTx.send({ from, gas: feeGas, gasPrice });
       console.log('✅ Tip platform fee sent to treasury');
     }
@@ -738,8 +783,9 @@ class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionPa
     const { uri, toAddress, editionNumber, quantity } = this.params;
     return nftContractEditions(web3).methods.safeMintToEditionQuantity(toAddress, uri, editionNumber, quantity);
   };
-  estimateGas = (web3: Web3) => {
-    return this.prepare(web3).estimateGas({ from: this.params.from });
+  estimateGas = async (_web3: Web3) => {
+    const txObj = this.prepare(_web3);
+    return this.estimateGasDirect(txObj, { from: this.params.from });
   };
   execute = async (web3: Web3) => {
     const { from, nonce } = this.params;
@@ -747,16 +793,7 @@ class MintNftTokensToEdition extends BlockchainFunction<MintNftTokensToEditionPa
     this.web3 = web3;
 
     const transactionObject = this.prepare(web3);
-
-    let gas = 0;
-    while (!gas) {
-      try {
-        gas = await transactionObject.estimateGas({ from });
-      } catch {
-        setTimeout(() => console.log('Retrying estimate gas'), 1000);
-      }
-    }
-    console.log('Gas estimated: ' + gas);
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>);
 
@@ -776,15 +813,16 @@ class CreateEdition extends BlockchainFunction<CreateEditionParams> {
     const { editionQuantity, toAddress, royaltyPercentage } = this.params;
     return nftContractEditions(web3).methods.createEdition(editionQuantity, toAddress, royaltyPercentage);
   };
-  estimateGas = (web3: Web3) => {
-    return this.prepare(web3).estimateGas({ from: this.params.from });
+  estimateGas = async (_web3: Web3) => {
+    const txObj = this.prepare(_web3);
+    return this.estimateGasDirect(txObj, { from: this.params.from });
   };
   execute = async (web3: Web3) => {
     const { from, nonce } = this.params;
     this.web3 = web3;
 
     const transactionObject = this.prepare(web3);
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>);
 
@@ -818,7 +856,7 @@ class ListEdition extends BlockchainFunction<ListEditionParams> {
       startTime,
     );
 
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -853,15 +891,16 @@ class ListBatch extends BlockchainFunction<ListBatchParams> {
       startTime,
     );
   };
-  estimateGas = (web3: Web3) => {
-    return this.prepare(web3).estimateGas({ from: this.params.from });
+  estimateGas = async (_web3: Web3) => {
+    const txObj = this.prepare(_web3);
+    return this.estimateGasDirect(txObj, { from: this.params.from });
   };
   execute = async (web3: Web3) => {
     const { from, nonce } = this.params;
     this.web3 = web3;
 
     const transactionObject = this.prepare(web3);
-    const gas = await transactionObject.estimateGas({ from, nonce });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>);
 
@@ -879,15 +918,16 @@ class CancelListingBatch extends BlockchainFunction<CancelListingBatchParams> {
     const { contractAddresses, tokenIds } = this.params;
     return marketplaceEditionsContract(web3).methods.cancelListingBatch(contractAddresses?.nft || nftAddress, tokenIds);
   };
-  estimateGas = (web3: Web3) => {
-    return this.prepare(web3).estimateGas({ from: this.params.from });
+  estimateGas = async (_web3: Web3) => {
+    const txObj = this.prepare(_web3);
+    return this.estimateGasDirect(txObj, { from: this.params.from });
   };
   execute = async (web3: Web3) => {
     const { from, nonce } = this.params;
     this.web3 = web3;
 
     const transactionObject = this.prepare(web3);
-    const gas = await transactionObject.estimateGas({ from, nonce });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice, nonce }) as PromiEvent<TransactionReceipt>);
 
@@ -908,7 +948,7 @@ class CancelEditionListing extends BlockchainFunction<CancelEditionListingParams
       contractAddresses?.nft || nftAddress,
       editionNumber,
     );
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>);
 
@@ -925,7 +965,7 @@ class TransferNftToken extends BlockchainFunction<TransferNftTokenParams> {
     const { contractAddresses, from, to, tokenId } = this.params;
     this.web3 = web3;
     const transactionObject = nftContract(web3, contractAddresses?.nft).methods.transferFrom(from, to, tokenId);
-    const gas = await transactionObject.estimateGas({ from });
+    const gas = await this.estimateGasDirect(transactionObject, { from });
 
     await this._execute(gasPrice => {
       return transactionObject.send({ from, gas, gasPrice }) as PromiEvent<TransactionReceipt>;
