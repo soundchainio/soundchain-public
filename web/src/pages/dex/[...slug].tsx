@@ -104,6 +104,7 @@ const DisplayNameForm = dynamic(() => import('components/forms/profile/DisplayNa
 const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr: false })
 const CreateTokenListingModal = dynamic(() => import('components/modals/CreateTokenListingModal').then(mod => ({ default: mod.CreateTokenListingModal })), { ssr: false })
 const CreateBundleListingModal = dynamic(() => import('components/modals/CreateBundleListingModal').then(mod => ({ default: mod.CreateBundleListingModal })), { ssr: false })
+const ListNFTModal = dynamic(() => import('components/modals/ListNFTModal').then(mod => ({ default: mod.ListNFTModal })), { ssr: false })
 
 // Staking contract helper for fetching staked OGUN balance
 const tokenStakeContractAddress = config.tokenStakeContractAddress as string
@@ -890,6 +891,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showFollowersModal, setShowFollowersModal] = useState(false)
   const [showCreateTokenModal, setShowCreateTokenModal] = useState(false)
   const [showCreateBundleModal, setShowCreateBundleModal] = useState(false)
+  const [listNFTModalTrack, setListNFTModalTrack] = useState<any>(null)
 
   // Token and Bundle listing states (mock data for now - will be GraphQL later)
   const [tokenListings, setTokenListings] = useState<Array<{
@@ -4922,7 +4924,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         onPlay={() => handlePlayTrack(track, index, ownedTracksData?.groupedTracks?.nodes || [])}
                         isPlaying={isPlaying}
                         isCurrentTrack={currentSong?.trackId === track.id}
-                        onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
+                        onTrackClick={(trackId) => {
+                          const t = ownedTracksData?.groupedTracks?.nodes?.find((n: any) => n.id === trackId)
+                          if (t) setListNFTModalTrack(t)
+                          else router.push(`/dex/track/${trackId}`)
+                        }}
                       />
                     ))}
                   </div>
@@ -5111,95 +5117,66 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Wallet View - Multi-Wallet Aggregator */}
           {selectedView === 'wallet' && (
             <MultiChainProvider walletAddress={userWallet}>
-            <div className="space-y-6">
-              {/* Wallet Selector - Legacy-style dropdown to switch wallets */}
-              <WalletSelector
-                className="mb-2"
-                showOgun={true}
-                onWalletChange={(address, walletType) => {
-                  console.log('🔄 Wallet changed:', { address, walletType })
-                  // Wallet change is handled internally by WalletSelector + GraphQL mutation
-                }}
-              />
+            <div className="space-y-4">
 
-              {/* EVM Network Switcher */}
-              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Globe className="w-4 h-4 text-cyan-400" />
-                    VIEW BALANCES ON
-                  </h3>
-                  <Badge className="bg-cyan-500/20 text-cyan-400 text-xs">Multi-Chain</Badge>
-                </div>
-                <ChainSwitcher showBalance={true} />
-              </div>
-
-              {/* Multi-Wallet Aggregator - Connect & View All Wallets */}
+              {/* Multi-Wallet Aggregator - Primary wallet display */}
               <MultiWalletAggregator
                 userWallet={userWallet}
                 maticBalance={activeBalance || maticBalance}
                 ogunBalance={activeOgunBalance || ogunBalance}
                 ownedTracks={ownedTracks}
                 onPlayTrack={(track, index) => handlePlayTrack(track, index, ownedTracks)}
-                onTrackClick={(trackId) => router.push(`/dex/track/${trackId}`)}
+                onTrackClick={(trackId) => {
+                  const t = ownedTracks?.find((n: any) => n.id === trackId)
+                  if (t) setListNFTModalTrack(t)
+                  else router.push(`/dex/track/${trackId}`)
+                }}
                 currentTrackId={currentSong?.trackId}
                 isPlaying={isPlaying}
                 openWeb3Modal={openWeb3Modal}
               />
 
-              {/* Blur-style Wallet Header */}
-              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
-                {/* Wallet Address Row */}
-                <div className="flex items-center justify-between mb-4">
+              {/* Quick Stats + Links */}
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-6 text-sm">
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase tracking-wide">OGUN</span>
+                      <p className="text-yellow-400 font-mono">{(Number(ogunBalance || 0) + Number(stakedOgunBalance || 0)).toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase tracking-wide">POL</span>
+                      <p className="text-purple-400 font-mono">{activeBalance || maticBalance || '0.00'}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase tracking-wide">NFTs</span>
+                      <p className="text-cyan-400 font-mono">{ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase tracking-wide">VALUE</span>
+                      <p className="text-green-400 font-mono">${maticUsdData?.maticUsd ? (Number(activeBalance || maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-white text-lg">
-                      {(activeAddress || walletAccount || '').slice(0, 6)}...{(activeAddress || walletAccount || '').slice(-4)}
-                    </span>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(activeAddress || walletAccount || '')}
-                      className="p-1 hover:bg-white/10 rounded transition-colors"
-                    >
-                      <Copy className="w-4 h-4 text-gray-400 hover:text-white" />
-                    </button>
-                    <a
-                      href={`https://polygonscan.com/address/${activeAddress || walletAccount}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1 hover:bg-white/10 rounded transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4 text-gray-400 hover:text-white" />
-                    </a>
-                    {chainName && (
-                      <span className="text-xs text-gray-400 ml-2">{chainName}</span>
+                    {(activeAddress || walletAccount) && (
+                      <a
+                        href={`https://polygonscan.com/address/${activeAddress || walletAccount}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 hover:bg-white/10 rounded transition-colors"
+                        title="View on Polygonscan"
+                      >
+                        <ExternalLink className="w-4 h-4 text-gray-400 hover:text-white" />
+                      </a>
                     )}
-                  </div>
-                  {activeWalletType === 'web3modal' && (
-                    <button
-                      onClick={unifiedDisconnectWallet}
-                      className="text-xs text-gray-400 hover:text-red-400 transition-colors"
-                    >
-                      Disconnect
-                    </button>
-                  )}
-                </div>
-
-                {/* Horizontal Stats Bar - Blur style */}
-                <div className="flex items-center gap-8 text-sm">
-                  <div>
-                    <span className="text-gray-400 text-xs uppercase tracking-wide">OGUN</span>
-                    <p className="text-yellow-400 font-mono">{(Number(ogunBalance || 0) + Number(stakedOgunBalance || 0)).toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 text-xs uppercase tracking-wide">POL</span>
-                    <p className="text-purple-400 font-mono">{activeBalance || maticBalance || '0.00'}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 text-xs uppercase tracking-wide">NFTs</span>
-                    <p className="text-cyan-400 font-mono">{ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 text-xs uppercase tracking-wide">VALUE</span>
-                    <p className="text-green-400 font-mono">${maticUsdData?.maticUsd ? (Number(activeBalance || maticBalance || 0) * Number(maticUsdData.maticUsd)).toFixed(2) : '0.00'}</p>
+                    {activeWalletType === 'web3modal' && (
+                      <button
+                        onClick={unifiedDisconnectWallet}
+                        className="text-xs text-gray-400 hover:text-red-400 transition-colors px-2 py-1"
+                      >
+                        Disconnect
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -7875,6 +7852,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           setBundleListings(prev => [listing, ...prev])
           setShowCreateBundleModal(false)
         }}
+      />
+
+      {/* List NFT Modal - inline listing from wallet view */}
+      <ListNFTModal
+        isOpen={!!listNFTModalTrack}
+        onClose={() => setListNFTModalTrack(null)}
+        track={listNFTModalTrack}
+        walletAddress={activeAddress || walletAccount || ''}
+        polBalance={activeBalance || maticBalance || '0'}
+        ogunBalance={activeOgunBalance || ogunBalance || '0'}
+        web3={magicWeb3 || null}
       />
 
     </div>
