@@ -226,6 +226,88 @@ class BlockchainFunction<Type> {
     return dWeb3.eth.sendSignedTransaction(rawTransaction);
   }
 
+  // Sign and broadcast via HD wallet API (completely bypasses Magic SDK).
+  // Sends unsigned tx to server, which derives the user's HD wallet key and signs.
+  protected async _signViaHdWallet(
+    txObject: any,
+    params: { from: string; gas: number; gasPrice: number | string; value?: string },
+  ): Promise<void> {
+    const to = txObject._parent?._address || txObject._parent?.options?.address;
+    const data = txObject.encodeABI();
+
+    const response = await fetch('/api/hd-wallet/sign-tx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin', // sends JWT cookie
+      body: JSON.stringify({
+        to,
+        data,
+        value: params.value || '0',
+        gas: params.gas,
+        gasPrice: String(params.gasPrice),
+      }),
+    });
+
+    const result = await response.json();
+    if (!result.success || !result.txHash) {
+      throw new Error(result.error || 'HD wallet signing failed');
+    }
+
+    this.transactionHash = result.txHash;
+    this.onTransactionHashFunction && this.onTransactionHashFunction(result.txHash);
+
+    // Poll for receipt via direct RPC
+    const dWeb3 = getDirectWeb3();
+    for (let i = 0; i < 90; i++) { // 3 min max
+      const receipt = await dWeb3.eth.getTransactionReceipt(result.txHash);
+      if (receipt) {
+        this.receipt = receipt;
+        this.onReceiptFunction && this.onReceiptFunction(receipt);
+        return;
+      }
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    throw new Error('Transaction sent but receipt not confirmed after 3 minutes');
+  }
+
+  // Send native POL via HD wallet API (bypasses Magic SDK).
+  protected async _sendNativeViaHdWallet(
+    params: { to: string; value: string; gas?: number | string; gasPrice?: number | string },
+  ): Promise<TransactionReceipt> {
+    const response = await fetch('/api/hd-wallet/send-native', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({
+        to: params.to,
+        value: params.value,
+        gas: params.gas || 21000,
+        gasPrice: params.gasPrice ? String(params.gasPrice) : undefined,
+      }),
+    });
+
+    const result = await response.json();
+    if (!result.success || !result.txHash) {
+      throw new Error(result.error || 'HD wallet native send failed');
+    }
+
+    this.transactionHash = result.txHash;
+    this.onTransactionHashFunction && this.onTransactionHashFunction(result.txHash);
+
+    // Poll for receipt
+    const dWeb3 = getDirectWeb3();
+    for (let i = 0; i < 90; i++) {
+      const receipt = await dWeb3.eth.getTransactionReceipt(result.txHash);
+      if (receipt) {
+        this.receipt = receipt;
+        this.onReceiptFunction && this.onReceiptFunction(receipt);
+        return receipt;
+      }
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    throw new Error('Native send broadcast but receipt not confirmed');
+  }
+
   protected async _execute(
     lambda: (gasPrice: string | number) => PromiEvent<TransactionReceipt>,
     txData?: { txObject: any; from: string; gas: number; value?: string; nonce?: number },
@@ -281,8 +363,27 @@ class BlockchainFunction<Type> {
         return;
       } catch (signErr: any) {
         // signTransaction might not be supported by all providers (e.g., some Magic versions)
-        // Fall through to the original .send() approach
-        console.warn('Sign-broadcast failed, falling back to send():', signErr?.message);
+        console.warn('Sign-broadcast failed, trying HD wallet fallback:', signErr?.message);
+      }
+    }
+
+    // Tier 3: HD wallet server-side signing (completely bypasses Magic SDK)
+    // Only works when the tx is FROM the user's HD wallet address
+    if (txData && this.me?.hdWalletAddress &&
+        txData.from.toLowerCase() === this.me.hdWalletAddress.toLowerCase()) {
+      try {
+        console.log('[HD Wallet] Attempting server-side signing for', txData.from);
+        await this._signViaHdWallet(txData.txObject, {
+          from: txData.from,
+          gas: txData.gas,
+          gasPrice,
+          value: txData.value,
+        });
+        this.finallyFunction && this.finallyFunction();
+        return;
+      } catch (hdErr: any) {
+        console.warn('HD wallet signing failed:', hdErr?.message);
+        // Fall through to Magic .send() as last resort
       }
     }
 
@@ -860,8 +961,20 @@ class SendMatic extends BlockchainFunction<SendMaticParams> {
       this.receipt = receipt;
       this.onReceiptFunction && this.onReceiptFunction(receipt);
     } catch (signErr: any) {
-      console.warn('Sign-broadcast failed for SendMatic, falling back:', signErr?.message);
-      // Fallback to original
+      console.warn('Sign-broadcast failed for SendMatic, trying HD wallet:', signErr?.message);
+      // Try HD wallet server-side signing
+      if (this.me?.hdWalletAddress && from.toLowerCase() === this.me.hdWalletAddress.toLowerCase()) {
+        try {
+          const receipt = await this._sendNativeViaHdWallet({
+            to, value: amountWei, gas: 21000, gasPrice: adjustedGasPrice,
+          });
+          this.receipt = receipt;
+          return this.receipt;
+        } catch (hdErr: any) {
+          console.warn('HD wallet native send failed:', hdErr?.message);
+        }
+      }
+      // Last resort: original .send()
       await this._execute(gasPrice =>
         web3.eth.sendTransaction({ from, to, value: amountWei, gas: 21000, gasPrice }) as unknown as PromiEvent<TransactionReceipt>
       );

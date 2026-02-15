@@ -26,6 +26,14 @@ const cancelListBatchUnitGasCost = 25000 // Was 30800 - slightly reduced
 export const gas = 1200000
 export const applySoundchainFee = (price: number) => (price * (1 + config.soundchainFee)).toFixed()
 
+// Direct RPC for read calls - bypasses Magic's broken proxy
+const DIRECT_POLYGON_RPC = 'https://polygon-bor-rpc.publicnode.com';
+let _directWeb3Read: Web3 | null = null;
+const getDirectWeb3 = (): Web3 => {
+  if (!_directWeb3Read) _directWeb3Read = new Web3(DIRECT_POLYGON_RPC);
+  return _directWeb3Read;
+};
+
 const useBlockchain = () => {
   const getIpfsAssetUrl = useCallback((uri: string) => {
     const [protocol, urn] = uri.split('//')
@@ -65,40 +73,47 @@ const useBlockchain = () => {
     return parseFloat(royalties)
   }, [])
 
-  const isApprovedMarketplace = useCallback(async (web3: Web3, from: string, contractAddresses: ContractAddresses) => {
-    const nftContract = new web3.eth.Contract(
+  const isApprovedMarketplace = useCallback(async (_web3: Web3, from: string, contractAddresses: ContractAddresses) => {
+    // Use direct RPC for read calls - Magic's proxy is broken
+    const directWeb3 = getDirectWeb3();
+    const nftC = new directWeb3.eth.Contract(
       soundchainContract.abi as AbiItem[],
       contractAddresses.nft || nftAddress,
     ) as unknown as Soundchain721
-    return await nftContract.methods.isApprovedForAll(from, marketplaceEditionsAddress).call()
+    return await nftC.methods.isApprovedForAll(from, marketplaceEditionsAddress).call()
   }, [])
 
-  const isApprovedAuction = useCallback(async (web3: Web3, from: string, contractAddresses: ContractAddresses) => {
-    const nftContract = new web3.eth.Contract(
+  const isApprovedAuction = useCallback(async (_web3: Web3, from: string, contractAddresses: ContractAddresses) => {
+    // Use direct RPC for read calls - Magic's proxy is broken
+    const directWeb3 = getDirectWeb3();
+    const nftC = new directWeb3.eth.Contract(
       soundchainContract.abi as AbiItem[],
       contractAddresses.nft || nftAddress,
     ) as unknown as Soundchain721
-    return await nftContract.methods.isApprovedForAll(from, auctionV2Address).call()
+    return await nftC.methods.isApprovedForAll(from, auctionV2Address).call()
   }, [])
 
-  const getHighestBid = useCallback(async (web3: Web3, tokenId: number, contractAddresses: ContractAddresses) => {
-    const auctionContract = new web3.eth.Contract(
+  const getHighestBid = useCallback(async (_web3: Web3, tokenId: number, contractAddresses: ContractAddresses) => {
+    const directWeb3 = getDirectWeb3();
+    const auctionContract = new directWeb3.eth.Contract(
       soundchainAuctionV2.abi as AbiItem[],
       auctionV2Address,
     ) as unknown as SoundchainAuctionV2
     return await auctionContract.methods.getHighestBidder(contractAddresses.nft || nftAddress, tokenId).call()
   }, [])
 
-  const getMaxGasFee = useCallback(async (web3: Web3) => {
-    const gasPriceWei = await web3.eth.getGasPrice()
-    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'))
+  const getMaxGasFee = useCallback(async (_web3: Web3) => {
+    const directWeb3 = getDirectWeb3();
+    const gasPriceWei = await directWeb3.eth.getGasPrice()
+    const gasPrice = parseInt(directWeb3.utils.fromWei(gasPriceWei, 'Gwei'))
     const maxFeeWei = gasPrice * gas
-    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei')
+    return directWeb3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei')
   }, [])
 
-  const getEstimatedMintFee = useCallback(async (web3: Web3, editionSize: number) => {
-    const gasPriceWei = await web3.eth.getGasPrice()
-    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'))
+  const getEstimatedMintFee = useCallback(async (_web3: Web3, editionSize: number) => {
+    const directWeb3 = getDirectWeb3();
+    const gasPriceWei = await directWeb3.eth.getGasPrice()
+    const gasPrice = parseInt(directWeb3.utils.fromWei(gasPriceWei, 'Gwei'))
 
     let cost = createEditionGasCost
 
@@ -111,28 +126,31 @@ const useBlockchain = () => {
     }
 
     const maxFeeWei = gasPrice * gasPriceMultiplier * cost
-    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei')
+    return directWeb3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei')
   }, [])
 
-  const getEstimatedListFee = useCallback(async (web3: Web3, quantity: number) => {
-    const gasPriceWei = await web3.eth.getGasPrice()
-    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'))
+  const getEstimatedListFee = useCallback(async (_web3: Web3, quantity: number) => {
+    const directWeb3 = getDirectWeb3();
+    const gasPriceWei = await directWeb3.eth.getGasPrice()
+    const gasPrice = parseInt(directWeb3.utils.fromWei(gasPriceWei, 'Gwei'))
 
     const maxFeeWei = gasPrice * gasPriceMultiplier * (listBatchUnitGasCost * quantity)
-    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei')
+    return directWeb3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei')
   }, [])
 
-  const getEstimatedCancelListFee = useCallback(async (web3: Web3, quantity: number) => {
-    const gasPriceWei = await web3.eth.getGasPrice()
-    const gasPrice = parseInt(web3.utils.fromWei(gasPriceWei, 'Gwei'))
+  const getEstimatedCancelListFee = useCallback(async (_web3: Web3, quantity: number) => {
+    const directWeb3 = getDirectWeb3();
+    const gasPriceWei = await directWeb3.eth.getGasPrice()
+    const gasPrice = parseInt(directWeb3.utils.fromWei(gasPriceWei, 'Gwei'))
 
     const maxFeeWei = gasPrice * gasPriceMultiplier * (cancelListBatchUnitGasCost * quantity)
-    return web3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei')
+    return directWeb3.utils.fromWei(maxFeeWei.toLocaleString('fullwide', { useGrouping: false }), 'Gwei')
   }, [])
 
-  const getCurrentGasPrice = useCallback(async (web3: Web3) => {
-    const gasPriceWei = await web3.eth.getGasPrice()
-    return web3.utils.fromWei(gasPriceWei, 'ether')
+  const getCurrentGasPrice = useCallback(async (_web3: Web3) => {
+    const directWeb3 = getDirectWeb3();
+    const gasPriceWei = await directWeb3.eth.getGasPrice()
+    return directWeb3.utils.fromWei(gasPriceWei, 'ether')
   }, [])
 
   return {
