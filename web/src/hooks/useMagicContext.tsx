@@ -43,15 +43,19 @@ interface MagicProviderProps {
 }
 
 // Create client-side Magic instance with OAuth extension
-// IMPORTANT: Do NOT set network config here - it causes OAuth timeouts on mobile Safari
-// Network config is handled via magic.rpcProvider when Web3 is created
+// Network config REQUIRED - without it, Magic routes ALL RPC through their relay server.
+// When relay has issues, every transaction fails with "Failed to fetch" [-32603].
+// With custom RPC, only signing goes through Magic; blockchain calls use Polygon RPC directly.
 const createMagic = (magicPublicKey: string): MagicInstance => {
   try {
     if (typeof window === 'undefined') return null;
 
     const magicInstance = new Magic(magicPublicKey, {
       extensions: [new OAuthExtension()],
-      // Network will be set via rpcProvider - don't set here or OAuth breaks on mobile
+      network: {
+        rpcUrl: network.rpc,
+        chainId: network.id,
+      },
     });
 
     return magicInstance as MagicInstance;
@@ -284,11 +288,12 @@ export function MagicProvider({ children }: MagicProviderProps) {
     }
   }, [])
 
-  // Helper to get the user's wallet address from any OAuth method
+  // Helper to get the user's wallet address from any method
   const getUserWalletAddress = useCallback(() => {
     // Debug: Log all available wallet addresses
-    console.log('💳 getUserWalletAddress - checking all OAuth wallets:', {
+    console.log('💳 getUserWalletAddress - checking all wallets:', {
       authMethod: me?.authMethod,
+      hdWalletAddress: me?.hdWalletAddress,
       magicWalletAddress: me?.magicWalletAddress,
       googleWalletAddress: me?.googleWalletAddress,
       discordWalletAddress: me?.discordWalletAddress,
@@ -296,9 +301,10 @@ export function MagicProvider({ children }: MagicProviderProps) {
       emailWalletAddress: me?.emailWalletAddress,
     })
 
-    // Check all possible OAuth wallet addresses
-    // Order: magic (email) > google > discord > twitch > email
-    const wallet = me?.magicWalletAddress ||
+    // Check all possible wallet addresses
+    // Order: hdWallet (new users) > magic (email) > google > discord > twitch > email
+    const wallet = me?.hdWalletAddress ||
+                   me?.magicWalletAddress ||
                    me?.googleWalletAddress ||
                    me?.discordWalletAddress ||
                    me?.twitchWalletAddress ||
@@ -307,7 +313,7 @@ export function MagicProvider({ children }: MagicProviderProps) {
 
     console.log('💳 getUserWalletAddress - selected wallet:', wallet)
     return wallet
-  }, [me?.magicWalletAddress, me?.googleWalletAddress, me?.discordWalletAddress, me?.twitchWalletAddress, me?.emailWalletAddress, me?.authMethod])
+  }, [me?.hdWalletAddress, me?.magicWalletAddress, me?.googleWalletAddress, me?.discordWalletAddress, me?.twitchWalletAddress, me?.emailWalletAddress, me?.authMethod])
 
   const handleSetAccount = useCallback(async () => {
     try {

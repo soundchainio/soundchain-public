@@ -165,17 +165,19 @@ export const ListNFTModal = ({
   // Main form submit handler
   const handleList = useCallback((values: ListNFTBuyNowFormValues, helper: FormikHelpers<ListNFTBuyNowFormValues>) => {
     if (nftData?.tokenId === null || nftData?.tokenId === undefined || !walletAddress || !web3) {
+      toast.error('Wallet not connected. Please refresh and try again.')
+      helper.setSubmitting(false)
       return
     }
     if (isApproved) {
       handleListSingleNft(values, helper)
     } else {
-      // Save form values and expand approve section
+      // Save form values then directly trigger approval (auto-lists after approval)
       setPendingFormValues({ values, helper })
       setApproveExpanded(true)
-      helper.setSubmitting(false)
+      handleApprove()
     }
-  }, [isApproved, walletAddress, web3, nftData, handleListSingleNft])
+  }, [isApproved, walletAddress, web3, nftData, handleListSingleNft, handleApprove])
 
   if (!isOpen || !track) return null
 
