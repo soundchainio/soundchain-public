@@ -186,18 +186,18 @@ const TrackNFTCardComponent: React.FC<TrackNFTCardProps> = ({
     )
   }
 
-  // Fullscreen modal - render in portal for proper z-index (fixes mobile stacking context issues)
+  // Overlay modal - render in portal for proper z-index (fixes mobile stacking context issues)
   if (isFullscreen && mounted) {
     return createPortal(
       <>
-        {/* Backdrop - click to close */}
+        {/* Backdrop - semi-transparent overlay */}
         <div
-          className="fixed inset-0 z-[9999] bg-black backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-md"
           onClick={() => setIsFullscreen(false)}
         />
         {/* Modal content */}
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 md:p-8 pointer-events-none">
-          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden pointer-events-auto">
+          <div className="relative w-full max-w-4xl max-h-[90vh] overflow-hidden pointer-events-auto rounded-2xl shadow-2xl shadow-cyan-500/10">
             {/* Close button */}
             <Button
               onClick={() => setIsFullscreen(false)}

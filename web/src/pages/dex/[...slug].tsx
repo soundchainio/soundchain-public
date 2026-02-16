@@ -703,11 +703,12 @@ function MoltbookPanel({ isOpen, onClose, totalTracks }: { isOpen: boolean; onCl
 }
 
 // Track Card with Audio Playback
-function TrackCard({ track, onPlay, isPlaying, isCurrentTrack }: {
+function TrackCard({ track, onPlay, isPlaying, isCurrentTrack, onFavorite }: {
   track: any;
   onPlay: () => void;
   isPlaying: boolean;
   isCurrentTrack: boolean;
+  onFavorite?: () => void;
 }) {
   return (
     <Card className={`retro-card transition-all duration-200 hover:border-cyan-400/50 ${isCurrentTrack ? 'border-cyan-400/70 bg-cyan-500/5' : ''}`}>
@@ -734,7 +735,7 @@ function TrackCard({ track, onPlay, isPlaying, isCurrentTrack }: {
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" className="hover:bg-red-500/20">
+          <Button variant="ghost" size="sm" className="hover:bg-red-500/20" onClick={(e) => { e.stopPropagation(); onFavorite?.() }}>
             <Heart className={`w-4 h-4 ${track.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
           </Button>
         </div>
@@ -4843,7 +4844,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         isCurrentTrack={currentSong?.trackId === track.id}
                         listView={false}
                         onFavorite={async () => {
-                          await toggleFavorite({ variables: { trackId: track.id } })
+                          await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks'] })
                         }}
                       />
                     ))}
@@ -6411,7 +6412,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <div className="flex flex-wrap gap-4">
                           <div className="flex items-center gap-2">
                             <Play className="w-4 h-4 text-cyan-400" />
-                            <span className="text-white">{trackDetailData.track.playbackCountFormatted || '0'} plays</span>
+                            <span className="text-white">{scidData?.scidByTrack?.streamCount?.toLocaleString() || trackDetailData.track.playbackCountFormatted || '0'} plays</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Heart className={`w-4 h-4 ${trackDetailData.track.isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
@@ -6462,10 +6463,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 router.push('/login')
                                 return
                               }
-                              await toggleFavorite({ variables: { trackId: trackDetailData.track.id } })
+                              await toggleFavorite({ variables: { trackId: trackDetailData.track.id }, refetchQueries: ['Track', 'FavoriteTracks'] })
                             }}
                           >
-                            <Heart className={`w-4 h-4 mr-2 ${trackDetailData.track.isFavorite ? 'fill-current' : ''}`} />
+                            <Heart className={`w-4 h-4 mr-2 ${trackDetailData.track.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                             {trackDetailData.track.isFavorite ? 'Favorited' : 'Favorite'}
                           </Button>
                           <Button
@@ -6704,7 +6705,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <div className="text-xs text-gray-400">Listed for Sale</div>
                           </div>
                           <div className="text-center p-4 bg-gray-800/50 rounded-lg">
-                            <div className="text-2xl font-bold text-purple-400">{trackDetailData.track.playbackCount || 0}</div>
+                            <div className="text-2xl font-bold text-purple-400">{scidData?.scidByTrack?.streamCount || trackDetailData.track.playbackCount || 0}</div>
                             <div className="text-xs text-gray-400">Total Plays</div>
                           </div>
                           <div className="text-center p-4 bg-gray-800/50 rounded-lg">
@@ -7252,6 +7253,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                       onPlay={() => handlePlayTrack(track, index, profileListings)}
                                       isPlaying={isPlaying}
                                       isCurrentTrack={currentSong?.trackId === track.id}
+                                      onFavorite={async () => {
+                                        await toggleFavorite({ variables: { trackId: track.id }, refetchQueries: ['FavoriteTracks', 'ListingItems'] })
+                                      }}
                                     />
                                   ))}
                                 </div>
