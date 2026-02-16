@@ -125,8 +125,34 @@ export class UserResolver {
       const users = await authService.getUserFromCredentials(magicUser.email);
 
       if (!users?.length) {
-        console.log('No users found for email:', magicUser.email);
-        throw new UserInputError('Invalid credentials');
+        console.log('No users found for email:', magicUser.email, '- auto-registering');
+
+        // Auto-register: generate handle from email prefix, create account
+        const emailPrefix = magicUser.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+        let handle = emailPrefix.slice(0, 20) || 'user';
+
+        // Check handle uniqueness, append random suffix if taken
+        const existingHandle = await UserModel.findOne({
+          handle: { $regex: `^${handle}$`, $options: 'i' },
+        });
+        if (existingHandle) {
+          handle = `${handle.slice(0, 16)}_${Math.random().toString(36).slice(2, 6)}`;
+        }
+
+        const authMethod = magicUser.oauthProvider || AuthMethod.magicLink;
+        console.log('[Auto-Register] Creating account:', magicUser.email, handle, authMethod);
+
+        const user = await authService.register(
+          magicUser.email,
+          handle,
+          handle, // displayName defaults to handle
+          magicUser.publicAddress,
+          authMethod,
+        );
+
+        console.log('[Auto-Register] Account created:', user._id.toString());
+        const jwt = jwtService.create(user);
+        return { jwt };
       }
 
       const authMethod = magicUser.oauthProvider || AuthMethod.magicLink;

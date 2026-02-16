@@ -5,26 +5,8 @@ import { useMe } from 'hooks/useMe'
 import { useUpdateSocialMediasMutation } from 'lib/graphql'
 import * as yup from 'yup'
 
-// Extended interface to include all fields until schema is updated
-interface ExtendedSocialMedias {
-  __typename?: 'SocialMedias' | undefined
-  soundcloud?: string | null
-  spotify?: string | null
-  bandcamp?: string | null
-  facebook?: string | null
-  instagram?: string | null
-  x?: string | null
-  tiktok?: string | null
-  linktree?: string | null
-  discord?: string | null
-  telegram?: string | null
-  onlyfans?: string | null
-  customLink?: string | null
-}
-
-// Fallback with all properties
-const getSocialMedias = (socialMedias: any): ExtendedSocialMedias => ({
-  ...{ soundcloud: '', spotify: '', bandcamp: '', facebook: '', instagram: '', x: '', tiktok: '', linktree: '', discord: '', telegram: '', onlyfans: '', customLink: '' },
+const getSocialMedias = (socialMedias: any) => ({
+  soundcloud: '', spotify: '', bandcamp: '', facebook: '', instagram: '', x: '', tiktok: '', linktree: '', discord: '', telegram: '', onlyfans: '', customLink: '',
   ...socialMedias,
 })
 
@@ -110,7 +92,7 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
     await updateSocialMedias({
       variables: {
         input: {
-          socialMedias: { soundcloud, spotify, bandcamp, facebook, instagram, x, tiktok, linktree, discord, telegram, onlyfans, customLink } as any, // Temporary cast
+          socialMedias: { soundcloud, spotify, bandcamp, facebook, instagram, x, tiktok, linktree, discord, telegram, onlyfans, customLink },
         },
       },
     })

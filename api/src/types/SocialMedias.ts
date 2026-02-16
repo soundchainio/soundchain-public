@@ -39,4 +39,20 @@ export class SocialMedias {
   @Field({ nullable: true })
   @prop({ required: false })
   bandcamp?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  x?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  tiktok?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  onlyfans?: string;
+
+  @Field({ nullable: true })
+  @prop({ required: false })
+  customLink?: string;
 }

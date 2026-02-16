@@ -4,6 +4,17 @@ import { Discord } from 'icons/social/Discord'
 import { LinktreeSquare } from 'icons/social/LinktreeSquare'
 import { SpotifySquare } from 'icons/social/SpotifySquare'
 import { TelegramSquare } from 'icons/social/TelegramSquare'
+import { X } from 'icons/social/X'
+import { TikTok } from 'icons/social/TikTok'
+
+// Simple globe icon for OnlyFans and custom links
+const GlobeIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+)
 
 const companies = {
   instagram: {
@@ -78,18 +89,45 @@ const companies = {
     },
     customClassName: '',
   },
+  x: {
+    label: 'X',
+    icon: X,
+    getLink(handle: string) {
+      return `https://x.com/${handle}`
+    },
+    customClassName: '',
+  },
+  tiktok: {
+    label: 'TikTok',
+    icon: TikTok,
+    getLink(handle: string) {
+      return `https://www.tiktok.com/@${handle}`
+    },
+    customClassName: '',
+  },
+  onlyfans: {
+    label: 'OnlyFans',
+    icon: GlobeIcon,
+    getLink(handle: string) {
+      return `https://onlyfans.com/${handle}`
+    },
+    customClassName: '',
+  },
+  customLink: {
+    label: 'Link',
+    icon: GlobeIcon,
+    getLink(handle: string) {
+      // Custom links may already be full URLs
+      if (handle.startsWith('http://') || handle.startsWith('https://')) {
+        return handle
+      }
+      return `https://${handle}`
+    },
+    customClassName: '',
+  },
 }
 
-type SocialMediaCompany =
-  | 'instagram'
-  | 'twitter'
-  | 'facebook'
-  | 'soundcloud'
-  | 'linktree'
-  | 'discord'
-  | 'telegram'
-  | 'spotify'
-  | 'bandcamp'
+type SocialMediaCompany = keyof typeof companies
 
 interface Props {
   company: SocialMediaCompany
@@ -97,7 +135,10 @@ interface Props {
 }
 
 export const SocialMediaLink = ({ company, handle }: Props) => {
-  const { getLink, icon: Icon, label, customClassName } = companies[company]
+  const config = companies[company]
+  if (!config) return null
+
+  const { getLink, icon: Icon, customClassName } = config
 
   return (
     <a href={getLink(handle)} className="flex items-center text-gray-50" target="_blank" rel="noreferrer">

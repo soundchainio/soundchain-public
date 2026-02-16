@@ -12,6 +12,10 @@ mutation updateSocialMedias($input: UpdateProfileInput!) {
         telegram
         spotify
         bandcamp
+        x
+        tiktok
+        onlyfans
+        customLink
       }
     }
   }
