@@ -3413,6 +3413,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 )}
               </div>
 
+              {/* DMs Icon */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:bg-cyan-500/10"
+                onClick={() => router.push('/dex/messages', undefined, { shallow: false })}
+              >
+                <MessageCircle className="w-5 h-5" />
+              </Button>
+
               {/* Notifications Bell - Dropdown Modal */}
               <div className="relative">
                 <Button
