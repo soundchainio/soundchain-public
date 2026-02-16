@@ -5,7 +5,11 @@ import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { Avatar } from '../Avatar'
 import { GuestAvatar, formatWalletAddress } from '../GuestAvatar'
-import { Play, Heart, MessageCircle, Share2, BadgeCheck, Volume2, VolumeX } from 'lucide-react'
+import { Play, Heart, MessageCircle, Share2, BadgeCheck, Volume2, VolumeX, Film } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { CreateStoryModal } from 'components/dex/CreateStoryModal'
+import { useMe } from 'hooks/useMe'
+import { useRouter } from 'next/router'
 import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from '../EmoteRenderer'
@@ -49,7 +53,10 @@ interface CompactPostProps {
 const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView = false }: CompactPostProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isMuted, setIsMuted] = useState(true) // Videos start muted for autoplay
+  const [showShareToStory, setShowShareToStory] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const me = useMe()
+  const router = useRouter()
 
   // Stop video on scroll - Intersection Observer
   useEffect(() => {
@@ -417,10 +424,57 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               >
                 <Share2 className="w-3.5 h-3.5" />
               </button>
+              {/* Share to Story - for posts with any media, logged-in users */}
+              {me && (hasUploadedMedia || post.mediaLink) && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (!me) return router.push('/login')
+                    setShowShareToStory(true)
+                  }}
+                  className="flex items-center text-neutral-500 hover:text-cyan-400 transition-colors"
+                  title="Share to Story"
+                >
+                  <Film className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Share to Story Modal */}
+      {showShareToStory && createPortal(
+        <CreateStoryModal
+          isOpen={showShareToStory}
+          onClose={() => setShowShareToStory(false)}
+          prefillMedia={(() => {
+            if (uploadedMediaUrl) {
+              return {
+                url: uploadedMediaUrl,
+                type: (uploadedMediaType?.startsWith('video') ? 'video' : 'image') as 'image' | 'video',
+                caption: post.body || undefined,
+                authorName: post.profile?.displayName || post.profile?.userHandle || undefined,
+              }
+            }
+            const ml = post.mediaLink
+            const thumb = post.mediaThumbnail
+              || (ml?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+                ? `https://img.youtube.com/vi/${ml!.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)![1]}/maxresdefault.jpg`
+                : null)
+            if (thumb) {
+              return {
+                url: thumb,
+                type: 'image' as const,
+                caption: post.body || undefined,
+                authorName: post.profile?.displayName || post.profile?.userHandle || undefined,
+              }
+            }
+            return null
+          })()}
+        />,
+        document.body
+      )}
     </div>
   )
 }

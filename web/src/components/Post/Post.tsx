@@ -427,6 +427,8 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             createdAt: post.createdAt,
             uploadedMediaUrl,
             uploadedMediaType,
+            mediaLink: post.mediaLink,
+            mediaThumbnail: post.mediaThumbnail,
             totalReactions: post.totalReactions,
             commentCount: post.commentCount,
             repostCount: post.repostCount,

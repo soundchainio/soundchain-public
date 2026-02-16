@@ -39,6 +39,8 @@ interface PostActionsProps {
     createdAt: string
     uploadedMediaUrl?: string | null
     uploadedMediaType?: string | null
+    mediaLink?: string | null
+    mediaThumbnail?: string | null
     totalReactions?: number
     commentCount?: number
     repostCount?: number
@@ -349,8 +351,8 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           <ShareIcon className="h-4 w-4" />
         </button>
       </div>
-      {/* Share to Story - only for posts with media, logged-in users */}
-      {me && postData?.uploadedMediaUrl && (
+      {/* Share to Story - for posts with any media (uploaded or embedded), logged-in users */}
+      {me && (postData?.uploadedMediaUrl || postData?.mediaThumbnail || postData?.mediaLink) && (
         <div className={commonClasses}>
           <button
             className="flex items-center px-3 py-2 font-medium hover:text-cyan-400 hover:bg-cyan-500/10 transition-all rounded-xl"
@@ -442,12 +444,31 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
         <CreateStoryModal
           isOpen={showShareToStory}
           onClose={() => setShowShareToStory(false)}
-          prefillMedia={postData?.uploadedMediaUrl ? {
-            url: postData.uploadedMediaUrl,
-            type: (postData.uploadedMediaType?.startsWith('video') ? 'video' : 'image') as 'image' | 'video',
-            caption: postData.body || undefined,
-            authorName: postData.profile?.displayName || postData.profile?.userHandle || undefined,
-          } : null}
+          prefillMedia={(() => {
+            // Direct upload — use as-is
+            if (postData?.uploadedMediaUrl) {
+              return {
+                url: postData.uploadedMediaUrl,
+                type: (postData.uploadedMediaType?.startsWith('video') ? 'video' : 'image') as 'image' | 'video',
+                caption: postData.body || undefined,
+                authorName: postData.profile?.displayName || postData.profile?.userHandle || undefined,
+              }
+            }
+            // Embedded media — use thumbnail or YouTube thumbnail as image story
+            const thumb = postData?.mediaThumbnail
+              || (postData?.mediaLink?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+                ? `https://img.youtube.com/vi/${postData.mediaLink!.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)![1]}/maxresdefault.jpg`
+                : null)
+            if (thumb) {
+              return {
+                url: thumb,
+                type: 'image' as const,
+                caption: postData?.body || undefined,
+                authorName: postData?.profile?.displayName || postData?.profile?.userHandle || undefined,
+              }
+            }
+            return null
+          })()}
         />,
         portalContainer
       )}
