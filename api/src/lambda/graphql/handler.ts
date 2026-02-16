@@ -388,8 +388,7 @@ const handleRestApi = async (event: APIGatewayProxyEvent): Promise<any> => {
     const SCidModel = mongoose.model('SCid');
 
     const OG_REWARD_CONFIG = {
-      nftRewardPerPlay: 0.35,
-      baseRewardPerPlay: 0.035,
+      rewardPerPlay: 0.35,    // Unified rate for all tracks (0.5 * 70%)
       maxRewardPerTrack: 10000,
     };
 
@@ -427,7 +426,7 @@ const handleRestApi = async (event: APIGatewayProxyEvent): Promise<any> => {
 
           if (!profileId) continue;
 
-          const rewardPerPlay = isNft ? OG_REWARD_CONFIG.nftRewardPerPlay : OG_REWARD_CONFIG.baseRewardPerPlay;
+          const rewardPerPlay = OG_REWARD_CONFIG.rewardPerPlay;
           const ogunToCredit = Math.min(playbackCount * rewardPerPlay, OG_REWARD_CONFIG.maxRewardPerTrack);
 
           if (!dryRun) {

@@ -38,6 +38,7 @@ import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { Metadata } from 'types/NftTypes'
 import { genres } from 'utils/Genres'
+import { generateCertificate, downloadCertificates, copyCertificateToClipboard } from 'utils/SCidCertificate'
 import { MintingDone } from './MintingDone'
 
 export const BATCH_SIZE = 120
@@ -150,6 +151,7 @@ export const CreateModal = () => {
     scid: string
     ipfsCid: string
     chainCode?: string
+    title?: string
   } | null>(null)
 
   useEffect(() => {
@@ -296,6 +298,7 @@ export const CreateModal = () => {
       scid: trackData.scid?.scid || '',
       ipfsCid: trackData.track.ipfsCid || '',
       chainCode: trackData.scid?.chainCode,
+      title: data.title,
     })
 
     return {
@@ -714,7 +717,7 @@ export const CreateModal = () => {
           <div className="p-6 text-center">
             <div className="mb-4 text-4xl">🎉</div>
             <h3 className="mb-2 text-xl font-bold text-white">Track Uploaded!</h3>
-            <p className="mb-4 text-gray-400">Your SCid certificate has been generated.</p>
+            <p className="mb-4 text-gray-400">Your SCid certificate is ready to download.</p>
             <div className="mb-4 rounded-lg bg-gray-800 p-4 text-left">
               <p className="text-sm text-gray-400">SCid:</p>
               <p className="font-mono text-cyan-400 break-all">{scidResult.scid}</p>
@@ -727,6 +730,47 @@ export const CreateModal = () => {
               <p className="mt-2 text-sm text-gray-400">IPFS CID:</p>
               <p className="font-mono text-cyan-400 break-all">{scidResult.ipfsCid}</p>
             </div>
+
+            {/* Certificate Download */}
+            <div className="mb-4 p-4 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/30 rounded-lg">
+              <p className="text-xs text-gray-400 mb-3">
+                Save this certificate to your device as proof of ownership.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                borderColor="bg-cyan-gradient"
+                className="w-full mb-2"
+                onClick={() => {
+                  const cert = generateCertificate({
+                    scid: scidResult.scid,
+                    chainCode: scidResult.chainCode,
+                    trackId: scidResult.trackId,
+                    title: scidResult.title || 'Untitled',
+                    ipfsCid: scidResult.ipfsCid,
+                  })
+                  downloadCertificates(cert)
+                }}
+              >
+                Download Certificate
+              </Button>
+              <button
+                className="text-xs text-cyan-400 hover:text-cyan-300"
+                onClick={() => {
+                  const cert = generateCertificate({
+                    scid: scidResult.scid,
+                    chainCode: scidResult.chainCode,
+                    trackId: scidResult.trackId,
+                    title: scidResult.title || 'Untitled',
+                    ipfsCid: scidResult.ipfsCid,
+                  })
+                  copyCertificateToClipboard(cert)
+                }}
+              >
+                Copy to Clipboard
+              </button>
+            </div>
+
             <Button variant="rainbow-xs" onClick={() => setScidResult(null)}>
               Upload Another
             </Button>
@@ -740,8 +784,8 @@ export const CreateModal = () => {
               <p className="text-center text-xs text-gray-400">
                 No wallet needed. Get an SCid certificate as proof of ownership.
               </p>
-              <p className="text-center text-xs text-gray-500 mt-2">
-                Earns OGUN rewards • NFT mints earn 2x rewards
+              <p className="text-center text-xs text-green-400/70 mt-2">
+                Earns 0.5 OGUN per stream (70% creator, 30% listener)
               </p>
             </div>
             <SimpleTrackUploadForm

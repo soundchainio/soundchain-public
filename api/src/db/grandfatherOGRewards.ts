@@ -18,12 +18,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// WIN-WIN reward rates (creator's 70% share)
+// WIN-WIN reward rates (creator's 70% share) - unified for all tracks
 const OG_REWARD_CONFIG = {
-  // NFT tracks: 0.5 OGUN total, creator gets 70% = 0.35 per stream
-  nftRewardPerPlay: 0.35,
-  // Non-NFT tracks: 0.05 OGUN total, creator gets 70% = 0.035 per stream
-  baseRewardPerPlay: 0.035,
+  // All tracks: 0.5 OGUN total, creator gets 70% = 0.35 per stream
+  rewardPerPlay: 0.35,
   // Cap per track to prevent abuse (even for OGs)
   maxRewardPerTrack: 10000, // 10k OGUN max per track
 };
@@ -101,8 +99,8 @@ export async function grandfatherOGRewards(options: {
           continue;
         }
 
-        // Calculate reward based on NFT status
-        const rewardPerPlay = isNft ? OG_REWARD_CONFIG.nftRewardPerPlay : OG_REWARD_CONFIG.baseRewardPerPlay;
+        // Calculate reward - unified rate for all tracks
+        const rewardPerPlay = OG_REWARD_CONFIG.rewardPerPlay;
         let ogunToCredit = playbackCount * rewardPerPlay;
 
         // Apply cap

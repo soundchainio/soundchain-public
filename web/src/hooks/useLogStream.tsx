@@ -4,8 +4,8 @@
  * Logs track streams to earn OGUN rewards for BOTH creators AND listeners!
  *
  * WIN-WIN Rewards:
- * - NFT mints: 0.5 OGUN per stream (70% creator, 30% listener)
- * - Non-NFT mints: 0.05 OGUN per stream (70% creator, 30% listener)
+ * - ALL tracks: 0.5 OGUN per stream (70% creator, 30% listener)
+ * - Free uploads (SCid) and NFT mints earn the SAME rate
  * - Creator max: 100 OGUN per track per day
  * - Listener max: 50 OGUN per day total
  * - Minimum 30 seconds playback to qualify as a stream

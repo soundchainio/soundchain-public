@@ -202,7 +202,7 @@ export default async function handler(
           how_to_earn: {
             method: 'Stream music to earn OGUN',
             endpoint: 'POST /api/agent/play',
-            rate: '0.05 OGUN per stream'
+            rate: '0.5 OGUN per stream'
           },
           meta: { request_id: requestId }
         })

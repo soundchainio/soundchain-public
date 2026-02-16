@@ -783,17 +783,12 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
               </div>
             </div>
 
-            {/* Reward Tiers Info - Compact */}
+            {/* Reward Rate Info - Universal */}
             <div className="flex gap-2 mb-4">
               <div className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-green-500/10 rounded-lg border border-green-500/20">
                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                <span className="text-xs text-gray-400">NFT:</span>
-                <span className="text-xs font-semibold text-green-400">0.5 OGUN</span>
-              </div>
-              <div className="flex-1 flex items-center justify-center gap-2 py-2 px-3 bg-white/5 rounded-lg border border-white/10">
-                <div className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
-                <span className="text-xs text-gray-400">Free:</span>
-                <span className="text-xs font-semibold text-gray-300">0.05 OGUN</span>
+                <span className="text-xs text-gray-400">All Tracks:</span>
+                <span className="text-xs font-semibold text-green-400">0.5 OGUN / stream</span>
               </div>
             </div>
 

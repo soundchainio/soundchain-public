@@ -36,8 +36,8 @@ function deriveAgentWallet(agentName: string): ethers.Wallet {
   return wallet
 }
 
-// Streaming reward rate: OGUN per play reported
-const OGUN_PER_STREAM = 0.05 // 0.05 OGUN per stream
+// Streaming reward rate: OGUN per play reported (same for ALL tracks)
+const OGUN_PER_STREAM = 0.5 // 0.5 OGUN per stream
 const MIN_STREAMS_TO_CLAIM = 10 // Minimum streams before claim
 const MIN_OGUN_TO_CLAIM = 0.5 // Minimum OGUN to claim
 

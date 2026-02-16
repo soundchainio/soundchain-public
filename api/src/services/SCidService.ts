@@ -13,11 +13,10 @@ import { Context } from '../types/Context';
 import { Service } from './Service';
 
 // OGUN rewards configuration - WIN-WIN model (creators AND listeners earn!)
+// ALL tracks earn the same rate - free uploads (SCid) and NFT mints alike!
 const OGUN_REWARDS_CONFIG = {
-  // NFT mints (on-chain with tokenId) get premium rate
-  nftRewardPerStream: 0.5,          // 0.5 OGUN per stream for NFT mints
-  // Non-NFT mints (off-chain, no tokenId) get base rate
-  baseRewardPerStream: 0.05,        // 0.05 OGUN per stream for non-NFT mints
+  // Universal reward rate - same for ALL tracks (SCid + NFT)
+  rewardPerStream: 0.5,             // 0.5 OGUN per stream for ALL tracks
   bonusMultiplier: 1.5,             // Bonus for verified artists
   maxDailyRewards: 100,             // Max 100 OGUN per track per day (anti-bot farming)
   minStreamDuration: 30,            // Minimum 30 seconds to count as valid stream
@@ -316,9 +315,8 @@ export class SCidService extends Service {
    *
    * Both CREATORS and LISTENERS earn OGUN tokens!
    *
-   * Tiered rewards:
-   * - NFT mints (with tokenId): 0.5 OGUN per stream (split 70/30)
-   * - Non-NFT mints: 0.05 OGUN per stream (split 70/30)
+   * Universal rewards (same for ALL tracks - free uploads + NFT mints):
+   * - ALL tracks: 0.5 OGUN per stream (split 70/30)
    * - Creator: 70% of reward
    * - Listener: 30% of reward
    * - Max 100 OGUN per track per day (creator anti-bot)
@@ -356,15 +354,12 @@ export class SCidService extends Service {
     const todayCreatorRewards = scidRecord.dailyOgunEarned || 0;
     let creatorDailyLimitReached = todayCreatorRewards >= OGUN_REWARDS_CONFIG.maxDailyRewards;
 
-    // Get the track to check if it's an NFT mint and get metadata
+    // Get the track metadata
     const track = await this.context.trackService.getTrack(scidRecord.trackId);
-    const isNFTMint = track?.nftData?.tokenId != null;
     const trackTitle = track?.title || 'Unknown Track';
 
-    // Calculate base OGUN reward based on mint type
-    let baseReward = isNFTMint
-      ? OGUN_REWARDS_CONFIG.nftRewardPerStream    // 0.5 OGUN for NFT mints
-      : OGUN_REWARDS_CONFIG.baseRewardPerStream;  // 0.05 OGUN for non-NFT mints
+    // Universal reward rate - ALL tracks earn the same (SCid + NFT)
+    let baseReward = OGUN_REWARDS_CONFIG.rewardPerStream;  // 0.5 OGUN for ALL tracks
 
     // Check if artist is verified (bonus multiplier - 1.5x)
     const creatorProfile = await this.context.profileService.getProfile(scidRecord.profileId);
@@ -476,7 +471,7 @@ export class SCidService extends Service {
 
     // Get collaborator wallets from NFT metadata (if any)
     let collaboratorRewards: WinWinRewardResult['collaboratorRewards'] = [];
-    if (isNFTMint && track?.nftData) {
+    if (track?.nftData?.tokenId && track?.nftData) {
       // TODO: Parse NFT metadata for collaborator wallets
       // For now, all creator rewards go to the track owner
       // In future: read royaltyReceivers from contract or metadata
@@ -1172,10 +1167,9 @@ export class SCidService extends Service {
   }> {
     const { dryRun = true, limit = 0, minPlays = 1 } = options;
 
-    // OG reward rates (creator's 70% share)
+    // OG reward rates (creator's 70% share) - unified rate for all tracks
     const OG_REWARD_CONFIG = {
-      nftRewardPerPlay: 0.35,    // 0.5 OGUN * 70%
-      baseRewardPerPlay: 0.035,  // 0.05 OGUN * 70%
+      rewardPerPlay: 0.35,       // 0.5 OGUN * 70% (same for all tracks)
       maxRewardPerTrack: 10000,  // Cap at 10k OGUN per track
     };
 
@@ -1222,8 +1216,8 @@ export class SCidService extends Service {
             continue;
           }
 
-          // Calculate reward
-          const rewardPerPlay = isNft ? OG_REWARD_CONFIG.nftRewardPerPlay : OG_REWARD_CONFIG.baseRewardPerPlay;
+          // Calculate reward - unified rate for all tracks
+          const rewardPerPlay = OG_REWARD_CONFIG.rewardPerPlay;
           let ogunToCredit = Math.min(playbackCount * rewardPerPlay, OG_REWARD_CONFIG.maxRewardPerTrack);
 
           if (!dryRun) {

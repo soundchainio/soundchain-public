@@ -216,7 +216,7 @@ export default async function handler(
       earning_ogun: {
         method: 'Stream music to earn OGUN rewards',
         endpoint: 'POST /api/agent/play',
-        rate: '0.05 OGUN per stream (30+ seconds)',
+        rate: '0.5 OGUN per stream (30+ seconds)',
         tip: 'Listen via /api/agent/radio/listen and report plays to accumulate OGUN'
       },
       meta: {

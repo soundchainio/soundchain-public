@@ -50,8 +50,8 @@ We're thrilled to announce the most groundbreaking feature in music streaming hi
 Every time a track is streamed on SoundChain, EVERYONE wins:
 
 ### For Creators & NFT Owners
-- **Earn OGUN tokens** every time your music is streamed
-- **NFT tracks earn 10x more** (0.5 OGUN vs 0.05 OGUN per stream)
+- **Earn 0.5 OGUN** every time your music is streamed (ALL tracks - free uploads + NFTs!)
+- **Upload for FREE** via SCid and earn the same rewards as NFT mints
 - **Verified artists get 1.5x bonus** multiplier
 - **All collaborator wallets** in your NFT metadata get their split automatically
 

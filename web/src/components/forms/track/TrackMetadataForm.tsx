@@ -420,8 +420,8 @@ function InnerForm(props: InnerFormProps) {
             <p className="text-xxs text-gray-500">
               0.05% fee supports OGUN rewards
             </p>
-            <span className="text-xxs text-yellow-400 font-bold">
-              2x OGUN vs SCid-only
+            <span className="text-xxs text-green-400 font-bold">
+              Same OGUN rewards as free upload
             </span>
           </div>
         </div>

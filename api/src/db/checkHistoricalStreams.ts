@@ -63,11 +63,8 @@ async function checkHistoricalStreams() {
   const nftPlays = nftResult[0]?.totalPlays || 0;
   console.log(`▶️  NFT Track Plays: ${nftPlays.toLocaleString()}`);
 
-  // Calculate potential OGUN rewards
-  const nonNftPlays = totalPlays - nftPlays;
-  const nftOgun = nftPlays * 0.35; // Creator's 70% of 0.5 OGUN
-  const nonNftOgun = nonNftPlays * 0.035; // Creator's 70% of 0.05 OGUN
-  const totalOgun = nftOgun + nonNftOgun;
+  // Calculate potential OGUN rewards (unified rate: 0.5 OGUN per stream, creator gets 70%)
+  const totalOgun = totalPlays * 0.35; // Creator's 70% of 0.5 OGUN for ALL tracks
 
   console.log('\n========================================');
   console.log('   GRANDFATHER OGUN CALCULATION');

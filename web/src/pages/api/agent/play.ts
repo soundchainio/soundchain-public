@@ -4,8 +4,8 @@
  * GET /api/agent/play - Get play statistics
  *
  * NOW CONNECTED TO OGUN STREAMING REWARDS!
- * - Creators earn 0.5 OGUN per stream (NFT) / 0.05 OGUN (non-NFT)
- * - Listeners earn 30% of the reward (WIN-WIN model)
+ * - ALL tracks earn 0.5 OGUN per stream (free uploads + NFTs earn the same!)
+ * - Creators get 70%, Listeners get 30% (WIN-WIN model)
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'

@@ -713,19 +713,12 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                             </div>
                           )}
 
-                          {/* Reward Rates */}
+                          {/* Reward Rate - Universal */}
                           <div className="p-3 border-b border-orange-500/20">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="text-center p-2 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-lg border border-yellow-500/30">
-                                <div className="text-[10px] text-yellow-400/80">NFT Tracks</div>
-                                <div className="text-base font-bold text-yellow-400">0.5 OGUN</div>
-                                <div className="text-[9px] text-gray-500">per stream</div>
-                              </div>
-                              <div className="text-center p-2 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-lg border border-cyan-500/30">
-                                <div className="text-[10px] text-cyan-400/80">Regular</div>
-                                <div className="text-base font-bold text-cyan-400">0.05 OGUN</div>
-                                <div className="text-[9px] text-gray-500">per stream</div>
-                              </div>
+                            <div className="text-center p-2 bg-gradient-to-br from-green-500/10 to-cyan-500/10 rounded-lg border border-green-500/30">
+                              <div className="text-[10px] text-green-400/80">All Tracks (Free Upload + NFT)</div>
+                              <div className="text-base font-bold text-green-400">0.5 OGUN</div>
+                              <div className="text-[9px] text-gray-400">per stream (70% creator / 30% listener)</div>
                             </div>
                           </div>
 
