@@ -1,7 +1,7 @@
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useMe } from 'hooks/useMe'
-import { Home, Compass, Library, Store, Plus, BarChart3, Settings } from 'lucide-react'
+import { Home, Compass, Library, Plus, BarChart3, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 
@@ -75,8 +75,6 @@ export const NavBar = () => {
           <NavItem href="/dex" label="Home" icon={Home} isActive={isActive('/dex')} />
           <NavItem href={me ? '/explore' : '/login'} label="Explore" icon={Compass} isActive={isActive('/explore')} />
           <NavItem href={me ? '/library' : '/login'} label="Library" icon={Library} isActive={isActive('/library')} />
-          <NavItem href="/marketplace" label="Market" icon={Store} isActive={isActive('/marketplace')} />
-
           {/* Create Button - Accent Color */}
           <button
             onClick={handleCreateClick}

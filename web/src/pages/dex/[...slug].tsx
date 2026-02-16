@@ -1014,7 +1014,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showTop100Modal, setShowTop100Modal] = useState(false)
 
   // Profile tab state (Feed | Music | Playlists)
-  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'playlists'>('myfeed')
+  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'shop' | 'playlists'>('myfeed')
 
   // Bio accordion state - collapsible bio panel for own profile
   const [isBioExpanded, setIsBioExpanded] = useState(false)
@@ -1492,7 +1492,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     ssr: false,
     fetchPolicy: 'cache-first', // Speed: cache-first for instant loads
     errorPolicy: 'all', // Allow partial data even with errors
-    skip: selectedView !== 'marketplace' && selectedView !== 'dashboard', // SPEED: Only fetch when needed
+    skip: selectedView !== 'marketplace' && selectedView !== 'dashboard' && !(selectedView === 'profile' && profileTab === 'shop'), // SPEED: Only fetch when needed (includes profile Shop tab)
   })
 
   // Load more listings
@@ -3695,7 +3695,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   { id: 'announcements', label: 'News', route: '/dex/announcements' },
                   { id: 'explore', label: 'Explore', route: '/dex/explore' },
                   { id: 'users', label: 'Users', route: '/dex/users' },
-                  { id: 'marketplace', label: 'Shop', route: '/dex/marketplace' },
                   { id: 'radio', label: 'Radio', route: '/radio' },
                   { id: 'moltbook', label: 'Moltbook', route: '/backend' },
                   { id: 'library', label: 'Library', route: '/dex/library' },
@@ -6972,6 +6971,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       </Button>
                       <Button
                         variant="ghost"
+                        onClick={() => setProfileTab('shop')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-amber-500/10 ${profileTab === 'shop' ? 'bg-amber-500/10' : ''}`}
+                      >
+                        <ShoppingBag className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'shop' ? 'text-amber-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'shop' ? 'text-amber-400' : 'text-gray-400'}`}>
+                          Shop
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
                         onClick={() => setProfileTab('playlists')}
                         className={`flex-shrink-0 transition-all duration-300 hover:bg-pink-500/10 ${profileTab === 'playlists' ? 'bg-pink-500/10' : ''}`}
                       >
@@ -7031,6 +7040,120 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       )}
                       {profileTab === 'music' && (
                         <TracksGrid profileId={viewingProfile.id} />
+                      )}
+                      {/* Shop - Listed NFTs, bundles, tickets, merch for this profile */}
+                      {profileTab === 'shop' && (
+                        <div className="space-y-4">
+                          {/* Shop Header with actions for own profile */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <ShoppingBag className="w-5 h-5 text-amber-400" />
+                              <h3 className="text-white font-semibold">
+                                {isViewingOwnProfile ? 'My Storefront' : `${viewingProfile.displayName || viewingProfile.userHandle}'s Shop`}
+                              </h3>
+                            </div>
+                            {isViewingOwnProfile && (
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowCreateBundleModal(true)}
+                                  className="border-amber-500/50 hover:bg-amber-500/10 text-amber-400"
+                                >
+                                  <Package className="w-4 h-4 mr-2" />
+                                  Bundle
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowSweepPanel(!showSweepPanel)}
+                                  className="border-purple-500/50 hover:bg-purple-500/10 text-purple-400"
+                                >
+                                  <Zap className="w-4 h-4 mr-2" />
+                                  Sweep
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Listed tracks filtered by this profile */}
+                          {(() => {
+                            const profileListings = marketTracks.filter(
+                              (track: any) => track.artistProfileId === viewingProfile.id || track.profileId === viewingProfile.id
+                            )
+                            if (listingLoading) {
+                              return (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                  {[...Array(4)].map((_, i) => (
+                                    <Card key={i} className="retro-card animate-pulse">
+                                      <div className="aspect-square bg-gray-700 rounded-t-lg" />
+                                      <div className="p-2 space-y-2">
+                                        <div className="h-3 bg-gray-700 rounded w-3/4" />
+                                        <div className="h-2 bg-gray-700 rounded w-1/2" />
+                                      </div>
+                                    </Card>
+                                  ))}
+                                </div>
+                              )
+                            }
+                            if (profileListings.length === 0) {
+                              return (
+                                <Card className="retro-card p-8 text-center">
+                                  <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+                                  <h3 className="text-white font-bold mb-2">No Items Listed</h3>
+                                  <p className="text-gray-400 text-sm">
+                                    {isViewingOwnProfile
+                                      ? 'List your published tracks, event tickets, or merch NFTs to start selling'
+                                      : 'This artist has no items listed for sale right now'}
+                                  </p>
+                                  {isViewingOwnProfile && (
+                                    <p className="text-amber-400/60 text-xs mt-3">
+                                      Go to Music tab → tap a published track → List for Sale
+                                    </p>
+                                  )}
+                                </Card>
+                              )
+                            }
+                            return (
+                              <>
+                                <span className="text-sm text-amber-400">{profileListings.length} listed</span>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                  {profileListings.map((track: any, index: number) => (
+                                    <TrackNFTCard
+                                      key={track.id}
+                                      track={{
+                                        id: track.id,
+                                        title: track.title || 'Untitled',
+                                        artist: track.artist || 'Unknown Artist',
+                                        artistProfileId: track.artistProfileId,
+                                        artworkUrl: track.artworkUrl || undefined,
+                                        playbackCount: track.playbackCount || 0,
+                                        playbackCountFormatted: track.playbackCountFormatted || '0',
+                                        favoriteCount: track.favoriteCount || 0,
+                                        genres: track.genres || [],
+                                        isFavorite: track.isFavorite || false,
+                                        nftData: track.nftData ? {
+                                          tokenId: track.nftData.tokenId,
+                                          transactionHash: track.nftData.transactionHash || undefined,
+                                          contractAddress: track.nftData.contract || undefined,
+                                        } : undefined,
+                                        listingItem: track.listingItem ? {
+                                          price: track.listingItem.pricePerItem || undefined,
+                                          pricePerItem: track.listingItem.pricePerItem || undefined,
+                                          pricePerItemToShow: track.listingItem.pricePerItemToShow || undefined,
+                                          acceptsOGUN: track.listingItem.isPaymentOGUN || false,
+                                        } : undefined,
+                                      }}
+                                      onPlay={() => handlePlayTrack(track, index, profileListings)}
+                                      isPlaying={isPlaying}
+                                      isCurrentTrack={currentSong?.trackId === track.id}
+                                    />
+                                  ))}
+                                </div>
+                              </>
+                            )
+                          })()}
+                        </div>
                       )}
                       {profileTab === 'playlists' && (
                         <div className="space-y-4">

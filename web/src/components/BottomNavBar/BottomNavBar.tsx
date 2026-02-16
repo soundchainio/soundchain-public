@@ -4,7 +4,6 @@ import { useMe } from 'hooks/useMe'
 import { Home } from 'icons/Home'
 import { Inbox } from 'icons/Inbox'
 import { Library } from 'icons/Library'
-import { MarketplaceNavBar } from 'icons/MarketplaceNavBar'
 import { Search } from 'icons/Search'
 import { Backend } from 'icons/Backend'
 import { useRouter } from 'next/router'
@@ -194,14 +193,6 @@ export const BottomNavBar = () => {
               path={me ? '/library' : '/login'}
               icon={Library}
               color="purple"
-              alwaysShowLabel
-            />
-            <NavBarButton
-              id="nav-market-"
-              label=""
-              icon={MarketplaceNavBar}
-              color="purple-green"
-              path={'/marketplace'}
               alwaysShowLabel
             />
             <NavBarButton
