@@ -92,7 +92,7 @@ export const CreateModal = () => {
   const { asPath } = useRouter()
   const { dispatchShowCreateModal, dispatchShowPostModal } = useModalDispatch()
   const me = useMe()
-  const [tab, setTab] = useState(Tabs.NFT)
+  const [tab, setTab] = useState(Tabs.SCID)
   const { setIsMintingState } = useHideBottomNavBar()
 
   const [file, setFile] = useState<File>()
@@ -671,15 +671,6 @@ export const CreateModal = () => {
   const tabs = (
     <div className="flex rounded-lg bg-gray-10">
       <button
-        onClick={() => setTab(Tabs.NFT)}
-        className={classNames(
-          'flex-1 rounded-lg py-1.5 text-sm font-bold',
-          tab === Tabs.NFT ? 'bg-gray-30 text-white' : 'text-gray-80',
-        )}
-      >
-        Publish Track
-      </button>
-      <button
         onClick={() => setTab(Tabs.SCID)}
         className={classNames(
           'flex-1 rounded-lg py-1.5 text-sm font-bold',
@@ -687,6 +678,15 @@ export const CreateModal = () => {
         )}
       >
         SCid
+      </button>
+      <button
+        onClick={() => setTab(Tabs.NFT)}
+        className={classNames(
+          'flex-1 rounded-lg py-1.5 text-sm font-bold',
+          tab === Tabs.NFT ? 'bg-gray-30 text-white' : 'text-gray-80',
+        )}
+      >
+        Publish Track
       </button>
       <button
         onClick={handlePostTabClick}
