@@ -9,7 +9,7 @@ import { useMeQuery } from 'lib/graphql'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useMagicContext } from 'hooks/useMagicContext'
-import { Users, ChevronDown, Copy, Check, Wallet, ExternalLink } from 'lucide-react'
+import { Users, ChevronDown, Copy, Check, Wallet, ExternalLink, MessageCircle } from 'lucide-react'
 
 import { Button } from './common/Buttons/Button'
 import { SoundChainPopOver } from './common/PopOverButton/PopOverButton'
@@ -285,6 +285,13 @@ export const TopNavBar = ({
             <>
               {/* Wallet Button */}
               <WalletButton />
+
+              {/* DMs */}
+              <Link href="/dex/messages" passHref>
+                <button className="p-2 rounded-full hover:bg-white/10 transition-all relative">
+                  <MessageCircle className="w-5 h-5 text-gray-400 hover:text-white transition-colors" />
+                </button>
+              </Link>
 
               {/* Notifications */}
               <SoundChainPopOver icon={Bell} badge={NotificationBadge}>
