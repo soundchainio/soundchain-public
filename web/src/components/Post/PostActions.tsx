@@ -15,6 +15,7 @@ import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon, ArrowDow
 import { Bookmark, Archive, Info, Film } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { CreateStoryModal } from 'components/dex/CreateStoryModal'
+import { SharePostModal } from 'components/modals/SharePostModal'
 
 // Detect if device supports hover (desktop)
 const checkIsDesktop = () => {
@@ -66,6 +67,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   const [showArchiveInfo, setShowArchiveInfo] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
   const [showShareToStory, setShowShareToStory] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const likeButtonRef = useRef<HTMLDivElement>(null)
@@ -156,6 +158,10 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   }
 
   const onShareClick = () => {
+    if (me) {
+      setShowShareModal(true)
+      return
+    }
     try {
       navigator
         .share({
@@ -260,7 +266,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   }, [postId, router.asPath])
 
   return (
-    <div className="relative flex items-center justify-between gap-2">
+    <div className="relative flex items-center justify-between gap-0.5 sm:gap-2 overflow-x-auto scrollbar-hide">
       {/* Like button with hover zone */}
       <div
         ref={likeButtonRef}
@@ -269,7 +275,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
         onMouseLeave={handleLikeMouseLeave}
       >
         <button
-          className="flex items-center gap-2 px-3 py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
+          className="flex items-center gap-2 px-1.5 sm:px-3 py-1.5 sm:py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
           onClick={handleLikeButton}
           title="Like"
         >
@@ -320,7 +326,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
 
       <div className={commonClasses}>
         <button
-          className="flex items-center gap-1.5 px-3 py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
+          className="flex items-center gap-1.5 px-1.5 sm:px-3 py-1.5 sm:py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
           onClick={() => dispatchShowCommentModal({ show: true, postId })}
           title="Reply"
         >
@@ -332,7 +338,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       </div>
       <div className={commonClasses}>
         <button
-          className="flex items-center gap-1.5 px-3 py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
+          className="flex items-center gap-1.5 px-1.5 sm:px-3 py-1.5 sm:py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
           onClick={onRepostClick}
           title="Repost"
         >
@@ -344,7 +350,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       </div>
       <div className={commonClasses}>
         <button
-          className="flex items-center px-3 py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
+          className="flex items-center px-1.5 sm:px-3 py-1.5 sm:py-2 font-medium hover:text-white hover:bg-white/5 transition-all rounded-xl"
           onClick={onShareClick}
           title="Share"
         >
@@ -355,7 +361,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       {me && (postData?.uploadedMediaUrl || postData?.mediaThumbnail || postData?.mediaLink) && (
         <div className={commonClasses}>
           <button
-            className="flex items-center px-3 py-2 font-medium hover:text-cyan-400 hover:bg-cyan-500/10 transition-all rounded-xl"
+            className="flex items-center px-1.5 sm:px-3 py-1.5 sm:py-2 font-medium hover:text-cyan-400 hover:bg-cyan-500/10 transition-all rounded-xl"
             onClick={onShareToStory}
             title="Share to Story"
           >
@@ -367,7 +373,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       {!hasTrack && postData && (
         <div className={commonClasses}>
           <button
-            className={`flex items-center px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${isDownloading ? 'opacity-50' : ''}`}
+            className={`flex items-center px-1.5 sm:px-3 py-1.5 sm:py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${isDownloading ? 'opacity-50' : ''}`}
             onClick={handleDownloadClick}
             disabled={isDownloading}
             title="Download"
@@ -380,7 +386,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       {me && (
         <div className={commonClasses}>
           <button
-            className={`flex items-center px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${bookmarking || unbookmarking ? 'opacity-50' : ''}`}
+            className={`flex items-center px-1.5 sm:px-3 py-1.5 sm:py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${bookmarking || unbookmarking ? 'opacity-50' : ''}`}
             onClick={handleBookmarkClick}
             disabled={bookmarking || unbookmarking}
             title="Save"
@@ -397,7 +403,7 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
       {isEphemeral && isOwner && postData && (
         <div className={`${commonClasses} relative`}>
           <button
-            className={`flex items-center px-3 py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${isArchiving ? 'opacity-50' : ''}`}
+            className={`flex items-center px-1.5 sm:px-3 py-1.5 sm:py-2 rounded-xl hover:bg-white/5 hover:text-white transition-all ${isArchiving ? 'opacity-50' : ''}`}
             onClick={handleArchiveClick}
             disabled={isArchiving}
             title={isArchiving ? 'Saving...' : 'Archive'}
@@ -465,6 +471,18 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
             }
             return null
           })()}
+        />,
+        portalContainer
+      )}
+
+      {/* Share Post Modal (DM share) */}
+      {portalContainer && showShareModal && createPortal(
+        <SharePostModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          postId={postId}
+          postBody={postData?.body}
+          onShareToStory={me && (postData?.uploadedMediaUrl || postData?.mediaThumbnail || postData?.mediaLink) ? onShareToStory : undefined}
         />,
         portalContainer
       )}
