@@ -23,6 +23,7 @@ import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { useHideBottomNavBar } from 'hooks/useHideBottomNavBar'
 import { useMagicContext } from 'hooks/useMagicContext'
+import { SocialMediaLink } from 'components/SocialMediaLink'
 import { NFTCard } from 'components/dex/NFTCard'
 import { ProfileHeader } from 'components/dex/ProfileHeader'
 import { TrackNFTCard } from 'components/dex/TrackNFTCard'
@@ -3883,6 +3884,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </p>
                   )}
 
+                  {/* Social Pills */}
+                  {(me?.profile?.socialMedias || userData?.me?.profile?.socialMedias) && (
+                    <div className="flex items-center gap-3 mt-3 flex-wrap">
+                      {(Object.entries(me?.profile?.socialMedias || userData?.me?.profile?.socialMedias || {}) as [string, string | null][])
+                        .filter(([key, value]) => key !== '__typename' && value)
+                        .map(([key, value]) => (
+                          <SocialMediaLink key={key} company={key as any} handle={value!} />
+                        ))}
+                    </div>
+                  )}
+
                   {/* Action buttons */}
                   <div className="flex items-center gap-2 mt-4">
                     <Button
@@ -6726,6 +6738,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {/* Bio */}
                       {viewingProfile.bio && (
                         <p className="text-gray-300 text-sm mt-3 max-w-xl">{viewingProfile.bio}</p>
+                      )}
+
+                      {/* Social Pills */}
+                      {viewingProfile.socialMedias && (
+                        <div className="flex items-center gap-3 mt-3 flex-wrap">
+                          {(Object.entries(viewingProfile.socialMedias) as [string, string | null][])
+                            .filter(([key, value]) => key !== '__typename' && value)
+                            .map(([key, value]) => (
+                              <SocialMediaLink key={key} company={key as any} handle={value!} />
+                            ))}
+                        </div>
                       )}
 
                       {/* Stats Row - Compact */}
