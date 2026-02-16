@@ -14,6 +14,7 @@ import { MediaCropEditor } from './MediaCropEditor'
 import StoryTextOverlay, { TextLayer } from './StoryTextOverlay'
 import { getIpfsUrl } from 'utils/ipfs'
 import { getNormalizedLink, IdentifySource } from 'utils/NormalizeEmbedLinks'
+import ReactPlayer from 'react-player'
 import { MediaProvider } from 'types/MediaProvider'
 
 // GraphQL mutation for creating story WITH overlays and attached track
@@ -419,12 +420,18 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
 
     // Detect video duration for proper story timing
     if (prefillMedia.type === 'video') {
-      const tempVideo = document.createElement('video')
-      tempVideo.preload = 'metadata'
-      tempVideo.crossOrigin = 'anonymous'
-      tempVideo.src = resolvedUrl
-      tempVideo.onloadedmetadata = () => {
-        setVideoDuration(tempVideo.duration)
+      // Embed URLs (YouTube etc) can't be loaded in a <video> element — use default duration
+      const isEmbed = /(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|spotify\.com|bandcamp\.com)/i.test(resolvedUrl)
+      if (isEmbed) {
+        setVideoDuration(60) // Default 60s for embeds — StoryViewer will detect actual duration
+      } else {
+        const tempVideo = document.createElement('video')
+        tempVideo.preload = 'metadata'
+        tempVideo.crossOrigin = 'anonymous'
+        tempVideo.src = resolvedUrl
+        tempVideo.onloadedmetadata = () => {
+          setVideoDuration(tempVideo.duration)
+        }
       }
     }
 
@@ -1062,7 +1069,9 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
                     ref={previewContainerRef}
                     className="relative aspect-square sm:aspect-[9/16] rounded-xl overflow-hidden bg-black"
                   >
-                    {mediaType === 'image' ? (
+                    {/(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|spotify\.com|bandcamp\.com)/i.test(mediaPreview) ? (
+                      <ReactPlayer url={mediaPreview} playing muted width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }} playsinline config={{ youtube: { playerVars: { autoplay: 1, modestbranding: 1, rel: 0, playsinline: 1 } } }} />
+                    ) : mediaType === 'image' ? (
                       <img src={mediaPreview} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <video src={mediaPreview} className="w-full h-full object-cover" autoPlay loop muted playsInline />

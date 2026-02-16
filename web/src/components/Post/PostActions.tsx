@@ -454,16 +454,12 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
                 authorName: postData.profile?.displayName || postData.profile?.userHandle || undefined,
               }
             }
-            // Embedded media — use thumbnail or YouTube thumbnail as image story
-            const thumb = postData?.mediaThumbnail
-              || (postData?.mediaLink?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-                ? `https://img.youtube.com/vi/${postData.mediaLink!.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)![1]}/maxresdefault.jpg`
-                : null)
-            if (thumb) {
+            // Embedded media — pass original embed URL so it autoplays in StoryViewer
+            if (postData?.mediaLink) {
               return {
-                url: thumb,
-                type: 'image' as const,
-                caption: postData?.body || undefined,
+                url: postData.mediaLink,
+                type: 'video' as const,
+                caption: postData.body || undefined,
                 authorName: postData?.profile?.displayName || postData?.profile?.userHandle || undefined,
               }
             }

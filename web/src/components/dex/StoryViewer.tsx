@@ -7,6 +7,11 @@ import { gql, useMutation } from '@apollo/client'
 import { MakeStoryPermanentModal } from './MakeStoryPermanentModal'
 import { ReelSCidTracker } from './ReelSCidTracker'
 import { getIpfsUrl } from 'utils/ipfs'
+import ReactPlayer from 'react-player'
+
+// Detect if a URL is an embeddable platform (YouTube, Vimeo, etc.) vs a direct file
+const isEmbedUrl = (url: string) =>
+  /(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|spotify\.com|bandcamp\.com|facebook\.com\/.*video)/i.test(url)
 
 const REACT_TO_STORY = gql`
   mutation reactToStory($storyId: ID!, $emoji: String!) {
@@ -682,8 +687,26 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, us
           </div>
         </div>
 
-        {/* Media - convert IPFS URLs to gateway URLs */}
-        {currentStory.mediaType === 'image' ? (
+        {/* Media - convert IPFS URLs to gateway URLs, embed URLs use ReactPlayer */}
+        {isEmbedUrl(currentStory.mediaUrl) ? (
+          <div className="w-full h-full bg-black flex items-center justify-center">
+            <ReactPlayer
+              url={currentStory.mediaUrl}
+              playing={!isPaused}
+              muted={isMuted}
+              width="100%"
+              height="100%"
+              style={{ position: 'absolute', top: 0, left: 0 }}
+              playsinline
+              onEnded={goToNextStory}
+              onDuration={(dur) => setVideoDuration(dur * 1000)}
+              config={{
+                youtube: { playerVars: { autoplay: 1, modestbranding: 1, rel: 0, playsinline: 1, controls: 0 } },
+                vimeo: { playerOptions: { autoplay: true, playsinline: true } },
+              }}
+            />
+          </div>
+        ) : currentStory.mediaType === 'image' ? (
           <img
             src={getIpfsUrl(currentStory.mediaUrl)}
             alt=""

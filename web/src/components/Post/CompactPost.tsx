@@ -457,15 +457,11 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
                 authorName: post.profile?.displayName || post.profile?.userHandle || undefined,
               }
             }
-            const ml = post.mediaLink
-            const thumb = post.mediaThumbnail
-              || (ml?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-                ? `https://img.youtube.com/vi/${ml!.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)![1]}/maxresdefault.jpg`
-                : null)
-            if (thumb) {
+            // Embedded media — pass original embed URL so it autoplays in StoryViewer
+            if (post.mediaLink) {
               return {
-                url: thumb,
-                type: 'image' as const,
+                url: post.mediaLink,
+                type: 'video' as const,
                 caption: post.body || undefined,
                 authorName: post.profile?.displayName || post.profile?.userHandle || undefined,
               }
