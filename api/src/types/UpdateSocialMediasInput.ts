@@ -48,4 +48,23 @@ export class UpdateSocialMediasInput {
   @Matches(handleRegex, { message: 'Invalid characters' })
   @MaxLength(100)
   bandcamp?: string;
+
+  @Field({ nullable: true })
+  @Matches(handleRegex, { message: 'Invalid characters' })
+  @MaxLength(100)
+  x?: string;
+
+  @Field({ nullable: true })
+  @Matches(handleRegex, { message: 'Invalid characters' })
+  @MaxLength(100)
+  tiktok?: string;
+
+  @Field({ nullable: true })
+  @Matches(handleRegex, { message: 'Invalid characters' })
+  @MaxLength(100)
+  onlyfans?: string;
+
+  @Field({ nullable: true })
+  @MaxLength(500)
+  customLink?: string;
 }

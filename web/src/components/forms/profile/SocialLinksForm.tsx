@@ -51,7 +51,7 @@ const regex = /(?:^https?:\/\/(?:www\.)?[\w]+\.(com|ee|gg|me|org))\/([\w-]+)/
 const normalize = (value: string, platform?: string) => {
   const match = value.match(regex)
   if (match) {
-    return match[1]
+    return match[2]
   }
   return value.replace(/[^a-zA-Z0-9-_.#/=?]/g, '')
 }

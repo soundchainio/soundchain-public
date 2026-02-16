@@ -2116,26 +2116,34 @@ export type SendMessagePayload = {
 export type SocialMedias = {
   __typename?: 'SocialMedias';
   bandcamp: Maybe<Scalars['String']['output']>;
+  customLink: Maybe<Scalars['String']['output']>;
   discord: Maybe<Scalars['String']['output']>;
   facebook: Maybe<Scalars['String']['output']>;
   instagram: Maybe<Scalars['String']['output']>;
   linktree: Maybe<Scalars['String']['output']>;
+  onlyfans: Maybe<Scalars['String']['output']>;
   soundcloud: Maybe<Scalars['String']['output']>;
   spotify: Maybe<Scalars['String']['output']>;
   telegram: Maybe<Scalars['String']['output']>;
+  tiktok: Maybe<Scalars['String']['output']>;
   twitter: Maybe<Scalars['String']['output']>;
+  x: Maybe<Scalars['String']['output']>;
 };
 
 export type SocialMediasInput = {
   bandcamp?: InputMaybe<Scalars['String']['input']>;
+  customLink?: InputMaybe<Scalars['String']['input']>;
   discord?: InputMaybe<Scalars['String']['input']>;
   facebook?: InputMaybe<Scalars['String']['input']>;
   instagram?: InputMaybe<Scalars['String']['input']>;
   linktree?: InputMaybe<Scalars['String']['input']>;
+  onlyfans?: InputMaybe<Scalars['String']['input']>;
   soundcloud?: InputMaybe<Scalars['String']['input']>;
   spotify?: InputMaybe<Scalars['String']['input']>;
   telegram?: InputMaybe<Scalars['String']['input']>;
+  tiktok?: InputMaybe<Scalars['String']['input']>;
   twitter?: InputMaybe<Scalars['String']['input']>;
+  x?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SortExploreTracks = {
@@ -2611,7 +2619,7 @@ export type CheapestListingItemQuery = { __typename?: 'Query', cheapestListingIt
 export type ClaimBadgeProfileMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ClaimBadgeProfileMutation = { __typename?: 'Mutation', claimBadgeProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } } };
+export type ClaimBadgeProfileMutation = { __typename?: 'Mutation', claimBadgeProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } } } };
 
 export type ClearNotificationsMutationVariables = Exact<{ [key: string]: never; }>;
 
@@ -2730,7 +2738,7 @@ export type ExploreQueryVariables = Exact<{
 }>;
 
 
-export type ExploreQuery = { __typename?: 'Query', explore: { __typename?: 'ExplorePayload', totalTracks: number, totalProfiles: number, tracks: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, profiles: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } }> } };
+export type ExploreQuery = { __typename?: 'Query', explore: { __typename?: 'ExplorePayload', totalTracks: number, totalProfiles: number, tracks: Array<{ __typename?: 'Track', id: string, profileId: string, title: string | null, assetUrl: string, artworkUrl: string | null, description: string | null, utilityInfo: string | null, artist: string | null, ISRC: string | null, artistId: string | null, artistProfileId: string | null, album: string | null, releaseYear: number | null, copyright: string | null, genres: Array<Genre> | null, playbackUrl: string, createdAt: string, updatedAt: string, deleted: boolean | null, playbackCountFormatted: string, isFavorite: boolean, favoriteCount: number, listingCount: number, playbackCount: number, saleType: string, trackEditionId: string | null, editionSize: number, price: { __typename?: 'TrackPrice', value: number, currency: CurrencyType }, nftData: { __typename?: 'NFTDataType', transactionHash: string | null, tokenId: number | null, contract: string | null, minter: string | null, ipfsCid: string | null, pendingRequest: PendingRequest | null, owner: string | null, pendingTime: string | null } | null, trackEdition: { __typename?: 'TrackEdition', id: string, editionId: number, transactionHash: string, contract: string | null, listed: boolean, marketplace: string | null, editionSize: number, deleted: boolean | null, createdAt: string, updatedAt: string, editionData: { __typename?: 'EditionDataType', pendingRequest: PendingRequest | null, pendingTime: string | null, pendingTrackCount: number | null, transactionHash: string | null, contract: string | null, owner: string | null } | null } | null }>, profiles: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } }> } };
 
 export type ExploreTracksQueryVariables = Exact<{
   sort?: InputMaybe<SortExploreTracks>;
@@ -2747,7 +2755,7 @@ export type ExploreUsersQueryVariables = Exact<{
 }>;
 
 
-export type ExploreUsersQuery = { __typename?: 'Query', exploreUsers: { __typename?: 'ProfileConnection', nodes: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } }>, pageInfo: { __typename?: 'PageInfo', totalCount: number, hasNextPage: boolean, endCursor: string | null } } };
+export type ExploreUsersQuery = { __typename?: 'Query', exploreUsers: { __typename?: 'ProfileConnection', nodes: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } }>, pageInfo: { __typename?: 'PageInfo', totalCount: number, hasNextPage: boolean, endCursor: string | null } } };
 
 export type FavoriteTracksQueryVariables = Exact<{
   sort?: InputMaybe<SortTrackInput>;
@@ -2779,7 +2787,7 @@ export type FollowedArtistsQueryVariables = Exact<{
 }>;
 
 
-export type FollowedArtistsQuery = { __typename?: 'Query', followedArtists: { __typename?: 'FollowedArtistsConnection', nodes: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
+export type FollowedArtistsQuery = { __typename?: 'Query', followedArtists: { __typename?: 'FollowedArtistsConnection', nodes: Array<{ __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, endCursor: string | null, totalCount: number } } };
 
 export type FollowerNotificationFieldsFragment = { __typename?: 'FollowerNotification', id: string, type: NotificationType, link: string, createdAt: string, followerName: string, followerPicture: string | null };
 
@@ -2912,7 +2920,7 @@ export type MaticUsdQuery = { __typename?: 'Query', maticUsd: string };
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, handle: string, email: string, magicWalletAddress: string | null, googleWalletAddress: string | null, discordWalletAddress: string | null, twitchWalletAddress: string | null, emailWalletAddress: string | null, metaMaskWalletAddressees: Array<string> | null, defaultWallet: DefaultWallet, authMethod: AuthMethod, isApprovedOnMarketplace: boolean, roles: Array<Role>, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } } | null };
+export type MeQuery = { __typename?: 'Query', me: { __typename?: 'User', id: string, handle: string, email: string, magicWalletAddress: string | null, googleWalletAddress: string | null, discordWalletAddress: string | null, twitchWalletAddress: string | null, emailWalletAddress: string | null, metaMaskWalletAddressees: Array<string> | null, defaultWallet: DefaultWallet, authMethod: AuthMethod, isApprovedOnMarketplace: boolean, roles: Array<Role>, profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } } } | null };
 
 export type MessageQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -3046,16 +3054,16 @@ export type ProfileQueryVariables = Exact<{
 }>;
 
 
-export type ProfileQuery = { __typename?: 'Query', profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } };
+export type ProfileQuery = { __typename?: 'Query', profile: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } } };
 
 export type ProfileByHandleQueryVariables = Exact<{
   handle: Scalars['String']['input'];
 }>;
 
 
-export type ProfileByHandleQuery = { __typename?: 'Query', profileByHandle: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } };
+export type ProfileByHandleQuery = { __typename?: 'Query', profileByHandle: { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } } };
 
-export type ProfileComponentFieldsFragment = { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, tracksCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } };
+export type ProfileComponentFieldsFragment = { __typename?: 'Profile', id: string, displayName: string, profilePicture: string | null, coverPicture: string | null, favoriteGenres: Array<Genre> | null, musicianTypes: Array<MusicianType> | null, bio: string | null, followerCount: number, followingCount: number, tracksCount: number, userHandle: string, isFollowed: boolean, isSubscriber: boolean, unreadNotificationCount: number, unreadMessageCount: number, verified: boolean | null, teamMember: boolean, magicWalletAddress: string | null, badges: Array<Badge> | null, createdAt: string, updatedAt: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } };
 
 export type ProfileDisplayNameQueryVariables = Exact<{
   id: Scalars['String']['input'];
@@ -3328,7 +3336,7 @@ export type UpdateSocialMediasMutationVariables = Exact<{
 }>;
 
 
-export type UpdateSocialMediasMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null } } } };
+export type UpdateSocialMediasMutation = { __typename?: 'Mutation', updateProfile: { __typename?: 'UpdateProfilePayload', profile: { __typename?: 'Profile', id: string, socialMedias: { __typename?: 'SocialMedias', facebook: string | null, instagram: string | null, soundcloud: string | null, twitter: string | null, linktree: string | null, discord: string | null, telegram: string | null, spotify: string | null, bandcamp: string | null, x: string | null, tiktok: string | null, onlyfans: string | null, customLink: string | null } } } };
 
 export type UpdateProfileVerificationRequestMutationVariables = Exact<{
   id: Scalars['String']['input'];
@@ -3784,6 +3792,10 @@ export const ProfileComponentFieldsFragmentDoc = gql`
     telegram
     spotify
     bandcamp
+    x
+    tiktok
+    onlyfans
+    customLink
   }
   favoriteGenres
   musicianTypes
@@ -8388,6 +8400,10 @@ export const UpdateSocialMediasDocument = gql`
         telegram
         spotify
         bandcamp
+        x
+        tiktok
+        onlyfans
+        customLink
       }
     }
   }

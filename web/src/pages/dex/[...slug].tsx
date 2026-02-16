@@ -3707,12 +3707,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <button
                       key={item.id}
                       onClick={() => {
-                        if (item.id === 'profile') {
-                          setIsBioExpanded(!isBioExpanded)
-                        } else {
-                          setIsBioExpanded(false)
-                          router.push(item.route, undefined, { shallow: false })
-                        }
+                        setIsBioExpanded(false)
+                        router.push(item.route, undefined, { shallow: false })
                       }}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                         isActive
@@ -3885,15 +3881,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   )}
 
                   {/* Social Pills */}
-                  {(me?.profile?.socialMedias || userData?.me?.profile?.socialMedias) && (
-                    <div className="flex items-center gap-3 mt-3 flex-wrap">
-                      {(Object.entries(me?.profile?.socialMedias || userData?.me?.profile?.socialMedias || {}) as [string, string | null][])
-                        .filter(([key, value]) => key !== '__typename' && value)
-                        .map(([key, value]) => (
-                          <SocialMediaLink key={key} company={key as any} handle={value!} />
+                  {(() => {
+                    const sm = me?.profile?.socialMedias || userData?.me?.profile?.socialMedias
+                    if (!sm) return null
+                    const entries = Object.entries(sm).filter(([k, v]) => k !== '__typename' && v)
+                    if (!entries.length) return null
+                    return (
+                      <div className="flex items-center gap-3 mt-3 flex-wrap">
+                        {entries.map(([k, v]) => (
+                          <SocialMediaLink key={k} company={k as keyof typeof sm} handle={String(v)} />
                         ))}
-                    </div>
-                  )}
+                      </div>
+                    )
+                  })()}
 
                   {/* Action buttons */}
                   <div className="flex items-center gap-2 mt-4">
@@ -6741,15 +6741,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       )}
 
                       {/* Social Pills */}
-                      {viewingProfile.socialMedias && (
-                        <div className="flex items-center gap-3 mt-3 flex-wrap">
-                          {(Object.entries(viewingProfile.socialMedias) as [string, string | null][])
-                            .filter(([key, value]) => key !== '__typename' && value)
-                            .map(([key, value]) => (
-                              <SocialMediaLink key={key} company={key as any} handle={value!} />
+                      {(() => {
+                        const sm = viewingProfile.socialMedias
+                        if (!sm) return null
+                        const entries = Object.entries(sm).filter(([k, v]) => k !== '__typename' && v)
+                        if (!entries.length) return null
+                        return (
+                          <div className="flex items-center gap-3 mt-3 flex-wrap">
+                            {entries.map(([k, v]) => (
+                              <SocialMediaLink key={k} company={k as keyof typeof sm} handle={String(v)} />
                             ))}
-                        </div>
-                      )}
+                          </div>
+                        )
+                      })()}
 
                       {/* Stats Row - Compact */}
                       <div className="flex items-center gap-6 mt-3 text-sm">
@@ -6775,7 +6779,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           </button>
                         ) : isViewingOwnProfile ? (
                           <button
-                            onClick={() => setSelectedView('settings')}
+                            onClick={() => router.push('/dex/settings', undefined, { shallow: false })}
                             className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
                           >
                             <Settings className="w-4 h-4" />
