@@ -32,7 +32,7 @@ export const getServerSideProps = protectPage<TransferPageProps, TransferPagePar
 export default function Transfer() {
   return (
     <>
-      <SEO title="Transfer NFTs - SoundChain" description="SoundChain Transfer NFTs" canonicalUrl="/wallet/transfer" />
+      <SEO title="Transfer Tracks - SoundChain" description="Transfer your music collection on SoundChain" canonicalUrl="/wallet/transfer" />
       <TransferNftsForm />
     </>
   )

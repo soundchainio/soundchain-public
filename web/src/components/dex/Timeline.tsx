@@ -259,7 +259,7 @@ export function Timeline() {
     {
       id: 0,
       author: "SoundChain.io",
-      content: "🎵 OFFICIAL SOUNDCHAIN MUSIC NFTs MIXTAPE RELEASE! 🚀 Check out our curated collection of Music NFTs from our amazing artists on the SoundChain platform. This is what the future of music sounds like! 🔥✨ #SoundChain #MusicNFTs #Web3Music",
+      content: "🎵 OFFICIAL SOUNDCHAIN MUSIC MIXTAPE RELEASE! 🚀 Check out our curated collection from our amazing artists on the SoundChain platform. This is what the future of music sounds like! 🔥✨ #SoundChain #StreamEarnOwn #DecentralizedMusic",
       youtubeUrl: "https://youtu.be/example",
       premium: false,
       avatar: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=100&h=100&fit=crop&crop=face",

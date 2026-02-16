@@ -82,7 +82,7 @@ const withRetry = async <T,>(
 }
 
 enum Tabs {
-  NFT = 'NFT',
+  NFT = 'Publish',
   SCID = 'SCid',
   POST = 'Post',
 }
@@ -417,7 +417,7 @@ export const CreateModal = () => {
           if (errorStr.includes('rate limit') || errorStr.includes('Too many requests')) {
             setMintingState('Rate limited by RPC. Please wait 30 seconds and try again.')
           } else {
-            setMintingState('There was an error while minting your NFT')
+            setMintingState('There was an error while publishing your track')
           }
           setMintError(true)
         }
@@ -590,7 +590,7 @@ export const CreateModal = () => {
             })
 
             console.log(`✅ Platform fee sent! TX: ${txReceipt.transactionHash}`)
-            setMintingState('Platform fee collected! Proceeding to mint...')
+            setMintingState('Platform fee collected! Proceeding to publish...')
             await sleep(1000) // Brief pause to show success
           } catch (feeError: any) {
             console.error('❌ Platform fee collection failed:', feeError)
@@ -603,7 +603,7 @@ export const CreateModal = () => {
             // For other errors (network issues, etc.), log but continue with minting
             // This prevents blocking users due to fee issues
             console.warn('⚠️ Fee collection failed, proceeding with mint anyway')
-            setMintingState('Fee skipped due to network issue. Proceeding to mint...')
+            setMintingState('Fee skipped due to network issue. Proceeding to publish...')
             await sleep(1000)
           }
         }
@@ -637,7 +637,7 @@ export const CreateModal = () => {
           const quantity = quantityLeft <= BATCH_SIZE ? quantityLeft : BATCH_SIZE
           // Wrap with retry for RPC rate limiting
           promises.push(withRetry(() => createAndMintTracks(quantity, editionNumber, index === 0), 3, 15000, usingMagicWallet))
-          setMintingState(`Minting NFT (${walletTypeLabel})`)
+          setMintingState(`Publishing track (${walletTypeLabel})`)
 
           quantityLeft = quantityLeft - BATCH_SIZE
         }
@@ -649,7 +649,7 @@ export const CreateModal = () => {
       } catch (e) {
         console.error(e)
         setTransactionHash(undefined)
-        setMintingState('There was an error while minting your NFT')
+        setMintingState('There was an error while publishing your track')
         setMintError(true)
       }
     }
@@ -677,7 +677,7 @@ export const CreateModal = () => {
           tab === Tabs.NFT ? 'bg-gray-30 text-white' : 'text-gray-80',
         )}
       >
-        Mint NFT
+        Publish Track
       </button>
       <button
         onClick={() => setTab(Tabs.SCID)}

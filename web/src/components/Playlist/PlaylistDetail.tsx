@@ -530,7 +530,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   // Get source type label
   const getSourceLabel = (sourceType: PlaylistTrackSourceType) => {
     switch (sourceType) {
-      case PlaylistTrackSourceType.Nft: return 'NFT'
+      case PlaylistTrackSourceType.Nft: return 'SoundChain'
       case PlaylistTrackSourceType.Youtube: return 'YouTube'
       case PlaylistTrackSourceType.Spotify: return 'Spotify'
       case PlaylistTrackSourceType.Soundcloud: return 'SoundCloud'

@@ -364,7 +364,7 @@ export function NotificationSettingsForm({ afterSubmit, initialValues }: Notific
               <ShoppingBag className="w-5 h-5 text-yellow-400" />
               <div>
                 <p className="text-white font-medium">Sales</p>
-                <p className="text-gray-500 text-xs">When your NFT sells on the marketplace</p>
+                <p className="text-gray-500 text-xs">When your track sells on the marketplace</p>
               </div>
             </div>
             <Toggle checked={notifyOnSale} onChange={setNotifyOnSale} />

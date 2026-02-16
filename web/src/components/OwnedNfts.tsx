@@ -40,7 +40,7 @@ export const OwnedNfts = ({ owner, refreshing }: OwnedNftsProps) => {
     )
   }
   if (!data) {
-    return <NoResultFound type="NFTs" />
+    return <NoResultFound type="Tracks" />
   }
 
   const { nodes, pageInfo } = data.groupedTracks

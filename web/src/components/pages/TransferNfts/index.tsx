@@ -94,7 +94,7 @@ function SelectNFTsField() {
 
   return (
     <div className="flex flex-col">
-      <p className="my-4 text-center font-semibold">Select the NFT you wish to transfer:</p>
+      <p className="my-4 text-center font-semibold">Select the track you wish to transfer:</p>
       <Listbox value={selectedNft} onChange={handleSetSelectedNft}>
         <Listbox.Options static className="space-y-1 text-white">
           {tracks?.nodes.map((track, index) => (

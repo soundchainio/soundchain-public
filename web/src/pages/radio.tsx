@@ -413,8 +413,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
   const handleShareTwitter = () => {
     const text = currentTrack
-      ? `Listening to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio 🔴 ${totalTracks || 618} NFT tracks streaming 24/7`
-      : `Tune in to OGUN Radio 🔴 ${totalTracks || 618} NFT tracks streaming 24/7`
+      ? `Listening to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio 🔴 ${totalTracks || 618} tracks streaming 24/7`
+      : `Tune in to OGUN Radio 🔴 ${totalTracks || 618} tracks streaming 24/7`
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(getShareUrl())}`, '_blank')
     setShowShareMenu(false)
   }
@@ -423,8 +423,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
     if (navigator.share) {
       try {
         await navigator.share({
-          title: currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music',
-          text: currentTrack ? `Listen to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio` : 'Tune in to OGUN Radio - 618 NFT tracks streaming 24/7',
+          title: currentTrack ? `${currentTrack.title} - ${currentTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 Music',
+          text: currentTrack ? `Listen to "${currentTrack.title}" by ${currentTrack.artist} on OGUN Radio` : 'Tune in to OGUN Radio - streaming 24/7',
           url: getShareUrl(),
         })
       } catch { /* user cancelled */ }
@@ -444,10 +444,10 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
   // Use initialTrack (SSR) for OG meta, fallback to currentTrack (client)
   const ogTrack = initialTrack || currentTrack
-  const ogTitle = ogTrack ? `${ogTrack.title} - ${ogTrack.artist}` : 'OGUN Radio - 24/7 NFT Music'
+  const ogTitle = ogTrack ? `${ogTrack.title} - ${ogTrack.artist}` : 'OGUN Radio - 24/7 Music'
   const ogDescription = ogTrack
     ? `🎵 ${ogTrack.title} by ${ogTrack.artist}\n\n🔊 Stream Now on SoundChain\n📍 Protocol: IPFS/Pinata P2P\n⛓️ Network: Polygon`
-    : `${totalTracks || 618} NFT tracks streaming 24/7 on decentralized IPFS`
+    : `${totalTracks || 618} tracks streaming 24/7 on decentralized IPFS`
   // Ensure artwork URL is a proper HTTPS URL for social previews
   let ogImage = ogTrack?.artwork_url || 'https://soundchain.io/soundchain-meta-logo.png'
   if (ogImage.startsWith('ipfs://')) {
@@ -457,7 +457,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   return (
     <>
       <Head>
-        <title>{ogTrack ? `${ogTrack.title} - ${ogTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 NFT Music | SoundChain'}</title>
+        <title>{ogTrack ? `${ogTrack.title} - ${ogTrack.artist} | OGUN Radio` : 'OGUN Radio - 24/7 Music | SoundChain'}</title>
         <meta name="description" content={ogDescription} />
 
         {/* OpenGraph - Rich previews for Discord, iMessage, Facebook, etc. */}
@@ -469,7 +469,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         <meta property="og:image:height" content="1200" />
         <meta property="og:image:alt" content={ogTrack ? `${ogTrack.title} album artwork` : 'OGUN Radio'} />
         <meta property="og:url" content={`https://soundchain.io/radio${ogTrack ? `?track=${ogTrack.id}` : ''}`} />
-        <meta property="og:site_name" content="SoundChain | Decentralized Music NFTs" />
+        <meta property="og:site_name" content="SoundChain | Decentralized Music Platform" />
         {ogTrack && (
           <>
             <meta property="music:musician" content={ogTrack.artist} />
@@ -481,7 +481,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         {/* Twitter Card - Rich preview for Twitter/X */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={ogTitle} />
-        <meta name="twitter:description" content={ogTrack ? `Stream "${ogTrack.title}" by ${ogTrack.artist} on OGUN Radio 🎶` : `${totalTracks || 618} NFT tracks streaming 24/7`} />
+        <meta name="twitter:description" content={ogTrack ? `Stream "${ogTrack.title}" by ${ogTrack.artist} on OGUN Radio 🎶` : `${totalTracks || 618} tracks streaming 24/7`} />
         <meta name="twitter:image" content={ogImage} />
         <meta name="twitter:site" content="@SoundChainFM" />
         <meta name="twitter:creator" content="@SoundChainFM" />
@@ -704,10 +704,10 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                               </div>
                               <div className="mt-2 p-2 bg-cyan-500/5 rounded-lg border border-cyan-500/20">
                                 <p className="text-[9px] text-cyan-400 text-center">
-                                  WIN-WIN! Earn 30% when YOU stream NFT tracks
+                                  WIN-WIN! Earn 30% when YOU stream tracks
                                 </p>
                                 <p className="text-[8px] text-gray-500 text-center mt-1">
-                                  Stream NFT tracks for 30+ sec → Earn 0.15 OGUN each (max {myListenerRewardsData?.myListenerRewards?.dailyLimit || 50} OGUN/day)
+                                  Stream tracks for 30+ sec → Earn 0.15 OGUN each (max {myListenerRewardsData?.myListenerRewards?.dailyLimit || 50} OGUN/day)
                                 </p>
                               </div>
                             </div>
@@ -716,7 +716,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                           {/* Reward Rate - Universal */}
                           <div className="p-3 border-b border-orange-500/20">
                             <div className="text-center p-2 bg-gradient-to-br from-green-500/10 to-cyan-500/10 rounded-lg border border-green-500/30">
-                              <div className="text-[10px] text-green-400/80">All Tracks (Free Upload + NFT)</div>
+                              <div className="text-[10px] text-green-400/80">All Tracks Earn Equal Rewards</div>
                               <div className="text-base font-bold text-green-400">0.5 OGUN</div>
                               <div className="text-[9px] text-gray-400">per stream (70% creator / 30% listener)</div>
                             </div>
@@ -892,7 +892,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">OGUN Radio</h1>
               <p className="text-gray-400 flex items-center justify-center gap-2">
-                {totalTracks || queueLength || '...'} NFT Tracks <Shuffle className="w-4 h-4 text-green-400" /> Infinite Shuffle
+                {totalTracks || queueLength || '...'} Tracks <Shuffle className="w-4 h-4 text-green-400" /> Infinite Shuffle
               </p>
             </div>
 
@@ -937,7 +937,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                     </div>
                     {currentTrack.is_nft && (
                       <div className="absolute -top-2 -right-2 px-2 py-1 bg-yellow-500 text-black text-xs font-bold rounded-full">
-                        NFT
+                        ⛓️
                       </div>
                     )}
                   </div>
@@ -972,7 +972,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                         <Play className="w-4 h-4" />
                         {currentTrack.play_count} plays
                       </span>
-                      <span>{totalTracks || queueLength} NFT Tracks</span>
+                      <span>{totalTracks || queueLength} Tracks</span>
                     </div>
                   </div>
                 </div>
@@ -1134,7 +1134,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
             <div className="bg-[#0a1628] border border-cyan-900/30 rounded-xl p-4 text-center">
               <div className="text-3xl font-bold text-cyan-400">{totalTracks || queueLength || '...'}</div>
-              <div className="text-sm text-gray-500">NFT Tracks</div>
+              <div className="text-sm text-gray-500">Tracks</div>
             </div>
             <div className="bg-[#0a1628] border border-yellow-900/30 rounded-xl p-4 text-center">
               <div className="text-3xl font-bold text-yellow-400">24/7</div>

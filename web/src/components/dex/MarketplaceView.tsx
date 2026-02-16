@@ -349,7 +349,7 @@ export const MarketplaceView: React.FC<MarketplaceViewProps> = ({
             {/* Center Tabs */}
             <div className="hidden md:flex items-center gap-1 bg-gray-900/50 rounded-lg p-1 border border-gray-800">
               {[
-                { id: 'nft', label: 'NFT', icon: ImageIcon },
+                { id: 'nft', label: 'TRACKS', icon: ImageIcon },
                 { id: 'token', label: 'TOKEN', icon: Coins },
                 { id: 'bundle', label: 'BUNDLE', icon: Package },
                 { id: 'sweep', label: 'SWEEP', icon: Layers },

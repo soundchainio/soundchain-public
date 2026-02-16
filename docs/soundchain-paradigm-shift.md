@@ -313,8 +313,9 @@ BLOCKCHAIN (Polygon)
     |
     +-- OGUN Token (0x45f1af89...)
     +-- StreamingRewardsDistributor (0xcf9416c4...)
-    +-- NFT Contract (0xF0287926D...)
-    +-- Marketplace Contract (0xD772ccf78...)
+    +-- NFT Contract (0xf01D323bd...)
+    +-- Marketplace Editions (0x7EfC9A7F3...)
+    +-- Marketplace V1 (0x27302E3ff...)
     +-- Treasury/Gnosis Safe (0x519bed3f...)
     |
 NOTIFICATIONS (All FREE)

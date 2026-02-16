@@ -86,7 +86,7 @@ export const BridgeNFTModal: React.FC<BridgeNFTModalProps> = ({
       <div className="relative w-full max-w-md bg-neutral-900 rounded-2xl border border-white/10 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10">
-          <h2 className="text-white font-bold">Bridge NFT</h2>
+          <h2 className="text-white font-bold">Bridge Track</h2>
           <button
             onClick={() => { resetModal(); onClose(); }}
             className="p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -105,7 +105,7 @@ export const BridgeNFTModal: React.FC<BridgeNFTModalProps> = ({
               </div>
               <h3 className="text-white font-bold text-lg mb-2">Bridge Initiated!</h3>
               <p className="text-gray-400 text-sm mb-4">
-                Your NFT is being transferred to {targetChain?.name}.
+                Your track is being transferred to {targetChain?.name}.
                 This usually takes 5-15 minutes.
               </p>
               {txHash && (
@@ -219,7 +219,7 @@ export const BridgeNFTModal: React.FC<BridgeNFTModalProps> = ({
                   <div>
                     <p className="text-yellow-400 text-sm font-medium">Cross-Chain Transfer</p>
                     <p className="text-gray-400 text-xs">
-                      NFT will be locked on Polygon and minted on {targetChain?.name || 'destination'}.
+                      Track will be locked on Polygon and bridged to {targetChain?.name || 'destination'}.
                       Bridge time: ~5-15 minutes.
                     </p>
                   </div>

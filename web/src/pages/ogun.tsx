@@ -164,7 +164,7 @@ export default function OgunPage() {
             <span className="col-span-2 md:col-span-1">
               <hr className="h-px border-0 bg-rainbow-gradient" />
               <p className="col-span-2 max-w-md pt-14 text-left text-2xl font-light md:col-span-1 md:text-4xl">
-                Users can earn additional OGUN just by buying and selling NFT's on the SoundChain Marketplace
+                Users can earn additional OGUN just by buying and selling music on the SoundChain Marketplace
               </p>
             </span>
           </span>

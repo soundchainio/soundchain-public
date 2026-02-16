@@ -176,7 +176,7 @@ export default function AuctionPage({ track }: TrackPageProps) {
 
         {/* Auction form */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
-          <ListNFTAuction handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
+          <ListNFTAuction handleSubmit={handleList} submitLabel={isApproved ? 'LIST TRACK' : 'APPROVE MARKETPLACE'} />
         </div>
       </div>
     </div>

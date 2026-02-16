@@ -57,7 +57,7 @@ const zetachain = {
 // Metadata
 const metadata = {
   name: 'SoundChain',
-  description: 'Music NFT Marketplace',
+  description: 'Decentralized Music Platform',
   url: 'https://soundchain.io',
   icons: ['https://soundchain.io/favicons/apple-touch-icon.png']
 }

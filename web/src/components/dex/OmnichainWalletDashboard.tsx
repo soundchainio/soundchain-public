@@ -308,7 +308,7 @@ function NFTCard({
     >
       <img
         src={displayImage}
-        alt={nft.name || 'NFT'}
+        alt={nft.name || 'Track'}
         className="w-full h-full object-cover"
         onError={() => setImageError(true)}
       />

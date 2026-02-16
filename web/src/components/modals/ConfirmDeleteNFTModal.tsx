@@ -160,7 +160,7 @@ export const ConfirmDeleteNFTModal = () => {
           <div className="flex h-full flex-col justify-around">
             <div className="px-4 text-center text-sm font-bold text-gray-80">
               <p className="flex flex-wrap items-end justify-center py-6 text-center">
-                <span className="leading-tight">Are you sure you want to {burn ? 'burn' : 'delete'} this NFT?</span>
+                <span className="leading-tight">Are you sure you want to {burn ? 'burn' : 'delete'} this track?</span>
               </p>
               <p>This action cannot be undone.</p>
             </div>
@@ -176,7 +176,7 @@ export const ConfirmDeleteNFTModal = () => {
           )}
         </div>
         <Button variant="approve" type="button" loading={loading} onClick={handleSubmit} disabled={disabled}>
-          {burn ? 'Burn NFT' : 'Delete NFT'}
+          {burn ? 'Burn Track' : 'Delete Track'}
         </Button>
       </div>
     </Modal>

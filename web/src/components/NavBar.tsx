@@ -89,7 +89,7 @@ export const NavBar = () => {
             `}
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden lg:inline">{isMinting ? 'Minting...' : 'Create'}</span>
+            <span className="hidden lg:inline">{isMinting ? 'Publishing...' : 'Create'}</span>
           </button>
 
           <NavItem href="/stake" label="Stake" icon={BarChart3} isActive={isActive('/stake')} />

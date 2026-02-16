@@ -110,7 +110,7 @@ export const AuthorActionsModal = () => {
 
   const actionLabel = authorActionsType === AuthorActionsType.POST ? 'Post'
     : authorActionsType === AuthorActionsType.COMMENT ? 'Comment'
-    : authorActionsType === AuthorActionsType.NFT ? 'NFT'
+    : authorActionsType === AuthorActionsType.NFT ? 'Track'
     : 'Edition'
 
   return (

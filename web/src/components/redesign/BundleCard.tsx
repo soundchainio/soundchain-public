@@ -119,7 +119,7 @@ export const BundleCard: React.FC<BundleCardProps> = ({
     membershipLevel: 'Gold',
     nftPreviews: bundle.nftIds.map(id => ({
       id,
-      name: `NFT #${id}`,
+      name: `Track #${id}`,
       rarity: ['common', 'rare', 'epic', 'legendary'][Math.floor(Math.random() * 4)]
     }))
   };

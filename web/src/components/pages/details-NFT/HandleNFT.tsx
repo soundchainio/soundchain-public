@@ -165,8 +165,8 @@ export const HandleNFT = ({
             price={price}
             OGUNprice={OGUNprice}
             isPaymentOGUN={isPaymentOGUN}
-            action="BUY NFT WITH MATIC"
-            secondAction="BUY NFT WITH OGUN"
+            action="COLLECT WITH POL"
+            secondAction="COLLECT WITH OGUN"
             variant="buy-nft"
             startingDate={startingDate}
           />
@@ -181,7 +181,7 @@ export const HandleNFT = ({
             price={price}
             OGUNprice={OGUNprice}
             isPaymentOGUN={isPaymentOGUN}
-            action="BUY NFT WITH OGUN"
+            action="COLLECT WITH OGUN"
             variant="buy-nft"
             startingDate={startingDate}
           />
@@ -194,7 +194,7 @@ export const HandleNFT = ({
           href={{ pathname: `${router.pathname}/buy-now`, query: router.query }}
           price={price}
           OGUNprice={OGUNprice}
-          action="BUY NFT"
+          action="COLLECT TRACK"
           variant="buy-nft"
           startingDate={startingDate}
         />

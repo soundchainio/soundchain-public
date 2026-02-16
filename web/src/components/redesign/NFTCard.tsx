@@ -311,7 +311,7 @@ export const NFTCard: React.FC<NFTCardProps> = ({
                       if (onFavorite) {
                         onFavorite(nft.id)
                       } else {
-                        toast.info('💜 NFT watchlist coming soon!')
+                        toast.info('💜 Watchlist coming soon!')
                       }
                     })}
                   >
@@ -487,7 +487,7 @@ export const NFTCard: React.FC<NFTCardProps> = ({
                 className="w-full retro-button"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
-                {isWalletConnected ? 'ACQUIRE_NFT' : 'CONNECT_WALLET'}
+                {isWalletConnected ? 'COLLECT TRACK' : 'CONNECT_WALLET'}
               </Button>
             </div>
           </div>

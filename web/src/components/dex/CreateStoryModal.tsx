@@ -337,7 +337,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
     // NFT badge
     ctx.fillStyle = '#eab308'
     ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, sans-serif'
-    ctx.fillText('\u2666 NFT TRACK \u2022 EARNING OGUN', 540, y + 130)
+    ctx.fillText('\u2666 TRACK \u2022 EARNING OGUN', 540, y + 130)
 
     // Watermark
     ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'
@@ -796,7 +796,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
             },
           })
           console.log('[CreateStoryModal] Step 3 complete: Story created!')
-          toast.success(selectedNftTrack ? 'Reel shared with NFT music! SCID rewards enabled.' : 'Story shared!')
+          toast.success(selectedNftTrack ? 'Reel shared with music! SCID rewards enabled.' : 'Story shared!')
         } catch (storyErr: any) {
           console.error('[CreateStoryModal] createStoryWithOverlays failed:', storyErr)
           throw new Error(`Story creation failed: ${storyErr?.message || 'Unknown error'}`)
@@ -1056,7 +1056,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
                     <Music2 className="w-5 h-5 text-purple-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-white text-sm font-medium">NFT Music Library</p>
+                    <p className="text-white text-sm font-medium">Music Library</p>
                     <p className="text-neutral-500 text-xs">Use our tracks - earn SCID rewards!</p>
                   </div>
                   {selectedNftTrack ? (

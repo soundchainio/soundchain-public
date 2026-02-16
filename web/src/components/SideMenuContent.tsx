@@ -48,7 +48,7 @@ export const SideMenuContent = ({}: SideMenuContentProps) => {
 
   const onLogout = async () => {
     if (isMinting) {
-      toast.error(`You can't logout while minting an NFT.`)
+      toast.error(`You can't logout while publishing a track.`)
       return false
     }
 

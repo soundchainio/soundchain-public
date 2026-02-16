@@ -39,7 +39,7 @@ export function MintSongsSection() {
               </div>
               <div className="mt-56 flex flex-col lg:flex-row">
                 <div className="flex min-w-[400px] flex-col">
-                  <span className="text-center text-3xl font-semibold text-white md:text-left">Mint NFTs on</span>
+                  <span className="text-center text-3xl font-semibold text-white md:text-left">Publish Tracks on</span>
                   <div className="mx-auto flex flex-row py-3 text-7xl text-[#77F744] md:mx-0">
                     <span>polygon</span>
                   </div>

@@ -93,7 +93,7 @@ export const CreateBundleListingModal = ({
     }
 
     if (selectedNFTs.length === 0) {
-      toast.error('Please select at least one NFT')
+      toast.error('Please select at least one track')
       return
     }
 
@@ -122,7 +122,7 @@ export const CreateBundleListingModal = ({
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500))
 
-      toast.success(`Bundle created with ${selectedNFTs.length} NFT${selectedNFTs.length > 1 ? 's' : ''}!`)
+      toast.success(`Bundle created with ${selectedNFTs.length} track${selectedNFTs.length > 1 ? 's' : ''}!`)
       onSuccess?.(newListing)
       onClose()
       resetForm()
@@ -169,7 +169,7 @@ export const CreateBundleListingModal = ({
                 </div>
                 <div>
                   <h2 className="font-bold text-white">Create Bundle</h2>
-                  <p className="text-xs text-gray-400">NFTs + Tokens + Real-World Perks</p>
+                  <p className="text-xs text-gray-400">Tracks + Tokens + Real-World Perks</p>
                 </div>
               </div>
               <button
@@ -209,7 +209,7 @@ export const CreateBundleListingModal = ({
             {step === 'nfts' && (
               <>
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-300">Select NFTs for Bundle</label>
+                  <label className="text-sm font-medium text-gray-300">Select Tracks for Bundle</label>
                   <Badge className="bg-cyan-500/20 text-cyan-400">{selectedNFTs.length} selected</Badge>
                 </div>
 
@@ -242,8 +242,8 @@ export const CreateBundleListingModal = ({
                 {mockNFTs.length === 0 && (
                   <div className="text-center py-8">
                     <ImageIcon className="w-12 h-12 mx-auto mb-3 text-gray-500" />
-                    <p className="text-gray-400">No NFTs found in your wallet</p>
-                    <p className="text-xs text-gray-500 mt-1">Mint some NFTs first to create bundles</p>
+                    <p className="text-gray-400">No tracks found in your wallet</p>
+                    <p className="text-xs text-gray-500 mt-1">Publish some tracks first to create bundles</p>
                   </div>
                 )}
               </>
@@ -255,7 +255,7 @@ export const CreateBundleListingModal = ({
                 <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
                   <div className="flex items-center gap-2 text-cyan-400 text-sm">
                     <ImageIcon className="w-4 h-4" />
-                    <span>{selectedNFTs.length} NFT{selectedNFTs.length > 1 ? 's' : ''} selected</span>
+                    <span>{selectedNFTs.length} track{selectedNFTs.length > 1 ? 's' : ''} selected</span>
                   </div>
                 </div>
 
@@ -351,7 +351,7 @@ export const CreateBundleListingModal = ({
                 <div className="p-3 rounded-xl bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 space-y-2">
                   <p className="text-sm text-gray-300">Bundle Contents:</p>
                   <div className="flex flex-wrap gap-2">
-                    <Badge className="bg-cyan-500/20 text-cyan-400">{selectedNFTs.length} NFT{selectedNFTs.length > 1 ? 's' : ''}</Badge>
+                    <Badge className="bg-cyan-500/20 text-cyan-400">{selectedNFTs.length} track{selectedNFTs.length > 1 ? 's' : ''}</Badge>
                     {parseFloat(tokenAmount) > 0 && (
                       <Badge className="bg-green-500/20 text-green-400">{tokenAmount} {getDisplaySymbol(selectedToken)}</Badge>
                     )}
@@ -423,7 +423,7 @@ export const CreateBundleListingModal = ({
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">NFTs Included</span>
+                      <span className="text-gray-400">Tracks Included</span>
                       <span className="text-white">{selectedNFTs.length}</span>
                     </div>
                     {parseFloat(tokenAmount) > 0 && (

@@ -1227,7 +1227,7 @@ export function ProfileHeader({
                       variant="outline"
                       className="border-yellow-500/50 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-300"
                       onClick={() => setShowTipBucket(true)}
-                      title="Tip Bucket - Send OGUN or Airdrop NFTs"
+                      title="Tip Bucket - Send OGUN or Share Tracks"
                     >
                       <Gift className="w-4 h-4" />
                     </Button>

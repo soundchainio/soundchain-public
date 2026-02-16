@@ -1930,7 +1930,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const fromAddress = transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet
 
     if (!transferRecipient || !selectedNftId || !fromAddress) {
-      toast.error('Please enter a recipient address and select an NFT')
+      toast.error('Please enter a recipient address and select a track')
       return
     }
     // Validate Ethereum address
@@ -1946,7 +1946,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     // Find the selected track to get tokenId and contract address
     const selectedTrack = ownedTracks.find((t: any) => t.id === selectedNftId)
     if (!selectedTrack) {
-      toast.error('Selected NFT not found')
+      toast.error('Selected track not found')
       return
     }
     const tokenId = selectedTrack.nftData?.tokenId || selectedTrack.tokenId
@@ -2019,7 +2019,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       // Step 2: Transfer NFT
       await tx.send({ from: fromAddress, gas: gasWithBuffer })
 
-      toast.success(`NFT transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)} (fee: ${platformFee.toFixed(8)} POL)`)
+      toast.success(`Track transferred to ${transferRecipient.slice(0, 6)}...${transferRecipient.slice(-4)} (fee: ${platformFee.toFixed(8)} POL)`)
       setTransferRecipient('')
       setSelectedNftId('')
     } catch (err: any) {
@@ -2259,7 +2259,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     const fromAddress = transferSourceWallet === 'oauth' ? userWallet : transferSourceWallet
 
     if (!sweepRecipient || sweepSelectedIds.size === 0 || !fromAddress) {
-      toast.error('Please select NFTs and enter a recipient address')
+      toast.error('Please select tracks and enter a recipient address')
       return
     }
     if (!/^0x[a-fA-F0-9]{40}$/.test(sweepRecipient)) {
@@ -2273,7 +2273,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
     const tracksToSweep = ownedTracks.filter((t: any) => sweepSelectedIds.has(t.id) && (t.nftData?.tokenId || t.tokenId))
     if (tracksToSweep.length === 0) {
-      toast.error('Selected NFTs have no on-chain token IDs')
+      toast.error('Selected tracks have no on-chain token IDs')
       return
     }
 
@@ -2373,7 +2373,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       setSweepProgress({ current: 0, total: 0 })
 
       if (succeeded > 0) {
-        toast.success(`Sweep complete! ${succeeded} NFT${succeeded > 1 ? 's' : ''} transferred${failed > 0 ? `, ${failed} failed` : ''} (fee: ${platformFee.toFixed(8)} POL)`)
+        toast.success(`Transfer complete! ${succeeded} track${succeeded > 1 ? 's' : ''} transferred${failed > 0 ? `, ${failed} failed` : ''} (fee: ${platformFee.toFixed(8)} POL)`)
         setSweepSelectedIds(new Set())
         setSweepRecipient('')
         setShowSweepPanel(false)
@@ -2851,10 +2851,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           </div>
                           <div className="mt-2 p-2 bg-cyan-500/5 rounded-lg border border-cyan-500/20">
                             <p className="text-[9px] text-cyan-400 text-center">
-                              🎧 WIN-WIN! Earn 30% when YOU stream NFT tracks
+                              🎧 WIN-WIN! Earn 30% when YOU stream tracks
                             </p>
                             <p className="text-[8px] text-gray-500 text-center mt-1">
-                              Stream NFT tracks for 30+ sec → Earn 0.15 OGUN each (max {myListenerRewardsData?.myListenerRewards?.dailyLimit || 50} OGUN/day)
+                              Stream tracks for 30+ sec → Earn 0.15 OGUN each (max {myListenerRewardsData?.myListenerRewards?.dailyLimit || 50} OGUN/day)
                             </p>
                           </div>
                         </div>
@@ -2863,7 +2863,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {/* Reward Rate - Universal */}
                       <div className="p-3 border-b border-orange-500/20">
                         <div className="text-center p-2 bg-gradient-to-br from-green-500/10 to-cyan-500/10 rounded-lg border border-green-500/30">
-                          <div className="text-[10px] text-green-400/80">All Tracks (Free Upload + NFT)</div>
+                          <div className="text-[10px] text-green-400/80">All Tracks Earn Equal Rewards</div>
                           <div className="text-base font-bold text-green-400">0.5 OGUN</div>
                           <div className="text-[9px] text-gray-400">per stream (70% creator / 30% listener)</div>
                         </div>
@@ -3013,7 +3013,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   size="sm"
                   onClick={handleMintClick}
                   className="hover:bg-purple-500/10 px-2"
-                  title="Mint NFT"
+                  title="Publish Track"
                 >
                   <Music className="w-5 h-5 text-purple-400" />
                 </Button>
@@ -3040,7 +3040,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     className="hover:bg-purple-500/10 nyan-cat-animation"
                   >
                     <Music className="w-4 h-4 mr-2 text-purple-400" />
-                    <span className="text-purple-400">Minting...</span>
+                    <span className="text-purple-400">Publishing...</span>
                   </Button>
                 ) : (
                   <Button
@@ -3050,7 +3050,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     className="hover:bg-purple-500/10"
                   >
                     <Music className="w-4 h-4 mr-2 text-purple-400" />
-                    <span className="text-purple-400">Mint+</span>
+                    <span className="text-purple-400">Publish+</span>
                   </Button>
                 )}
               </div>
@@ -3249,10 +3249,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </div>
                         <div className="mt-2 p-2 bg-cyan-500/5 rounded-lg border border-cyan-500/20">
                           <p className="text-[9px] text-cyan-400 text-center">
-                            🎧 WIN-WIN! Earn 30% when YOU stream NFT tracks
+                            🎧 WIN-WIN! Earn 30% when YOU stream tracks
                           </p>
                           <p className="text-[8px] text-gray-500 text-center mt-1">
-                            Stream NFT tracks for 30+ sec → Earn 0.15 OGUN each (max {myListenerRewardsData?.myListenerRewards?.dailyLimit || 50} OGUN/day)
+                            Stream tracks for 30+ sec → Earn 0.15 OGUN each (max {myListenerRewardsData?.myListenerRewards?.dailyLimit || 50} OGUN/day)
                           </p>
                         </div>
                       </div>
@@ -3261,7 +3261,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     {/* Reward Rate - Universal */}
                     <div className="p-3 border-b border-orange-500/20">
                       <div className="text-center p-2 bg-gradient-to-br from-green-500/10 to-cyan-500/10 rounded-lg border border-green-500/30">
-                        <div className="text-[10px] text-green-400/80">All Tracks (Free Upload + NFT)</div>
+                        <div className="text-[10px] text-green-400/80">All Tracks Earn Equal Rewards</div>
                         <div className="text-base font-bold text-green-400">0.5 OGUN</div>
                         <div className="text-[9px] text-gray-400">per stream (70% creator / 30% listener)</div>
                       </div>
@@ -4046,7 +4046,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <>
                   <Separator className="my-8" />
                   <h2 className="retro-title">Marketplace Listings ({listingData?.listingItems?.pageInfo?.totalCount || marketTracks.length})</h2>
-                  <p className="text-sm text-gray-400 mb-4">NFTs available for purchase</p>
+                  <p className="text-sm text-gray-400 mb-4">Tracks available to collect</p>
                   <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2' : 'space-y-2'}>
                     {marketTracks.map((track: any, index: number) => (
                       <TrackNFTCard
@@ -4757,7 +4757,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 <Card className="metadata-section p-4 text-center cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedView('wallet')}>
                   <ImageIcon className="w-8 h-8 text-purple-400 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-white">{ownedTracksData?.groupedTracks?.nodes?.length || 0}</p>
-                  <p className="text-xs text-gray-400">Owned NFTs</p>
+                  <p className="text-xs text-gray-400">My Collection</p>
                 </Card>
                 <Card className="metadata-section p-4 text-center cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setSelectedView('playlist')}>
                   <ListMusic className="w-8 h-8 text-green-400 mx-auto mb-2" />
@@ -4819,14 +4819,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <Card className="retro-card p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <ImageIcon className="w-6 h-6 text-purple-400" />
-                  <h2 className="retro-title text-xl">Owned NFTs</h2>
+                  <h2 className="retro-title text-xl">My Collection</h2>
                   <Badge className="bg-purple-500/20 text-purple-400 text-xs">{ownedTracksData?.groupedTracks?.nodes?.length || 0}</Badge>
                   {ownedTracksLoading && <Badge className="bg-yellow-500/20 text-yellow-400 text-xs">Loading...</Badge>}
                 </div>
                 {ownedTracksLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full" />
-                    <span className="ml-3 text-gray-400">Loading owned NFTs...</span>
+                    <span className="ml-3 text-gray-400">Loading collection...</span>
                   </div>
                 ) : (ownedTracksData?.groupedTracks?.nodes?.length ?? 0) > 0 ? (
                   <div className="space-y-1">
@@ -4866,7 +4866,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 ) : (
                   <div className="text-center py-8">
                     <ImageIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400">No NFTs owned yet</p>
+                    <p className="text-gray-400">No tracks collected yet</p>
                     <Button onClick={() => setSelectedView('marketplace')} className="mt-4 retro-button">
                       <ShoppingBag className="w-4 h-4 mr-2" />
                       Browse Marketplace
@@ -4875,7 +4875,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 )}
                 {(ownedTracksData?.groupedTracks?.nodes?.length ?? 0) > 12 && (
                   <Button variant="ghost" className="w-full mt-4 hover:bg-purple-500/10 text-purple-400" onClick={() => setSelectedView('wallet')}>
-                    View All {ownedTracksData?.groupedTracks?.nodes?.length} NFTs
+                    View All {ownedTracksData?.groupedTracks?.nodes?.length} Tracks
                   </Button>
                 )}
               </Card>
@@ -5080,7 +5080,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <p className="text-purple-400 font-mono">{activeBalance || maticBalance || '0.00'}</p>
                     </div>
                     <div>
-                      <span className="text-gray-400 text-xs uppercase tracking-wide">NFTs</span>
+                      <span className="text-gray-400 text-xs uppercase tracking-wide">Collection</span>
                       <p className="text-cyan-400 font-mono">{ownedTracksLoading ? '...' : ownedTracksData?.groupedTracks?.pageInfo?.totalCount || 0}</p>
                     </div>
                     <div>
@@ -5159,13 +5159,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                       </svg>
-                      <h3 className="retro-title text-lg">Sweep NFTs</h3>
+                      <h3 className="retro-title text-lg">Batch Transfer</h3>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => setShowSweepPanel(false)} className="text-gray-400 hover:text-white">
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
-                  <p className="text-gray-400 text-sm mb-4">Select NFTs to batch transfer to another wallet.</p>
+                  <p className="text-gray-400 text-sm mb-4">Select tracks to batch transfer to another wallet.</p>
 
                   {/* From Wallet Indicator - uses same selection as Token Transfer */}
                   <div className="mb-4 p-2 bg-black/30 rounded-lg border border-gray-700">
@@ -5193,7 +5193,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                   {/* Select All / Deselect All */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-gray-400 text-xs">{sweepSelectedIds.size} NFT{sweepSelectedIds.size !== 1 ? 's' : ''} selected</span>
+                    <span className="text-gray-400 text-xs">{sweepSelectedIds.size} track{sweepSelectedIds.size !== 1 ? 's' : ''} selected</span>
                     <div className="flex gap-2">
                       <Button variant="ghost" size="sm" onClick={selectAllForSweep} disabled={sweeping} className="text-orange-400 text-xs">
                         Select All
@@ -5207,7 +5207,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {/* NFT Grid with Checkboxes */}
                   <div className="max-h-64 overflow-y-auto mb-4 space-y-1">
                     {ownedTracks.filter((t: any) => t.nftData?.tokenId || t.tokenId).length === 0 ? (
-                      <p className="text-gray-500 text-sm text-center py-4">No NFTs with on-chain token IDs found</p>
+                      <p className="text-gray-500 text-sm text-center py-4">No tracks with on-chain token IDs found</p>
                     ) : (
                       ownedTracks
                         .filter((t: any) => t.nftData?.tokenId || t.tokenId)
@@ -5270,7 +5270,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   >
                     {sweeping
                       ? `Sweeping ${sweepProgress.current}/${sweepProgress.total}...`
-                      : `Sweep ${sweepSelectedIds.size} NFT${sweepSelectedIds.size !== 1 ? 's' : ''}`
+                      : `Transfer ${sweepSelectedIds.size} Track${sweepSelectedIds.size !== 1 ? 's' : ''}`
                     }
                   </Button>
                 </div>
@@ -5472,7 +5472,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <div id="transfer-section" className="bg-black/60 backdrop-blur-sm rounded-lg border border-gray-800 p-4 mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Share2 className="w-4 h-4 text-purple-400" />
-                  <h3 className="text-sm font-medium text-white">Transfer NFT</h3>
+                  <h3 className="text-sm font-medium text-white">Transfer Track</h3>
                 </div>
 
                 {/* From Wallet Indicator - uses same selection as Token Transfer */}
@@ -5498,13 +5498,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400 mb-2 block">Select NFT</label>
+                    <label className="text-xs text-gray-400 mb-2 block">Select Track</label>
                     <select
                       value={selectedNftId}
                       onChange={(e) => setSelectedNftId(e.target.value)}
                       className="w-full bg-black/50 border border-gray-700 rounded-lg px-3 py-3 text-white focus:border-purple-500 focus:outline-none"
                     >
-                      <option value="">Select an NFT to transfer</option>
+                      <option value="">Select a track to transfer</option>
                       {ownedTracks.map((track) => (
                         <option key={track.id} value={track.id}>{track.title} - {track.artist}</option>
                       ))}
@@ -5524,7 +5524,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     ) : (
                       <>
                         <Share2 className="w-4 h-4 mr-2" />
-                        Transfer NFT
+                        Transfer Track
                       </>
                     )}
                   </Button>
@@ -6378,7 +6378,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               onClick={() => router.push(`/tracks/${trackDetailData.track.id}/buy-now`)}
                             >
                               <ShoppingBag className="w-4 h-4 mr-2" />
-                              Buy NFT
+                              Collect Track
                             </Button>
                           )}
                           {/* List for Sale button - only shown if user owns this NFT */}
@@ -6532,7 +6532,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           {/* Minter */}
                           {trackDetailData.track.nftData.minter && (
                             <div className="flex flex-col md:flex-row md:justify-between py-2 border-b border-gray-800">
-                              <span className="text-gray-400 mb-1 md:mb-0">Minter</span>
+                              <span className="text-gray-400 mb-1 md:mb-0">Publisher</span>
                               <a
                                 href={`${config.polygonscan}address/${trackDetailData.track.nftData.minter}`}
                                 target="_blank"
@@ -7082,8 +7082,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               <div className="flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-yellow-400" />
                 <div>
-                  <span className="font-bold text-yellow-100 text-sm">Top 100 NFTs</span>
-                  <p className="text-xs text-yellow-200/60">Most streamed NFT tracks</p>
+                  <span className="font-bold text-yellow-100 text-sm">Top 100 Tracks</span>
+                  <p className="text-xs text-yellow-200/60">Most streamed tracks</p>
                 </div>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setShowTop100Modal(false)} className="w-8 h-8 p-0 text-yellow-300 hover:text-white hover:bg-yellow-500/20">
@@ -7409,7 +7409,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-[10px] font-bold rounded-full">COMING SOON</span>
                             </div>
                             <p className="text-gray-400 text-xs leading-relaxed">
-                              Tip {follower.name} with <span className="text-cyan-400">NFTs</span> or <span className="text-green-400">Tokens</span> directly to their wallet!
+                              Tip {follower.name} with <span className="text-cyan-400">Tracks</span> or <span className="text-green-400">Tokens</span> directly to their wallet!
                             </p>
                             <p className="text-gray-500 text-[10px] mt-2">
                               Multi-chain support · ZetaChain sweep · 0.05 fee
@@ -7554,7 +7554,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               <span className="px-2 py-0.5 bg-orange-500/20 text-orange-400 text-[10px] font-bold rounded-full">COMING SOON</span>
                             </div>
                             <p className="text-gray-400 text-xs leading-relaxed">
-                              Tip {following.name} with <span className="text-cyan-400">NFTs</span> or <span className="text-green-400">Tokens</span> directly to their wallet!
+                              Tip {following.name} with <span className="text-cyan-400">Tracks</span> or <span className="text-green-400">Tokens</span> directly to their wallet!
                             </p>
                             <p className="text-gray-500 text-[10px] mt-2">
                               Multi-chain support · ZetaChain sweep · 0.05 fee

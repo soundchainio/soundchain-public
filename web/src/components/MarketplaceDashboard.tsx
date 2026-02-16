@@ -222,11 +222,11 @@ export function MarketplaceDashboard({
   );
 
   const mockActivity = [
-    { action: 'Bundle purchased', item: '3 Music NFTs', time: '2m ago', type: 'sale' },
+    { action: 'Bundle purchased', item: '3 Music Tracks', time: '2m ago', type: 'sale' },
     { action: 'Auction started', item: 'Rare Album', time: '5m ago', type: 'auction' },
     { action: 'Sweep completed', item: '10 Tracks', time: '8m ago', type: 'sweep' },
     { action: 'Private listing', item: 'Concert Ticket', time: '12m ago', type: 'private' },
-    { action: 'Token minted', item: 'New Release', time: '15m ago', type: 'mint' },
+    { action: 'Track published', item: 'New Release', time: '15m ago', type: 'mint' },
   ];
 
   return (

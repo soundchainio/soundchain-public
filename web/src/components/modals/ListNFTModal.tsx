@@ -106,7 +106,7 @@ export const ListNFTModal = ({
     }
 
     if (salePrice <= 0) {
-      toast('NFT needs a price higher than 0 on OGUN or MATIC.')
+      toast('Track needs a price higher than 0 on OGUN or POL.')
       helper.setSubmitting(false)
       return
     }
@@ -127,7 +127,7 @@ export const ListNFTModal = ({
           },
         },
       })
-      toast.success('NFT listed for sale!')
+      toast.success('Track listed for sale!')
       onClose()
     }
 
@@ -160,7 +160,7 @@ export const ListNFTModal = ({
         setIsApproved(true)
         setApproveLoading(false)
         setApproveExpanded(false)
-        toast.success('Marketplace approved! You can now list your NFT.')
+        toast.success('Marketplace approved! You can now list your track.')
         // Auto-list if form values were passed directly
         if (formValues && formHelper) {
           handleListSingleNft(formValues, formHelper)
@@ -223,7 +223,7 @@ export const ListNFTModal = ({
                   <Tag className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-white">List NFT for Sale</h2>
+                  <h2 className="font-bold text-white">List Track for Sale</h2>
                   <p className="text-xs text-gray-400">Set your price and start selling</p>
                 </div>
               </div>
@@ -295,7 +295,7 @@ export const ListNFTModal = ({
               <div className="border-b border-white/10">
                 <ListNFTBuyNow
                   handleSubmit={handleList}
-                  submitLabel={isApproved ? 'LIST NFT' : 'APPROVE & LIST'}
+                  submitLabel={isApproved ? 'LIST TRACK' : 'APPROVE & LIST'}
                 />
               </div>
             )}

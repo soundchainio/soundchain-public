@@ -35,10 +35,10 @@ export const MintingDone = ({ track, transactionHash }: MintingDoneProps) => {
         style={{ backgroundImage: 'url(/congratulations.gif)', backgroundSize: '100% 100%' }}
       >
         <div style={{ color: '#808080' }}>Congrats,</div>
-        <div>you created an NFT!</div>
+        <div>your track is live!</div>
         <NextLink href={`/tracks/${track.id}`}>
           <Button className="mt-6 w-1/3 rounded text-sm" variant="rainbow">
-            NFT Details
+            Track Details
           </Button>
         </NextLink>
       </div>

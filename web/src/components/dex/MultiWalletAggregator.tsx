@@ -779,13 +779,13 @@ export function MultiWalletAggregator({
                     <div className="py-6 text-center">
                       <div className="text-gray-500 text-sm mb-2">
                         {wallet.type === 'magic'
-                          ? 'No NFTs owned yet'
-                          : `No SoundChain NFTs found on ${wallet.chainName}`}
+                          ? 'No tracks collected yet'
+                          : `No SoundChain tracks found on ${wallet.chainName}`}
                       </div>
                       {wallet.type !== 'magic' && (
                         <div className="space-y-2">
                           <p className="text-xs text-gray-600">
-                            Only SoundChain music NFTs are displayed
+                            Only SoundChain music tracks are displayed
                           </p>
                           <button
                             onClick={(e) => {

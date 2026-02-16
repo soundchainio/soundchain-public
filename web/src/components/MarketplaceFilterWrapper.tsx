@@ -11,7 +11,7 @@ import { Badge } from './common/Badges/Badge';
 import { FilterComponent } from './Filter/Filter';
 import { Token, TOKEN_INFO } from 'constants/tokens';
 
-const categories = ['genres', 'most popular', 'new mints', 'airdrops', 'exclusives'] as const;
+const categories = ['genres', 'most popular', 'new releases', 'airdrops', 'exclusives'] as const;
 type Category = typeof categories[number];
 
 interface FilterWrapperProps {
@@ -150,7 +150,7 @@ export const MarketplaceFilterWrapper = memo((props: FilterWrapperProps) => {
           <button aria-label="Grid view (9 cards)">
             <GridViewIcon color={localViewMode === 'grid' ? 'rainbow' : undefined} onClick={() => setLocalViewMode('grid')} />
           </button>
-          <button aria-label="Single NFT view">
+          <button aria-label="Single track view">
             <ListViewIcon color={localViewMode === 'single' ? 'rainbow' : undefined} onClick={() => setLocalViewMode('single')} />
           </button>
         </div>

@@ -144,7 +144,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
     }
 
     if (salePrice <= 0) {
-      toast('NFT needs a price higher than 0 on OGUN or MATIC.')
+      toast('Track needs a price higher than 0 on OGUN or POL.')
       return
     }
     const weiPrice = selectedCurrency === 'MATIC' ? web3?.utils.toWei(salePrice.toString(), 'ether') : '0'
@@ -242,7 +242,7 @@ export default function ListBuyNowPage({ track }: TrackPageProps) {
 
         {/* Listing form */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
-          <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST NFT' : 'APPROVE MARKETPLACE'} />
+          <ListNFTBuyNow handleSubmit={handleList} submitLabel={isApproved ? 'LIST TRACK' : 'APPROVE MARKETPLACE'} />
         </div>
       </div>
     </div>

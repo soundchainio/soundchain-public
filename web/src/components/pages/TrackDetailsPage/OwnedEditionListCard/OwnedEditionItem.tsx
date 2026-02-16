@@ -31,7 +31,7 @@ export const OwnedEditionItem = (props: OwnedEditionItemProps) => {
       <div className="my-2 flex items-center justify-center gap-4">
         {isProcessing && (
           <ProcessingContainer>
-            <Tooltip id="processingEdition" content="Your NFT is being processed. This can take several minutes." />
+            <Tooltip id="processingEdition" content="Your track is being processed. This can take several minutes." />
             <BsQuestionCircleFill data-tooltip-id="processingEdition" size={18} />
             <span>
               <SpinAnimation />

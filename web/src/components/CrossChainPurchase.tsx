@@ -244,7 +244,7 @@ export function CrossChainPurchase({
       // Full implementation would call the omnichain contract
       setStatus({
         type: 'success',
-        message: `Purchase initiated! NFT will be minted on Polygon.`
+        message: `Purchase initiated! Track will be available on Polygon.`
       });
 
       // TODO: Implement actual cross-chain call via ZetaChain

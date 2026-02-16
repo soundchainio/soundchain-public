@@ -149,7 +149,7 @@ export const NFTMusicPicker = ({
                 >
                   {tab === 'trending' && 'Trending'}
                   {tab === 'following' && 'Following'}
-                  {tab === 'myNfts' && 'My NFTs'}
+                  {tab === 'myNfts' && 'My Tracks'}
                   {tab === 'all' && 'All'}
                 </button>
               ))}

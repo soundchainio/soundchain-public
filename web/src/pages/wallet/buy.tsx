@@ -61,7 +61,7 @@ export default function BuyMaticPage() {
       />
       <div className="px-8 py-4 text-xs text-gray-80">
         <p className="m-4 text-center font-bold">
-          In order to mint or purchase {"NFT's"} on SoundChain, you must have:
+          To publish or collect tracks on SoundChain, you must have:
         </p>
         <p className="flex items-center justify-center">
           {MaticSign} on the {PolygonSign} chain.

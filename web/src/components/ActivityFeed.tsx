@@ -113,8 +113,8 @@ const getActivityMessage = (activity: Activity): React.ReactNode => {
       return (
         <>
           <span className="font-semibold text-white">{name}</span>
-          <span className="text-gray-400"> minted </span>
-          <span className="text-white">{metadata?.trackTitle || 'an NFT'}</span>
+          <span className="text-gray-400"> published </span>
+          <span className="text-white">{metadata?.trackTitle || 'a track'}</span>
           {metadata?.quantity && metadata.quantity > 1 && (
             <span className="text-gray-400"> ({metadata.quantity} editions)</span>
           )}

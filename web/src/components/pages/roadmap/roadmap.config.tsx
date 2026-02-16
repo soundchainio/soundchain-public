@@ -45,12 +45,12 @@ export const roadmapSteps: RoadmapStep[] = [
   {
     title: '23+ Omnichain Token Integration - EXCLUSIVE',
     status: 'Planned - Jan 2026',
-    description: 'Deploying proxy contracts for 23+ blockchain networks exclusively available on SoundChain.io! Including Bitcoin, Ethereum, Solana, Polygon, Base, Arbitrum, ZetaChain, ApeChain, Berachain, Unichain, Zora, and more. True cross-chain NFT aggregation - one platform, all chains. Private use only on SoundChain.',
+    description: 'Deploying proxy contracts for 23+ blockchain networks exclusively available on SoundChain.io! Including Bitcoin, Ethereum, Solana, Polygon, Base, Arbitrum, ZetaChain, ApeChain, Berachain, Unichain, Zora, and more. True cross-chain music aggregation - one platform, all chains. Private use only on SoundChain.',
   },
   {
     title: 'SCid Code Generator',
     status: 'Planned - Jan 2026',
-    description: 'Unique identifier system for all SoundChain NFTs - generating SCid codes for permanent on-chain asset tracking.',
+    description: 'Unique identifier system for all SoundChain tracks - generating SCid codes for permanent on-chain asset tracking.',
   },
   {
     title: 'BitTorrent DEX Integration',
@@ -91,10 +91,10 @@ export const roadmapSteps: RoadmapStep[] = [
     the general layout of the site`,
   },
   {
-    title: 'Multi-edition NFTs',
+    title: 'Multi-edition Tracks',
     status: 'Completed',
     description:
-      'Giving you the ability to mint and sell multiple editions of your NFTs. Be able to sell multiple copies of your track',
+      'Giving you the ability to publish and sell multiple editions of your tracks. Be able to sell multiple copies of your music',
   },
   {
     title: 'Token Launch',
@@ -105,7 +105,7 @@ export const roadmapSteps: RoadmapStep[] = [
   {
     title: 'Ethereum',
     status: 'Late Winter',
-    description: 'Adding the ability to mint and sell your tracks on the Ethereum blockchain',
+    description: 'Adding the ability to publish and sell your tracks on the Ethereum blockchain',
   },
   {
     title: 'Ogun Styling',
@@ -114,10 +114,10 @@ export const roadmapSteps: RoadmapStep[] = [
       "Adding some spice to the platform, we'll be creating a variety of ways to spiff up your profile. Badges, special profile picture frames, and other visual flair will be available to be obtained with OGUN, and we'll be putting it right back into the economy of the token to recharge rewards or benefit holders",
   },
   {
-    title: 'Art NFTs',
+    title: 'Art Collectibles',
     status: 'Fall 2023',
     description:
-      "Music has always been tied closely to visual art, and we want to support the whole system. We'll be adding the ability to mint and sell your art as NFTs, and to make it really fit into the SoundChain ways, we'll focus on the ties between a track and its album art. Holders of your art NFTs will be able to automatically select it as their album art when uploading their own tracks, and each NFT minted this way will point right back to you, the artist",
+      "Music has always been tied closely to visual art, and we want to support the whole system. We'll be adding the ability to publish and sell your art as collectibles, and to make it really fit into the SoundChain ways, we'll focus on the ties between a track and its album art. Holders of your art will be able to automatically select it as their album art when uploading their own tracks, and each piece published this way will point right back to you, the artist",
   },
   {
     title: 'Governance',
@@ -129,7 +129,7 @@ export const roadmapSteps: RoadmapStep[] = [
     title: 'Stems and Samples',
     status: '',
     description:
-      "For all you beat-makers and music makers, who really want to pack up everything into each NFT you mint, we'll be adding the capability to include stems and samples right into each NFT you mint. You'll be able to pass on whatever raw materials you choose to pass to the buyer and truly get into that beautiful collaborative mindset as they continue to mix and sample what you've made",
+      "For all you beat-makers and music makers, who really want to pack up everything into each track you publish, we'll be adding the capability to include stems and samples right into each release. You'll be able to pass on whatever raw materials you choose to pass to the buyer and truly get into that beautiful collaborative mindset as they continue to mix and sample what you've made",
   },
   {
     title: 'Mobile App',
@@ -141,7 +141,7 @@ export const roadmapSteps: RoadmapStep[] = [
     title: 'Sell Your Royalties',
     status: '',
     description:
-      "To give you more power over your own content, we'll start to offer the ability to tokenize your royalties for NFT secondary sales. You'll be able to sell fractions of the royalty rights as their own NFTs that would get you that part of the money generated from secondary sales",
+      "To give you more power over your own content, we'll start to offer the ability to tokenize your royalties for secondary sales. You'll be able to sell fractions of the royalty rights as their own tokens that would get you that part of the money generated from secondary sales",
   },
   {
     title: 'OGUN Marketing',
@@ -159,7 +159,7 @@ export const roadmapSteps: RoadmapStep[] = [
     title: 'DAW',
     status: '',
     description:
-      "We're here for the music, and else could really represent our beliefs besides giving you a way to make some. Not only are we working with some of the best musicians, but we ourselves love to make music, so we know what goes into a good DAW. We want to build one right into the platform that will let you mint and sell right there. We also intend to take this feature into schools to give kids a way to make music for themselves",
+      "We're here for the music, and what else could really represent our beliefs besides giving you a way to make some. Not only are we working with some of the best musicians, but we ourselves love to make music, so we know what goes into a good DAW. We want to build one right into the platform that will let you create and sell right there. We also intend to take this feature into schools to give kids a way to make music for themselves",
   },
 ]
 

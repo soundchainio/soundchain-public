@@ -382,7 +382,7 @@ export default function MoltbookPlayground() {
         <div className="px-4 md:px-6 py-4">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
             <StatCard icon={Radio} value={radioData?.data?.queue_length?.toString() || '618'} label="Radio Queue" />
-            <StatCard icon={ImageIcon} value={nftsMinted.toString()} label="Your NFTs" />
+            <StatCard icon={ImageIcon} value={nftsMinted.toString()} label="Your Tracks" />
             <StatCard icon={Play} value={totalTracks.toString() || '618'} label="Total Tracks" />
             <StatCard icon={Wallet} value={displayOgunBalance} label="OGUN Balance" prefix="" />
             <StatCard icon={Users} value={airdropData?.tier_1?.current_eligible?.toString() || '0'} label="Agents Registered" />
@@ -628,7 +628,7 @@ export default function MoltbookPlayground() {
                 <EndpointRow
                   method="GET"
                   path="/api/agent/radio"
-                  description="Get current/random NFT track from OGUN Radio"
+                  description="Get current/random track from OGUN Radio"
                 />
                 <EndpointRow
                   method="GET"

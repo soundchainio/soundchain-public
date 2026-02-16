@@ -226,7 +226,7 @@ function InnerForm(props: InnerFormProps) {
           <div className="group relative">
             <span className="cursor-help text-cyan-400 text-xs border border-cyan-400 rounded-full w-4 h-4 inline-flex items-center justify-center">?</span>
             <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-900 border border-cyan-500/50 rounded-lg text-xs text-gray-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-lg">
-              <p className="font-bold text-cyan-400 mb-2">Cross-Chain Minting</p>
+              <p className="font-bold text-cyan-400 mb-2">Cross-Chain Publishing</p>
               <p className="mb-2">Polygon recommended for lowest gas fees!</p>
             </div>
           </div>
@@ -246,7 +246,7 @@ function InnerForm(props: InnerFormProps) {
       </div>
       <div className="flex items-center gap-2 px-4">
         <p className="max-w-5/10 text-xxs font-bold leading-tight text-gray-80">
-          Enter the number of NFT editions to mint. This cannot be changed after minting.
+          Enter the number of editions to publish. This cannot be changed after publishing.
         </p>
         <div className="flex w-full flex-col">
           <InputField name="editionQuantity" type="number" label="# OF EDITIONS" />
@@ -401,7 +401,7 @@ function InnerForm(props: InnerFormProps) {
       <div className="px-4 pb-4 mt-2">
         <div className="flex flex-col gap-2 mb-3 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-gray-400">Est. Gas Fee ({values.editionQuantity} NFT{values.editionQuantity > 1 ? 's' : ''})</span>
+            <span className="text-gray-400">Est. Gas Fee ({values.editionQuantity} edition{values.editionQuantity > 1 ? 's' : ''})</span>
             <Matic value={maxMintGasFee || '0'} variant="currency" />
           </div>
           <div className="flex justify-between items-center text-xs">
@@ -433,7 +433,7 @@ function InnerForm(props: InnerFormProps) {
             className="w-full px-6 py-2 text-sm"
             disabled={!enoughFunds}
           >
-            MINT NFT
+            PUBLISH TRACK
           </Button>
         </div>
         {!enoughFunds && balance !== undefined && (
