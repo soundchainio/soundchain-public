@@ -49,7 +49,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1003,8 +1003,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   }
 
   // Messaging state
-  const [selectedChatId, setSelectedChatId] = useState<string | null>(null)
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(routeType === 'messages' && routeId ? routeId : null)
   const [messageInput, setMessageInput] = useState('')
+  const messagesEndRef = React.useRef<HTMLDivElement>(null)
 
   // Playlist state
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false)
@@ -1616,15 +1617,25 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     }
   }, [selectedView, exploreUsersLoading, exploreUsersError, exploreUsersData])
 
-  // Chats/Messages Query - fetch all conversations
+  // Chats/Messages Query - fetch all conversations with polling
   const { data: chatsData, loading: chatsLoading, refetch: refetchChats } = useChatsQuery({
     skip: selectedView !== 'messages' || !userData?.me,
     fetchPolicy: 'cache-and-network',
+    pollInterval: selectedView === 'messages' ? 15000 : 0, // Poll every 15s when on messages
   })
+
+  // Reset unread count when opening messages view
+  const [resetUnreadCount] = useResetUnreadMessageCountMutation()
+  useEffect(() => {
+    if (selectedView === 'messages' && userData?.me) {
+      resetUnreadCount()
+    }
+  }, [selectedView, userData?.me])
 
   // Lazy query for loading chat history when a conversation is selected
   const [loadChatHistory, { data: chatHistoryData, loading: chatHistoryLoading }] = useChatHistoryLazyQuery({
     fetchPolicy: 'cache-and-network',
+    pollInterval: selectedChatId ? 5000 : 0, // Poll every 5s when in active chat
   })
 
   // Send message mutation
@@ -1635,6 +1646,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       if (selectedChatId) {
         loadChatHistory({ variables: { profileId: selectedChatId } })
       }
+      // Auto-scroll to bottom after sending
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
     },
     onError: (error) => {
       console.error('Failed to send message:', error)
@@ -1648,6 +1661,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       loadChatHistory({ variables: { profileId: selectedChatId } })
     }
   }, [selectedChatId, selectedView, loadChatHistory])
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatHistoryData?.chatHistory?.nodes?.length) {
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+    }
+  }, [chatHistoryData?.chatHistory?.nodes?.length])
+
+  // Resolve selected chat's recipient profile from conversations list
+  const selectedChatProfile = chatsData?.chats?.nodes?.find(
+    (chat: any) => (chat.profile?.id || chat.id) === selectedChatId
+  )?.profile
 
   // Explore Tracks Query - search for tracks
   // SPEED: cache-first, only fetch when on explore view
@@ -3688,7 +3713,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
         <div className="max-w-screen-2xl mx-auto relative">
           {/* Horizontal scrolling nav pills */}
           <div className="flex items-center gap-1.5 mb-1 px-3 pt-1">
-            <div className="flex-1 overflow-x-auto scrollbar-hide">
+            <div className="flex-1 overflow-x-auto scrollbar-hide bg-black/60 backdrop-blur-md rounded-full px-2 py-1">
               <div className="flex items-center gap-1.5 min-w-max">
                 {[
                   { id: 'feed', label: 'Feed', route: '/dex/feed' },
@@ -5846,112 +5871,178 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             </div>
           )}
 
-          {/* Messages View - Full DM System */}
+          {/* Messages View - Full DM System (mobile-friendly: list OR chat, not both) */}
           {selectedView === 'messages' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-              {/* Conversations List */}
-              <Card className="retro-card overflow-hidden lg:col-span-1">
+            <div className="h-[calc(100vh-200px)] flex flex-col lg:grid lg:grid-cols-3 lg:gap-4">
+              {/* Conversations List — hidden on mobile when a chat is selected */}
+              <Card className={`retro-card overflow-hidden lg:col-span-1 flex flex-col ${selectedChatId ? 'hidden lg:flex' : 'flex'}`}>
                 <div className="p-4 border-b border-cyan-500/30">
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="w-6 h-6 text-blue-400" />
-                    <h2 className="retro-title text-lg">Messages</h2>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <MessageCircle className="w-5 h-5 text-blue-400" />
+                      <h2 className="text-lg font-bold text-white">Messages</h2>
+                    </div>
+                    <button
+                      onClick={() => refetchChats()}
+                      className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                      title="Refresh"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${chatsLoading ? 'animate-spin' : ''}`} />
+                    </button>
                   </div>
                 </div>
-                <div className="overflow-y-auto h-[calc(100%-60px)]">
-                  {chatsLoading ? (
+                <div className="flex-1 overflow-y-auto">
+                  {chatsLoading && !chatsData ? (
                     <div className="flex items-center justify-center py-8">
                       <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
                     </div>
                   ) : (chatsData?.chats?.nodes?.length ?? 0) > 0 ? (
-                    <div className="divide-y divide-gray-800">
-                      {chatsData?.chats?.nodes?.map((chat: any) => (
-                        <div
-                          key={chat.id}
-                          onClick={() => setSelectedChatId(chat.profile?.id || chat.id)}
-                          className={`p-4 cursor-pointer hover:bg-cyan-500/5 transition-colors ${selectedChatId === (chat.profile?.id || chat.id) ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-12 h-12">
-                              {chat.profile?.profilePicture ? (
-                                <AvatarImage src={chat.profile.profilePicture} />
-                              ) : null}
-                              <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white">
-                                {chat.profile?.displayName?.charAt(0)?.toUpperCase() || '?'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-white truncate">{chat.profile?.displayName || 'Unknown'}</p>
+                    <div className="divide-y divide-gray-800/50">
+                      {chatsData?.chats?.nodes?.map((chat: any) => {
+                        const chatProfileId = chat.profile?.id || chat.id
+                        const isSelected = selectedChatId === chatProfileId
+                        return (
+                          <div
+                            key={chat.id}
+                            onClick={() => setSelectedChatId(chatProfileId)}
+                            className={`p-3 cursor-pointer transition-all ${isSelected ? 'bg-cyan-500/10 border-l-2 border-cyan-400' : 'hover:bg-white/5 border-l-2 border-transparent'}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <Avatar className="w-11 h-11">
+                                  {chat.profile?.profilePicture ? (
+                                    <AvatarImage src={chat.profile.profilePicture} />
+                                  ) : null}
+                                  <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white text-sm">
+                                    {chat.profile?.displayName?.charAt(0)?.toUpperCase() || '?'}
+                                  </AvatarFallback>
+                                </Avatar>
                                 {chat.unread && (
-                                  <span className="w-2 h-2 bg-cyan-500 rounded-full flex-shrink-0" />
+                                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-cyan-400 rounded-full border-2 border-black" />
                                 )}
                               </div>
-                              <p className="text-sm text-gray-400 truncate">{chat.message}</p>
-                              <p className="text-xs text-gray-600">{new Date(chat.createdAt).toLocaleDateString()}</p>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className={`font-medium truncate ${chat.unread ? 'text-white' : 'text-gray-300'}`}>
+                                    {chat.profile?.displayName || 'Unknown'}
+                                  </p>
+                                  <span className="text-[10px] text-gray-600 flex-shrink-0">
+                                    {new Date(chat.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                  </span>
+                                </div>
+                                <p className={`text-sm truncate ${chat.unread ? 'text-gray-300 font-medium' : 'text-gray-500'}`}>
+                                  {chat.message || 'No messages yet'}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <MessageCircle className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                      <p className="text-gray-400 text-sm">No conversations yet</p>
-                      <p className="text-xs text-gray-600 mt-1">Visit an artist's profile to start a chat</p>
+                    <div className="flex-1 flex items-center justify-center py-12">
+                      <div className="text-center px-6">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center">
+                          <MessageCircle className="w-8 h-8 text-cyan-400" />
+                        </div>
+                        <p className="text-white font-medium mb-1">No conversations yet</p>
+                        <p className="text-sm text-gray-500">Visit an artist's profile and tap the message icon to start chatting</p>
+                      </div>
                     </div>
                   )}
                 </div>
               </Card>
 
-              {/* Chat Window */}
-              <Card className="retro-card overflow-hidden lg:col-span-2 flex flex-col">
+              {/* Chat Window — full screen on mobile when selected */}
+              <Card className={`retro-card overflow-hidden lg:col-span-2 flex flex-col ${selectedChatId ? 'flex' : 'hidden lg:flex'}`}>
                 {selectedChatId ? (
                   <>
-                    {/* Chat Header */}
-                    <div className="p-4 border-b border-cyan-500/30 flex items-center gap-3">
-                      {chatHistoryData?.chatHistory?.nodes?.[0]?.fromProfile && (
-                        <>
-                          <Avatar className="w-10 h-10">
-                            {(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.profilePicture ? (
-                              <AvatarImage src={(chatHistoryData.chatHistory.nodes[0].fromProfile as any).profilePicture} />
+                    {/* Chat Header — uses resolved profile from conversations list */}
+                    <div className="p-3 border-b border-cyan-500/30 flex items-center gap-3">
+                      {/* Back button (mobile only) */}
+                      <button
+                        onClick={() => setSelectedChatId(null)}
+                        className="lg:hidden p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                      >
+                        <ArrowLeft className="w-5 h-5" />
+                      </button>
+                      {selectedChatProfile ? (
+                        <div
+                          className="flex items-center gap-3 flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => selectedChatProfile?.userHandle && router.push(`/dex/users/${selectedChatProfile.userHandle}`)}
+                        >
+                          <Avatar className="w-9 h-9">
+                            {(selectedChatProfile as any)?.profilePicture ? (
+                              <AvatarImage src={(selectedChatProfile as any).profilePicture} />
                             ) : null}
-                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white">
-                              {(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName?.charAt(0) || '?'}
+                            <AvatarFallback className="bg-gradient-to-br from-purple-600 to-cyan-600 text-white text-xs">
+                              {(selectedChatProfile as any)?.displayName?.charAt(0) || '?'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium text-white">{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.displayName}</p>
-                            <p className="text-xs text-gray-400">@{(chatHistoryData.chatHistory.nodes[0].fromProfile as any)?.userHandle}</p>
+                            <p className="font-medium text-white text-sm">{(selectedChatProfile as any)?.displayName}</p>
+                            <p className="text-xs text-gray-500">@{(selectedChatProfile as any)?.userHandle}</p>
                           </div>
-                        </>
+                        </div>
+                      ) : (
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-400">Loading...</p>
+                        </div>
                       )}
                     </div>
 
-                    {/* Messages */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                      {chatHistoryLoading ? (
+                    {/* Messages — scrollable thread */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                      {chatHistoryLoading && !chatHistoryData ? (
                         <div className="flex items-center justify-center py-8">
                           <div className="animate-spin w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full" />
                         </div>
+                      ) : chatHistoryData?.chatHistory?.nodes?.length ? (
+                        <>
+                          {chatHistoryData.chatHistory.nodes.map((message: any, idx: number) => {
+                            const isMe = message.fromId === user?.id
+                            const prevMessage = idx > 0 ? chatHistoryData.chatHistory.nodes[idx - 1] : null
+                            const showTimestamp = !prevMessage ||
+                              (new Date(message.createdAt).getTime() - new Date(prevMessage.createdAt).getTime() > 300000) // 5 min gap
+                            return (
+                              <React.Fragment key={message.id}>
+                                {showTimestamp && (
+                                  <div className="flex justify-center py-2">
+                                    <span className="text-[10px] text-gray-600 bg-gray-900/50 px-3 py-1 rounded-full">
+                                      {new Date(message.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
+                                    isMe
+                                      ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black'
+                                      : 'bg-gray-800/80 text-white border border-gray-700/50'
+                                  }`}>
+                                    <p className="text-sm leading-relaxed break-words">{message.message}</p>
+                                    <p className={`text-[10px] mt-1 ${isMe ? 'text-cyan-900/70' : 'text-gray-500'}`}>
+                                      {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                  </div>
+                                </div>
+                              </React.Fragment>
+                            )
+                          })}
+                          <div ref={messagesEndRef} />
+                        </>
                       ) : (
-                        chatHistoryData?.chatHistory?.nodes?.map((message: any) => {
-                          const isMe = message.fromId === user?.id
-                          return (
-                            <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                              <div className={`max-w-[70%] rounded-2xl px-4 py-2 ${isMe ? 'bg-cyan-500 text-black' : 'bg-gray-800 text-white'}`}>
-                                <p className="text-sm">{message.message}</p>
-                                <p className={`text-xs mt-1 ${isMe ? 'text-cyan-900' : 'text-gray-500'}`}>
-                                  {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                              </div>
-                            </div>
-                          )
-                        })
+                        <div className="flex-1 flex items-center justify-center py-12">
+                          <div className="text-center">
+                            <Sparkles className="w-8 h-8 text-cyan-400 mx-auto mb-3" />
+                            <p className="text-gray-400 text-sm">Start of your conversation</p>
+                            <p className="text-xs text-gray-600 mt-1">Say something to break the ice</p>
+                          </div>
+                        </div>
                       )}
                     </div>
 
                     {/* Message Input */}
-                    <div className="p-4 border-t border-cyan-500/30">
+                    <div className="p-3 border-t border-gray-800/50 bg-black/40">
                       <form
                         onSubmit={(e) => {
                           e.preventDefault()
@@ -5966,36 +6057,40 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             })
                           }
                         }}
-                        className="flex gap-3"
+                        className="flex gap-2 items-end"
                       >
                         <input
                           type="text"
                           value={messageInput}
                           onChange={(e) => setMessageInput(e.target.value)}
                           placeholder="Type a message..."
-                          className="flex-1 bg-black/50 border border-gray-700 rounded-xl px-4 py-2 text-white focus:border-cyan-500 focus:outline-none"
+                          className="flex-1 bg-gray-900/80 border border-gray-700/50 rounded-2xl px-4 py-2.5 text-white text-sm placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 transition-all"
                           maxLength={1000}
                         />
-                        <Button
+                        <button
                           type="submit"
-                          className="retro-button"
                           disabled={!messageInput.trim() || sendingMessage}
+                          className="p-2.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-gray-700 disabled:text-gray-500 text-black transition-all flex-shrink-0"
                         >
                           {sendingMessage ? (
-                            <div className="animate-spin w-4 h-4 border-2 border-black border-t-transparent rounded-full" />
+                            <div className="animate-spin w-5 h-5 border-2 border-black border-t-transparent rounded-full" />
                           ) : (
-                            'Send'
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                            </svg>
                           )}
-                        </Button>
+                        </button>
                       </form>
                     </div>
                   </>
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                      <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                      <p className="text-gray-400">Select a conversation</p>
-                      <p className="text-xs text-gray-600 mt-1">Choose from your messages on the left</p>
+                    <div className="text-center px-6">
+                      <div className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/20 flex items-center justify-center">
+                        <MessageCircle className="w-10 h-10 text-cyan-500/50" />
+                      </div>
+                      <p className="text-white font-medium mb-1">Your Messages</p>
+                      <p className="text-sm text-gray-500">Select a conversation to start chatting</p>
                     </div>
                   </div>
                 )}
@@ -6934,8 +7029,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
                   {/* Main Content */}
                   <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
-                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Playlists */}
-                    <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2">
+                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Shop | Playlists */}
+                    <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 bg-black/60 backdrop-blur-md rounded-full px-3 py-1.5">
                       {/* My Feed tab - ONLY shown when viewing own profile */}
                       {isViewingOwnProfile && (
                         <Button

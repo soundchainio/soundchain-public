@@ -3,6 +3,7 @@ query Chats($page: PageInput) {
     nodes {
       id
       profile {
+        id
         displayName
         profilePicture
         verified
