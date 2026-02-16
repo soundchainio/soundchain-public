@@ -6,7 +6,7 @@ import { useUpdateSocialMediasMutation } from 'lib/graphql'
 import * as yup from 'yup'
 
 const getSocialMedias = (socialMedias: any) => ({
-  soundcloud: '', spotify: '', bandcamp: '', facebook: '', instagram: '', x: '', tiktok: '', linktree: '', discord: '', telegram: '', onlyfans: '', customLink: '',
+  soundcloud: '', spotify: '', bandcamp: '', facebook: '', instagram: '', linktree: '', discord: '', telegram: '',
   ...socialMedias,
 })
 
@@ -16,20 +16,16 @@ interface SocialLinksFormProps {
   submitText: string
 }
 
-// Music-related at top, others below, onlyfans second-to-last, customLink last
+// Music-related at top, others below
 interface FormValues {
   soundcloud: string | undefined
   spotify: string | undefined
   bandcamp: string | undefined
   facebook: string | undefined
   instagram: string | undefined
-  x: string | undefined
-  tiktok: string | undefined
   linktree: string | undefined
   discord: string | undefined
   telegram: string | undefined
-  onlyfans: string | undefined
-  customLink: string | undefined
 }
 
 const validationSchema: yup.Schema<FormValues> = yup.object().shape({
@@ -38,13 +34,9 @@ const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   bandcamp: yup.string().label('Bandcamp').optional(),
   facebook: yup.string().label('Facebook').optional(),
   instagram: yup.string().label('Instagram').optional(),
-  x: yup.string().label('X').optional(),
-  tiktok: yup.string().label('TikTok').optional(),
   linktree: yup.string().label('Linktree').optional(),
   discord: yup.string().label('Discord').optional(),
   telegram: yup.string().label('Telegram').optional(),
-  onlyfans: yup.string().label('OnlyFans').optional(),
-  customLink: yup.string().label('Custom Link').optional(),
 })
 
 const regex = /(?:^https?:\/\/(?:www\.)?[\w]+\.(com|ee|gg|me|org))\/([\w-]+)/
@@ -65,13 +57,9 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
     bandcamp: socialMedias.bandcamp || '',
     facebook: socialMedias.facebook || '',
     instagram: socialMedias.instagram || '',
-    x: socialMedias.x || '', // Removed twitter fallback
-    tiktok: socialMedias.tiktok || '',
     linktree: socialMedias.linktree || '',
     discord: socialMedias.discord || '',
     telegram: socialMedias.telegram || '',
-    onlyfans: socialMedias.onlyfans || '',
-    customLink: socialMedias.customLink || '',
   }
   const [updateSocialMedias, { loading }] = useUpdateSocialMediasMutation()
 
@@ -81,18 +69,14 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
     bandcamp,
     facebook,
     instagram,
-    x,
-    tiktok,
     linktree,
     discord,
     telegram,
-    onlyfans,
-    customLink,
   }: FormValues) => {
     await updateSocialMedias({
       variables: {
         input: {
-          socialMedias: { soundcloud, spotify, bandcamp, facebook, instagram, x, tiktok, linktree, discord, telegram, onlyfans, customLink },
+          socialMedias: { soundcloud, spotify, bandcamp, facebook, instagram, linktree, discord, telegram },
         },
       },
     })
@@ -146,22 +130,6 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
           </div>
           <div className="flex items-center">
             <InputField
-              label="x.com/"
-              type="text"
-              name="x"
-              onChange={e => setFieldValue('x', normalize(e.target.value, 'x'))}
-            />
-          </div>
-          <div className="flex items-center">
-            <InputField
-              label="tiktok.com/"
-              type="text"
-              name="tiktok"
-              onChange={e => setFieldValue('tiktok', normalize(e.target.value, 'tiktok'))}
-            />
-          </div>
-          <div className="flex items-center">
-            <InputField
               label="linktr.ee/"
               type="text"
               name="linktree"
@@ -182,22 +150,6 @@ export const SocialLinksForm = ({ afterSubmit, submitText, submitProps }: Social
               type="text"
               name="telegram"
               onChange={e => setFieldValue('telegram', normalize(e.target.value, 'telegram'))}
-            />
-          </div>
-          <div className="flex items-center">
-            <InputField
-              label="onlyfans.com/"
-              type="text"
-              name="onlyfans"
-              onChange={e => setFieldValue('onlyfans', normalize(e.target.value, 'onlyfans'))}
-            />
-          </div>
-          <div className="flex items-center">
-            <InputField
-              label="Custom Link"
-              type="text"
-              name="customLink"
-              onChange={e => setFieldValue('customLink', e.target.value)} // No normalization for custom
             />
           </div>
           <div className="flex flex-col">

@@ -13,10 +13,6 @@ fragment ProfileComponentFields on Profile {
     telegram
     spotify
     bandcamp
-    x
-    tiktok
-    onlyfans
-    customLink
   }
   favoriteGenres
   musicianTypes
