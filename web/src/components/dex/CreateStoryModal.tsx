@@ -153,15 +153,24 @@ interface RadioTrackPrefill {
   artworkUrl?: string
 }
 
+interface PrefillMedia {
+  url: string
+  type: 'image' | 'video'
+  caption?: string
+  authorName?: string
+}
+
 interface CreateStoryModalProps {
   isOpen: boolean
   onClose: () => void
   onPublish?: (mediaUrl: string, mediaType: 'image' | 'video') => void
   /** Pre-fill with a radio/NFT track (artwork as media + track attached) */
   prefillTrack?: RadioTrackPrefill | null
+  /** Pre-fill with a post's media (Share to Story) */
+  prefillMedia?: PrefillMedia | null
 }
 
-export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: CreateStoryModalProps) => {
+export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, prefillMedia }: CreateStoryModalProps) => {
   // useMe() returns the User object directly, not { me: User }
   const me = useMe()
 
@@ -218,6 +227,9 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
   // Crop editor state
   const [showCropEditor, setShowCropEditor] = useState(false)
   const prefillApplied = useRef(false)
+
+  // Pre-filled media from shared post (Share to Story)
+  const [prefillMediaUrl, setPrefillMediaUrl] = useState<string | null>(null)
 
   // Generate a radio story card using canvas (always works, no CORS issues)
   const generateRadioCard = useCallback((artworkImg?: HTMLImageElement) => {
@@ -395,10 +407,35 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
     }
   }, [isOpen, prefillTrack, generateRadioCard])
 
+  // Pre-fill from shared post media when modal opens (Share to Story)
+  useEffect(() => {
+    if (!isOpen || !prefillMedia || prefillApplied.current) return
+    prefillApplied.current = true
+
+    const resolvedUrl = getIpfsUrl(prefillMedia.url)
+    setMediaPreview(resolvedUrl)
+    setMediaType(prefillMedia.type)
+    setPrefillMediaUrl(prefillMedia.url) // Store original URL for publish
+
+    // Detect video duration for proper story timing
+    if (prefillMedia.type === 'video') {
+      const tempVideo = document.createElement('video')
+      tempVideo.preload = 'metadata'
+      tempVideo.crossOrigin = 'anonymous'
+      tempVideo.src = resolvedUrl
+      tempVideo.onloadedmetadata = () => {
+        setVideoDuration(tempVideo.duration)
+      }
+    }
+
+    setActiveTab('text') // Let user add overlays before sharing
+  }, [isOpen, prefillMedia])
+
   // Reset prefill flag when modal closes
   useEffect(() => {
     if (!isOpen) {
       prefillApplied.current = false
+      setPrefillMediaUrl(null)
     }
   }, [isOpen])
 
@@ -669,14 +706,72 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
   }
 
   const handlePublish = async () => {
-    if (!mediaFile || !mediaPreview || !mediaType) return
+    if ((!mediaFile && !prefillMediaUrl) || !mediaPreview || !mediaType) return
     setIsUploading(true)
     setUploadError(null)
     setUploadProgress(0)
 
     try {
       let ipfsCid: string
-      const useDirectUpload = mediaFile.size < DIRECT_UPLOAD_THRESHOLD
+      const useDirectUpload = mediaFile ? mediaFile.size < DIRECT_UPLOAD_THRESHOLD : false
+
+      // Fast path: Pre-filled media from shared post (already hosted)
+      if (prefillMediaUrl) {
+        setUploadStep('creating')
+        setUploadProgress(85)
+        // Use the original URL directly — it's already on IPFS or S3
+        const ipfsUrl = prefillMediaUrl
+
+        // Prepare overlays
+        const overlays = convertLayersToOverlays()
+
+        setUploadProgress(90)
+
+        if (isLoggedIn) {
+          await createStoryWithOverlays({
+            variables: {
+              mediaUrl: ipfsUrl,
+              mediaType,
+              duration: mediaType === 'video' ? Math.floor(videoDuration) || 15 : 60,
+              overlays: overlays.length > 0 ? overlays : null,
+              attachedTrackId: selectedNftTrack?.id || null,
+              caption: normalizedEmbedUrl || null,
+            },
+          })
+          toast.success('Shared to your Story!')
+        } else {
+          let walletAddress = me?.magicWalletAddress || me?.googleWalletAddress || me?.discordWalletAddress || me?.twitchWalletAddress
+          if (!walletAddress) {
+            const hexChars = '0123456789abcdef'
+            let addressBody = ''
+            for (let i = 0; i < 40; i++) {
+              addressBody += hexChars[Math.floor(Math.random() * 16)]
+            }
+            walletAddress = `0x${addressBody}`
+          }
+          await guestCreateStoryWithOverlays({
+            variables: {
+              mediaUrl: ipfsUrl,
+              mediaType,
+              walletAddress,
+              duration: mediaType === 'video' ? Math.floor(videoDuration) || 15 : 60,
+              overlays: overlays.length > 0 ? overlays : null,
+              attachedTrackId: selectedNftTrack?.id || null,
+              caption: normalizedEmbedUrl || null,
+            },
+          })
+          toast.success('Shared to Story! Login to earn SCID rewards.')
+        }
+
+        setUploadProgress(100)
+        if (onPublish) onPublish(ipfsUrl, mediaType)
+        handleClear()
+        onClose()
+        return
+      }
+
+      // At this point, mediaFile is guaranteed non-null (prefillMediaUrl path returned early)
+      const file = mediaFile!
 
       if (useDirectUpload) {
         // 🚀 FAST PATH: Direct upload to IPFS (skips S3 entirely!)
@@ -684,7 +779,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
         setUploadStep('uploading')
         setUploadProgress(20)
 
-        const base64Data = await fileToBase64(mediaFile)
+        const base64Data = await fileToBase64(file)
         setUploadProgress(50)
 
         setUploadStep('pinning')
@@ -693,9 +788,9 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
         const { data: pinResult } = await directPinToIPFS({
           variables: {
             input: {
-              fileName: `story-${Date.now()}-${mediaFile.name}`,
+              fileName: `story-${Date.now()}-${file.name}`,
               base64Data,
-              mimeType: mediaFile.type,
+              mimeType: file.type,
             },
           },
         })
@@ -709,11 +804,11 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
         // Reliable S3 → IPFS path: Upload to S3 first, then pin to IPFS
         setUploadStep('uploading')
         setUploadProgress(10)
-        console.log('[CreateStoryModal] Step 1: Uploading to S3...', { isLoggedIn, fileSize: mediaFile.size, fileType: mediaFile.type })
+        console.log('[CreateStoryModal] Step 1: Uploading to S3...', { isLoggedIn, fileSize: file.size, fileType: file.type })
 
         let s3Url: string | undefined
         try {
-          s3Url = await upload([mediaFile])
+          s3Url = await upload([file])
         } catch (uploadErr: any) {
           console.error('[CreateStoryModal] S3 upload failed:', uploadErr)
           throw new Error(`S3 upload failed: ${uploadErr?.message || 'Unknown error'}`)
@@ -848,7 +943,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
   }
 
   const handleClear = () => {
-    if (mediaPreview) URL.revokeObjectURL(mediaPreview)
+    if (mediaPreview && !prefillMediaUrl) URL.revokeObjectURL(mediaPreview)
     setMediaFile(null)
     setMediaPreview(null)
     setMediaType(null)
@@ -859,6 +954,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack }: C
     setOriginalSize(0)
     setUploadError(null)
     setTextLayers([])
+    setPrefillMediaUrl(null)
     clearMusic()
   }
 

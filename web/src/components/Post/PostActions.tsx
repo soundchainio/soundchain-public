@@ -12,7 +12,9 @@ import { useRouter } from 'next/router'
 import { toast } from 'react-toastify'
 
 import { ChatBubbleLeftIcon, ArrowPathIcon, ShareIcon, HandThumbUpIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
-import { Bookmark, Archive, Info } from 'lucide-react'
+import { Bookmark, Archive, Info, Film } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { CreateStoryModal } from 'components/dex/CreateStoryModal'
 
 // Detect if device supports hover (desktop)
 const checkIsDesktop = () => {
@@ -61,6 +63,8 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   const [isDownloading, setIsDownloading] = useState(false)
   const [showArchiveInfo, setShowArchiveInfo] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
+  const [showShareToStory, setShowShareToStory] = useState(false)
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const likeButtonRef = useRef<HTMLDivElement>(null)
   const me = useMe()
@@ -70,6 +74,16 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
   useEffect(() => {
     setIsDesktop(checkIsDesktop())
   }, [])
+
+  // Portal container for Share to Story modal
+  useEffect(() => {
+    setPortalContainer(document.body)
+  }, [])
+
+  const onShareToStory = () => {
+    if (!me) return router.push('/login')
+    setShowShareToStory(true)
+  }
 
   // Bookmark mutations
   const [bookmarkPost, { loading: bookmarking }] = useBookmarkPostMutation()
@@ -335,6 +349,18 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
           <ShareIcon className="h-4 w-4" />
         </button>
       </div>
+      {/* Share to Story - only for posts with media, logged-in users */}
+      {me && postData?.uploadedMediaUrl && (
+        <div className={commonClasses}>
+          <button
+            className="flex items-center px-3 py-2 font-medium hover:text-cyan-400 hover:bg-cyan-500/10 transition-all rounded-xl"
+            onClick={onShareToStory}
+            title="Share to Story"
+          >
+            <Film className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {/* Download button - all posts except NFTs (track posts) */}
       {!hasTrack && postData && (
         <div className={commonClasses}>
@@ -409,6 +435,21 @@ export const PostActions = ({ postId, myReaction, isBookmarked: initialIsBookmar
             </div>
           )}
         </div>
+      )}
+
+      {/* Share to Story Modal */}
+      {portalContainer && showShareToStory && createPortal(
+        <CreateStoryModal
+          isOpen={showShareToStory}
+          onClose={() => setShowShareToStory(false)}
+          prefillMedia={postData?.uploadedMediaUrl ? {
+            url: postData.uploadedMediaUrl,
+            type: (postData.uploadedMediaType?.startsWith('video') ? 'video' : 'image') as 'image' | 'video',
+            caption: postData.body || undefined,
+            authorName: postData.profile?.displayName || postData.profile?.userHandle || undefined,
+          } : null}
+        />,
+        portalContainer
       )}
     </div>
   )
