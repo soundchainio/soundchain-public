@@ -7430,9 +7430,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 avatar: u.profilePicture || undefined,
                                 isVerified: u.verified || u.teamMember || false,
                               })).filter((u: any) => u.id) : []
-                              // Merge: local first, then server results not already in local
-                              const localIds = new Set(localFiltered.map((u: any) => u.id))
-                              const merged = [...localFiltered, ...serverResults.filter((u: any) => !localIds.has(u.id))]
+                              // Merge: deduplicate, prefer entry with avatar
+                              const byId = new Map<string, any>()
+                              for (const u of localFiltered) byId.set(u.id, u)
+                              for (const u of serverResults) {
+                                const existing = byId.get(u.id)
+                                if (!existing) byId.set(u.id, u)
+                                else if (!existing.avatar && u.avatar) byId.set(u.id, { ...existing, avatar: u.avatar })
+                              }
+                              const merged = Array.from(byId.values())
                               if (merged.length === 0) {
                                 return <div className="col-span-5 text-center py-6 text-gray-500 text-sm">{query ? 'No users found' : 'Follow people to add them as Top Friends'}</div>
                               }
@@ -7478,42 +7484,42 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
                   )}
 
-                  {/* Top 8 Friends Grid (visible to all) */}
+                  {/* Top 8 Friends — single tight horizontal row */}
                   {(() => {
                     const topFriendsProfiles = topFriendsData?.profile?.topFriendsProfiles
                     if (!topFriendsProfiles || topFriendsProfiles.length === 0) return null
                     return (
-                      <div className="px-4 mt-4">
+                      <div className="px-4 mt-3">
                         <div className="max-w-screen-lg mx-auto">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Heart className="w-3 h-3 text-pink-400" />
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Top {topFriendsProfiles.length} Friends</span>
-                          </div>
-                          <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                          <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide py-1">
+                            <div className="flex items-center gap-1 shrink-0">
+                              <Heart className="w-3 h-3 text-pink-400" />
+                              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Top {topFriendsProfiles.length}</span>
+                            </div>
                             {topFriendsProfiles.map((friend: any) => (
                               <button
                                 key={friend.id}
                                 onClick={() => router.push(`/dex/users/${friend.userHandle}`)}
-                                className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-white/5 transition-colors group"
+                                className="flex flex-col items-center gap-0.5 shrink-0 group"
                               >
                                 <div className="relative">
-                                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 ring-2 ring-white/10 group-hover:ring-cyan-400/50 transition-all">
+                                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 ring-2 ring-white/10 group-hover:ring-cyan-400/50 transition-all">
                                     {friend.profilePicture ? (
                                       <img src={friend.profilePicture} alt={friend.displayName} className="w-full h-full object-cover" />
                                     ) : (
-                                      <div className="w-full h-full flex items-center justify-center"><User className="w-5 h-5 text-gray-600" /></div>
+                                      <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
                                     )}
                                   </div>
                                   {friend.isOnline && (
-                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-neutral-900" />
+                                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-neutral-900" />
                                   )}
                                   {(friend.verified || friend.teamMember) && (
                                     <div className="absolute -top-0.5 -right-0.5">
-                                      <BadgeCheck className="w-3.5 h-3.5 text-cyan-400" />
+                                      <BadgeCheck className="w-3 h-3 text-cyan-400" />
                                     </div>
                                   )}
                                 </div>
-                                <span className="text-[11px] text-gray-400 group-hover:text-white truncate w-full text-center transition-colors">{friend.displayName}</span>
+                                <span className="text-[9px] text-gray-500 group-hover:text-white truncate max-w-[56px] text-center transition-colors">{friend.displayName?.split(' ')[0] || friend.userHandle}</span>
                               </button>
                             ))}
                           </div>
