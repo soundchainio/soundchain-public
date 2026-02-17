@@ -16,14 +16,22 @@ export class WallPostService extends ModelService<typeof WallPost> {
   async createWallPost(
     profileId: string,
     authorProfileId: string,
-    body: string,
+    body?: string,
     replyToId?: string,
+    mediaUrl?: string,
+    mediaType?: string,
+    coverArtUrl?: string,
+    mediaThumbnailUrl?: string,
   ): Promise<WallPost> {
     const wallPost = new WallPostModel({
       profileId,
       authorProfileId,
-      body: body.substring(0, 1000),
+      body: body ? body.substring(0, 1000) : undefined,
       replyToId,
+      mediaUrl,
+      mediaType,
+      coverArtUrl,
+      mediaThumbnailUrl,
     });
     await wallPost.save();
     return wallPost.toObject() as WallPost;

@@ -16,22 +16,34 @@ export class WallPostResolver {
   async createWallPost(
     @Ctx() { wallPostService, activityService, notificationService }: Context,
     @Arg('profileId') profileId: string,
-    @Arg('body') body: string,
+    @Arg('body', { nullable: true }) body: string,
     @Arg('replyToId', { nullable: true }) replyToId: string,
+    @Arg('mediaUrl', { nullable: true }) mediaUrl: string,
+    @Arg('mediaType', { nullable: true }) mediaType: string,
+    @Arg('coverArtUrl', { nullable: true }) coverArtUrl: string,
+    @Arg('mediaThumbnailUrl', { nullable: true }) mediaThumbnailUrl: string,
     @CurrentUser() { profileId: authorProfileId }: User,
   ): Promise<WallPost> {
+    if (!body && !mediaUrl) {
+      throw new Error('Wall post must have either text or media');
+    }
+
     const wallPost = await wallPostService.createWallPost(
       profileId,
       authorProfileId.toString(),
       body,
       replyToId,
+      mediaUrl,
+      mediaType,
+      coverArtUrl,
+      mediaThumbnailUrl,
     );
 
     // Log activity
     const metadata: WallPostedMetadata = {
       wallPostId: wallPost._id.toString(),
       wallProfileId: profileId,
-      body: body.substring(0, 100),
+      body: (body || '').substring(0, 100),
     };
     await activityService.logActivity({
       profileId: authorProfileId.toString(),

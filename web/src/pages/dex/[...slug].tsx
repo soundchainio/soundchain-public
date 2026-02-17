@@ -7952,6 +7952,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           isOwnProfile={isViewingOwnProfile}
                           viewerProfileId={me?.profile?.id}
                           profileName={viewingProfile.displayName}
+                          userHandle={viewingProfile.userHandle}
                         />
                       )}
                     </div>

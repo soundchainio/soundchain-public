@@ -1,19 +1,22 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { Button } from 'components/ui/button'
 import {
   Send, Trash2, Pin, MessageCircle, ChevronDown, Play, Heart,
   Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp, ExternalLink, Minus, Plus,
-  Smile, Sparkles, Link2, X,
+  Smile, Sparkles, Link2, X, Paperclip, Share2, Upload, Image as ImageIcon,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { useDropzone } from 'react-dropzone'
+import { toast } from 'react-toastify'
 import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from 'components/EmoteRenderer'
 import { StickerPicker } from 'components/StickerPicker'
+import { useUpload } from 'hooks/useUpload'
 import Picker from '@emoji-mart/react'
 
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false })
@@ -63,6 +66,10 @@ const WALL_POSTS_QUERY = gql`
         body
         pinned
         createdAt
+        mediaUrl
+        mediaType
+        coverArtUrl
+        mediaThumbnailUrl
         author {
           id
           displayName
@@ -75,6 +82,10 @@ const WALL_POSTS_QUERY = gql`
           authorProfileId
           body
           createdAt
+          mediaUrl
+          mediaType
+          coverArtUrl
+          mediaThumbnailUrl
           author {
             id
             displayName
@@ -92,11 +103,15 @@ const WALL_POSTS_QUERY = gql`
 `
 
 const CREATE_WALL_POST = gql`
-  mutation CreateWallPost($profileId: String!, $body: String!, $replyToId: String) {
-    createWallPost(profileId: $profileId, body: $body, replyToId: $replyToId) {
+  mutation CreateWallPost($profileId: String!, $body: String, $replyToId: String, $mediaUrl: String, $mediaType: String, $coverArtUrl: String, $mediaThumbnailUrl: String) {
+    createWallPost(profileId: $profileId, body: $body, replyToId: $replyToId, mediaUrl: $mediaUrl, mediaType: $mediaType, coverArtUrl: $coverArtUrl, mediaThumbnailUrl: $mediaThumbnailUrl) {
       id
       body
       createdAt
+      mediaUrl
+      mediaType
+      coverArtUrl
+      mediaThumbnailUrl
       author {
         id
         displayName
@@ -122,12 +137,97 @@ const PIN_WALL_POST = gql`
   }
 `
 
+// Accepted file types for wall uploads
+const wallAcceptedTypes = {
+  'image/jpeg': ['.jpg', '.jpeg'],
+  'image/png': ['.png'],
+  'image/gif': ['.gif'],
+  'image/webp': ['.webp'],
+  'video/mp4': ['.mp4', '.m4v'],
+  'video/quicktime': ['.mov'],
+  'video/webm': ['.webm'],
+  'audio/mpeg': ['.mp3'],
+  'audio/wav': ['.wav'],
+  'audio/wave': ['.wav'],
+  'audio/flac': ['.flac'],
+  'audio/ogg': ['.ogg'],
+  'audio/mp4': ['.m4a'],
+  'audio/x-m4a': ['.m4a'],
+  'audio/aiff': ['.aiff', '.aif'],
+}
+
+const getMediaTypeFromMime = (mime: string): 'audio' | 'image' | 'video' => {
+  if (mime.startsWith('audio/')) return 'audio'
+  if (mime.startsWith('video/')) return 'video'
+  return 'image'
+}
+
+// iOS-style waveform audio player for posts without cover art
+function WallAudioPlayer({ src, coverArtUrl, small }: { src: string; coverArtUrl?: string; small?: boolean }) {
+  const barCount = small ? 20 : 32
+  return (
+    <div className={`flex items-center gap-3 ${small ? 'p-2' : 'p-3'} bg-gradient-to-r from-neutral-800 via-neutral-800/90 to-neutral-700 rounded-xl border border-white/10`}>
+      {coverArtUrl ? (
+        <img src={coverArtUrl} alt="" className={`${small ? 'w-10 h-10' : 'w-14 h-14'} rounded-lg object-cover flex-shrink-0`} />
+      ) : (
+        <div className={`${small ? 'w-10 h-10' : 'w-14 h-14'} rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center flex-shrink-0`}>
+          <Music className={`${small ? 'w-4 h-4' : 'w-6 h-6'} text-white`} />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-end gap-[2px] h-6 mb-1.5">
+          {Array.from({ length: barCount }).map((_, i) => {
+            const h = 4 + Math.abs(Math.sin(i * 0.7 + 1.2) * 16) + Math.abs(Math.cos(i * 1.3) * 6)
+            return <div key={i} className="flex-1 rounded-full bg-cyan-400/60" style={{ height: `${h}px` }} />
+          })}
+        </div>
+        <audio controls src={src} className="w-full h-8 [&::-webkit-media-controls-panel]:bg-transparent" style={{ filter: 'invert(1) hue-rotate(180deg) brightness(0.9)', height: small ? '28px' : '32px' }} />
+      </div>
+    </div>
+  )
+}
+
+// Render uploaded media for a wall post
+function WallPostMedia({ post, small }: { post: any; small?: boolean }) {
+  if (!post.mediaUrl) return null
+  const type = post.mediaType || 'image'
+
+  if (type === 'image') {
+    return (
+      <div className={`mt-2 rounded-xl overflow-hidden ${small ? 'max-h-48' : 'max-h-80'}`}>
+        <img src={post.mediaUrl} alt="" className="w-full object-cover rounded-xl" style={{ maxHeight: small ? '192px' : '320px' }} />
+      </div>
+    )
+  }
+
+  if (type === 'video') {
+    return (
+      <div className="mt-2 rounded-xl overflow-hidden">
+        <video controls playsInline className="w-full rounded-xl" style={{ maxHeight: small ? '192px' : '320px' }} poster={post.mediaThumbnailUrl || undefined}>
+          <source src={post.mediaUrl} />
+        </video>
+      </div>
+    )
+  }
+
+  if (type === 'audio') {
+    return (
+      <div className="mt-2">
+        <WallAudioPlayer src={post.mediaUrl} coverArtUrl={post.coverArtUrl} small={small} />
+      </div>
+    )
+  }
+
+  return null
+}
+
 interface ProfileWallProps {
   profileId: string
   isOwnProfile: boolean
   viewerProfileId?: string
   profileName?: string
   walletAddress?: string
+  userHandle?: string
 }
 
 // Reusable Emoji/Sticker toolbar for wall inputs
@@ -145,6 +245,8 @@ function WallInputToolbar({
   onEmojiSelect,
   charCount,
   maxChars,
+  onMediaClick,
+  showMediaActive,
 }: {
   showEmojiPicker: boolean
   setShowEmojiPicker: (v: boolean) => void
@@ -159,6 +261,8 @@ function WallInputToolbar({
   onEmojiSelect: (emoji: Emoji) => void
   charCount: number
   maxChars: number
+  onMediaClick?: () => void
+  showMediaActive?: boolean
 }) {
   return (
     <>
@@ -234,6 +338,22 @@ function WallInputToolbar({
             <Link2 className="w-3.5 h-3.5" />
             <span className="text-[9px] font-medium hidden sm:inline">Embed</span>
           </button>
+
+          {onMediaClick && (
+            <button
+              type="button"
+              onClick={() => { onMediaClick(); setShowEmojiPicker(false); setShowStickerPicker(false); setShowEmbedInput(false) }}
+              className={`p-1 rounded-lg transition-all flex items-center gap-0.5 ${
+                showMediaActive
+                  ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 ring-1 ring-green-400'
+                  : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+              }`}
+              title="Upload media (audio, image, video)"
+            >
+              <Paperclip className="w-3.5 h-3.5" />
+              <span className="text-[9px] font-medium hidden sm:inline">Media</span>
+            </button>
+          )}
         </div>
 
         <span className={`text-[9px] ${charCount > maxChars * 0.8 ? 'text-amber-400' : 'text-neutral-500'}`}>
@@ -288,7 +408,7 @@ function WallInputToolbar({
   )
 }
 
-export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileName, walletAddress }: ProfileWallProps) {
+export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileName, walletAddress, userHandle }: ProfileWallProps) {
   const [body, setBody] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyBody, setReplyBody] = useState('')
@@ -303,6 +423,21 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   const [showPostSticker, setShowPostSticker] = useState(false)
   const [showPostEmbed, setShowPostEmbed] = useState(false)
 
+  // Media upload state
+  const [postMediaUrl, setPostMediaUrl] = useState<string | null>(null)
+  const [postMediaType, setPostMediaType] = useState<string | null>(null)
+  const [postMediaPreview, setPostMediaPreview] = useState<string | null>(null)
+  const [postMediaFileName, setPostMediaFileName] = useState<string | null>(null)
+  const [postCoverArtUrl, setPostCoverArtUrl] = useState<string | null>(null)
+  const [postCoverArtPreview, setPostCoverArtPreview] = useState<string | null>(null)
+  const [postThumbnailUrl, setPostThumbnailUrl] = useState<string | null>(null)
+  const [showMediaDropzone, setShowMediaDropzone] = useState(false)
+
+  // Upload hooks
+  const { uploading: mediaUploading, upload: uploadMedia } = useUpload()
+  const { uploading: coverArtUploading, upload: uploadCoverArt } = useUpload()
+  const coverArtInputRef = useRef<HTMLInputElement>(null)
+
   // Reply input state
   const [replyStickers, setReplyStickers] = useState<Array<{url: string, name: string}>>([])
   const [replyEmbedUrl, setReplyEmbedUrl] = useState('')
@@ -311,6 +446,98 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   const [showReplyEmbed, setShowReplyEmbed] = useState(false)
 
   const toggle = (key: string) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }))
+
+  // Capture video thumbnail from a video file
+  const captureVideoThumbnail = useCallback(async (videoFile: File): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video')
+      video.src = URL.createObjectURL(videoFile)
+      video.muted = true
+      video.playsInline = true
+      const cleanup = () => { URL.revokeObjectURL(video.src) }
+      video.onloadeddata = () => { video.currentTime = Math.min(1, video.duration * 0.1) }
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = video.videoWidth
+        canvas.height = video.videoHeight
+        canvas.getContext('2d')?.drawImage(video, 0, 0)
+        canvas.toBlob((blob) => { cleanup(); resolve(blob) }, 'image/jpeg', 0.85)
+      }
+      video.onerror = () => { cleanup(); resolve(null) }
+      setTimeout(() => { cleanup(); resolve(null) }, 10000)
+    })
+  }, [])
+
+  // Handle media file drop/select
+  const onMediaDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return
+    const file = acceptedFiles[0]
+    const mediaType = getMediaTypeFromMime(file.type)
+
+    setPostMediaPreview(URL.createObjectURL(file))
+    setPostMediaType(mediaType)
+    setPostMediaFileName(file.name)
+
+    try {
+      const url = await uploadMedia([file])
+      if (url) setPostMediaUrl(url)
+
+      // Capture video thumbnail
+      if (mediaType === 'video') {
+        const thumbBlob = await captureVideoThumbnail(file)
+        if (thumbBlob) {
+          const thumbFile = new File([thumbBlob], 'thumb.jpg', { type: 'image/jpeg' })
+          const thumbUrl = await uploadCoverArt([thumbFile])
+          if (thumbUrl) setPostThumbnailUrl(thumbUrl)
+        }
+      }
+    } catch {
+      toast.error('Upload failed')
+      clearMedia()
+    }
+  }, [uploadMedia, uploadCoverArt, captureVideoThumbnail])
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: onMediaDrop,
+    accept: wallAcceptedTypes,
+    maxFiles: 1,
+    noClick: false,
+    noKeyboard: false,
+  })
+
+  // Handle cover art selection for audio posts
+  const onCoverArtSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setPostCoverArtPreview(URL.createObjectURL(file))
+    try {
+      const url = await uploadCoverArt([file])
+      if (url) setPostCoverArtUrl(url)
+    } catch {
+      toast.error('Cover art upload failed')
+    }
+  }, [uploadCoverArt])
+
+  const clearMedia = () => {
+    setPostMediaUrl(null)
+    setPostMediaType(null)
+    setPostMediaPreview(null)
+    setPostMediaFileName(null)
+    setPostCoverArtUrl(null)
+    setPostCoverArtPreview(null)
+    setPostThumbnailUrl(null)
+    setShowMediaDropzone(false)
+  }
+
+  // Share wall post handler
+  const handleShareWallPost = useCallback((postId: string, postBody?: string) => {
+    const url = `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${postId}`
+    if (navigator.share) {
+      navigator.share({ title: 'SoundChain', text: postBody?.slice(0, 100) || 'Check out this wall post', url }).catch(() => {})
+    } else {
+      navigator.clipboard.writeText(url).then(() => toast.success('Link copied!')).catch(() => {})
+    }
+  }, [userHandle, profileId])
 
   // Wall posts
   const { data, loading, refetch } = useQuery(WALL_POSTS_QUERY, {
@@ -367,6 +594,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
       setShowPostEmoji(false)
       setShowPostSticker(false)
       setShowPostEmbed(false)
+      clearMedia()
       setReplyingTo(null)
       setReplyBody('')
       setReplyStickers([])
@@ -390,8 +618,17 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
     // Combine text + sticker markdown + embed URL (same pattern as WaveformWithComments)
     const stickerMarkdown = postStickers.map(s => `![emote:${s.name}](${s.url})`).join(' ')
     const finalBody = [body.trim(), stickerMarkdown, postEmbedUrl.trim()].filter(Boolean).join(' ')
-    if (!finalBody) return
-    createWallPost({ variables: { profileId, body: finalBody } })
+    if (!finalBody && !postMediaUrl) return
+    createWallPost({
+      variables: {
+        profileId,
+        body: finalBody || undefined,
+        mediaUrl: postMediaUrl || undefined,
+        mediaType: postMediaType || undefined,
+        coverArtUrl: postCoverArtUrl || undefined,
+        mediaThumbnailUrl: postThumbnailUrl || undefined,
+      },
+    })
   }
 
   const handleReply = (wallPostId: string) => {
@@ -559,7 +796,99 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
               }}
               charCount={body.length + postStickers.length}
               maxChars={1000}
+              onMediaClick={() => setShowMediaDropzone(!showMediaDropzone)}
+              showMediaActive={showMediaDropzone || !!postMediaUrl}
             />
+
+            {/* Media Upload Dropzone */}
+            {showMediaDropzone && !postMediaUrl && (
+              <div className="mt-2">
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
+                    isDragActive ? 'border-green-400 bg-green-400/10' : 'border-neutral-600 hover:border-neutral-400 bg-neutral-800/50'
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  <Upload className="w-6 h-6 text-neutral-400 mx-auto mb-1" />
+                  <p className="text-xs text-neutral-400">
+                    {isDragActive ? 'Drop file here' : 'Drop or tap to upload audio, image, or video'}
+                  </p>
+                  <p className="text-[9px] text-neutral-500 mt-0.5">MP3, WAV, FLAC, JPG, PNG, MP4, MOV</p>
+                </div>
+              </div>
+            )}
+
+            {/* Media Preview */}
+            {postMediaUrl && (
+              <div className="mt-2 relative">
+                <button onClick={clearMedia} className="absolute top-1 right-1 z-10 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center">
+                  <X className="w-3 h-3 text-white" />
+                </button>
+                {postMediaType === 'image' && postMediaPreview && (
+                  <img src={postMediaPreview} alt="" className="w-full max-h-48 object-cover rounded-xl" />
+                )}
+                {postMediaType === 'video' && postMediaPreview && (
+                  <video src={postMediaPreview} className="w-full max-h-48 rounded-xl" controls muted />
+                )}
+                {postMediaType === 'audio' && (
+                  <div className="flex items-center gap-3 p-3 bg-neutral-800 rounded-xl border border-neutral-700">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                      {postCoverArtPreview ? (
+                        <img src={postCoverArtPreview} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      ) : (
+                        <Music className="w-5 h-5 text-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-white truncate">{postMediaFileName || 'Audio file'}</p>
+                      {mediaUploading ? (
+                        <p className="text-[9px] text-cyan-400">Uploading...</p>
+                      ) : (
+                        <p className="text-[9px] text-green-400">Ready</p>
+                      )}
+                    </div>
+                    {!postCoverArtUrl && (
+                      <button
+                        type="button"
+                        onClick={() => coverArtInputRef.current?.click()}
+                        className="text-[9px] text-cyan-400 hover:text-cyan-300 bg-neutral-700 hover:bg-neutral-600 px-2 py-1 rounded-lg flex items-center gap-1 flex-shrink-0"
+                      >
+                        <ImageIcon className="w-3 h-3" />
+                        Cover Art
+                      </button>
+                    )}
+                    {postCoverArtUrl && (
+                      <button
+                        type="button"
+                        onClick={() => { setPostCoverArtUrl(null); setPostCoverArtPreview(null) }}
+                        className="text-[9px] text-red-400 hover:text-red-300 flex-shrink-0"
+                      >
+                        Remove Art
+                      </button>
+                    )}
+                    <input
+                      ref={coverArtInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={onCoverArtSelect}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Uploading indicator */}
+            {(mediaUploading || coverArtUploading) && (
+              <div className="mt-1 flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="text-[9px] text-cyan-400">
+                  {coverArtUploading ? 'Uploading cover art...' : 'Uploading media...'}
+                </span>
+              </div>
+            )}
+
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -571,7 +900,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
               <Button
                 size="sm"
                 onClick={handleSubmit}
-                disabled={(!body.trim() && postStickers.length === 0 && !postEmbedUrl.trim()) || posting}
+                disabled={(!body.trim() && postStickers.length === 0 && !postEmbedUrl.trim() && !postMediaUrl) || posting || mediaUploading || coverArtUploading}
                 className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1"
               >
                 <Send className="w-3 h-3 mr-1" />
@@ -619,7 +948,8 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                       </span>
                       {post.pinned && <Pin className="w-3 h-3 text-yellow-400 fill-yellow-400" />}
                     </div>
-                    <div className="text-gray-300 text-sm mt-1 whitespace-pre-wrap break-words">{renderBody(post.body)}</div>
+                    {post.body && <div className="text-gray-300 text-sm mt-1 whitespace-pre-wrap break-words">{renderBody(post.body)}</div>}
+                    <WallPostMedia post={post} />
 
                     <div className="flex items-center gap-3 mt-2">
                       <button
@@ -636,6 +966,13 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                       >
                         <MessageCircle className="w-3 h-3" />
                         Reply {post.replyCount > 0 && `(${post.replyCount})`}
+                      </button>
+                      <button
+                        onClick={() => handleShareWallPost(post.id, post.body)}
+                        className="text-gray-500 hover:text-green-400 text-xs flex items-center gap-1 transition-colors"
+                      >
+                        <Share2 className="w-3 h-3" />
+                        Share
                       </button>
                       {(post.authorProfileId === viewerProfileId || isOwnProfile) && (
                         <button
@@ -674,7 +1011,8 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                                   {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                                 </span>
                               </div>
-                              <div className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">{renderBody(reply.body)}</div>
+                              {reply.body && <div className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">{renderBody(reply.body)}</div>}
+                              <WallPostMedia post={reply} small />
                             </div>
                           </div>
                         ))}

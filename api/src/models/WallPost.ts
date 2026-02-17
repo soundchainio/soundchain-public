@@ -22,13 +22,29 @@ export class WallPost extends Model {
   @prop({ required: true })
   public authorProfileId!: string;
 
-  @Field(() => String)
-  @prop({ required: true, maxlength: 1000 })
-  public body!: string;
+  @Field(() => String, { nullable: true })
+  @prop({ required: false, maxlength: 1000 })
+  public body?: string;
 
   @Field(() => String, { nullable: true })
   @prop({ required: false })
   public replyToId?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  public mediaUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  public mediaType?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  public coverArtUrl?: string;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  public mediaThumbnailUrl?: string;
 
   @Field(() => Boolean)
   @prop({ required: true, default: false })
