@@ -60,8 +60,8 @@ jobs:
             aws ecr describe-repositories --repository-names $ecr_repository || \
             aws ecr create-repository --repository-name $ecr_repository
 
-            # Build, tag, and push image
-            docker build -t $ecr_repository:$image_tag -f ./src/lambda/$lambda_name/Dockerfile .
+            # Build, tag, and push image (--provenance=false forces Docker V2 manifest that Lambda supports)
+            docker build --provenance=false -t $ecr_repository:$image_tag -f ./src/lambda/$lambda_name/Dockerfile .
 
             docker tag $ecr_repository:$image_tag $ECR_REGISTRY/$ecr_repository:$image_tag
             docker push $ECR_REGISTRY/$ecr_repository:$image_tag
