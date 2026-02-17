@@ -2060,10 +2060,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [updateFeaturedTrack] = useMutation(UPDATE_FEATURED_TRACK_MUTATION)
   const [updateTopFriends] = useMutation(UPDATE_TOP_FRIENDS_MUTATION)
 
-  // Top Friends Profiles query
-  const { data: topFriendsData } = useQuery(TOP_FRIENDS_PROFILES_QUERY, {
+  // Top Friends Profiles query — use selectedTopFriends for own profile (always fresh after save)
+  const hasTopFriends = isViewingOwnProfile ? selectedTopFriends.length > 0 : !!(viewingProfile as any)?.topFriends?.length
+  const { data: topFriendsData, refetch: refetchTopFriends } = useQuery(TOP_FRIENDS_PROFILES_QUERY, {
     variables: { profileId: viewingProfile?.id || '' },
-    skip: !viewingProfile?.id || selectedView !== 'profile' || !(viewingProfile as any)?.topFriends?.length,
+    skip: !viewingProfile?.id || selectedView !== 'profile' || !hasTopFriends,
     fetchPolicy: 'cache-and-network',
   })
 
