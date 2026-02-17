@@ -434,7 +434,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                 </p>
               )}
             </div>
-          </div>
         </div>
 
         {/* Their Friends / Following */}
@@ -483,7 +482,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                 </p>
               )}
             </div>
-          </div>
         </div>
 
         {/* Their Collection — NFT artwork grid */}
@@ -518,7 +516,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                   ))}
               </div>
             </div>
-          </div>
         )}
 
         {/* Quick Stats — about THIS user */}
@@ -554,7 +551,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                 <p className="text-gray-500 text-[10px]">Wall Posts</p>
               </div>
             </div>
-          </div>
         </div>
       </div>
     </div>
