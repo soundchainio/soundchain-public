@@ -4563,12 +4563,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Main Feed - Posts lead, clean and content-first */}
               {/* Using memoized Posts to prevent re-renders when header modals open (keeps video/audio playing) */}
-              <div className="flex-1 max-w-full md:max-w-[614px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+              <div className="flex-1 max-w-full md:max-w-[680px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
                 {MemoizedFeedPosts}
               </div>
-
-              {/* Right Sidebar - Desktop only */}
-              <RightSidebar />
 
               {/* Floating Compose Button - Blade Runner / Cyberpunk style - Opens for ALL users */}
               <button
@@ -4661,8 +4658,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 )}
               </div>
 
-              {/* Right Sidebar - Desktop only */}
-              <RightSidebar />
             </div>
           )}
 
