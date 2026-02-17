@@ -7663,6 +7663,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           Wall
                         </span>
                       </Button>
+                      {/* Posts tab (Public) - before My Feed */}
+                      <Button
+                        variant="ghost"
+                        onClick={() => setProfileTab('posts')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'posts' ? 'bg-green-500/10' : ''}`}
+                      >
+                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'posts' ? 'text-green-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'posts' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
+                          Posts
+                        </span>
+                      </Button>
                       {/* My Feed tab - ONLY shown when viewing own profile */}
                       {isViewingOwnProfile && (
                         <Button
@@ -7676,16 +7687,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           </span>
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        onClick={() => setProfileTab('posts')}
-                        className={`flex-shrink-0 transition-all duration-300 hover:bg-green-500/10 ${profileTab === 'posts' ? 'bg-green-500/10' : ''}`}
-                      >
-                        <MessageCircle className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'posts' ? 'text-green-400' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'posts' ? 'green-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
-                          Posts
-                        </span>
-                      </Button>
                       <Button
                         variant="ghost"
                         onClick={() => setProfileTab('music')}

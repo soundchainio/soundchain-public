@@ -5,40 +5,10 @@ import { gql, useQuery } from '@apollo/client'
 import { useFollowingQuery } from 'lib/graphql'
 import { StoryViewer } from './StoryViewer'
 
-// Query for a specific user's stories (Their Reels)
-const USER_STORIES = gql`
-  query userStories($profileId: ID!) {
-    userStories(profileId: $profileId) {
-      id
-      profileId
-      mediaUrl
-      mediaType
-      caption
-      duration
-      createdAt
-      expiresAt
-      isPermanent
-      viewCount
-      attachedTrackId
-      attachedTrackIpfsUrl
-      attachedTrackTitle
-      attachedTrackArtist
-      attachedTrackCoverUrl
-      profile {
-        id
-        userHandle
-        displayName
-        profilePicture
-      }
-    }
-  }
-`
-
-// Query for stories from people this profile follows (Their Circle)
-// We'll use publicStories as a proxy and filter client-side, since there's no
-// "following stories for user X" query - myFollowingStories is for the logged-in user
+// Single query for all public stories — no auth required
+// We filter client-side for both "Their Reels" (by profileId) and "Their Circle" (by following)
 const PUBLIC_STORIES = gql`
-  query publicStoriesForCircle($limit: Int) {
+  query publicStoriesForProfile($limit: Int) {
     publicStories(limit: $limit) {
       id
       profileId
@@ -242,9 +212,9 @@ const ReelRow = ({
 }
 
 export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, profilePicture }: ProfileReelsProps) => {
-  // Fetch this profile's stories
-  const { data: userStoriesData } = useQuery(USER_STORIES, {
-    variables: { profileId },
+  // Single public stories query — no auth required (userStories has @Authorized which fails before JWT restores)
+  const { data: publicStoriesData } = useQuery(PUBLIC_STORIES, {
+    variables: { limit: 200 },
     skip: !profileId,
     fetchPolicy: 'cache-and-network',
   })
@@ -259,60 +229,63 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     return (followingData?.following?.nodes || []).map((f: any) => f.id)
   }, [followingData])
 
-  // Fetch public stories for "Their Circle" — we'll filter by followingIds
-  const { data: publicStoriesData } = useQuery(PUBLIC_STORIES, {
-    variables: { limit: 100 },
-    skip: followingIds.length === 0,
-    fetchPolicy: 'cache-and-network',
+  // Helper to map a story to StoryViewer format
+  const mapStory = (s: any) => ({
+    id: s.id,
+    mediaUrl: s.mediaUrl,
+    mediaType: s.mediaType || 'image',
+    createdAt: s.createdAt,
+    duration: s.duration || undefined,
+    isPermanent: s.isPermanent,
+    viewCount: s.viewCount || 0,
+    reactions: s.reactions || [],
+    ...(s.attachedTrackId ? {
+      attachedTrack: {
+        id: s.attachedTrackId,
+        title: s.attachedTrackTitle,
+        artist: s.attachedTrackArtist,
+        artworkUrl: s.attachedTrackCoverUrl,
+        audioUrl: s.attachedTrackIpfsUrl,
+      }
+    } : {}),
   })
 
-  // Transform user's stories into bubbles (grouped since it's one user, show as story count)
+  // Filter public stories to find THIS profile's stories (Their Reels)
+  const ownStories = useMemo(() => {
+    const allStories = publicStoriesData?.publicStories || []
+    return allStories.filter((s: any) => {
+      const storyProfileId = s.profileId || s.profile?.id
+      return storyProfileId === profileId
+    })
+  }, [publicStoriesData, profileId])
+
+  // Transform this profile's stories into a single bubble
   const theirReelsBubbles: StoryBubble[] = useMemo(() => {
-    const stories = userStoriesData?.userStories || []
-    if (stories.length === 0) return []
+    if (ownStories.length === 0) return []
     return [{
       id: profileId,
       profileId,
       profilePicture,
       displayName: profileDisplayName || profileHandle,
       userHandle: profileHandle,
-      isPermanent: stories.some((s: any) => s.isPermanent),
-      storyCount: stories.length,
-      latestMediaUrl: stories[0]?.mediaUrl,
-      latestMediaType: stories[0]?.mediaType,
+      isPermanent: ownStories.some((s: any) => s.isPermanent),
+      storyCount: ownStories.length,
+      latestMediaUrl: ownStories[0]?.mediaUrl,
+      latestMediaType: ownStories[0]?.mediaType,
     }]
-  }, [userStoriesData, profileId, profileHandle, profileDisplayName, profilePicture])
+  }, [ownStories, profileId, profileHandle, profileDisplayName, profilePicture])
 
   // StoryViewer format for Their Reels
   const theirReelsStoryUsers = useMemo(() => {
-    const stories = userStoriesData?.userStories || []
-    if (stories.length === 0) return []
+    if (ownStories.length === 0) return []
     return [{
       profileId,
       profilePicture,
       displayName: profileDisplayName || profileHandle,
       userHandle: profileHandle,
-      stories: stories.map((s: any) => ({
-        id: s.id,
-        mediaUrl: s.mediaUrl,
-        mediaType: s.mediaType || 'image',
-        createdAt: s.createdAt,
-        duration: s.duration || undefined,
-        isPermanent: s.isPermanent,
-        viewCount: s.viewCount || 0,
-        reactions: s.reactions || [],
-        ...(s.attachedTrackId ? {
-          attachedTrack: {
-            id: s.attachedTrackId,
-            title: s.attachedTrackTitle,
-            artist: s.attachedTrackArtist,
-            artworkUrl: s.attachedTrackCoverUrl,
-            audioUrl: s.attachedTrackIpfsUrl,
-          }
-        } : {}),
-      })),
+      stories: ownStories.map(mapStory),
     }]
-  }, [userStoriesData, profileId, profileHandle, profileDisplayName, profilePicture])
+  }, [ownStories, profileId, profileHandle, profileDisplayName, profilePicture])
 
   // Filter public stories to only include stories from people this profile follows
   const circleStoriesBubbles: StoryBubble[] = useMemo(() => {
@@ -320,13 +293,11 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     const allStories = publicStoriesData?.publicStories || []
     const followingSet = new Set(followingIds)
 
-    // Filter stories from followed users (exclude the profile owner's own stories)
     const filtered = allStories.filter((s: any) => {
       const storyProfileId = s.profileId || s.profile?.id
       return storyProfileId && storyProfileId !== profileId && followingSet.has(storyProfileId)
     })
 
-    // Group by profile
     const grouped: Record<string, StoryBubble & { _stories: any[] }> = {}
     for (const story of filtered) {
       const pid = story.profileId || story.profile?.id
@@ -381,25 +352,7 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
           stories: [],
         }
       }
-      grouped[pid].stories.push({
-        id: story.id,
-        mediaUrl: story.mediaUrl,
-        mediaType: story.mediaType || 'image',
-        createdAt: story.createdAt,
-        duration: story.duration || undefined,
-        isPermanent: story.isPermanent,
-        viewCount: story.viewCount || 0,
-        reactions: [],
-        ...(story.attachedTrackId ? {
-          attachedTrack: {
-            id: story.attachedTrackId,
-            title: story.attachedTrackTitle,
-            artist: story.attachedTrackArtist,
-            artworkUrl: story.attachedTrackCoverUrl,
-            audioUrl: story.attachedTrackIpfsUrl,
-          }
-        } : {}),
-      })
+      grouped[pid].stories.push(mapStory(story))
     }
 
     return Object.values(grouped)
