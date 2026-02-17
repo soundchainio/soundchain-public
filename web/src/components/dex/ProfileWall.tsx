@@ -4,10 +4,13 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { Button } from 'components/ui/button'
 import {
   Send, Trash2, Pin, MessageCircle, ChevronDown, Play, Heart,
-  Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp,
+  Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp, ExternalLink,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+const ReactPlayer = dynamic(() => import('react-player'), { ssr: false })
 import {
   useGroupedTracksQuery, useFollowingLazyQuery, useFollowersLazyQuery,
   SortTrackField, SortOrder,
@@ -182,6 +185,36 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
 
   const displayName = profileName || 'This user'
 
+  // Render wall post body with auto-embeds for YouTube/Vimeo and clickable links
+  const renderBody = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g
+    const parts = text.split(urlRegex)
+    if (parts.length === 1) return <span>{text}</span>
+    const videoRegex = /youtu\.be\/|youtube\.com\/|vimeo\.com\//
+    return (
+      <>
+        {parts.map((part, i) => {
+          if (!urlRegex.test(part)) return <span key={i}>{part}</span>
+          // Reset lastIndex since we reuse the regex
+          urlRegex.lastIndex = 0
+          if (videoRegex.test(part)) {
+            return (
+              <div key={i} className="mt-2 mb-1 rounded-xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: 220 }}>
+                <ReactPlayer url={part} width="100%" height="100%" controls light playing={false} />
+              </div>
+            )
+          }
+          return (
+            <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline inline-flex items-center gap-0.5 break-all">
+              {part.length > 50 ? part.slice(0, 50) + '...' : part}
+              <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
+            </a>
+          )
+        })}
+      </>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* === WALL MESSAGE BOARD (top of dashboard) === */}
@@ -248,7 +281,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                       </span>
                       {post.pinned && <Pin className="w-3 h-3 text-yellow-400 fill-yellow-400" />}
                     </div>
-                    <p className="text-gray-300 text-sm mt-1 whitespace-pre-wrap break-words">{post.body}</p>
+                    <div className="text-gray-300 text-sm mt-1 whitespace-pre-wrap break-words">{renderBody(post.body)}</div>
 
                     <div className="flex items-center gap-3 mt-2">
                       <button
@@ -295,7 +328,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                                   {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
                                 </span>
                               </div>
-                              <p className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">{reply.body}</p>
+                              <div className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">{renderBody(reply.body)}</div>
                             </div>
                           </div>
                         ))}
