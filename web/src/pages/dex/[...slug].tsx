@@ -2060,11 +2060,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [updateFeaturedTrack] = useMutation(UPDATE_FEATURED_TRACK_MUTATION)
   const [updateTopFriends] = useMutation(UPDATE_TOP_FRIENDS_MUTATION)
 
-  // Top Friends Profiles query — check both profile data AND local state to avoid race condition
+  // Top Friends Profiles query — always fetch on profile pages, let backend return [] if none
+  // Removed hasTopFriends skip gate to fix persistence bug: after fresh login, topFriends
+  // from Me/ProfileByHandle may not be available yet when skip is first evaluated
   const hasTopFriends = !!(viewingProfile as any)?.topFriends?.length || selectedTopFriends.length > 0
   const { data: topFriendsData, refetch: refetchTopFriends } = useQuery(TOP_FRIENDS_PROFILES_QUERY, {
     variables: { profileId: viewingProfile?.id || '' },
-    skip: !viewingProfile?.id || selectedView !== 'profile' || !hasTopFriends,
+    skip: !viewingProfile?.id || selectedView !== 'profile',
     fetchPolicy: 'cache-and-network',
   })
 
@@ -7375,7 +7377,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                   try {
                                     await updateTopFriends({
                                       variables: { input: { topFriends: selectedTopFriends } },
-                                      refetchQueries: [{ query: TOP_FRIENDS_PROFILES_QUERY, variables: { profileId: viewingProfile?.id || '' } }],
+                                      refetchQueries: [
+                                        { query: TOP_FRIENDS_PROFILES_QUERY, variables: { profileId: viewingProfile?.id || '' } },
+                                        'Me',
+                                      ],
                                     })
                                     toast.success('Top friends updated!')
                                     setShowTopFriendsPicker(false)
