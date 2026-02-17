@@ -49,7 +49,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1031,6 +1031,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Top 8 Friends state
   const [showTopFriendsPicker, setShowTopFriendsPicker] = useState(false)
   const [selectedTopFriends, setSelectedTopFriends] = useState<string[]>([])
+  const [topFriendsSearch, setTopFriendsSearch] = useState('')
+  const [searchExploreUsers, { data: searchUsersData, loading: searchUsersLoading }] = useExploreUsersLazyQuery()
+  const topFriendsSearchTimer = useRef<NodeJS.Timeout | null>(null)
 
   // Account Settings mutations
   const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
@@ -7368,58 +7371,106 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={async () => {
-                                  await updateTopFriends({ variables: { input: { topFriends: selectedTopFriends } } })
-                                  toast.success('Top friends updated!')
-                                  setShowTopFriendsPicker(false)
+                                  try {
+                                    await updateTopFriends({
+                                      variables: { input: { topFriends: selectedTopFriends } },
+                                      refetchQueries: [{ query: TOP_FRIENDS_PROFILES_QUERY, variables: { profileId: viewingProfile?.id || '' } }],
+                                    })
+                                    toast.success('Top friends updated!')
+                                    setShowTopFriendsPicker(false)
+                                    setTopFriendsSearch('')
+                                  } catch (err: any) {
+                                    toast.error(err?.message || 'Failed to save top friends')
+                                  }
                                 }}
                                 className="px-3 py-1 text-xs bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
                               >
                                 Save
                               </button>
-                              <button onClick={() => setShowTopFriendsPicker(false)} className="p-1 hover:bg-white/10 rounded">
+                              <button onClick={() => { setShowTopFriendsPicker(false); setTopFriendsSearch('') }} className="p-1 hover:bg-white/10 rounded">
                                 <X className="w-4 h-4 text-gray-400" />
                               </button>
                             </div>
                           </div>
-                          <div className="grid grid-cols-5 sm:grid-cols-6 gap-3 max-h-[40vh] overflow-y-auto">
-                            {followingList.map((user: any) => {
-                              const isSelected = selectedTopFriends.includes(user.id)
-                              return (
-                                <button
-                                  key={user.id}
-                                  onClick={() => {
-                                    if (isSelected) {
-                                      setSelectedTopFriends(prev => prev.filter(id => id !== user.id))
-                                    } else if (selectedTopFriends.length < 10) {
-                                      setSelectedTopFriends(prev => [...prev, user.id])
-                                    } else {
-                                      toast.error('Maximum 10 friends')
-                                    }
-                                  }}
-                                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${isSelected ? 'bg-purple-500/20 ring-2 ring-purple-400' : 'hover:bg-white/5'}`}
-                                >
-                                  <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-800">
-                                    {user.avatar ? (
-                                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
-                                    )}
-                                    {isSelected && (
-                                      <div className="absolute inset-0 bg-purple-500/30 flex items-center justify-center">
-                                        <Check className="w-4 h-4 text-white" />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
-                                  {isSelected && (
-                                    <span className="text-[9px] text-purple-400 font-bold">#{selectedTopFriends.indexOf(user.id) + 1}</span>
-                                  )}
-                                </button>
-                              )
-                            })}
-                            {followingList.length === 0 && (
-                              <div className="col-span-5 text-center py-6 text-gray-500 text-sm">Follow people to add them as Top Friends</div>
+                          {/* Search input */}
+                          <div className="mb-3 relative">
+                            <input
+                              type="text"
+                              value={topFriendsSearch}
+                              onChange={(e) => {
+                                const q = e.target.value
+                                setTopFriendsSearch(q)
+                                if (topFriendsSearchTimer.current) clearTimeout(topFriendsSearchTimer.current)
+                                if (q.trim().length >= 2) {
+                                  topFriendsSearchTimer.current = setTimeout(() => {
+                                    searchExploreUsers({ variables: { search: q.trim(), page: { first: 20 } } })
+                                  }, 200)
+                                }
+                              }}
+                              placeholder="Search by name..."
+                              className="w-full px-3 py-2 text-sm bg-black/40 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
+                            />
+                            {searchUsersLoading && (
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                              </div>
                             )}
+                          </div>
+                          <div className="grid grid-cols-5 sm:grid-cols-6 gap-3 max-h-[40vh] overflow-y-auto">
+                            {(() => {
+                              const query = topFriendsSearch.trim().toLowerCase()
+                              // Local filter from following list
+                              const localFiltered = query ? followingList.filter((u: any) => u.name?.toLowerCase().includes(query) || u.userHandle?.toLowerCase().includes(query)) : followingList
+                              // Server results (broader than just following)
+                              const serverResults = (query.length >= 2 && searchUsersData?.exploreUsers?.nodes) ? searchUsersData.exploreUsers.nodes.map((u: any) => ({
+                                id: u.profile?.id || u.id,
+                                name: u.profile?.displayName || u.displayName || u.profile?.userHandle || '',
+                                userHandle: u.profile?.userHandle || u.userHandle || '',
+                                avatar: u.profile?.profilePicture || undefined,
+                                isVerified: u.profile?.verified || u.profile?.teamMember || false,
+                              })).filter((u: any) => u.id) : []
+                              // Merge: local first, then server results not already in local
+                              const localIds = new Set(localFiltered.map((u: any) => u.id))
+                              const merged = [...localFiltered, ...serverResults.filter((u: any) => !localIds.has(u.id))]
+                              if (merged.length === 0) {
+                                return <div className="col-span-5 text-center py-6 text-gray-500 text-sm">{query ? 'No users found' : 'Follow people to add them as Top Friends'}</div>
+                              }
+                              return merged.map((user: any) => {
+                                const isSelected = selectedTopFriends.includes(user.id)
+                                return (
+                                  <button
+                                    key={user.id}
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        setSelectedTopFriends(prev => prev.filter(id => id !== user.id))
+                                      } else if (selectedTopFriends.length < 10) {
+                                        setSelectedTopFriends(prev => [...prev, user.id])
+                                      } else {
+                                        toast.error('Maximum 10 friends')
+                                      }
+                                    }}
+                                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${isSelected ? 'bg-purple-500/20 ring-2 ring-purple-400' : 'hover:bg-white/5'}`}
+                                  >
+                                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-800">
+                                      {user.avatar ? (
+                                        <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
+                                      )}
+                                      {isSelected && (
+                                        <div className="absolute inset-0 bg-purple-500/30 flex items-center justify-center">
+                                          <Check className="w-4 h-4 text-white" />
+                                        </div>
+                                      )}
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
+                                    {isSelected && (
+                                      <span className="text-[9px] text-purple-400 font-bold">#{selectedTopFriends.indexOf(user.id) + 1}</span>
+                                    )}
+                                  </button>
+                                )
+                              })
+                            })()}
                           </div>
                         </Card>
                       </div>
