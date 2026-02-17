@@ -1,0 +1,14 @@
+query TopFriendsProfiles($profileId: String!) {
+  profile(id: $profileId) {
+    id
+    topFriendsProfiles {
+      id
+      displayName
+      profilePicture
+      userHandle
+      verified
+      teamMember
+      isOnline
+    }
+  }
+}

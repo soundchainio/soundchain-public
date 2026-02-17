@@ -50,6 +50,8 @@ export const PostModal = () => {
   const clearState = () => {
     dispatchShowPostModal({ show: false })
     setPostLink('')
+    setOriginalLink('')
+    setBodyValue('')
     dispatchSetRepostId(undefined)
     dispatchSetEditPostId(undefined)
   }
@@ -104,6 +106,10 @@ export const PostModal = () => {
   useEffect(() => {
     if (showNewPost) {
       setOriginalLink('')
+      // Clear body when opening a fresh new post (not edit/repost)
+      if (!editPostId && !repostId) {
+        setBodyValue('')
+      }
     }
   }, [showNewPost])
 

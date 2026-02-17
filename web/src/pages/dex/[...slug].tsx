@@ -75,7 +75,8 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText, Tag, MessageSquare, Eye, Volume2
+  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText, Tag, MessageSquare, Eye, Volume2,
+  Star, GripVertical
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
@@ -183,6 +184,42 @@ const PROFILE_VIEW_COUNT_QUERY = gql`
     profileViewCount(profileId: $profileId) {
       total
       today
+    }
+  }
+`
+
+// Update featured track mutation
+const UPDATE_FEATURED_TRACK_MUTATION = gql`
+  mutation UpdateFeaturedTrack($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile { id featuredTrackId }
+    }
+  }
+`
+
+// Update top friends mutation
+const UPDATE_TOP_FRIENDS_MUTATION = gql`
+  mutation UpdateTopFriends($input: UpdateProfileInput!) {
+    updateProfile(input: $input) {
+      profile { id topFriends }
+    }
+  }
+`
+
+// Top friends profiles query
+const TOP_FRIENDS_PROFILES_QUERY = gql`
+  query TopFriendsProfiles($profileId: String!) {
+    profile(id: $profileId) {
+      id
+      topFriendsProfiles {
+        id
+        displayName
+        profilePicture
+        userHandle
+        verified
+        teamMember
+        isOnline
+      }
     }
   }
 `
@@ -984,6 +1021,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [accountSettingsSaving, setAccountSettingsSaving] = useState(false)
   const [accountSettingsSuccess, setAccountSettingsSuccess] = useState<string | null>(null)
   const [nostrPubkeyCopied, setNostrPubkeyCopied] = useState(false)
+
+  // Stats overlay modal state
+  const [profileStatsModal, setProfileStatsModal] = useState<'tracks' | 'followers' | 'following' | null>(null)
+
+  // Profile Song picker state
+  const [showProfileSongPicker, setShowProfileSongPicker] = useState(false)
+
+  // Top 8 Friends state
+  const [showTopFriendsPicker, setShowTopFriendsPicker] = useState(false)
+  const [selectedTopFriends, setSelectedTopFriends] = useState<string[]>([])
 
   // Account Settings mutations
   const [updateDisplayName] = useUpdateProfileDisplayNameMutation()
@@ -1955,15 +2002,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   )
   const shouldSkipPlaylists = (selectedView !== 'playlist' && selectedView !== 'library' && !isViewingOwnProfile) || !userData?.me
 
-  // Set default profile tab based on whether viewing own profile
-  // Own profile: default to 'myfeed', Others: default to 'posts'
+  // Set default profile tab — Wall is always default (MySpace style)
   useEffect(() => {
     if (selectedView === 'profile') {
-      if (isViewingOwnProfile) {
-        setProfileTab('myfeed')
-      } else {
-        setProfileTab('posts')
-      }
+      setProfileTab('wall')
     }
   }, [selectedView, isViewingOwnProfile])
 
@@ -2016,6 +2058,24 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     // Hide banner after 8 seconds
     setTimeout(() => setShowNowPlaying(false), 8000)
   }, [selectedView, isViewingOwnProfile, viewingProfile?.id, featuredTrackData?.profile?.featuredTrack?.id])
+
+  // --- MySpace Phase 2: Mutations for Featured Track & Top Friends ---
+  const [updateFeaturedTrack] = useMutation(UPDATE_FEATURED_TRACK_MUTATION)
+  const [updateTopFriends] = useMutation(UPDATE_TOP_FRIENDS_MUTATION)
+
+  // Top Friends Profiles query
+  const { data: topFriendsData } = useQuery(TOP_FRIENDS_PROFILES_QUERY, {
+    variables: { profileId: viewingProfile?.id || '' },
+    skip: !viewingProfile?.id || selectedView !== 'profile' || !(viewingProfile as any)?.topFriends?.length,
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // Initialize selectedTopFriends from profile data when viewing own profile
+  useEffect(() => {
+    if (isViewingOwnProfile && (viewingProfile as any)?.topFriends) {
+      setSelectedTopFriends((viewingProfile as any).topFriends)
+    }
+  }, [isViewingOwnProfile, (viewingProfile as any)?.topFriends])
 
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
@@ -5834,6 +5894,68 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <DisplayNameForm afterSubmit={() => router.push('/dex/settings')} submitText="Save Name" />
                 </Card>
               )}
+              {routeId === 'profile-song' && (
+                <Card className="retro-card p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Link href="/dex/settings" className="text-cyan-400 hover:text-cyan-300">← Back</Link>
+                    <h2 className="retro-title text-xl">Profile Song</h2>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-4">Choose which track auto-plays when others visit your profile.</p>
+                  {(viewingProfile as any)?.featuredTrackId && (
+                    <div className="flex items-center gap-2 mb-4 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                      <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span className="text-xs text-amber-400">
+                        Current: {viewingProfileNFTs.find((t: any) => t.id === (viewingProfile as any)?.featuredTrackId)?.title || 'Selected track'}
+                      </span>
+                      <button
+                        onClick={async () => {
+                          await updateFeaturedTrack({ variables: { input: { featuredTrackId: '' } } })
+                          toast.success('Profile song cleared')
+                        }}
+                        className="ml-auto text-xs text-gray-500 hover:text-red-400"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
+                  <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+                    {viewingProfileNFTs.map((track: any) => {
+                      const isSelected = (viewingProfile as any)?.featuredTrackId === track.id
+                      return (
+                        <button
+                          key={track.id}
+                          onClick={async () => {
+                            await updateFeaturedTrack({ variables: { input: { featuredTrackId: track.id } } })
+                            toast.success(`Profile song set to "${track.title}"`)
+                            router.push('/dex/settings')
+                          }}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${isSelected ? 'bg-amber-500/10 border border-amber-500/50' : 'bg-gray-800/50 hover:bg-gray-700/50 border border-transparent'}`}
+                        >
+                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0">
+                            {track.artworkUrl ? (
+                              <img src={track.artworkUrl} alt={track.title} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center"><Music className="w-4 h-4 text-gray-600" /></div>
+                            )}
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm text-white truncate">{track.title}</p>
+                            <p className="text-xs text-gray-500 truncate">{track.artist}</p>
+                          </div>
+                          {isSelected ? (
+                            <Star className="w-4 h-4 text-amber-400 fill-amber-400 flex-shrink-0" />
+                          ) : (
+                            <div className="w-4 h-4 rounded-full border border-gray-600 flex-shrink-0" />
+                          )}
+                        </button>
+                      )
+                    })}
+                    {viewingProfileNFTs.length === 0 && (
+                      <div className="text-center py-8 text-gray-500 text-sm">Upload tracks to set a profile song</div>
+                    )}
+                  </div>
+                </Card>
+              )}
               {/* Main settings menu - show when no sub-route */}
               {!routeId && (
                 <Card className="retro-card p-6">
@@ -5934,6 +6056,21 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             <p className="text-xs text-gray-400 mt-1">Connect your socials</p>
                           </div>
                           <span className="text-cyan-400">→</span>
+                        </div>
+                      </Card>
+                    </Link>
+                    <Link href="/dex/settings/profile-song">
+                      <Card className="metadata-section p-4 hover:border-amber-500/50 transition-all cursor-pointer">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-bold text-white text-sm">Profile Song</h3>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {(viewingProfile as any)?.featuredTrackId
+                                ? <span className="text-amber-400">♫ {viewingProfileNFTs.find((t: any) => t.id === (viewingProfile as any)?.featuredTrackId)?.title || 'Set'}</span>
+                                : 'Choose auto-play track'}
+                            </p>
+                          </div>
+                          <span className="text-amber-400">→</span>
                         </div>
                       </Card>
                     </Link>
@@ -6862,7 +6999,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {viewingProfile && (
                 <>
                   {/* Cover Image - FULL SCREEN with profile info overlaid at bottom */}
-                  <div className="relative h-[70vh] min-h-[400px] w-full overflow-hidden">
+                  <div className="relative h-[40vh] min-h-[250px] w-full overflow-hidden">
                     {viewingProfile.coverPicture ? (
                       <img
                         src={viewingProfile.coverPicture}
@@ -6945,7 +7082,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         )
                       })()}
 
-                      {/* Stats Row - Compact */}
+                      {/* Stats Row - Clickable */}
                       <div className="flex items-center gap-6 mt-3 text-sm">
                         <div className="flex items-center gap-1">
                           <Eye className="w-3 h-3 text-gray-500" />
@@ -6956,19 +7093,115 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           </span>
                           <span className="text-gray-500">{isViewingOwnProfile ? 'views today' : 'views'}</span>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <button onClick={() => setProfileStatsModal('tracks')} className="flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors">
                           <span className="font-bold text-white">{viewingProfileTrackCount}</span>
-                          <span className="text-gray-500">Tracks</span>
-                        </div>
-                        <div className="flex items-center gap-1">
+                          <span className="text-gray-500 hover:text-cyan-400">Tracks</span>
+                        </button>
+                        <button onClick={() => setProfileStatsModal('followers')} className="flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors">
                           <span className="font-bold text-white">{viewingProfile.followerCount?.toLocaleString() || 0}</span>
-                          <span className="text-gray-500">Followers</span>
-                        </div>
-                        <div className="flex items-center gap-1">
+                          <span className="text-gray-500 hover:text-cyan-400">Followers</span>
+                        </button>
+                        <button onClick={() => setProfileStatsModal('following')} className="flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors">
                           <span className="font-bold text-white">{viewingProfile.followingCount?.toLocaleString() || 0}</span>
-                          <span className="text-gray-500">Following</span>
-                        </div>
+                          <span className="text-gray-500 hover:text-cyan-400">Following</span>
+                        </button>
                       </div>
+
+                      {/* Stats Overlay Modal */}
+                      {profileStatsModal && (
+                        <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh]" onClick={() => setProfileStatsModal(null)}>
+                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                          <div className="relative w-[90vw] max-w-md bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl max-h-[60vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                              <h3 className="text-white font-bold text-sm">
+                                {profileStatsModal === 'tracks' && `${viewingProfileTrackCount} Tracks`}
+                                {profileStatsModal === 'followers' && `${viewingProfile.followerCount?.toLocaleString() || 0} Followers`}
+                                {profileStatsModal === 'following' && `${viewingProfile.followingCount?.toLocaleString() || 0} Following`}
+                              </h3>
+                              <button onClick={() => setProfileStatsModal(null)} className="p-1 hover:bg-white/10 rounded-full">
+                                <X className="w-4 h-4 text-gray-400" />
+                              </button>
+                            </div>
+                            {/* Content */}
+                            <div className="overflow-y-auto max-h-[50vh] p-3">
+                              {profileStatsModal === 'tracks' && (
+                                <div className="grid grid-cols-4 gap-2">
+                                  {viewingProfileNFTs.map((track: any, idx: number) => (
+                                    <button
+                                      key={track.id}
+                                      onClick={() => { handlePlayTrack(track, idx, viewingProfileNFTs); setProfileStatsModal(null); }}
+                                      className="group relative aspect-square rounded-lg overflow-hidden bg-gray-800 hover:ring-2 hover:ring-cyan-400 transition-all"
+                                      title={track.title}
+                                    >
+                                      {track.artworkUrl ? (
+                                        <img src={track.artworkUrl} alt={track.title} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center"><Music className="w-5 h-5 text-gray-600" /></div>
+                                      )}
+                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                        <Play className="w-5 h-5 text-white" />
+                                      </div>
+                                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <p className="text-[10px] text-white truncate">{track.title}</p>
+                                      </div>
+                                    </button>
+                                  ))}
+                                  {viewingProfileNFTs.length === 0 && (
+                                    <div className="col-span-4 text-center py-8 text-gray-500 text-sm">No tracks yet</div>
+                                  )}
+                                </div>
+                              )}
+                              {profileStatsModal === 'followers' && (
+                                <div className="grid grid-cols-5 gap-3">
+                                  {followersList.map((user: any) => (
+                                    <button
+                                      key={user.id}
+                                      onClick={() => { router.push(`/dex/users/${user.userHandle}`); setProfileStatsModal(null); }}
+                                      className="flex flex-col items-center gap-1 hover:bg-white/5 rounded-lg p-2 transition-colors"
+                                    >
+                                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800">
+                                        {user.avatar ? (
+                                          <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
+                                        )}
+                                      </div>
+                                      <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
+                                    </button>
+                                  ))}
+                                  {followersList.length === 0 && (
+                                    <div className="col-span-5 text-center py-8 text-gray-500 text-sm">No followers yet</div>
+                                  )}
+                                </div>
+                              )}
+                              {profileStatsModal === 'following' && (
+                                <div className="grid grid-cols-5 gap-3">
+                                  {followingList.map((user: any) => (
+                                    <button
+                                      key={user.id}
+                                      onClick={() => { router.push(`/dex/users/${user.userHandle}`); setProfileStatsModal(null); }}
+                                      className="flex flex-col items-center gap-1 hover:bg-white/5 rounded-lg p-2 transition-colors"
+                                    >
+                                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800">
+                                        {user.avatar ? (
+                                          <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
+                                        )}
+                                      </div>
+                                      <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
+                                    </button>
+                                  ))}
+                                  {followingList.length === 0 && (
+                                    <div className="col-span-5 text-center py-8 text-gray-500 text-sm">No following yet</div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Action Buttons - Compact row */}
                       <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -6977,13 +7210,29 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             Loading...
                           </button>
                         ) : isViewingOwnProfile ? (
-                          <button
-                            onClick={() => router.push('/dex/settings', undefined, { shallow: false })}
-                            className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
-                          >
-                            <Settings className="w-4 h-4" />
-                            Edit Profile
-                          </button>
+                          <>
+                            <button
+                              onClick={() => router.push('/dex/settings', undefined, { shallow: false })}
+                              className="px-4 py-2 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center gap-2 transition-colors"
+                            >
+                              <Settings className="w-4 h-4" />
+                              Edit Profile
+                            </button>
+                            <button
+                              onClick={() => setShowProfileSongPicker(!showProfileSongPicker)}
+                              className={`p-2 text-sm rounded-lg transition-colors ${showProfileSongPicker ? 'bg-amber-500/20 border border-amber-500/50' : 'bg-gray-800 hover:bg-gray-700'}`}
+                              title="Set Profile Song"
+                            >
+                              <Music className={`w-4 h-4 ${showProfileSongPicker ? 'text-amber-400' : 'text-gray-400'}`} />
+                            </button>
+                            <button
+                              onClick={() => setShowTopFriendsPicker(!showTopFriendsPicker)}
+                              className={`p-2 text-sm rounded-lg transition-colors ${showTopFriendsPicker ? 'bg-purple-500/20 border border-purple-500/50' : 'bg-gray-800 hover:bg-gray-700'}`}
+                              title="Edit Top 8 Friends"
+                            >
+                              <Users className={`w-4 h-4 ${showTopFriendsPicker ? 'text-purple-400' : 'text-gray-400'}`} />
+                            </button>
+                          </>
                         ) : (
                           <button
                             onClick={async () => {
@@ -7032,6 +7281,189 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
                   </div>
                   </div>
+
+                  {/* Profile Song Picker Overlay (own profile only) */}
+                  {showProfileSongPicker && isViewingOwnProfile && (
+                    <div className="px-4 mt-3">
+                      <div className="max-w-screen-lg mx-auto">
+                        <Card className="p-4 border border-amber-500/30 bg-neutral-900 shadow-xl">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Music className="w-4 h-4 text-amber-400" />
+                              <span className="text-sm font-bold text-amber-400">Set Profile Song</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {(viewingProfile as any)?.featuredTrackId && (
+                                <button
+                                  onClick={async () => {
+                                    await updateFeaturedTrack({ variables: { input: { featuredTrackId: '' } } })
+                                    toast.success('Profile song cleared — falls back to most-streamed')
+                                    setShowProfileSongPicker(false)
+                                  }}
+                                  className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+                                >
+                                  Clear
+                                </button>
+                              )}
+                              <button onClick={() => setShowProfileSongPicker(false)} className="p-1 hover:bg-white/10 rounded">
+                                <X className="w-4 h-4 text-gray-400" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-[40vh] overflow-y-auto">
+                            {viewingProfileNFTs.map((track: any) => {
+                              const isSelected = (viewingProfile as any)?.featuredTrackId === track.id
+                              return (
+                                <button
+                                  key={track.id}
+                                  onClick={async () => {
+                                    await updateFeaturedTrack({ variables: { input: { featuredTrackId: track.id } } })
+                                    toast.success(`Profile song set to "${track.title}"`)
+                                    setShowProfileSongPicker(false)
+                                  }}
+                                  className={`group relative aspect-square rounded-lg overflow-hidden bg-gray-800 transition-all ${isSelected ? 'ring-2 ring-amber-400' : 'hover:ring-2 hover:ring-cyan-400'}`}
+                                  title={track.title}
+                                >
+                                  {track.artworkUrl ? (
+                                    <img src={track.artworkUrl} alt={track.title} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center"><Music className="w-5 h-5 text-gray-600" /></div>
+                                  )}
+                                  {isSelected && (
+                                    <div className="absolute top-1 right-1">
+                                      <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                                    </div>
+                                  )}
+                                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
+                                    <p className="text-[10px] text-white truncate">{track.title}</p>
+                                  </div>
+                                </button>
+                              )
+                            })}
+                            {viewingProfileNFTs.length === 0 && (
+                              <div className="col-span-4 text-center py-6 text-gray-500 text-sm">Upload tracks to set a profile song</div>
+                            )}
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top 8 Friends Picker Overlay (own profile only) */}
+                  {showTopFriendsPicker && isViewingOwnProfile && (
+                    <div className="px-4 mt-3">
+                      <div className="max-w-screen-lg mx-auto">
+                        <Card className="p-4 border border-purple-500/30 bg-neutral-900 shadow-xl">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-purple-400" />
+                              <span className="text-sm font-bold text-purple-400">Edit Top 8 Friends</span>
+                              <span className="text-xs text-gray-500">({selectedTopFriends.length}/10)</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={async () => {
+                                  await updateTopFriends({ variables: { input: { topFriends: selectedTopFriends } } })
+                                  toast.success('Top friends updated!')
+                                  setShowTopFriendsPicker(false)
+                                }}
+                                className="px-3 py-1 text-xs bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                              >
+                                Save
+                              </button>
+                              <button onClick={() => setShowTopFriendsPicker(false)} className="p-1 hover:bg-white/10 rounded">
+                                <X className="w-4 h-4 text-gray-400" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-5 sm:grid-cols-6 gap-3 max-h-[40vh] overflow-y-auto">
+                            {followingList.map((user: any) => {
+                              const isSelected = selectedTopFriends.includes(user.id)
+                              return (
+                                <button
+                                  key={user.id}
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setSelectedTopFriends(prev => prev.filter(id => id !== user.id))
+                                    } else if (selectedTopFriends.length < 10) {
+                                      setSelectedTopFriends(prev => [...prev, user.id])
+                                    } else {
+                                      toast.error('Maximum 10 friends')
+                                    }
+                                  }}
+                                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${isSelected ? 'bg-purple-500/20 ring-2 ring-purple-400' : 'hover:bg-white/5'}`}
+                                >
+                                  <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-800">
+                                    {user.avatar ? (
+                                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
+                                    )}
+                                    {isSelected && (
+                                      <div className="absolute inset-0 bg-purple-500/30 flex items-center justify-center">
+                                        <Check className="w-4 h-4 text-white" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
+                                  {isSelected && (
+                                    <span className="text-[9px] text-purple-400 font-bold">#{selectedTopFriends.indexOf(user.id) + 1}</span>
+                                  )}
+                                </button>
+                              )
+                            })}
+                            {followingList.length === 0 && (
+                              <div className="col-span-5 text-center py-6 text-gray-500 text-sm">Follow people to add them as Top Friends</div>
+                            )}
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top 8 Friends Grid (visible to all) */}
+                  {(() => {
+                    const topFriendsProfiles = topFriendsData?.profile?.topFriendsProfiles
+                    if (!topFriendsProfiles || topFriendsProfiles.length === 0) return null
+                    return (
+                      <div className="px-4 mt-4">
+                        <div className="max-w-screen-lg mx-auto">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Heart className="w-3 h-3 text-pink-400" />
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Top {topFriendsProfiles.length} Friends</span>
+                          </div>
+                          <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                            {topFriendsProfiles.map((friend: any) => (
+                              <button
+                                key={friend.id}
+                                onClick={() => router.push(`/dex/users/${friend.userHandle}`)}
+                                className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-white/5 transition-colors group"
+                              >
+                                <div className="relative">
+                                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 ring-2 ring-white/10 group-hover:ring-cyan-400/50 transition-all">
+                                    {friend.profilePicture ? (
+                                      <img src={friend.profilePicture} alt={friend.displayName} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center"><User className="w-5 h-5 text-gray-600" /></div>
+                                    )}
+                                  </div>
+                                  {friend.isOnline && (
+                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-neutral-900" />
+                                  )}
+                                  {(friend.verified || friend.teamMember) && (
+                                    <div className="absolute -top-0.5 -right-0.5">
+                                      <BadgeCheck className="w-3.5 h-3.5 text-cyan-400" />
+                                    </div>
+                                  )}
+                                </div>
+                                <span className="text-[11px] text-gray-400 group-hover:text-white truncate w-full text-center transition-colors">{friend.displayName}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })()}
 
                   {/* Wallet Address + Actions Row */}
                   {viewingProfile.magicWalletAddress && (
@@ -7157,6 +7589,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
                     {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Shop | Playlists | Wall */}
                     <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 bg-black/60 backdrop-blur-md rounded-full px-3 py-1.5">
+                      {/* Wall tab - FIRST (MySpace style, default open) */}
+                      <Button
+                        variant="ghost"
+                        onClick={() => setProfileTab('wall')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-orange-500/10 ${profileTab === 'wall' ? 'bg-orange-500/10' : ''}`}
+                      >
+                        <MessageSquare className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'wall' ? 'text-orange-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'wall' ? 'text-orange-400' : 'text-gray-400'}`}>
+                          Wall
+                        </span>
+                      </Button>
                       {/* My Feed tab - ONLY shown when viewing own profile */}
                       {isViewingOwnProfile && (
                         <Button
@@ -7210,17 +7653,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           Playlists
                         </span>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        onClick={() => setProfileTab('wall')}
-                        className={`flex-shrink-0 transition-all duration-300 hover:bg-orange-500/10 ${profileTab === 'wall' ? 'bg-orange-500/10' : ''}`}
-                      >
-                        <MessageSquare className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'wall' ? 'text-orange-400' : 'text-gray-400'}`} />
-                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'wall' ? 'text-orange-400' : 'text-gray-400'}`}>
-                          Wall
-                        </span>
-                      </Button>
-
                       {/* Bio Accordion Toggle - Only shown when viewing own profile */}
                       {isViewingOwnProfile && (me?.profile?.bio || userData?.me?.profile?.bio) && (
                         <button

@@ -31,4 +31,7 @@ export class UpdateProfileInput {
 
   @Field(() => String, { nullable: true })
   featuredTrackId?: string;
+
+  @Field(() => [String], { nullable: true })
+  topFriends?: string[];
 }

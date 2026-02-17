@@ -184,6 +184,21 @@ export class ProfileResolver {
     };
   }
 
+  @FieldResolver(() => [Profile])
+  async topFriendsProfiles(
+    @Ctx() { profileService }: Context,
+    @Root() profile: Profile,
+  ): Promise<Profile[]> {
+    const ids = (profile as any).topFriends;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) return [];
+    const profiles = await Promise.all(
+      ids.slice(0, 10).map((id: string) =>
+        profileService.getProfile(id).catch(() => null)
+      )
+    );
+    return profiles.filter(Boolean) as Profile[];
+  }
+
   @FieldResolver(() => Track, { nullable: true })
   async featuredTrack(@Root() profile: Profile): Promise<Track | null> {
     // If user set a featured track, fetch it

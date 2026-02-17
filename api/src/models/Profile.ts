@@ -98,6 +98,10 @@ export class Profile extends Model {
   @prop({ required: false })
   featuredTrackId?: string;
 
+  @Field(() => [String], { nullable: true })
+  @prop({ required: false, type: [String], default: [] })
+  topFriends?: string[];
+
   @prop({ required: false })
   listenerDailyReset?: Date;
 
