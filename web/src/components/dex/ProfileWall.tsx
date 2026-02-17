@@ -9,8 +9,31 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { MediaProvider } from 'types/MediaProvider'
 
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false })
+
+const getYouTubeThumbnail = (url: string): string | null => {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return match?.[1] ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null
+}
+
+const getEmbedHeight = (url: string): string => {
+  const mediaType = IdentifySource(url).type
+  const isPlaylist = url.includes('listType=playlist') || url.includes('videoseries') || url.includes('list=')
+  if (isPlaylist) return '360px'
+  switch (mediaType) {
+    case MediaProvider.BANDCAMP: return '470px'
+    case MediaProvider.SPOTIFY: return '352px'
+    case MediaProvider.SOUNDCLOUD: return '166px'
+    case MediaProvider.INSTAGRAM: return '540px'
+    case MediaProvider.TIKTOK: return '740px'
+    case MediaProvider.X: return '400px'
+    case MediaProvider.TWITCH: return '378px'
+    default: return '250px'
+  }
+}
 import {
   useGroupedTracksQuery, useFollowingLazyQuery, useFollowersLazyQuery,
   SortTrackField, SortOrder,
@@ -188,30 +211,58 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
 
   const displayName = profileName || 'This user'
 
-  // Render wall post body with auto-embeds for YouTube/Vimeo and clickable links
+  // Render wall post body with auto-embeds matching feed/post pattern
   const renderBody = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g
     const parts = text.split(urlRegex)
     if (parts.length === 1) return <span>{text}</span>
-    const videoRegex = /youtu\.be\/|youtube\.com\/|vimeo\.com\//
     return (
       <>
         {parts.map((part, i) => {
           if (!urlRegex.test(part)) return <span key={i}>{part}</span>
-          // Reset lastIndex since we reuse the regex
           urlRegex.lastIndex = 0
-          if (videoRegex.test(part)) {
+          const mediaUrl = part.replace(/^http:/, 'https:')
+          const source = IdentifySource(part).type
+          if (!source) {
             return (
-              <div key={i} className="mt-2 mb-1 rounded-xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: 220 }}>
-                <ReactPlayer url={part} width="100%" height="100%" controls light playing={false} />
+              <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline inline-flex items-center gap-0.5 break-all">
+                {part.length > 50 ? part.slice(0, 50) + '...' : part}
+                <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
+              </a>
+            )
+          }
+          const isPlaylist = mediaUrl.includes('listType=playlist') || mediaUrl.includes('videoseries') || mediaUrl.includes('list=')
+          const useReactPlayer = !isPlaylist && hasLazyLoadWithThumbnailSupport(part)
+          if (useReactPlayer) {
+            return (
+              <div key={i} className="relative w-full mt-2 mb-1 rounded-xl overflow-hidden"
+                style={{ paddingTop: '56.25%', contain: 'layout style', willChange: 'contents', transform: 'translateZ(0)' }}>
+                <ReactPlayer
+                  width="100%" height="100%"
+                  style={{ position: 'absolute', top: 0, left: 0 }}
+                  url={mediaUrl} playsinline controls
+                  light={getYouTubeThumbnail(mediaUrl) || true}
+                  pip playing={false} stopOnUnmount={false}
+                  config={{
+                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' } },
+                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                    facebook: { appId: '' },
+                  }}
+                />
               </div>
             )
           }
           return (
-            <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline inline-flex items-center gap-0.5 break-all">
-              {part.length > 50 ? part.slice(0, 50) + '...' : part}
-              <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
-            </a>
+            <div key={i} className="mt-2 mb-1 rounded-xl overflow-hidden"
+              style={{ contain: 'layout style', willChange: 'contents', transform: 'translateZ(0)' }}>
+              <iframe
+                frameBorder="0" className="w-full bg-black rounded-xl"
+                style={{ minHeight: getEmbedHeight(mediaUrl) }}
+                src={mediaUrl} title="Media"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
+                allowFullScreen referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
           )
         })}
       </>
