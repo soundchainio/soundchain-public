@@ -1,11 +1,12 @@
 import React, { useState, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { Button } from 'components/ui/button'
 import {
   Send, Trash2, Pin, MessageCircle, ChevronDown, Play, Heart,
   Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp, ExternalLink, Minus, Plus,
-  Smile, Sparkles, Link2, X, Paperclip, Share2, Upload, Image as ImageIcon,
+  Smile, Sparkles, Link2, X, Paperclip, Share2, Upload, Image as ImageIcon, Film,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
@@ -17,6 +18,8 @@ import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from 'components/EmoteRenderer'
 import { StickerPicker } from 'components/StickerPicker'
 import { useUpload } from 'hooks/useUpload'
+import { SharePostModal } from 'components/modals/SharePostModal'
+import { CreateStoryModal } from 'components/dex/CreateStoryModal'
 import Picker from '@emoji-mart/react'
 
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false })
@@ -501,6 +504,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
     onDrop: onMediaDrop,
     accept: wallAcceptedTypes,
     maxFiles: 1,
+    maxSize: 1073741824, // 1GB easter egg
     noClick: false,
     noKeyboard: false,
   })
@@ -529,15 +533,11 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
     setShowMediaDropzone(false)
   }
 
-  // Share wall post handler
-  const handleShareWallPost = useCallback((postId: string, postBody?: string) => {
-    const url = `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${postId}`
-    if (navigator.share) {
-      navigator.share({ title: 'SoundChain', text: postBody?.slice(0, 100) || 'Check out this wall post', url }).catch(() => {})
-    } else {
-      navigator.clipboard.writeText(url).then(() => toast.success('Link copied!')).catch(() => {})
-    }
-  }, [userHandle, profileId])
+  // Share modal state (matches PostActions pattern)
+  const [shareModalPost, setShareModalPost] = useState<{ id: string; body?: string; mediaUrl?: string; mediaType?: string } | null>(null)
+  const [storyModalPost, setStoryModalPost] = useState<{ mediaUrl: string; mediaType: string; body?: string; authorName?: string } | null>(null)
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
+  React.useEffect(() => { setPortalContainer(document.body) }, [])
 
   // Wall posts
   const { data, loading, refetch } = useQuery(WALL_POSTS_QUERY, {
@@ -968,12 +968,26 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                         Reply {post.replyCount > 0 && `(${post.replyCount})`}
                       </button>
                       <button
-                        onClick={() => handleShareWallPost(post.id, post.body)}
+                        onClick={() => viewerProfileId ? setShareModalPost({ id: post.id, body: post.body, mediaUrl: post.mediaUrl, mediaType: post.mediaType }) : (() => {
+                          const url = `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${post.id}`
+                          if (navigator.share) { navigator.share({ title: 'SoundChain', text: post.body?.slice(0, 100) || 'Check out this wall post', url }).catch(() => {}) }
+                          else { navigator.clipboard.writeText(url).then(() => toast.success('Link copied!')).catch(() => {}) }
+                        })()}
                         className="text-gray-500 hover:text-green-400 text-xs flex items-center gap-1 transition-colors"
                       >
                         <Share2 className="w-3 h-3" />
                         Share
                       </button>
+                      {viewerProfileId && post.mediaUrl && (post.mediaType === 'image' || post.mediaType === 'video') && (
+                        <button
+                          onClick={() => setStoryModalPost({ mediaUrl: post.mediaUrl, mediaType: post.mediaType, body: post.body, authorName: post.author?.displayName })}
+                          className="text-gray-500 hover:text-cyan-400 text-xs flex items-center gap-1 transition-colors"
+                          title="Share to Story"
+                        >
+                          <Film className="w-3 h-3" />
+                          Story
+                        </button>
+                      )}
                       {(post.authorProfileId === viewerProfileId || isOwnProfile) && (
                         <button
                           onClick={() => deleteWallPost({ variables: { wallPostId: post.id } })}
@@ -1087,6 +1101,36 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
           </div>
         )}
       </div>
+
+      {/* Share Post Modal (DM share sheet — matches PostActions) */}
+      {portalContainer && shareModalPost && createPortal(
+        <SharePostModal
+          isOpen={!!shareModalPost}
+          onClose={() => setShareModalPost(null)}
+          postId={shareModalPost.id}
+          postBody={shareModalPost.body}
+          onShareToStory={shareModalPost.mediaUrl && (shareModalPost.mediaType === 'image' || shareModalPost.mediaType === 'video') ? () => {
+            setStoryModalPost({ mediaUrl: shareModalPost.mediaUrl!, mediaType: shareModalPost.mediaType!, body: shareModalPost.body, authorName: profileName })
+            setShareModalPost(null)
+          } : undefined}
+        />,
+        portalContainer
+      )}
+
+      {/* Create Story Modal (Share to Story — matches PostActions) */}
+      {portalContainer && storyModalPost && createPortal(
+        <CreateStoryModal
+          isOpen={!!storyModalPost}
+          onClose={() => setStoryModalPost(null)}
+          prefillMedia={{
+            url: storyModalPost.mediaUrl,
+            type: storyModalPost.mediaType as 'image' | 'video',
+            caption: storyModalPost.body || undefined,
+            authorName: storyModalPost.authorName || undefined,
+          }}
+        />,
+        portalContainer
+      )}
 
       {/* === PERSONALIZED DASHBOARD — collapsible cards, long scroll === */}
       <div className="space-y-3">
