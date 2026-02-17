@@ -7402,10 +7402,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 const q = e.target.value
                                 setTopFriendsSearch(q)
                                 if (topFriendsSearchTimer.current) clearTimeout(topFriendsSearchTimer.current)
-                                if (q.trim().length >= 2) {
+                                if (q.trim().length >= 1) {
                                   topFriendsSearchTimer.current = setTimeout(() => {
                                     searchExploreUsers({ variables: { search: q.trim(), page: { first: 20 } } })
-                                  }, 200)
+                                  }, 150)
                                 }
                               }}
                               placeholder="Search by name..."
@@ -7423,7 +7423,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               // Local filter from following list
                               const localFiltered = query ? followingList.filter((u: any) => u.name?.toLowerCase().includes(query) || u.userHandle?.toLowerCase().includes(query)) : followingList
                               // Server results (broader than just following)
-                              const serverResults = (query.length >= 2 && searchUsersData?.exploreUsers?.nodes) ? searchUsersData.exploreUsers.nodes.map((u: any) => ({
+                              const serverResults = (query.length >= 1 && searchUsersData?.exploreUsers?.nodes) ? searchUsersData.exploreUsers.nodes.map((u: any) => ({
                                 id: u.id,
                                 name: u.displayName || u.userHandle || '',
                                 userHandle: u.userHandle || '',
@@ -7440,7 +7440,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               }
                               const merged = Array.from(byId.values())
                               if (merged.length === 0) {
-                                return <div className="col-span-5 text-center py-6 text-gray-500 text-sm">{query ? 'No users found' : 'Follow people to add them as Top Friends'}</div>
+                                return <div className="col-span-5 text-center py-6 text-gray-500 text-sm">{query ? (searchUsersLoading ? 'Searching...' : 'No users found') : 'Follow people to add them as Top Friends'}</div>
                               }
                               return merged.map((user: any) => {
                                 const isSelected = selectedTopFriends.includes(user.id)
