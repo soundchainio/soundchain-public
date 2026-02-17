@@ -175,6 +175,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
 
   return (
     <div className="space-y-4">
+      {/* === WALL MESSAGE BOARD (top of dashboard) === */}
       {/* Write input */}
       {viewerProfileId && (
         <div className="flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
@@ -201,6 +202,147 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
           </div>
         </div>
       )}
+
+      {/* Wall Posts */}
+      <div>
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <MessageCircle className="w-4 h-4 text-orange-400" />
+          <h3 className="text-white font-bold text-sm">Wall</h3>
+          {pageInfo?.totalCount > 0 && (
+            <span className="text-gray-600 text-xs">({pageInfo.totalCount})</span>
+          )}
+        </div>
+
+        {loading && posts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">Loading wall...</div>
+        ) : sortedPosts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No wall posts yet. Be the first to write!</p>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            {sortedPosts.map((post: any) => (
+              <div key={post.id} className={`p-3.5 rounded-2xl border ${post.pinned ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-white/10 bg-white/[0.03]'}`}>
+                <div className="flex items-start gap-2.5">
+                  <Avatar className="w-8 h-8 flex-shrink-0">
+                    <AvatarImage src={post.author?.profilePicture} />
+                    <AvatarFallback className="bg-gray-700 text-white text-xs">
+                      {post.author?.displayName?.[0] || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-white text-sm">{post.author?.displayName}</span>
+                      <span className="text-gray-500 text-xs">@{post.author?.userHandle}</span>
+                      <span className="text-gray-600 text-xs">
+                        {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                      </span>
+                      {post.pinned && <Pin className="w-3 h-3 text-yellow-400 fill-yellow-400" />}
+                    </div>
+                    <p className="text-gray-300 text-sm mt-1 whitespace-pre-wrap break-words">{post.body}</p>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}
+                        className="text-gray-500 hover:text-cyan-400 text-xs flex items-center gap-1 transition-colors"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                        Reply {post.replyCount > 0 && `(${post.replyCount})`}
+                      </button>
+                      {(post.authorProfileId === viewerProfileId || isOwnProfile) && (
+                        <button
+                          onClick={() => deleteWallPost({ variables: { wallPostId: post.id } })}
+                          className="text-gray-500 hover:text-red-400 text-xs flex items-center gap-1 transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Delete
+                        </button>
+                      )}
+                      {isOwnProfile && (
+                        <button
+                          onClick={() => pinWallPost({ variables: { wallPostId: post.id } })}
+                          className={`text-xs flex items-center gap-1 transition-colors ${post.pinned ? 'text-yellow-400' : 'text-gray-500 hover:text-yellow-400'}`}
+                        >
+                          <Pin className="w-3 h-3" />
+                          {post.pinned ? 'Unpin' : 'Pin'}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Threaded replies */}
+                    {post.replies?.length > 0 && (
+                      <div className="mt-3 ml-2 pl-3 border-l-2 border-white/10 space-y-2">
+                        {post.replies.map((reply: any) => (
+                          <div key={reply.id} className="flex items-start gap-2">
+                            <Avatar className="w-6 h-6 flex-shrink-0">
+                              <AvatarImage src={reply.author?.profilePicture} />
+                              <AvatarFallback className="bg-gray-700 text-white text-[10px]">
+                                {reply.author?.displayName?.[0] || '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-semibold text-white text-xs">{reply.author?.displayName}</span>
+                                <span className="text-gray-600 text-[10px]">
+                                  {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
+                                </span>
+                              </div>
+                              <p className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">{reply.body}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reply input */}
+                    {replyingTo === post.id && viewerProfileId && (
+                      <div className="mt-3 ml-2 pl-3 border-l-2 border-cyan-500/30 flex items-center gap-2">
+                        <input
+                          value={replyBody}
+                          onChange={(e) => setReplyBody(e.target.value)}
+                          placeholder="Write a reply..."
+                          className="flex-1 bg-transparent text-white placeholder-gray-500 text-xs outline-none"
+                          maxLength={1000}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault()
+                              handleReply(post.id)
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => handleReply(post.id)}
+                          disabled={!replyBody.trim() || posting}
+                          className="text-cyan-400 hover:text-cyan-300 disabled:opacity-50"
+                        >
+                          <Send className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Load more */}
+        {pageInfo?.hasNextPage && (
+          <div className="text-center pt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPage(p => p + 1)}
+              className="text-gray-400 hover:text-white"
+            >
+              <ChevronDown className="w-4 h-4 mr-1" />
+              Load more
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* === AGGREGATOR DASHBOARD — Pill Card Grid === */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -342,146 +484,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
         </div>
       </div>
 
-      {/* === WALL POSTS SECTION === */}
-      <div className="pt-2">
-        <div className="flex items-center gap-2 mb-3 px-1">
-          <MessageCircle className="w-4 h-4 text-orange-400" />
-          <h3 className="text-white font-bold text-sm">Wall</h3>
-          {pageInfo?.totalCount > 0 && (
-            <span className="text-gray-600 text-xs">({pageInfo.totalCount})</span>
-          )}
-        </div>
-
-        {loading && posts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">Loading wall...</div>
-        ) : sortedPosts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No wall posts yet. Be the first to write!</p>
-          </div>
-        ) : (
-          <div className="space-y-2.5">
-            {sortedPosts.map((post: any) => (
-              <div key={post.id} className={`p-3.5 rounded-2xl border ${post.pinned ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-white/10 bg-white/[0.03]'}`}>
-                <div className="flex items-start gap-2.5">
-                  <Avatar className="w-8 h-8 flex-shrink-0">
-                    <AvatarImage src={post.author?.profilePicture} />
-                    <AvatarFallback className="bg-gray-700 text-white text-xs">
-                      {post.author?.displayName?.[0] || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-white text-sm">{post.author?.displayName}</span>
-                      <span className="text-gray-500 text-xs">@{post.author?.userHandle}</span>
-                      <span className="text-gray-600 text-xs">
-                        {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                      </span>
-                      {post.pinned && <Pin className="w-3 h-3 text-yellow-400 fill-yellow-400" />}
-                    </div>
-                    <p className="text-gray-300 text-sm mt-1 whitespace-pre-wrap break-words">{post.body}</p>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-3 mt-2">
-                      <button
-                        onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}
-                        className="text-gray-500 hover:text-cyan-400 text-xs flex items-center gap-1 transition-colors"
-                      >
-                        <MessageCircle className="w-3 h-3" />
-                        Reply {post.replyCount > 0 && `(${post.replyCount})`}
-                      </button>
-                      {(post.authorProfileId === viewerProfileId || isOwnProfile) && (
-                        <button
-                          onClick={() => deleteWallPost({ variables: { wallPostId: post.id } })}
-                          className="text-gray-500 hover:text-red-400 text-xs flex items-center gap-1 transition-colors"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          Delete
-                        </button>
-                      )}
-                      {isOwnProfile && (
-                        <button
-                          onClick={() => pinWallPost({ variables: { wallPostId: post.id } })}
-                          className={`text-xs flex items-center gap-1 transition-colors ${post.pinned ? 'text-yellow-400' : 'text-gray-500 hover:text-yellow-400'}`}
-                        >
-                          <Pin className="w-3 h-3" />
-                          {post.pinned ? 'Unpin' : 'Pin'}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Threaded replies */}
-                    {post.replies?.length > 0 && (
-                      <div className="mt-3 ml-2 pl-3 border-l-2 border-white/10 space-y-2">
-                        {post.replies.map((reply: any) => (
-                          <div key={reply.id} className="flex items-start gap-2">
-                            <Avatar className="w-6 h-6 flex-shrink-0">
-                              <AvatarImage src={reply.author?.profilePicture} />
-                              <AvatarFallback className="bg-gray-700 text-white text-[10px]">
-                                {reply.author?.displayName?.[0] || '?'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-semibold text-white text-xs">{reply.author?.displayName}</span>
-                                <span className="text-gray-600 text-[10px]">
-                                  {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
-                                </span>
-                              </div>
-                              <p className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">{reply.body}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Reply input */}
-                    {replyingTo === post.id && viewerProfileId && (
-                      <div className="mt-3 ml-2 pl-3 border-l-2 border-cyan-500/30 flex items-center gap-2">
-                        <input
-                          value={replyBody}
-                          onChange={(e) => setReplyBody(e.target.value)}
-                          placeholder="Write a reply..."
-                          className="flex-1 bg-transparent text-white placeholder-gray-500 text-xs outline-none"
-                          maxLength={1000}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              handleReply(post.id)
-                            }
-                          }}
-                        />
-                        <button
-                          onClick={() => handleReply(post.id)}
-                          disabled={!replyBody.trim() || posting}
-                          className="text-cyan-400 hover:text-cyan-300 disabled:opacity-50"
-                        >
-                          <Send className="w-3 h-3" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Load more */}
-        {pageInfo?.hasNextPage && (
-          <div className="text-center pt-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setPage(p => p + 1)}
-              className="text-gray-400 hover:text-white"
-            >
-              <ChevronDown className="w-4 h-4 mr-1" />
-              Load more
-            </Button>
-          </div>
-        )}
-      </div>
     </div>
   )
 }
