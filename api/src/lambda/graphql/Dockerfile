@@ -17,14 +17,11 @@ RUN npm install -g yarn
 # Install dependencies using frozen lockfile
 RUN yarn install --frozen-lockfile
 
-# Install TypeScript globally
-RUN npm install -g typescript
-
 # Copy the rest of the function code
 COPY . ${LAMBDA_TASK_ROOT}
 
-# Build
-RUN tsc
+# Build using project's local TypeScript (not global — avoids version mismatch)
+RUN npx tsc
 
 # Copy SSL cert for DocumentDB TLS connection
 # config.ts looks for it at path.join(__dirname, '..', 'global-bundle.pem')
