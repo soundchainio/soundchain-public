@@ -8,6 +8,7 @@ import { MakeStoryPermanentModal } from './MakeStoryPermanentModal'
 import { ReelSCidTracker } from './ReelSCidTracker'
 import { getIpfsUrl } from 'utils/ipfs'
 import ReactPlayer from 'react-player'
+import { useMe } from 'hooks/useMe'
 
 // Detect if a URL is an embeddable platform (YouTube, Vimeo, etc.) vs a direct file
 const isEmbedUrl = (url: string) =>
@@ -139,6 +140,7 @@ const mockStoryUsers: StoryUser[] = [
 
 export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, users = mockStoryUsers }: StoryViewerProps) => {
   const router = useRouter()
+  const me = useMe()
   const [currentUserIndex, setCurrentUserIndex] = useState(0)
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
@@ -993,8 +995,8 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, us
             </button>
           </div>
 
-          {/* Make Permanent CTA - Hidden for radio-shared NFT stories (copyright) */}
-          {!currentStory.isPermanent && !currentStory.attachedTrack && (
+          {/* Make Permanent CTA - Only for YOUR OWN stories, not shared content */}
+          {!currentStory.isPermanent && !currentStory.attachedTrack && currentUser.profileId === me?.profile?.id && (
             <button
               onClick={(e) => { e.stopPropagation(); handleMakePermanent() }}
               className="group relative w-full py-2.5 rounded-xl overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-[0.98]"
