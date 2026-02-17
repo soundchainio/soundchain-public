@@ -4,7 +4,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { Button } from 'components/ui/button'
 import {
   Send, Trash2, Pin, MessageCircle, ChevronDown, Play, Heart,
-  Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp, ExternalLink,
+  Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp, ExternalLink, Minus, Plus,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
@@ -99,7 +99,10 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyBody, setReplyBody] = useState('')
   const [page, setPage] = useState(1)
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const { playlistState } = useAudioPlayerContext()
+
+  const toggle = (key: string) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }))
 
   // Wall posts
   const { data, loading, refetch } = useQuery(WALL_POSTS_QUERY, {
@@ -381,155 +384,175 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
         )}
       </div>
 
-      {/* === PERSONALIZED DASHBOARD — All about this user === */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* === PERSONALIZED DASHBOARD — collapsible cards, long scroll === */}
+      <div className="space-y-3">
 
         {/* Their Music */}
         <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-neutral-900/80 via-cyan-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
+          <button onClick={() => toggle('music')} className="flex items-center gap-2 w-full">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center flex-shrink-0">
               <Headphones className="w-3.5 h-3.5 text-white" />
             </div>
             <h3 className="text-white font-bold text-sm">{isOwnProfile ? 'My Music' : `${displayName}'s Music`}</h3>
-            <span className="ml-auto text-[10px] text-cyan-400">
+            <span className="text-[10px] text-cyan-400">
               {userTracksData?.groupedTracks?.pageInfo?.totalCount || userTracks.length} tracks
             </span>
-          </div>
-          {userTracks.length > 0 ? (
-            <div className="space-y-1.5">
-              {userTracks.slice(0, 5).map((track: any, index: number) => (
-                <div
-                  key={track.id}
-                  className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer"
-                  onClick={() => handlePlayTrack(userTracks, index)}
-                >
-                  <div className="w-9 h-9 rounded-lg overflow-hidden relative flex-shrink-0">
-                    <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Play className="w-3 h-3 text-white" fill="white" />
+            <span className="ml-auto w-5 h-5 rounded-full bg-white/10 flex items-center justify-center md:hidden">
+              {collapsed.music ? <Plus className="w-3 h-3 text-gray-400" /> : <Minus className="w-3 h-3 text-gray-400" />}
+            </span>
+          </button>
+          <div className={`${collapsed.music ? 'hidden md:block' : ''} mt-3`}>
+              {userTracks.length > 0 ? (
+                <div className="space-y-1.5">
+                  {userTracks.slice(0, 5).map((track: any, index: number) => (
+                    <div
+                      key={track.id}
+                      className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer"
+                      onClick={() => handlePlayTrack(userTracks, index)}
+                    >
+                      <div className="w-9 h-9 rounded-lg overflow-hidden relative flex-shrink-0">
+                        <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <Play className="w-3 h-3 text-white" fill="white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-xs font-medium truncate group-hover:text-cyan-400 transition-colors">{track.title}</p>
+                        <p className="text-gray-500 text-[10px] truncate">{track.artist}</p>
+                      </div>
+                      <span className="text-gray-600 text-[10px] flex items-center gap-0.5 flex-shrink-0">
+                        <TrendingUp className="w-2.5 h-2.5" />
+                        {track.playbackCountFormatted || '0'}
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-xs font-medium truncate group-hover:text-cyan-400 transition-colors">{track.title}</p>
-                    <p className="text-gray-500 text-[10px] truncate">{track.artist}</p>
-                  </div>
-                  <span className="text-gray-600 text-[10px] flex items-center gap-0.5 flex-shrink-0">
-                    <TrendingUp className="w-2.5 h-2.5" />
-                    {track.playbackCountFormatted || '0'}
-                  </span>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <p className="text-gray-600 text-xs text-center py-4">
+                  <Music className="w-6 h-6 mx-auto mb-1 opacity-30" />
+                  {isOwnProfile ? 'Upload your first track!' : 'No tracks yet'}
+                </p>
+              )}
             </div>
-          ) : (
-            <p className="text-gray-600 text-xs text-center py-6">
-              <Music className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              {isOwnProfile ? 'Upload your first track!' : 'No tracks yet'}
-            </p>
-          )}
+          </div>
         </div>
 
         {/* Their Friends / Following */}
         <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-neutral-900/80 via-purple-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
+          <button onClick={() => toggle('circle')} className="flex items-center gap-2 w-full">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
               <Users className="w-3.5 h-3.5 text-white" />
             </div>
             <h3 className="text-white font-bold text-sm">{isOwnProfile ? 'My Circle' : `${displayName}'s Circle`}</h3>
-            <span className="ml-auto text-[10px] text-purple-400">
+            <span className="text-[10px] text-purple-400">
               {followingCount} following
             </span>
-          </div>
-          {following.length > 0 ? (
-            <div className="grid grid-cols-4 gap-2">
-              {following.slice(0, 8).map((user: any) => (
-                <Link
-                  key={user.id}
-                  href={`/dex/users/${user.userHandle}`}
-                  className="flex flex-col items-center gap-1 p-1.5 rounded-xl hover:bg-white/5 transition-colors group"
-                >
-                  <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-purple-500/20 group-hover:ring-purple-500/50 transition-all">
-                    <img
-                      src={user.profilePicture || '/images/default-avatar.png'}
-                      alt={user.displayName || user.userHandle || ''}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    <span className="text-[10px] text-gray-400 truncate max-w-[60px] group-hover:text-white transition-colors">
-                      {user.displayName || user.userHandle}
-                    </span>
-                    {user.verified && <BadgeCheck className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />}
-                  </div>
-                </Link>
-              ))}
+            <span className="ml-auto w-5 h-5 rounded-full bg-white/10 flex items-center justify-center md:hidden">
+              {collapsed.circle ? <Plus className="w-3 h-3 text-gray-400" /> : <Minus className="w-3 h-3 text-gray-400" />}
+            </span>
+          </button>
+          <div className={`${collapsed.circle ? 'hidden md:block' : ''} mt-3`}>
+              {following.length > 0 ? (
+                <div className="grid grid-cols-4 gap-2">
+                  {following.slice(0, 8).map((user: any) => (
+                    <Link
+                      key={user.id}
+                      href={`/dex/users/${user.userHandle}`}
+                      className="flex flex-col items-center gap-1 p-1.5 rounded-xl hover:bg-white/5 transition-colors group"
+                    >
+                      <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-purple-500/20 group-hover:ring-purple-500/50 transition-all">
+                        <img
+                          src={user.profilePicture || '/images/default-avatar.png'}
+                          alt={user.displayName || user.userHandle || ''}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        <span className="text-[10px] text-gray-400 truncate max-w-[60px] group-hover:text-white transition-colors">
+                          {user.displayName || user.userHandle}
+                        </span>
+                        {user.verified && <BadgeCheck className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600 text-xs text-center py-4">
+                  <Heart className="w-6 h-6 mx-auto mb-1 opacity-30" />
+                  {isOwnProfile ? 'Follow artists to fill your circle!' : 'Not following anyone yet'}
+                </p>
+              )}
             </div>
-          ) : (
-            <p className="text-gray-600 text-xs text-center py-6">
-              <Heart className="w-8 h-8 mx-auto mb-2 opacity-30" />
-              {isOwnProfile ? 'Follow artists to fill your circle!' : 'Not following anyone yet'}
-            </p>
-          )}
+          </div>
         </div>
 
         {/* Their Collection — NFT artwork grid */}
         {userTracks.filter((t: any) => t.nftData?.tokenId || t.nftData?.contract).length > 0 && (
           <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-neutral-900/80 via-amber-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
-            <div className="flex items-center gap-2 mb-3">
+            <button onClick={() => toggle('collection')} className="flex items-center gap-2 w-full">
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
                 <Disc3 className="w-3.5 h-3.5 text-white" />
               </div>
               <h3 className="text-white font-bold text-sm">{isOwnProfile ? 'My Collection' : 'Collection'}</h3>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {userTracks
-                .filter((t: any) => t.nftData?.tokenId || t.nftData?.contract)
-                .slice(0, 8)
-                .map((track: any, index: number) => (
-                  <button
-                    key={track.id}
-                    className="group relative aspect-square rounded-xl overflow-hidden bg-gray-800 hover:ring-2 hover:ring-amber-400/60 transition-all"
-                    onClick={() => handlePlayTrack(userTracks.filter((t: any) => t.nftData?.tokenId || t.nftData?.contract), index)}
-                    title={track.title}
-                  >
-                    <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute bottom-0 left-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-[9px] text-white truncate font-medium">{track.title}</p>
-                    </div>
-                  </button>
-                ))}
+              <span className="ml-auto w-5 h-5 rounded-full bg-white/10 flex items-center justify-center md:hidden">
+                {collapsed.collection ? <Plus className="w-3 h-3 text-gray-400" /> : <Minus className="w-3 h-3 text-gray-400" />}
+              </span>
+            </button>
+            <div className={`${collapsed.collection ? 'hidden md:block' : ''} mt-3 grid grid-cols-4 gap-2`}>
+                {userTracks
+                  .filter((t: any) => t.nftData?.tokenId || t.nftData?.contract)
+                  .slice(0, 8)
+                  .map((track: any, index: number) => (
+                    <button
+                      key={track.id}
+                      className="group relative aspect-square rounded-xl overflow-hidden bg-gray-800 hover:ring-2 hover:ring-amber-400/60 transition-all"
+                      onClick={() => handlePlayTrack(userTracks.filter((t: any) => t.nftData?.tokenId || t.nftData?.contract), index)}
+                      title={track.title}
+                    >
+                      <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt="" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute bottom-0 left-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-[9px] text-white truncate font-medium">{track.title}</p>
+                      </div>
+                    </button>
+                  ))}
+              </div>
             </div>
           </div>
         )}
 
         {/* Quick Stats — about THIS user */}
         <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-900/80 via-neutral-800/10 to-neutral-900/80 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
+          <button onClick={() => toggle('stats')} className="flex items-center gap-2 w-full">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center flex-shrink-0">
               <TrendingUp className="w-3.5 h-3.5 text-white" />
             </div>
             <h3 className="text-white font-bold text-sm">Stats</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <Music className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
-              <p className="text-white font-bold text-lg">{userTracksData?.groupedTracks?.pageInfo?.totalCount || userTracks.length}</p>
-              <p className="text-gray-500 text-[10px]">Tracks</p>
-            </div>
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <Users className="w-4 h-4 text-purple-400 mx-auto mb-1" />
-              <p className="text-white font-bold text-lg">{followersCount}</p>
-              <p className="text-gray-500 text-[10px]">Followers</p>
-            </div>
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <Heart className="w-4 h-4 text-pink-400 mx-auto mb-1" />
-              <p className="text-white font-bold text-lg">{followingCount}</p>
-              <p className="text-gray-500 text-[10px]">Following</p>
-            </div>
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <MessageCircle className="w-4 h-4 text-orange-400 mx-auto mb-1" />
-              <p className="text-white font-bold text-lg">{pageInfo?.totalCount || 0}</p>
-              <p className="text-gray-500 text-[10px]">Wall Posts</p>
+            <span className="ml-auto w-5 h-5 rounded-full bg-white/10 flex items-center justify-center md:hidden">
+              {collapsed.stats ? <Plus className="w-3 h-3 text-gray-400" /> : <Minus className="w-3 h-3 text-gray-400" />}
+            </span>
+          </button>
+          <div className={`${collapsed.stats ? 'hidden md:block' : ''} mt-3 grid grid-cols-2 gap-2`}>
+              <div className="rounded-xl bg-white/5 p-3 text-center">
+                <Music className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
+                <p className="text-white font-bold text-lg">{userTracksData?.groupedTracks?.pageInfo?.totalCount || userTracks.length}</p>
+                <p className="text-gray-500 text-[10px]">Tracks</p>
+              </div>
+              <div className="rounded-xl bg-white/5 p-3 text-center">
+                <Users className="w-4 h-4 text-purple-400 mx-auto mb-1" />
+                <p className="text-white font-bold text-lg">{followersCount}</p>
+                <p className="text-gray-500 text-[10px]">Followers</p>
+              </div>
+              <div className="rounded-xl bg-white/5 p-3 text-center">
+                <Heart className="w-4 h-4 text-pink-400 mx-auto mb-1" />
+                <p className="text-white font-bold text-lg">{followingCount}</p>
+                <p className="text-gray-500 text-[10px]">Following</p>
+              </div>
+              <div className="rounded-xl bg-white/5 p-3 text-center">
+                <MessageCircle className="w-4 h-4 text-orange-400 mx-auto mb-1" />
+                <p className="text-white font-bold text-lg">{pageInfo?.totalCount || 0}</p>
+                <p className="text-gray-500 text-[10px]">Wall Posts</p>
+              </div>
             </div>
           </div>
         </div>
