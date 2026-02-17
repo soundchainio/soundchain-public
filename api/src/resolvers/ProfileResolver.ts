@@ -192,7 +192,7 @@ export class ProfileResolver {
     const ids = (profile as any).topFriends;
     if (!ids || !Array.isArray(ids) || ids.length === 0) return [];
     const profiles = await Promise.all(
-      ids.slice(0, 10).map((id: string) =>
+      ids.slice(0, 10).map((id: string): Promise<Profile | null> =>
         profileService.getProfile(id).catch(() => null)
       )
     );
