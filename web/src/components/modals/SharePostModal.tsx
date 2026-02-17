@@ -19,9 +19,10 @@ interface SharePostModalProps {
   postId: string
   postBody?: string | null
   onShareToStory?: () => void
+  customUrl?: string
 }
 
-export const SharePostModal = ({ isOpen, onClose, postId, postBody, onShareToStory }: SharePostModalProps) => {
+export const SharePostModal = ({ isOpen, onClose, postId, postBody, onShareToStory, customUrl }: SharePostModalProps) => {
   const me = useMe()
   const [search, setSearch] = useState('')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -34,7 +35,7 @@ export const SharePostModal = ({ isOpen, onClose, postId, postBody, onShareToSto
   const [loadFollowing, { data: followingData }] = useFollowingLazyQuery({ fetchPolicy: 'cache-and-network' })
   const [sendMessage] = useSendMessageMutation()
 
-  const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/posts/${postId}` : ''
+  const postUrl = customUrl || (typeof window !== 'undefined' ? `${window.location.origin}/posts/${postId}` : '')
 
   // Load data when modal opens
   useEffect(() => {

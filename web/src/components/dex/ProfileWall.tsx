@@ -534,7 +534,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   }
 
   // Share modal state (matches PostActions pattern)
-  const [shareModalPost, setShareModalPost] = useState<{ id: string; body?: string; mediaUrl?: string; mediaType?: string } | null>(null)
+  const [shareModalPost, setShareModalPost] = useState<{ id: string; body?: string; mediaUrl?: string; mediaType?: string; isReply?: boolean; parentId?: string } | null>(null)
   const [storyModalPost, setStoryModalPost] = useState<{ mediaUrl: string; mediaType: string; body?: string; authorName?: string } | null>(null)
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   React.useEffect(() => { setPortalContainer(document.body) }, [])
@@ -1018,7 +1018,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                                 {reply.author?.displayName?.[0] || '?'}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="font-semibold text-white text-xs">{reply.author?.displayName}</span>
                                 <span className="text-gray-600 text-[10px]">
@@ -1027,6 +1027,39 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                               </div>
                               {reply.body && <div className="text-gray-300 text-xs mt-0.5 whitespace-pre-wrap break-words">{renderBody(reply.body)}</div>}
                               <WallPostMedia post={reply} small />
+                              {/* Reply action buttons — share + story */}
+                              <div className="flex items-center gap-2.5 mt-1.5">
+                                <button
+                                  onClick={() => viewerProfileId ? setShareModalPost({ id: reply.id, body: reply.body, mediaUrl: reply.mediaUrl, mediaType: reply.mediaType, isReply: true, parentId: post.id }) : (() => {
+                                    const url = `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${post.id}`
+                                    if (navigator.share) { navigator.share({ title: 'SoundChain', text: reply.body?.slice(0, 100) || 'Check out this wall post', url }).catch(() => {}) }
+                                    else { navigator.clipboard.writeText(url).then(() => toast.success('Link copied!')).catch(() => {}) }
+                                  })()}
+                                  className="text-gray-600 hover:text-green-400 text-[10px] flex items-center gap-0.5 transition-colors"
+                                >
+                                  <Share2 className="w-2.5 h-2.5" />
+                                  Share
+                                </button>
+                                {viewerProfileId && reply.mediaUrl && (reply.mediaType === 'image' || reply.mediaType === 'video') && (
+                                  <button
+                                    onClick={() => setStoryModalPost({ mediaUrl: reply.mediaUrl, mediaType: reply.mediaType, body: reply.body, authorName: reply.author?.displayName })}
+                                    className="text-gray-600 hover:text-cyan-400 text-[10px] flex items-center gap-0.5 transition-colors"
+                                    title="Share to Story"
+                                  >
+                                    <Film className="w-2.5 h-2.5" />
+                                    Story
+                                  </button>
+                                )}
+                                {(reply.authorProfileId === viewerProfileId || isOwnProfile) && (
+                                  <button
+                                    onClick={() => deleteWallPost({ variables: { wallPostId: reply.id } })}
+                                    className="text-gray-600 hover:text-red-400 text-[10px] flex items-center gap-0.5 transition-colors"
+                                  >
+                                    <Trash2 className="w-2.5 h-2.5" />
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -1109,6 +1142,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
           onClose={() => setShareModalPost(null)}
           postId={shareModalPost.id}
           postBody={shareModalPost.body}
+          customUrl={typeof window !== 'undefined' ? `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${shareModalPost.isReply && shareModalPost.parentId ? shareModalPost.parentId : shareModalPost.id}` : undefined}
           onShareToStory={shareModalPost.mediaUrl && (shareModalPost.mediaType === 'image' || shareModalPost.mediaType === 'video') ? () => {
             setStoryModalPost({ mediaUrl: shareModalPost.mediaUrl!, mediaType: shareModalPost.mediaType!, body: shareModalPost.body, authorName: profileName })
             setShareModalPost(null)
