@@ -7424,11 +7424,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                               const localFiltered = query ? followingList.filter((u: any) => u.name?.toLowerCase().includes(query) || u.userHandle?.toLowerCase().includes(query)) : followingList
                               // Server results (broader than just following)
                               const serverResults = (query.length >= 2 && searchUsersData?.exploreUsers?.nodes) ? searchUsersData.exploreUsers.nodes.map((u: any) => ({
-                                id: u.profile?.id || u.id,
-                                name: u.profile?.displayName || u.displayName || u.profile?.userHandle || '',
-                                userHandle: u.profile?.userHandle || u.userHandle || '',
-                                avatar: u.profile?.profilePicture || undefined,
-                                isVerified: u.profile?.verified || u.profile?.teamMember || false,
+                                id: u.id,
+                                name: u.displayName || u.userHandle || '',
+                                userHandle: u.userHandle || '',
+                                avatar: u.profilePicture || undefined,
+                                isVerified: u.verified || u.teamMember || false,
                               })).filter((u: any) => u.id) : []
                               // Merge: local first, then server results not already in local
                               const localIds = new Set(localFiltered.map((u: any) => u.id))
