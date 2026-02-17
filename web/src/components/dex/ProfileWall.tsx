@@ -1,18 +1,31 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { gql, useQuery, useMutation } from '@apollo/client'
 import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { Button } from 'components/ui/button'
 import {
   Send, Trash2, Pin, MessageCircle, ChevronDown, Play, Heart,
   Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp, ExternalLink, Minus, Plus,
+  Smile, Sparkles, Link2, X,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
+import { EmoteRenderer } from 'components/EmoteRenderer'
+import { StickerPicker } from 'components/StickerPicker'
+import Picker from '@emoji-mart/react'
 
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false })
+
+interface Emoji {
+  id: string
+  name: string
+  native: string
+  unified: string
+  keywords: string[]
+  shortcodes: string
+}
 
 const getYouTubeThumbnail = (url: string): string | null => {
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
@@ -117,6 +130,164 @@ interface ProfileWallProps {
   walletAddress?: string
 }
 
+// Reusable Emoji/Sticker toolbar for wall inputs
+function WallInputToolbar({
+  showEmojiPicker,
+  setShowEmojiPicker,
+  showStickerPicker,
+  setShowStickerPicker,
+  showEmbedInput,
+  setShowEmbedInput,
+  embedUrl,
+  setEmbedUrl,
+  selectedStickers,
+  setSelectedStickers,
+  onEmojiSelect,
+  charCount,
+  maxChars,
+}: {
+  showEmojiPicker: boolean
+  setShowEmojiPicker: (v: boolean) => void
+  showStickerPicker: boolean
+  setShowStickerPicker: (v: boolean) => void
+  showEmbedInput: boolean
+  setShowEmbedInput: (v: boolean) => void
+  embedUrl: string
+  setEmbedUrl: (v: string) => void
+  selectedStickers: Array<{url: string, name: string}>
+  setSelectedStickers: React.Dispatch<React.SetStateAction<Array<{url: string, name: string}>>>
+  onEmojiSelect: (emoji: Emoji) => void
+  charCount: number
+  maxChars: number
+}) {
+  return (
+    <>
+      {/* Selected Stickers Preview */}
+      {selectedStickers.length > 0 && (
+        <div className="mb-2 p-2 bg-neutral-800/50 rounded-xl border border-neutral-700">
+          <div className="flex items-center gap-1 mb-1">
+            <Sparkles className="w-3 h-3 text-cyan-400" />
+            <span className="text-[10px] text-neutral-400">Stickers ({selectedStickers.length})</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {selectedStickers.map((sticker, idx) => (
+              <div key={idx} className="relative group">
+                <img
+                  src={sticker.url}
+                  alt={sticker.name}
+                  className="w-8 h-8 object-contain rounded-lg bg-neutral-900/50 p-0.5"
+                  title={sticker.name}
+                />
+                <button
+                  onClick={() => setSelectedStickers(prev => prev.filter((_, i) => i !== idx))}
+                  className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-2 h-2 text-white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Action bar */}
+      <div className="flex items-center justify-between mt-1.5 gap-1">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); setShowEmbedInput(false) }}
+            className={`p-1 rounded-lg transition-all flex items-center gap-0.5 ${
+              showEmojiPicker
+                ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 ring-1 ring-yellow-400'
+                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+            title="Add emoji"
+          >
+            <Smile className="w-3.5 h-3.5" />
+            <span className="text-[9px] font-medium hidden sm:inline">Emoji</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false); setShowEmbedInput(false) }}
+            className={`p-1 rounded-lg transition-all flex items-center gap-0.5 ${
+              showStickerPicker
+                ? 'bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 ring-1 ring-cyan-400'
+                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+            title="Add stickers (7TV, BTTV, FFZ)"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="text-[9px] font-medium hidden sm:inline">Stickers</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setShowEmbedInput(!showEmbedInput); setShowStickerPicker(false); setShowEmojiPicker(false) }}
+            className={`p-1 rounded-lg transition-all flex items-center gap-0.5 ${
+              showEmbedInput || embedUrl
+                ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-400 ring-1 ring-purple-400'
+                : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+            title="Add embed URL"
+          >
+            <Link2 className="w-3.5 h-3.5" />
+            <span className="text-[9px] font-medium hidden sm:inline">Embed</span>
+          </button>
+        </div>
+
+        <span className={`text-[9px] ${charCount > maxChars * 0.8 ? 'text-amber-400' : 'text-neutral-500'}`}>
+          {charCount}/{maxChars}
+        </span>
+      </div>
+
+      {/* Embed URL Input */}
+      {showEmbedInput && (
+        <div className="mt-2">
+          <div className="bg-neutral-800 rounded-xl p-2 border border-neutral-700">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Link2 className="w-3 h-3 text-purple-400" />
+              <span className="text-[9px] text-neutral-400">Embed URL (YouTube, Spotify, etc.)</span>
+            </div>
+            <input
+              type="url"
+              value={embedUrl}
+              onChange={(e) => setEmbedUrl(e.target.value)}
+              placeholder="https://..."
+              className="w-full bg-neutral-900 border border-neutral-600 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-purple-500 transition-colors"
+            />
+            {embedUrl && (
+              <div className="mt-1 flex items-center justify-between">
+                <span className="text-[9px] text-green-400">URL attached</span>
+                <button onClick={() => setEmbedUrl('')} className="text-[9px] text-red-400 hover:text-red-300">Remove</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Emoji Picker */}
+      {showEmojiPicker && (
+        <div className="mt-2" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <Picker theme="dark" perLine={8} onEmojiSelect={onEmojiSelect} />
+        </div>
+      )}
+
+      {/* Sticker Picker */}
+      {showStickerPicker && (
+        <div className="mt-2" onClick={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
+          <StickerPicker
+            theme="dark"
+            onSelect={(stickerUrl, stickerName) => {
+              setSelectedStickers(prev => [...prev, { url: stickerUrl, name: stickerName }])
+            }}
+          />
+        </div>
+      )}
+    </>
+  )
+}
+
 export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileName, walletAddress }: ProfileWallProps) {
   const [body, setBody] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
@@ -124,6 +295,20 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   const [page, setPage] = useState(1)
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const { playlistState } = useAudioPlayerContext()
+
+  // Wall post input state
+  const [postStickers, setPostStickers] = useState<Array<{url: string, name: string}>>([])
+  const [postEmbedUrl, setPostEmbedUrl] = useState('')
+  const [showPostEmoji, setShowPostEmoji] = useState(false)
+  const [showPostSticker, setShowPostSticker] = useState(false)
+  const [showPostEmbed, setShowPostEmbed] = useState(false)
+
+  // Reply input state
+  const [replyStickers, setReplyStickers] = useState<Array<{url: string, name: string}>>([])
+  const [replyEmbedUrl, setReplyEmbedUrl] = useState('')
+  const [showReplyEmoji, setShowReplyEmoji] = useState(false)
+  const [showReplySticker, setShowReplySticker] = useState(false)
+  const [showReplyEmbed, setShowReplyEmbed] = useState(false)
 
   const toggle = (key: string) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }))
 
@@ -177,8 +362,18 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   const [createWallPost, { loading: posting }] = useMutation(CREATE_WALL_POST, {
     onCompleted: () => {
       setBody('')
+      setPostStickers([])
+      setPostEmbedUrl('')
+      setShowPostEmoji(false)
+      setShowPostSticker(false)
+      setShowPostEmbed(false)
       setReplyingTo(null)
       setReplyBody('')
+      setReplyStickers([])
+      setReplyEmbedUrl('')
+      setShowReplyEmoji(false)
+      setShowReplySticker(false)
+      setShowReplyEmbed(false)
       refetch()
     },
   })
@@ -192,13 +387,18 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   })
 
   const handleSubmit = () => {
-    if (!body.trim()) return
-    createWallPost({ variables: { profileId, body: body.trim() } })
+    // Combine text + sticker markdown + embed URL (same pattern as WaveformWithComments)
+    const stickerMarkdown = postStickers.map(s => `![emote:${s.name}](${s.url})`).join(' ')
+    const finalBody = [body.trim(), stickerMarkdown, postEmbedUrl.trim()].filter(Boolean).join(' ')
+    if (!finalBody) return
+    createWallPost({ variables: { profileId, body: finalBody } })
   }
 
   const handleReply = (wallPostId: string) => {
-    if (!replyBody.trim()) return
-    createWallPost({ variables: { profileId, body: replyBody.trim(), replyToId: wallPostId } })
+    const stickerMarkdown = replyStickers.map(s => `![emote:${s.name}](${s.url})`).join(' ')
+    const finalBody = [replyBody.trim(), stickerMarkdown, replyEmbedUrl.trim()].filter(Boolean).join(' ')
+    if (!finalBody) return
+    createWallPost({ variables: { profileId, body: finalBody, replyToId: wallPostId } })
   }
 
   const posts = data?.wallPosts?.nodes || []
@@ -211,16 +411,84 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
 
   const displayName = profileName || 'This user'
 
-  // Render wall post body with auto-embeds matching feed/post pattern
+  // Normalize a raw URL into an embeddable URL for iframe-based platforms
+  const getEmbedUrl = (url: string): string => {
+    let embedUrl = url.replace(/^http:/, 'https:')
+    // Spotify: open.spotify.com/track/X → open.spotify.com/embed/track/X
+    if (/open\.spotify\.com\/(?!embed\/)/.test(embedUrl)) {
+      embedUrl = embedUrl.replace('open.spotify.com/', 'open.spotify.com/embed/')
+    }
+    // SoundCloud: add ?visual=true for player embed (oEmbed fallback)
+    if (/soundcloud\.com\//.test(embedUrl) && !embedUrl.includes('w.soundcloud.com')) {
+      embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(embedUrl)}&color=%2306b6d4&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`
+    }
+    // Bandcamp: /track/ or /album/ → add /size=large/bgcol=333333/linkcol=0687f5/
+    if (/bandcamp\.com\/(track|album)\//.test(embedUrl) && !embedUrl.includes('bandcamp.com/EmbeddedPlayer')) {
+      const bcMatch = embedUrl.match(/https?:\/\/([^/]+)\.bandcamp\.com\/(track|album)\/([^/?#]+)/)
+      if (bcMatch) {
+        const [, , type, slug] = bcMatch
+        embedUrl = `https://bandcamp.com/EmbeddedPlayer/${type}=${slug}/size=large/bgcol=333333/linkcol=0687f5/tracklist=false/transparent=true/`
+      }
+    }
+    return embedUrl
+  }
+
+  // Render wall post body with auto-embeds + emote support
   const renderBody = (text: string) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g
-    const parts = text.split(urlRegex)
-    if (parts.length === 1) return <span>{text}</span>
+    // Check for emote markdown
+    const hasEmotes = text.includes('![emote:') || text.includes('[!emote:') || text.includes('[emote:')
+
+    // Strip emote markdown before URL detection to avoid splitting CDN URLs inside emote syntax
+    // e.g. ![emote:KEKW](https://cdn.7tv.app/emote/xxx/2x) should NOT be split on the CDN URL
+    const textWithoutEmotes = text.replace(/!\[emote:[^\]]*\]\([^)]*\)/g, '')
+
+    // Use non-global regex for URL detection (avoids lastIndex bugs)
+    const urlPattern = /https?:\/\/[^\s]+/
+    const hasUrls = urlPattern.test(textWithoutEmotes)
+
+    // Simple text with no URLs or emotes
+    if (!hasUrls && !hasEmotes) return <span>{text}</span>
+
+    // If only emotes, no URLs — use EmoteRenderer with linkify
+    if (!hasUrls && hasEmotes) {
+      return <EmoteRenderer text={text} linkify />
+    }
+
+    // Has URLs — split on URLs but preserve emote markdown
+    // First, extract emote tokens and replace with placeholders
+    const emoteTokens: string[] = []
+    const textWithPlaceholders = text.replace(/!\[emote:[^\]]*\]\([^)]*\)/g, (match) => {
+      emoteTokens.push(match)
+      return `__EMOTE_${emoteTokens.length - 1}__`
+    })
+
+    // Now split on URLs (using capturing group to keep URLs in results)
+    const urlSplitRegex = /(https?:\/\/[^\s]+)/g
+    const parts = textWithPlaceholders.split(urlSplitRegex)
+    if (parts.length === 1) return hasEmotes ? <EmoteRenderer text={text} linkify /> : <span>{text}</span>
+
     return (
       <>
         {parts.map((part, i) => {
-          if (!urlRegex.test(part)) return <span key={i}>{part}</span>
-          urlRegex.lastIndex = 0
+          // Check if this part is a URL
+          if (!urlPattern.test(part)) {
+            // Restore emote placeholders in non-URL text
+            let restored = part
+            emoteTokens.forEach((token, idx) => {
+              restored = restored.replace(`__EMOTE_${idx}__`, token)
+            })
+            return restored.trim() ? (
+              hasEmotes || restored.includes('![emote:')
+                ? <EmoteRenderer key={i} text={restored} />
+                : <span key={i}>{restored}</span>
+            ) : null
+          }
+
+          // Skip CDN URLs that were part of emote markdown (shouldn't reach here after placeholder stripping)
+          if (part.includes('cdn.7tv.app/emote/') || part.includes('cdn.betterttv.net/emote/') || part.includes('cdn.frankerfacez.com/')) {
+            return null
+          }
+
           const mediaUrl = part.replace(/^http:/, 'https:')
           const source = IdentifySource(part).type
           if (!source) {
@@ -252,13 +520,15 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
               </div>
             )
           }
+          // Normalize URL for iframe-based embeds (Spotify, SoundCloud, Bandcamp)
+          const embedSrc = getEmbedUrl(mediaUrl)
           return (
             <div key={i} className="mt-2 mb-1 rounded-xl overflow-hidden"
               style={{ contain: 'layout style', willChange: 'contents', transform: 'translateZ(0)' }}>
               <iframe
                 frameBorder="0" className="w-full bg-black rounded-xl"
                 style={{ minHeight: getEmbedHeight(mediaUrl) }}
-                src={mediaUrl} title="Media"
+                src={embedSrc} title="Media"
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
                 allowFullScreen referrerPolicy="no-referrer-when-downgrade"
               />
@@ -273,21 +543,38 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
     <div className="space-y-4">
       {/* === WALL MESSAGE BOARD (top of dashboard) === */}
       {viewerProfileId && (
-        <div className="flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
+        <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
           <div className="flex-1">
+            {/* Selected Stickers Preview for post */}
+            <WallInputToolbar
+              showEmojiPicker={showPostEmoji}
+              setShowEmojiPicker={setShowPostEmoji}
+              showStickerPicker={showPostSticker}
+              setShowStickerPicker={setShowPostSticker}
+              showEmbedInput={showPostEmbed}
+              setShowEmbedInput={setShowPostEmbed}
+              embedUrl={postEmbedUrl}
+              setEmbedUrl={setPostEmbedUrl}
+              selectedStickers={postStickers}
+              setSelectedStickers={setPostStickers}
+              onEmojiSelect={(emoji) => {
+                if (body.length < 1000) setBody(prev => prev + emoji.native)
+              }}
+              charCount={body.length + postStickers.length}
+              maxChars={1000}
+            />
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder={`Write on ${profileName || 'their'} wall...`}
-              className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none text-sm min-h-[60px]"
+              className="w-full bg-transparent text-white placeholder-gray-500 resize-none outline-none text-sm min-h-[60px] mt-2"
               maxLength={1000}
             />
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-xs text-gray-600">{body.length}/1000</span>
+            <div className="flex items-center justify-end mt-2">
               <Button
                 size="sm"
                 onClick={handleSubmit}
-                disabled={!body.trim() || posting}
+                disabled={(!body.trim() && postStickers.length === 0 && !postEmbedUrl.trim()) || posting}
                 className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1"
               >
                 <Send className="w-3 h-3 mr-1" />
@@ -339,7 +626,15 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
 
                     <div className="flex items-center gap-3 mt-2">
                       <button
-                        onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}
+                        onClick={() => {
+                          setReplyingTo(replyingTo === post.id ? null : post.id)
+                          setReplyBody('')
+                          setReplyStickers([])
+                          setReplyEmbedUrl('')
+                          setShowReplyEmoji(false)
+                          setShowReplySticker(false)
+                          setShowReplyEmbed(false)
+                        }}
                         className="text-gray-500 hover:text-cyan-400 text-xs flex items-center gap-1 transition-colors"
                       >
                         <MessageCircle className="w-3 h-3" />
@@ -390,27 +685,50 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                     )}
 
                     {replyingTo === post.id && viewerProfileId && (
-                      <div className="mt-3 ml-2 pl-3 border-l-2 border-cyan-500/30 flex items-center gap-2">
-                        <input
-                          value={replyBody}
-                          onChange={(e) => setReplyBody(e.target.value)}
-                          placeholder="Write a reply..."
-                          className="flex-1 bg-transparent text-white placeholder-gray-500 text-xs outline-none"
-                          maxLength={1000}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault()
-                              handleReply(post.id)
-                            }
-                          }}
-                        />
-                        <button
-                          onClick={() => handleReply(post.id)}
-                          disabled={!replyBody.trim() || posting}
-                          className="text-cyan-400 hover:text-cyan-300 disabled:opacity-50"
-                        >
-                          <Send className="w-3 h-3" />
-                        </button>
+                      <div className="mt-3 ml-2 pl-3 border-l-2 border-cyan-500/30">
+                        <div className="flex items-start gap-2">
+                          <div className="flex-1">
+                            <div className="relative">
+                              <input
+                                value={replyBody}
+                                onChange={(e) => setReplyBody(e.target.value)}
+                                placeholder="Write a reply..."
+                                className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 pr-10 text-white placeholder-gray-500 text-xs outline-none focus:border-cyan-500 transition-colors"
+                                maxLength={1000}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault()
+                                    handleReply(post.id)
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={() => handleReply(post.id)}
+                                disabled={(!replyBody.trim() && replyStickers.length === 0 && !replyEmbedUrl.trim()) || posting}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-cyan-400 hover:text-cyan-300 disabled:opacity-50"
+                              >
+                                <Send className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <WallInputToolbar
+                              showEmojiPicker={showReplyEmoji}
+                              setShowEmojiPicker={setShowReplyEmoji}
+                              showStickerPicker={showReplySticker}
+                              setShowStickerPicker={setShowReplySticker}
+                              showEmbedInput={showReplyEmbed}
+                              setShowEmbedInput={setShowReplyEmbed}
+                              embedUrl={replyEmbedUrl}
+                              setEmbedUrl={setReplyEmbedUrl}
+                              selectedStickers={replyStickers}
+                              setSelectedStickers={setReplyStickers}
+                              onEmojiSelect={(emoji) => {
+                                if (replyBody.length < 1000) setReplyBody(prev => prev + emoji.native)
+                              }}
+                              charCount={replyBody.length + replyStickers.length}
+                              maxChars={1000}
+                            />
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

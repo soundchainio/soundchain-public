@@ -540,6 +540,7 @@ export const StickerPicker = ({ onSelect, theme = 'dark' }: StickerPickerProps) 
           placeholder="Search emotes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation() } }}
           className={classNames('w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500', {
             'bg-neutral-800 text-white placeholder-neutral-500': theme === 'dark',
             'bg-gray-100 text-gray-900 placeholder-gray-400': theme === 'light',

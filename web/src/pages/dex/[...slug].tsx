@@ -63,7 +63,7 @@ import { SUPPORTED_TOKENS, TOKEN_INFO, Token, getDisplaySymbol } from 'constants
 import { ToastContainer, toast } from 'react-toastify'
 import dynamic from 'next/dynamic'
 import { useUnifiedWallet } from 'contexts/UnifiedWalletContext'
-import { LeftSidebar, RightSidebar } from 'components/Sidebar'
+import { LeftSidebar, RightSidebar, MiniProfileDashboard } from 'components/Sidebar'
 import { PlaylistCard, PlaylistDetail, CreatePlaylistModal } from 'components/Playlist'
 import { DMModal } from 'components/modals/DMModal'
 import { FollowModal } from 'components/FollowersModal'
@@ -80,6 +80,7 @@ import {
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
+import { ProfileReels } from 'components/dex/ProfileReels'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
@@ -4558,14 +4559,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
             <div className="relative flex justify-center gap-4 xl:gap-6 min-h-screen py-4 -mx-4 px-4">
-              {/* Left Sidebar - Desktop only */}
-              <LeftSidebar />
+              {/* Left Sidebar - Mini Profile Dashboard (Desktop only) */}
+              <MiniProfileDashboard />
 
               {/* Main Feed - Posts lead, clean and content-first */}
               {/* Using memoized Posts to prevent re-renders when header modals open (keeps video/audio playing) */}
               <div className="flex-1 max-w-full md:max-w-[680px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
                 {MemoizedFeedPosts}
               </div>
+
+              {/* Right Sidebar - Trending, Featured Artists, Top 100 (Desktop only) */}
+              <RightSidebar />
 
               {/* Floating Compose Button - Blade Runner / Cyberpunk style - Opens for ALL users */}
               <button
@@ -7007,15 +7011,6 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     {/* Gradient overlay - stronger at bottom for text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
-                    {/* Back Button - Floating top left */}
-                    <button
-                      onClick={() => router.back()}
-                      className="absolute top-4 left-4 flex items-center gap-1 text-white/90 hover:text-white text-sm bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full transition-colors z-20"
-                    >
-                      <ChevronDown className="w-4 h-4 rotate-90" />
-                      Back
-                    </button>
-
                     {/* Profile Info - Positioned at bottom of cover */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
                       <div className="max-w-screen-lg mx-auto">
@@ -7756,6 +7751,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           </div>
                         </div>
                       </div>
+                    )}
+
+                    {/* Profile Reels - Their Reels + Their Circle */}
+                    {viewingProfile?.id && (
+                      <ProfileReels
+                        profileId={viewingProfile.id}
+                        profileHandle={viewingProfile.userHandle}
+                        profileDisplayName={viewingProfile.displayName}
+                        profilePicture={viewingProfile.profilePicture}
+                      />
                     )}
 
                     {/* Tab Content */}
