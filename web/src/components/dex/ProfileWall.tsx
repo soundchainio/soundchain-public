@@ -3,12 +3,15 @@ import { gql, useQuery, useMutation } from '@apollo/client'
 import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { Button } from 'components/ui/button'
 import {
-  Send, Trash2, Pin, MessageCircle, ChevronDown, Flame, Play, Trophy,
-  TrendingUp, Sparkles, Users, BadgeCheck, Music, BarChart3, Eye, Disc3,
+  Send, Trash2, Pin, MessageCircle, ChevronDown, Play, Heart,
+  Users, BadgeCheck, Music, Disc3, Headphones, TrendingUp,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
-import { useTracksQuery, useExploreUsersQuery, SortTrackField, SortOrder } from 'lib/graphql'
+import {
+  useGroupedTracksQuery, useFollowingLazyQuery, useFollowersLazyQuery,
+  SortTrackField, SortOrder,
+} from 'lib/graphql'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 
 const WALL_POSTS_QUERY = gql`
@@ -85,46 +88,50 @@ interface ProfileWallProps {
   isOwnProfile: boolean
   viewerProfileId?: string
   profileName?: string
+  walletAddress?: string
 }
 
-export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileName }: ProfileWallProps) {
+export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileName, walletAddress }: ProfileWallProps) {
   const [body, setBody] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyBody, setReplyBody] = useState('')
   const [page, setPage] = useState(1)
   const { playlistState } = useAudioPlayerContext()
 
+  // Wall posts
   const { data, loading, refetch } = useQuery(WALL_POSTS_QUERY, {
     variables: { profileId, page: { first: 20 * page } },
     fetchPolicy: 'cache-and-network',
   })
 
-  // Trending tracks
-  const { data: trendingData } = useTracksQuery({
+  // THIS USER's tracks (what they created)
+  const { data: userTracksData } = useGroupedTracksQuery({
     variables: {
+      filter: { profileId },
+      sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
       page: { first: 8 },
-      sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
     },
+    skip: !profileId,
   })
 
-  // Top NFT tracks
-  const { data: top100Data } = useTracksQuery({
-    variables: {
-      page: { first: 100 },
-      sort: { field: SortTrackField.PlaybackCount, order: SortOrder.Desc },
-    },
-  })
+  // THIS USER's following (their friends)
+  const [fetchFollowing, { data: followingData, called: followingCalled }] = useFollowingLazyQuery()
+  const [fetchFollowers, { data: followersData, called: followersCalled }] = useFollowersLazyQuery()
 
-  // Featured users
-  const { data: usersData } = useExploreUsersQuery({
-    variables: { page: { first: 8 } },
-  })
+  // Lazy-load friends when component mounts
+  React.useEffect(() => {
+    if (profileId && !followingCalled) {
+      fetchFollowing({ variables: { profileId, page: { first: 12 } }, fetchPolicy: 'cache-and-network' })
+    }
+    if (profileId && !followersCalled) {
+      fetchFollowers({ variables: { profileId, page: { first: 200 } }, fetchPolicy: 'cache-and-network' })
+    }
+  }, [profileId, followingCalled, followersCalled, fetchFollowing, fetchFollowers])
 
-  const trendingTracks = trendingData?.tracks?.nodes || []
-  const featuredUsers = usersData?.exploreUsers?.nodes || []
-  const top100NftTracks = (top100Data?.tracks?.nodes || [])
-    .filter((track: any) => track.nftData?.tokenId || track.nftData?.contract)
-    .slice(0, 12)
+  const userTracks = userTracksData?.groupedTracks?.nodes || []
+  const following = followingData?.following?.nodes?.map((n: any) => n.followedProfile).filter(Boolean) || []
+  const followersCount = followersData?.followers?.pageInfo?.totalCount || 0
+  const followingCount = followingData?.following?.pageInfo?.totalCount || 0
 
   const handlePlayTrack = (tracks: any[], index: number) => {
     const playlist: Song[] = tracks.map(t => ({
@@ -173,10 +180,11 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
     return 0
   })
 
+  const displayName = profileName || 'This user'
+
   return (
     <div className="space-y-4">
       {/* === WALL MESSAGE BOARD (top of dashboard) === */}
-      {/* Write input */}
       {viewerProfileId && (
         <div className="flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
           <div className="flex-1">
@@ -242,7 +250,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                     </div>
                     <p className="text-gray-300 text-sm mt-1 whitespace-pre-wrap break-words">{post.body}</p>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}
@@ -271,7 +278,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                       )}
                     </div>
 
-                    {/* Threaded replies */}
                     {post.replies?.length > 0 && (
                       <div className="mt-3 ml-2 pl-3 border-l-2 border-white/10 space-y-2">
                         {post.replies.map((reply: any) => (
@@ -296,7 +302,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                       </div>
                     )}
 
-                    {/* Reply input */}
                     {replyingTo === post.id && viewerProfileId && (
                       <div className="mt-3 ml-2 pl-3 border-l-2 border-cyan-500/30 flex items-center gap-2">
                         <input
@@ -328,7 +333,6 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
           </div>
         )}
 
-        {/* Load more */}
         {pageInfo?.hasNextPage && (
           <div className="text-center pt-3">
             <Button
@@ -344,146 +348,159 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
         )}
       </div>
 
-      {/* === AGGREGATOR DASHBOARD — Pill Card Grid === */}
+      {/* === PERSONALIZED DASHBOARD — All about this user === */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
-        {/* Trending Tracks Card */}
-        <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-neutral-900/80 via-orange-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center flex-shrink-0">
-              <Flame className="w-3.5 h-3.5 text-white" />
-            </div>
-            <h3 className="text-white font-bold text-sm">Trending</h3>
-            <Link href="/dex/explore" className="ml-auto text-[10px] text-orange-400 hover:text-orange-300">See all</Link>
-          </div>
-          <div className="space-y-1.5">
-            {trendingTracks.slice(0, 5).map((track, index) => (
-              <div
-                key={track.id}
-                className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer"
-                onClick={() => handlePlayTrack(trendingTracks, index)}
-              >
-                <span className={`w-4 text-center font-bold text-xs ${
-                  index === 0 ? 'text-orange-400' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-600'
-                }`}>{index + 1}</span>
-                <div className="w-9 h-9 rounded-lg overflow-hidden relative flex-shrink-0">
-                  <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt="" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Play className="w-3 h-3 text-white" fill="white" />
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-xs font-medium truncate group-hover:text-orange-400 transition-colors">{track.title}</p>
-                  <p className="text-gray-500 text-[10px] truncate">{track.artist}</p>
-                </div>
-                <span className="text-gray-600 text-[10px] flex items-center gap-0.5 flex-shrink-0">
-                  <TrendingUp className="w-2.5 h-2.5" />
-                  {track.playbackCountFormatted || '0'}
-                </span>
-              </div>
-            ))}
-            {trendingTracks.length === 0 && <p className="text-gray-600 text-xs text-center py-3">No trending tracks</p>}
-          </div>
-        </div>
-
-        {/* Top NFTs Card */}
-        <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-br from-neutral-900/80 via-yellow-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center flex-shrink-0">
-              <Trophy className="w-3.5 h-3.5 text-white" />
-            </div>
-            <h3 className="text-white font-bold text-sm">Top NFTs</h3>
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {top100NftTracks.slice(0, 8).map((track: any, index: number) => (
-              <button
-                key={track.id}
-                className="group relative aspect-square rounded-xl overflow-hidden bg-gray-800 hover:ring-2 hover:ring-yellow-400/60 transition-all"
-                onClick={() => handlePlayTrack(top100NftTracks, index)}
-                title={`#${index + 1} ${track.title}`}
-              >
-                <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt="" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute top-1 left-1 bg-black/70 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-yellow-400">
-                  #{index + 1}
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-[9px] text-white truncate font-medium">{track.title}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-          {top100NftTracks.length === 0 && <p className="text-gray-600 text-xs text-center py-3">No NFT tracks</p>}
-        </div>
-
-        {/* Featured Artists Card */}
-        <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-neutral-900/80 via-purple-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-            </div>
-            <h3 className="text-white font-bold text-sm">Artists</h3>
-            <Link href="/dex/users" className="ml-auto text-[10px] text-purple-400 hover:text-purple-300">Discover</Link>
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {featuredUsers.slice(0, 8).map((user) => (
-              <Link
-                key={user.id}
-                href={`/dex/users/${user.userHandle}`}
-                className="flex flex-col items-center gap-1 p-1.5 rounded-xl hover:bg-white/5 transition-colors group"
-              >
-                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-purple-500/20 group-hover:ring-purple-500/50 transition-all">
-                  <img
-                    src={user.profilePicture || '/images/default-avatar.png'}
-                    alt={user.displayName || user.userHandle || ''}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex items-center gap-0.5">
-                  <span className="text-[10px] text-gray-400 truncate max-w-[60px] group-hover:text-white transition-colors">
-                    {user.displayName || user.userHandle}
-                  </span>
-                  {user.verified && <BadgeCheck className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />}
-                </div>
-              </Link>
-            ))}
-          </div>
-          {featuredUsers.length === 0 && <p className="text-gray-600 text-xs text-center py-3">No artists yet</p>}
-        </div>
-
-        {/* Platform Stats Card */}
+        {/* Their Music */}
         <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-neutral-900/80 via-cyan-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center flex-shrink-0">
-              <BarChart3 className="w-3.5 h-3.5 text-white" />
+              <Headphones className="w-3.5 h-3.5 text-white" />
             </div>
-            <h3 className="text-white font-bold text-sm">Platform</h3>
+            <h3 className="text-white font-bold text-sm">{isOwnProfile ? 'My Music' : `${displayName}'s Music`}</h3>
+            <span className="ml-auto text-[10px] text-cyan-400">
+              {userTracksData?.groupedTracks?.pageInfo?.totalCount || userTracks.length} tracks
+            </span>
+          </div>
+          {userTracks.length > 0 ? (
+            <div className="space-y-1.5">
+              {userTracks.slice(0, 5).map((track: any, index: number) => (
+                <div
+                  key={track.id}
+                  className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/5 transition-colors group cursor-pointer"
+                  onClick={() => handlePlayTrack(userTracks, index)}
+                >
+                  <div className="w-9 h-9 rounded-lg overflow-hidden relative flex-shrink-0">
+                    <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Play className="w-3 h-3 text-white" fill="white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white text-xs font-medium truncate group-hover:text-cyan-400 transition-colors">{track.title}</p>
+                    <p className="text-gray-500 text-[10px] truncate">{track.artist}</p>
+                  </div>
+                  <span className="text-gray-600 text-[10px] flex items-center gap-0.5 flex-shrink-0">
+                    <TrendingUp className="w-2.5 h-2.5" />
+                    {track.playbackCountFormatted || '0'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 text-xs text-center py-6">
+              <Music className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              {isOwnProfile ? 'Upload your first track!' : 'No tracks yet'}
+            </p>
+          )}
+        </div>
+
+        {/* Their Friends / Following */}
+        <div className="rounded-2xl border border-purple-500/20 bg-gradient-to-br from-neutral-900/80 via-purple-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+              <Users className="w-3.5 h-3.5 text-white" />
+            </div>
+            <h3 className="text-white font-bold text-sm">{isOwnProfile ? 'My Circle' : `${displayName}'s Circle`}</h3>
+            <span className="ml-auto text-[10px] text-purple-400">
+              {followingCount} following
+            </span>
+          </div>
+          {following.length > 0 ? (
+            <div className="grid grid-cols-4 gap-2">
+              {following.slice(0, 8).map((user: any) => (
+                <Link
+                  key={user.id}
+                  href={`/dex/users/${user.userHandle}`}
+                  className="flex flex-col items-center gap-1 p-1.5 rounded-xl hover:bg-white/5 transition-colors group"
+                >
+                  <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-purple-500/20 group-hover:ring-purple-500/50 transition-all">
+                    <img
+                      src={user.profilePicture || '/images/default-avatar.png'}
+                      alt={user.displayName || user.userHandle || ''}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    <span className="text-[10px] text-gray-400 truncate max-w-[60px] group-hover:text-white transition-colors">
+                      {user.displayName || user.userHandle}
+                    </span>
+                    {user.verified && <BadgeCheck className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-600 text-xs text-center py-6">
+              <Heart className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              {isOwnProfile ? 'Follow artists to fill your circle!' : 'Not following anyone yet'}
+            </p>
+          )}
+        </div>
+
+        {/* Their Collection — NFT artwork grid */}
+        {userTracks.filter((t: any) => t.nftData?.tokenId || t.nftData?.contract).length > 0 && (
+          <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-neutral-900/80 via-amber-950/10 to-neutral-900/80 p-4 backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center flex-shrink-0">
+                <Disc3 className="w-3.5 h-3.5 text-white" />
+              </div>
+              <h3 className="text-white font-bold text-sm">{isOwnProfile ? 'My Collection' : 'Collection'}</h3>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {userTracks
+                .filter((t: any) => t.nftData?.tokenId || t.nftData?.contract)
+                .slice(0, 8)
+                .map((track: any, index: number) => (
+                  <button
+                    key={track.id}
+                    className="group relative aspect-square rounded-xl overflow-hidden bg-gray-800 hover:ring-2 hover:ring-amber-400/60 transition-all"
+                    onClick={() => handlePlayTrack(userTracks.filter((t: any) => t.nftData?.tokenId || t.nftData?.contract), index)}
+                    title={track.title}
+                  >
+                    <img src={track.artworkUrl ?? '/images/default-artwork.png'} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="absolute bottom-0 left-0 right-0 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <p className="text-[9px] text-white truncate font-medium">{track.title}</p>
+                    </div>
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quick Stats — about THIS user */}
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-neutral-900/80 via-neutral-800/10 to-neutral-900/80 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center flex-shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 text-white" />
+            </div>
+            <h3 className="text-white font-bold text-sm">Stats</h3>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl bg-white/5 p-3 text-center">
-              <Disc3 className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
-              <p className="text-white font-bold text-lg">{trendingTracks.length > 0 ? '600+' : '—'}</p>
-              <p className="text-gray-500 text-[10px]">NFT Tracks</p>
+              <Music className="w-4 h-4 text-cyan-400 mx-auto mb-1" />
+              <p className="text-white font-bold text-lg">{userTracksData?.groupedTracks?.pageInfo?.totalCount || userTracks.length}</p>
+              <p className="text-gray-500 text-[10px]">Tracks</p>
             </div>
             <div className="rounded-xl bg-white/5 p-3 text-center">
               <Users className="w-4 h-4 text-purple-400 mx-auto mb-1" />
-              <p className="text-white font-bold text-lg">{featuredUsers.length > 0 ? `${featuredUsers.length}+` : '—'}</p>
-              <p className="text-gray-500 text-[10px]">Artists</p>
+              <p className="text-white font-bold text-lg">{followersCount}</p>
+              <p className="text-gray-500 text-[10px]">Followers</p>
             </div>
             <div className="rounded-xl bg-white/5 p-3 text-center">
-              <Eye className="w-4 h-4 text-green-400 mx-auto mb-1" />
+              <Heart className="w-4 h-4 text-pink-400 mx-auto mb-1" />
+              <p className="text-white font-bold text-lg">{followingCount}</p>
+              <p className="text-gray-500 text-[10px]">Following</p>
+            </div>
+            <div className="rounded-xl bg-white/5 p-3 text-center">
+              <MessageCircle className="w-4 h-4 text-orange-400 mx-auto mb-1" />
               <p className="text-white font-bold text-lg">{pageInfo?.totalCount || 0}</p>
               <p className="text-gray-500 text-[10px]">Wall Posts</p>
-            </div>
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <Music className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-              <p className="text-white font-bold text-lg">0.05%</p>
-              <p className="text-gray-500 text-[10px]">Platform Fee</p>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   )
 }
