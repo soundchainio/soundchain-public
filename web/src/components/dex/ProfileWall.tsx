@@ -434,73 +434,70 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   }
 
   // Render wall post body with auto-embeds + emote support
+  // Strategy: extract embed-able URLs (YouTube/Spotify/etc) for rich rendering,
+  // then let EmoteRenderer handle ALL remaining text (emotes + plain URLs) in one pass.
+  // This avoids splitting emote markdown like ![emote:X](cdn-url) on the URL part.
   const renderBody = (text: string) => {
-    // Check for emote markdown
     const hasEmotes = text.includes('![emote:') || text.includes('[!emote:') || text.includes('[emote:')
 
-    // Strip emote markdown before URL detection to avoid splitting CDN URLs inside emote syntax
-    // e.g. ![emote:KEKW](https://cdn.7tv.app/emote/xxx/2x) should NOT be split on the CDN URL
-    const textWithoutEmotes = text.replace(/!\[emote:[^\]]*\]\([^)]*\)/g, '')
+    // Strip emote markdown before looking for embed-able URLs
+    const textWithoutEmotes = text.replace(/!?\[!?emote:[^\]]*\]\([^)]*\)/g, '')
 
-    // Use non-global regex for URL detection (avoids lastIndex bugs)
-    const urlPattern = /https?:\/\/[^\s]+/
-    const hasUrls = urlPattern.test(textWithoutEmotes)
+    // Find embed-able URLs (YouTube, Vimeo, Spotify, SoundCloud, Bandcamp) in the non-emote text
+    const embedUrlRegex = /https?:\/\/[^\s]+/g
+    const embedUrls: string[] = []
+    let urlMatch
+    while ((urlMatch = embedUrlRegex.exec(textWithoutEmotes)) !== null) {
+      const url = urlMatch[0]
+      // Only extract URLs that are embed-able (have a recognized media source)
+      const source = IdentifySource(url).type
+      if (source) embedUrls.push(url)
+    }
 
-    // Simple text with no URLs or emotes
-    if (!hasUrls && !hasEmotes) return <span>{text}</span>
+    // No embeds and no emotes — plain text
+    if (embedUrls.length === 0 && !hasEmotes) {
+      // Check for plain URLs to linkify
+      if (/https?:\/\//.test(text)) {
+        return <EmoteRenderer text={text} linkify />
+      }
+      return <span>{text}</span>
+    }
 
-    // If only emotes, no URLs — use EmoteRenderer with linkify
-    if (!hasUrls && hasEmotes) {
+    // No embed URLs — let EmoteRenderer handle emotes + linkify plain URLs
+    if (embedUrls.length === 0) {
       return <EmoteRenderer text={text} linkify />
     }
 
-    // Has URLs — split on URLs but preserve emote markdown
-    // First, extract emote tokens and replace with placeholders
-    const emoteTokens: string[] = []
-    const textWithPlaceholders = text.replace(/!\[emote:[^\]]*\]\([^)]*\)/g, (match) => {
-      emoteTokens.push(match)
-      return `__EMOTE_${emoteTokens.length - 1}__`
-    })
+    // Has embed URLs — extract them from the original text for rich rendering
+    // Build segments: text chunks (rendered via EmoteRenderer) and embed URLs (rendered as players)
+    const segments: { type: 'text' | 'embed'; content: string }[] = []
+    let remaining = text
 
-    // Now split on URLs (using capturing group to keep URLs in results)
-    const urlSplitRegex = /(https?:\/\/[^\s]+)/g
-    const parts = textWithPlaceholders.split(urlSplitRegex)
-    if (parts.length === 1) return hasEmotes ? <EmoteRenderer text={text} linkify /> : <span>{text}</span>
+    for (const embedUrl of embedUrls) {
+      const idx = remaining.indexOf(embedUrl)
+      if (idx === -1) continue
+      // Text before this embed URL
+      const before = remaining.slice(0, idx)
+      if (before.trim()) segments.push({ type: 'text', content: before })
+      segments.push({ type: 'embed', content: embedUrl })
+      remaining = remaining.slice(idx + embedUrl.length)
+    }
+    // Remaining text after all embeds
+    if (remaining.trim()) segments.push({ type: 'text', content: remaining })
 
     return (
       <>
-        {parts.map((part, i) => {
-          // Check if this part is a URL
-          if (!urlPattern.test(part)) {
-            // Restore emote placeholders in non-URL text
-            let restored = part
-            emoteTokens.forEach((token, idx) => {
-              restored = restored.replace(`__EMOTE_${idx}__`, token)
-            })
-            return restored.trim() ? (
-              hasEmotes || restored.includes('![emote:')
-                ? <EmoteRenderer key={i} text={restored} />
-                : <span key={i}>{restored}</span>
-            ) : null
+        {segments.map((seg, i) => {
+          if (seg.type === 'text') {
+            // EmoteRenderer handles emotes + linkifies any remaining plain URLs
+            return <EmoteRenderer key={i} text={seg.content} linkify />
           }
 
-          // Skip CDN URLs that were part of emote markdown (shouldn't reach here after placeholder stripping)
-          if (part.includes('cdn.7tv.app/emote/') || part.includes('cdn.betterttv.net/emote/') || part.includes('cdn.frankerfacez.com/')) {
-            return null
-          }
-
-          const mediaUrl = part.replace(/^http:/, 'https:')
-          const source = IdentifySource(part).type
-          if (!source) {
-            return (
-              <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline inline-flex items-center gap-0.5 break-all">
-                {part.length > 50 ? part.slice(0, 50) + '...' : part}
-                <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
-              </a>
-            )
-          }
+          // Render embed URL as ReactPlayer or iframe
+          const mediaUrl = seg.content.replace(/^http:/, 'https:')
           const isPlaylist = mediaUrl.includes('listType=playlist') || mediaUrl.includes('videoseries') || mediaUrl.includes('list=')
-          const useReactPlayer = !isPlaylist && hasLazyLoadWithThumbnailSupport(part)
+          const useReactPlayer = !isPlaylist && hasLazyLoadWithThumbnailSupport(seg.content)
+
           if (useReactPlayer) {
             return (
               <div key={i} className="relative w-full mt-2 mb-1 rounded-xl overflow-hidden"

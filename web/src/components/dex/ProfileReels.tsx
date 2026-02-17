@@ -405,33 +405,27 @@ export const ProfileReels = ({ profileId, profileHandle, profileDisplayName, pro
     return Object.values(grouped)
   }, [publicStoriesData, followingIds, profileId])
 
-  // Don't render anything if there are no stories at all
   const hasReels = theirReelsBubbles.length > 0
   const hasCircle = circleStoriesBubbles.length > 0
-  if (!hasReels && !hasCircle) return null
 
   return (
     <div className="mb-4 bg-black/30 backdrop-blur-sm rounded-xl p-3 border border-white/5">
-      {hasReels && (
-        <ReelRow
-          title={`${profileDisplayName || profileHandle}'s Reels`}
-          icon={<Film className="w-3.5 h-3.5 text-cyan-400" />}
-          bubbles={theirReelsBubbles}
-          accentColor="from-cyan-500 via-purple-500 to-pink-500"
-          storyUsers={theirReelsStoryUsers}
-          emptyMessage="No reels yet"
-        />
-      )}
-      {hasCircle && (
-        <ReelRow
-          title={`${profileDisplayName || profileHandle}'s Circle`}
-          icon={<Users className="w-3.5 h-3.5 text-purple-400" />}
-          bubbles={circleStoriesBubbles}
-          accentColor="from-purple-500 via-pink-500 to-orange-500"
-          storyUsers={circleStoryUsers}
-          emptyMessage="No circle stories"
-        />
-      )}
+      <ReelRow
+        title={`${profileDisplayName || profileHandle}'s Reels`}
+        icon={<Film className="w-3.5 h-3.5 text-cyan-400" />}
+        bubbles={theirReelsBubbles}
+        accentColor="from-cyan-500 via-purple-500 to-pink-500"
+        storyUsers={theirReelsStoryUsers}
+        emptyMessage="No reels yet — create a story to start"
+      />
+      <ReelRow
+        title={`${profileDisplayName || profileHandle}'s Circle`}
+        icon={<Users className="w-3.5 h-3.5 text-purple-400" />}
+        bubbles={circleStoriesBubbles}
+        accentColor="from-purple-500 via-pink-500 to-orange-500"
+        storyUsers={circleStoryUsers}
+        emptyMessage="No circle stories yet"
+      />
     </div>
   )
 }

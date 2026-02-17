@@ -7651,7 +7651,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   {/* Main Content */}
                   <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
                     {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Shop | Playlists | Wall */}
-                    <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 bg-black/60 backdrop-blur-md rounded-full px-3 py-1.5">
+                    <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 bg-black/80 backdrop-blur-md rounded-full px-3 py-1.5 sticky top-0 z-30">
                       {/* Wall tab - FIRST (MySpace style, default open) */}
                       <Button
                         variant="ghost"
