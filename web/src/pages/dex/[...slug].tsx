@@ -49,7 +49,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, SortTrackField, SortOrder } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1868,46 +1868,40 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     chain: 'Polygon',
   })) || []
 
-  // Query to get followers list for viewed profile
-  const { data: viewingProfileFollowersData } = useFollowersQuery({
-    variables: {
-      profileId: viewingProfile?.id || '',
-      page: { first: 100 },
-    },
-    skip: !viewingProfile?.id || selectedView !== 'profile',
-    fetchPolicy: 'cache-first',
-  })
+  // Lazy queries for followers/following — fire when stats modal opens
+  const [fetchViewingFollowers, { data: viewingProfileFollowersData, loading: viewingFollowersLoading }] = useFollowersLazyQuery()
+  const [fetchViewingFollowing, { data: viewingProfileFollowingData, loading: viewingFollowingLoading }] = useFollowingLazyQuery()
 
-  // Query to get following list for viewed profile
-  const { data: viewingProfileFollowingData } = useFollowingQuery({
-    variables: {
-      profileId: viewingProfile?.id || '',
-      page: { first: 100 },
-    },
-    skip: !viewingProfile?.id || selectedView !== 'profile',
-    fetchPolicy: 'cache-first',
-  })
+  // Fire queries when stats modal or top friends picker opens
+  useEffect(() => {
+    if (profileStatsModal === 'followers' && viewingProfile?.id) {
+      fetchViewingFollowers({ variables: { profileId: viewingProfile.id, page: { first: 200 } }, fetchPolicy: 'network-only' })
+    }
+    if ((profileStatsModal === 'following' || showTopFriendsPicker) && viewingProfile?.id) {
+      fetchViewingFollowing({ variables: { profileId: viewingProfile.id, page: { first: 200 } }, fetchPolicy: 'network-only' })
+    }
+  }, [profileStatsModal, showTopFriendsPicker, viewingProfile?.id])
 
-  // Transform followers data for ProfileHeader (filter out null profiles)
+  // Transform followers data (filter out null profiles)
   const followersList = viewingProfileFollowersData?.followers?.nodes
     ?.filter(f => f?.followerProfile)
     ?.map(f => ({
       id: f.followerProfile.id,
       name: f.followerProfile.displayName || f.followerProfile.userHandle,
       username: `@${f.followerProfile.userHandle}`,
-      userHandle: f.followerProfile.userHandle, // For navigation
+      userHandle: f.followerProfile.userHandle,
       avatar: f.followerProfile.profilePicture || undefined,
       isVerified: f.followerProfile.verified || f.followerProfile.teamMember || false,
     })) || []
 
-  // Transform following data for ProfileHeader (filter out null profiles)
+  // Transform following data (filter out null profiles)
   const followingList = viewingProfileFollowingData?.following?.nodes
     ?.filter(f => f?.followedProfile)
     ?.map(f => ({
       id: f.followedProfile.id,
       name: f.followedProfile.displayName || f.followedProfile.userHandle,
       username: `@${f.followedProfile.userHandle}`,
-      userHandle: f.followedProfile.userHandle, // For navigation
+      userHandle: f.followedProfile.userHandle,
       avatar: f.followedProfile.profilePicture || undefined,
       isVerified: f.followedProfile.verified || f.followedProfile.teamMember || false,
     })) || []
@@ -7102,13 +7096,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </button>
                       </div>
 
-                      {/* Stats Overlay Modal */}
+                      {/* Stats Overlay Modal — fixed centered, portal-style */}
                       {profileStatsModal && (
-                        <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[15vh]" onClick={() => setProfileStatsModal(null)}>
-                          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                          <div className="relative w-[90vw] max-w-md bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl max-h-[60vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setProfileStatsModal(null)}>
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+                          <div className="relative w-full max-w-lg bg-neutral-900 border border-white/10 rounded-2xl shadow-2xl max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                             {/* Header */}
-                            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 sticky top-0 bg-neutral-900 z-10">
                               <h3 className="text-white font-bold text-sm">
                                 {profileStatsModal === 'tracks' && `${viewingProfileTrackCount} Tracks`}
                                 {profileStatsModal === 'followers' && `${viewingProfile.followerCount?.toLocaleString() || 0} Followers`}
@@ -7118,10 +7112,10 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 <X className="w-4 h-4 text-gray-400" />
                               </button>
                             </div>
-                            {/* Content */}
-                            <div className="overflow-y-auto max-h-[50vh] p-3">
+                            {/* Content — scrollable */}
+                            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(80vh - 52px)' }}>
                               {profileStatsModal === 'tracks' && (
-                                <div className="grid grid-cols-4 gap-2">
+                                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                                   {viewingProfileNFTs.map((track: any, idx: number) => (
                                     <button
                                       key={track.id}
@@ -7148,50 +7142,66 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                 </div>
                               )}
                               {profileStatsModal === 'followers' && (
-                                <div className="grid grid-cols-5 gap-3">
-                                  {followersList.map((user: any) => (
-                                    <button
-                                      key={user.id}
-                                      onClick={() => { router.push(`/dex/users/${user.userHandle}`); setProfileStatsModal(null); }}
-                                      className="flex flex-col items-center gap-1 hover:bg-white/5 rounded-lg p-2 transition-colors"
-                                    >
-                                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800">
-                                        {user.avatar ? (
-                                          <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                          <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
-                                        )}
-                                      </div>
-                                      <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
-                                    </button>
-                                  ))}
-                                  {followersList.length === 0 && (
-                                    <div className="col-span-5 text-center py-8 text-gray-500 text-sm">No followers yet</div>
+                                <>
+                                  {viewingFollowersLoading && followersList.length === 0 ? (
+                                    <div className="flex items-center justify-center py-8">
+                                      <div className="animate-spin w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                                    </div>
+                                  ) : (
+                                    <div className="grid grid-cols-5 gap-3">
+                                      {followersList.map((user: any) => (
+                                        <button
+                                          key={user.id}
+                                          onClick={() => { router.push(`/dex/users/${user.userHandle}`); setProfileStatsModal(null); }}
+                                          className="flex flex-col items-center gap-1.5 hover:bg-white/5 rounded-xl p-2 transition-colors"
+                                        >
+                                          <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-800 ring-2 ring-white/5">
+                                            {user.avatar ? (
+                                              <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                              <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
+                                            )}
+                                          </div>
+                                          <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
+                                        </button>
+                                      ))}
+                                      {followersList.length === 0 && (
+                                        <div className="col-span-5 text-center py-8 text-gray-500 text-sm">No followers yet</div>
+                                      )}
+                                    </div>
                                   )}
-                                </div>
+                                </>
                               )}
                               {profileStatsModal === 'following' && (
-                                <div className="grid grid-cols-5 gap-3">
-                                  {followingList.map((user: any) => (
-                                    <button
-                                      key={user.id}
-                                      onClick={() => { router.push(`/dex/users/${user.userHandle}`); setProfileStatsModal(null); }}
-                                      className="flex flex-col items-center gap-1 hover:bg-white/5 rounded-lg p-2 transition-colors"
-                                    >
-                                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800">
-                                        {user.avatar ? (
-                                          <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                          <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
-                                        )}
-                                      </div>
-                                      <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
-                                    </button>
-                                  ))}
-                                  {followingList.length === 0 && (
-                                    <div className="col-span-5 text-center py-8 text-gray-500 text-sm">No following yet</div>
+                                <>
+                                  {viewingFollowingLoading && followingList.length === 0 ? (
+                                    <div className="flex items-center justify-center py-8">
+                                      <div className="animate-spin w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full" />
+                                    </div>
+                                  ) : (
+                                    <div className="grid grid-cols-5 gap-3">
+                                      {followingList.map((user: any) => (
+                                        <button
+                                          key={user.id}
+                                          onClick={() => { router.push(`/dex/users/${user.userHandle}`); setProfileStatsModal(null); }}
+                                          className="flex flex-col items-center gap-1.5 hover:bg-white/5 rounded-xl p-2 transition-colors"
+                                        >
+                                          <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-800 ring-2 ring-white/5">
+                                            {user.avatar ? (
+                                              <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                              <div className="w-full h-full flex items-center justify-center"><User className="w-4 h-4 text-gray-600" /></div>
+                                            )}
+                                          </div>
+                                          <span className="text-[10px] text-gray-400 truncate w-full text-center">{user.name}</span>
+                                        </button>
+                                      ))}
+                                      {followingList.length === 0 && (
+                                        <div className="col-span-5 text-center py-8 text-gray-500 text-sm">No following yet</div>
+                                      )}
+                                    </div>
                                   )}
-                                </div>
+                                </>
                               )}
                             </div>
                           </div>
