@@ -28,4 +28,7 @@ export class UpdateProfileInput {
 
   @Field(() => SocialMedias, { nullable: true })
   socialMedias: SocialMedias;
+
+  @Field(() => String, { nullable: true })
+  featuredTrackId?: string;
 }

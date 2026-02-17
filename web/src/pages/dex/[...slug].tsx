@@ -37,7 +37,7 @@ import { WalletConnectButton } from 'components/dex/WalletConnectButton'
 import { GenreSection } from 'components/dex/GenreSection'
 import { TopChartsSection } from 'components/dex/TopChartsSection'
 import { GenreLeaderboard } from 'components/dex/GenreLeaderboard'
-import { gql, useQuery } from '@apollo/client'
+import { gql, useQuery, useMutation } from '@apollo/client'
 import { TokenCard } from 'components/dex/TokenCard'
 import { BundleCard } from 'components/dex/BundleCard'
 import { MarketplaceView } from 'components/dex/MarketplaceView'
@@ -75,7 +75,7 @@ import {
   Users, MessageCircle, Share2, Copy, Trophy, Flame, Rocket, Heart, Server,
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
-  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText, Tag
+  Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText, Tag, MessageSquare, Eye, Volume2
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
@@ -106,6 +106,7 @@ const StakingPanel = dynamic(() => import('components/dex/StakingPanel'), { ssr:
 const CreateTokenListingModal = dynamic(() => import('components/modals/CreateTokenListingModal').then(mod => ({ default: mod.CreateTokenListingModal })), { ssr: false })
 const CreateBundleListingModal = dynamic(() => import('components/modals/CreateBundleListingModal').then(mod => ({ default: mod.CreateBundleListingModal })), { ssr: false })
 const ListNFTModal = dynamic(() => import('components/modals/ListNFTModal').then(mod => ({ default: mod.ListNFTModal })), { ssr: false })
+const ProfileWall = dynamic(() => import('components/dex/ProfileWall').then(mod => ({ default: mod.ProfileWall })), { ssr: false })
 
 // Staking contract helper for fetching staked OGUN balance
 const tokenStakeContractAddress = config.tokenStakeContractAddress as string
@@ -148,6 +149,40 @@ const MY_LISTENER_REWARDS_QUERY = gql`
       totalEarned
       dailyLimit
       tracksStreamedToday
+    }
+  }
+`
+
+// Profile view logging mutation
+const LOG_PROFILE_VIEW_MUTATION = gql`
+  mutation LogProfileView($viewedProfileId: String!) {
+    logProfileView(viewedProfileId: $viewedProfileId)
+  }
+`
+
+// Featured track query for auto-play on profile visit
+const FEATURED_TRACK_QUERY = gql`
+  query FeaturedTrack($profileId: String!) {
+    profile(id: $profileId) {
+      id
+      featuredTrackId
+      featuredTrack {
+        id
+        title
+        assetUrl
+        artist
+        artworkUrl
+      }
+    }
+  }
+`
+
+// Profile view count query
+const PROFILE_VIEW_COUNT_QUERY = gql`
+  query ProfileViewCount($profileId: String!) {
+    profileViewCount(profileId: $profileId) {
+      total
+      today
     }
   }
 `
@@ -1016,7 +1051,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showTop100Modal, setShowTop100Modal] = useState(false)
 
   // Profile tab state (Feed | Music | Playlists)
-  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'shop' | 'playlists'>('myfeed')
+  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'shop' | 'playlists' | 'wall'>('myfeed')
 
   // Bio accordion state - collapsible bio panel for own profile
   const [isBioExpanded, setIsBioExpanded] = useState(false)
@@ -1931,6 +1966,56 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       }
     }
   }, [selectedView, isViewingOwnProfile])
+
+  // --- MySpace Visibility: Profile View Counter ---
+  const [logProfileView] = useMutation(LOG_PROFILE_VIEW_MUTATION)
+
+  // Log profile view when visiting another user's profile
+  useEffect(() => {
+    if (selectedView === 'profile' && viewingProfile?.id && !isViewingOwnProfile && me?.profile?.id) {
+      logProfileView({ variables: { viewedProfileId: viewingProfile.id } }).catch(() => {})
+    }
+  }, [selectedView, viewingProfile?.id, isViewingOwnProfile, me?.profile?.id])
+
+  // Fetch view count for the profile being viewed
+  const { data: viewCountData } = useQuery(PROFILE_VIEW_COUNT_QUERY, {
+    variables: { profileId: viewingProfile?.id || '' },
+    skip: !viewingProfile?.id || selectedView !== 'profile',
+    fetchPolicy: 'cache-and-network',
+  })
+
+  // --- MySpace Visibility: Auto-Play Featured Track ---
+  const { data: featuredTrackData } = useQuery(FEATURED_TRACK_QUERY, {
+    variables: { profileId: viewingProfile?.id || '' },
+    skip: !viewingProfile?.id || selectedView !== 'profile' || isViewingOwnProfile,
+    fetchPolicy: 'cache-first',
+  })
+
+  // Auto-play state
+  const [showNowPlaying, setShowNowPlaying] = useState(false)
+
+  // Auto-play featured track on profile visit (session dedup)
+  useEffect(() => {
+    if (selectedView !== 'profile' || isViewingOwnProfile || !viewingProfile?.id) return
+    const ft = featuredTrackData?.profile?.featuredTrack
+    if (!ft?.assetUrl) return
+
+    const sessionKey = `autoplay-${viewingProfile.id}`
+    if (sessionStorage.getItem(sessionKey)) return
+
+    sessionStorage.setItem(sessionKey, '1')
+    const song: Song = {
+      src: ft.assetUrl,
+      title: ft.title || 'Untitled',
+      trackId: ft.id,
+      artist: ft.artist || 'Unknown',
+      art: ft.artworkUrl || '',
+    }
+    play(song)
+    setShowNowPlaying(true)
+    // Hide banner after 8 seconds
+    setTimeout(() => setShowNowPlaying(false), 8000)
+  }, [selectedView, isViewingOwnProfile, viewingProfile?.id, featuredTrackData?.profile?.featuredTrack?.id])
 
   const { data: playlistsData, loading: playlistsLoading, error: playlistsError, refetch: refetchPlaylists } = useGetUserPlaylistsQuery({
     variables: {},
@@ -6863,6 +6948,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       {/* Stats Row - Compact */}
                       <div className="flex items-center gap-6 mt-3 text-sm">
                         <div className="flex items-center gap-1">
+                          <Eye className="w-3 h-3 text-gray-500" />
+                          <span className="font-bold text-white">
+                            {isViewingOwnProfile
+                              ? (viewCountData?.profileViewCount?.today || 0)
+                              : ((viewingProfile as any)?.profileViewCount?.toLocaleString() || viewCountData?.profileViewCount?.total || 0)}
+                          </span>
+                          <span className="text-gray-500">{isViewingOwnProfile ? 'views today' : 'views'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
                           <span className="font-bold text-white">{viewingProfileTrackCount}</span>
                           <span className="text-gray-500">Tracks</span>
                         </div>
@@ -7038,9 +7132,30 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     </div>
                   )}
 
+                  {/* Now Playing Banner — auto-play featured track */}
+                  {showNowPlaying && featuredTrackData?.profile?.featuredTrack && (
+                    <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6 mb-4">
+                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-xl backdrop-blur-md animate-pulse">
+                        {featuredTrackData.profile.featuredTrack.artworkUrl && (
+                          <img src={featuredTrackData.profile.featuredTrack.artworkUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Volume2 className="w-4 h-4 text-cyan-400 animate-pulse" />
+                            <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">Now Playing</span>
+                          </div>
+                          <p className="text-white text-sm font-medium truncate">{featuredTrackData.profile.featuredTrack.title}</p>
+                        </div>
+                        <button onClick={() => setShowNowPlaying(false)} className="text-gray-400 hover:text-white">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Main Content */}
                   <div className="relative z-10 max-w-screen-2xl mx-auto px-4 lg:px-6">
-                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Shop | Playlists */}
+                    {/* Profile Tabs - My Feed (own profile only) | Posts | Music | Shop | Playlists | Wall */}
                     <div className="flex items-center gap-3 mb-6 overflow-x-auto scrollbar-hide pb-2 bg-black/60 backdrop-blur-md rounded-full px-3 py-1.5">
                       {/* My Feed tab - ONLY shown when viewing own profile */}
                       {isViewingOwnProfile && (
@@ -7093,6 +7208,16 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         <ListMusic className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'playlists' ? 'text-pink-400' : 'text-gray-400'}`} />
                         <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'playlists' ? 'pink-gradient-text text-transparent bg-clip-text' : 'text-gray-400'}`}>
                           Playlists
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setProfileTab('wall')}
+                        className={`flex-shrink-0 transition-all duration-300 hover:bg-orange-500/10 ${profileTab === 'wall' ? 'bg-orange-500/10' : ''}`}
+                      >
+                        <MessageSquare className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'wall' ? 'text-orange-400' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'wall' ? 'text-orange-400' : 'text-gray-400'}`}>
+                          Wall
                         </span>
                       </Button>
 
@@ -7314,6 +7439,14 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             </div>
                           )}
                         </div>
+                      )}
+                      {profileTab === 'wall' && (
+                        <ProfileWall
+                          profileId={viewingProfile.id}
+                          isOwnProfile={isViewingOwnProfile}
+                          viewerProfileId={me?.profile?.id}
+                          profileName={viewingProfile.displayName}
+                        />
                       )}
                     </div>
                   </div>

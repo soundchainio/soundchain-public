@@ -43,6 +43,8 @@ import { BookmarkResolver } from './BookmarkResolver';
 import { TrackCommentResolver } from './TrackCommentResolver';
 import { DeveloperResolver } from './DeveloperResolver';
 import { StoryResolver } from './StoryResolver';
+import { ProfileViewResolver } from './ProfileViewResolver';
+import { WallPostResolver } from './WallPostResolver';
 
 export const resolvers = [
   ActivityResolver,
@@ -90,4 +92,6 @@ export const resolvers = [
   TrackCommentResolver,
   DeveloperResolver,
   StoryResolver,
+  ProfileViewResolver,
+  WallPostResolver,
 ] as const;

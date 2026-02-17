@@ -7,6 +7,7 @@ export enum ActivityType {
   Followed = 'Followed',
   Minted = 'Minted',
   Posted = 'Posted',
+  WallPosted = 'WallPosted',
 }
 
 registerEnumType(ActivityType, {

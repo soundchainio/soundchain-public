@@ -90,6 +90,14 @@ export class Profile extends Model {
   @prop({ required: false, default: 0 })
   totalTracksStreamed?: number;
 
+  @Field(() => Number)
+  @prop({ required: true, default: 0 })
+  profileViewCount: number;
+
+  @Field(() => String, { nullable: true })
+  @prop({ required: false })
+  featuredTrackId?: string;
+
   @prop({ required: false })
   listenerDailyReset?: Date;
 

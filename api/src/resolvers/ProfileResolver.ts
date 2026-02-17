@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import { CurrentUser } from '../decorators/current-user';
 import { Profile } from '../models/Profile';
+import { Track, TrackModel } from '../models/Track';
 import { User } from '../models/User';
 import { Context } from '../types/Context';
 import { FollowedArtistsConnection } from '../types/FollowedArtistsConnection';
@@ -181,5 +182,21 @@ export class ProfileResolver {
       dailyLimit: rewards.dailyLimit,
       tracksStreamedToday: rewards.tracksStreamedToday || 0,
     };
+  }
+
+  @FieldResolver(() => Track, { nullable: true })
+  async featuredTrack(@Root() profile: Profile): Promise<Track | null> {
+    // If user set a featured track, fetch it
+    if ((profile as any).featuredTrackId) {
+      const track = await TrackModel.findById((profile as any).featuredTrackId).lean();
+      if (track) return track as unknown as Track;
+    }
+
+    // Fallback: user's most-streamed track
+    const topTrack = await TrackModel.findOne({ profileId: profile._id })
+      .sort({ playbackCount: -1 })
+      .lean();
+
+    return (topTrack as unknown as Track) || null;
   }
 }

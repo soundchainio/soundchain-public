@@ -1,0 +1,3 @@
+mutation DeleteWallPost($wallPostId: String!) {
+  deleteWallPost(wallPostId: $wallPostId)
+}

@@ -1,0 +1,6 @@
+query ProfileViewCount($profileId: String!) {
+  profileViewCount(profileId: $profileId) {
+    total
+    today
+  }
+}

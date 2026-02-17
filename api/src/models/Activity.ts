@@ -44,13 +44,20 @@ export interface PostedMetadata {
   hasMedia?: boolean;
 }
 
+export interface WallPostedMetadata {
+  wallPostId: string;
+  wallProfileId: string;
+  body?: string;
+}
+
 export type ActivityMetadata =
   | ListenedMetadata
   | LikedMetadata
   | CommentedMetadata
   | FollowedMetadata
   | MintedMetadata
-  | PostedMetadata;
+  | PostedMetadata
+  | WallPostedMetadata;
 
 @ObjectType()
 @index({ profileId: 1, createdAt: -1 })

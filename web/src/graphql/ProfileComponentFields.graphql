@@ -29,6 +29,8 @@ fragment ProfileComponentFields on Profile {
   teamMember
   magicWalletAddress
   badges
+  profileViewCount
+  featuredTrackId
   createdAt
   updatedAt
 }
