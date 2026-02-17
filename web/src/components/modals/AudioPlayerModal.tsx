@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import Asset from 'components/Asset/Asset'
 import { Modal } from 'components/Modal'
 import { TrackListItem } from 'components/TrackListItem'
-import { TrackShareButton } from 'components/TrackShareButton'
 import { useModalDispatch, useModalState } from 'contexts/ModalContext'
 import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
 import { useMe } from 'hooks/useMe'
@@ -22,15 +21,19 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { checkIsMobile } from 'utils/IsMobile'
-import { Flame, Share2, ChevronDown, BadgeCheck, ListMusic, SkipBack, SkipForward } from 'lucide-react'
+import { Flame, Share2, ChevronDown, BadgeCheck, ListMusic, SkipBack, SkipForward, Link2, MessageSquare, Film } from 'lucide-react'
 import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
 import dynamic from 'next/dynamic'
+import { toast } from 'react-toastify'
 
 // Default fallback artwork
 const DEFAULT_ARTWORK = '/default-pictures/album-artwork.png'
 
 // Dynamic import for WaveformWithComments (uses wavesurfer.js which needs client-side)
 const WaveformWithComments = dynamic(() => import('components/WaveformWithComments'), { ssr: false })
+
+// Dynamic import for CreateStoryModal
+const CreateStoryModal = dynamic(() => import('components/dex/CreateStoryModal').then(m => ({ default: m.default || m.CreateStoryModal })), { ssr: false })
 
 // Gradient Progress Bar Component
 const GradientProgressBar = ({
@@ -77,7 +80,7 @@ export const AudioPlayerModal = () => {
   const router = useRouter()
   const modalState = useModalState()
   const [toggleFavorite] = useToggleFavoriteMutation()
-  const { dispatchShowAudioPlayerModal } = useModalDispatch()
+  const { dispatchShowAudioPlayerModal, dispatchShowPostModal } = useModalDispatch()
   const {
     currentSong,
     isPlaying,
@@ -105,6 +108,9 @@ export const AudioPlayerModal = () => {
   const [showTotalPlaybackDuration, setShowTotalPlaybackDuration] = useState(true)
   const [isMobile, setIsMobile] = useState(true)
   const [artworkError, setArtworkError] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [showStoryModal, setShowStoryModal] = useState(false)
+  const shareMenuRef = useRef<HTMLDivElement>(null)
   const me = useMe()
 
   // Use artwork URL with fallback - track errors for background image
@@ -140,6 +146,45 @@ export const AudioPlayerModal = () => {
       router.push('/login')
     }
   }
+
+  const handleShareURL = async () => {
+    const url = `${window.location.origin}/tracks/${currentSong.trackId}`
+    try {
+      await navigator.share({
+        title: 'SoundChain',
+        text: `Listen to this SoundChain track: ${currentSong.title} - ${currentSong.artist}`,
+        url,
+      })
+    } catch {
+      await navigator.clipboard.writeText(url)
+      toast('URL copied to clipboard')
+    }
+    setShowShareMenu(false)
+  }
+
+  const handleShareAsPost = () => {
+    setShowShareMenu(false)
+    dispatchShowAudioPlayerModal(false)
+    dispatchShowPostModal({ show: true, trackId: currentSong.trackId })
+  }
+
+  const handleShareToStory = () => {
+    setShowShareMenu(false)
+    setShowStoryModal(true)
+  }
+
+  // Close share menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(e.target as Node)) {
+        setShowShareMenu(false)
+      }
+    }
+    if (showShareMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showShareMenu])
 
   useEffect(() => {
     handleClose()
@@ -194,13 +239,7 @@ export const AudioPlayerModal = () => {
 
             <h2 className="text-white font-semibold text-sm tracking-wide drop-shadow-lg">Now Playing</h2>
 
-            <div className="bg-black/30 backdrop-blur-sm rounded-full">
-              <TrackShareButton
-                trackId={currentSong.trackId}
-                title={currentSong.title}
-                artist={currentSong.artist}
-              />
-            </div>
+            <div className="w-10" /> {/* Spacer to balance header */}
           </div>
 
           {/* Spacer to push controls to bottom */}
@@ -317,6 +356,44 @@ export const AudioPlayerModal = () => {
                   className={`w-6 h-6 ${loopMode !== 'off' ? 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'text-white/60'}`}
                 />
               </button>
+
+              {/* Share */}
+              <div className="relative" ref={shareMenuRef}>
+                <button
+                  onClick={() => setShowShareMenu(!showShareMenu)}
+                  className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                  aria-label="Share"
+                >
+                  <Share2 className={`w-6 h-6 ${showShareMenu ? 'text-cyan-400' : 'text-white/60'}`} />
+                </button>
+
+                {/* Share Menu Popup */}
+                {showShareMenu && (
+                  <div className="absolute bottom-full mb-2 right-0 w-48 rounded-xl bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-150 z-50">
+                    <button
+                      onClick={handleShareURL}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors"
+                    >
+                      <Link2 className="w-4 h-4 text-cyan-400" />
+                      Share URL
+                    </button>
+                    <button
+                      onClick={handleShareAsPost}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors"
+                    >
+                      <MessageSquare className="w-4 h-4 text-purple-400" />
+                      Share as Post
+                    </button>
+                    <button
+                      onClick={handleShareToStory}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-white/10 transition-colors"
+                    >
+                      <Film className="w-4 h-4 text-pink-400" />
+                      Share to Story/Reel
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Volume Control - Desktop only */}
@@ -365,6 +442,20 @@ export const AudioPlayerModal = () => {
           </div>
         </div>
       </div>
+
+      {/* Story/Reel Creation Modal */}
+      {showStoryModal && (
+        <CreateStoryModal
+          isOpen={showStoryModal}
+          onClose={() => setShowStoryModal(false)}
+          prefillTrack={{
+            trackId: currentSong.trackId,
+            title: currentSong.title || 'Unknown Title',
+            artist: currentSong.artist || 'Unknown Artist',
+            artworkUrl: artworkUrl,
+          }}
+        />
+      )}
     </Modal>
   )
 }
