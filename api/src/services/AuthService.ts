@@ -296,9 +296,10 @@ export class AuthService extends Service {
     }
 
     if (!hdWalletAddress) {
-      // Clean up profile if HD wallet generation failed
-      await ProfileModel.deleteOne({ _id: profile._id });
-      throw new Error('HD wallet system not available. Please try again later.');
+      // HD wallet not available - proceed without blockchain wallet
+      // User can still use the platform; HD wallet will be generated later
+      // when HUMAN_WALLET_SEED is configured or on next login
+      console.log('[Auth] HD wallet not available for new account, proceeding without blockchain wallet');
     }
 
     // Create user with email as auth + HD wallet as on-chain identity

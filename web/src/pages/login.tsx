@@ -86,6 +86,7 @@ export default function LoginPage() {
   const [createTermsAccepted, setCreateTermsAccepted] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [createdWalletAddress, setCreatedWalletAddress] = useState<string | null>(null);
+  const [accountCreated, setAccountCreated] = useState(false);
   const [createHdAccountMutation] = useMutation(CREATE_HD_ACCOUNT_MUTATION);
 
   useEffect(() => {
@@ -270,7 +271,8 @@ export default function LoginPage() {
 
       if (data?.createHdAccount?.jwt) {
         const { jwt, hdWalletAddress } = data.createHdAccount;
-        setCreatedWalletAddress(hdWalletAddress);
+        setCreatedWalletAddress(hdWalletAddress || null);
+        setAccountCreated(true);
         await setJwt(jwt);
 
         setTimeout(() => {
@@ -530,11 +532,11 @@ export default function LoginPage() {
         <Overlay />
         <ContentContainer>
           {/* ========== CREATE ACCOUNT (HD Wallet) ========== */}
-          {loginMode === 'create' && !createdWalletAddress && (
+          {loginMode === 'create' && !accountCreated && (
             <div className="w-full rounded-xl bg-black/40 border border-cyan-500/30 p-4 backdrop-blur-sm">
               <div className="text-center mb-3">
                 <p className="text-sm font-semibold text-white">Create Your Account</p>
-                <p className="text-[10px] text-cyan-300 mt-0.5">Multi-chain HD wallet generated automatically</p>
+                <p className="text-[10px] text-cyan-300 mt-0.5">Stream. Earn. Own. LFG.</p>
               </div>
 
               {error && (
@@ -636,12 +638,18 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* HD Account Created Success */}
-          {createdWalletAddress && (
+          {/* Account Created Success */}
+          {accountCreated && (
             <div className="w-full rounded-xl bg-green-500/10 border border-green-500/30 p-4 text-center backdrop-blur-sm">
               <p className="text-green-400 font-semibold text-sm">Account Created!</p>
-              <p className="text-[10px] text-gray-400 mt-1">Your HD Wallet</p>
-              <p className="text-[10px] text-cyan-300 font-mono mt-0.5 break-all">{createdWalletAddress}</p>
+              {createdWalletAddress ? (
+                <>
+                  <p className="text-[10px] text-gray-400 mt-1">Your HD Wallet</p>
+                  <p className="text-[10px] text-cyan-300 font-mono mt-0.5 break-all">{createdWalletAddress}</p>
+                </>
+              ) : (
+                <p className="text-[10px] text-gray-400 mt-1">Welcome to SoundChain</p>
+              )}
               <div className="mt-3">
                 <div className="animate-spin w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full mx-auto"></div>
                 <p className="text-[10px] text-gray-400 mt-1">Redirecting to feed...</p>
