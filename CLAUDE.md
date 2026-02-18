@@ -11,14 +11,16 @@
 ### Summary
 Wall posts with uploaded audio files (non-SCid, non-NFT) couldn't be shared to stories/reels — Story button was gated to image/video only. Extended the full stack (backend + frontend) to support raw audio attachment on stories. Cover art displays as the reel visual while the music file plays in the background.
 
-### Fixes (Commit `e0a462c58`)
+### Fixes
 
-| Issue | Fix |
-|-------|-----|
-| **Story button missing on audio wall posts** | Added `mediaType === 'audio' && post.coverArtUrl` condition to show Story button |
-| **No way to attach raw audio to stories** | Added `attachedAudioUrl/Title/Artist/CoverUrl` params to `createStoryWithOverlays` mutation |
-| **StoriesBar ignored audio-only stories** | Changed condition from `attachedTrackId` to `attachedTrackId \|\| attachedTrackIpfsUrl` |
-| **SharePostModal Story button blocked audio** | `onShareToStory` callback now handles audio posts via cover art + audio URL |
+| Commit | Issue | Fix |
+|--------|-------|-----|
+| `e0a462c58` | **Story button missing on audio wall posts** | Added `mediaType === 'audio'` condition to show Story button |
+| `e0a462c58` | **No way to attach raw audio to stories** | Added `attachedAudioUrl/Title/Artist/CoverUrl` params to `createStoryWithOverlays` mutation |
+| `e0a462c58` | **StoriesBar ignored audio-only stories** | Changed condition from `attachedTrackId` to `attachedTrackId \|\| attachedTrackIpfsUrl` |
+| `e0a462c58` | **SharePostModal Story button blocked audio** | `onShareToStory` callback now handles audio posts via cover art + audio URL |
+| `85b0bf449` | **Audio not playing in reel** | File-upload publish path wasn't passing `attachedAudioUrl` params — now both fast-path and upload-path send audio |
+| `85b0bf449` | **Wall posts without cover art couldn't share** | Removed `coverArtUrl` requirement — generates cyan vinyl-style visual card as fallback |
 
 ### Files Modified
 
@@ -26,16 +28,17 @@ Wall posts with uploaded audio files (non-SCid, non-NFT) couldn't be shared to s
 |------|---------|
 | `api/src/resolvers/StoryResolver.ts` | 4 new optional params: `attachedAudioUrl`, `attachedAudioTitle`, `attachedAudioArtist`, `attachedAudioCoverUrl` |
 | `api/src/services/StoryService.ts` | Extended `CreateStoryParams` + fallback to raw audio when no `attachedTrackId` |
-| `web/src/components/dex/CreateStoryModal.tsx` | Extended `PrefillMedia` interface with audio fields, updated GraphQL mutation, passes audio params on publish |
-| `web/src/components/dex/ProfileWall.tsx` | Story button shows for audio+coverArt posts, passes audio metadata through share flow |
+| `web/src/components/dex/CreateStoryModal.tsx` | Extended `PrefillMedia` interface with audio fields + `needsGeneratedCard`, `generateAudioCard()` canvas function for no-cover-art fallback, both publish paths pass audio params |
+| `web/src/components/dex/ProfileWall.tsx` | Story button shows for ALL audio posts (with or without cover art), passes audio metadata + `needsGeneratedCard` flag through share flow |
 | `web/src/components/dex/StoriesBar.tsx` | Maps `attachedTrack` for stories with raw audio (no Track ID) |
 
 ### How It Works
-1. User sees audio post on wall (with cover art)
+1. User sees audio post on wall (with or without cover art)
 2. Clicks **Story** button
-3. Cover art becomes the reel's visual image
-4. Audio URL stored as `attachedTrackIpfsUrl` on the Story document
-5. StoryViewer plays the audio during reel playback (existing `attachedTrack.audioUrl` system)
+3. **With cover art:** Cover art becomes the reel's visual image
+4. **Without cover art:** Generates a vinyl-style card with title + artist name
+5. Audio URL stored as `attachedTrackIpfsUrl` on the Story document (reuses existing denormalized fields)
+6. StoryViewer plays the audio during reel playback (existing `attachedTrack.audioUrl` system)
 
 ### Key Architecture Decision
 Reused the existing `attachedTrack` denormalized fields (`attachedTrackIpfsUrl`, `attachedTrackTitle`, etc.) for raw audio — no new schema fields needed on the Story model. The only difference: no `attachedTrackId` (since there's no Track document for wall audio uploads).
