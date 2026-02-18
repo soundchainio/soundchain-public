@@ -172,6 +172,8 @@ interface PrefillMedia {
   audioTitle?: string
   audioArtist?: string
   audioCoverUrl?: string
+  /** Generate a visual card when no cover art exists */
+  needsGeneratedCard?: boolean
 }
 
 interface CreateStoryModalProps {
@@ -421,10 +423,99 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
     }
   }, [isOpen, prefillTrack, generateRadioCard])
 
+  // Generate audio card for wall post audio without cover art
+  const generateAudioCard = useCallback((title: string, artist: string) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1080
+    canvas.height = 1920
+    const ctx = canvas.getContext('2d')!
+
+    // Dark gradient background
+    const bg = ctx.createLinearGradient(0, 0, 0, 1920)
+    bg.addColorStop(0, '#030d1b')
+    bg.addColorStop(0.5, '#0a1628')
+    bg.addColorStop(1, '#030d1b')
+    ctx.fillStyle = bg
+    ctx.fillRect(0, 0, 1080, 1920)
+
+    // Vinyl record graphic
+    ctx.fillStyle = 'rgba(6, 182, 212, 0.15)'
+    ctx.beginPath()
+    ctx.arc(540, 760, 280, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = 'rgba(6, 182, 212, 0.3)'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    for (let r = 220; r > 40; r -= 40) {
+      ctx.beginPath()
+      ctx.arc(540, 760, r, 0, Math.PI * 2)
+      ctx.strokeStyle = `rgba(6, 182, 212, ${0.1 + (220 - r) * 0.001})`
+      ctx.stroke()
+    }
+    ctx.fillStyle = '#030d1b'
+    ctx.beginPath()
+    ctx.arc(540, 760, 30, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.textAlign = 'center'
+
+    // Music icon indicator
+    ctx.fillStyle = '#06b6d4'
+    ctx.font = 'bold 38px -apple-system, BlinkMacSystemFont, sans-serif'
+    ctx.fillText('\u{1F3B5} NOW PLAYING', 540, 180)
+
+    // Title
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 48px -apple-system, BlinkMacSystemFont, sans-serif'
+    const words = title.split(' ')
+    let line = ''
+    let y = 1150
+    for (const word of words) {
+      const test = line + word + ' '
+      if (ctx.measureText(test).width > 920 && line) {
+        ctx.fillText(line.trim(), 540, y)
+        line = word + ' '
+        y += 60
+      } else {
+        line = test
+      }
+    }
+    ctx.fillText(line.trim(), 540, y)
+
+    // Artist
+    if (artist) {
+      ctx.fillStyle = '#9ca3af'
+      ctx.font = '36px -apple-system, BlinkMacSystemFont, sans-serif'
+      ctx.fillText(artist, 540, y + 65)
+    }
+
+    // Watermark
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.25)'
+    ctx.font = '22px -apple-system, BlinkMacSystemFont, sans-serif'
+    ctx.fillText('soundchain.io', 540, 1860)
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], 'audio-story.jpg', { type: 'image/jpeg' })
+        setMediaFile(file)
+        setMediaPreview(URL.createObjectURL(file))
+        setMediaType('image')
+        setPrefillMediaUrl(null) // Use uploaded file, not a URL
+        setActiveTab('text')
+      }
+    }, 'image/jpeg', 0.92)
+  }, [])
+
   // Pre-fill from shared post media when modal opens (Share to Story)
   useEffect(() => {
     if (!isOpen || !prefillMedia || prefillApplied.current) return
     prefillApplied.current = true
+
+    // Audio without cover art — generate a visual card
+    if (prefillMedia.needsGeneratedCard) {
+      generateAudioCard(prefillMedia.audioTitle || 'Wall Post', prefillMedia.audioArtist || '')
+      return
+    }
 
     const resolvedUrl = getIpfsUrl(prefillMedia.url)
     setMediaPreview(resolvedUrl)
@@ -911,10 +1002,17 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
             variables: {
               mediaUrl: ipfsUrl,
               mediaType,
-              duration: mediaType === 'video' ? Math.floor(videoDuration) : (prefillTrack ? 59 : 60),
+              duration: mediaType === 'video' ? Math.floor(videoDuration) : (prefillTrack ? 59 : (prefillMedia?.audioUrl ? 60 : 60)),
               overlays: overlays.length > 0 ? overlays : null,
               attachedTrackId: selectedNftTrack?.id || null,
               caption: normalizedEmbedUrl || null, // Use caption field for embed URL
+              // Raw audio attachment from wall post shares
+              ...(prefillMedia?.audioUrl && !selectedNftTrack ? {
+                attachedAudioUrl: prefillMedia.audioUrl,
+                attachedAudioTitle: prefillMedia.audioTitle || null,
+                attachedAudioArtist: prefillMedia.audioArtist || null,
+                attachedAudioCoverUrl: prefillMedia.audioCoverUrl || null,
+              } : {}),
             },
           })
           console.log('[CreateStoryModal] Step 3 complete: Story created!')
