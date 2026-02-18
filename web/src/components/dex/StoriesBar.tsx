@@ -192,9 +192,9 @@ export const StoriesBar = ({ onCreateStory, onViewStory, deepLinkStoryId, deepLi
         isPermanent: story.isPermanent,
         viewCount: story.viewCount || 0,
         reactions: [],
-        ...(story.attachedTrackId ? {
+        ...((story.attachedTrackId || story.attachedTrackIpfsUrl) ? {
           attachedTrack: {
-            id: story.attachedTrackId,
+            id: story.attachedTrackId || 'wall-audio',
             title: story.attachedTrackTitle,
             artist: story.attachedTrackArtist,
             artworkUrl: story.attachedTrackCoverUrl,

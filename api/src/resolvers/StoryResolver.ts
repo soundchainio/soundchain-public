@@ -340,6 +340,10 @@ export class StoryResolver {
     @Arg('attachedTrackId', { nullable: true }) attachedTrackId: string,
     @Arg('caption', { nullable: true }) caption: string,
     @Arg('duration', () => Int, { nullable: true }) duration: number,
+    @Arg('attachedAudioUrl', { nullable: true }) attachedAudioUrl: string,
+    @Arg('attachedAudioTitle', { nullable: true }) attachedAudioTitle: string,
+    @Arg('attachedAudioArtist', { nullable: true }) attachedAudioArtist: string,
+    @Arg('attachedAudioCoverUrl', { nullable: true }) attachedAudioCoverUrl: string,
     @CurrentUser() { profileId }: User
   ): Promise<Story> {
     return storyService.create({
@@ -350,6 +354,10 @@ export class StoryResolver {
       duration,
       overlays: overlays || [],
       attachedTrackId,
+      attachedAudioUrl,
+      attachedAudioTitle,
+      attachedAudioArtist,
+      attachedAudioCoverUrl,
     });
   }
 

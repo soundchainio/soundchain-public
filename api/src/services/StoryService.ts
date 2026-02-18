@@ -25,6 +25,11 @@ interface CreateStoryParams {
   duration?: number;
   overlays?: OverlayInput[];
   attachedTrackId?: string;
+  // Raw audio attachment (for wall post audio shares — no Track document needed)
+  attachedAudioUrl?: string;
+  attachedAudioTitle?: string;
+  attachedAudioArtist?: string;
+  attachedAudioCoverUrl?: string;
 }
 
 interface CreateGuestStoryParams {
@@ -75,7 +80,7 @@ export class StoryService extends ModelService<typeof Story> {
    * Supports overlays and attached NFT tracks for Reels 2.0
    */
   async create(params: CreateStoryParams): Promise<Story> {
-    const { profileId, mediaUrl, mediaType, caption, duration, overlays, attachedTrackId } = params;
+    const { profileId, mediaUrl, mediaType, caption, duration, overlays, attachedTrackId, attachedAudioUrl, attachedAudioTitle, attachedAudioArtist, attachedAudioCoverUrl } = params;
 
     // Calculate expiry time (24 hours from now)
     const expiresAt = new Date(Date.now() + STORY_EXPIRY_HOURS * 60 * 60 * 1000);
@@ -129,6 +134,14 @@ export class StoryService extends ModelService<typeof Story> {
       } catch (err) {
         console.error('[StoryService] Failed to fetch attached track:', err);
       }
+    } else if (attachedAudioUrl) {
+      // Raw audio attachment (wall post audio shares — no Track document)
+      trackDetails = {
+        attachedTrackIpfsUrl: attachedAudioUrl,
+        attachedTrackTitle: attachedAudioTitle || 'Wall Post Audio',
+        attachedTrackArtist: attachedAudioArtist || '',
+        attachedTrackCoverUrl: attachedAudioCoverUrl || '',
+      };
     }
 
     const story = new StoryModel({

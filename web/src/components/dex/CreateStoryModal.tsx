@@ -26,6 +26,10 @@ const CREATE_STORY_WITH_OVERLAYS = gql`
     $attachedTrackId: String
     $caption: String
     $duration: Int
+    $attachedAudioUrl: String
+    $attachedAudioTitle: String
+    $attachedAudioArtist: String
+    $attachedAudioCoverUrl: String
   ) {
     createStoryWithOverlays(
       mediaUrl: $mediaUrl
@@ -34,6 +38,10 @@ const CREATE_STORY_WITH_OVERLAYS = gql`
       attachedTrackId: $attachedTrackId
       caption: $caption
       duration: $duration
+      attachedAudioUrl: $attachedAudioUrl
+      attachedAudioTitle: $attachedAudioTitle
+      attachedAudioArtist: $attachedAudioArtist
+      attachedAudioCoverUrl: $attachedAudioCoverUrl
     ) {
       id
       mediaUrl
@@ -159,6 +167,11 @@ interface PrefillMedia {
   type: 'image' | 'video'
   caption?: string
   authorName?: string
+  /** Raw audio URL for wall post audio shares (plays in reel) */
+  audioUrl?: string
+  audioTitle?: string
+  audioArtist?: string
+  audioCoverUrl?: string
 }
 
 interface CreateStoryModalProps {
@@ -739,10 +752,17 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
             variables: {
               mediaUrl: ipfsUrl,
               mediaType,
-              duration: mediaType === 'video' ? Math.floor(videoDuration) || 15 : 60,
+              duration: mediaType === 'video' ? Math.floor(videoDuration) || 15 : (prefillMedia?.audioUrl ? 60 : 60),
               overlays: overlays.length > 0 ? overlays : null,
               attachedTrackId: selectedNftTrack?.id || null,
               caption: normalizedEmbedUrl || null,
+              // Raw audio attachment from wall post shares
+              ...(prefillMedia?.audioUrl && !selectedNftTrack ? {
+                attachedAudioUrl: prefillMedia.audioUrl,
+                attachedAudioTitle: prefillMedia.audioTitle || null,
+                attachedAudioArtist: prefillMedia.audioArtist || null,
+                attachedAudioCoverUrl: prefillMedia.audioCoverUrl || null,
+              } : {}),
             },
           })
           toast.success('Shared to your Story!')

@@ -534,8 +534,8 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
   }
 
   // Share modal state (matches PostActions pattern)
-  const [shareModalPost, setShareModalPost] = useState<{ id: string; body?: string; mediaUrl?: string; mediaType?: string; isReply?: boolean; parentId?: string } | null>(null)
-  const [storyModalPost, setStoryModalPost] = useState<{ mediaUrl: string; mediaType: string; body?: string; authorName?: string } | null>(null)
+  const [shareModalPost, setShareModalPost] = useState<{ id: string; body?: string; mediaUrl?: string; mediaType?: string; coverArtUrl?: string; isReply?: boolean; parentId?: string } | null>(null)
+  const [storyModalPost, setStoryModalPost] = useState<{ mediaUrl: string; mediaType: string; body?: string; authorName?: string; audioUrl?: string; audioTitle?: string; audioArtist?: string; audioCoverUrl?: string } | null>(null)
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
   React.useEffect(() => { setPortalContainer(document.body) }, [])
 
@@ -968,7 +968,7 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                         Reply {post.replyCount > 0 && `(${post.replyCount})`}
                       </button>
                       <button
-                        onClick={() => viewerProfileId ? setShareModalPost({ id: post.id, body: post.body, mediaUrl: post.mediaUrl, mediaType: post.mediaType }) : (() => {
+                        onClick={() => viewerProfileId ? setShareModalPost({ id: post.id, body: post.body, mediaUrl: post.mediaUrl, mediaType: post.mediaType, coverArtUrl: post.coverArtUrl }) : (() => {
                           const url = `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${post.id}`
                           if (navigator.share) { navigator.share({ title: 'SoundChain', text: post.body?.slice(0, 100) || 'Check out this wall post', url }).catch(() => {}) }
                           else { navigator.clipboard.writeText(url).then(() => toast.success('Link copied!')).catch(() => {}) }
@@ -978,9 +978,20 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                         <Share2 className="w-3 h-3" />
                         Share
                       </button>
-                      {viewerProfileId && post.mediaUrl && (post.mediaType === 'image' || post.mediaType === 'video') && (
+                      {viewerProfileId && post.mediaUrl && (post.mediaType === 'image' || post.mediaType === 'video' || (post.mediaType === 'audio' && post.coverArtUrl)) && (
                         <button
-                          onClick={() => setStoryModalPost({ mediaUrl: post.mediaUrl, mediaType: post.mediaType, body: post.body, authorName: post.author?.displayName })}
+                          onClick={() => setStoryModalPost({
+                            mediaUrl: post.mediaType === 'audio' ? post.coverArtUrl : post.mediaUrl,
+                            mediaType: post.mediaType === 'audio' ? 'image' : post.mediaType,
+                            body: post.body,
+                            authorName: post.author?.displayName,
+                            ...(post.mediaType === 'audio' ? {
+                              audioUrl: post.mediaUrl,
+                              audioTitle: post.body?.slice(0, 60) || 'Wall Post',
+                              audioArtist: post.author?.displayName || '',
+                              audioCoverUrl: post.coverArtUrl,
+                            } : {}),
+                          })}
                           className="text-gray-500 hover:text-cyan-400 text-xs flex items-center gap-1 transition-colors"
                           title="Share to Story"
                         >
@@ -1040,9 +1051,20 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
                                   <Share2 className="w-2.5 h-2.5" />
                                   Share
                                 </button>
-                                {viewerProfileId && reply.mediaUrl && (reply.mediaType === 'image' || reply.mediaType === 'video') && (
+                                {viewerProfileId && reply.mediaUrl && (reply.mediaType === 'image' || reply.mediaType === 'video' || (reply.mediaType === 'audio' && reply.coverArtUrl)) && (
                                   <button
-                                    onClick={() => setStoryModalPost({ mediaUrl: reply.mediaUrl, mediaType: reply.mediaType, body: reply.body, authorName: reply.author?.displayName })}
+                                    onClick={() => setStoryModalPost({
+                                      mediaUrl: reply.mediaType === 'audio' ? reply.coverArtUrl : reply.mediaUrl,
+                                      mediaType: reply.mediaType === 'audio' ? 'image' : reply.mediaType,
+                                      body: reply.body,
+                                      authorName: reply.author?.displayName,
+                                      ...(reply.mediaType === 'audio' ? {
+                                        audioUrl: reply.mediaUrl,
+                                        audioTitle: reply.body?.slice(0, 60) || 'Wall Post',
+                                        audioArtist: reply.author?.displayName || '',
+                                        audioCoverUrl: reply.coverArtUrl,
+                                      } : {}),
+                                    })}
                                     className="text-gray-600 hover:text-cyan-400 text-[10px] flex items-center gap-0.5 transition-colors"
                                     title="Share to Story"
                                   >
@@ -1143,8 +1165,19 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
           postId={shareModalPost.id}
           postBody={shareModalPost.body}
           customUrl={typeof window !== 'undefined' ? `${window.location.origin}/dex/users/${userHandle || profileId}?wall=${shareModalPost.isReply && shareModalPost.parentId ? shareModalPost.parentId : shareModalPost.id}` : undefined}
-          onShareToStory={shareModalPost.mediaUrl && (shareModalPost.mediaType === 'image' || shareModalPost.mediaType === 'video') ? () => {
-            setStoryModalPost({ mediaUrl: shareModalPost.mediaUrl!, mediaType: shareModalPost.mediaType!, body: shareModalPost.body, authorName: profileName })
+          onShareToStory={shareModalPost.mediaUrl && (shareModalPost.mediaType === 'image' || shareModalPost.mediaType === 'video' || (shareModalPost.mediaType === 'audio' && shareModalPost.coverArtUrl)) ? () => {
+            setStoryModalPost({
+              mediaUrl: shareModalPost.mediaType === 'audio' ? shareModalPost.coverArtUrl! : shareModalPost.mediaUrl!,
+              mediaType: shareModalPost.mediaType === 'audio' ? 'image' : shareModalPost.mediaType!,
+              body: shareModalPost.body,
+              authorName: profileName,
+              ...(shareModalPost.mediaType === 'audio' ? {
+                audioUrl: shareModalPost.mediaUrl!,
+                audioTitle: shareModalPost.body?.slice(0, 60) || 'Wall Post',
+                audioArtist: profileName || '',
+                audioCoverUrl: shareModalPost.coverArtUrl!,
+              } : {}),
+            })
             setShareModalPost(null)
           } : undefined}
         />,
@@ -1161,6 +1194,10 @@ export function ProfileWall({ profileId, isOwnProfile, viewerProfileId, profileN
             type: storyModalPost.mediaType as 'image' | 'video',
             caption: storyModalPost.body || undefined,
             authorName: storyModalPost.authorName || undefined,
+            audioUrl: storyModalPost.audioUrl,
+            audioTitle: storyModalPost.audioTitle,
+            audioArtist: storyModalPost.audioArtist,
+            audioCoverUrl: storyModalPost.audioCoverUrl,
           }}
         />,
         portalContainer
