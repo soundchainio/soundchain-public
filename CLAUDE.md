@@ -1,8 +1,58 @@
 # CLAUDE.md - SoundChain Development Guide
 
-**Last Updated:** February 17, 2026 (Wall Audio Posts Share to Reels)
+**Last Updated:** February 18, 2026 (Agent Eye — OpenClaw Browser Bug Catcher)
 **Project Start:** July 14, 2021
 **Total Commits:** 10,000+ (across all branches)
+
+---
+
+## 👁️ SESSION: Feb 18, 2026 — AGENT EYE (OpenClaw Browser Bug Catcher)
+
+### Summary
+Built **Agent Eye** — the first passive browser bug catcher in the OpenClaw ecosystem (confirmed by scanning all 39 extensions). 3-layer architecture: content script captures user actions + errors in browser tabs, Chrome background.js relays to OpenClaw gateway via HTTP POST, extension stores bugs and exposes them as LLM tools + `/eye` command. **Zero booleans** — all state uses typed string enums with explicit `===` equality checks.
+
+### Architecture
+```
+[Browser Tab]  content-script.js → clicks/errors/fetch failures
+       ↓ chrome.runtime.sendMessage({ channel: "AGENT_EYE_REPORT" })
+[background.js]  validates mode === EYE_MODE.WATCHING → POST
+       ↓ HTTP POST to localhost:{port}/agent-eye/report
+[OpenClaw Extension]  validates trigger → BugStore → tools + /eye command
+```
+
+### Files Created (5 new in openclaw repo)
+| File | Purpose |
+|------|---------|
+| `extensions/agent-eye/package.json` | Workspace package `@openclaw/agent-eye` |
+| `extensions/agent-eye/openclaw.plugin.json` | Plugin manifest |
+| `extensions/agent-eye/index.ts` | HTTP route + 3 tools + `/eye` command |
+| `extensions/agent-eye/src/store.ts` | BugStore — circular buffer (200 max, 1hr TTL), all typed enums |
+| `assets/chrome-extension/content-script.js` | Captures user actions + errors in browser tabs |
+
+### Files Modified (2)
+| File | Change |
+|------|--------|
+| `assets/chrome-extension/manifest.json` | Added `scripting` + `<all_urls>` permissions |
+| `assets/chrome-extension/background.js` | Agent Eye state (EYE_MODE enum), relay, programmatic injection |
+
+### Enums (Zero Booleans)
+- **EYE_MODE**: `WATCHING` / `DORMANT` / `PAUSED`
+- **BUG_SEVERITY**: `CRITICAL` / `ERROR` / `WARNING` / `INFO`
+- **TRIGGER_KIND**: `JS_ERROR` / `UNHANDLED_REJECTION` / `CONSOLE_ERROR` / `NETWORK_ERROR`
+- **ACTION_KIND**: `CLICK` / `INPUT` / `SCROLL` / `NAVIGATE`
+- **REPORT_VERDICT**: `ACCEPTED` / `RATE_LIMITED` / `REJECTED`
+
+### Tools & Commands
+| Tool/Command | Description |
+|------|-------------|
+| `agent_eye_bugs` | List/inspect bugs, filter by severity, full action timeline |
+| `agent_eye_status` | Mode, counts by severity, buffer capacity |
+| `agent_eye_clear` | Clear all bugs |
+| `/eye watch\|sleep\|bugs\|clear\|status` | Slash command for mode control + quick view |
+
+### PR
+- **OpenClaw PR #19953**: https://github.com/openclaw/openclaw/pull/19953 — ALL CHECKS PASSED
+- Fork `soundchainio/openclaw` synced with upstream
 
 ---
 
