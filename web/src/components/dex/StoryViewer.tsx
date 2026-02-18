@@ -303,13 +303,17 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, us
   // Load and auto-play track audio when story changes
   useEffect(() => {
     if (!audioRef.current) return
+    console.log('[StoryViewer] Audio check:', { hasTrackAudio, attachedTrack: currentStory?.attachedTrack, storyId: currentStory?.id })
     if (hasTrackAudio) {
       const audioUrl = getIpfsUrl(currentStory!.attachedTrack!.audioUrl!)
+      console.log('[StoryViewer] Loading audio:', audioUrl)
       audioRef.current.src = audioUrl
       audioRef.current.muted = isMuted
+      audioRef.current.onerror = (e) => console.error('[StoryViewer] Audio load error:', e, audioUrl)
+      audioRef.current.oncanplay = () => console.log('[StoryViewer] Audio ready to play')
       audioRef.current.load()
       if (!isPaused) {
-        audioRef.current.play().catch(() => {})
+        audioRef.current.play().catch((err) => console.error('[StoryViewer] Audio play failed:', err))
       }
     } else {
       // No track audio for this story - stop any playing audio
@@ -727,7 +731,7 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, us
         )}
 
         {/* Hidden audio element for attached track playback */}
-        <audio ref={audioRef} preload="auto" style={{ display: 'none' }} />
+        <audio ref={audioRef} preload="auto" crossOrigin="anonymous" style={{ display: 'none' }} />
 
         {/* Text overlays from Reels 2.0 */}
         {currentStory.overlays && currentStory.overlays.length > 0 && (

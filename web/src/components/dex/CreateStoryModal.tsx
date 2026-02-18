@@ -832,6 +832,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
         setUploadProgress(85)
         // Use the original URL directly — it's already on IPFS or S3
         const ipfsUrl = prefillMediaUrl
+        console.log('[CreateStoryModal] Prefill publish — audioUrl:', prefillMedia?.audioUrl, 'prefillMedia:', prefillMedia)
 
         // Prepare overlays
         const overlays = convertLayersToOverlays()
