@@ -19,37 +19,13 @@ soundchain-contracts/
 mux_exported/
 package-lock.json
 
-# Claude/Agent Session Files - Keep private
-CLAUDE.md
-CLAUDE_CONTEXT.md
-CLAUDE_SESSION_HANDOFF.md
-HANDOFF.md
-HANDOFF_*.md
-MASTER_HANDOFF.md
-SESSION_HANDOFF*.md
-SOUNDCHAIN_VISION_HANDOFF.md
-VICTORY_SESSION_SUMMARY.md
-AGENTIDE_LEARNING_ANALYSIS.md
-ARCHITECTURE_MAP.md
-BLOCKCHAIN_FLOW.md
-BROWSER_CACHE_FIX.md
-DEX_*.md
-DIAGNOSTIC_CHECKLIST.md
-IMMEDIATE_FIXES_STATUS.md
-PITCHDECK.md
-STAGING.md
-SUMMARY.md
-
-# Business/Strategy docs - NEVER public
-*ACQUISITION*.md
-*PROPOSAL*.md
-*ROADMAP*.md
-!docs/roadmap/*.md
-!web/src/components/pages/roadmap/*
-moltbook-*.md
+# Markdown files — block ALL, whitelist only public docs
+*.md
+!README.md
+!docs/**/*.md
+!api/README.md
+!api/DEPLOY_TRIGGER.md
 moltbook-*.json
-*-session*.md
-*SESSION*.md
 chart.html
 chart.json
 commit_history.txt
@@ -75,9 +51,4 @@ node_modules/
 .DS_Store
 
 # Private workflow files
-jeremy-*.md
-desktop-laptop-green.md
-green.md
-*-test-assignment*.md
-session-*.md
 scripts/post-announcements.sh
