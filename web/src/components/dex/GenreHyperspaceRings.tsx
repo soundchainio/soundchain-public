@@ -18,14 +18,23 @@ interface Edge {
   dist: number
 }
 
-// SoundChain palette for cycling connections
-const PALETTE = [
-  [6, 182, 212],    // cyan-500
-  [168, 85, 247],   // purple-500
-  [236, 72, 153],   // pink-500
-  [139, 92, 246],   // violet-500
-  [6, 182, 212],    // cyan again for wrap
-  [131, 24, 67],    // pink-900
+// SoundChain palette — pre-computed RGB strings (no per-frame string interpolation)
+const PALETTE_RGB = [
+  'rgb(6, 182, 212)',    // cyan-500
+  'rgb(168, 85, 247)',   // purple-500
+  'rgb(236, 72, 153)',   // pink-500
+  'rgb(139, 92, 246)',   // violet-500
+  'rgb(6, 182, 212)',    // cyan again for wrap
+  'rgb(131, 24, 67)',    // pink-900
+]
+// Pre-computed glow colors (rgba at 0.15 alpha for soft halo)
+const PALETTE_GLOW = [
+  'rgba(6, 182, 212, 0.15)',
+  'rgba(168, 85, 247, 0.15)',
+  'rgba(236, 72, 153, 0.15)',
+  'rgba(139, 92, 246, 0.15)',
+  'rgba(6, 182, 212, 0.15)',
+  'rgba(131, 24, 67, 0.15)',
 ]
 
 export default function GenreHyperspaceRings() {
@@ -35,6 +44,9 @@ export default function GenreHyperspaceRings() {
   const edgesRef = useRef<Edge[]>([])
   const dirtyRef = useRef(true)
   const lastScanRef = useRef(0)
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null)
+  // Cached node halo gradients — rebuilt only on scanNodes
+  const haloGradsRef = useRef<CanvasGradient[]>([])
   const isMobile = useIsMobile()
 
   useEffect(() => {
@@ -42,6 +54,9 @@ export default function GenreHyperspaceRings() {
     if (!canvas) return
     const parent = canvas.parentElement
     if (!parent) return
+
+    // Cache context once
+    ctxRef.current = canvas.getContext('2d')
 
     const dpr = window.devicePixelRatio || 1
     let paused = false
@@ -53,6 +68,7 @@ export default function GenreHyperspaceRings() {
 
     // Build proximity-based network edges from pill positions
     function scanNodes() {
+      const ctx = ctxRef.current
       const parentRect = parent!.getBoundingClientRect()
       const pills = parent!.querySelectorAll('[data-genre-pill]')
       const nodes: NodePos[] = []
@@ -68,7 +84,7 @@ export default function GenreHyperspaceRings() {
       nodesRef.current = nodes
 
       // Connect pills that are close — proximity threshold based on average spacing
-      if (nodes.length < 2) { edgesRef.current = []; return }
+      if (nodes.length < 2) { edgesRef.current = []; haloGradsRef.current = []; return }
 
       // Calculate distances between all pairs
       const allDists: Edge[] = []
@@ -81,10 +97,8 @@ export default function GenreHyperspaceRings() {
         }
       }
 
-      // Sort by distance, keep closest connections (each node connects to ~3-4 neighbors)
       allDists.sort((a, b) => a.dist - b.dist)
 
-      // Track connections per node — cap at 4 to keep the web clean
       const connCount = new Map<number, number>()
       const edges: Edge[] = []
       const maxPerNode = isMobile ? 3 : 4
@@ -100,6 +114,22 @@ export default function GenreHyperspaceRings() {
       }
 
       edgesRef.current = edges
+
+      // Pre-build node halo gradients (only changes when nodes move)
+      if (ctx) {
+        const halos: CanvasGradient[] = []
+        const radius = isMobile ? 18 : 24
+        for (let ni = 0; ni < nodes.length; ni++) {
+          const node = nodes[ni]
+          const ci = ni % PALETTE_RGB.length
+          const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius)
+          grad.addColorStop(0, PALETTE_RGB[ci])
+          grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+          halos.push(grad)
+        }
+        haloGradsRef.current = halos
+      }
+
       dirtyRef.current = false
       lastScanRef.current = performance.now()
     }
@@ -119,7 +149,7 @@ export default function GenreHyperspaceRings() {
       rafRef.current = requestAnimationFrame(draw)
       if (isMobile && time - lastFrameTime < MOBILE_FRAME_INTERVAL) return
       lastFrameTime = time
-      const ctx = canvas!.getContext('2d')
+      const ctx = ctxRef.current
       if (!ctx) return
 
       const w = parent!.offsetWidth
@@ -135,7 +165,7 @@ export default function GenreHyperspaceRings() {
         dirtyRef.current = true
       }
 
-      // Throttled position scan
+      // Throttled position scan (also rebuilds halo gradient cache)
       if (dirtyRef.current && time - lastScanRef.current > SCAN_INTERVAL) {
         scanNodes()
       }
@@ -149,78 +179,83 @@ export default function GenreHyperspaceRings() {
       const edges = edgesRef.current
       if (nodes.length < 2 || edges.length === 0) return
 
-      // Draw network edges — glowing energy lines
+      // Draw network edges — NO shadowBlur (was the #1 memory killer)
+      // Already has double-stroke technique: wide semi-transparent outer + thin core
       for (let ei = 0; ei < edges.length; ei++) {
         const edge = edges[ei]
         const from = nodes[edge.from]
         const to = nodes[edge.to]
         if (!from || !to) continue
 
-        // Cycle through palette based on edge index
-        const color = PALETTE[ei % PALETTE.length]
+        const ci = ei % PALETTE_RGB.length
         const pulse = 0.12 + 0.18 * Math.sin(time * 0.002 + ei * 0.7)
 
-        // Outer glow
-        ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${pulse * 0.4})`
+        // Outer glow — wider stroke, low alpha (replaces shadowBlur)
+        ctx.globalAlpha = pulse * 0.4
+        ctx.strokeStyle = PALETTE_RGB[ci]
         ctx.lineWidth = isMobile ? 3 : 4
-        ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.5)`
-        if (!isMobile) ctx.shadowBlur = 12
         ctx.beginPath()
         ctx.moveTo(from.x, from.y)
         ctx.lineTo(to.x, to.y)
         ctx.stroke()
-        if (!isMobile) ctx.shadowBlur = 0
 
         // Core line
-        ctx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${pulse})`
+        ctx.globalAlpha = pulse
         ctx.lineWidth = isMobile ? 1 : 1.5
         ctx.beginPath()
         ctx.moveTo(from.x, from.y)
         ctx.lineTo(to.x, to.y)
         ctx.stroke()
 
-        // Particles flowing from→to
+        // Particles flowing from→to (no shadowBlur — use glow circle)
         for (let p = 0; p < PARTICLES_PER_EDGE; p++) {
           const offset = p / PARTICLES_PER_EDGE
-          const speed = 0.0004 + (ei % 3) * 0.0001 // slightly different speeds
+          const speed = 0.0004 + (ei % 3) * 0.0001
           const t = (time * speed + offset + ei * 0.05) % 1
           const px = from.x + (to.x - from.x) * t
           const py = from.y + (to.y - from.y) * t
           const pAlpha = 0.5 + 0.5 * Math.sin(time * 0.004 + p * 3 + ei)
           const pRadius = isMobile ? 1.8 : 2.5
 
-          // Particle glow
-          ctx.shadowColor = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.9)`
-          if (!isMobile) ctx.shadowBlur = 8
-          ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${pAlpha})`
+          // Soft glow halo (replaces expensive shadowBlur)
+          if (!isMobile) {
+            ctx.globalAlpha = pAlpha * 0.3
+            ctx.fillStyle = PALETTE_GLOW[ci]
+            ctx.beginPath()
+            ctx.arc(px, py, pRadius * 3, 0, Math.PI * 2)
+            ctx.fill()
+          }
+
+          // Particle core
+          ctx.globalAlpha = pAlpha
+          ctx.fillStyle = PALETTE_RGB[ci]
           ctx.beginPath()
           ctx.arc(px, py, pRadius, 0, Math.PI * 2)
           ctx.fill()
 
-          // White-hot core
-          if (!isMobile) ctx.shadowBlur = 0
-          ctx.fillStyle = `rgba(255, 255, 255, ${pAlpha * 0.7})`
+          // White-hot center
+          ctx.globalAlpha = pAlpha * 0.7
+          ctx.fillStyle = 'rgb(255, 255, 255)'
           ctx.beginPath()
           ctx.arc(px, py, pRadius * 0.35, 0, Math.PI * 2)
           ctx.fill()
         }
       }
 
-      // Node glow halos — subtle radial glow at each genre pill center
+      // Node glow halos — use cached gradients, animate with globalAlpha
+      const halos = haloGradsRef.current
+      const haloRadius = isMobile ? 18 : 24
       for (let ni = 0; ni < nodes.length; ni++) {
         const node = nodes[ni]
-        const color = PALETTE[ni % PALETTE.length]
         const nodePulse = 0.08 + 0.06 * Math.sin(time * 0.0015 + ni * 1.2)
-        const radius = isMobile ? 18 : 24
-
-        const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius)
-        grad.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${nodePulse})`)
-        grad.addColorStop(1, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0)`)
-        ctx.fillStyle = grad
+        ctx.globalAlpha = nodePulse
+        ctx.fillStyle = halos[ni] || PALETTE_RGB[ni % PALETTE_RGB.length]
         ctx.beginPath()
-        ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
+        ctx.arc(node.x, node.y, haloRadius, 0, Math.PI * 2)
         ctx.fill()
       }
+
+      ctx.globalAlpha = 1
     }
 
     // Initial scan after a short delay for pills to render
@@ -231,6 +266,7 @@ export default function GenreHyperspaceRings() {
       cancelAnimationFrame(rafRef.current)
       observer.disconnect()
       document.removeEventListener('visibilitychange', handleVisibility)
+      ctxRef.current = null
     }
   }, [isMobile])
 

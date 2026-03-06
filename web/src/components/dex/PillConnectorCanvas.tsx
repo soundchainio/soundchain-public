@@ -16,6 +16,14 @@ interface PillPosition {
 
 const SCAN_THROTTLE_MS = 500
 
+// Pre-computed colors at full alpha — pulse via ctx.globalAlpha
+const GRAD_COLOR_START = 'rgb(6, 182, 212)'   // cyan-500
+const GRAD_COLOR_MID   = 'rgb(168, 85, 247)'  // purple-500
+const GRAD_COLOR_END   = 'rgb(131, 24, 67)'   // pink-900
+const PARTICLE_COLOR   = 'rgb(6, 182, 212)'
+// Soft glow circle (replaces expensive shadowBlur)
+const PARTICLE_GLOW    = 'rgba(6, 182, 212, 0.15)'
+
 export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expandedPillId, alwaysActive }: PillConnectorCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rafRef = useRef<number>(0)
@@ -23,6 +31,9 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
   const dirtyRef = useRef(true)
   const lastScanRef = useRef(0)
   const observerRef = useRef<ResizeObserver | null>(null)
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null)
+  // Cached gradients — rebuilt only when positions change
+  const gradientsRef = useRef<CanvasGradient[]>([])
   const isMobile = useIsMobile()
 
   // Nothing to draw: no genre filter (unless alwaysActive) or fewer than 2 items
@@ -37,7 +48,6 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
     const parentRect = parent.getBoundingClientRect()
     const pills: PillPosition[] = []
 
-    // Scan ALL pills — no cap. Every pill in the genre gets connected.
     for (const id of sortedUserIds) {
       const el = parent.querySelector(`[data-pill-id="${id}"]`) as HTMLElement | null
       if (!el) continue
@@ -49,6 +59,23 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
     }
 
     positionsRef.current = pills
+
+    // Rebuild gradient cache — one per connection
+    const ctx = ctxRef.current
+    if (ctx && pills.length >= 2) {
+      const grads: CanvasGradient[] = []
+      for (let i = 0; i < pills.length - 1; i++) {
+        const from = pills[i]
+        const to = pills[i + 1]
+        const grad = ctx.createLinearGradient(from.x, from.y, to.x, to.y)
+        grad.addColorStop(0, GRAD_COLOR_START)
+        grad.addColorStop(0.5, GRAD_COLOR_MID)
+        grad.addColorStop(1, GRAD_COLOR_END)
+        grads.push(grad)
+      }
+      gradientsRef.current = grads
+    }
+
     dirtyRef.current = false
     lastScanRef.current = performance.now()
   }, [sortedUserIds])
@@ -65,6 +92,9 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
     if (!canvas) return
     const parent = canvas.parentElement
     if (!parent) return
+
+    // Cache context once
+    ctxRef.current = canvas.getContext('2d')
 
     // ResizeObserver to detect layout changes
     observerRef.current = new ResizeObserver(() => {
@@ -91,7 +121,7 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
       rafRef.current = requestAnimationFrame(draw)
       if (isMobile && time - lastFrameTime < MOBILE_FRAME_INTERVAL) return
       lastFrameTime = time
-      const ctx = canvas!.getContext('2d')
+      const ctx = ctxRef.current
       if (!ctx) return
 
       // Resize canvas to match parent
@@ -106,7 +136,7 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
         dirtyRef.current = true
       }
 
-      // Throttled position scan
+      // Throttled position scan (also rebuilds gradient cache)
       if (dirtyRef.current && time - lastScanRef.current > SCAN_THROTTLE_MS) {
         scanPositions()
       }
@@ -117,6 +147,7 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
       if (positions.length < 2) return
 
       const connectionCount = positions.length - 1
+      const gradients = gradientsRef.current
 
       // Scale visual density based on number of connections
       const isHeavy = connectionCount > 100
@@ -130,30 +161,23 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
       const baseOpacity = isHeavy ? 0.10 : isMedium ? 0.12 : 0.15
       const opacityRange = isHeavy ? 0.15 : isMedium ? 0.20 : 0.25
 
+      // Draw all connections
+      ctx.lineWidth = lineWidth
       for (let i = 0; i < connectionCount; i++) {
         const from = positions[i]
         const to = positions[i + 1]
         if (!from || !to) continue
 
-        // Pulsating opacity
+        // Pulsating opacity via globalAlpha (no per-frame gradient creation)
         const pulse = baseOpacity + opacityRange * Math.sin(time * 0.002 + i * 0.5)
-
-        // Gradient stroke
-        const grad = ctx.createLinearGradient(from.x, from.y, to.x, to.y)
-        grad.addColorStop(0, `rgba(6, 182, 212, ${pulse})`)
-        grad.addColorStop(0.5, `rgba(168, 85, 247, ${pulse})`)
-        grad.addColorStop(1, `rgba(131, 24, 67, ${pulse})`)
+        ctx.globalAlpha = pulse
+        ctx.strokeStyle = gradients[i] || GRAD_COLOR_START
 
         ctx.beginPath()
-        ctx.strokeStyle = grad
-        ctx.lineWidth = lineWidth
-
         if (isMobile) {
-          // Straight lines on mobile
           ctx.moveTo(from.x, from.y)
           ctx.lineTo(to.x, to.y)
         } else {
-          // Quadratic Bezier on desktop with animated wave
           const midX = (from.x + to.x) / 2
           const midY = (from.y + to.y) / 2
           const cpOffset = Math.sin(time * 0.001 + i) * 15
@@ -161,9 +185,15 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
           ctx.quadraticCurveTo(midX, midY + cpOffset, to.x, to.y)
         }
         ctx.stroke()
+      }
 
-        // Particles flowing along the line
-        if (particlesPerLine > 0) {
+      // Draw all particles (no shadowBlur — use wider glow circle instead)
+      if (particlesPerLine > 0) {
+        for (let i = 0; i < connectionCount; i++) {
+          const from = positions[i]
+          const to = positions[i + 1]
+          if (!from || !to) continue
+
           for (let p = 0; p < particlesPerLine; p++) {
             const offset = p / particlesPerLine
             const t = (time * 0.0003 + offset + i * 0.1) % 1
@@ -174,7 +204,6 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
               px = from.x + (to.x - from.x) * t
               py = from.y + (to.y - from.y) * t
             } else {
-              // Quadratic Bezier point
               const midX = (from.x + to.x) / 2
               const midY = (from.y + to.y) / 2
               const cpOffset = Math.sin(time * 0.001 + i) * 15
@@ -185,18 +214,26 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
               py = inv * inv * from.y + 2 * inv * t * cpy + t * t * to.y
             }
 
+            // Glow halo (replaces shadowBlur — single wider circle, no GPU blur)
+            if (!isMobile) {
+              ctx.globalAlpha = pOpacity * 0.3
+              ctx.fillStyle = PARTICLE_GLOW
+              ctx.beginPath()
+              ctx.arc(px, py, 6, 0, Math.PI * 2)
+              ctx.fill()
+            }
+
+            // Core particle
+            ctx.globalAlpha = pOpacity
+            ctx.fillStyle = PARTICLE_COLOR
             ctx.beginPath()
             ctx.arc(px, py, 2, 0, Math.PI * 2)
-            ctx.fillStyle = `rgba(6, 182, 212, ${pOpacity})`
-            if (!isMobile) {
-              ctx.shadowColor = 'rgba(6, 182, 212, 0.8)'
-              ctx.shadowBlur = 8
-            }
             ctx.fill()
-            if (!isMobile) ctx.shadowBlur = 0
           }
         }
       }
+
+      ctx.globalAlpha = 1
     }
 
     // Initial position scan
@@ -207,6 +244,7 @@ export default function PillConnectorCanvas({ genreFilter, sortedUserIds, expand
       cancelAnimationFrame(rafRef.current)
       observerRef.current?.disconnect()
       document.removeEventListener('visibilitychange', handleVisibility)
+      ctxRef.current = null
     }
   }, [active, isMobile, scanPositions, sortedUserIds, genreFilter, expandedPillId])
 
