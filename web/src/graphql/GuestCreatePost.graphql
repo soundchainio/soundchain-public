@@ -1,0 +1,19 @@
+mutation GuestCreatePost($input: CreatePostInput!, $walletAddress: String!) {
+  guestCreatePost(input: $input, walletAddress: $walletAddress) {
+    post {
+      id
+      body
+      mediaLink
+      originalMediaLink
+      mediaThumbnail
+      createdAt
+      updatedAt
+      isGuest
+      walletAddress
+      uploadedMediaUrl
+      uploadedMediaType
+      mediaExpiresAt
+      isEphemeral
+    }
+  }
+}

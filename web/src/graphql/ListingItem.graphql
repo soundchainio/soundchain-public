@@ -1,0 +1,5 @@
+query ListingItem($input: FilterListingItemInput!) {
+  listingItem(input: $input) {
+    ...ListingItemViewComponentFields
+  }
+}

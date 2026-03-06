@@ -1,0 +1,17 @@
+query MyBookmarks($page: PageInput) {
+  myBookmarks(page: $page) {
+    nodes {
+      id
+      postId
+      createdAt
+      post {
+        ...PostComponentFields
+      }
+    }
+    pageInfo {
+      totalCount
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}

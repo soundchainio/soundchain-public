@@ -1,0 +1,5 @@
+query CountBids($tokenId: Float!) {
+  countBids(tokenId: $tokenId) {
+    numberOfBids
+  }
+}

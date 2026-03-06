@@ -1,0 +1,1645 @@
+/* Import retro fonts - must be at top */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Agent feed animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
+  opacity: 0;
+}
+
+/* Marketplace token marquee animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Hide scrollbar for horizontal scroll sections (Spotify-style) */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/Metropolis-Regular.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/Metropolis-Medium.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/Metropolis-SemiBold.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/Metropolis-Bold.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 800;
+  src: url('/fonts/Metropolis-ExtraBold.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 900;
+  src: url('/fonts/Metropolis-Black.otf') format('opentype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 300;
+  src: url('/fonts/Rubik-Light.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/Rubik-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 500;
+  src: url('/fonts/Rubik-Medium.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 600;
+  src: url('/fonts/Rubik-SemiBold.ttf') format('truetype');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 800;
+  src: url('/fonts/Rubik-ExtraBold.ttf') format('truetype');
+  font-display: swap;
+}
+
+body,
+pre {
+  font-family: 'Metropolis';
+}
+
+html {
+  height: 100%;
+  background-color: rgba(16, 16, 16);
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+body {
+  height: 100%;
+  background-color: rgba(16, 16, 16);
+
+  --color-thumb: #4d4d4d;
+  --color-track: #292929;
+
+  /* Official styles (Firefox) */
+  scrollbar-color: #4d4d4d #292929;
+  scrollbar-width: thin;
+
+  overscroll-behavior-y: contain;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+}
+
+/* Ensure main content areas are scrollable on iOS */
+.ios-scroll-fix {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+}
+
+/* Vendor prefix for other browsers */
+::-webkit-scrollbar {
+  background-color: #292929;
+  border-radius: 20px;
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #4d4d4d;
+  border-radius: 20px;
+  width: 6px;
+  height: 132px;
+}
+
+@media only screen and (max-width: 600px) {
+  ::-webkit-scrollbar {
+    display: none;
+    width: 0;
+  }
+  body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
+#__next {
+  height: 100%;
+  overflow: visible;
+}
+
+:root {
+  --toastify-color-progress-light: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
+}
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  #bottom-nav-bar {
+    padding-top: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Capacitor Native App - Safe Area Handling */
+html.capacitor-app {
+  /* Ensure full height accounting for safe areas */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html.capacitor-app body {
+  /* NO body padding - let header/footer handle safe areas */
+  padding-top: 0;
+  padding-bottom: 0;
+  /* Ensure content doesn't go behind status bar */
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  /* Reset any zoom/scale */
+  zoom: 1;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Capacitor: Header respects top safe area (notch/Dynamic Island) */
+html.capacitor-app header.sticky {
+  padding-top: env(safe-area-inset-top);
+  /* Match safe area bg to header */
+  background-color: rgba(0, 0, 0, 0.95);
+}
+
+/* Capacitor: Bottom nav respects home indicator safe area */
+html.capacitor-app #bottom-nav-bar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Slim down bottom nav for Capacitor - more compact icons */
+html.capacitor-app #bottom-nav-bar {
+  padding-top: 0.5rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+/* Smaller nav icons in Capacitor for sleek look */
+html.capacitor-app #bottom-nav-bar svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Tighter gap between icons in Capacitor */
+html.capacitor-app #bottom-nav-bar > div > div {
+  gap: 0.125rem;
+}
+
+/* Capacitor WebView specific fixes */
+html.capacitor-app * {
+  /* Ensure consistent box sizing */
+  box-sizing: border-box;
+}
+
+html.capacitor-app input,
+html.capacitor-app textarea,
+html.capacitor-app select,
+html.capacitor-app button {
+  /* Prevent iOS from zooming on input focus */
+  font-size: 16px !important;
+}
+
+/* iOS standalone mode (PWA/Capacitor) */
+@media all and (display-mode: standalone) {
+  body {
+    /* Header and footer handle safe areas */
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* PWA header safe area */
+  header.sticky {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* PWA bottom nav safe area */
+  #bottom-nav-bar {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* When running in Capacitor WebView */
+body.capacitor-ios {
+  /* Header handles safe area, not body */
+  padding-top: 0;
+}
+
+body.capacitor-android {
+  /* Android typically handles status bar differently */
+  padding-top: 0;
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+.max-content {
+  width: max-content !important;
+}
+
+.bg-yellow-gradient {
+  background: linear-gradient(76.4deg, rgba(177, 159, 59, 0.2) 8.28%, rgba(255, 241, 111, 0.2) 83.02%);
+}
+
+.bg-yellow-red-gradient {
+  background: linear-gradient(
+    222.93deg,
+    rgb(254 85 63 / 75%) 22.11%,
+    rgb(252 174 27 / 75%) 49.25%,
+    rgb(254 214 3 / 75%) 61.45%
+  );
+}
+
+.bg-purple-gradient {
+  background: linear-gradient(76.4deg, #ab4eff 8.28%, #f1419e 83.02%);
+}
+
+.user-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 300px);
+  justify-items: center;
+  justify-content: center;
+  grid-auto-flow: row;
+  align-items: center;
+  grid-row-gap: 20px;
+  grid-column-gap: 10px;
+}
+
+.mobile-image-black-bottom-gradient {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0) 0.01%, rgba(0, 0, 0, 0) 45.31%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+.absolute-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 50%)
+}
+
+/** TODO: tip
+* I've moved this styles to tailwind.config.js
+* Since it may or may not work or conflict with existing styles, I've commented the code
+* for future reference
+*/
+
+/*.bg-rainbow-gradient {
+  background-image: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
+}
+
+.bg-rainbow-gradient-dark {
+  background-image: linear-gradient(90deg, #1ea686 0%, #8a3fcc 25%, #ccaa02 75%, #cc4533 100%);
+}*/
+
+.rainbox-text {
+  background: linear-gradient(90deg, #26d1a8 0%, #ac4efd 25%, #fed503 75%, #fe5540 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-rainbow-gradient {
+  background: linear-gradient(87.71deg, rgba(38, 209, 168, 0.4) 0%, rgba(172, 78, 253, 0.4) 25%, rgba(241, 65, 158, 0.4) 49.48%, rgba(254, 213, 3, 0.4) 72.4%, rgba(254, 85, 64, 0.4) 100%);;
+}
+
+.green-yellow-gradient-text {
+  background: linear-gradient(90deg, #68d18d 0%, #42f07f 25%, #9eee1d 75%, #ffd604 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-gradient-text {
+  background: linear-gradient(90deg, #278e31 0%, #52b23b 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.yellow-gradient-text {
+  background: linear-gradient(90deg, #fe5540 0%, #fcae1b 69%, #fed603 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.yellow-gradient-text-break {
+  background: linear-gradient(90deg, #fe5540 0%, #fcae1b 69%, #fed603 100%);
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.purple-gradient-text {
+  background: linear-gradient(90deg, #ab4eff 0%, #f1419e 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-green-gradient-text {
+  background: linear-gradient(90deg, #ab4eff 0%, #84ff82 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.purple-blue-gradient-text-break {
+  background: linear-gradient(129.55deg, #ff8282 -12.7%, #4870ff 92.4%);
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.bg-green-blue-gradient {
+  background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
+}
+
+.green-blue-gradient-text {
+  background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.green-blue-gradient-text-break {
+  background: linear-gradient(90deg, #84ff82 0%, #4870ff 100%);
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.green-blue-diagonal-gradient-text-break {
+  background: linear-gradient(150deg, #84ff82 0%, #4870ff 100%);
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.purple-green-yellow-gradient-text {
+  background: linear-gradient(90deg, #3fdd8a 0%, #a252fe 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.pink-blue-gradient-text {
+  background: linear-gradient(#fe5252 20%, #3f91dd 80%);
+  background-clip: text;
+  color: transparent;
+}
+
+.bg-blue-gradient {
+  background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
+}
+
+.bg-light-blue-gradient {
+  background: linear-gradient(76.4deg, #87d5ed 8.28%, #9be8f7 83.02%);
+}
+
+.bg-light-green-gradient {
+  background: linear-gradient(76.4deg, #98dd9f 8.28%, #afe2a3 83.02%);
+}
+
+.bg-green-gradient {
+  background: linear-gradient(90deg, #278e31 0%, #52b23b 100%);
+}
+
+.bg-pink-gradient {
+  background: linear-gradient(76.4deg, #ff9192 8.28%, #ff989e 83.02%);
+}
+
+.blue-gradient-text {
+  background: linear-gradient(90deg, #3b5bb1 0%, #6fa1ff 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.indigo-gradient-text {
+  background: linear-gradient(90deg, #6366f1 0%, #a855f7 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.orange-gradient-text {
+  background: linear-gradient(90deg, #f97316 0%, #fbbf24 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.no-bg-selection::selection {
+  background: transparent;
+}
+
+.text-shadow {
+  text-shadow: 0px 2px 2px rgba(0, 0, 0, 0.25);
+}
+
+.flex-grow-basis {
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
+.m-0 {
+  margin: 0 !important;
+}
+
+.Toastify__close-button svg {
+  fill: white;
+}
+
+.h-auto {
+  height: auto !important;
+}
+
+@layer utilities {
+  .placeholder-semibold::placeholder {
+    @apply font-semibold;
+  }
+}
+
+@media only screen and (max-height: 615px) {
+  #mobile-logo {
+    display: none;
+  }
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type='number'] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+/* Override @tailwindcss/forms - dark theme defaults */
+input,
+textarea,
+select {
+  background-color: inherit !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Force textareas to be full width and borderless inside containers */
+textarea {
+  width: 100% !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+textarea:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: none !important;
+  ring: none !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  -webkit-text-fill-color: #6b7280 !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  background-color: inherit !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Style native dropdown options for better contrast */
+select option {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 8px 12px !important;
+}
+
+select option:hover,
+select option:checked {
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+/* Ensure select dropdowns have visible text */
+select {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Force number inputs to have white text (collaborator percentage) */
+input[type="number"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  color-scheme: dark;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+  filter: invert(1);
+}
+
+/* Collaborator wallet address - cyan to match wallet selector */
+.collaborator-input {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.social-links div,
+.social-links div input {
+  width: 100%;
+}
+
+.buy-now-gradient {
+  background: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auction-gradient {
+  background: linear-gradient(76.4deg, #3b5bb1 8.28%, #6fa1ff 83.02%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.no-scrollbars {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+
+  &::-webkit-scrollbar {
+    width: 1px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+  }
+}
+
+.no-scrollbars::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+.darkGreyBackgroundColor {
+  background-color: #1c1c1c;
+}
+
+.grey80BackgroundColor {
+  background-color: #505050;
+}
+
+.ogun-yellow {
+  color: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
+}
+
+.ogun-bg {
+  background: linear-gradient(76.4deg, #b19f3b 8.28%, #fff16f 83.02%);
+}
+
+/* ============================================
+   RETRO MPC60 AESTHETIC - SoundChain Redesign
+   ============================================ */
+
+/* SoundChain Color Variables */
+:root {
+  --soundchain-gradient: linear-gradient(135deg, #ff6b35 0%, #f7931e 25%, #00d4aa 50%, #00bcd4 75%, #9c27b0 100%);
+  --soundchain-accent: #00d4aa;
+  --soundchain-primary: #f7931e;
+  --soundchain-secondary: #9c27b0;
+  --soundchain-tertiary: #ff6b35;
+  --soundchain-cyan: #00bcd4;
+  --mpc60-green: #00ff00;
+  --mpc60-amber: #ffaa00;
+  --retro-bg: #0a0a0a;
+  --retro-card-bg: #121212;
+  --retro-border: #1a1a1a;
+}
+
+/* Retro Text Styles */
+.retro-text {
+  font-family: 'JetBrains Mono', 'Space Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+.retro-title {
+  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: var(--soundchain-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.05em;
+}
+
+.retro-json {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--soundchain-accent);
+  letter-spacing: 0.02em;
+}
+
+/* MPC60 Display Style */
+.mpc60-display {
+  font-family: 'Space Mono', monospace;
+  background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 100%);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 8px 12px;
+  color: var(--mpc60-green);
+  text-shadow: 0 0 8px var(--mpc60-green);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Modern Card Base - OpenSea/Rarible Inspired */
+.retro-card {
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.2s ease-out;
+}
+
+.retro-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  transform: translateY(-4px);
+}
+
+/* Clean Card Variant - Minimal Style */
+.card-clean {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.card-clean:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: scale(1.02);
+}
+
+/* NFT Card - Image-First Design */
+.nft-card-modern {
+  background: #121212;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.nft-card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.nft-card-modern .card-image {
+  aspect-ratio: 1/1;
+  width: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.nft-card-modern:hover .card-image {
+  transform: scale(1.05);
+}
+
+.nft-card-modern .card-content {
+  padding: 12px;
+}
+
+.nft-card-modern .card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nft-card-modern .card-subtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 8px;
+}
+
+.nft-card-modern .card-price {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nft-card-modern .price-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+}
+
+.nft-card-modern .price-usd {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Modern Button - Primary */
+.btn-primary {
+  font-weight: 600;
+  background: #22d3ee;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  color: black;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-primary:hover {
+  background: #67e8f9;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Modern Button - Secondary */
+.btn-secondary {
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 20px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Retro Button (legacy - gradient style) */
+.retro-button {
+  font-family: 'Space Mono', monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: black;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retro-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 211, 238, 0.3);
+}
+
+.retro-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* SoundChain Button Outline */
+.soundchain-button-outline {
+  font-family: 'JetBrains Mono', monospace;
+  background: transparent;
+  border: 1px solid var(--soundchain-accent);
+  color: var(--soundchain-accent);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.soundchain-button-outline:hover {
+  background: rgba(0, 212, 170, 0.1);
+  border-color: var(--soundchain-primary);
+  color: var(--soundchain-primary);
+}
+
+/* ============================================
+   FLIP CARD ANIMATION
+   ============================================ */
+
+.nft-flip-card-container {
+  perspective: 1000px;
+  cursor: pointer;
+  width: 100%;
+  /* Let aspect-ratio determine height */
+}
+
+.nft-flip-card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3/4; /* Rarible-style compact ratio */
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nft-flip-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.nft-flip-card-front,
+.nft-flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+}
+
+.nft-flip-card-front {
+  z-index: 2;
+  overflow: hidden;
+}
+
+.nft-flip-card-back {
+  transform: rotateY(180deg);
+  background: linear-gradient(145deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+  border: 1px solid #30363d;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 0 30px rgba(0, 212, 170, 0.03);
+  /* Allow scrolling on back side for mobile */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile: Use taller ratio for more content space */
+@media (max-width: 640px) {
+  .nft-flip-card {
+    aspect-ratio: 2/3; /* Taller on mobile for more content */
+  }
+
+  .nft-flip-card-back .metadata-section {
+    padding: 8px;
+    margin-bottom: 6px;
+  }
+
+  .nft-flip-card-back .metadata-json {
+    font-size: 9px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+}
+
+.flip-hint {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  color: var(--soundchain-accent);
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.nft-flip-card-container:hover .flip-hint {
+  opacity: 1;
+}
+
+/* ============================================
+   METADATA DISPLAY STYLES
+   ============================================ */
+
+.metadata-section {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.metadata-section-compact {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 212, 170, 0.15);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: 'JetBrains Mono', 'Space Mono', monospace;
+}
+
+.metadata-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--soundchain-accent);
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 212, 170, 0.2);
+}
+
+.metadata-value {
+  font-family: 'JetBrains Mono', monospace;
+  color: #e6e6e6;
+  font-weight: 500;
+}
+
+.metadata-attribute {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: var(--soundchain-accent);
+}
+
+.metadata-json {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 6px;
+  padding: 10px;
+  color: var(--mpc60-green);
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR STYLES
+   ============================================ */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 170, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 170, 0.5);
+}
+
+.custom-scrollbar-mini::-webkit-scrollbar {
+  width: 3px;
+}
+
+.custom-scrollbar-mini::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.custom-scrollbar-mini::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 170, 0.25);
+  border-radius: 2px;
+}
+
+.custom-scrollbar-mini::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 170, 0.4);
+}
+
+/* Track NFT Card (uses same flip card base) */
+.track-nft-card-container {
+  perspective: 1000px;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* ============================================
+   ANALOG GLOW EFFECTS
+   ============================================ */
+
+.analog-glow {
+  position: relative;
+  box-shadow:
+    0 0 10px rgba(0, 212, 170, 0.1),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.analog-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure images inside analog-glow sit above the overlay */
+.analog-glow > img,
+.analog-glow > div {
+  position: relative;
+  z-index: 2;
+}
+
+/* Card Image Styling */
+.card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* ============================================
+   RARITY BADGE COLORS
+   ============================================ */
+
+.rarity-legendary {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
+.rarity-epic {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(171, 78, 255, 0.2));
+  border: 1px solid rgba(156, 39, 176, 0.5);
+  color: #ab4eff;
+  text-shadow: 0 0 8px rgba(171, 78, 255, 0.5);
+}
+
+.rarity-rare {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(100, 181, 246, 0.2));
+  border: 1px solid rgba(33, 150, 243, 0.5);
+  color: #64b5f6;
+  text-shadow: 0 0 8px rgba(100, 181, 246, 0.5);
+}
+
+.rarity-common {
+  background: rgba(128, 128, 128, 0.2);
+  border: 1px solid rgba(128, 128, 128, 0.5);
+  color: #808080;
+}
+
+/* ============================================
+   CHAIN BADGE COLORS
+   ============================================ */
+
+.chain-ethereum { background: rgba(98, 126, 234, 0.2); border-color: #627eea; color: #627eea; }
+.chain-polygon { background: rgba(130, 71, 229, 0.2); border-color: #8247e5; color: #8247e5; }
+.chain-bsc { background: rgba(243, 186, 47, 0.2); border-color: #f3ba2f; color: #f3ba2f; }
+.chain-solana { background: rgba(0, 209, 140, 0.2); border-color: #00d18c; color: #00d18c; }
+.chain-avalanche { background: rgba(232, 65, 66, 0.2); border-color: #e84142; color: #e84142; }
+.chain-zetachain { background: rgba(0, 212, 170, 0.2); border-color: #00d4aa; color: #00d4aa; }
+.chain-base { background: rgba(0, 82, 255, 0.2); border-color: #0052ff; color: #0052ff; }
+
+/* ============================================
+   SCROLLING BACKGROUND
+   ============================================ */
+
+.scrolling-background {
+  background:
+    linear-gradient(180deg, rgba(10, 10, 10, 0.95) 0%, rgba(10, 10, 10, 0.8) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 212, 170, 0.03) 2px,
+      rgba(0, 212, 170, 0.03) 4px
+    );
+  background-size: 100% 100%, 100% 8px;
+  animation: scanlines 10s linear infinite;
+}
+
+@keyframes scanlines {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 0 0, 0 100%; }
+}
+
+/* ============================================
+   SOUNDCHAIN GRADIENT TEXT
+   ============================================ */
+
+.soundchain-gradient-text {
+  background: var(--soundchain-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.soundchain-accent-text {
+  color: var(--soundchain-accent);
+}
+
+.soundchain-gradient-border {
+  border: 1px solid transparent;
+  background: linear-gradient(#0a0a0a, #0a0a0a) padding-box,
+              var(--soundchain-gradient) border-box;
+}
+
+/* ============================================
+   MARKETPLACE GRID LAYOUT - OpenSea/Rarible Inspired
+   ============================================ */
+
+.marketplace-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* Tablet */
+@media (min-width: 640px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    padding: 1.25rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+}
+
+/* Large Desktop */
+@media (min-width: 1440px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.75rem;
+    padding: 2rem;
+  }
+}
+
+/* Ultra-wide */
+@media (min-width: 1920px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 2rem;
+    padding: 2rem;
+  }
+}
+
+/* Compact Grid Variant - for profile/collection pages */
+.marketplace-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .marketplace-grid-compact {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .marketplace-grid-compact {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .marketplace-grid-compact {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* ============================================
+   MARKETPLACE FILTER BAR
+   ============================================ */
+
+.marketplace-filter-bar {
+  background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);
+  border-bottom: 1px solid #2a2a2a;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.filter-button {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.3);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  color: var(--soundchain-accent);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.filter-button:hover,
+.filter-button.active {
+  background: rgba(0, 212, 170, 0.2);
+  border-color: var(--soundchain-accent);
+}
+
+.filter-button.active {
+  box-shadow: 0 0 10px rgba(0, 212, 170, 0.3);
+}
+
+/* View Mode Toggle */
+.view-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-toggle button {
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: #808080;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-toggle button.active {
+  background: var(--soundchain-accent);
+  color: white;
+}
+
+.view-toggle button:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   OGUN REWARD TOAST ANIMATIONS
+   Gamified coin drop effect for streaming rewards
+   ============================================ */
+@keyframes coin-drop {
+  0% {
+    transform: translateY(-30px) rotate(0deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(5px) rotate(180deg);
+  }
+  80% {
+    transform: translateY(-3px) rotate(270deg);
+  }
+  100% {
+    transform: translateY(10px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes coin-shine {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 3px rgba(234, 179, 8, 0.5));
+  }
+  50% {
+    filter: brightness(1.3) drop-shadow(0 0 8px rgba(234, 179, 8, 0.8));
+  }
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes piggy-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-coin-drop {
+  animation: coin-drop 0.6s ease-out forwards;
+}
+
+.animate-coin-shine {
+  animation: coin-shine 1.5s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in-up 0.3s ease-out forwards;
+}
+
+.animate-piggy-pulse {
+  animation: piggy-pulse 0.3s ease-out;
+}
+
+/* Emoji sparkle/shimmer animation - sophisticated adult sparkle */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) rotate(-45deg);
+  }
+  100% {
+    transform: translateX(200%) rotate(-45deg);
+  }
+}
+
+@keyframes emoji-glow {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 2px rgba(34, 211, 238, 0.3));
+  }
+  50% {
+    filter: brightness(1.15) drop-shadow(0 0 6px rgba(34, 211, 238, 0.6));
+  }
+}
+
+@keyframes sparkle-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-emoji-glow {
+  animation: emoji-glow 2s ease-in-out infinite;
+}
+
+/* Glowing Logo Animations */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes logoGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(162,82,254,0.6)) drop-shadow(0 0 15px rgba(63,221,138,0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(162,82,254,0.8)) drop-shadow(0 0 25px rgba(63,221,138,0.6)) drop-shadow(0 0 35px rgba(1,192,214,0.4));
+  }
+}
+
+.animate-breathe {
+  animation: breathe 2s ease-in-out infinite;
+}
+
+.animate-logo-glow {
+  animation: logoGlow 2s ease-in-out infinite;
+}
+
+.animate-sparkle-pulse {
+  animation: sparkle-pulse 2s ease-in-out infinite;
+}
+
+/* Matrix "ai" shimmer for SoundChain logo text */
+@keyframes matrixShimmer {
+  0% {
+    text-shadow: 0 0 4px rgba(0,255,65,0.6), 0 0 8px rgba(0,255,65,0.3);
+    opacity: 0.85;
+  }
+  25% {
+    text-shadow: 0 0 8px rgba(0,255,65,0.9), 0 0 16px rgba(0,255,65,0.5), 0 0 24px rgba(0,255,65,0.2);
+    opacity: 1;
+  }
+  50% {
+    text-shadow: 0 0 6px rgba(0,255,65,0.7), 0 0 12px rgba(0,255,65,0.4), 0 0 30px rgba(0,200,50,0.3);
+    opacity: 0.9;
+  }
+  75% {
+    text-shadow: 0 0 10px rgba(0,255,65,1), 0 0 20px rgba(0,255,65,0.6), 0 0 35px rgba(0,255,65,0.3);
+    opacity: 1;
+  }
+  100% {
+    text-shadow: 0 0 4px rgba(0,255,65,0.6), 0 0 8px rgba(0,255,65,0.3);
+    opacity: 0.85;
+  }
+}
+
+.matrix-ai {
+  color: #00ff41;
+  animation: matrixShimmer 2.5s ease-in-out infinite;
+  font-style: normal;
+}
+
+/* Enhanced helix glow for logo icon */
+@keyframes helixPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(162,82,254,0.7)) drop-shadow(0 0 12px rgba(63,221,138,0.5));
+  }
+  33% {
+    filter: drop-shadow(0 0 10px rgba(1,192,214,0.8)) drop-shadow(0 0 20px rgba(162,82,254,0.6)) drop-shadow(0 0 30px rgba(63,221,138,0.3));
+  }
+  66% {
+    filter: drop-shadow(0 0 12px rgba(63,221,138,0.9)) drop-shadow(0 0 22px rgba(254,85,64,0.5)) drop-shadow(0 0 35px rgba(1,192,214,0.3));
+  }
+}
+
+.animate-helix-glow {
+  animation: helixPulse 3s ease-in-out infinite;
+}
+
+/* High-res emoji rendering for 4K+ displays */
+.emoji-hd {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Toast container styling */
+.ogun-reward-toast {
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(30, 30, 30, 0.95) 100%) !important;
+  border: 1px solid rgba(234, 179, 8, 0.3) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 20px rgba(234, 179, 8, 0.2), 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+.ogun-reward-toast::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.8), transparent);
+}
+
+/* ============================================
+   BATTERY SAVING: Respect user's reduced motion preference
+   Disables animations for users who have enabled
+   "Reduce Motion" on iOS/Android/macOS/Windows
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable specific Tailwind animations */
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce,
+  .animate-ping,
+  .animate-wave {
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   GREEN MODE: Disable backdrop-blur on mobile
+   Eliminates GPU Gaussian blur shader entirely.
+   Visually near-identical on small screens.
+   ============================================ */
+@media (max-width: 768px) {
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: rgba(0, 0, 0, 0.85) !important;
+  }
+}

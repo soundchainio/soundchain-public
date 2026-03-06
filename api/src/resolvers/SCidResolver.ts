@@ -1,0 +1,702 @@
+/**
+ * SCid GraphQL Resolver
+ *
+ * API endpoints for SCid (SoundChain ID) operations.
+ */
+
+import { Arg, Authorized, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
+import { CurrentUser } from '../decorators/current-user';
+import { SCid, SCidStatus } from '../models/SCid';
+import { User } from '../models/User';
+import { Context } from '../types/Context';
+import { ChainCode } from '../utils/SCidGenerator';
+import { SCidGenerator } from '../utils/SCidGenerator';
+
+// Input types
+import { Field, InputType, ObjectType, Int } from 'type-graphql';
+
+@InputType()
+export class RegisterSCidInput {
+  @Field()
+  trackId: string;
+
+  @Field(() => ChainCode, { nullable: true })
+  chainCode?: ChainCode;
+
+  @Field({ nullable: true })
+  metadataHash?: string;
+}
+
+@InputType()
+export class LogStreamInput {
+  @Field()
+  scid: string;
+
+  @Field(() => Int)
+  duration: number;
+
+  @Field({ nullable: true })
+  listenerWallet?: string;
+
+  @Field({ nullable: true })
+  listenerProfileId?: string;
+}
+
+@InputType()
+export class TransferSCidInput {
+  @Field()
+  scid: string;
+
+  @Field()
+  toProfileId: string;
+
+  @Field({ nullable: true })
+  reason?: string;
+}
+
+@InputType()
+export class SCidSearchInput {
+  @Field({ nullable: true })
+  profileId?: string;
+
+  @Field(() => ChainCode, { nullable: true })
+  chainCode?: ChainCode;
+
+  @Field(() => SCidStatus, { nullable: true })
+  status?: SCidStatus;
+
+  @Field({ nullable: true })
+  year?: string;
+
+  @Field(() => Int, { nullable: true, defaultValue: 50 })
+  limit?: number;
+
+  @Field(() => Int, { nullable: true, defaultValue: 0 })
+  offset?: number;
+}
+
+// Response types
+@ObjectType()
+export class RegisterSCidPayload {
+  @Field(() => SCid)
+  scid: SCid;
+}
+
+@ObjectType()
+export class LogStreamPayload {
+  @Field()
+  success: boolean;
+
+  @Field(() => Int)
+  totalStreams: number;
+
+  // WIN-WIN: Creator rewards
+  @Field()
+  creatorReward: number;
+
+  @Field({ nullable: true })
+  creatorWallet?: string;
+
+  @Field({ nullable: true })
+  creatorProfileId?: string;
+
+  @Field({ nullable: true })
+  creatorDailyLimitReached?: boolean;
+
+  // WIN-WIN: Listener rewards
+  @Field()
+  listenerReward: number;
+
+  @Field({ nullable: true })
+  listenerWallet?: string;
+
+  @Field({ nullable: true })
+  listenerProfileId?: string;
+
+  @Field({ nullable: true })
+  listenerDailyLimitReached?: boolean;
+
+  // Track info
+  @Field({ nullable: true })
+  trackTitle?: string;
+
+  @Field({ nullable: true })
+  trackId?: string;
+
+  // Legacy fields for backward compatibility
+  @Field({ nullable: true })
+  ogunReward?: number;
+
+  @Field({ nullable: true })
+  dailyLimitReached?: boolean;
+}
+
+@InputType()
+export class ClaimStreamingRewardsInput {
+  @Field()
+  walletAddress: string;
+
+  @Field({ nullable: true, defaultValue: false })
+  stakeDirectly?: boolean;
+}
+
+@ObjectType()
+export class ClaimStreamingRewardsPayload {
+  @Field()
+  success: boolean;
+
+  @Field()
+  totalClaimed: number;
+
+  @Field(() => Int)
+  tracksCount: number;
+
+  @Field()
+  staked: boolean;
+
+  @Field({ nullable: true })
+  transactionHash?: string;
+
+  @Field({ nullable: true })
+  error?: string;
+}
+
+@ObjectType()
+export class UnclaimedRewardsPayload {
+  @Field()
+  totalUnclaimed: number;
+
+  @Field(() => Int)
+  tracksWithRewards: number;
+
+  @Field(() => [UnclaimedRewardBreakdown])
+  breakdown: UnclaimedRewardBreakdown[];
+}
+
+@ObjectType()
+export class UnclaimedRewardBreakdown {
+  @Field()
+  scid: string;
+
+  @Field()
+  trackId: string;
+
+  @Field()
+  unclaimed: number;
+}
+
+@ObjectType()
+export class GrandfatherPayload {
+  @Field(() => Int)
+  totalTracksFound: number;
+
+  @Field(() => Int)
+  tracksWithoutScid: number;
+
+  @Field(() => Int)
+  registered: number;
+
+  @Field(() => Int)
+  skipped: number;
+
+  @Field(() => Int)
+  nftTracks: number;
+
+  @Field(() => Int)
+  nonNftTracks: number;
+
+  @Field(() => [String])
+  errors: string[];
+}
+
+@ObjectType()
+export class SCidValidationResult {
+  @Field()
+  valid: boolean;
+
+  @Field({ nullable: true })
+  error?: string;
+
+  @Field({ nullable: true })
+  chainCode?: string;
+
+  @Field({ nullable: true })
+  artistHash?: string;
+
+  @Field({ nullable: true })
+  year?: string;
+
+  @Field({ nullable: true })
+  sequence?: string;
+}
+
+@ObjectType()
+export class SCidStatsPayload {
+  @Field(() => Int)
+  totalScids: number;
+
+  @Field(() => Int)
+  totalStreams: number;
+
+  @Field()
+  totalOgunRewarded: number;
+}
+
+@ObjectType()
+export class SCidSearchResult {
+  @Field(() => [SCid])
+  scids: SCid[];
+
+  @Field(() => Int)
+  total: number;
+}
+
+@ObjectType()
+export class BulkRegisterPayload {
+  @Field(() => Int)
+  registered: number;
+
+  @Field(() => Int)
+  skipped: number;
+
+  @Field(() => [String])
+  errors: string[];
+}
+
+// Historical Stats Types
+@ObjectType()
+export class TopTrackStats {
+  @Field()
+  trackId: string;
+
+  @Field()
+  title: string;
+
+  @Field(() => Int)
+  plays: number;
+
+  @Field()
+  isNft: boolean;
+}
+
+@ObjectType()
+export class HistoricalStreamStatsPayload {
+  @Field(() => Int)
+  totalTracks: number;
+
+  @Field(() => Int)
+  tracksWithPlays: number;
+
+  @Field(() => Int)
+  totalPlays: number;
+
+  @Field(() => Int)
+  nftTracksWithPlays: number;
+
+  @Field(() => Int)
+  nftPlays: number;
+
+  @Field(() => Int)
+  nonNftPlays: number;
+
+  @Field()
+  estimatedCreatorOgun: number;
+
+  @Field(() => Int)
+  uniqueCreators: number;
+
+  @Field(() => [TopTrackStats])
+  topTracks: TopTrackStats[];
+}
+
+// OG Rewards Types
+@ObjectType()
+export class TopRewardedTrack {
+  @Field()
+  trackId: string;
+
+  @Field()
+  title: string;
+
+  @Field(() => Int)
+  plays: number;
+
+  @Field()
+  ogun: number;
+}
+
+@ObjectType()
+export class GrandfatherOGRewardsPayload {
+  @Field(() => Int)
+  totalTracksProcessed: number;
+
+  @Field(() => Int)
+  totalPlaysRewarded: number;
+
+  @Field()
+  totalOgunCredited: number;
+
+  @Field(() => Int)
+  nftTracksRewarded: number;
+
+  @Field(() => Int)
+  nonNftTracksRewarded: number;
+
+  @Field(() => Int)
+  creatorsRewarded: number;
+
+  @Field(() => [TopRewardedTrack])
+  topRewarded: TopRewardedTrack[];
+
+  @Field(() => [String])
+  errors: string[];
+}
+
+@Resolver(SCid)
+export class SCidResolver {
+  /**
+   * Get track title for an SCid
+   */
+  @FieldResolver(() => String, { nullable: true })
+  async trackTitle(@Ctx() { trackService }: Context, @Root() scid: SCid): Promise<string | null> {
+    try {
+      const track = await trackService.findOrFail(scid.trackId);
+      return track.title;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get artist display name for an SCid
+   */
+  @FieldResolver(() => String, { nullable: true })
+  async artistName(@Ctx() { profileService }: Context, @Root() scid: SCid): Promise<string | null> {
+    try {
+      const profile = await profileService.getProfile(scid.profileId);
+      return profile?.displayName || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get formatted SCid for display
+   */
+  @FieldResolver(() => String)
+  formattedScid(@Root() scid: SCid): string {
+    return SCidGenerator.formatForDisplay(scid.scid);
+  }
+
+  // ==================== QUERIES ====================
+
+  /**
+   * Get SCid by code
+   */
+  @Query(() => SCid, { nullable: true })
+  async scid(
+    @Ctx() { scidService }: Context,
+    @Arg('scid') scid: string
+  ): Promise<SCid | null> {
+    return scidService.getBySCid(scid);
+  }
+
+  /**
+   * Get SCid by track ID
+   */
+  @Query(() => SCid, { nullable: true })
+  async scidByTrack(
+    @Ctx() { scidService }: Context,
+    @Arg('trackId') trackId: string
+  ): Promise<SCid | null> {
+    return scidService.getByTrackId(trackId);
+  }
+
+  /**
+   * Get all SCids for a profile
+   */
+  @Query(() => [SCid])
+  async scidsByProfile(
+    @Ctx() { scidService }: Context,
+    @Arg('profileId') profileId: string
+  ): Promise<SCid[]> {
+    return scidService.getByProfileId(profileId);
+  }
+
+  /**
+   * Get my SCids (authenticated)
+   */
+  @Query(() => [SCid])
+  @Authorized()
+  async myScids(
+    @Ctx() { scidService }: Context,
+    @CurrentUser() { profileId }: User
+  ): Promise<SCid[]> {
+    return scidService.getByProfileId(profileId.toString());
+  }
+
+  /**
+   * Validate an SCid format
+   */
+  @Query(() => SCidValidationResult)
+  validateScid(@Arg('scid') scid: string): SCidValidationResult {
+    const result = SCidGenerator.parse(scid);
+
+    if (!result.valid) {
+      return { valid: false, error: result.error };
+    }
+
+    return {
+      valid: true,
+      chainCode: result.components?.chainCode,
+      artistHash: result.components?.artistHash,
+      year: result.components?.year,
+      sequence: result.components?.sequence,
+    };
+  }
+
+  /**
+   * Get SCid statistics
+   */
+  @Query(() => SCidStatsPayload)
+  async scidStats(@Ctx() { scidService }: Context): Promise<SCidStatsPayload> {
+    const stats = await scidService.getStats();
+    return {
+      totalScids: stats.totalScids,
+      totalStreams: stats.totalStreams,
+      totalOgunRewarded: stats.totalOgunRewarded,
+    };
+  }
+
+  /**
+   * Search SCids
+   */
+  @Query(() => SCidSearchResult)
+  async searchScids(
+    @Ctx() { scidService }: Context,
+    @Arg('input') input: SCidSearchInput
+  ): Promise<SCidSearchResult> {
+    return scidService.search(input);
+  }
+
+  /**
+   * Generate SCid preview (doesn't save)
+   */
+  @Query(() => String)
+  previewScid(
+    @Arg('artistIdentifier') artistIdentifier: string,
+    @Arg('sequenceNumber', () => Int) sequenceNumber: number,
+    @Arg('chainCode', () => ChainCode, { nullable: true }) chainCode?: ChainCode
+  ): string {
+    return SCidGenerator.generate({
+      artistIdentifier,
+      sequenceNumber,
+      chainCode,
+    });
+  }
+
+  // ==================== MUTATIONS ====================
+
+  /**
+   * Register a new SCid for a track
+   */
+  @Mutation(() => RegisterSCidPayload)
+  @Authorized()
+  async registerScid(
+    @Ctx() { scidService, profileService }: Context,
+    @Arg('input') input: RegisterSCidInput,
+    @CurrentUser() user: User
+  ): Promise<RegisterSCidPayload> {
+    // Get user's wallet address
+    const profile = await profileService.getProfile(user.profileId.toString());
+    const walletAddress = profile?.magicWalletAddress;
+
+    const scid = await scidService.register({
+      trackId: input.trackId,
+      profileId: user.profileId.toString(),
+      walletAddress,
+      chainCode: input.chainCode,
+      metadataHash: input.metadataHash,
+    });
+
+    return { scid };
+  }
+
+  /**
+   * Log a stream and earn OGUN rewards - WIN-WIN MODEL!
+   *
+   * Both CREATORS and LISTENERS earn OGUN tokens!
+   */
+  @Mutation(() => LogStreamPayload)
+  async logStream(
+    @Ctx() { scidService }: Context,
+    @Arg('input') input: LogStreamInput
+  ): Promise<LogStreamPayload> {
+    const result = await scidService.logStream({
+      scid: input.scid,
+      duration: input.duration,
+      listenerWallet: input.listenerWallet,
+      listenerProfileId: input.listenerProfileId,
+    });
+
+    // Add legacy fields for backward compatibility
+    return {
+      ...result,
+      ogunReward: result.creatorReward + result.listenerReward,
+      dailyLimitReached: result.creatorDailyLimitReached || result.listenerDailyLimitReached,
+    };
+  }
+
+  /**
+   * Transfer SCid ownership
+   */
+  @Mutation(() => SCid)
+  @Authorized()
+  async transferScid(
+    @Ctx() { scidService }: Context,
+    @Arg('input') input: TransferSCidInput,
+    @CurrentUser() user: User
+  ): Promise<SCid> {
+    const result = await scidService.transfer(
+      input.scid,
+      user.profileId.toString(),
+      input.toProfileId,
+      undefined,
+      input.reason
+    );
+
+    if (!result) {
+      throw new Error('Transfer failed');
+    }
+
+    return result;
+  }
+
+  /**
+   * Mark SCid as registered on-chain (admin or system)
+   */
+  @Mutation(() => SCid, { nullable: true })
+  @Authorized(['ADMIN'])
+  async markScidRegistered(
+    @Ctx() { scidService }: Context,
+    @Arg('scid') scid: string,
+    @Arg('transactionHash') transactionHash: string,
+    @Arg('blockNumber', () => Int) blockNumber: number,
+    @Arg('contractAddress') contractAddress: string
+  ): Promise<SCid | null> {
+    return scidService.markRegistered(scid, transactionHash, blockNumber, contractAddress);
+  }
+
+  /**
+   * Bulk register SCids for existing tracks
+   */
+  @Mutation(() => BulkRegisterPayload)
+  @Authorized()
+  async bulkRegisterScids(
+    @Ctx() { scidService }: Context,
+    @Arg('trackIds', () => [String]) trackIds: string[],
+    @Arg('chainCode', () => ChainCode, { nullable: true }) chainCode: ChainCode,
+    @CurrentUser() user: User
+  ): Promise<BulkRegisterPayload> {
+    return scidService.bulkRegister(
+      trackIds,
+      user.profileId.toString(),
+      chainCode
+    );
+  }
+
+  /**
+   * Get unclaimed streaming rewards for current user
+   */
+  @Query(() => UnclaimedRewardsPayload)
+  @Authorized()
+  async myUnclaimedStreamingRewards(
+    @Ctx() { scidService }: Context,
+    @CurrentUser() { profileId }: User
+  ): Promise<UnclaimedRewardsPayload> {
+    return scidService.getUnclaimedRewards(profileId.toString());
+  }
+
+  /**
+   * Claim streaming rewards
+   *
+   * Claims all unclaimed OGUN rewards from streaming.
+   * When contract is deployed, this will also trigger on-chain distribution.
+   */
+  @Mutation(() => ClaimStreamingRewardsPayload)
+  @Authorized()
+  async claimStreamingRewards(
+    @Ctx() { scidService }: Context,
+    @Arg('input') input: ClaimStreamingRewardsInput,
+    @CurrentUser() user: User
+  ): Promise<ClaimStreamingRewardsPayload> {
+    return scidService.claimStreamingRewards({
+      profileId: user.profileId.toString(),
+      walletAddress: input.walletAddress,
+      stakeDirectly: input.stakeDirectly,
+    });
+  }
+
+  /**
+   * Grandfather existing tracks with SCid codes
+   *
+   * Admin-only mutation to register SCids for all existing tracks.
+   * This migrates existing NFTs/tracks to the SCid system for OGUN rewards.
+   */
+  @Mutation(() => GrandfatherPayload)
+  @Authorized(['ADMIN'])
+  async grandfatherExistingTracks(
+    @Ctx() { scidService }: Context,
+    @Arg('limit', () => Int, { nullable: true, defaultValue: 100 }) limit: number,
+    @Arg('dryRun', { nullable: true, defaultValue: false }) dryRun: boolean,
+    @Arg('chainCode', () => ChainCode, { nullable: true }) chainCode?: ChainCode
+  ): Promise<GrandfatherPayload> {
+    return scidService.grandfatherExistingTracks({
+      limit,
+      dryRun,
+      chainCode,
+    });
+  }
+
+  // ==================== OG REWARDS QUERIES & MUTATIONS ====================
+
+  /**
+   * Get historical streaming statistics
+   *
+   * Admin query to see total playbackCount data across all tracks.
+   * Use this to preview what grandfatherOGRewards will process.
+   */
+  @Query(() => HistoricalStreamStatsPayload)
+  @Authorized(['ADMIN'])
+  async historicalStreamStats(
+    @Ctx() { scidService }: Context
+  ): Promise<HistoricalStreamStatsPayload> {
+    return scidService.getHistoricalStreamStats();
+  }
+
+  /**
+   * Grandfather OG Rewards
+   *
+   * Admin mutation to credit retroactive OGUN rewards to creators
+   * based on their historical playbackCount data from 2022-2026.
+   *
+   * This rewards OG users who've been supporting SoundChain!
+   * Rewards are added as CLAIMABLE BALANCE.
+   */
+  @Mutation(() => GrandfatherOGRewardsPayload)
+  @Authorized(['ADMIN'])
+  async grandfatherOGRewards(
+    @Ctx() { scidService }: Context,
+    @Arg('dryRun', { nullable: true, defaultValue: true }) dryRun: boolean,
+    @Arg('limit', () => Int, { nullable: true, defaultValue: 0 }) limit: number,
+    @Arg('minPlays', () => Int, { nullable: true, defaultValue: 1 }) minPlays: number
+  ): Promise<GrandfatherOGRewardsPayload> {
+    return scidService.grandfatherOGRewards({
+      dryRun,
+      limit,
+      minPlays,
+    });
+  }
+}
+
+export default SCidResolver;

@@ -1,0 +1,8 @@
+mutation UnsubscribeFromProfile($input: UnsubscribeFromProfileInput!) {
+  unsubscribeFromProfile(input: $input) {
+    profile {
+      id
+      isSubscriber
+    }
+  }
+}

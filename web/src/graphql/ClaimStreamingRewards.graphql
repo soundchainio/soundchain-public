@@ -1,0 +1,22 @@
+mutation ClaimStreamingRewards($input: ClaimStreamingRewardsInput!) {
+  claimStreamingRewards(input: $input) {
+    success
+    totalClaimed
+    tracksCount
+    staked
+    transactionHash
+    error
+  }
+}
+
+query GetUnclaimedStreamingRewards {
+  myUnclaimedStreamingRewards {
+    totalUnclaimed
+    tracksWithRewards
+    breakdown {
+      scid
+      trackId
+      unclaimed
+    }
+  }
+}

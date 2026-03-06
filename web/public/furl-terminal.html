@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>FURL Terminal</title>
+<link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0a}
+  #terminal{width:100%;height:100%}
+  .xterm{height:100%!important}
+  /* Status bar at top — thin, unobtrusive */
+  #status{position:absolute;top:0;left:0;right:0;height:18px;background:#0a0a0a;border-bottom:1px solid rgba(6,182,212,0.15);
+    display:flex;align-items:center;padding:0 8px;font:10px 'JetBrains Mono',Menlo,Monaco,monospace;color:#666;z-index:10}
+  #status .dot{width:6px;height:6px;border-radius:50%;margin-right:6px;background:#555}
+  #status .dot.connected{background:#22c55e;box-shadow:0 0 4px #22c55e}
+  #status .dot.connecting{background:#eab308;animation:pulse 1s infinite}
+  #status .dot.error{background:#ef4444}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  #term-wrap{position:absolute;top:18px;left:0;right:0;bottom:0}
+</style>
+</head>
+<body>
+<div id="status"><span class="dot connecting" id="dot"></span><span id="msg">connecting...</span></div>
+<div id="term-wrap"><div id="terminal"></div></div>
+
+<script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://unpkg.com/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
+<script src="https://unpkg.com/@xterm/addon-web-links@0.11.0/lib/addon-web-links.js"></script>
+<script>
+(function(){
+  var params = new URLSearchParams(location.search);
+  var tunnelUrl = params.get('tunnel');
+  if (!tunnelUrl) {
+    document.getElementById('msg').textContent = 'no tunnel URL';
+    document.getElementById('dot').className = 'dot error';
+    return;
+  }
+
+  // Terminal
+  var term = new Terminal({
+    cursorBlink: true,
+    cursorStyle: 'bar',
+    fontSize: 12,
+    fontFamily: 'JetBrains Mono, Menlo, Monaco, monospace',
+    theme: {
+      background: '#0a0a0a',
+      foreground: '#e0e0e0',
+      cursor: '#22d3ee',
+      selectionBackground: '#22d3ee33',
+      black: '#0a0a0a',
+      green: '#22c55e',
+      cyan: '#22d3ee',
+      yellow: '#eab308',
+      red: '#ef4444',
+      blue: '#3b82f6',
+      magenta: '#a855f7',
+      white: '#e0e0e0'
+    },
+    allowTransparency: true,
+    scrollback: 5000
+  });
+
+  var fitAddon = new FitAddon.FitAddon();
+  var webLinksAddon = new WebLinksAddon.WebLinksAddon();
+  term.loadAddon(fitAddon);
+  term.loadAddon(webLinksAddon);
+  term.open(document.getElementById('terminal'));
+  term.focus();
+
+  setTimeout(function(){ try { fitAddon.fit(); } catch(e){} }, 50);
+
+  // Click to focus
+  document.getElementById('term-wrap').addEventListener('click', function(){ term.focus(); });
+
+  // Status helpers
+  var dot = document.getElementById('dot');
+  var msg = document.getElementById('msg');
+  function setStatus(state, text) {
+    dot.className = 'dot ' + state;
+    msg.textContent = text;
+  }
+
+  // WebSocket connection
+  var baseUrl = tunnelUrl.replace(/\/+$/, '');
+  var isRelay = baseUrl.indexOf('tunnel.soundchain.io') !== -1;
+  var httpBase = 'https://' + baseUrl.replace(/^https?:\/\//, '');
+  var wsBase = httpBase.replace(/^http/, 'ws');
+  var ws = null;
+  var reconnectAttempts = 0;
+  var maxReconnect = 5;
+  var reconnectTimer = null;
+
+  function connect() {
+    setStatus('connecting', 'connecting...');
+
+    var wsUrl;
+    if (isRelay) {
+      wsUrl = wsBase;
+      doConnect(wsUrl);
+    } else {
+      // Legacy ttyd: fetch /token first
+      fetch(httpBase + '/token', { credentials: 'omit' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ doConnect(wsBase + '/ws?token=' + (d.token || '')); })
+        .catch(function(){ doConnect(wsBase + '/ws?token='); });
+    }
+  }
+
+  function doConnect(wsUrl) {
+    try { if (ws) ws.close(); } catch(e){}
+
+    ws = new WebSocket(wsUrl, ['tty']);
+    ws.binaryType = 'arraybuffer';
+
+    var connectTimeout = setTimeout(function(){
+      if (ws.readyState !== WebSocket.OPEN) {
+        setStatus('error', 'timeout');
+        term.writeln('\r\n\x1b[31m[connection timed out]\x1b[0m');
+        try { ws.close(); } catch(e){}
+        scheduleReconnect();
+      }
+    }, 10000);
+
+    ws.onopen = function() {
+      clearTimeout(connectTimeout);
+      reconnectAttempts = 0;
+      setStatus('connected', isRelay ? 'relay' : 'tunnel');
+
+      term.focus();
+      try { fitAddon.fit(); } catch(e){}
+      sendResize();
+
+      // Staggered resize + fit sequence
+      setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); term.focus(); }, 200);
+      setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 800);
+      // Auto-launch Claude Code
+      setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('claude\n'); }, 1500);
+    };
+
+    ws.onmessage = function(evt) {
+      if (typeof evt.data === 'string') {
+        var type = evt.data[0];
+        var data = evt.data.slice(1);
+        if (type === '0') term.write(data);
+      } else if (evt.data instanceof ArrayBuffer) {
+        var arr = new Uint8Array(evt.data);
+        if (arr.length > 0 && arr[0] === 48) term.write(arr.slice(1));
+      }
+    };
+
+    ws.onclose = function() {
+      clearTimeout(connectTimeout);
+      setStatus('error', 'disconnected');
+      term.writeln('\r\n\x1b[33m[tunnel disconnected]\x1b[0m');
+      scheduleReconnect();
+    };
+
+    ws.onerror = function() {
+      clearTimeout(connectTimeout);
+      setStatus('error', 'error');
+    };
+
+    // User input → ttyd binary protocol
+    term.onData(function(data) {
+      if (ws.readyState === WebSocket.OPEN) {
+        var encoder = new TextEncoder();
+        var dataBytes = encoder.encode(data);
+        var buf = new Uint8Array(dataBytes.length + 1);
+        buf[0] = 48; // '0' = input
+        buf.set(dataBytes, 1);
+        ws.send(buf.buffer);
+      }
+    });
+
+    // Resize → ttyd binary protocol
+    term.onResize(function(size) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        var encoder = new TextEncoder();
+        var json = encoder.encode(JSON.stringify({ columns: size.cols, rows: size.rows }));
+        var buf = new Uint8Array(json.length + 1);
+        buf[0] = 49; // '1' = resize
+        buf.set(json, 1);
+        ws.send(buf.buffer);
+      }
+    });
+  }
+
+  function sendResize() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    var cols = Math.max(term.cols, 40);
+    var rows = Math.max(term.rows, 10);
+    var encoder = new TextEncoder();
+    var json = encoder.encode(JSON.stringify({ columns: cols, rows: rows }));
+    var buf = new Uint8Array(json.length + 1);
+    buf[0] = 49;
+    buf.set(json, 1);
+    ws.send(buf.buffer);
+  }
+
+  function sendInput(text) {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    var encoder = new TextEncoder();
+    var bytes = encoder.encode(text);
+    var buf = new Uint8Array(bytes.length + 1);
+    buf[0] = 48;
+    buf.set(bytes, 1);
+    ws.send(buf.buffer);
+  }
+
+  function scheduleReconnect() {
+    if (reconnectAttempts >= maxReconnect) {
+      setStatus('error', 'failed — refresh to retry');
+      term.writeln('\x1b[31m[max reconnection attempts reached]\x1b[0m');
+      return;
+    }
+    reconnectAttempts++;
+    var delay = Math.min(2000 * Math.pow(2, reconnectAttempts - 1), 30000);
+    setStatus('connecting', 'reconnecting in ' + Math.round(delay/1000) + 's...');
+    clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(connect, delay);
+  }
+
+  // Window resize → refit terminal
+  window.addEventListener('resize', function(){ try { fitAddon.fit(); } catch(e){} });
+
+  // Visibility API — pause/resume awareness
+  document.addEventListener('visibilitychange', function(){
+    if (!document.hidden && ws && ws.readyState === WebSocket.OPEN) {
+      try { fitAddon.fit(); } catch(e){}
+      sendResize();
+    }
+  });
+
+  // Listen for postMessage from parent (for programmatic input/disconnect)
+  window.addEventListener('message', function(evt) {
+    if (!evt.data || typeof evt.data !== 'object') return;
+    if (evt.data.type === 'furl-input' && evt.data.text) {
+      sendInput(evt.data.text);
+    }
+    if (evt.data.type === 'furl-disconnect') {
+      clearTimeout(reconnectTimer);
+      maxReconnect = 0; // prevent auto-reconnect
+      try { ws.close(); } catch(e){}
+      setStatus('error', 'disconnected by parent');
+    }
+    if (evt.data.type === 'furl-focus') {
+      term.focus();
+    }
+    if (evt.data.type === 'furl-fit') {
+      try { fitAddon.fit(); } catch(e){}
+      sendResize();
+    }
+  });
+
+  // Start connection
+  term.writeln('\x1b[36m\u250C\u2500 CLI BRIDGE (iframe-isolated) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\x1b[0m');
+  term.writeln('\x1b[36m\u2502\x1b[0m connecting to ' + (isRelay ? 'SoundChain relay' : 'tunnel') + '...');
+  term.writeln('\x1b[36m\u2502\x1b[0m \x1b[90m' + httpBase + '\x1b[0m');
+  term.writeln('\x1b[36m\u2502\x1b[0m \x1b[32mThis terminal survives page refreshes!\x1b[0m');
+  term.writeln('\x1b[36m\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\x1b[0m');
+  term.writeln('');
+
+  connect();
+})();
+</script>
+</body>
+</html>

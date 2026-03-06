@@ -1,0 +1,8 @@
+query TracksByGenre($limit: Float) {
+  tracksByGenre(limit: $limit) {
+    genre
+    tracks {
+      ...TrackComponentFields
+    }
+  }
+}

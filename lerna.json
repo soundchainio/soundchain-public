@@ -1,0 +1,5 @@
+{
+  "packages": ["api", "web"],
+  "version": "1.0.0",
+  "npmClient": "yarn"
+}

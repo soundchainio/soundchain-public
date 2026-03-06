@@ -1,0 +1,6 @@
+query UnreadMessageCount {
+  myProfile {
+    id
+    unreadMessageCount
+  }
+}

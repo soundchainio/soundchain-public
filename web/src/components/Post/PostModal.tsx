@@ -1,0 +1,173 @@
+import { useModalDispatch, useModalState } from 'contexts/ModalContext'
+import GraphemeSplitter from 'grapheme-splitter'
+import { usePostLazyQuery } from 'lib/graphql'
+import { useCallback, useEffect, useState } from 'react'
+import { PostFormType } from 'types/PostFormType'
+import { getNormalizedLink, hasLink } from '../../utils/NormalizeEmbedLinks'
+import { ModalsPortal } from '../ModalsPortal'
+import { PostForm } from './PostForm'
+import { X } from 'lucide-react'
+
+export const maxLength = 1000
+
+const splitter = new GraphemeSplitter()
+
+// Regex to match emote markdown: ![emote:name](url)
+const emoteMarkdownRegex = /!\[emote:[^\]]+\]\([^)]+\)/g
+
+export const getBodyCharacterCount = (body?: string) => {
+  if (!body) return 0
+
+  // Count each emote as 1 character instead of full markdown length
+  const emoteMatches = body.match(emoteMarkdownRegex) || []
+  const textWithoutEmotes = body.replace(emoteMarkdownRegex, '')
+
+  // Grapheme count of text + number of emotes (each emote = 1)
+  return splitter.splitGraphemes(textWithoutEmotes).length + emoteMatches.length
+}
+
+// When we get string.length, emojis are counted as 2 characters
+// This functions fixes the input maxLength and adjust to count an emoji as 1 char
+export const setMaxInputLength = (input: string) => {
+  const rawValue = input.length
+
+  return maxLength + (rawValue - getBodyCharacterCount(input))
+}
+
+export const PostModal = () => {
+  const [postType, setPostType] = useState<PostFormType>(PostFormType.NEW)
+  const [originalLink, setOriginalLink] = useState('')
+  const [postLink, setPostLink] = useState('')
+  const [bodyValue, setBodyValue] = useState('')
+
+  const { showNewPost, repostId, editPostId, trackId } = useModalState()
+  const { dispatchShowPostModal, dispatchSetRepostId, dispatchSetEditPostId } = useModalDispatch()
+
+  const [getPost, { data: editingPost }] = usePostLazyQuery()
+
+  const initialValues = { body: editingPost?.post.body || '' }
+
+  const clearState = () => {
+    dispatchShowPostModal({ show: false })
+    setPostLink('')
+    setOriginalLink('')
+    setBodyValue('')
+    dispatchSetRepostId(undefined)
+    dispatchSetEditPostId(undefined)
+  }
+
+  const cancel = (setFieldValue: (val: string, newVal: string) => void) => {
+    setFieldValue('body', '')
+    clearState()
+  }
+
+  const normalizeOriginalLink = useCallback(async () => {
+    if (originalLink.length && hasLink(originalLink)) {
+      const link = await getNormalizedLink(originalLink)
+      if (link) {
+        setPostLink(link)
+      }
+    } else {
+      setPostLink('')
+    }
+  }, [originalLink])
+
+  useEffect(() => {
+    if (editPostId) {
+      getPost({ variables: { id: editPostId } })
+    }
+  }, [editPostId, getPost])
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(async () => {
+      if (bodyValue.length) {
+        const link = await getNormalizedLink(bodyValue)
+        if (link) {
+          setPostLink(link)
+        } else if (!originalLink && postType !== PostFormType.EDIT) {
+          setPostLink('')
+        }
+      } else if (!originalLink && postType !== PostFormType.EDIT) {
+        setPostLink('')
+      }
+    }, 1000)
+
+    return () => clearTimeout(delayDebounce)
+  }, [bodyValue])
+
+  useEffect(() => {
+    if (originalLink) {
+      normalizeOriginalLink()
+    } else if (postType !== PostFormType.EDIT) {
+      setPostLink('')
+    }
+  }, [normalizeOriginalLink, originalLink])
+
+  useEffect(() => {
+    if (showNewPost) {
+      setOriginalLink('')
+      // Clear body when opening a fresh new post (not edit/repost)
+      if (!editPostId && !repostId) {
+        setBodyValue('')
+      }
+    }
+  }, [showNewPost])
+
+  useEffect(() => {
+    if (repostId) {
+      setPostType(PostFormType.REPOST)
+    }
+
+    if (editPostId) {
+      setPostType(PostFormType.EDIT)
+    }
+
+    if (!editPostId && !repostId) {
+      setPostType(PostFormType.NEW)
+    }
+  }, [repostId, editPostId])
+
+  useEffect(() => {
+    if (editingPost) {
+      setPostLink(editingPost.post.mediaLink || '')
+      setBodyValue(editingPost.post.body || '')
+    }
+  }, [editingPost])
+
+  // Don't render if not showing - prevents click interception (same pattern as AuthorActionsModal)
+  if (!showNewPost) return null
+
+  return (
+    <ModalsPortal>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-50 bg-black/60 animate-in fade-in duration-200"
+        onClick={() => clearState()}
+      />
+
+      {/* Modal - centered on desktop, bottom sheet on mobile - EXACT same pattern as AuthorActionsModal */}
+      <div className="fixed z-50 bottom-0 left-0 right-0 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-md sm:w-full animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+        <div
+          className="border border-neutral-700 rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl max-h-[80vh] overflow-y-auto"
+          style={{ backgroundColor: '#171717' }}
+        >
+          <PostForm
+            type={postType}
+            initialValues={initialValues}
+            postLink={postLink}
+            originalLink={originalLink}
+            afterSubmit={clearState}
+            onCancel={cancel}
+            showNewPost={showNewPost}
+            setOriginalLink={setOriginalLink}
+            setPostLink={setPostLink}
+            setBodyValue={setBodyValue}
+            trackId={trackId}
+          />
+        </div>
+      </div>
+    </ModalsPortal>
+  )
+}
+
+export default PostModal

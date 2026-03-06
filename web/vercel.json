@@ -1,0 +1,19 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/agent/radio/broadcast",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

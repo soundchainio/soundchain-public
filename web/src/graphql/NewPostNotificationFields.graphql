@@ -1,0 +1,26 @@
+fragment NewPostNotificationFields on NewPostNotification {
+  id
+  type
+  authorName
+  authorPicture
+  body
+  link
+  previewBody
+  previewLink
+  createdAt
+  track {
+    id
+    title
+    playbackUrl
+    artworkUrl
+    artist
+    isFavorite
+    playbackCountFormatted
+    favoriteCount
+    saleType
+    price {
+      value
+      currency
+    }
+  }
+}

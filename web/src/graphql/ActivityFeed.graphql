@@ -1,0 +1,15 @@
+query ActivityFeed($page: PageInput) {
+  activityFeed(page: $page) {
+    id
+    type
+    metadata
+    createdAt
+    profile {
+      id
+      displayName
+      profilePicture
+      userHandle
+      isOnline
+    }
+  }
+}

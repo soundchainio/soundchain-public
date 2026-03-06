@@ -1,0 +1,5 @@
+query MimeType($url: String!) {
+  mimeType(url: $url) {
+    value
+  }
+}

@@ -1,0 +1,13 @@
+query FeaturedTrack($profileId: String!) {
+  profile(id: $profileId) {
+    id
+    featuredTrackId
+    featuredTrack {
+      id
+      title
+      assetUrl
+      artist
+      artworkUrl
+    }
+  }
+}

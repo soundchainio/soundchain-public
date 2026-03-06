@@ -1,0 +1,10 @@
+mutation ChangeReaction($input: ChangeReactionInput!) {
+  changeReaction(input: $input) {
+    post {
+      id
+      totalReactions
+      topReactions(top: 2)
+      myReaction
+    }
+  }
+}

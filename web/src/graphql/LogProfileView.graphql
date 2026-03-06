@@ -1,0 +1,3 @@
+mutation LogProfileView($viewedProfileId: String!) {
+  logProfileView(viewedProfileId: $viewedProfileId)
+}

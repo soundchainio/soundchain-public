@@ -1,0 +1,34 @@
+query Me {
+  me {
+    id
+    handle
+    email
+    magicWalletAddress
+    googleWalletAddress
+    discordWalletAddress
+    twitchWalletAddress
+    emailWalletAddress
+    metaMaskWalletAddressees
+    defaultWallet
+    authMethod
+    isApprovedOnMarketplace
+    roles
+    phoneNumber
+    notifyOnFollow
+    notifyOnLike
+    notifyOnComment
+    notifyOnSale
+    notifyOnTip
+    notifyOnDM
+    nostrPubkey
+    notifyViaNostr
+    hdWalletAddress
+    hdWalletCreatedAt
+    primaryWallet
+    migrationStatus
+    solanaAddress
+    profile {
+      ...ProfileComponentFields
+    }
+  }
+}

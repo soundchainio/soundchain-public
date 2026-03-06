@@ -1,0 +1,14 @@
+query Feed($page: PageInput) {
+  feed(page: $page) {
+    nodes {
+      id
+      post {
+        ...PostComponentFields
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

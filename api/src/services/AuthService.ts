@@ -1,0 +1,337 @@
+import { ethers } from 'ethers';
+import { v4 as uuidv4 } from 'uuid';
+import { ProfileModel } from '../models/Profile';
+import { User, UserModel, PrimaryWalletType, MigrationStatus } from '../models/User';
+import { AuthMethod } from '../types/AuthMethod';
+import { Role } from '../types/Role';
+import { validateUniqueIdentifiers } from '../utils/Validation';
+import { Service } from './Service';
+import { generateNostrKeypair } from '../utils/nostrKeygen';
+import { deriveHumanEvmWallet, isHdWalletSystemReady } from '../utils/hdWallet';
+
+export class AuthService extends Service {
+  async register(
+    email: string,
+    handle: string,
+    displayName: string,
+    magicWalletAddress: string,
+    oauthProvider: string,
+  ): Promise<User> {
+    await validateUniqueIdentifiers({ handle });
+
+    const profile = new ProfileModel({ displayName });
+    await profile.save();
+    await this.context.feedService.seedNewProfileFeed(profile.id);
+
+    const emailVerificationToken = uuidv4();
+
+    // Auto-generate Nostr keypair for decentralized notifications
+    const nostrKeypair = generateNostrKeypair();
+    console.log('[Auth] Generated Nostr identity for new user:', nostrKeypair.publicKey.slice(0, 16) + '...');
+
+    // HD WALLET FIRST: Generate HD wallet for multi-chain support
+    // This is FREE ($0) vs Magic.link per-user wallet costs
+    let hdWalletFields: Record<string, any> = {};
+    let walletFields: Record<string, string> = {};
+
+    if (isHdWalletSystemReady()) {
+      const hdWallet = deriveHumanEvmWallet(profile._id.toString());
+      if (hdWallet) {
+        hdWalletFields = {
+          hdWalletAddress: hdWallet.address,
+          hdWalletCreatedAt: new Date(),
+          primaryWallet: PrimaryWalletType.HD,
+          migrationStatus: MigrationStatus.NONE,
+        };
+        console.log('[Auth] Generated HD wallet for new user:', hdWallet.address.slice(0, 10) + '...');
+        console.log('[Auth] SKIPPING Magic wallet storage - using HD wallet only ($0 cost)');
+
+        // DON'T save Magic wallet - use HD wallet as the primary wallet
+        // Magic still handles OAuth auth, but we don't need their wallet
+        // This keeps us in the free tier!
+      }
+    }
+
+    // FALLBACK: Only save Magic wallet if HD wallet generation failed
+    if (!hdWalletFields.hdWalletAddress) {
+      console.log('[Auth] HD wallet not available, falling back to Magic wallet');
+      walletFields = { magicWalletAddress };
+
+      // Save to provider-specific wallet field
+      switch (oauthProvider) {
+        case AuthMethod.google:
+          walletFields.googleWalletAddress = magicWalletAddress;
+          break;
+        case AuthMethod.discord:
+          walletFields.discordWalletAddress = magicWalletAddress;
+          break;
+        case AuthMethod.twitch:
+          walletFields.twitchWalletAddress = magicWalletAddress;
+          break;
+        case AuthMethod.magicLink:
+        default:
+          walletFields.emailWalletAddress = magicWalletAddress;
+          break;
+      }
+    }
+
+    const user = new UserModel({
+      email,
+      handle,
+      profileId: profile._id,
+      emailVerificationToken,
+      ...walletFields,      // Only populated if HD wallet failed
+      ...hdWalletFields,    // HD wallet fields (primary)
+      authMethod: oauthProvider || AuthMethod.magicLink,
+      // Auto-enable Nostr notifications with generated keypair
+      nostrPubkey: nostrKeypair.publicKey,
+      nostrPrivateKey: nostrKeypair.privateKey,
+      notifyViaNostr: true,
+    });
+
+    const soundChainUser = await this.getSoundChainUser();
+    console.log("soundChainUser lookup result:", soundChainUser);
+
+    try {
+      await user.save();
+      await this.context.profileService.followProfile(profile._id, soundChainUser.profileId);
+      await this.context.mailchimpService.addMember(user);
+    } catch (err) {
+      ProfileModel.deleteOne({ _id: profile.id });
+      await this.context.profileService.unfollowProfile(profile._id, soundChainUser.profileId);
+      throw new Error(`Error while creating user: ${err}`);
+    }
+
+    return user;
+  }
+
+  async getUserFromCredentials(username: string): Promise<User[] | undefined> {
+    return UserModel.find({ email: username });
+  }
+
+  async getSoundChainUser(): Promise<User | undefined> {
+    return UserModel.findOne({ roles: Role.SOUNDCHAIN_ACCOUNT });
+  }
+
+  /**
+   * Verify a wallet signature matches the expected message and address
+   * Uses EIP-191 personal_sign standard
+   */
+  verifyWalletSignature(walletAddress: string, message: string, signature: string): boolean {
+    try {
+      const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+      return recoveredAddress.toLowerCase() === walletAddress.toLowerCase();
+    } catch (error) {
+      console.error('Signature verification failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Register a new wallet-only user (no email/OAuth required)
+   * Creates a synthetic email and auto-generated handle
+   */
+  async registerWithWallet(
+    walletAddress: string,
+    handle?: string,
+    displayName?: string,
+  ): Promise<User> {
+    // Normalize wallet address
+    const normalizedAddress = walletAddress.toLowerCase();
+
+    // Generate synthetic email for wallet-only user
+    const syntheticEmail = `${normalizedAddress}@wallet.soundchain.io`;
+
+    // Generate handle from wallet prefix if not provided
+    const walletPrefix = `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`;
+    const userHandle = handle || `wallet_${walletAddress.slice(2, 10).toLowerCase()}`;
+    const userDisplayName = displayName || walletPrefix;
+
+    // Validate handle uniqueness
+    try {
+      await validateUniqueIdentifiers({ handle: userHandle });
+    } catch (error) {
+      // If handle exists, append random suffix
+      const randomSuffix = Math.random().toString(36).substring(2, 6);
+      await validateUniqueIdentifiers({ handle: `${userHandle}_${randomSuffix}` });
+    }
+
+    // Create profile
+    const profile = new ProfileModel({ displayName: userDisplayName });
+    await profile.save();
+    await this.context.feedService.seedNewProfileFeed(profile.id);
+
+    const emailVerificationToken = uuidv4();
+
+    // Auto-generate Nostr keypair for decentralized notifications
+    const nostrKeypair = generateNostrKeypair();
+    console.log('[Auth] Generated Nostr identity for wallet user:', nostrKeypair.publicKey.slice(0, 16) + '...');
+
+    // Auto-generate HD wallet for multi-chain support
+    let hdWalletFields: Record<string, any> = {};
+    if (isHdWalletSystemReady()) {
+      const hdWallet = deriveHumanEvmWallet(profile._id.toString());
+      if (hdWallet) {
+        hdWalletFields = {
+          hdWalletAddress: hdWallet.address,
+          hdWalletCreatedAt: new Date(),
+          // Wallet-only users: their connected wallet is primary, HD is secondary
+          primaryWallet: PrimaryWalletType.MAGIC,
+          migrationStatus: MigrationStatus.NONE,
+        };
+        console.log('[Auth] Generated HD wallet for wallet user:', hdWallet.address.slice(0, 10) + '...');
+      }
+    }
+
+    // Create user with wallet as primary identifier
+    const user = new UserModel({
+      email: syntheticEmail,
+      handle: userHandle,
+      profileId: profile._id,
+      emailVerificationToken,
+      magicWalletAddress: walletAddress, // Store in magic field for compatibility
+      metaMaskWalletAddressees: [walletAddress], // Also store in MetaMask array
+      ...hdWalletFields, // Add HD wallet fields
+      authMethod: AuthMethod.wallet,
+      isApprovedOnMarketplace: false, // Explicit default for wallet-only users
+      // Auto-enable Nostr notifications with generated keypair
+      nostrPubkey: nostrKeypair.publicKey,
+      nostrPrivateKey: nostrKeypair.privateKey,
+      notifyViaNostr: true,
+    });
+
+    const soundChainUser = await this.getSoundChainUser();
+    console.log('Registering wallet-only user:', walletAddress);
+
+    try {
+      await user.save();
+      if (soundChainUser) {
+        await this.context.profileService.followProfile(profile._id, soundChainUser.profileId);
+      }
+      // Skip mailchimp for wallet-only users (no real email)
+    } catch (err) {
+      ProfileModel.deleteOne({ _id: profile.id });
+      if (soundChainUser) {
+        await this.context.profileService.unfollowProfile(profile._id, soundChainUser.profileId);
+      }
+      throw new Error(`Error while creating wallet user: ${err}`);
+    }
+
+    return user;
+  }
+
+  /**
+   * Get existing user by wallet or create new wallet-only user
+   */
+  async getOrCreateByWallet(
+    walletAddress: string,
+    handle?: string,
+    displayName?: string,
+  ): Promise<User> {
+    // Check if user exists with this wallet
+    const existingUser = await this.context.userService.getUserByWallet(walletAddress);
+
+    if (existingUser) {
+      console.log('Found existing user for wallet:', walletAddress);
+      return existingUser;
+    }
+
+    // Create new wallet-only user
+    console.log('Creating new wallet-only user for:', walletAddress);
+    return this.registerWithWallet(walletAddress, handle, displayName);
+  }
+
+  /**
+   * Register a new HD wallet account (no external wallet or Magic OAuth required)
+   * User provides email + handle. Backend generates HD wallet.
+   * Future logins use email OTP via the existing login page.
+   */
+  async registerHdAccount(
+    email: string,
+    handle: string,
+    displayName?: string,
+  ): Promise<{ user: User; hdWalletAddress: string }> {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      throw new Error('Invalid email address');
+    }
+
+    // Check email not already in use
+    const existingUser = await UserModel.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      throw new Error('An account with this email already exists. Please log in instead.');
+    }
+
+    // Validate handle uniqueness
+    await validateUniqueIdentifiers({ handle });
+
+    // Create profile
+    const userDisplayName = displayName || handle;
+    const profile = new ProfileModel({ displayName: userDisplayName });
+    await profile.save();
+    await this.context.feedService.seedNewProfileFeed(profile.id);
+
+    const emailVerificationToken = uuidv4();
+
+    // Generate Nostr keypair
+    const nostrKeypair = generateNostrKeypair();
+    console.log('[Auth] Generated Nostr identity for HD account:', nostrKeypair.publicKey.slice(0, 16) + '...');
+
+    // Generate HD wallet
+    let hdWalletAddress = '';
+    let hdWalletFields: Record<string, any> = {};
+    if (isHdWalletSystemReady()) {
+      const hdWallet = deriveHumanEvmWallet(profile._id.toString());
+      if (hdWallet) {
+        hdWalletAddress = hdWallet.address;
+        hdWalletFields = {
+          hdWalletAddress: hdWallet.address,
+          hdWalletCreatedAt: new Date(),
+          primaryWallet: PrimaryWalletType.HD,
+          migrationStatus: MigrationStatus.NONE,
+        };
+        console.log('[Auth] Generated HD wallet for new account:', hdWallet.address.slice(0, 10) + '...');
+      }
+    }
+
+    if (!hdWalletAddress) {
+      // HD wallet not available - proceed without blockchain wallet
+      // User can still use the platform; HD wallet will be generated later
+      // when HUMAN_WALLET_SEED is configured or on next login
+      console.log('[Auth] HD wallet not available for new account, proceeding without blockchain wallet');
+    }
+
+    // Create user with email as auth + HD wallet as on-chain identity
+    const user = new UserModel({
+      email: email.toLowerCase(),
+      handle,
+      profileId: profile._id,
+      emailVerificationToken,
+      ...hdWalletFields,
+      authMethod: AuthMethod.magicLink, // Email OTP for future logins
+      isApprovedOnMarketplace: false,
+      nostrPubkey: nostrKeypair.publicKey,
+      nostrPrivateKey: nostrKeypair.privateKey,
+      notifyViaNostr: true,
+    });
+
+    const soundChainUser = await this.getSoundChainUser();
+    console.log('[Auth] Registering HD account:', email, handle, hdWalletAddress);
+
+    try {
+      await user.save();
+      if (soundChainUser) {
+        await this.context.profileService.followProfile(profile._id, soundChainUser.profileId);
+      }
+    } catch (err) {
+      await ProfileModel.deleteOne({ _id: profile._id });
+      if (soundChainUser) {
+        await this.context.profileService.unfollowProfile(profile._id, soundChainUser.profileId);
+      }
+      throw new Error(`Error creating HD account: ${err}`);
+    }
+
+    return { user, hdWalletAddress };
+  }
+}

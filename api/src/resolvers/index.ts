@@ -1,0 +1,101 @@
+import { ActivityResolver } from './ActivityResolver';
+import { AuctionEndedNotificationResolver } from './AuctionEndedNotificationResolver';
+import { AuctionIsEndingNotificationResolver } from './AuctionIsEndingNotificationResolver';
+import { AuctionItemResolver } from './AuctionItemResolver';
+import { AudioHolderResolver } from './AudioHolderResolver';
+import { BidResolver } from './BidResolver';
+import { BuyNowItemResolver } from './BuyNowItemResolver';
+import { ChatResolver } from './ChatResolver';
+import { CommentNotificationResolver } from './CommentNotificationResolver';
+import { CommentResolver } from './CommentResolver';
+import { DeletedCommentNotificationResolver } from './DeletedCommentNotificationResolver';
+import { DeletedPostNotificationResolver } from './DeletedPostNotificationResolver';
+import { ExploreResolver } from './ExploreResolver';
+import { FeedResolver } from './FeedResolver';
+import { FollowerNotificationResolver } from './FollowerNotificationResolver';
+import { FollowResolver } from './FollowResolver';
+import { GenericNotificationResolver } from './GenericNotificationResolver';
+import { ListingItemResolver } from './ListingItemResolver';
+import { MessageResolver } from './MessageResolver';
+import { NewBidNotificationResolver } from './NewBidNotificationResolver';
+import { NewPostNotificationResolver } from './NewPostNotificationResolver';
+import { NewVerificationRequestNotificationResolver } from './NewVerificationRequestNotificationResolver';
+import { NFTSoldNotificationResolver } from './NFTSoldNotificationResolver';
+import { NotificationResolver } from './NotificationResolver';
+import { OutbidNotificationResolver } from './OutbidNotificationResolver';
+import { PinningResolver } from './PinningResolver';
+import { PolygonscanResolver } from './PolygonResolver';
+import { PostResolver } from './PostResolver';
+import { ProfileResolver } from './ProfileResolver';
+import { PushSubscriptionResolver } from './PushSubscriptionResolver';
+import { ProfileVerificationRequestResolver } from './ProfileVerificationRequestResolver';
+import { ReactionNotificationResolver } from './ReactionNotificationResolver';
+import { ReactionResolver } from './ReactionResolver';
+import { TrackEditionResolver } from './TrackEditionResolver';
+import { TrackResolver } from './TrackResolver';
+import { PlaylistResolver } from './PlaylistResolver';
+import { UploadResolver } from './UploadResolver';
+import { UserResolver } from './UserResolver';
+import { VerificationRequestNotificationResolver } from './VerificationRequestNotificationResolver';
+import { WhitelistEntryResolver } from './WhitelistEntryResolver';
+import { WonAuctionNotificationResolver } from './WonAuctionNotificationResolver';
+import { SCidResolver } from './SCidResolver';
+import { BookmarkResolver } from './BookmarkResolver';
+import { TrackCommentResolver } from './TrackCommentResolver';
+import { DeveloperResolver } from './DeveloperResolver';
+import { StoryResolver } from './StoryResolver';
+import { ProfileViewResolver } from './ProfileViewResolver';
+import { WallPostResolver } from './WallPostResolver';
+import { CallSignalResolver } from './CallSignalResolver';
+
+export const resolvers = [
+  ActivityResolver,
+  CallSignalResolver,
+  AuctionEndedNotificationResolver,
+  AuctionIsEndingNotificationResolver,
+  AuctionItemResolver,
+  BidResolver,
+  BuyNowItemResolver,
+  ChatResolver,
+  CommentNotificationResolver,
+  CommentResolver,
+  DeletedCommentNotificationResolver,
+  DeletedPostNotificationResolver,
+  ExploreResolver,
+  FeedResolver,
+  FollowerNotificationResolver,
+  FollowResolver,
+  GenericNotificationResolver,
+  ListingItemResolver,
+  MessageResolver,
+  NewBidNotificationResolver,
+  NewPostNotificationResolver,
+  NewVerificationRequestNotificationResolver,
+  NFTSoldNotificationResolver,
+  NotificationResolver,
+  OutbidNotificationResolver,
+  PinningResolver,
+  PolygonscanResolver,
+  PostResolver,
+  ProfileResolver,
+  ProfileVerificationRequestResolver,
+  PushSubscriptionResolver,
+  ReactionNotificationResolver,
+  ReactionResolver,
+  TrackResolver,
+  PlaylistResolver,
+  UploadResolver,
+  UserResolver,
+  VerificationRequestNotificationResolver,
+  WonAuctionNotificationResolver,
+  WhitelistEntryResolver,
+  AudioHolderResolver,
+  TrackEditionResolver,
+  SCidResolver,
+  BookmarkResolver,
+  TrackCommentResolver,
+  DeveloperResolver,
+  StoryResolver,
+  ProfileViewResolver,
+  WallPostResolver,
+] as const;

@@ -1,0 +1,10 @@
+query OwnedBuyNowTrackIds($filter: FilterOwnedBuyNowItemInput!) {
+  ownedBuyNowListingItems(filter: $filter) {
+    nodes {
+      id
+      nftData {
+        tokenId
+      }
+    }
+  }
+}

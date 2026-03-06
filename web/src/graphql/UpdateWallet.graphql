@@ -1,0 +1,8 @@
+mutation UpdateMetaMaskAddresses($input: UpdateWalletInput!) {
+  updateMetaMaskAddresses(input: $input) {
+    user {
+      id
+      metaMaskWalletAddressees
+    }
+  }
+}

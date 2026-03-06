@@ -1,0 +1,7 @@
+query GuestUploadUrl($fileType: String!) {
+  guestUploadUrl(fileType: $fileType) {
+    uploadUrl
+    fileName
+    readUrl
+  }
+}

@@ -1,0 +1,64 @@
+fragment ListingItemComponentFields on TrackWithListingItem {
+  id
+  profileId
+  title
+  assetUrl
+  artworkUrl
+  description
+  utilityInfo
+  artist
+  artistId
+  artistProfileId
+  album
+  releaseYear
+  copyright
+  genres
+  playbackUrl
+  createdAt
+  updatedAt
+  deleted
+  playbackCountFormatted
+  isFavorite
+  favoriteCount
+  playbackCount
+  listingCount
+  saleType
+  price {
+    value
+    currency
+  }
+  trackEditionId
+  editionSize
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+    ipfsCid
+    pendingRequest
+    owner
+    pendingTime
+  }
+  trackEdition {
+    ...TrackEditionFields
+  }
+  listingItem {
+    id
+    owner
+    nft
+    tokenId
+    contract
+    pricePerItem
+    pricePerItemToShow
+    OGUNPricePerItem
+    OGUNPricePerItemToShow
+    isPaymentOGUN
+    startingTime
+    endingTime
+    reservePrice
+    reservePriceToShow
+    createdAt
+    updatedAt
+    priceToShow
+  }
+}

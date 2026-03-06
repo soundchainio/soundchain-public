@@ -1,0 +1,139 @@
+name: Deploy Production API
+
+on:
+  push:
+    branches:
+      - main
+      - production
+    paths:
+      - "api/**"
+  workflow_dispatch:
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Build Code
+        run: yarn build
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, Tag, and Push Docker Images to ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          build_and_push() {
+            local lambda_name=$1
+            local image_tag="${lambda_name}-${GITHUB_SHA}"
+            local ecr_repository="lambda-${lambda_name,,}"  # Convert to lowercase
+
+            # Create ECR repository if it doesn't exist
+            aws ecr describe-repositories --repository-names $ecr_repository || \
+            aws ecr create-repository --repository-name $ecr_repository
+
+            # Build, tag, and push image (--provenance=false forces Docker V2 manifest that Lambda supports)
+            docker build --provenance=false -t $ecr_repository:$image_tag -f ./src/lambda/$lambda_name/Dockerfile .
+
+            docker tag $ecr_repository:$image_tag $ECR_REGISTRY/$ecr_repository:$image_tag
+            docker push $ECR_REGISTRY/$ecr_repository:$image_tag
+
+            # Set environment variable for Serverless deployment
+            echo "${lambda_name^^}_IMAGE_URI=$ECR_REGISTRY/$ecr_repository:$image_tag" >> $GITHUB_ENV
+          }
+
+          build_and_push "graphql"
+          build_and_push "hello"
+          build_and_push "migrate"
+          build_and_push "blockchainwatcher"
+          build_and_push "processauctions"
+          build_and_push "processpending"
+          build_and_push "cleanupephemeral"
+
+      - name: Install Serverless Framework
+        run: npm install -g serverless
+
+      - name: Deploy with Serverless Framework
+        env:
+          NODE_ENV: production
+          BRANCH: ${GITHUB_REF#refs/heads/}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_USERNAME: ${{ secrets.DATABASE_USERNAME }}
+          JWT_NAMESPACE: ${{ secrets.JWT_NAMESPACE }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          WEB_APP_URL: ${{ secrets.WEB_APP_URL }}
+          CONTRACT_ADDRESS: ${{ secrets.NFT_ADDRESS }}
+          WALLET_PUBLIC_KEY: ${{ secrets.WALLET_PUBLIC_KEY }}
+          WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
+          ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
+          MARKETPLACE_ADDRESS: ${{ secrets.MARKETPLACE_ADDRESS }}
+          NFT_ADDRESS: ${{ secrets.NFT_ADDRESS }}
+          AUCTION_ADDRESS: ${{ secrets.AUCTION_ADDRESS }}
+          AUCTION_V2_ADDRESS: ${{ secrets.AUCTION_V2_ADDRESS }}
+          NFT_MULTIPLE_EDITION_ADDRESS: ${{ secrets.NFT_MULTIPLE_EDITION_ADDRESS }}
+          MARKETPLACE_MULTIPLE_EDITION_ADDRESS: ${{ secrets.MARKETPLACE_MULTIPLE_EDITION_ADDRESS }}
+          PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+          PINATA_API_SECRET: ${{ secrets.PINATA_API_SECRET }}
+          SENTRY_URL: ${{ secrets.SENTRY_URL }}
+          MAGIC_PRIVATE_KEY: ${{ secrets.MAGIC_PRIVATE_KEY }}
+          POLYGON_SCAN_API_KEY: ${{ secrets.POLYGON_SCAN_API_KEY }}
+          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+          HUMAN_WALLET_SEED: ${{ secrets.HUMAN_WALLET_SEED }}
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          GRAPHQL_IMAGE_URI: ${{ env.GRAPHQL_IMAGE_URI }}
+          HELLO_IMAGE_URI: ${{ env.HELLO_IMAGE_URI }}
+          MIGRATE_IMAGE_URI: ${{ env.MIGRATE_IMAGE_URI }}
+          BLOCKCHAINWATCHER_IMAGE_URI: ${{ env.BLOCKCHAINWATCHER_IMAGE_URI }}
+          PROCESSAUCTIONS_IMAGE_URI: ${{ env.PROCESSAUCTIONS_IMAGE_URI }}
+          PROCESSPENDING_IMAGE_URI: ${{ env.PROCESSPENDING_IMAGE_URI }}
+          CLEANUPEPHEMERAL_IMAGE_URI: ${{ env.CLEANUPEPHEMERAL_IMAGE_URI }}
+        run: |
+          echo "Deploying with images:"
+          echo "GraphQL: $GRAPHQL_IMAGE_URI"
+          echo "Hello: $HELLO_IMAGE_URI"
+          echo "Migrate: $MIGRATE_IMAGE_URI"
+          echo "Blockchain Watcher: $BLOCKCHAINWATCHER_IMAGE_URI"
+          echo "Process Auctions: $PROCESSAUCTIONS_IMAGE_URI"
+          echo "Process Pending: $PROCESSPENDING_IMAGE_URI"
+          echo "Cleanup Ephemeral: $CLEANUPEPHEMERAL_IMAGE_URI"
+          serverless deploy -s production --verbose
+
+      - name: Trigger migrate lambda function
+        run: |
+          aws lambda invoke --function-name soundchain-api-production-migrate response.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1

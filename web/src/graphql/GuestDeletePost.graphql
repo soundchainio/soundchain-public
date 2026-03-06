@@ -1,0 +1,8 @@
+mutation GuestDeletePost($postId: String!, $walletAddress: String!) {
+  guestDeletePost(postId: $postId, walletAddress: $walletAddress) {
+    post {
+      id
+      deleted
+    }
+  }
+}

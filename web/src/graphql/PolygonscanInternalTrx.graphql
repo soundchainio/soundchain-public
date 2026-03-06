@@ -1,0 +1,19 @@
+query PolygonscanInternalTrx($wallet: String!, $page: PageInput) {
+  getInternalTransactionHistory(wallet: $wallet, page: $page) {
+    nextPage
+    result {
+      blockNumber
+      timeStamp
+      hash
+      from
+      to
+      value
+      gas
+      isError
+      input
+      contractAddress
+      gasUsed
+      date
+    }
+  }
+}

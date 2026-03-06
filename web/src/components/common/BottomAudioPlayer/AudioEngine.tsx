@@ -1,0 +1,652 @@
+import Hls from 'hls.js'
+import { useAudioPlayerContext } from 'hooks/useAudioPlayer'
+import { useLogStream } from 'hooks/useLogStream'
+import { useMe } from 'hooks/useMe'
+import { useMagicContext } from 'hooks/useMagicContext'
+import { useEffect, useRef, useCallback, useState } from 'react'
+import { toast } from 'react-toastify'
+import { OgunRewardToast, DailyLimitToast } from '../OgunRewardToast'
+
+// Mobile detection for memory-optimized preloading
+const checkIsMobile = () => {
+  if (typeof window === 'undefined') return false
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    window.innerWidth < 768
+}
+
+/**
+ * Audio Normalization Settings
+ * Target: -24 LUFS (broadcast standard for consistent loudness)
+ *
+ * Uses gain-based normalization only - NO compression.
+ * Preserves the original dynamics of the audio while normalizing volume.
+ *
+ * -24 LUFS is approximately -24 dB relative to full scale.
+ * Most commercial music is mastered around -14 to -8 LUFS.
+ * We apply gain adjustment to bring typical music closer to -24 LUFS target.
+ */
+const NORMALIZATION_CONFIG = {
+  // Target LUFS level (broadcast standard)
+  targetLUFS: -24,
+  // Assumed average loudness of uploaded music (most music is around -10 to -14 LUFS)
+  assumedSourceLUFS: -12,
+  // Calculated gain: difference between target and assumed source
+  // -24 - (-12) = -12 dB = 10^(-12/20) = 0.25 linear gain
+  // However, this might be too quiet, so we use a moderate adjustment
+  // targeting a reduction that brings loud tracks down without killing quiet ones
+  normalizationGain: 1.0,  // Full volume (no reduction)
+}
+
+/**
+ * AudioEngine - Single audio element for the entire app
+ * This component manages the actual <audio> element, HLS streaming,
+ * and audio normalization via Web Audio API.
+ * It should only be mounted ONCE in the app to prevent echo/duplicate audio.
+ */
+export const AudioEngine = () => {
+  const me = useMe()
+  const { account: walletAddress } = useMagicContext()
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const hlsRef = useRef<Hls | null>(null)
+  // Web Audio API refs for normalization (gain only, no compression)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null)
+  const gainNodeRef = useRef<GainNode | null>(null)
+  const isAudioGraphConnected = useRef(false)
+
+  // Mobile detection for memory-optimized preloading
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    setIsMobile(checkIsMobile())
+  }, [])
+
+  // Stream logging for OGUN rewards
+  const { logStream, startTracking, stopTracking } = useLogStream({
+    minDuration: 30, // 30 seconds minimum to count as stream
+    onReward: (reward) => {
+      if (reward > 0) {
+        // Gamified toast with coin animation
+        toast(<OgunRewardToast amount={reward} trackTitle={currentSong?.title} />, {
+          position: 'bottom-right',
+          autoClose: 4000,
+          hideProgressBar: true,
+          className: 'ogun-reward-toast',
+          bodyClassName: 'ogun-reward-toast-body',
+        })
+      }
+    },
+    onDailyLimitReached: () => {
+      toast(<DailyLimitToast trackTitle={currentSong?.title} />, {
+        position: 'bottom-right',
+        autoClose: 4000,
+        className: 'ogun-limit-toast',
+      })
+    },
+  })
+  // Track previous song to log streams when song changes
+  const previousSongRef = useRef<{ trackId: string; playStartTime: number } | null>(null)
+  // Track whether we already logged a stream for the current play session (resets on track change/loop)
+  const streamLoggedForCurrentPlay = useRef(false)
+
+  const {
+    currentSong,
+    isPlaying,
+    progressFromSlider,
+    hasNext,
+    volume,
+    playNext,
+    setPlayingState,
+    setDurationState,
+    setProgressState,
+    setProgressStateFromSlider,
+    loopMode,
+    playlist,
+    jumpTo,
+  } = useAudioPlayerContext()
+
+  // Setup Media Session API for CarPlay/external device metadata
+  const updateMediaSession = useCallback(() => {
+    if ('mediaSession' in navigator && currentSong.src) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentSong.title || 'Unknown Title',
+        artist: currentSong.artist || 'Unknown Artist',
+        album: 'SoundChain',
+        artwork: currentSong.art
+          ? [
+              { src: currentSong.art, sizes: '96x96', type: 'image/jpeg' },
+              { src: currentSong.art, sizes: '128x128', type: 'image/jpeg' },
+              { src: currentSong.art, sizes: '192x192', type: 'image/jpeg' },
+              { src: currentSong.art, sizes: '256x256', type: 'image/jpeg' },
+              { src: currentSong.art, sizes: '384x384', type: 'image/jpeg' },
+              { src: currentSong.art, sizes: '512x512', type: 'image/jpeg' },
+            ]
+          : [],
+      })
+    }
+  }, [currentSong.art, currentSong.artist, currentSong.src, currentSong.title])
+
+  /**
+   * Check if user is likely using external audio (CarPlay, Bluetooth, AirPlay)
+   * In these cases, we skip Web Audio API to ensure audio routes correctly
+   */
+  const isExternalAudioOutput = useCallback(() => {
+    // Check for iOS/Safari which commonly use CarPlay
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+
+    // If on mobile Safari (likely CarPlay capable), skip Web Audio API
+    // This ensures audio routes through system audio path for CarPlay
+    if (isIOS || isSafari) {
+      return true
+    }
+
+    return false
+  }, [])
+
+  /**
+   * Initialize Web Audio API graph for audio normalization
+   * Chain: AudioElement -> MediaElementSource -> Gain -> Destination
+   *
+   * Uses gain-only normalization (NO compression) to preserve original dynamics
+   * while targeting -24 LUFS output level
+   *
+   * IMPORTANT: Disabled for iOS/Safari to ensure CarPlay compatibility
+   * Web Audio API can interfere with external audio routing (CarPlay, AirPlay, Bluetooth)
+   */
+  const initializeAudioGraph = useCallback(() => {
+    if (!audioRef.current || isAudioGraphConnected.current) return
+
+    // Skip Web Audio API for external audio devices (CarPlay, AirPlay, Bluetooth)
+    // This ensures audio routes through the standard system path
+    if (isExternalAudioOutput()) {
+      console.log('External audio detected (iOS/Safari) - using native volume for CarPlay/AirPlay compatibility')
+      // Just set the audio element volume directly for normalization effect
+      if (audioRef.current) {
+        audioRef.current.volume = NORMALIZATION_CONFIG.normalizationGain
+      }
+      return
+    }
+
+    try {
+      // Create AudioContext (handles Safari prefix)
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+      if (!AudioContextClass) {
+        console.warn('Web Audio API not supported - playing without normalization')
+        return
+      }
+
+      audioContextRef.current = new AudioContextClass()
+      const ctx = audioContextRef.current
+
+      // Create source from audio element
+      sourceNodeRef.current = ctx.createMediaElementSource(audioRef.current)
+
+      // Create gain node for volume normalization (no compression - preserves dynamics)
+      gainNodeRef.current = ctx.createGain()
+      gainNodeRef.current.gain.setValueAtTime(NORMALIZATION_CONFIG.normalizationGain, ctx.currentTime)
+
+      // Connect the audio graph: source -> gain -> destination
+      // No compressor in chain - full dynamics preserved
+      sourceNodeRef.current.connect(gainNodeRef.current)
+      gainNodeRef.current.connect(ctx.destination)
+
+      isAudioGraphConnected.current = true
+      console.log('Audio normalization initialized (-24 LUFS target, dynamics preserved)')
+    } catch (error) {
+      console.warn('Failed to initialize audio normalization:', error)
+    }
+  }, [isExternalAudioOutput])
+
+  // Resume AudioContext on user interaction (required by browsers)
+  const resumeAudioContext = useCallback(() => {
+    if (audioContextRef.current?.state === 'suspended') {
+      audioContextRef.current.resume()
+    }
+  }, [])
+
+  // Setup HLS and audio source
+  useEffect(() => {
+    if (!audioRef.current || !currentSong.src) return
+
+    // EXTERNAL TRACK DETECTION: If src starts with EXTERNAL:, dispatch event and skip audio loading
+    // External tracks (YouTube, Spotify, etc.) need iframe embeds, not audio element
+    if (currentSong.src.startsWith('EXTERNAL:')) {
+      console.log('[AudioEngine] External track detected, dispatching event:', currentSong.src)
+
+      // CRITICAL: Pause any currently playing audio to prevent overlap with embed
+      if (audioRef.current?.src && !audioRef.current.paused) {
+        audioRef.current.pause()
+      }
+
+      // Update MediaSession metadata so CarPlay/lock screen/wearables show the correct
+      // title, artist, and artwork even when playing embedded content (YouTube, SoundCloud, etc.)
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: currentSong.title || 'Unknown Title',
+          artist: currentSong.artist || 'Unknown Artist',
+          album: 'SoundChain',
+          artwork: currentSong.art
+            ? [
+                { src: currentSong.art, sizes: '96x96', type: 'image/jpeg' },
+                { src: currentSong.art, sizes: '128x128', type: 'image/jpeg' },
+                { src: currentSong.art, sizes: '192x192', type: 'image/jpeg' },
+                { src: currentSong.art, sizes: '256x256', type: 'image/jpeg' },
+                { src: currentSong.art, sizes: '384x384', type: 'image/jpeg' },
+                { src: currentSong.art, sizes: '512x512', type: 'image/jpeg' },
+              ]
+            : [],
+        })
+      }
+
+      // Parse the external URL: format is "EXTERNAL:sourceType:url"
+      const parts = currentSong.src.split(':')
+      const sourceType = parts[1]
+      const externalUrl = parts.slice(2).join(':') // Rejoin in case URL has colons
+
+      // Dispatch custom event for playlist components to handle
+      window.dispatchEvent(new CustomEvent('externalTrackPlay', {
+        detail: {
+          trackId: currentSong.trackId,
+          sourceType,
+          externalUrl,
+          title: currentSong.title,
+          artist: currentSong.artist,
+          art: currentSong.art,
+        }
+      }))
+
+      // Don't try to load external URL as audio
+      return
+    }
+
+    // Cleanup previous HLS instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy()
+      hlsRef.current = null
+    }
+
+    const audio = audioRef.current
+    const isHlsStream = currentSong.src.includes('.m3u8')
+
+    if (isHlsStream) {
+      // HLS stream
+      if (audio.canPlayType('application/vnd.apple.mpegurl')) {
+        // Native HLS support (Safari, iOS)
+        audio.src = currentSong.src
+      } else if (Hls.isSupported()) {
+        // Use hls.js for other browsers
+        hlsRef.current = new Hls()
+        hlsRef.current.loadSource(currentSong.src)
+        hlsRef.current.attachMedia(audio)
+      }
+    } else {
+      // Direct audio file (IPFS/Pinata URLs - MP3, WAV, etc.)
+      // These don't need HLS processing, just set the src directly
+      audio.src = currentSong.src
+    }
+
+
+    // Update Media Session metadata for CarPlay
+    updateMediaSession()
+
+    // Initialize audio normalization graph on first song load
+    initializeAudioGraph()
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+    }
+  }, [currentSong, me?.id, updateMediaSession, initializeAudioGraph])
+
+  // Handle play/pause state
+  useEffect(() => {
+    if (!audioRef.current) return
+
+    // EXTERNAL tracks are handled via iframe embeds, not the audio element.
+    // Skip audio.play() to prevent overlap with embed or false error states.
+    if (currentSong.src?.startsWith('EXTERNAL:')) {
+      return
+    }
+
+    if (isPlaying) {
+      // Resume AudioContext if suspended (required for Web Audio after user interaction)
+      resumeAudioContext()
+      audioRef.current.play().catch((err) => {
+        // Log errors for debugging (CORS, network, autoplay restrictions)
+        console.error('Audio playback failed:', err.message, '- Source:', currentSong.src)
+        setPlayingState(false)
+      })
+    } else {
+      audioRef.current.pause()
+    }
+  }, [isPlaying, currentSong, setPlayingState, resumeAudioContext])
+
+  // Handle seeking from slider
+  useEffect(() => {
+    if (audioRef.current && (progressFromSlider || progressFromSlider === 0)) {
+      audioRef.current.currentTime = progressFromSlider
+      setProgressStateFromSlider(null)
+    }
+  }, [progressFromSlider, setProgressStateFromSlider])
+
+  // Handle volume changes - apply to gain node for normalized output
+  useEffect(() => {
+    // For iOS/Safari (CarPlay, AirPlay, wearables) - use native volume
+    if (isExternalAudioOutput()) {
+      if (audioRef.current) {
+        // Apply normalization gain + user volume directly to audio element
+        audioRef.current.volume = volume * NORMALIZATION_CONFIG.normalizationGain
+      }
+    } else if (gainNodeRef.current && audioContextRef.current) {
+      // Web Audio API path (desktop browsers)
+      const finalGain = volume * NORMALIZATION_CONFIG.normalizationGain
+      gainNodeRef.current.gain.setValueAtTime(finalGain, audioContextRef.current.currentTime)
+    } else if (audioRef.current) {
+      // Fallback if Web Audio API not available
+      audioRef.current.volume = volume
+    }
+  }, [volume, isExternalAudioOutput])
+
+  // Cleanup AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {})
+        audioContextRef.current = null
+        sourceNodeRef.current = null
+        gainNodeRef.current = null
+        isAudioGraphConnected.current = false
+      }
+    }
+  }, [])
+
+  // OGUN Stream Logging - Track song changes, reset stream-logged flag
+  useEffect(() => {
+    if (!currentSong.trackId) return
+
+    // Reset stream-logged flag for new track
+    streamLoggedForCurrentPlay.current = false
+
+    // Start tracking new song
+    previousSongRef.current = { trackId: currentSong.trackId, playStartTime: Date.now() }
+    startTracking(currentSong.trackId)
+  }, [currentSong.trackId, startTracking])
+
+  // Setup Media Session action handlers for CarPlay controls
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', () => {
+        setPlayingState(true)
+      })
+      navigator.mediaSession.setActionHandler('pause', () => {
+        setPlayingState(false)
+      })
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        if (hasNext) playNext()
+      })
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        // Restart current track or go to previous
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0
+        }
+      })
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (audioRef.current && details.seekTime !== undefined) {
+          audioRef.current.currentTime = details.seekTime
+          setProgressState(Math.floor(details.seekTime))
+        }
+      })
+    }
+  }, [hasNext, playNext, setPlayingState, setProgressState])
+
+  // Prevent playback interruption on device rotation / visibility changes / app switching
+  useEffect(() => {
+    let wasPlayingBeforeHidden = false
+    let backgroundResumeInterval: NodeJS.Timeout | null = null
+    let resumeTimeout: NodeJS.Timeout | null = null
+
+    // Capture audio element ref at effect setup time to avoid stale ref in cleanup
+    const audioElement = audioRef.current
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Page is hidden (user switched apps) - remember if we were playing
+        wasPlayingBeforeHidden = isPlaying
+
+        // Start background resume attempts for mobile (limited to 30 seconds to prevent leaks)
+        if (isPlaying && audioElement) {
+          let attempts = 0
+          const maxAttempts = 30 // Stop after 30 seconds
+          backgroundResumeInterval = setInterval(() => {
+            attempts++
+            if (attempts > maxAttempts) {
+              if (backgroundResumeInterval) {
+                clearInterval(backgroundResumeInterval)
+                backgroundResumeInterval = null
+              }
+              return
+            }
+            if (audioElement?.paused && wasPlayingBeforeHidden) {
+              audioElement.play().catch(() => {})
+            }
+          }, 1000)
+        }
+      } else {
+        // Page is visible again - clear interval and resume
+        if (backgroundResumeInterval) {
+          clearInterval(backgroundResumeInterval)
+          backgroundResumeInterval = null
+        }
+
+        // Resume playback if we were playing before
+        if (wasPlayingBeforeHidden && audioElement) {
+          // Small delay to let the browser settle
+          resumeTimeout = setTimeout(() => {
+            if (audioElement?.paused && wasPlayingBeforeHidden) {
+              audioElement.play().catch(() => {})
+            }
+          }, 100)
+        }
+      }
+    }
+
+    const handleOrientationChange = () => {
+      // Device rotated - ensure playback continues
+      if (isPlaying && audioElement?.paused) {
+        audioElement.play().catch(() => {})
+      }
+    }
+
+    // Handle unexpected pauses (browser pausing audio in background)
+    const handleUnexpectedPause = () => {
+      // If we're supposed to be playing but got paused, try to resume
+      if (isPlaying && audioElement?.paused) {
+        // Small delay before retrying
+        setTimeout(() => {
+          if (isPlaying && audioElement?.paused) {
+            audioElement.play().catch(() => {})
+          }
+        }, 100)
+      }
+    }
+
+    // Listen for blur/focus events (more reliable than visibility on some devices)
+    const handleWindowBlur = () => {
+      wasPlayingBeforeHidden = isPlaying
+    }
+
+    const handleWindowFocus = () => {
+      if (wasPlayingBeforeHidden && audioElement?.paused) {
+        audioElement.play().catch(() => {})
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('orientationchange', handleOrientationChange)
+    window.addEventListener('resize', handleOrientationChange)
+    window.addEventListener('blur', handleWindowBlur)
+    window.addEventListener('focus', handleWindowFocus)
+
+    // Listen for pause events on the audio element itself
+    if (audioElement) {
+      audioElement.addEventListener('pause', handleUnexpectedPause)
+    }
+
+    return () => {
+      if (backgroundResumeInterval) {
+        clearInterval(backgroundResumeInterval)
+      }
+      if (resumeTimeout) {
+        clearTimeout(resumeTimeout)
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('orientationchange', handleOrientationChange)
+      window.removeEventListener('resize', handleOrientationChange)
+      window.removeEventListener('blur', handleWindowBlur)
+      window.removeEventListener('focus', handleWindowFocus)
+      // Use captured audioElement instead of stale ref
+      if (audioElement) {
+        audioElement.removeEventListener('pause', handleUnexpectedPause)
+      }
+    }
+  }, [isPlaying])
+
+  const lastRenderedSecond = useRef(-1)
+
+  function handleTimeUpdate() {
+    if (audioRef.current?.currentTime) {
+      // Only trigger React re-render when the displayed second changes (1/sec not 4/sec)
+      const currentSecond = Math.floor(audioRef.current.currentTime)
+      if (currentSecond === lastRenderedSecond.current) return
+      lastRenderedSecond.current = currentSecond
+      // Use actual time (not floored) for smoother slider updates
+      setProgressState(audioRef.current.currentTime)
+
+      // Log stream at 30-second mark of play time
+      if (
+        !streamLoggedForCurrentPlay.current &&
+        previousSongRef.current &&
+        audioRef.current.currentTime >= 30
+      ) {
+        streamLoggedForCurrentPlay.current = true
+        const playDuration = Math.floor(audioRef.current.currentTime)
+        logStream(previousSongRef.current.trackId, playDuration, walletAddress || undefined, me?.profile?.id)
+          .catch(err => console.warn('[OGUN] Failed to log stream at 30s mark:', err))
+      }
+
+      // Update Media Session position state for CarPlay progress bar
+      if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: audioRef.current.duration || 0,
+            playbackRate: audioRef.current.playbackRate,
+            position: audioRef.current.currentTime,
+          })
+        } catch (e) {
+          // Ignore errors from setPositionState
+        }
+      }
+    }
+  }
+
+  function handleDurationChange() {
+    if (audioRef.current?.duration) {
+      setDurationState(audioRef.current.duration)
+    }
+  }
+
+  function handleEndedSong() {
+    // Stream logging happens at 30s mark in handleTimeUpdate, not here
+
+    // Handle loop modes
+    if (loopMode === 'one') {
+      // Loop single track - restart from beginning
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0
+        audioRef.current.play().catch(() => {})
+        // Reset stream-logged flag so the next loop iteration can log at 30s
+        streamLoggedForCurrentPlay.current = false
+        previousSongRef.current = { trackId: currentSong.trackId, playStartTime: Date.now() }
+      }
+    } else if (loopMode === 'all') {
+      // Loop all tracks - go to next or restart playlist
+      if (hasNext) {
+        playNext()
+      } else if (playlist.length > 0) {
+        // At end of playlist, restart from beginning
+        jumpTo(0)
+      } else {
+        setProgressState(0)
+      }
+    } else {
+      // No loop - play next or stop
+      if (hasNext) {
+        playNext()
+      } else {
+        setProgressState(0)
+      }
+    }
+  }
+
+  /**
+   * Handle audio errors (broken URLs, network issues, unsupported formats)
+   * Automatically skips to the next track to avoid getting stuck
+   */
+  function handleAudioError(e: React.SyntheticEvent<HTMLAudioElement, Event>) {
+    const audio = e.currentTarget
+    const error = audio.error
+
+    // Log the error for debugging
+    console.error('[AudioEngine] Playback error:', {
+      trackId: currentSong.trackId,
+      title: currentSong.title,
+      src: currentSong.src?.substring(0, 100) + '...',
+      errorCode: error?.code,
+      errorMessage: error?.message,
+    })
+
+    // Show toast notification
+    toast.error(`Skipping: ${currentSong.title || 'Track'} (audio unavailable)`, {
+      position: 'bottom-right',
+      autoClose: 3000,
+    })
+
+    // Skip to next track if available
+    if (hasNext) {
+      playNext()
+    } else if (loopMode === 'all' && playlist.length > 0) {
+      // If looping all and at end, restart from beginning
+      jumpTo(0)
+    } else {
+      // No next track - stop playback
+      setPlayingState(false)
+      setProgressState(0)
+    }
+  }
+
+  return (
+    <audio
+      ref={audioRef}
+      onPlay={() => setPlayingState(true)}
+      onPause={() => setPlayingState(false)}
+      onTimeUpdate={handleTimeUpdate}
+      onDurationChange={handleDurationChange}
+      onEnded={handleEndedSong}
+      onError={handleAudioError}
+      className="h-0 w-0 opacity-0"
+      playsInline
+      // MOBILE OPTIMIZATION: Use "metadata" on mobile to prevent memory exhaustion
+      // "auto" preloads the entire file which can crash mobile browsers
+      preload={isMobile ? "metadata" : "auto"}
+      crossOrigin="anonymous"
+      // iOS background playback attributes
+      // @ts-ignore - webkit specific attributes
+      webkit-playsinline="true"
+      x-webkit-airplay="allow"
+    />
+  )
+}
+
+export default AudioEngine

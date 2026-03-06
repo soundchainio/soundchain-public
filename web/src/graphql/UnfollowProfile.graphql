@@ -1,0 +1,9 @@
+mutation UnfollowProfile($input: UnfollowProfileInput!) {
+  unfollowProfile(input: $input) {
+    unfollowedProfile {
+      id
+      followerCount
+      isFollowed
+    }
+  }
+}

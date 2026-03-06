@@ -1,0 +1,18 @@
+mutation updateSocialMedias($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    profile {
+      id
+      socialMedias {
+        facebook
+        instagram
+        soundcloud
+        twitter
+        linktree
+        discord
+        telegram
+        spotify
+        bandcamp
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+service: soundchain-api
+variablesResolutionMode: 20210326
+useDotenv: true
+
+plugins:
+  - serverless-prune-plugin
+  - serverless-deployment-bucket
+  - serverless-offline
+
+functions:
+  graphql:
+    image: ${env:GRAPHQL_IMAGE_URI}
+    timeout: 30  # 30 seconds for Magic API calls during login
+    memorySize: 1024  # More memory for faster cold starts
+    events:
+      - http:
+          path: /
+          method: post
+          cors: true
+      - http:
+          path: /
+          method: get
+          cors: true
+      # Developer Platform REST API (v1)
+      - http:
+          path: /v1/{proxy+}
+          method: any
+          cors: true
+  hello:
+    image: ${env:HELLO_IMAGE_URI}
+    events:
+      - http:
+          path: /hello
+          method: get
+          cors: true
+  migrate:
+    image: ${env:MIGRATE_IMAGE_URI}
+    timeout: 300  # 5 minutes for large migrations like IPFS CID update
+    memorySize: 1024  # More memory for batch processing
+  blockchainwatcher:
+    image: ${env:BLOCKCHAINWATCHER_IMAGE_URI}
+    timeout: 30
+    events:
+      - schedule: rate(1 minute)
+  processauctions:
+    image: ${env:PROCESSAUCTIONS_IMAGE_URI}
+    events:
+      - schedule: rate(5 minutes)
+  processpending:
+    image: ${env:PROCESSPENDING_IMAGE_URI}
+    events:
+      - schedule: rate(30 minutes)
+  cleanupephemeral:
+    image: ${env:CLEANUPEPHEMERAL_IMAGE_URI}
+    timeout: 60
+    events:
+      - schedule: rate(1 hour)
+
+build:
+  external:
+    - 'electron'
+
+custom:
+  prune:
+    automatic: true
+    number: 20
+  # Use existing DocumentDB cluster (soundchain-cluster) instead of creating new one
+  db:
+    host: soundchain-cluster.cluster-capqvzyh8vvd.us-east-1.docdb.amazonaws.com
+    port: 27017
+  uploadsBucket:
+    name: soundchain-api-production-uploads
+
+provider:
+  name: aws
+  region: us-east-1
+  runtime: nodejs20.x
+  ecr:
+    scanOnPush: true
+  lambdaHashingVersion: 20201221
+  # Use existing VPC (vpc-dc305ba1) where soundchain-cluster lives
+  vpc:
+    securityGroupIds:
+      - sg-09daefe70a140db88  # docdb-soundchain security group
+    subnetIds:
+      - subnet-05718f1ab69abbb0b  # soundchain-subnet-us-east-1b
+      - subnet-08119f357cf21acf6  # soundchain-subnet-us-east-1c
+  deploymentBucket:
+    name: soundchain-deploymentbucket
+  environment:
+    NODE_ENV: ${env:NODE_ENV}
+    # Use existing DocumentDB cluster with production data
+    DATABASE_URL: mongodb://${env:DATABASE_USERNAME}:${env:DATABASE_PASSWORD}@${self:custom.db.host}:${self:custom.db.port}/test?tls=true&authSource=admin&authMechanism=SCRAM-SHA-1&retryWrites=false
+    DATABASE_SSL_PATH: db/global-bundle.pem
+    DATABASE_USERNAME: ${env:DATABASE_USERNAME}
+    DATABASE_PASSWORD: ${env:DATABASE_PASSWORD}
+    JWT_NAMESPACE: ${env:JWT_NAMESPACE}
+    JWT_SECRET: ${env:JWT_SECRET}
+    WEB_APP_URL: ${env:WEB_APP_URL}
+    UPLOADS_BUCKET_REGION: ${self:provider.region}
+    UPLOADS_BUCKET_NAME: ${self:custom.uploadsBucket.name}
+    WALLET_PUBLIC_KEY: ${env:WALLET_PUBLIC_KEY}
+    WALLET_PRIVATE_KEY: ${env:WALLET_PRIVATE_KEY}
+    ALCHEMY_API_KEY: ${env:ALCHEMY_API_KEY}
+    MARKETPLACE_ADDRESS: ${env:MARKETPLACE_ADDRESS}
+    NFT_ADDRESS: ${env:NFT_ADDRESS}
+    AUCTION_ADDRESS: ${env:AUCTION_ADDRESS}
+    AUCTION_V2_ADDRESS: ${env:AUCTION_V2_ADDRESS}
+    PINATA_API_KEY: ${env:PINATA_API_KEY}
+    PINATA_API_SECRET: ${env:PINATA_API_SECRET}
+    SENTRY_URL: ${env:SENTRY_URL}
+    MAGIC_PRIVATE_KEY: ${env:MAGIC_PRIVATE_KEY}
+    POLYGON_SCAN_API_KEY: ${env:POLYGON_SCAN_API_KEY}
+    NFT_MULTIPLE_EDITION_ADDRESS: ${env:NFT_MULTIPLE_EDITION_ADDRESS}
+    MARKETPLACE_MULTIPLE_EDITION_ADDRESS: ${env:MARKETPLACE_MULTIPLE_EDITION_ADDRESS}
+    SERVERLESS_ACCESS_KEY: ${env:SERVERLESS_ACCESS_KEY}
+    # HD Wallet System - Multi-chain support for human users
+    HUMAN_WALLET_SEED: ${env:HUMAN_WALLET_SEED}
+    # Web Push Notifications (VAPID)
+    VAPID_PUBLIC_KEY: ${env:VAPID_PUBLIC_KEY}
+    VAPID_PRIVATE_KEY: ${env:VAPID_PRIVATE_KEY}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:PutObjectAcl
+            - s3:DeleteObject
+          Resource:
+            - arn:aws:s3:::${self:custom.uploadsBucket.name}/*
+
+# REMOVED: All VPC/NAT Gateway/DocumentDB creation
+# This saves ~$180+/month and uses existing production infrastructure
+# - No new VPC (using existing vpc-dc305ba1)
+# - No new NAT Gateways (2x @ $90/month each)
+# - No new DocumentDB cluster (using existing soundchain-cluster)

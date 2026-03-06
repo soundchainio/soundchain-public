@@ -1,0 +1,7 @@
+mutation CreateWhitelistEntry($input: CreateWhitelistEntryInput!) {
+  createWhitelistEntry(input: $input) {
+    whitelistEntry {
+      id
+    }
+  }
+}

@@ -1,0 +1,25 @@
+query ExploreTracksSlim($sort: SortExploreTracks, $search: String, $page: PageInput) {
+  exploreTracks(sort: $sort, search: $search, page: $page) {
+    nodes {
+      id
+      title
+      artist
+      artworkUrl
+      playbackUrl
+      assetUrl
+      createdAt
+      isFavorite
+      trackEditionId
+      editionSize
+      nftData {
+        tokenId
+        contract
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}

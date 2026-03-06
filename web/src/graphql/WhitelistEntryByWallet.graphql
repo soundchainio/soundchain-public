@@ -1,0 +1,6 @@
+query WhitelistEntryByWallet($walletAdress: String!) {
+  whitelistEntryByWallet(walletAdress: $walletAdress) {
+    id
+    ogunClaimed
+  }
+}

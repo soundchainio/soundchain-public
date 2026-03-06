@@ -1,0 +1,30 @@
+{
+  "name": "soundchain",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "bootstrap": "lerna bootstrap && husky install",
+    "genMerkleTree": "cd api/src/utils/airdrop && yarn && yarn start",
+    "seed": "cd api && yarn seed",
+    "seedProof": "cd api && yarn seedProof",
+    "dev": "lerna run --parallel dev",
+    "dev:quick": "lerna run --parallel dev:quick",
+    "codegen": "lerna run --parallel codegen"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "devDependencies": {
+    "husky": "^7.0.1",
+    "lerna": "^4.0.0"
+  },
+  "dependencies": {
+    "@sentry/serverless": "^7.10.0",
+    "@web3modal/ethers5": "5.1.11",
+    "react-linkify-it": "^1.0.7",
+    "web3": "^1.2.11"
+  }
+}

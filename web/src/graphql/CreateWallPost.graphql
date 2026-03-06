@@ -1,0 +1,13 @@
+mutation CreateWallPost($profileId: String!, $body: String!, $replyToId: String) {
+  createWallPost(profileId: $profileId, body: $body, replyToId: $replyToId) {
+    id
+    body
+    createdAt
+    author {
+      id
+      displayName
+      userHandle
+      profilePicture
+    }
+  }
+}

@@ -1,0 +1,12 @@
+fragment ProfileVerificationRequestComponentFields on ProfileVerificationRequest {
+  id
+  profileId
+  soundcloud
+  youtube
+  bandcamp
+  status
+  reason
+  reviewerProfileId
+  createdAt
+  updatedAt
+}

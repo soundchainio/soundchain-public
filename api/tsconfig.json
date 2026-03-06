@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "lib": ["es2018", "esnext.asynciterable"],
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "strictNullChecks": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "outDir": ".build",
+    "typeRoots": ["./typings", "./node_modules/@typings"]
+  },
+  "include": ["**/*.ts", "migrate-mongo-config.js"],
+  "exclude": ["node_modules", "typings", "src/utils/airdrop/app.ts", "src/utils/airdrop/generator.ts", "src/utils/airdrop/logger.ts", "src/db/seeds.ts", "src/db/seedsProofBook.ts", "src/db/seedWhitelistCsv.ts", "src/db/seedAudiusHoldersCsv.ts", "src/db/checkHistoricalStreams.ts", "src/db/seedOGRewardsAnnouncement.ts", "src/db/seedWinWinAnnouncement.ts"]
+}

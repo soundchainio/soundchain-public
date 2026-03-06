@@ -1,0 +1,5 @@
+query Profile($id: String!) {
+  profile(id: $id) {
+    ...ProfileComponentFields
+  }
+}

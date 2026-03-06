@@ -1,0 +1,7 @@
+mutation DeletePost($input: DeletePostInput!) {
+  deletePost(input: $input) {
+    post {
+      ...PostComponentFields
+    }
+  }
+}

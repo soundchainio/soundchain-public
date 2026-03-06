@@ -1,0 +1,19 @@
+query BuyNowItem($input: FilterListingItemInput!) {
+  buyNowItem(input: $input) {
+    buyNowItem {
+      id
+      owner
+      nft
+      tokenId
+      contract
+      pricePerItem
+      selectedCurrency
+      pricePerItemToShow
+      OGUNPricePerItem
+      OGUNPricePerItemToShow
+      acceptsMATIC
+      acceptsOGUN
+      startingTime
+    }
+  }
+}

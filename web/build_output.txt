@@ -1,0 +1,22 @@
+yarn run v1.22.22
+$ next build
+  ▲ Next.js 14.2.31
+  - Environments: .env
+
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/components/Marketplace.tsx:597:47
+Type error: Cannot find name 'TrackWithListingItem'.
+
+[0m [90m 595 |[39m       {viewMode [33m===[39m [32m'grid'[39m [33m?[39m ([0m
+[0m [90m 596 |[39m         [33m<[39m[33mGridView[39m[0m
+[0m[31m[1m>[22m[39m[90m 597 |[39m           tracks[33m=[39m{data[33m?[39m[33m.[39mlistingItems[33m.[39mnodes [36mas[39m [33mTrackWithListingItem[39m[]}[0m
+[0m [90m     |[39m                                               [31m[1m^[22m[39m[0m
+[0m [90m 598 |[39m           loading[33m=[39m{loading}[0m
+[0m [90m 599 |[39m           refetch[33m=[39m{refetch}[0m
+[0m [90m 600 |[39m           hasNextPage[33m=[39m{data[33m?[39m[33m.[39mlistingItems[33m.[39mpageInfo[33m?[39m[33m.[39mhasNextPage}[0m
+Next.js build worker exited with code: 1 and signal: null
+error Command failed with exit code 1.
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.

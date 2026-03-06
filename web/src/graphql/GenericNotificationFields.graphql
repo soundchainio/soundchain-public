@@ -1,0 +1,7 @@
+fragment GenericNotificationFields on GenericNotification {
+  id
+  type
+  body
+  link
+  createdAt
+}

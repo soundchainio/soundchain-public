@@ -1,0 +1,19 @@
+# Soundchain API
+
+## TODO:
+
+- Auth
+- DataLoaders
+- Monitoring
+
+# Migrations
+
+- To create a migration: `yarn migrate:create [description]`
+- Migrate Up: `yarn migrate`
+- Migrate Down: `yarn migrate:down`
+# Trigger API deploy - Sat Jan 31 14:02:59 MST 2026
+# Redeploy 1769896046
+# Hand typed key 1769897480
+# Redeploy 1769905275
+# Vercel env vars cleaned - redeploy API
+# Trigger deploy - Sat Jan 31 19:02:20 MST 2026

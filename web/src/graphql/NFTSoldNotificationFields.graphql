@@ -1,0 +1,15 @@
+fragment NFTSoldNotificationFields on NFTSoldNotification {
+  id
+  type
+  createdAt
+  buyerName
+  buyerPicture
+  buyerProfileId
+  trackId
+  trackName
+  artist
+  artworkUrl
+  price
+  sellType
+  isPaymentOgun
+}

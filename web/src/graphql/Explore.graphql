@@ -1,0 +1,12 @@
+query Explore($search: String) {
+  explore(search: $search) {
+    tracks {
+      ...TrackComponentFields
+    }
+    profiles {
+      ...ProfileComponentFields
+    }
+    totalTracks
+    totalProfiles
+  }
+}

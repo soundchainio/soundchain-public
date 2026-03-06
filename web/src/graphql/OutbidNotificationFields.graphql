@@ -1,0 +1,10 @@
+fragment OutbidNotificationFields on OutbidNotification {
+  id
+  type
+  createdAt
+  trackId
+  trackName
+  artist
+  artworkUrl
+  price
+}

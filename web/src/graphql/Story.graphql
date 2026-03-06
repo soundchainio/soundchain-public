@@ -1,0 +1,105 @@
+# Story queries and mutations
+
+fragment StoryFields on Story {
+  id
+  profileId
+  mediaUrl
+  mediaType
+  caption
+  duration
+  createdAt
+  expiresAt
+  isPermanent
+  permanentTxHash
+  viewCount
+  attachedTrackId
+  attachedTrackIpfsUrl
+  attachedTrackTitle
+  attachedTrackArtist
+  attachedTrackCoverUrl
+  reactions {
+    profileId
+    emoji
+    createdAt
+  }
+}
+
+# Queries
+query publicStories($limit: Int) {
+  publicStories(limit: $limit) {
+    ...StoryFields
+    profile {
+      id
+      userHandle
+      displayName
+      profilePicture
+    }
+  }
+}
+
+query myFollowingStories {
+  myFollowingStories {
+    ...StoryFields
+    profile {
+      id
+      userHandle
+      displayName
+      profilePicture
+    }
+  }
+}
+
+query userStories($profileId: String!) {
+  userStories(profileId: $profileId) {
+    ...StoryFields
+    profile {
+      id
+      userHandle
+      displayName
+      profilePicture
+    }
+  }
+}
+
+# Mutations
+mutation createStory($mediaUrl: String!, $mediaType: String!, $caption: String, $duration: Int) {
+  createStory(mediaUrl: $mediaUrl, mediaType: $mediaType, caption: $caption, duration: $duration) {
+    ...StoryFields
+  }
+}
+
+mutation viewStory($storyId: String!) {
+  viewStory(storyId: $storyId) {
+    id
+    viewCount
+  }
+}
+
+mutation reactToStory($storyId: String!, $emoji: String!) {
+  reactToStory(storyId: $storyId, emoji: $emoji) {
+    id
+    reactions {
+      profileId
+      emoji
+      createdAt
+    }
+  }
+}
+
+mutation makeStoryPermanent($input: MakeStoryPermanentInput!) {
+  makeStoryPermanent(input: $input) {
+    success
+    error
+    story {
+      id
+      isPermanent
+      permanentTxHash
+    }
+  }
+}
+
+mutation deleteStory($storyId: String!) {
+  deleteStory(storyId: $storyId) {
+    id
+  }
+}

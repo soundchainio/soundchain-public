@@ -1,0 +1,5 @@
+mutation pinJsonToIPFS($input: PinJsonToIPFSInput!) {
+  pinJsonToIPFS(input: $input) {
+    cid
+  }
+}

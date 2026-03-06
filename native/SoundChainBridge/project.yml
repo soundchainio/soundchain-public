@@ -1,0 +1,34 @@
+name: SoundChainBridge
+options:
+  bundleIdPrefix: io.soundchain
+  deploymentTarget:
+    iOS: "15.0"
+  xcodeVersion: "15.0"
+
+settings:
+  MARKETING_VERSION: "1.0.0"
+  CURRENT_PROJECT_VERSION: "1"
+  DEVELOPMENT_TEAM: ""
+
+targets:
+  SoundChainBridge:
+    type: application
+    platform: iOS
+    sources:
+      - path: SoundChainBridge
+        excludes:
+          - "*.xcassets"
+      - path: SoundChainBridge/Assets.xcassets
+    settings:
+      INFOPLIST_FILE: SoundChainBridge/Info.plist
+      PRODUCT_BUNDLE_IDENTIFIER: io.soundchain.bridge
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+      SWIFT_VERSION: "5.0"
+      TARGETED_DEVICE_FAMILY: "1,2"
+      CODE_SIGN_STYLE: Automatic
+      ENABLE_PREVIEWS: YES
+    entitlements:
+      path: SoundChainBridge/SoundChainBridge.entitlements
+      properties:
+        com.apple.developer.networking.multicast: true

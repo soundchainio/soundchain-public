@@ -1,0 +1,972 @@
+import { useState, useEffect, useRef } from 'react'
+import classNames from 'classnames'
+// Note: Custom SC stickers with data URLs removed - they broke when inserted as text
+// Using 7TV CDN emotes instead which work reliably
+
+// Types for emote APIs
+interface SevenTVEmote {
+  id: string
+  name: string
+  data: {
+    animated: boolean
+    host: {
+      url: string
+      files: Array<{ name: string; format: string }>
+    }
+  }
+}
+
+interface BTTVEmote {
+  id: string
+  code: string
+  imageType: 'png' | 'gif' | 'webp'
+  animated: boolean
+}
+
+interface FFZEmote {
+  id: number
+  name: string
+  urls: { [key: string]: string }
+  animated?: boolean
+}
+
+interface NormalizedEmote {
+  id: string
+  name: string
+  url: string
+  animated: boolean
+  source: 'twitch' | '7tv' | 'bttv' | 'ffz' | 'kick' | 'tenor' | 'soundchain'
+}
+
+type StickerCategory = '7tv' | 'bttv' | 'ffz' | 'trending' | 'twitch' | 'kick' | 'custom'
+
+interface CustomSticker {
+  id: string
+  name: string
+  dataUrl: string
+  createdAt: number
+}
+
+const CUSTOM_STICKERS_KEY = 'soundchain_custom_stickers'
+const MAX_CUSTOM_FILE_SIZE = 512 * 1024 // 512KB max per sticker
+
+const loadCustomStickers = (): CustomSticker[] => {
+  try {
+    const raw = localStorage.getItem(CUSTOM_STICKERS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+const saveCustomStickers = (stickers: CustomSticker[]): boolean => {
+  try {
+    localStorage.setItem(CUSTOM_STICKERS_KEY, JSON.stringify(stickers))
+    return true
+  } catch (err) {
+    console.error('Failed to save custom stickers:', err)
+    return false
+  }
+}
+
+interface StickerPickerProps {
+  onSelect: (stickerUrl: string, stickerName: string) => void
+  onClose?: () => void
+  theme?: 'dark' | 'light'
+}
+
+// Cache for loaded emotes (cleared on page refresh)
+const emoteCache: { [key: string]: NormalizedEmote[] } = {}
+
+// Filter out seasonal/holiday emotes
+// Update this list seasonally: remove holiday keywords after the season, add new ones before
+const SEASONAL_KEYWORDS = [
+  // Christmas/Winter (remove after Jan 15)
+  'christmas', 'xmas', 'santa', 'holiday', 'reindeer', 'snowman', 'gift', 'present',
+  'mistletoe', 'ornament', 'sleigh', 'elf', 'grinch', 'rudolph', 'frosty', 'jingle',
+  'noel', 'yule', 'candycane', 'stocking', 'wreath', 'nutcracker', 'festive',
+  // Add more seasonal keywords as needed:
+  // Halloween: 'halloween', 'spooky', 'ghost', 'witch', 'pumpkin', 'skeleton'
+  // Easter: 'easter', 'bunny', 'egg'
+]
+
+const isSeasonalEmote = (name: string): boolean => {
+  const lowerName = name.toLowerCase()
+  return SEASONAL_KEYWORDS.some(keyword => lowerName.includes(keyword))
+}
+
+const filterSeasonalEmotes = (emotes: NormalizedEmote[]): NormalizedEmote[] => {
+  return emotes.filter(emote => !isSeasonalEmote(emote.name))
+}
+
+export const StickerPicker = ({ onSelect, onClose, theme = 'dark' }: StickerPickerProps) => {
+  const [activeCategory, setActiveCategory] = useState<StickerCategory>('7tv')
+  const [emotes, setEmotes] = useState<NormalizedEmote[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [customStickers, setCustomStickers] = useState<CustomSticker[]>([])
+  const [uploadError, setUploadError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Load custom stickers on mount
+  useEffect(() => {
+    setCustomStickers(loadCustomStickers())
+  }, [])
+
+  // Categories - only ones that load images reliably
+  const categories = [
+    { id: 'custom' as const, label: 'Mine', icon: '⭐' },
+    { id: '7tv' as const, label: '7TV', icon: '7️⃣' },
+    { id: 'trending' as const, label: 'Hot', icon: '🔥' },
+    { id: 'twitch' as const, label: 'Twitch', icon: '💜' },
+    { id: 'kick' as const, label: 'Kick', icon: '💚' },
+    { id: 'bttv' as const, label: 'BTTV', icon: '🅱️' },
+    { id: 'ffz' as const, label: 'FFZ', icon: '😎' },
+  ]
+
+  // Handle custom sticker upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadError('')
+
+    // Validate type
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Only images allowed')
+      return
+    }
+
+    // Validate size
+    if (file.size > MAX_CUSTOM_FILE_SIZE) {
+      setUploadError(`Max ${MAX_CUSTOM_FILE_SIZE / 1024}KB`)
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      const name = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 20) || 'sticker'
+      const newSticker: CustomSticker = {
+        id: `custom-${Date.now()}`,
+        name,
+        dataUrl,
+        createdAt: Date.now(),
+      }
+      const updated = [...customStickers, newSticker]
+      const saved = saveCustomStickers(updated)
+      if (saved) {
+        setCustomStickers(updated)
+      } else {
+        setUploadError('Storage full — try deleting some stickers')
+      }
+    }
+    reader.onerror = () => {
+      setUploadError('Failed to read file')
+    }
+    reader.readAsDataURL(file)
+
+    // Reset input so same file can be re-selected
+    e.target.value = ''
+  }
+
+  const deleteCustomSticker = (id: string) => {
+    const updated = customStickers.filter(s => s.id !== id)
+    if (saveCustomStickers(updated)) {
+      setCustomStickers(updated)
+    }
+  }
+
+  // Fetch 7TV Global Emotes
+  const fetch7TVEmotes = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['7tv']) return emoteCache['7tv']
+
+    try {
+      const response = await fetch('https://7tv.io/v3/emote-sets/global')
+      const data = await response.json()
+
+      const normalized: NormalizedEmote[] = (data.emotes || []).map((emote: SevenTVEmote) => {
+        const isAnimated = emote.data?.animated || false
+        // 7TV CDN - no file extension needed, CDN auto-serves correct format
+        return {
+          id: emote.id,
+          name: emote.name,
+          url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
+          animated: isAnimated,
+          source: '7tv' as const,
+        }
+      })
+
+      emoteCache['7tv'] = normalized
+      return normalized
+    } catch (error) {
+      console.error('Failed to fetch 7TV emotes:', error)
+      return []
+    }
+  }
+
+  // Fetch BTTV Global Emotes
+  const fetchBTTVEmotes = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['bttv']) return emoteCache['bttv']
+
+    try {
+      const response = await fetch('https://api.betterttv.net/3/cached/emotes/global')
+      const data: BTTVEmote[] = await response.json()
+
+      const normalized: NormalizedEmote[] = data.map((emote) => ({
+        id: emote.id,
+        name: emote.code,
+        url: `https://cdn.betterttv.net/emote/${emote.id}/2x.${emote.imageType}`,
+        animated: emote.animated || emote.imageType === 'gif',
+        source: 'bttv' as const,
+      }))
+
+      emoteCache['bttv'] = normalized
+      return normalized
+    } catch (error) {
+      console.error('Failed to fetch BTTV emotes:', error)
+      return []
+    }
+  }
+
+  // Fetch FFZ Global Emotes
+  const fetchFFZEmotes = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['ffz']) return emoteCache['ffz']
+
+    try {
+      const response = await fetch('https://api.frankerfacez.com/v1/set/global')
+      const data = await response.json()
+
+      const allEmotes: NormalizedEmote[] = []
+
+      // FFZ returns sets, we need to flatten them
+      for (const setId of Object.keys(data.sets || {})) {
+        const set = data.sets[setId]
+        for (const emote of set.emoticons || []) {
+          allEmotes.push({
+            id: String(emote.id),
+            name: emote.name,
+            url: emote.urls['2'] || emote.urls['1'] || Object.values(emote.urls)[0] as string,
+            animated: emote.animated || false,
+            source: 'ffz' as const,
+          })
+        }
+      }
+
+      emoteCache['ffz'] = allEmotes
+      return allEmotes
+    } catch (error) {
+      console.error('Failed to fetch FFZ emotes:', error)
+      return []
+    }
+  }
+
+  // Fetch Twitch Global Emotes (curated popular emotes via static CDN)
+  const fetchTwitchEmotes = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['twitch']) return emoteCache['twitch']
+
+    // Popular Twitch global emote IDs (these are stable Twitch emote IDs)
+    const twitchEmotes = [
+      { id: '25', name: 'Kappa' },
+      { id: '1', name: ':)' },
+      { id: '2', name: ':(' },
+      { id: '7', name: 'B)' },
+      { id: '8', name: 'O_o' },
+      { id: '86', name: 'BibleThump' },
+      { id: '88', name: 'PogChamp' },
+      { id: '354', name: '4Head' },
+      { id: '425618', name: 'LUL' },
+      { id: '30259', name: 'HeyGuys' },
+      { id: '28', name: 'MrDestructoid' },
+      { id: '36', name: 'PJSalt' },
+      { id: '41', name: 'Kreygasm' },
+      { id: '58765', name: 'NotLikeThis' },
+      { id: '68856', name: 'WutFace' },
+      { id: '33', name: 'DansGame' },
+      { id: '114836', name: 'CoolStoryBob' },
+      { id: '425688', name: 'SeemsGood' },
+      { id: '81274', name: 'VoHiYo' },
+      { id: '425614', name: 'FailFish' },
+      { id: '46881', name: 'AngelThump' },
+      { id: '80393', name: 'TriHard' },
+      { id: '86', name: 'BibleThump' },
+      { id: '120232', name: 'CorgiDerp' },
+      { id: '52', name: 'SMOrc' },
+      { id: '244', name: 'FrankerZ' },
+      { id: '167', name: 'OSFrog' },
+      { id: '65', name: 'SwiftRage' },
+      { id: '138', name: 'ResidentSleeper' },
+      { id: '55338', name: 'KonCha' },
+      { id: '160401', name: 'TPFufun' },
+      { id: '160395', name: 'GunRun' },
+      { id: '425670', name: 'PJSugar' },
+      { id: '160394', name: 'DogFace' },
+      { id: '102242', name: 'VoteYea' },
+      { id: '102243', name: 'VoteNay' },
+      { id: '160392', name: 'CarlSmile' },
+      { id: '28087', name: 'WutFace' },
+      { id: '191762', name: 'bleedPurple' },
+    ]
+
+    const normalized: NormalizedEmote[] = twitchEmotes.map(emote => ({
+      id: `twitch-${emote.id}`,
+      name: emote.name,
+      url: `https://static-cdn.jtvnw.net/emoticons/v2/${emote.id}/default/dark/2.0`,
+      animated: false,
+      source: 'twitch' as const,
+    }))
+
+    emoteCache['twitch'] = normalized
+    return normalized
+  }
+
+  // Fetch Kick-style emotes (popular streaming emotes from 7TV)
+  // Note: Kick.com doesn't have a public emote CDN, so we use 7TV emotes popular with Kick streamers
+  const fetchKickEmotes = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['kick']) return emoteCache['kick']
+
+    try {
+      // Fetch popular emotes from multiple Kick streamer 7TV sets
+      const setIds = [
+        '01GFXJ8WK0000014MXH9PNH9F7', // Popular Kick streamer set
+        '01GG9NZS6G000CXPT2B0TZFZ3J', // Additional popular set
+      ]
+
+      const allEmotes: NormalizedEmote[] = []
+
+      for (const setId of setIds) {
+        try {
+          const response = await fetch(`https://7tv.io/v3/emote-sets/${setId}`)
+          const data = await response.json()
+
+          if (data.emotes) {
+            for (const emote of data.emotes.slice(0, 25)) {
+              const isAnimated = emote.data?.animated || false
+              allEmotes.push({
+                id: `kick-${emote.id}`,
+                name: emote.name,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
+                animated: isAnimated,
+                source: 'kick' as const,
+              })
+            }
+          }
+        } catch (e) {
+          // Skip failed set
+        }
+      }
+
+      // Add some curated popular streaming emotes (all animated)
+      const curatedKickEmotes = [
+        { id: '60ae958e229664e8667aea38', name: 'KEKW' },
+        { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
+        { id: '60b0d3ec8ed8b373e421e7a7', name: 'OMEGALUL' },
+        { id: '60aec9186d0b8c60ac0be7c0', name: 'catJAM' },
+        { id: '60ae8cac229664e8667ae5a8', name: 'pepeD' },
+      ]
+
+      const curated = curatedKickEmotes.map(e => ({
+        id: `kick-curated-${e.id}`,
+        name: e.name,
+        url: `https://cdn.7tv.app/emote/${e.id}/2x`,
+        animated: true,
+        source: 'kick' as const,
+      }))
+
+      const combined = [...curated, ...allEmotes]
+      emoteCache['kick'] = combined
+      return combined
+    } catch (error) {
+      console.error('Failed to fetch Kick emotes:', error)
+      return []
+    }
+  }
+
+  // Fetch 7TV Trending/Popular emotes from multiple emote sets
+  const fetch7TVTrending = async (): Promise<NormalizedEmote[]> => {
+    if (emoteCache['7tv-trending']) return emoteCache['7tv-trending']
+
+    try {
+      // Fetch from multiple popular 7TV emote sets
+      const setIds = [
+        '01GG9NZS6G000CXPT2B0TZFZ3J', // NymN's set
+        '01FDMJPSF8000E7SY3FBPS1V6K', // xQc's set
+        '01H9E8G4MR0004NYG5BCPE3M2Y', // Popular set
+      ]
+
+      const allEmotes: NormalizedEmote[] = []
+
+      for (const setId of setIds) {
+        try {
+          const response = await fetch(`https://7tv.io/v3/emote-sets/${setId}`)
+          const data = await response.json()
+
+          if (data.emotes) {
+            for (const emote of data.emotes.slice(0, 30)) {
+              const isAnimated = emote.data?.animated || false
+              allEmotes.push({
+                id: `trend-${emote.id}`,
+                name: emote.name,
+                url: `https://cdn.7tv.app/emote/${emote.id}/2x`,
+                animated: isAnimated,
+                source: '7tv' as const,
+              })
+            }
+          }
+        } catch (e) {
+          // Skip failed set
+        }
+      }
+
+      emoteCache['7tv-trending'] = allEmotes
+      return allEmotes
+    } catch (error) {
+      console.error('Failed to fetch 7TV trending:', error)
+      return []
+    }
+  }
+
+  // Popular reaction emotes (curated from 7TV) - MASSIVE collection!
+  const getReactionEmotes = (): NormalizedEmote[] => {
+    // Popular reaction emote IDs from 7TV (all animated) - GO BIG!
+    const reactions = [
+      // Classic reactions
+      { id: '60ae958e229664e8667aea38', name: 'KEKW' },
+      { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
+      { id: '60aefc43ff8a9a15a6de5847', name: 'PepeLaugh' },
+      { id: '60ae3fd1229664e8667ab074', name: 'Sadge' },
+      { id: '60af9fdde5e3c23f8a6dea93', name: 'Copium' },
+      { id: '60af1b9eaa0d72dc39f1ea0f', name: 'Aware' },
+      { id: '60b0d3ec8ed8b373e421e7a7', name: 'OMEGALUL' },
+      { id: '60b0d3c3daa8fb57cd62c5db', name: 'monkaS' },
+      { id: '60b0d3d4a5de6cf21b5ea84e', name: 'PogU' },
+      { id: '60b0d3a7a5de6cf21b5ea83b', name: 'FeelsGoodMan' },
+      { id: '60b0d3b5a5de6cf21b5ea842', name: 'FeelsBadMan' },
+      { id: '60afe3c580df1e6b58fd7f3f', name: 'NODDERS' },
+      { id: '60aec9186d0b8c60ac0be7c0', name: 'catJAM' },
+      { id: '60af3bfc77ccd81f2b76a2c3', name: 'PauseChamp' },
+      { id: '60b0d53e77ccd81f2b78c1c0', name: 'peepoHappy' },
+      { id: '60b0d577f0e6f5574632aad8', name: 'peepoSad' },
+      { id: '60af2c40aa0d72dc39f1c3e4', name: 'Clap' },
+      { id: '60b04bc4daa8fb57cd61b38c', name: 'WAYTOODANK' },
+      { id: '60af69b37e08e07de9d40f04', name: 'Pepega' },
+      { id: '60ae4aa5229664e8667ab8ef', name: 'HYPERS' },
+      { id: '60ae4dc1229664e8667ab9d9', name: 'PepeHands' },
+      { id: '60af14f4e5e3c23f8a6dd802', name: 'WideHard' },
+      { id: '60af3c7e229664e8667ac2eb', name: 'Prayge' },
+      { id: '60b0d3f1daa8fb57cd62c5e6', name: 'EZ' },
+      { id: '60b0d43b77ccd81f2b78ba37', name: 'forsenCD' },
+      { id: '60af2d01aa0d72dc39f1c470', name: 'CoolCat' },
+      { id: '60b0d42e77ccd81f2b78ba2d', name: 'monkaW' },
+      { id: '60af3d5ee5e3c23f8a6ddc9e', name: 'HACKERMANS' },
+      { id: '60b0d3df77ccd81f2b78b963', name: 'TriHard' },
+      { id: '60ae8cac229664e8667ae5a8', name: 'pepeD' },
+      // More popular emotes
+      { id: '60b0bb0f8ed8b373e421cf47', name: 'Chatting' },
+      { id: '60ae7be1ff8a9a15a6de0e3e', name: 'GIGACHAD' },
+      { id: '60ae9f49ff8a9a15a6de5f93', name: 'Clueless' },
+      { id: '60ae37d7229664e8667ab051', name: 'Bedge' },
+      { id: '60b076aea64e9d892a82d9f1', name: 'BOOBA' },
+      { id: '60af7df477ccd81f2b77196d', name: 'modCheck' },
+      { id: '60b0bca1e5e3c23f8a6e24f1', name: 'Stare' },
+      { id: '60b09eb777ccd81f2b78dbd9', name: 'BASED' },
+      { id: '60b09c1477ccd81f2b78db76', name: 'DESPAIR' },
+      { id: '60b0a9aba64e9d892a82dd3b', name: 'Susge' },
+      { id: '60b09e93e5e3c23f8a6e1f48', name: 'NOTED' },
+      { id: '60b0952ee5e3c23f8a6e1cfe', name: 'CAUGHT' },
+      { id: '60b0b83377ccd81f2b78e4f4', name: 'ThisStream' },
+      { id: '60b0bfd6e5e3c23f8a6e25f7', name: 'FeelsStrongMan' },
+      { id: '60b109e077ccd81f2b78fc0c', name: 'peepoArrive' },
+      { id: '60b10a61a64e9d892a83081b', name: 'peepoLeave' },
+      { id: '60b11106a64e9d892a830d7c', name: 'peepoRiot' },
+      { id: '60b112648ed8b373e42210b5', name: 'peepoSit' },
+      { id: '60b11aab6a76e2db2da56f59', name: 'peepoClap' },
+      { id: '60b1195d6a76e2db2da56e83', name: 'peepoGiggles' },
+      { id: '60b11b38e5e3c23f8a6e340a', name: 'peepoBlush' },
+      { id: '60b0d50b8ed8b373e421e7c1', name: 'POGGERS' },
+      { id: '60b0d51c8ed8b373e421e7c5', name: 'WeirdChamp' },
+      { id: '60b0d4e0daa8fb57cd62c638', name: 'Pepepains' },
+      { id: '60b0d4cba5de6cf21b5ea87e', name: 'ICANT' },
+      { id: '60b0d4b3a5de6cf21b5ea877', name: 'Okayge' },
+      { id: '60b0d49a77ccd81f2b78babb', name: 'NOIDONTTHINKSO' },
+      { id: '60b0d47e77ccd81f2b78ba9c', name: 'forsenE' },
+      { id: '60b0d464daa8fb57cd62c609', name: 'xqcL' },
+      { id: '60b0d44fdaa8fb57cd62c5fe', name: 'LETSGO' },
+      { id: '60b0d4188ed8b373e421e7a8', name: 'Madge' },
+      { id: '60b0d401daa8fb57cd62c5f2', name: 'Pepepls' },
+      { id: '60b0d3be77ccd81f2b78b950', name: 'PETTHE' },
+      { id: '60b0d38a8ed8b373e421e795', name: 'YEAHBUT' },
+      { id: '60b0c0ce8ed8b373e421e68d', name: 'lebronJAM' },
+      // ─── Dance & Groove (18) ─────────────────────────────────
+      { id: '60b0d555daa8fb57cd62c64b', name: 'pepeDS' },
+      { id: '60b0d59da5de6cf21b5ea8a7', name: 'RainbowPls' },
+      { id: '60b0d5b0a5de6cf21b5ea8ad', name: 'DinkDonk' },
+      { id: '60b0d618daa8fb57cd62c66b', name: 'WIGGLE' },
+      { id: '60b0d63ea5de6cf21b5ea8d1', name: 'Dance' },
+      { id: '60b0d6bed83ef0fc71e8e0e8', name: 'HyperPls' },
+      { id: '01F2ZWD6CR000DSBG200DM9SGM', name: 'pepeD' },
+      { id: '01EZY967K0000CYST6006V20T8', name: 'pepeJAM' },
+      { id: '01F6MXRSC00009HX192HR1XME9', name: 'pepeJAMJAM' },
+      { id: '01G3BNV55000068RCV6YVN340R', name: 'catPls' },
+      { id: '01FJAV4EJG000FZHS49NWQRPND', name: 'catDance' },
+      { id: '01F6N14GMG000AR0YATR3RKYTC', name: 'spongePls' },
+      { id: '01F6VS6DR8000ECZXVKQBJ42S0', name: 'vibePls' },
+      { id: '01FSJ0HVKG0001Z3WXBKV36R0Z', name: 'poroPls' },
+      { id: '01FZ5KJ818000B4AWRZNMVN880', name: 'danse' },
+      { id: '01HTZ8GEWR0007838DQ0AM7RA2', name: 'pedro' },
+      { id: '01F6TDN2V0000E7TRSM97WER0J', name: 'FrogDance' },
+      { id: '01GA0HWQ7R0001VT2F11KM5EZM', name: 'Jigglin' },
+      { id: '01G3KYTKXR000ET2J0MQP5Y06S', name: 'PagBounce' },
+      { id: '01GSK9T85R0001G7T9NFZMVEGY', name: 'vibeeparty' },
+      { id: '01GVKDB7R8000C1XHZ2SH6CRQA', name: 'bop' },
+      // ─── Music / DJ / Instruments (15) ─────────────────────
+      { id: '01F6ME9FRG0005TFYTWP1H8R42', name: 'catJam' },
+      { id: '01F6Q7D0S80001K6WGNZJBQNC1', name: 'pepeBASS' },
+      { id: '01F6W1T7XR0002M7WQ84WYZ5HF', name: 'EDM' },
+      { id: '01F6MDM7380000WDA7ERT6VTFQ', name: 'GuitarTime' },
+      { id: '01F6MKBDD00009C9ZSNZTDTB9A', name: 'DrumTime' },
+      { id: '01F6MWWB70000EMM7M7JFFF2ZC', name: 'TrumpetTime' },
+      { id: '01G611X31800020B4JB4BJGS5N', name: 'Headbang' },
+      { id: '01F9W4QQN0000DG20CB692XPMJ', name: 'djShaq' },
+      { id: '01FJ9019000005ZW4QCZF2JSZQ', name: 'DJammin' },
+      { id: '01J85F52A0000DNWJ3ST67GVF0', name: 'kittyJam' },
+      { id: '01F5VVZ7C80003RCV2Z6JBHBAS', name: 'Jammies' },
+      { id: '01GAJBNT780004XAVG6P7AZAK2', name: 'Jamgie' },
+      { id: '01FSB8V1YR0003FQCDGQSE1JSH', name: 'BoomerJAM' },
+      { id: '60b0d6978ed8b373e421e808', name: 'Jamming' },
+      { id: '01F6SBQJGG000F2AC3SMENMAVD', name: 'donkJAM' },
+      // ─── Rave / Party / Celebration (12) ────────────────────
+      { id: '01GCN0JF60000D8ZK13J8KVD8A', name: 'RaveTime' },
+      { id: '01GGRX0GNR0005JFNK2VC9HTVR', name: 'WideRaveTime' },
+      { id: '01G1N23CNR0004YN3NKDRRA04H', name: 'RAVE' },
+      { id: '01F6TDT0280005G9TG05W2BXMB', name: 'PartyKirby' },
+      { id: '01GSRDK64G000FG1RDMKJ4Q0H1', name: 'YIPPIE' },
+      { id: '01GFKMBAHG0007SC7A230SCCYX', name: 'peepoCheer' },
+      { id: '01H9JADJJR0008QVVK15MGJ4NY', name: 'clappi' },
+      { id: '01H9D5QNVR0005XNK7Z4N9D90F', name: 'catClap' },
+      { id: '01GAEJ7DZ0000CKYC26QANPD4Z', name: 'BAND' },
+      { id: '01GEY746JG000EVQAMFX8JF8RG', name: 'HappiJam' },
+      { id: '60b0d62c77ccd81f2b78c208', name: 'bongoTap' },
+      { id: '01F6NE9AER000CKKT9BSDYGT0J', name: 'Clap2' },
+      // ─── Hype / LETS GO (10) ───────────────────────────────
+      { id: '01F6RD7B88000B4N55W5NS55R7', name: 'LETSGO2' },
+      { id: '01FDC150C8000F43V49GZTVECJ', name: 'HYPERYump' },
+      { id: '01F6T6GJB0000DDVB8PWZQ53NQ', name: 'PogTasty' },
+      { id: '01H1SDVRH000080K50KTZJ6NH9', name: 'BANGER' },
+      { id: '01F7VQR9BR00012GPWP0G6X5NF', name: 'FIRE' },
+      { id: '01GFRG067R000DQSEG934QMZ0C', name: 'Bussin' },
+      { id: '01HFMESN68000FJQ1V068X3KBA', name: 'BASED2' },
+      { id: '01GPHW2CWG000E1TY1GWRPM8TV', name: 'HECOOKED' },
+      { id: '01GAM9C110000D2Y1HG0HWYBB0', name: 'BUSSERS' },
+      { id: '01GZY2S1E8000D7D15DR9DGCWT', name: 'PausersHype' },
+      // ─── Vibe / Chill (13) ─────────────────────────────────
+      { id: '01FYQZVG280006SX8JX4TD7SJA', name: 'VIBE' },
+      { id: '01GQM29WZG000145YX66WQVSS4', name: 'vibee' },
+      { id: '01FAPFR2T80009222ZMH048914', name: 'Chillin' },
+      { id: '01F6MAWT78000B5V5G2M2MJBDY', name: 'peepoCoffee' },
+      { id: '01F6Q2602000015Y8FNQB0MTW4', name: 'pepeSmoke' },
+      { id: '01FEHRN6PR000AEZ0QNPT4F4MF', name: 'SmokeTime2' },
+      { id: '01GAHPVTPG00097G249C9HFBEA', name: 'Sippin' },
+      { id: '01GN75J83G000BFK4D6E53NER9', name: 'sip' },
+      { id: '01HBNNK50R0006HD9P1VTRJZSK', name: 'Lissen' },
+      { id: '01H9CM6RMR0007Y8SZQ94N86MH', name: 'CatFunk' },
+      { id: '01F6MDFCSR0000WDA7ERT623YT', name: 'NODDERS2' },
+      { id: '60b0d6aa8ed8b373e421e80e', name: 'vibing' },
+      { id: '60b0d5c4a5de6cf21b5ea8b3', name: 'SmokeTime' },
+      // ─── Action / Combat (12) ──────────────────────────────
+      { id: '01GP2BY1XG0009TPRPGFYX0Q91', name: 'SCATTER' },
+      { id: '01HBNMEYT8000DHXYR814CVZA3', name: 'raid' },
+      { id: '01G0MTNE800001Q6MTS9XCTH1N', name: 'MonkeSwim' },
+      { id: '01G5VHG3CG000AM0RPEKKRCFBR', name: 'catPunch' },
+      { id: '01HMBZSBD00004EWJWE421Y80X', name: 'catSlap' },
+      { id: '01F6Q7P0W0000A6S4F82D5TD55', name: 'PepegaGun' },
+      { id: '01F6NTBCYG000B70V1XA8K6W4P', name: 'peepoRiot' },
+      { id: '01GBFAYKGR000FWWN7MDZZ8XQN', name: 'RAGEY' },
+      { id: '01GKJR0DR0000AQ89HB8P2TAZR', name: 'RageyBoom' },
+      { id: '01FDBFCE1G000F43V49GZTVDY2', name: 'duckHey' },
+      { id: '01FPJXCDHR000DZKS9B24504YP', name: 'duckArrive' },
+      { id: '60b0d66277ccd81f2b78c222', name: 'ReallyMad' },
+      // ─── Reaction / Love / Cute (15) ───────────────────────
+      { id: '01FE3XY508000AA32JP519W2EW', name: 'PETPET' },
+      { id: '01F6N7ZY4000052X5637DG0KTC', name: 'peepoPat' },
+      { id: '01F6QW78400004V0XPDH23G6HT', name: 'PepoPopcorn' },
+      { id: '01HP9MYD2G0003S4PACH9JQK2C', name: 'wave' },
+      { id: '01H9373MDR000696ETCT8WE4YB', name: 'GoodBye' },
+      { id: '01FHT0W9Q8000B2A95MSMDGHJS', name: 'happy' },
+      { id: '01FNMBRDN8000EJT2EVEY3EM1H', name: 'catNOD' },
+      { id: '01GGMQ2M7R00084ZHXKAP9XDJT', name: 'CatHeart' },
+      { id: '01FYKTPW780009C6Z6S6QKTJ1R', name: 'catLove' },
+      { id: '01G5F9YYRR000F7K35RQS227R7', name: 'Lovegers' },
+      { id: '60b11c21e5e3c23f8a6e34a1', name: 'peepoRun' },
+      { id: '60b10cf477ccd81f2b78fc85', name: 'peepoWave' },
+      { id: '60b0d672a5de6cf21b5ea8e1', name: 'Popcorn' },
+      { id: '60b0d64edaa8fb57cd62c679', name: 'WeSmart' },
+      { id: '60b0d68277ccd81f2b78c23a', name: 'MONKA' },
+      // ─── Money / Flex (5) ──────────────────────────────────
+      { id: '01F9CMPV18000FG9EXKNPZVK6F', name: 'MoneyTime' },
+      { id: '01F8X2WQBR000492R7CBZS5B5W', name: 'pepeMoney' },
+      { id: '01G9FN8YF000080GCW6BK847N1', name: 'MONKE' },
+      { id: '01HPSDAPAR0009V37317AFM230', name: 'SpeedLaugh' },
+      { id: '60b0d5d98ed8b373e421e7e6', name: 'YEP' },
+      { id: '60b0d5e877ccd81f2b78c1e2', name: 'NOPE' },
+      { id: '60b0d5f6daa8fb57cd62c65d', name: 'HUHH' },
+      { id: '60b0d607daa8fb57cd62c663', name: 'ThisIsFine' },
+    ]
+
+    return reactions.map(r => ({
+      id: `react-${r.id}`,
+      name: r.name,
+      url: `https://cdn.7tv.app/emote/${r.id}/2x`,
+      animated: true,
+      source: '7tv' as const,
+    }))
+  }
+
+  // Music-themed emotes
+  const getMusicEmotes = (): NormalizedEmote[] => {
+    // Popular music/vibe emote IDs from 7TV (all animated)
+    const musicEmotes = [
+      { id: '60aec9186d0b8c60ac0be7c0', name: 'catJAM' },
+      { id: '60ae8cac229664e8667ae5a8', name: 'pepeD' },
+      { id: '60afe3c580df1e6b58fd7f3f', name: 'NODDERS' },
+      { id: '60af2c40aa0d72dc39f1c3e4', name: 'Clap' },
+      { id: '60b076aea64e9d892a82d9f1', name: 'BOOBA' },
+      { id: '60b0d53e77ccd81f2b78c1c0', name: 'peepoHappy' },
+      { id: '60af8dace5e3c23f8a6de1ec', name: 'FeelsOkayMan' },
+      { id: '60b0d3ec8ed8b373e421e7a7', name: 'OMEGALUL' },
+      { id: '60b11aab6a76e2db2da56f59', name: 'peepoClap' },
+      { id: '60ae4aa5229664e8667ab8ef', name: 'HYPERS' },
+      { id: '60b0d3a7a5de6cf21b5ea83b', name: 'FeelsGoodMan' },
+      { id: '60af3c7e229664e8667ac2eb', name: 'Prayge' },
+      { id: '60b04b4a77ccd81f2b77d67d', name: 'LULW' },
+      { id: '60af14f4e5e3c23f8a6dd802', name: 'WideHard' },
+      { id: '60ae958e229664e8667aea38', name: 'KEKW' },
+      { id: '60b0d3f1daa8fb57cd62c5e6', name: 'EZ' },
+      { id: '60aefc43ff8a9a15a6de5847', name: 'PepeLaugh' },
+      { id: '60b0d43b77ccd81f2b78ba37', name: 'forsenCD' },
+      { id: '60af3bfc77ccd81f2b76a2c3', name: 'PauseChamp' },
+      { id: '60b0d3d4a5de6cf21b5ea84e', name: 'PogU' },
+    ]
+
+    return musicEmotes.map(e => ({
+      id: `music-${e.id}`,
+      name: e.name,
+      url: `https://cdn.7tv.app/emote/${e.id}/2x`,
+      animated: true,
+      source: '7tv' as const,
+    }))
+  }
+
+  // Load emotes when category changes
+  useEffect(() => {
+    const loadEmotes = async () => {
+      setLoading(true)
+
+      try {
+        let loadedEmotes: NormalizedEmote[] = []
+
+        switch (activeCategory) {
+          case 'custom':
+            // Custom stickers handled separately in the grid
+            setEmotes([])
+            setLoading(false)
+            return
+          case '7tv': {
+            // Load curated 110+ emotes first (always available, no API needed)
+            const curated = getReactionEmotes()
+            const apiEmotes = await fetch7TVEmotes()
+            // Deduplicate: curated emotes take priority
+            const seenNames = new Set(curated.map(e => e.name))
+            const extras = apiEmotes.filter(e => !seenNames.has(e.name))
+            loadedEmotes = [...curated, ...extras]
+            break
+          }
+          case 'bttv':
+            loadedEmotes = await fetchBTTVEmotes()
+            break
+          case 'ffz':
+            loadedEmotes = await fetchFFZEmotes()
+            break
+          case 'twitch':
+            loadedEmotes = await fetchTwitchEmotes()
+            break
+          case 'kick':
+            loadedEmotes = await fetchKickEmotes()
+            break
+          case 'trending':
+            // GO BIG! Load a MASSIVE mix of popular animated emotes from all sources
+            const [sevenTV, bttv, ffz, trending, twitchGlobal, kickEmotesData] = await Promise.all([
+              fetch7TVEmotes(),
+              fetchBTTVEmotes(),
+              fetchFFZEmotes(),
+              fetch7TVTrending(),
+              fetchTwitchEmotes(),
+              fetchKickEmotes(),
+            ])
+
+            // Maximize emotes - get as many as possible!
+            const animated7tv = sevenTV.filter(e => e.animated).slice(0, 50)
+            const animatedBttv = bttv.filter(e => e.animated).slice(0, 40)
+            const animatedFfz = ffz.filter(e => e.animated).slice(0, 20)
+            const trendingEmotes = trending.filter(e => e.animated).slice(0, 50)
+            const animatedKick = kickEmotesData.filter(e => e.animated).slice(0, 30)
+
+            // Also get popular static ones including Twitch classics
+            const static7tv = sevenTV.filter(e => !e.animated).slice(0, 20)
+            const staticBttv = bttv.filter(e => !e.animated).slice(0, 15)
+            const twitchClassics = twitchGlobal.slice(0, 30) // All Twitch classics
+            const staticKick = kickEmotesData.filter(e => !e.animated).slice(0, 10)
+
+            loadedEmotes = [...trendingEmotes, ...animated7tv, ...animatedBttv, ...animatedFfz, ...animatedKick, ...twitchClassics, ...static7tv, ...staticBttv, ...staticKick]
+            break
+        }
+
+        // Filter out seasonal/holiday emotes
+        setEmotes(filterSeasonalEmotes(loadedEmotes))
+      } catch (error) {
+        console.error('Failed to load emotes:', error)
+        setEmotes([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadEmotes()
+  }, [activeCategory])
+
+  // Filter emotes by search query
+  const filteredEmotes = searchQuery
+    ? emotes.filter(e => e.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : emotes
+
+  const handleEmoteClick = (emote: NormalizedEmote) => {
+    // Pass both URL and name for rendering in the post/comment
+    onSelect(emote.url, emote.name)
+  }
+
+  return (
+    <div
+      className={classNames('w-full max-w-[min(480px,100%)] rounded-xl shadow-2xl border overflow-hidden', {
+        'bg-neutral-900 text-white border-neutral-700': theme === 'dark',
+        'bg-white text-gray-900 border-gray-200': theme === 'light',
+      })}
+    >
+      {/* Header with Search + Close */}
+      <div className="p-3 border-b border-neutral-700">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            placeholder="Search emotes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation() } }}
+            className={classNames('flex-1 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500', {
+              'bg-neutral-800 text-white placeholder-neutral-500': theme === 'dark',
+              'bg-gray-100 text-gray-900 placeholder-gray-400': theme === 'light',
+            })}
+          />
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-all"
+              title="Close"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7 7 10 10"/><path d="M7 17 17 7"/></svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Category Tabs - horizontally scrollable */}
+      <div className="relative border-b border-neutral-700">
+        <div
+          className="flex overflow-x-auto scrollbar-hide"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
+              className={classNames('flex-shrink-0 px-2.5 sm:px-3 py-2.5 text-[10px] sm:text-xs font-medium transition-all whitespace-nowrap', {
+                'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-400': activeCategory === category.id,
+                'text-neutral-400 hover:bg-neutral-800 hover:text-white': activeCategory !== category.id && theme === 'dark',
+                'text-gray-500 hover:bg-gray-50 hover:text-gray-900': activeCategory !== category.id && theme === 'light',
+              })}
+            >
+              <span className="mr-0.5 sm:mr-1">{category.icon}</span>
+              {category.label}
+            </button>
+          ))}
+          {/* Spacer to ensure last tab is fully visible when scrolled */}
+          <div className="flex-shrink-0 w-4" />
+        </div>
+        {/* Fade indicator for more content */}
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-neutral-900 to-transparent pointer-events-none" />
+      </div>
+
+      {/* Emotes Grid - responsive height */}
+      <div className="h-56 sm:h-72 md:h-80 overflow-y-auto overflow-x-hidden p-2">
+        {activeCategory === 'custom' ? (
+          /* ─── Custom Stickers Tab ─────────────────────────── */
+          <div>
+            {/* Upload area */}
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full mb-2 py-3 rounded-lg border border-dashed border-cyan-500/40 hover:border-cyan-400/70 bg-cyan-500/5 hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-2 text-cyan-400 text-sm"
+            >
+              <span className="text-lg">+</span> Upload Sticker
+              <span className="text-[10px] text-neutral-500">(image/gif, max 512KB)</span>
+            </button>
+            {uploadError && (
+              <div className="text-red-400 text-[10px] text-center mb-2">{uploadError}</div>
+            )}
+
+            {customStickers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-neutral-500 gap-2">
+                <span className="text-2xl">🎨</span>
+                <span className="text-sm">No custom stickers yet</span>
+                <span className="text-[10px] text-neutral-600">Upload images or GIFs to create your own!</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
+                {customStickers
+                  .filter(s => !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .map((sticker) => (
+                  <button
+                    key={sticker.id}
+                    onClick={() => onSelect(sticker.dataUrl, sticker.name)}
+                    className="relative flex items-center justify-center p-1 rounded-lg transition-all hover:scale-110 group hover:bg-neutral-800"
+                    title={sticker.name}
+                  >
+                    <img
+                      src={sticker.dataUrl}
+                      alt={sticker.name}
+                      className="w-7 h-7 object-contain"
+                    />
+                    {/* Delete button on hover */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); deleteCustomSticker(sticker.id) }}
+                      className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white text-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Delete sticker"
+                    >
+                      ×
+                    </button>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/90 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                      {sticker.name}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-neutral-400">Loading emotes...</span>
+            </div>
+          </div>
+        ) : filteredEmotes.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-neutral-500">
+            {searchQuery ? 'No emotes found' : 'No emotes available'}
+          </div>
+        ) : (
+          <div className="grid grid-cols-6 sm:grid-cols-8 gap-1">
+            {filteredEmotes.map((emote) => (
+              <button
+                key={`${emote.source}-${emote.id}`}
+                onClick={() => handleEmoteClick(emote)}
+                className={classNames(
+                  'relative flex items-center justify-center p-1 rounded-lg transition-all hover:scale-110 group',
+                  {
+                    'hover:bg-neutral-800': theme === 'dark',
+                    'hover:bg-gray-100': theme === 'light',
+                  }
+                )}
+                title={`${emote.name} (${emote.source.toUpperCase()}${emote.animated ? ' - Animated' : ''})`}
+              >
+                <img
+                  src={emote.url}
+                  alt={emote.name}
+                  className="w-7 h-7 object-contain"
+                  loading="lazy"
+                  onError={(e) => {
+                    // 7TV CDN works without extensions - don't add them
+                    const img = e.target as HTMLImageElement
+                    const url = img.src
+                    const is7TV = url.includes('cdn.7tv.app')
+
+                    if (is7TV) {
+                      // 7TV: strip any extension, CDN auto-serves correct format
+                      const baseUrl = url.replace(/\.(gif|webp|png)$/, '')
+                      if (url !== baseUrl) {
+                        img.src = baseUrl
+                        return
+                      }
+                    } else {
+                      // Non-7TV: fallback chain
+                      if (url.includes('.gif')) {
+                        img.src = url.replace('.gif', '.webp')
+                        return
+                      } else if (url.includes('.webp')) {
+                        img.src = url.replace('.webp', '.png')
+                        return
+                      }
+                    }
+
+                    // All failed - show text fallback
+                    img.style.display = 'none'
+                    const parent = img.parentElement
+                    if (parent) {
+                      parent.classList.add('bg-neutral-700/50')
+                      const span = document.createElement('span')
+                      span.className = 'text-[8px] text-cyan-400 font-medium'
+                      span.textContent = emote.name.slice(0, 5)
+                      parent.appendChild(span)
+                    }
+                  }}
+                />
+                {/* Animated indicator */}
+                {emote.animated && (
+                  <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse" />
+                )}
+                {/* Tooltip on hover */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/90 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                  {emote.name}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="px-3 py-2 text-[10px] text-neutral-500 border-t border-neutral-700 flex items-center justify-between">
+        <span>
+          {activeCategory === 'custom' ? (
+            <>{customStickers.length} custom sticker{customStickers.length !== 1 ? 's' : ''}</>
+          ) : (
+            <>
+              {filteredEmotes.length} emotes
+              {filteredEmotes.filter(e => e.animated).length > 0 && (
+                <span className="ml-1">
+                  • <span className="text-cyan-400">{filteredEmotes.filter(e => e.animated).length} animated</span>
+                </span>
+              )}
+            </>
+          )}
+        </span>
+        <span className="text-cyan-400">{activeCategory === 'custom' ? '🎨 Your Stickers' : '🚀 Go Big!'}</span>
+      </div>
+    </div>
+  )
+}

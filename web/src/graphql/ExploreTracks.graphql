@@ -1,0 +1,12 @@
+query ExploreTracks($sort: SortExploreTracks, $search: String, $page: PageInput) {
+  exploreTracks(sort: $sort, search: $search, page: $page) {
+    nodes {
+      ...TrackComponentFields
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+      totalCount
+    }
+  }
+}

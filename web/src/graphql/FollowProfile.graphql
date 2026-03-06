@@ -1,0 +1,9 @@
+mutation FollowProfile($input: FollowProfileInput!) {
+  followProfile(input: $input) {
+    followedProfile {
+      id
+      followerCount
+      isFollowed
+    }
+  }
+}

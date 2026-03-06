@@ -1,0 +1,18 @@
+fragment CommentComponentFields on Comment {
+  id
+  body
+  postId
+  createdAt
+  deleted
+  isGuest
+  walletAddress
+  profile {
+    id
+    displayName
+    profilePicture
+    verified
+    teamMember
+    userHandle
+    badges
+  }
+}

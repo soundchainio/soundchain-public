@@ -1,0 +1,8 @@
+mutation SubscribeToProfile($input: SubscribeToProfileInput!) {
+  subscribeToProfile(input: $input) {
+    profile {
+      id
+      isSubscriber
+    }
+  }
+}

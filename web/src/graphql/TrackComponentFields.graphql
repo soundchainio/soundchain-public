@@ -1,0 +1,46 @@
+fragment TrackComponentFields on Track {
+  id
+  profileId
+  title
+  assetUrl
+  artworkUrl
+  description
+  utilityInfo
+  artist
+  ISRC
+  artistId
+  artistProfileId
+  album
+  releaseYear
+  copyright
+  genres
+  playbackUrl
+  createdAt
+  updatedAt
+  deleted
+  playbackCountFormatted
+  isFavorite
+  favoriteCount
+  listingCount
+  playbackCount
+  saleType
+  price {
+    value
+    currency
+  }
+  trackEditionId
+  editionSize
+  nftData {
+    transactionHash
+    tokenId
+    contract
+    minter
+    ipfsCid
+    pendingRequest
+    owner
+    pendingTime
+  }
+  trackEdition {
+    ...TrackEditionFields
+  }
+}

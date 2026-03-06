@@ -1,0 +1,35 @@
+query WallPosts($profileId: String!, $page: PageInput) {
+  wallPosts(profileId: $profileId, page: $page) {
+    nodes {
+      id
+      profileId
+      authorProfileId
+      body
+      pinned
+      createdAt
+      author {
+        id
+        displayName
+        userHandle
+        profilePicture
+      }
+      replyCount
+      replies {
+        id
+        authorProfileId
+        body
+        createdAt
+        author {
+          id
+          displayName
+          userHandle
+          profilePicture
+        }
+      }
+    }
+    pageInfo {
+      totalCount
+      hasNextPage
+    }
+  }
+}

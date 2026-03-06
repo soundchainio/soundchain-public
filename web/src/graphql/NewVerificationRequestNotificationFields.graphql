@@ -1,0 +1,6 @@
+fragment NewVerificationRequestNotificationFields on NewVerificationRequestNotification {
+  id
+  type
+  verificationRequestId
+  createdAt
+}

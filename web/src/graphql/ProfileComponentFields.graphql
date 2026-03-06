@@ -1,0 +1,48 @@
+fragment ProfileComponentFields on Profile {
+  id
+  displayName
+  profilePicture
+  coverPicture
+  socialMedias {
+    facebook
+    instagram
+    soundcloud
+    twitter
+    linktree
+    discord
+    telegram
+    spotify
+    bandcamp
+  }
+  favoriteGenres
+  musicianTypes
+  bio
+  followerCount
+  followingCount
+  tracksCount
+  userHandle
+  isFollowed
+  isSubscriber
+  unreadNotificationCount
+  unreadMessageCount
+  verified
+  teamMember
+  magicWalletAddress
+  badges
+  topFriends
+  profileViewCount
+  featuredTrackId
+  featuredAudioUrl
+  featuredAudioTitle
+  featuredAudioArtist
+  featuredAudioCoverUrl
+  wallAudioPlaylist {
+    audioUrl
+    title
+    artist
+    coverUrl
+    wallPostId
+  }
+  createdAt
+  updatedAt
+}

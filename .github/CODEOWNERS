@@ -1,0 +1,62 @@
+# SoundChain Code Ownership Rules
+# These files require explicit approval from @soundchainio before merging
+# Protects critical bug fixes from being accidentally overwritten
+
+# ============================================
+# CRITICAL - MONGOOSE SERIALIZATION FIXES
+# ============================================
+# These files contain fixes for the Symbol(mongoose#Document#scope) error
+# that breaks comment creation. DO NOT modify without owner approval.
+# Bug was fixed multiple times (Dec 2025, Jan 2026) - commits: e295754ab, 40fc241ec, 7feea157d
+
+/api/src/services/CommentService.ts @soundchainio
+/api/src/services/TrackCommentService.ts @soundchainio
+
+# ============================================
+# CORE SERVICES - REQUIRE REVIEW
+# ============================================
+# Other critical backend services that affect core functionality
+
+/api/src/services/NotificationService.ts @soundchainio
+/api/src/services/PostService.ts @soundchainio
+/api/src/services/ProfileService.ts @soundchainio
+
+# SCidService - Contains claimStreamingRewards() with batch chunking fix
+# BUG FIX (Jan 7, 2026): Users with 100+ tracks got "batch must be between 1-100"
+# error because batchSubmitRewards() has max 100 items. Fixed by chunking batches.
+# Also fixes: rewards marked "claimed" before contract call (caused "already claimed" on retry)
+# Commit: 9d321542d
+/api/src/services/SCidService.ts @soundchainio
+
+# ============================================
+# STREAMING REWARDS CONTRACT UTILITY
+# ============================================
+# Contains batch size validation (max 100) - DO NOT change without testing large users
+# Works with StreamingRewardsDistributor: 0xcf9416c49D525f7a50299c71f33606A158F28546
+
+/api/src/utils/StreamingRewardsContract.ts @soundchainio
+
+# ============================================
+# DATABASE & PAGINATION
+# ============================================
+# Paginate contains .lean() fix for GraphQL serialization
+
+/api/src/db/pagination/paginate.ts @soundchainio
+
+# ============================================
+# AUTHENTICATION & SESSION
+# ============================================
+# Session persistence and JWT handling - 30 day login fix
+# Login page contains Magic SDK OTP/OAuth flow - CRITICAL
+
+/web/src/lib/apollo/index.tsx @soundchainio
+/web/src/hooks/useMagicContext.tsx @soundchainio
+/web/src/pages/login.tsx @soundchainio
+/web/src/pages/create-account.tsx @soundchainio
+
+# ============================================
+# SMART CONTRACTS
+# ============================================
+# Contract files should never be modified without explicit approval
+
+/soundchain-contracts/contracts/ @soundchainio

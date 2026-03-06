@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "types": ["node", "react", "react-dom", "jest"], // Keep for dependency support
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "baseUrl": "./src", // Match legacy root
+    "incremental": true,
+    "paths": {
+      "*": ["*"] // Simplify paths, rely on baseUrl
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/**/*.d.ts"],
+  "exclude": ["node_modules/react-datepicker/**"]
+}

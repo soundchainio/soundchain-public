@@ -1,0 +1,83 @@
+.vercel
+api-source.tar.gz
+
+# Environment files - NEVER commit secrets
+.env
+.env.local
+.env.*.local
+.env.backup
+.env.bak*
+*.env
+!.env.sample
+!.env.example
+
+# Large files - don't commit
+soundchain_toc.json
+api-source.tar.gz
+soundchain/
+soundchain-contracts/
+mux_exported/
+package-lock.json
+
+# Claude/Agent Session Files - Keep private
+CLAUDE.md
+CLAUDE_CONTEXT.md
+CLAUDE_SESSION_HANDOFF.md
+HANDOFF.md
+HANDOFF_*.md
+MASTER_HANDOFF.md
+SESSION_HANDOFF*.md
+SOUNDCHAIN_VISION_HANDOFF.md
+VICTORY_SESSION_SUMMARY.md
+AGENTIDE_LEARNING_ANALYSIS.md
+ARCHITECTURE_MAP.md
+BLOCKCHAIN_FLOW.md
+BROWSER_CACHE_FIX.md
+DEX_*.md
+DIAGNOSTIC_CHECKLIST.md
+IMMEDIATE_FIXES_STATUS.md
+PITCHDECK.md
+STAGING.md
+SUMMARY.md
+
+# Business/Strategy docs - NEVER public
+*ACQUISITION*.md
+*PROPOSAL*.md
+*ROADMAP*.md
+!docs/roadmap/*.md
+!web/src/components/pages/roadmap/*
+moltbook-*.md
+moltbook-*.json
+*-session*.md
+*SESSION*.md
+chart.html
+chart.json
+commit_history.txt
+request.json
+temp_yarn.lock
+.claude/
+soundchain-agent/
+.env.vercel-check
+
+# Tunnel relay - private infrastructure
+tunnel-relay/
+
+# Audio files - private content
+audio/
+
+# Node modules - never commit
+node_modules/
+
+# Next.js build output
+.next/
+
+# OS files
+.DS_Store
+
+# Private workflow files
+jeremy-*.md
+desktop-laptop-green.md
+green.md
+*-test-assignment*.md
+session-*.md
+scripts/post-announcements.sh

@@ -1,0 +1,19 @@
+query ExploreUsersSlim($search: String, $page: PageInput) {
+  exploreUsers(search: $search, page: $page) {
+    nodes {
+      id
+      displayName
+      profilePicture
+      userHandle
+      verified
+      followerCount
+      favoriteGenres
+      createdAt
+    }
+    pageInfo {
+      totalCount
+      hasNextPage
+      endCursor
+    }
+  }
+}

@@ -1,0 +1,3 @@
+{
+  "query": "query { posts(page: { first: 5 }) { pageInfo { totalCount } nodes { id body createdAt profile { displayName userHandle } } } }"
+}

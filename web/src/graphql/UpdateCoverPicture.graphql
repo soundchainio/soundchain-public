@@ -1,0 +1,8 @@
+mutation UpdateCoverPicture($input: UpdateProfileInput!) {
+  updateProfile(input: $input) {
+    profile {
+      id
+      coverPicture
+    }
+  }
+}
