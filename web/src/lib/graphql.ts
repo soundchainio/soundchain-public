@@ -7207,8 +7207,8 @@ export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, Expl
 // ── Slim Explore Queries (lightweight for fast page loads) ──────────────
 
 export const ExploreTracksSlimDocument = gql`
-    query ExploreTracksSlim($sort: SortExploreTracks, $search: String, $page: PageInput) {
-  exploreTracks(sort: $sort, search: $search, page: $page) {
+    query ExploreTracksSlim($sort: SortExploreTracks, $search: String, $genre: String, $page: PageInput) {
+  exploreTracks(sort: $sort, search: $search, genre: $genre, page: $page) {
     nodes {
       id
       title
@@ -7220,6 +7220,7 @@ export const ExploreTracksSlimDocument = gql`
       isFavorite
       trackEditionId
       editionSize
+      genres
       nftData {
         tokenId
         contract
@@ -7233,11 +7234,32 @@ export const ExploreTracksSlimDocument = gql`
   }
 }
     `;
-export type ExploreTracksSlimQuery = { exploreTracks: { nodes: Array<{ id: string; title?: string | null; artist?: string | null; artworkUrl?: string | null; playbackUrl?: string | null; assetUrl?: string | null; createdAt: any; isFavorite?: boolean | null; trackEditionId?: string | null; editionSize?: number | null; nftData?: { tokenId?: string | null; contract?: string | null } | null }>; pageInfo: { hasNextPage: boolean; endCursor?: string | null; totalCount: number } } };
-export type ExploreTracksSlimQueryVariables = ExploreTracksQueryVariables;
+export type ExploreTracksSlimQuery = { exploreTracks: { nodes: Array<{ id: string; title?: string | null; artist?: string | null; artworkUrl?: string | null; playbackUrl?: string | null; assetUrl?: string | null; createdAt: any; isFavorite?: boolean | null; trackEditionId?: string | null; editionSize?: number | null; genres?: Array<string> | null; nftData?: { tokenId?: string | null; contract?: string | null } | null }>; pageInfo: { hasNextPage: boolean; endCursor?: string | null; totalCount: number } } };
+export type ExploreTracksSlimQueryVariables = Exact<{
+  sort?: InputMaybe<SortExploreTracks>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  genre?: InputMaybe<Scalars['String']['input']>;
+  page?: InputMaybe<PageInput>;
+}>;
 export function useExploreTracksSlimQuery(baseOptions?: Apollo.QueryHookOptions<ExploreTracksSlimQuery, ExploreTracksSlimQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
         return Apollo.useQuery<ExploreTracksSlimQuery, ExploreTracksSlimQueryVariables>(ExploreTracksSlimDocument, options);
+      }
+
+// Genre counts for explore pills
+export const ExploreGenreCountsDocument = gql`
+    query ExploreGenreCounts {
+  exploreGenreCounts {
+    genre
+    count
+  }
+}
+    `;
+export type ExploreGenreCountsQuery = { exploreGenreCounts: Array<{ genre: string; count: number }> };
+export type ExploreGenreCountsQueryVariables = Exact<{ [key: string]: never; }>;
+export function useExploreGenreCountsQuery(baseOptions?: Apollo.QueryHookOptions<ExploreGenreCountsQuery, ExploreGenreCountsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ExploreGenreCountsQuery, ExploreGenreCountsQueryVariables>(ExploreGenreCountsDocument, options);
       }
 
 export const ExploreUsersSlimDocument = gql`

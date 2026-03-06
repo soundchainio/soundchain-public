@@ -1,8 +1,9 @@
 import { PaginateResult, PaginateSortParams } from '../db/pagination/paginate';
 import { Profile } from '../models/Profile';
-import { Track } from '../models/Track';
+import { Track, TrackModel } from '../models/Track';
 import { Context } from '../types/Context';
 import { ExplorePayload } from '../types/ExplorePayload';
+import { GenreCount } from '../types/GenreCount';
 import { PageInput } from '../types/PageInput';
 import { SortOrder } from '../types/SortOrder';
 import { Service } from './Service';
@@ -28,8 +29,8 @@ export class ExploreService extends Service {
     return { profiles: profiles.list, totalProfiles: profiles.total, tracks: tracks.nodes, totalTracks: tracks.pageInfo.totalCount };
   }
 
-  async getExploreTracks(sort: PaginateSortParams<typeof Track> | undefined, search: string, page?: PageInput): Promise<PaginateResult<Track>> {
-    const aggregationParams = this.getTrackAggregationParams(search)
+  async getExploreTracks(sort: PaginateSortParams<typeof Track> | undefined, search: string, page?: PageInput, genre?: string): Promise<PaginateResult<Track>> {
+    const aggregationParams = this.getTrackAggregationParams(search, genre)
     const result = await this.context.trackService.paginatePipelineAggregated({
       ...aggregationParams,
       sort: {
@@ -40,6 +41,25 @@ export class ExploreService extends Service {
     });
 
     return result
+  }
+
+  async getGenreCounts(): Promise<GenreCount[]> {
+    // Count unique editions per genre
+    const result = await TrackModel.aggregate([
+      { $match: { deleted: false, genres: { $exists: true, $ne: [] } } },
+      // Group by edition first (so each edition counts once)
+      {
+        $group: {
+          _id: { $ifNull: ['$trackEditionId', '$_id'] },
+          genres: { $first: '$genres' },
+        }
+      },
+      { $unwind: '$genres' },
+      { $group: { _id: '$genres', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]).exec();
+
+    return result.map((r: any) => ({ genre: r._id, count: r.count }));
   }
 
   getExploreUsers(search?: string, page?: PageInput): Promise<PaginateResult<Profile>> {
@@ -56,7 +76,58 @@ export class ExploreService extends Service {
     });
   }
 
-  private getTrackAggregationParams(search: string) {
+  private getTrackAggregationParams(search: string, genre?: string) {
+    // When genre filter is active, filter directly by genres array
+    if (genre) {
+      // Convert enum key (HIP_HOP) to stored value (hip_hop)
+      const genreValue = genre.toLowerCase()
+      const matchFilter: any = { genres: genreValue, deleted: false }
+
+      // Also apply text search within the genre if provided
+      if (search) {
+        const regex = new RegExp(search, 'i')
+        matchFilter.$or = [
+          { title: regex },
+          { description: regex },
+          { artist: regex },
+          { album: regex },
+        ]
+      }
+
+      return {
+        aggregation: [
+          { $match: matchFilter },
+          {
+            $group: {
+              _id: {
+                $ifNull: [
+                  '$trackEditionId',
+                  '$_id',
+                ]
+              },
+              sumPlaybackCount: { $sum: '$playbackCount' },
+              sumFavoriteCount: { $sum: '$favoriteCount' },
+              first: { $first: '$$ROOT' }
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $mergeObjects: [
+                  '$first',
+                  {
+                    playbackCount: '$sumPlaybackCount',
+                    favoriteCount: '$sumFavoriteCount'
+                  },
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+
+    // No genre filter — existing text search behavior
     const regex = new RegExp(search, 'i');
     // Build match conditions — search title/description/artist/album AND genres
     const matchConditions: any[] = [

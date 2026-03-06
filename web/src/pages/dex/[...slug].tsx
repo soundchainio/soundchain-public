@@ -49,7 +49,7 @@ import { Avatar, AvatarImage, AvatarFallback } from 'components/ui/avatar'
 import { ScrollArea } from 'components/ui/scroll-area'
 import { Separator } from 'components/ui/separator'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, useProfileVerificationRequestQuery, ProfileVerificationStatusType } from 'lib/graphql'
+import { useMeQuery, useGroupedTracksQuery, useTracksQuery, useTracksLazyQuery, useListingItemsQuery, useExploreUsersQuery, useExploreTracksQuery, useExploreUsersSlimQuery, useExploreTracksSlimQuery, useExploreGenreCountsQuery, useFollowProfileMutation, useUnfollowProfileMutation, useTrackQuery, usePostQuery, useProfileQuery, useProfileByHandleQuery, useChatsQuery, useChatHistoryLazyQuery, useSendMessageMutation, useResetUnreadMessageCountMutation, useFavoriteTracksQuery, useNotificationsQuery, usePolygonscanQuery, useMaticUsdQuery, useToggleFavoriteMutation, useFollowersQuery, useFollowingQuery, useFollowersLazyQuery, useFollowingLazyQuery, useUpdateHandleMutation, useUpdateProfileDisplayNameMutation, useExploreUsersLazyQuery, SortTrackField, SortOrder, useCreateProfileVerificationRequestMutation, useProfileVerificationRequestQuery, ProfileVerificationStatusType } from 'lib/graphql'
 import { SelectToApolloQuery, SortListingItem } from 'lib/apollo/sorting'
 import { StateProvider } from 'contexts'
 import { ModalProvider } from 'contexts/ModalContext'
@@ -1011,6 +1011,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [coverImageError, setCoverImageError] = useState(false)
   const [exploreSearchQuery, setExploreSearchQuery] = useState('')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+  const [exploreGenreFilter, setExploreGenreFilter] = useState<string | null>(null)
   const [exploreTab, setExploreTab] = useState<'tracks' | 'users'>('users')
   const [tracksViewMode, setTracksViewMode] = useState<'browse' | 'leaderboard'>('browse')
   const [showNavMenu, setShowNavMenu] = useState(false)
@@ -1899,8 +1900,15 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const { data: exploreTracksData, loading: exploreTracksLoading, fetchMore: fetchMoreExploreTracks } = useExploreTracksSlimQuery({
     variables: {
       search: debouncedSearchQuery.trim() || undefined,
+      genre: exploreGenreFilter || undefined,
       page: { first: 200 }
     },
+    skip: selectedView !== 'explore',
+    fetchPolicy: 'cache-first',
+  })
+
+  // Genre counts for explore pills
+  const { data: genreCountsData } = useExploreGenreCountsQuery({
     skip: selectedView !== 'explore',
     fetchPolicy: 'cache-first',
   })
@@ -5232,41 +5240,61 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 />
               </div>
 
-              {/* Genre Pills - horizontal scroll with glass overlay */}
+              {/* Genre Pills - horizontal scroll with track counts */}
               <div className="overflow-x-auto scrollbar-hide">
                 <div className="flex gap-1.5 min-w-max pb-1">
-                  {[
-                    { label: 'All', value: '' },
-                    { label: 'Hip-Hop', value: 'HIP_HOP' },
-                    { label: 'R&B', value: 'R_AND_B' },
-                    { label: 'Electronic', value: 'ELECTRONIC' },
-                    { label: 'Pop', value: 'POP' },
-                    { label: 'Lofi', value: 'LOFI' },
-                    { label: 'House', value: 'HOUSE' },
-                    { label: 'Reggae', value: 'REGGAE' },
-                    { label: 'Jazz', value: 'JAZZ' },
-                    { label: 'Soul/Funk', value: 'SOUL_FUNK' },
-                    { label: 'Latin', value: 'LATIN' },
-                    { label: 'Ambient', value: 'AMBIENT' },
-                    { label: 'Indie', value: 'INDIE' },
-                    { label: 'Gospel', value: 'GOSPEL' },
-                    { label: 'Classical', value: 'CLASSICAL' },
-                    { label: 'Techno', value: 'TECHNO' },
-                    { label: 'Acoustic', value: 'ACOUSTIC' },
-                    { label: 'World', value: 'WORLD' },
-                  ].map((g) => (
-                    <button
-                      key={g.value}
-                      onClick={() => setExploreSearchQuery(g.value ? g.label : '')}
-                      className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                        (g.value === '' && !exploreSearchQuery) || exploreSearchQuery === g.label
-                          ? 'bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/40 shadow-lg shadow-cyan-500/10'
-                          : 'bg-white/10 text-gray-200 ring-1 ring-white/15 hover:bg-white/20 hover:text-white'
-                      }`}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
+                  {(() => {
+                    // Build genre count map from backend data
+                    const genreCountMap: Record<string, number> = {}
+                    if (genreCountsData?.exploreGenreCounts) {
+                      for (const gc of genreCountsData.exploreGenreCounts) {
+                        // Backend returns lowercase values (hip_hop), pill values are uppercase (HIP_HOP)
+                        genreCountMap[gc.genre.toUpperCase()] = gc.count
+                      }
+                    }
+                    const totalTracks = Object.values(genreCountMap).reduce((a, b) => a + b, 0)
+
+                    return [
+                      { label: 'All', value: '' },
+                      { label: 'Hip-Hop', value: 'HIP_HOP' },
+                      { label: 'R&B', value: 'R_AND_B' },
+                      { label: 'Electronic', value: 'ELECTRONIC' },
+                      { label: 'Pop', value: 'POP' },
+                      { label: 'Lofi', value: 'LOFI' },
+                      { label: 'House', value: 'HOUSE' },
+                      { label: 'Reggae', value: 'REGGAE' },
+                      { label: 'Jazz', value: 'JAZZ' },
+                      { label: 'Soul/Funk', value: 'SOUL_FUNK' },
+                      { label: 'Latin', value: 'LATIN' },
+                      { label: 'Ambient', value: 'AMBIENT' },
+                      { label: 'Indie', value: 'INDIE' },
+                      { label: 'Gospel', value: 'GOSPEL' },
+                      { label: 'Classical', value: 'CLASSICAL' },
+                      { label: 'Techno', value: 'TECHNO' },
+                      { label: 'Acoustic', value: 'ACOUSTIC' },
+                      { label: 'World', value: 'WORLD' },
+                    ].map((g) => {
+                      const count = g.value ? (genreCountMap[g.value] || 0) : totalTracks
+                      const isActive = g.value ? exploreGenreFilter === g.value : !exploreGenreFilter
+                      return (
+                        <button
+                          key={g.value || 'all'}
+                          onClick={() => {
+                            setExploreGenreFilter(g.value || null)
+                            // Clear text search when switching genres
+                            if (!g.value) setExploreSearchQuery('')
+                          }}
+                          className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                            isActive
+                              ? 'bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/40 shadow-lg shadow-cyan-500/10'
+                              : 'bg-white/10 text-gray-200 ring-1 ring-white/15 hover:bg-white/20 hover:text-white'
+                          }`}
+                        >
+                          {g.label}{count > 0 ? ` ${count}` : ''}
+                        </button>
+                      )
+                    })
+                  })()}
                 </div>
               </div>
 
