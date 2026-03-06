@@ -1,5 +1,5 @@
-query ExploreTracksSlim($sort: SortExploreTracks, $search: String, $genre: String, $page: PageInput) {
-  exploreTracks(sort: $sort, search: $search, genre: $genre, page: $page) {
+query ExploreTracksSlim($sort: SortExploreTracks, $search: String, $page: PageInput) {
+  exploreTracks(sort: $sort, search: $search, page: $page) {
     nodes {
       id
       title

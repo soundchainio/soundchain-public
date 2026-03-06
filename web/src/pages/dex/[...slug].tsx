@@ -1896,18 +1896,17 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   )?.profile
 
   // Explore Tracks Query - search for tracks
-  // Load 200 tracks at once for full genre browsing
+  // Load 200 tracks at once for full genre browsing — genre filtering done client-side
   const { data: exploreTracksData, loading: exploreTracksLoading, fetchMore: fetchMoreExploreTracks } = useExploreTracksSlimQuery({
     variables: {
       search: debouncedSearchQuery.trim() || undefined,
-      genre: exploreGenreFilter || undefined,
       page: { first: 200 }
     },
     skip: selectedView !== 'explore',
     fetchPolicy: 'cache-first',
   })
 
-  // Genre counts for explore pills
+  // Genre counts for explore pills (separate lightweight query)
   const { data: genreCountsData } = useExploreGenreCountsQuery({
     skip: selectedView !== 'explore',
     fetchPolicy: 'cache-first',
@@ -5240,60 +5239,73 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                 />
               </div>
 
-              {/* Genre Pills - horizontal scroll with track counts */}
+              {/* Genre Pills - dynamic from backend counts, shows ALL genres with tracks */}
               <div className="overflow-x-auto scrollbar-hide">
                 <div className="flex gap-1.5 min-w-max pb-1">
                   {(() => {
-                    // Build genre count map from backend data
-                    const genreCountMap: Record<string, number> = {}
+                    // Human-readable labels for genre enum values
+                    const GENRE_LABELS: Record<string, string> = {
+                      acoustic: 'Acoustic', alternative: 'Alternative', ambient: 'Ambient',
+                      americana: 'Americana', blues: 'Blues', bpm: 'BPM', c_pop: 'C-Pop',
+                      cannabis: 'Cannabis', christian: 'Christian', classic_rock: 'Classic Rock',
+                      classical: 'Classical', country: 'Country', dance: 'Dance',
+                      deep_house: 'Deep House', devotional: 'Devotional', electronic: 'Electronic',
+                      experimental: 'Experimental', gospel: 'Gospel', hard_rock: 'Hard Rock',
+                      hip_hop: 'Hip-Hop', house: 'House', indie: 'Indie',
+                      instrumental: 'Instrumental', jazz: 'Jazz', jungle: 'Jungle',
+                      k_pop: 'K-Pop', kids_and_family: 'Kids & Family', latin: 'Latin',
+                      lo_fi: 'Lofi', metal: 'Metal', musica_mexicana: 'Musica Mexicana',
+                      musica_tropical: 'Musica Tropical', podcasts: 'Podcasts', pop: 'Pop',
+                      pop_latino: 'Pop Latino', punk: 'Punk', r_and_b: 'R&B',
+                      reggae: 'Reggae', reggaeton: 'Reggaeton', salsa: 'Salsa',
+                      samples: 'Samples', soul_funk: 'Soul/Funk', soundbath: 'Soundbath',
+                      soundtrack: 'Soundtrack', spoken: 'Spoken', urban_latino: 'Urban Latino',
+                      world: 'World', techno: 'Techno',
+                    }
+
+                    // Build pills dynamically from backend genre counts
+                    const genrePills: { label: string; value: string; count: number }[] = []
+                    let totalTracks = 0
                     if (genreCountsData?.exploreGenreCounts) {
                       for (const gc of genreCountsData.exploreGenreCounts) {
-                        // Backend returns lowercase values (hip_hop), pill values are uppercase (HIP_HOP)
-                        genreCountMap[gc.genre.toUpperCase()] = gc.count
+                        genrePills.push({
+                          label: GENRE_LABELS[gc.genre] || gc.genre.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                          value: gc.genre, // lowercase enum value as stored in DB
+                          count: gc.count,
+                        })
+                        totalTracks += gc.count
                       }
                     }
-                    const totalTracks = Object.values(genreCountMap).reduce((a, b) => a + b, 0)
 
-                    return [
-                      { label: 'All', value: '' },
-                      { label: 'Hip-Hop', value: 'HIP_HOP' },
-                      { label: 'R&B', value: 'R_AND_B' },
-                      { label: 'Electronic', value: 'ELECTRONIC' },
-                      { label: 'Pop', value: 'POP' },
-                      { label: 'Lofi', value: 'LOFI' },
-                      { label: 'House', value: 'HOUSE' },
-                      { label: 'Reggae', value: 'REGGAE' },
-                      { label: 'Jazz', value: 'JAZZ' },
-                      { label: 'Soul/Funk', value: 'SOUL_FUNK' },
-                      { label: 'Latin', value: 'LATIN' },
-                      { label: 'Ambient', value: 'AMBIENT' },
-                      { label: 'Indie', value: 'INDIE' },
-                      { label: 'Gospel', value: 'GOSPEL' },
-                      { label: 'Classical', value: 'CLASSICAL' },
-                      { label: 'Techno', value: 'TECHNO' },
-                      { label: 'Acoustic', value: 'ACOUSTIC' },
-                      { label: 'World', value: 'WORLD' },
-                    ].map((g) => {
-                      const count = g.value ? (genreCountMap[g.value] || 0) : totalTracks
-                      const isActive = g.value ? exploreGenreFilter === g.value : !exploreGenreFilter
-                      return (
+                    return (
+                      <>
+                        {/* "All" pill */}
                         <button
-                          key={g.value || 'all'}
-                          onClick={() => {
-                            setExploreGenreFilter(g.value || null)
-                            // Clear text search when switching genres
-                            if (!g.value) setExploreSearchQuery('')
-                          }}
+                          onClick={() => setExploreGenreFilter(null)}
                           className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                            isActive
+                            !exploreGenreFilter
                               ? 'bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/40 shadow-lg shadow-cyan-500/10'
                               : 'bg-white/10 text-gray-200 ring-1 ring-white/15 hover:bg-white/20 hover:text-white'
                           }`}
                         >
-                          {g.label}{count > 0 ? ` ${count}` : ''}
+                          All{totalTracks > 0 ? ` ${totalTracks}` : ''}
                         </button>
-                      )
-                    })
+                        {/* Genre pills sorted by count (most tracks first) */}
+                        {genrePills.map((g) => (
+                          <button
+                            key={g.value}
+                            onClick={() => setExploreGenreFilter(g.value)}
+                            className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                              exploreGenreFilter === g.value
+                                ? 'bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/40 shadow-lg shadow-cyan-500/10'
+                                : 'bg-white/10 text-gray-200 ring-1 ring-white/15 hover:bg-white/20 hover:text-white'
+                            }`}
+                          >
+                            {g.label} {g.count}
+                          </button>
+                        ))}
+                      </>
+                    )
                   })()}
                 </div>
               </div>
@@ -5353,8 +5365,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
               {/* Tracks — NFT Collection + SCid Directory (Sequencer Agent) */}
               {(() => {
-                const allTracks = exploreTracksData?.exploreTracks?.nodes || []
-                const totalTracksCount = exploreTracksData?.exploreTracks?.pageInfo?.totalCount || allTracks.length
+                const allTracksRaw = exploreTracksData?.exploreTracks?.nodes || []
+                const allTracks = exploreGenreFilter
+                  ? allTracksRaw.filter((t: any) => t.genres?.includes(exploreGenreFilter))
+                  : allTracksRaw
+                const totalTracksCount = exploreGenreFilter
+                  ? allTracks.length
+                  : (exploreTracksData?.exploreTracks?.pageInfo?.totalCount || allTracks.length)
 
                 // Split into NFT vs SCid
                 const nftTracksRaw = allTracks.filter((t: any) => t.nftData?.tokenId || t.nftData?.contract)

@@ -7207,8 +7207,8 @@ export type ExploreUsersQueryResult = Apollo.QueryResult<ExploreUsersQuery, Expl
 // ── Slim Explore Queries (lightweight for fast page loads) ──────────────
 
 export const ExploreTracksSlimDocument = gql`
-    query ExploreTracksSlim($sort: SortExploreTracks, $search: String, $genre: String, $page: PageInput) {
-  exploreTracks(sort: $sort, search: $search, genre: $genre, page: $page) {
+    query ExploreTracksSlim($sort: SortExploreTracks, $search: String, $page: PageInput) {
+  exploreTracks(sort: $sort, search: $search, page: $page) {
     nodes {
       id
       title
@@ -7238,7 +7238,6 @@ export type ExploreTracksSlimQuery = { exploreTracks: { nodes: Array<{ id: strin
 export type ExploreTracksSlimQueryVariables = Exact<{
   sort?: InputMaybe<SortExploreTracks>;
   search?: InputMaybe<Scalars['String']['input']>;
-  genre?: InputMaybe<Scalars['String']['input']>;
   page?: InputMaybe<PageInput>;
 }>;
 export function useExploreTracksSlimQuery(baseOptions?: Apollo.QueryHookOptions<ExploreTracksSlimQuery, ExploreTracksSlimQueryVariables>) {
