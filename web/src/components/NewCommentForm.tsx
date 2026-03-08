@@ -546,6 +546,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
                     setBody(prev => prev + emoji.native)
                   }
                 }}
+                onClickOutside={() => setShowEmojiPicker(false)}
               />
             </div>
           )}

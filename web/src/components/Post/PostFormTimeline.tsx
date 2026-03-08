@@ -239,17 +239,20 @@ export const PostFormTimeline = () => {
                 {isEmojiPickerOpen ? '❌' : '😃'}
               </button>
               {isEmojiPickerOpen && (
-                <div className="absolute left-0 z-50 mt-2" onClick={(e) => e.stopPropagation()}>
-                  <Picker
-                    theme="dark"
-                    perLine={7}
-                    onEmojiSelect={(e: Emoji) => {
-                      handleSelectEmoji(e)
-                      // Picker stays open - blast those emojis! 🔥
-                    }}
-                    onClickOutside={() => setEmojiPickerOpen(false)}
-                  />
-                </div>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setEmojiPickerOpen(false)} />
+                  <div className="absolute left-0 z-50 mt-2" onClick={(e) => e.stopPropagation()}>
+                    <Picker
+                      theme="dark"
+                      perLine={7}
+                      onEmojiSelect={(e: Emoji) => {
+                        handleSelectEmoji(e)
+                        // Picker stays open - blast those emojis! 🔥
+                      }}
+                      onClickOutside={() => setEmojiPickerOpen(false)}
+                    />
+                  </div>
+                </>
               )}
             </div>
             {/* Sticker Picker - controlled state to stay open for sticker flurries! */}
@@ -267,14 +270,17 @@ export const PostFormTimeline = () => {
                 <Sparkles className={`m-auto w-5 ${isStickerPickerOpen ? 'text-cyan-400' : 'text-gray-400'}`} />
               </button>
               {isStickerPickerOpen && (
-                <div className="absolute left-0 z-50 mt-2" onClick={(e) => e.stopPropagation()}>
-                  <StickerPicker
-                    onSelect={(stickerUrl, stickerName) => {
-                      handleSelectSticker(stickerUrl, stickerName)
-                    }}
-                    theme="dark"
-                  />
-                </div>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setStickerPickerOpen(false)} />
+                  <div className="absolute left-0 z-50 mt-2" onClick={(e) => e.stopPropagation()}>
+                    <StickerPicker
+                      onSelect={(stickerUrl, stickerName) => {
+                        handleSelectSticker(stickerUrl, stickerName)
+                      }}
+                      theme="dark"
+                    />
+                  </div>
+                </>
               )}
             </div>
             {/* GIF Picker - GIPHY powered */}
@@ -292,15 +298,18 @@ export const PostFormTimeline = () => {
                 <Film className={`m-auto w-5 ${isGifPickerOpen ? 'text-pink-400' : 'text-gray-400'}`} />
               </button>
               {isGifPickerOpen && (
-                <div className="absolute left-0 z-50 mt-2" onClick={(e) => e.stopPropagation()}>
-                  <GifPicker
-                    theme="dark"
-                    onClose={() => setGifPickerOpen(false)}
-                    onSelect={(gifUrl, gifTitle) => {
-                      handleSelectSticker(gifUrl, `gif:${gifTitle}`)
-                    }}
-                  />
-                </div>
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setGifPickerOpen(false)} />
+                  <div className="absolute left-0 z-50 mt-2" onClick={(e) => e.stopPropagation()}>
+                    <GifPicker
+                      theme="dark"
+                      onClose={() => setGifPickerOpen(false)}
+                      onSelect={(gifUrl, gifTitle) => {
+                        handleSelectSticker(gifUrl, `gif:${gifTitle}`)
+                      }}
+                    />
+                  </div>
+                </>
               )}
             </div>
             <button

@@ -280,9 +280,21 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
     )
   }
 
-  if (!data || !data.posts || !data.posts.nodes) {
+  if (!data || !data.posts || !data.posts.nodes || data.posts.nodes.length === 0) {
     console.log('📫 Posts: No data available', { data, posts: data?.posts })
-    return <NoResultFound type="posts" />
+    return (
+      <div className="flex flex-col items-center gap-4 py-12 px-4">
+        <div className="text-4xl">🎵</div>
+        <p className="text-neutral-300 text-sm font-medium">Your feed is quiet</p>
+        <p className="text-neutral-500 text-xs text-center max-w-xs">Follow artists and creators to see their posts here, or explore what&apos;s trending.</p>
+        <a
+          href="/dex/explore"
+          className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm rounded-lg transition-colors"
+        >
+          Explore SoundChain
+        </a>
+      </div>
+    )
   }
 
   const loadMoreItems = loading ? () => null : loadMore
