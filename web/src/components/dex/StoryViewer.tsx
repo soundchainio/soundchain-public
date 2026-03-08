@@ -898,9 +898,10 @@ export const StoryViewer = ({ isOpen, onClose, initialUserId, initialStoryId, us
               className="flex-1 min-w-0"
               onClick={(e) => {
                 e.stopPropagation()
-                // Navigate to author profile where the original wall post lives
+                // Close viewer first, then navigate to author profile
                 const handle = currentUser?.userHandle || currentUser?.profileId
                 if (handle) {
+                  onClose()
                   router.push(`/dex/users/${handle}`)
                 }
               }}

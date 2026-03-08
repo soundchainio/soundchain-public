@@ -201,10 +201,10 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
   const [guestPinToIPFS] = useMutation(GUEST_PIN_TO_IPFS)
   const [directPinToIPFS] = useMutation(DIRECT_PIN_TO_IPFS)
   const [createStoryWithOverlays] = useMutation(CREATE_STORY_WITH_OVERLAYS, {
-    refetchQueries: ['publicStories', 'myFollowingStories'],
+    refetchQueries: ['publicStories', 'myFollowingStories', 'publicStoriesForProfile'],
   })
   const [guestCreateStoryWithOverlays] = useMutation(GUEST_CREATE_STORY_WITH_OVERLAYS, {
-    refetchQueries: ['publicStories'],
+    refetchQueries: ['publicStories', 'publicStoriesForProfile'],
   })
 
   // Media state
@@ -1136,7 +1136,7 @@ export const CreateStoryModal = ({ isOpen, onClose, onPublish, prefillTrack, pre
             {mediaPreview && (
               <div
                 ref={previewContainerRef}
-                className="relative aspect-square sm:aspect-[9/16] rounded-xl bg-black"
+                className="relative aspect-square sm:aspect-[9/16] max-h-48 sm:max-h-80 rounded-xl bg-black"
               >
                 <div className="absolute inset-0 rounded-xl overflow-hidden">
                   {/(?:youtube\.com|youtu\.be|vimeo\.com|dailymotion\.com|twitch\.tv|soundcloud\.com|spotify\.com|bandcamp\.com)/i.test(mediaPreview) ? (
