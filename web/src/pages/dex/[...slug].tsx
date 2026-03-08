@@ -7899,6 +7899,60 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                         </button>
                       </div>
 
+                      {/* Profile Song — MySpace-style auto-play bar */}
+                      {(() => {
+                        const featuredTrackId = (viewingProfile as any)?.featuredTrackId
+                        const featuredAudioUrl = (viewingProfile as any)?.featuredAudioUrl
+                        if (!featuredTrackId && !featuredAudioUrl) return null
+                        const nftTrack = featuredTrackId ? viewingProfileNFTs.find((t: any) => t.id === featuredTrackId) : null
+                        const songTitle = nftTrack?.title || (viewingProfile as any)?.featuredAudioTitle || 'Profile Song'
+                        const songArtist = nftTrack?.artist || (viewingProfile as any)?.featuredAudioArtist || viewingProfile.displayName
+                        const songArt = nftTrack?.artworkUrl || (viewingProfile as any)?.featuredAudioCoverUrl
+                        const songUrl = nftTrack?.playbackUrl || featuredAudioUrl
+                        if (!songUrl) return null
+                        return (
+                          <button
+                            onClick={() => {
+                              if (nftTrack) {
+                                handlePlayTrack(nftTrack, 0, [nftTrack])
+                              } else {
+                                playlistState([{
+                                  trackId: `profile-song-${viewingProfile.id}`,
+                                  src: songUrl,
+                                  title: songTitle,
+                                  artist: songArtist || '',
+                                  art: songArt || '',
+                                  isFavorite: false,
+                                }], 0)
+                              }
+                            }}
+                            className="mt-3 flex items-center gap-3 w-full max-w-sm p-2 rounded-lg bg-gradient-to-r from-amber-500/10 to-purple-500/10 border border-amber-500/30 hover:border-amber-400/60 transition-all group"
+                          >
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0 relative">
+                              {songArt ? (
+                                <img src={songArt} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-500 to-purple-600">
+                                  <Music className="w-4 h-4 text-white" />
+                                </div>
+                              )}
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
+                                <Play className="w-4 h-4 text-white fill-white" />
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0 text-left">
+                              <p className="text-sm text-white truncate font-medium">{songTitle}</p>
+                              <p className="text-[10px] text-amber-400 truncate">Profile Song{songArtist ? ` — ${songArtist}` : ''}</p>
+                            </div>
+                            <div className="flex items-center gap-0.5 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
+                              <div className="w-0.5 h-3 bg-amber-400 rounded-full animate-pulse" />
+                              <div className="w-0.5 h-4 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.15s' }} />
+                              <div className="w-0.5 h-2 bg-amber-400 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+                            </div>
+                          </button>
+                        )
+                      })()}
+
                       {/* Stats Overlay Modal — fixed centered, portal-style */}
                       {profileStatsModal && (
                         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={() => setProfileStatsModal(null)}>
