@@ -19,10 +19,9 @@ soundchain-contracts/
 mux_exported/
 package-lock.json
 
-# Markdown files — block ALL, whitelist only public docs
+# Markdown files — block ALL, whitelist only essential docs
 *.md
 !README.md
-!docs/**/*.md
 !api/README.md
 !api/DEPLOY_TRIGGER.md
 moltbook-*.json
