@@ -217,9 +217,10 @@ export function CallUI({
         </div>
 
         <h2 className="text-white text-xl font-bold mb-1">{remotePeer?.displayName || 'Calling...'}</h2>
-        <p className="text-gray-400 text-sm mb-12">
+        <p className="text-gray-400 text-sm">
           {callMode === 'video' ? 'Video' : 'Voice'} calling...
         </p>
+        <p className="text-cyan-400/60 text-xs font-mono mb-12">{formattedDuration}</p>
 
         <button
           onClick={onEndCall}

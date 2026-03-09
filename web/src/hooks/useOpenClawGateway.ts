@@ -81,9 +81,14 @@ export function useOpenClawGateway(userId: string | undefined) {
     const delay = Math.min(1000 * Math.pow(2, attempt), 30000)
     reconnectAttemptRef.current = attempt + 1
 
-    // After 5 failed attempts, switch to polling fallback
+    // BUG-CALL-005: After 5 failed attempts, switch to polling fallback
+    // but schedule a recovery attempt after 60 seconds instead of permanent failure
     if (attempt >= 5) {
       setFallbackPolling(true)
+      reconnectTimerRef.current = setTimeout(() => {
+        reconnectAttemptRef.current = 0 // Reset retry counter
+        connect()
+      }, 60000)
       return
     }
 

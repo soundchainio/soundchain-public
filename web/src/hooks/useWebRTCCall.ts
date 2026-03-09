@@ -37,8 +37,12 @@ interface UseWebRTCCallOptions {
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  // Free TURN relay — required for symmetric NAT (mobile networks, corporate WiFi)
-  {
+  // BUG-CALL-004: TURN relay configurable via env vars, falls back to free public relay
+  ...(process.env.NEXT_PUBLIC_TURN_URL ? [{
+    urls: process.env.NEXT_PUBLIC_TURN_URL.split(','),
+    username: process.env.NEXT_PUBLIC_TURN_USER || '',
+    credential: process.env.NEXT_PUBLIC_TURN_CRED || '',
+  }] : [{
     urls: [
       'turn:openrelay.metered.ca:80',
       'turn:openrelay.metered.ca:443',
@@ -46,7 +50,7 @@ const ICE_SERVERS: RTCIceServer[] = [
     ],
     username: 'openrelayproject',
     credential: 'openrelayproject',
-  },
+  }]),
 ]
 
 export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall }: UseWebRTCCallOptions) {
@@ -70,19 +74,27 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
   const timerRef = useRef<ReturnType<typeof setInterval>>()
   const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([])
   const signalCleanupRef = useRef<(() => void) | null>(null)
+  const ringTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const ringTimerRef = useRef<ReturnType<typeof setInterval>>()
+  const endCallRef = useRef<(() => void) | null>(null)
 
-  // Refs for endCall to read current state without adding deps (breaks re-render cascade)
+  // Refs to read current state without adding deps (breaks re-render cascade)
+  const gatewayRef = useRef(gateway)
+  gatewayRef.current = gateway
   const callIdRef = useRef(callId)
   const remotePeerRef = useRef(remotePeer)
+  const callStateRef = useRef(callState)
   callIdRef.current = callId
   remotePeerRef.current = remotePeer
+  callStateRef.current = callState
 
   // Generate unique call ID
   const generateCallId = () => `call_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
 
-  // Send signal via gateway
+  // Send signal via gateway (uses ref to always check latest connection state)
   const sendSignal = useCallback((toId: string, cId: string, signalType: string, data: Record<string, unknown>) => {
-    if (!gateway || !myId) return
+    const gw = gatewayRef.current
+    if (!gw || !myId) return
     const payload = {
       toId,
       callId: cId,
@@ -93,11 +105,11 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
       data,
     }
     // Try WebSocket first
-    if (gateway.connected) {
-      gateway.emit('call.signal', payload)
+    if (gw.connected) {
+      gw.emit('call.signal', payload)
     }
     // TODO: fallback to GraphQL mutation when gateway is disconnected
-  }, [gateway, myId, myName, myAvatar])
+  }, [myId, myName, myAvatar])
 
   // Get user media
   const getMedia = useCallback(async (mode: CallMode) => {
@@ -153,8 +165,12 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
 
     pc.oniceconnectionstatechange = () => {
       if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        // Clear ring timeout and ring elapsed timer (BUG-003 + BUG-006)
+        if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current)
+        if (ringTimerRef.current) clearInterval(ringTimerRef.current)
+        setCallDuration(0) // Reset for call duration counting
         setCallState('connected')
-        // Start duration timer
+        // Start call duration timer
         timerRef.current = setInterval(() => {
           setCallDuration(d => d + 1)
         }, 1000)
@@ -177,9 +193,43 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
     setCallDuration(0)
     setRemotePeer({ id: peerId, displayName: peerName, profilePicture: peerAvatar })
 
+    // BUG-CALL-006: Start ring elapsed timer (shows caller how long they've been ringing)
+    ringTimerRef.current = setInterval(() => {
+      setCallDuration(d => d + 1)
+    }, 1000)
+
+    // BUG-CALL-001: Wait for signaling relay to be ready (max 5 seconds)
+    if (!gatewayRef.current?.connected) {
+      console.log('[Call] Waiting for signaling relay...')
+      const connected = await new Promise<boolean>((resolve) => {
+        let elapsed = 0
+        const interval = setInterval(() => {
+          elapsed += 200
+          if (gatewayRef.current?.connected) {
+            clearInterval(interval)
+            resolve(true)
+          } else if (elapsed >= 5000) {
+            clearInterval(interval)
+            resolve(false)
+          }
+        }, 200)
+      })
+      if (!connected) {
+        console.warn('[Call] Signaling relay not connected — cannot start call')
+        if (ringTimerRef.current) clearInterval(ringTimerRef.current)
+        setCallState('idle')
+        setCallId(null)
+        setRemotePeer(null)
+        setCallDuration(0)
+        return
+      }
+    }
+
     const stream = await getMedia(mode)
     if (!stream) {
+      if (ringTimerRef.current) clearInterval(ringTimerRef.current)
       setCallState('idle')
+      setCallDuration(0)
       return
     }
 
@@ -195,6 +245,13 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
       sdp: offer.sdp,
       type: offer.type,
     })
+
+    // BUG-CALL-003: Auto-hangup after 30 seconds if callee doesn't answer
+    ringTimeoutRef.current = setTimeout(() => {
+      if (callStateRef.current === 'calling') {
+        endCallRef.current?.()
+      }
+    }, 30000)
   }, [myId, callState, getMedia, createPeerConnection, sendSignal])
 
   // Answer an incoming call
@@ -257,6 +314,9 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
     if (timerRef.current) {
       clearInterval(timerRef.current)
     }
+    // BUG-CALL-003 + BUG-CALL-006: Clear ring timeout and ring elapsed timer
+    if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current)
+    if (ringTimerRef.current) clearInterval(ringTimerRef.current)
     if (callIdRef.current && remotePeerRef.current) {
       sendSignal(remotePeerRef.current.id, callIdRef.current, 'hangup', {})
     }
@@ -275,6 +335,7 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
       setRemotePeer(null)
     }, 2000)
   }, [sendSignal])
+  endCallRef.current = endCall
 
   // Toggle mute
   const toggleMute = useCallback(() => {
