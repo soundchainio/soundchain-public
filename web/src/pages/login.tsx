@@ -622,12 +622,14 @@ export default function LoginPage() {
         }
 
         if (oauthError) {
-          // On mobile Safari, getRedirectResult() always fails because ITP blocks
-          // Magic's iframe. Don't throw — fall through to try credential flow instead.
-          if (!isMobileSafari()) {
+          // On mobile browsers, getRedirectResult() fails because:
+          // - Safari ITP blocks Magic's iframe storage (PKCE verifier lost)
+          // - Chrome iOS clears PKCE verifier during cross-origin redirect
+          // Don't throw on mobile — fall through to try credential flow instead.
+          if (!isMobile) {
             throw new Error(`Google login failed: ${oauthError.message}. Please try again.`);
           }
-          console.log('[Auth] Mobile Safari — getRedirectResult failed (ITP), trying credential flow...');
+          console.log('[Auth] Mobile browser — getRedirectResult failed, trying credential flow...');
         }
 
         // Try email magic link credential flow
@@ -637,7 +639,7 @@ export default function LoginPage() {
           console.log('[Auth] loginWithCredential failed:', credErr?.message);
           // On mobile Safari, credential flow also fails due to ITP.
           // Last resort: try getIdToken in case Magic session is valid despite errors.
-          if (isMobileSafari()) {
+          if (isMobile) {
             try {
               const fallbackToken = await magic.user.getIdToken();
               if (fallbackToken) {
@@ -645,12 +647,12 @@ export default function LoginPage() {
                 const loginResult = await login({ variables: { input: { token: fallbackToken } } });
                 if (loginResult.data?.login.jwt) {
                   await setJwt(loginResult.data.login.jwt);
-                  await handlePostLoginRedirect();
+                  await handlePostLoginRedirect(undefined, true);
                   return;
                 }
               }
             } catch (_) {}
-            throw new Error('Login failed on this browser. Please use email login below.');
+            throw new Error('Google login is not supported on mobile browsers. Please enter your email address below to log in.');
           }
           throw credErr;
         }
