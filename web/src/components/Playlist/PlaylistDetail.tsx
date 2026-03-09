@@ -697,7 +697,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl border border-pink-500/20 shadow-2xl">
+      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto md:overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl border border-pink-500/20 shadow-2xl">
         {/* Loading overlay */}
         {isLoading && (
           <div className="absolute inset-0 z-20 bg-black/50 flex items-center justify-center">
@@ -716,7 +716,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           <X className="w-4 h-4 text-white" />
         </button>
 
-        <div className="flex flex-col md:flex-row h-full max-h-[90vh]">
+        <div className="flex flex-col md:flex-row md:h-full md:max-h-[90vh]">
           {/* Left - Playlist Info */}
           <div className="w-full md:w-80 p-6 flex-shrink-0 bg-gradient-to-b from-pink-500/10 to-transparent">
             {/* Artwork */}
@@ -981,7 +981,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           </div>
 
           {/* Right - Track List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 md:overflow-y-auto">
             {/* Embedded Player for External Sources */}
             {activeEmbed && (
               <div className="sticky top-0 z-10 bg-neutral-800 border-b border-neutral-700">

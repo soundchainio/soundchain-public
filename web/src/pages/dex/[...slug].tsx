@@ -69,7 +69,7 @@ import { PlaylistCard, PlaylistDetail, CreatePlaylistModal } from 'components/Pl
 import { DMModal } from 'components/modals/DMModal'
 import { FollowModal } from 'components/FollowersModal'
 import { FollowModalType } from 'types/FollowModalType'
-import { useGetUserPlaylistsQuery, GetUserPlaylistsQuery } from 'lib/graphql'
+import { useGetUserPlaylistsQuery, GetUserPlaylistsQuery, usePlaylistLazyQuery } from 'lib/graphql'
 import {
   Grid, List, Coins, Image as ImageIcon, Package, Search, Home, Music, Library,
   ShoppingBag, Plus, Wallet, Bell, TrendingUp, Zap, Globe, BarChart3, Play, Pause,
@@ -2201,6 +2201,49 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'network-only', // Always fetch fresh, don't use cache
     errorPolicy: 'all', // Return partial data even if there are errors
   })
+
+  // Lazy query for fetching a specific playlist by ID (for share links)
+  const [fetchPlaylistById, { data: sharedPlaylistData }] = usePlaylistLazyQuery()
+
+  // Auto-open PlaylistDetail when navigating to /dex/playlist/{id}
+  // Handles share links: first check own playlists, then fetch by ID
+  useEffect(() => {
+    if (routeType !== 'playlist' || !routeId || selectedPlaylist) return
+
+    // Check if playlist exists in own playlists data
+    const ownPlaylist = playlistsData?.getUserPlaylists?.nodes?.find((p) => p.id === routeId)
+    if (ownPlaylist) {
+      setSelectedPlaylist(ownPlaylist)
+      return
+    }
+
+    // Not found in own playlists (shared link from another user) — fetch basic info
+    if (!playlistsLoading) {
+      fetchPlaylistById({ variables: { id: routeId } })
+    }
+  }, [routeType, routeId, playlistsData, playlistsLoading, selectedPlaylist])
+
+  // When shared playlist data arrives, construct a playlist object for PlaylistDetail
+  useEffect(() => {
+    if (sharedPlaylistData?.playlist && routeType === 'playlist' && routeId && !selectedPlaylist) {
+      const p = sharedPlaylistData.playlist
+      setSelectedPlaylist({
+        __typename: 'Playlist',
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        artworkUrl: p.artworkUrl,
+        profileId: p.profileId,
+        favoriteCount: p.favoriteCount,
+        followCount: p.followCount,
+        isFavorite: false,
+        isFollowed: false,
+        createdAt: p.createdAt,
+        updatedAt: p.createdAt,
+        tracks: null,
+      } as any)
+    }
+  }, [sharedPlaylistData, routeType, routeId, selectedPlaylist])
 
   // Handle follow toggle
   const handleFollowToggle = async (profileId: string, isFollowed: boolean, handle: string) => {
@@ -5800,43 +5843,52 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </Button>
                 </div>
 
-                {/* OGUN Rewards Info */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                  <div className="p-4 rounded-xl bg-pink-500/10 border border-pink-500/20 text-center">
-                    <div className="text-2xl mb-1">🎵</div>
-                    <h3 className="font-bold text-white text-sm">Curate</h3>
-                    <p className="text-xs text-gray-400">Build your perfect playlists</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
-                    <div className="text-2xl mb-1">💰</div>
-                    <h3 className="font-bold text-white text-sm">Earn OGUN</h3>
-                    <p className="text-xs text-gray-400">Get rewarded for plays</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-center">
-                    <div className="text-2xl mb-1">🔥</div>
-                    <h3 className="font-bold text-white text-sm">Share</h3>
-                    <p className="text-xs text-gray-400">Build your audience</p>
-                  </div>
+                {/* Feature pills */}
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <span className="px-3 py-1.5 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs font-medium">🎵 Curate</span>
+                  <span className="px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-medium">💰 Earn OGUN</span>
+                  <span className="px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium">🔥 Share</span>
                 </div>
               </Card>
 
-              {/* Playlists Grid */}
+              {/* Playlists Grid — compact pills on mobile, NFT-card grid on desktop */}
               {playlistsLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="aspect-square bg-neutral-800 rounded-2xl animate-pulse" />
-                  ))}
-                </div>
+                <>
+                  <div className="space-y-2 sm:hidden">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-16 bg-neutral-800 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                  <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="aspect-square bg-neutral-800 rounded-2xl animate-pulse" />
+                    ))}
+                  </div>
+                </>
               ) : playlistsData?.getUserPlaylists?.nodes && playlistsData.getUserPlaylists.nodes.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {playlistsData.getUserPlaylists.nodes.map((playlist) => (
-                    <PlaylistCard
-                      key={playlist.id}
-                      playlist={playlist}
-                      onSelect={(p) => setSelectedPlaylist(p)}
-                    />
-                  ))}
-                </div>
+                <>
+                  {/* Mobile: compact pill list */}
+                  <div className="sm:hidden space-y-1">
+                    {playlistsData.getUserPlaylists.nodes.map((playlist) => (
+                      <PlaylistCard
+                        key={playlist.id}
+                        playlist={playlist}
+                        onSelect={(p) => setSelectedPlaylist(p)}
+                        compact
+                      />
+                    ))}
+                  </div>
+                  {/* Desktop: NFT-card grid */}
+                  <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {playlistsData.getUserPlaylists.nodes.map((playlist) => (
+                      <PlaylistCard
+                        key={playlist.id}
+                        playlist={playlist}
+                        onSelect={(p) => setSelectedPlaylist(p)}
+                      />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <Card className="retro-card p-12 text-center">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-neutral-800 flex items-center justify-center">
