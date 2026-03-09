@@ -449,28 +449,31 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
         // External link - check if it's a direct audio file or needs embed
         const url = pt.externalUrl || pt.uploadedFileUrl!
 
+        const resolvedTitle = resolveDisplayTitle(pt.title, url, pt.sourceType)
+        const resolvedArtist = pt.artist || getSourceLabel(pt.sourceType)
+
         if (isDirectAudioUrl(url)) {
           // Direct audio file (MP3, WAV, etc.) - can play directly in audio player!
           songs.push({
             trackId: `external_${pt.id}`,
             src: url, // Direct URL, no EXTERNAL prefix needed
             art: pt.artworkUrl || undefined,
-            title: pt.title || 'External Track',
-            artist: pt.artist || getSourceLabel(pt.sourceType),
+            title: resolvedTitle,
+            artist: resolvedArtist,
             isFavorite: false,
           })
-          console.log('[PlaylistDetail] Added direct audio URL:', pt.title, url)
+          console.log('[PlaylistDetail] Added direct audio URL:', resolvedTitle, url)
         } else {
           // Platform URL (YouTube, Spotify, etc.) - needs embed player
           songs.push({
             trackId: `external_${pt.id}`,
             src: `EXTERNAL:${pt.sourceType}:${url}`, // Special format for embed handling
             art: pt.artworkUrl || undefined,
-            title: pt.title || 'External Track',
-            artist: pt.artist || getSourceLabel(pt.sourceType),
+            title: resolvedTitle,
+            artist: resolvedArtist,
             isFavorite: false,
           })
-          console.log('[PlaylistDetail] Added external platform track:', pt.title, url)
+          console.log('[PlaylistDetail] Added external platform track:', resolvedTitle, url)
         }
       }
     }
@@ -686,6 +689,42 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       case PlaylistTrackSourceType.Upload: return 'Upload'
       default: return 'External'
     }
+  }
+
+  // Extract a meaningful title from a URL when oEmbed title resolution failed
+  // e.g. soundcloud.com/artist-name/cool-track → "cool track"
+  // e.g. youtube.com/watch?v=abc → null (no useful path info)
+  const extractTitleFromUrl = (url: string): string | null => {
+    try {
+      const parsed = new URL(url)
+      const segments = parsed.pathname.split('/').filter(Boolean)
+      // Get the last meaningful path segment (usually the track/video slug)
+      const slug = segments.length > 0 ? segments[segments.length - 1] : null
+      if (!slug || slug.length < 3) return null
+      // Skip common non-title segments
+      if (['watch', 'embed', 'track', 'album', 'playlist', 'v', 'e'].includes(slug.toLowerCase())) return null
+      // Convert slug to readable title: "my-cool-track" → "my cool track"
+      return slug.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim()
+    } catch {
+      return null
+    }
+  }
+
+  // Check if a stored title is just the platform name (oEmbed failed during add)
+  const platformNames = ['YouTube', 'Spotify', 'SoundCloud', 'Bandcamp', 'Apple Music', 'Tidal', 'Vimeo', 'External']
+  const isTitleJustPlatformName = (title: string | null | undefined): boolean => {
+    if (!title) return true
+    return platformNames.some(p => p.toLowerCase() === title.toLowerCase())
+  }
+
+  // Resolve display title: prefer stored title, but if it's just a platform name, try URL extraction
+  const resolveDisplayTitle = (title: string | null | undefined, url: string | null | undefined, sourceType: PlaylistTrackSourceType): string => {
+    if (title && !isTitleJustPlatformName(title)) return title
+    if (url) {
+      const urlTitle = extractTitleFromUrl(url)
+      if (urlTitle) return urlTitle
+    }
+    return `Track from ${getSourceLabel(sourceType)}`
   }
 
   // Get first 4 artworks for mosaic
@@ -1067,7 +1106,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
                   // Resolve display info: prefer PlaylistTrack fields, fall back to pre-fetched NFT metadata
                   const meta = pt.trackId ? nftTrackMeta[pt.trackId] : undefined
-                  const displayTitle = pt.title || meta?.title || 'Untitled'
+                  const displayTitle = isNft
+                    ? (pt.title || meta?.title || 'Untitled')
+                    : resolveDisplayTitle(pt.title, pt.externalUrl || pt.uploadedFileUrl, pt.sourceType)
                   const displayArtist = pt.artist || meta?.artist || (isNft ? 'SoundChain NFT' : getSourceLabel(pt.sourceType))
                   const displayArtwork = pt.artworkUrl || meta?.artworkUrl
                   const displayDuration = pt.duration || meta?.duration
