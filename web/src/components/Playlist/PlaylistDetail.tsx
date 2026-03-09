@@ -91,9 +91,9 @@ interface PlaylistDetailProps {
 const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string => {
   try {
     if (sourceType === PlaylistTrackSourceType.Youtube) {
-      // Extract YouTube video ID
+      // Extract YouTube video ID — enablejsapi=1 allows us to receive postMessage events (ended, paused, etc.)
       const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-      if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1`
+      if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.fm'}`
     }
     if (sourceType === PlaylistTrackSourceType.Spotify) {
       // Convert Spotify URLs to embed format
@@ -218,6 +218,56 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     return () => window.removeEventListener('externalTrackPlay', handleExternalTrack as EventListener)
   }, [])
 
+  // BUG-001 FIX: Auto-advance when external embeds end
+  // YouTube: IFrame API postMessage events (enablejsapi=1 on embed URL enables this)
+  // Spotify: 30s preview timer (free embeds only play 30s snippets)
+  useEffect(() => {
+    if (!activeEmbed) return
+
+    if (activeEmbed.sourceType === PlaylistTrackSourceType.Youtube) {
+      const handleYouTubeMessage = (event: MessageEvent) => {
+        if (typeof event.data !== 'string') return
+        try {
+          const data = JSON.parse(event.data)
+          // YouTube state 0 = video ended
+          if (data.event === 'onStateChange' && data.info === 0) {
+            console.log('[PlaylistDetail] YouTube video ended, auto-advancing')
+            playNextInQueue()
+          }
+        } catch {
+          // Not a YouTube message
+        }
+      }
+
+      window.addEventListener('message', handleYouTubeMessage)
+
+      // Send "listening" command to YouTube iframe to subscribe to state changes
+      const sendListening = () => {
+        const iframe = document.querySelector('iframe[src*="youtube.com"]') as HTMLIFrameElement
+        if (iframe?.contentWindow) {
+          iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 'sc-playlist' }), '*')
+        }
+      }
+      const t1 = setTimeout(sendListening, 500)
+      const t2 = setTimeout(sendListening, 2000)
+
+      return () => {
+        window.removeEventListener('message', handleYouTubeMessage)
+        clearTimeout(t1)
+        clearTimeout(t2)
+      }
+    }
+
+    // Spotify free embeds play ~30s previews then stop
+    if (activeEmbed.sourceType === PlaylistTrackSourceType.Spotify) {
+      const timer = setTimeout(() => {
+        console.log('[PlaylistDetail] Spotify preview ended, auto-advancing')
+        playNextInQueue()
+      }, 35000)
+      return () => clearTimeout(timer)
+    }
+  }, [activeEmbed?.url, currentQueueIndex, tracks.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Query for tracks to add
   const { data: searchTracksData, loading: searchLoading } = useExploreTracksQuery({
     variables: {
@@ -284,6 +334,30 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     setAddingTracks(true)
     setAddLinkError('')
 
+    // BUG-003 FIX: Fetch oEmbed metadata for auto-title when user doesn't provide one
+    let resolvedTitle = externalLinkTitle.trim()
+    if (!resolvedTitle) {
+      try {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), 3000)
+        const oembedRes = await fetch(
+          `https://noembed.com/embed?url=${encodeURIComponent(normalizedUrl)}`,
+          { signal: controller.signal }
+        )
+        clearTimeout(timeout)
+        if (oembedRes.ok) {
+          const oembed = await oembedRes.json()
+          if (oembed.title) {
+            resolvedTitle = oembed.author_name
+              ? `${oembed.title} — ${oembed.author_name}`
+              : oembed.title
+          }
+        }
+      } catch {
+        // oEmbed fetch failed (timeout, CORS, network) — use platform name as fallback
+      }
+    }
+
     try {
       await addPlaylistItem({
         variables: {
@@ -291,7 +365,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
             playlistId: playlist.id,
             sourceType: detected.sourceType,
             externalUrl: normalizedUrl,
-            title: externalLinkTitle.trim() || detected.platform,
+            title: resolvedTitle || detected.platform,
           },
         },
       })
@@ -395,26 +469,38 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   }
 
   // Play a specific track in the queue (NFT or external)
+  // ALWAYS routes through the unified audio engine queue so prev/next works
+  // and SC audio is properly paused when external embeds play
   const playTrackAtIndex = async (index: number) => {
     if (index < 0 || index >= tracks.length) return
 
     const track = tracks[index]
+    const isNftTrack = (track.sourceType === PlaylistTrackSourceType.Nft || !track.sourceType) && track.trackId
+
     setCurrentQueueIndex(index)
     setIsPlayingAll(true)
 
-    if ((track.sourceType === PlaylistTrackSourceType.Nft || !track.sourceType) && track.trackId) {
-      // Close any active embed
+    // Close embed when transitioning to NFT track
+    if (isNftTrack) {
       setActiveEmbed(null)
-      // Play NFT track — build unified queue so prev/next works
-      const songs = await buildSongsWithPlaybackUrls()
-      const nftIndex = songs.findIndex(s => s.trackId === track.trackId)
-      if (nftIndex >= 0) {
-        playlistState(songs, nftIndex)
-      }
-    } else if (track.externalUrl || track.uploadedFileUrl) {
-      // Show embed for external tracks - ALWAYS inline, never redirect!
-      const url = track.externalUrl || track.uploadedFileUrl!
-      handleOpenExternal(url, track.title, track.sourceType, index)
+    }
+
+    // Build unified queue and route through playlistState for ALL track types.
+    // For NFT tracks: AudioEngine plays audio directly.
+    // For external tracks: AudioEngine detects EXTERNAL: prefix, pauses audio,
+    // dispatches externalTrackPlay event → our listener opens the embed.
+    const songs = await buildSongsWithPlaybackUrls()
+
+    // Find the matching song index in the built queue
+    let songIndex = -1
+    if (isNftTrack) {
+      songIndex = songs.findIndex(s => s.trackId === track.trackId)
+    } else {
+      songIndex = songs.findIndex(s => s.trackId === `external_${track.id}`)
+    }
+
+    if (songIndex >= 0) {
+      playlistState(songs, songIndex)
     }
   }
 
