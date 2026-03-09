@@ -90,10 +90,21 @@ interface PlaylistDetailProps {
 // Users must NEVER leave SoundChain - everything plays inline!
 const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string => {
   try {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.fm'
     if (sourceType === PlaylistTrackSourceType.Youtube) {
+      // Handle YouTube playlist URLs first (youtube.com/playlist?list=...)
+      const playlistMatch = url.match(/[?&]list=([A-Za-z0-9_-]+)/)
+      if (url.includes('/playlist') && playlistMatch) {
+        return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}&autoplay=1&index=0&enablejsapi=1&origin=${origin}`
+      }
       // Extract YouTube video ID — enablejsapi=1 allows us to receive postMessage events (ended, paused, etc.)
       const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-      if (match) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&enablejsapi=1&origin=${typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.fm'}`
+      if (match) {
+        // Preserve playlist context if present (watch?v=VIDEO_ID&list=PLAYLIST_ID)
+        const listParam = url.match(/[?&]list=([a-zA-Z0-9_-]+)/)
+        const listSuffix = listParam ? `&list=${listParam[1]}&index=0` : ''
+        return `https://www.youtube.com/embed/${match[1]}?autoplay=1&enablejsapi=1&origin=${origin}${listSuffix}`
+      }
     }
     if (sourceType === PlaylistTrackSourceType.Spotify) {
       // Convert Spotify URLs to embed format

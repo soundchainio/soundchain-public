@@ -96,15 +96,13 @@ const normalizeYoutube = (str: string) => {
   // Check for YouTube Music album URL (watch with list param) - prioritize album embed
   const musicAlbumMatch = str.match(youtubeMusicAlbumRegex)
   if (musicAlbumMatch && musicAlbumMatch[1]) {
-    // Use listType=playlist format to show tracklist
-    return `https://www.youtube.com/embed?listType=playlist&list=${musicAlbumMatch[1]}`
+    return `https://www.youtube.com/embed/videoseries?list=${musicAlbumMatch[1]}&autoplay=1&index=0`
   }
 
-  // Check for playlist URL - embed as playlist with tracklist visible
+  // Check for playlist URL — use /embed/videoseries (NOT /embed?listType=playlist which is malformed)
   const playlistMatch = str.match(youtubePlaylistRegex)
   if (playlistMatch && playlistMatch[1]) {
-    // Use listType=playlist format to show tracklist
-    return `https://www.youtube.com/embed?listType=playlist&list=${playlistMatch[1]}`
+    return `https://www.youtube.com/embed/videoseries?list=${playlistMatch[1]}&autoplay=1&index=0`
   }
 
   // Check for clip URL - clips use a different embed format
@@ -123,6 +121,11 @@ const normalizeYoutube = (str: string) => {
   // Extract video ID from standard YouTube URL formats (watch, shorts, live, v/, youtu.be, music)
   const match = str.match(youtubeVideoIdRegex)
   if (match && match[1]) {
+    // Preserve playlist context if present (e.g. watch?v=VIDEO_ID&list=PLAYLIST_ID)
+    const listParam = str.match(/[?&]list=([a-zA-Z0-9_-]+)/)
+    if (listParam && listParam[1]) {
+      return `https://www.youtube.com/embed/${match[1]}?list=${listParam[1]}&autoplay=1&index=0`
+    }
     return `https://www.youtube.com/embed/${match[1]}`
   }
 
