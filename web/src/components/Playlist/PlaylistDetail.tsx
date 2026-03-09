@@ -164,6 +164,41 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const tracks = playlist.tracks?.nodes || []
   const existingTrackIds = new Set(tracks.map(t => t.trackId).filter(Boolean))
 
+  // Pre-fetch metadata for NFT tracks that are missing title/artist
+  const [nftTrackMeta, setNftTrackMeta] = useState<Record<string, { title: string; artist: string; artworkUrl: string | null; duration: number | null }>>({})
+
+  useEffect(() => {
+    const fetchMissing = async () => {
+      const nftTracks = tracks.filter(t =>
+        ((t.sourceType === PlaylistTrackSourceType.Nft || t.sourceType === null || t.sourceType === undefined) && t.trackId) &&
+        (!t.title || !t.artist)
+      )
+      if (nftTracks.length === 0) return
+
+      const meta: typeof nftTrackMeta = {}
+      for (const pt of nftTracks) {
+        if (!pt.trackId) continue
+        try {
+          const trackData = await fetchTrackData(pt.trackId)
+          if (trackData) {
+            meta[pt.trackId] = {
+              title: trackData.title || 'Untitled',
+              artist: trackData.artist || 'Unknown Artist',
+              artworkUrl: trackData.artworkUrl || null,
+              duration: trackData.duration || null,
+            }
+          }
+        } catch {
+          // ignore fetch errors
+        }
+      }
+      if (Object.keys(meta).length > 0) {
+        setNftTrackMeta(prev => ({ ...prev, ...meta }))
+      }
+    }
+    fetchMissing()
+  }, [tracks.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Listen for external track events from AudioEngine
   useEffect(() => {
     const handleExternalTrack = (event: CustomEvent) => {
@@ -613,19 +648,11 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
             )}
 
             <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-              <span>{tracks.length} tracks</span>
+              <span>{tracks.length} {tracks.length === 1 ? 'item' : 'items'}</span>
               <span>•</span>
               <span>{playlist.favoriteCount} likes</span>
             </div>
 
-            {/* Debug info - shows track types */}
-            {tracks.length > 0 && (
-              <div className="text-xs text-gray-600 mb-4 p-2 bg-black/30 rounded">
-                {tracks.map((t, i) => (
-                  <div key={t.id}>#{i+1}: {t.title || 'Untitled'} ({t.sourceType}){t.trackId ? ' NFT' : ''}{t.externalUrl ? ' EXT' : ''}</div>
-                ))}
-              </div>
-            )}
 
             {/* Actions */}
             <div className="flex items-center gap-3 flex-wrap">
@@ -936,10 +963,17 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 </div>
               ) : (
                 tracks.map((pt, index) => {
-                  const isNft = pt.sourceType === PlaylistTrackSourceType.Nft
+                  const isNft = (pt.sourceType === PlaylistTrackSourceType.Nft || pt.sourceType === null || pt.sourceType === undefined) && !!pt.trackId
                   const isCurrentTrack = isNft && pt.trackId ? isCurrentSong(pt.trackId) : false
                   const isTrackPlaying = isCurrentTrack && isPlaying
                   const hasExternalUrl = pt.externalUrl || pt.uploadedFileUrl
+
+                  // Resolve display info: prefer PlaylistTrack fields, fall back to pre-fetched NFT metadata
+                  const meta = pt.trackId ? nftTrackMeta[pt.trackId] : undefined
+                  const displayTitle = pt.title || meta?.title || 'Untitled'
+                  const displayArtist = pt.artist || meta?.artist || (isNft ? 'SoundChain NFT' : getSourceLabel(pt.sourceType))
+                  const displayArtwork = pt.artworkUrl || meta?.artworkUrl
+                  const displayDuration = pt.duration || meta?.duration
 
                   const handleClick = () => {
                     if (isNft && pt.trackId) {
@@ -949,7 +983,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                         handlePlayTrack(index)
                       }
                     } else if (hasExternalUrl) {
-                      handleOpenExternal(pt.externalUrl || pt.uploadedFileUrl!, pt.title, pt.sourceType, index)
+                      handleOpenExternal(pt.externalUrl || pt.uploadedFileUrl!, displayTitle, pt.sourceType, index)
                     }
                   }
 
@@ -988,8 +1022,8 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                         onClick={handleClick}
                       >
                         <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
-                          {pt.artworkUrl ? (
-                            <img src={pt.artworkUrl} alt={pt.title || 'Track'} className="w-full h-full object-cover" />
+                          {displayArtwork ? (
+                            <img src={displayArtwork} alt={displayTitle} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full bg-neutral-700 flex items-center justify-center">
                               <Music className="w-4 h-4 text-neutral-500" />
@@ -998,9 +1032,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                         </div>
                         <div className="min-w-0">
                           <p className={`font-medium truncate ${isCurrentTrack ? 'text-pink-400' : 'text-white'}`}>
-                            {pt.title || 'Unknown Track'}
+                            {displayTitle}
                           </p>
-                          <p className="text-gray-500 text-sm truncate">{pt.artist || 'Unknown Artist'}</p>
+                          <p className="text-gray-500 text-sm truncate">{displayArtist}</p>
                         </div>
                       </div>
 
@@ -1009,13 +1043,13 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                         <span className={`text-xs px-2 py-1 rounded-full ${
                           isNft ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
                         }`}>
-                          {getSourceLabel(pt.sourceType)}
+                          {isNft ? 'SoundChain' : getSourceLabel(pt.sourceType)}
                         </span>
                       </div>
 
                       {/* Duration */}
                       <div className="w-16 text-right text-gray-500 text-sm">
-                        {formatDuration(pt.duration)}
+                        {formatDuration(displayDuration)}
                       </div>
 
                       {/* Remove button (owner only) */}

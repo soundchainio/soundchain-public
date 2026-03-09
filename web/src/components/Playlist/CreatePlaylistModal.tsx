@@ -556,39 +556,33 @@ export const CreatePlaylistModal = ({ isOpen, onClose, onSuccess }: CreatePlayli
                 Playlist Items ({selectedTracks.length + externalLinks.length})
               </label>
 
-              {/* Stacked preview of selected tracks */}
-              {selectedTracks.length > 0 && (
-                <div className="flex items-center gap-2 p-3 bg-neutral-800 rounded-xl">
-                  <div className="flex -space-x-2">
-                    {selectedTracks.slice(0, 5).map((track, i) => (
-                      <div
-                        key={track.id}
-                        className="w-8 h-8 rounded-full border-2 border-neutral-800 overflow-hidden bg-neutral-700"
-                        style={{ zIndex: 10 - i }}
-                      >
-                        {track.artworkUrl ? (
-                          <Asset src={track.artworkUrl} sizes="32px" />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-green-500 to-cyan-500" />
-                        )}
-                      </div>
-                    ))}
-                    {selectedTracks.length > 5 && (
-                      <div className="w-8 h-8 rounded-full border-2 border-neutral-800 bg-neutral-700 flex items-center justify-center text-xs font-bold text-white">
-                        +{selectedTracks.length - 5}
-                      </div>
+              {/* Individual selected tracks */}
+              {selectedTracks.map((track) => (
+                <div
+                  key={track.id}
+                  className="flex items-center gap-3 p-3 bg-neutral-800 rounded-xl"
+                >
+                  <div className="w-8 h-8 rounded bg-neutral-700 overflow-hidden flex-shrink-0">
+                    {track.artworkUrl ? (
+                      <Asset src={track.artworkUrl} sizes="32px" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-green-500 to-cyan-500" />
                     )}
                   </div>
-                  <span className="text-sm text-neutral-300">{selectedTracks.length} tracks</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{track.title || 'Untitled'}</p>
+                    <p className="text-xs text-neutral-500 truncate">{track.artist || 'Unknown Artist'}</p>
+                  </div>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">SCid</span>
                   <button
                     type="button"
-                    onClick={() => setSelectedTracks([])}
-                    className="ml-auto text-xs text-red-400 hover:text-red-300"
+                    onClick={() => handleRemoveTrack(track.id)}
+                    className="p-1 hover:bg-red-500/20 rounded transition-colors"
                   >
-                    Clear all
+                    <Trash2 className="w-4 h-4 text-red-400" />
                   </button>
                 </div>
-              )}
+              ))}
 
               {/* External links list */}
               {externalLinks.map((link) => (
