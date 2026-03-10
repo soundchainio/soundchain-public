@@ -622,14 +622,12 @@ export default function LoginPage() {
         }
 
         if (oauthError) {
-          // On mobile browsers, getRedirectResult() fails because:
-          // - Safari ITP blocks Magic's iframe storage (PKCE verifier lost)
-          // - Chrome iOS clears PKCE verifier during cross-origin redirect
-          // Don't throw on mobile — fall through to try credential flow instead.
-          if (!isMobile) {
-            throw new Error(`Google login failed: ${oauthError.message}. Please try again.`);
-          }
-          console.log('[Auth] Mobile browser — getRedirectResult failed, trying credential flow...');
+          // getRedirectResult() fails when PKCE verifier is lost from localStorage.
+          // Common causes: Safari ITP, Chrome privacy settings, browser extensions (MetaMask),
+          // or Chrome clearing storage during cross-origin redirect.
+          // Fall through to credential flow on ALL platforms — the magic_credential
+          // in the URL is still valid for loginWithCredential().
+          console.log('[Auth] getRedirectResult failed, trying credential flow...', oauthError.message);
         }
 
         // Try email magic link credential flow
