@@ -1213,6 +1213,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   // Playlist state
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false)
   const [selectedPlaylist, setSelectedPlaylist] = useState<GetUserPlaylistsQuery['getUserPlaylists']['nodes'][0] | null>(null)
+  const [playlistSearch, setPlaylistSearch] = useState('')
+  const [playlistSort, setPlaylistSort] = useState<'recent' | 'name' | 'tracks' | 'favorites'>('recent')
+  const [playlistViewMode, setPlaylistViewMode] = useState<'grid' | 'list'>('grid')
 
   // Top 100 NFTs modal state
   const [showTop100Modal, setShowTop100Modal] = useState(false)
@@ -5820,93 +5823,174 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
           )}
 
           {/* Playlist View - Full Implementation */}
-          {selectedView === 'playlist' && (
-            <div className="space-y-6">
+          {selectedView === 'playlist' && (() => {
+            const allPlaylists = playlistsData?.getUserPlaylists?.nodes || []
+
+            // Filter by search
+            const filteredPlaylists = playlistSearch
+              ? allPlaylists.filter((p: any) =>
+                  p.title?.toLowerCase().includes(playlistSearch.toLowerCase()) ||
+                  p.description?.toLowerCase().includes(playlistSearch.toLowerCase())
+                )
+              : allPlaylists
+
+            // Sort
+            const sortedPlaylists = [...filteredPlaylists].sort((a: any, b: any) => {
+              switch (playlistSort) {
+                case 'name': return (a.title || '').localeCompare(b.title || '')
+                case 'tracks': return (b.tracks?.nodes?.length || 0) - (a.tracks?.nodes?.length || 0)
+                case 'favorites': return (b.favoriteCount || 0) - (a.favoriteCount || 0)
+                default: return 0 // 'recent' — already in creation order from API
+              }
+            })
+
+            return (
+            <div className="space-y-4">
               {/* Header */}
-              <Card className="retro-card p-6">
+              <Card className="retro-card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
-                      <ListMusic className="w-6 h-6 text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                      <ListMusic className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <h2 className="retro-title text-xl">My Playlists</h2>
-                      <p className="text-gray-400 text-sm">Curate and share your music collections</p>
+                      <p className="text-gray-500 text-xs font-mono">{allPlaylists.length} collections</p>
                     </div>
                   </div>
                   <Button
                     onClick={() => setShowCreatePlaylistModal(true)}
                     className="retro-button bg-gradient-to-r from-pink-500 to-purple-500 hover:opacity-90"
+                    size="sm"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Playlist
+                    <Plus className="w-4 h-4 mr-1" />
+                    New
                   </Button>
                 </div>
 
-                {/* Feature pills */}
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="px-3 py-1.5 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs font-medium">🎵 Curate</span>
-                  <span className="px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-medium">💰 Earn OGUN</span>
-                  <span className="px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium">🔥 Share</span>
+                {/* Search + Sort + View Toggle */}
+                <div className="flex items-center gap-2">
+                  {/* Search */}
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                    <input
+                      type="text"
+                      value={playlistSearch}
+                      onChange={(e) => setPlaylistSearch(e.target.value)}
+                      placeholder="Search playlists..."
+                      className="w-full pl-9 pr-3 py-2 bg-neutral-900 border border-neutral-800 rounded-lg text-white placeholder-gray-600 text-sm focus:outline-none focus:border-cyan-500/50"
+                    />
+                  </div>
+
+                  {/* Sort dropdown */}
+                  <select
+                    value={playlistSort}
+                    onChange={(e) => setPlaylistSort(e.target.value as any)}
+                    className="bg-neutral-900 border border-neutral-800 rounded-lg text-gray-400 text-xs px-2 py-2 focus:outline-none focus:border-cyan-500/50 font-mono"
+                  >
+                    <option value="recent">Recent</option>
+                    <option value="name">A-Z</option>
+                    <option value="tracks">Tracks</option>
+                    <option value="favorites">Likes</option>
+                  </select>
+
+                  {/* View toggle */}
+                  <div className="flex border border-neutral-800 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setPlaylistViewMode('grid')}
+                      className={`p-2 transition-colors ${playlistViewMode === 'grid' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-600 hover:text-gray-400'}`}
+                    >
+                      <Grid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setPlaylistViewMode('list')}
+                      className={`p-2 transition-colors ${playlistViewMode === 'list' ? 'bg-cyan-500/20 text-cyan-400' : 'text-gray-600 hover:text-gray-400'}`}
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </Card>
 
-              {/* Playlists Grid — compact pills on mobile, NFT-card grid on desktop */}
+              {/* Playlists */}
               {playlistsLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="aspect-square bg-neutral-800 rounded-2xl animate-pulse" />
+                  ))}
+                </div>
+              ) : sortedPlaylists.length > 0 ? (
                 <>
-                  <div className="space-y-2 sm:hidden">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-16 bg-neutral-800 rounded-lg animate-pulse" />
-                    ))}
-                  </div>
-                  <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="aspect-square bg-neutral-800 rounded-2xl animate-pulse" />
-                    ))}
-                  </div>
+                  {/* List view */}
+                  {playlistViewMode === 'list' ? (
+                    <div className="space-y-1">
+                      {sortedPlaylists.map((playlist: any) => (
+                        <PlaylistCard
+                          key={playlist.id}
+                          playlist={playlist}
+                          onSelect={(p: any) => setSelectedPlaylist(p)}
+                          compact
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      {/* Mobile: compact list */}
+                      <div className="sm:hidden space-y-1">
+                        {sortedPlaylists.map((playlist: any) => (
+                          <PlaylistCard
+                            key={playlist.id}
+                            playlist={playlist}
+                            onSelect={(p: any) => setSelectedPlaylist(p)}
+                            compact
+                          />
+                        ))}
+                      </div>
+                      {/* Desktop: grid */}
+                      <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {sortedPlaylists.map((playlist: any) => (
+                          <PlaylistCard
+                            key={playlist.id}
+                            playlist={playlist}
+                            onSelect={(p: any) => setSelectedPlaylist(p)}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Results count when searching */}
+                  {playlistSearch && (
+                    <p className="text-center text-gray-600 text-xs font-mono">
+                      {sortedPlaylists.length} of {allPlaylists.length} playlists
+                    </p>
+                  )}
                 </>
-              ) : playlistsData?.getUserPlaylists?.nodes && playlistsData.getUserPlaylists.nodes.length > 0 ? (
-                <>
-                  {/* Mobile: compact pill list */}
-                  <div className="sm:hidden space-y-1">
-                    {playlistsData.getUserPlaylists.nodes.map((playlist) => (
-                      <PlaylistCard
-                        key={playlist.id}
-                        playlist={playlist}
-                        onSelect={(p) => setSelectedPlaylist(p)}
-                        compact
-                      />
-                    ))}
-                  </div>
-                  {/* Desktop: NFT-card grid */}
-                  <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {playlistsData.getUserPlaylists.nodes.map((playlist) => (
-                      <PlaylistCard
-                        key={playlist.id}
-                        playlist={playlist}
-                        onSelect={(p) => setSelectedPlaylist(p)}
-                      />
-                    ))}
-                  </div>
-                </>
+              ) : playlistSearch ? (
+                <Card className="retro-card p-8 text-center">
+                  <Search className="w-8 h-8 text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm">No playlists match "{playlistSearch}"</p>
+                  <button onClick={() => setPlaylistSearch('')} className="mt-3 text-cyan-400 text-sm hover:text-cyan-300">Clear search</button>
+                </Card>
               ) : (
                 <Card className="retro-card p-12 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-neutral-800 flex items-center justify-center">
-                    <ListMusic className="w-10 h-10 text-neutral-600" />
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-cyan-500/5 border border-cyan-500/10 flex items-center justify-center">
+                    <ListMusic className="w-8 h-8 text-cyan-500/30" />
                   </div>
                   <h3 className="text-white font-bold text-lg mb-2">No playlists yet</h3>
-                  <p className="text-gray-400 mb-6">Create your first playlist to start curating your music collection</p>
+                  <p className="text-gray-500 text-sm mb-6 font-mono">Create your first playlist to start curating</p>
                   <Button
                     onClick={() => setShowCreatePlaylistModal(true)}
                     className="retro-button bg-gradient-to-r from-pink-500 to-purple-500"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Your First Playlist
+                    Create Playlist
                   </Button>
                 </Card>
               )}
             </div>
-          )}
+            )
+          })()}
 
           {/* Playlist Detail Modal */}
           {selectedPlaylist && (

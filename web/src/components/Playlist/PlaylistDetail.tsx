@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2 } from 'lucide-react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder, useAddPlaylistItemMutation } from 'lib/graphql'
 import { useApolloClient } from '@apollo/client'
@@ -159,7 +159,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showShareToast, setShowShareToast] = useState(false)
   const [showAddTracks, setShowAddTracks] = useState(false)
-  const [addMode, setAddMode] = useState<'nft' | 'external'>('nft') // Toggle between NFT search and external link
+  const [addMode, setAddMode] = useState<'nft' | 'external' | 'import'>('nft')
   const [trackSearchQuery, setTrackSearchQuery] = useState('')
   const [externalLinkUrl, setExternalLinkUrl] = useState('')
   const [externalLinkTitle, setExternalLinkTitle] = useState('')
@@ -171,6 +171,13 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [activeEmbed, setActiveEmbed] = useState<{ url: string; title: string; sourceType: PlaylistTrackSourceType } | null>(null)
   const [currentQueueIndex, setCurrentQueueIndex] = useState<number>(-1)
   const [isPlayingAll, setIsPlayingAll] = useState(false)
+  const [importUrl, setImportUrl] = useState('')
+  const [importLoading, setImportLoading] = useState(false)
+  const [importError, setImportError] = useState('')
+  const [importedTracks, setImportedTracks] = useState<Array<{ title: string; url: string; thumbnail: string | null; selected: boolean }>>([])
+  const [importPlatform, setImportPlatform] = useState('')
+  const [importNote, setImportNote] = useState('')
+  const [importAdding, setImportAdding] = useState(false)
 
   const tracks = playlist.tracks?.nodes || []
   const existingTrackIds = new Set(tracks.map(t => t.trackId).filter(Boolean))
@@ -668,6 +675,79 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
+  // Import playlist from URL
+  const handleImportFetch = async () => {
+    if (!importUrl.trim()) return
+    setImportLoading(true)
+    setImportError('')
+    setImportedTracks([])
+    setImportNote('')
+
+    try {
+      const res = await fetch('/api/playlist/import-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: importUrl.trim() }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setImportError(data.error || 'Failed to import')
+        return
+      }
+
+      setImportPlatform(data.platform)
+      setImportNote(data.note || '')
+      setImportedTracks(data.tracks.map((t: any) => ({ ...t, selected: true })))
+    } catch {
+      setImportError('Network error. Please try again.')
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
+  // Add selected imported tracks to playlist
+  const handleImportAdd = async () => {
+    const selected = importedTracks.filter(t => t.selected)
+    if (selected.length === 0) return
+
+    setImportAdding(true)
+    try {
+      for (const track of selected) {
+        const detected = detectPlatformFromUrl(track.url)
+        await addPlaylistItem({
+          variables: {
+            input: {
+              playlistId: playlist.id,
+              sourceType: detected.sourceType,
+              externalUrl: track.url,
+              title: track.title,
+            },
+          },
+        })
+      }
+      await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
+      setImportedTracks([])
+      setImportUrl('')
+      setImportPlatform('')
+      setImportNote('')
+    } catch (err) {
+      console.error('Failed to add imported tracks:', err)
+      setImportError('Failed to add some tracks. Please try again.')
+    } finally {
+      setImportAdding(false)
+    }
+  }
+
+  const toggleImportTrack = (index: number) => {
+    setImportedTracks(prev => prev.map((t, i) => i === index ? { ...t, selected: !t.selected } : t))
+  }
+
+  const toggleAllImportTracks = () => {
+    const allSelected = importedTracks.every(t => t.selected)
+    setImportedTracks(prev => prev.map(t => ({ ...t, selected: !allSelected })))
+  }
+
   const formatDuration = (seconds: number | null | undefined) => {
     if (!seconds) return '--:--'
     const mins = Math.floor(seconds / 60)
@@ -882,6 +962,18 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                     <span className="hidden sm:inline">External Link</span>
                     <span className="sm:hidden">Links</span>
                   </button>
+                  <button
+                    onClick={() => setAddMode('import')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+                      addMode === 'import'
+                        ? 'text-pink-400 border-b-2 border-pink-400 bg-pink-500/10'
+                        : 'text-gray-400 hover:text-white hover:bg-neutral-700/50'
+                    }`}
+                  >
+                    <Import className="w-4 h-4" />
+                    <span className="hidden sm:inline">Import</span>
+                    <span className="sm:hidden">Import</span>
+                  </button>
                 </div>
 
                 {/* NFT Track Search */}
@@ -1014,6 +1106,123 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                       {['MP3', 'WAV', 'YouTube', 'Spotify', 'SoundCloud', 'Any URL'].map(p => (
                         <span key={p} className="px-2 py-0.5 bg-neutral-700 text-neutral-400 text-xs rounded-full">
                           {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Import Playlist */}
+                {addMode === 'import' && (
+                  <div className="p-4 space-y-3">
+                    <p className="text-gray-400 text-xs font-mono">
+                      Import tracks from a YouTube playlist URL.
+                    </p>
+
+                    {/* URL Input */}
+                    <div className="relative">
+                      <Import className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                      <input
+                        type="url"
+                        value={importUrl}
+                        onChange={(e) => { setImportUrl(e.target.value); setImportError(''); }}
+                        placeholder="Paste YouTube playlist URL..."
+                        className="w-full pl-10 pr-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:border-pink-500 text-sm"
+                        onKeyDown={(e) => e.key === 'Enter' && handleImportFetch()}
+                      />
+                    </div>
+
+                    {/* Fetch Button */}
+                    <button
+                      onClick={handleImportFetch}
+                      disabled={importLoading || !importUrl.trim()}
+                      className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {importLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span className="font-mono text-sm">Fetching tracks...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Search className="w-4 h-4" />
+                          <span className="font-mono text-sm">Fetch Tracks</span>
+                        </>
+                      )}
+                    </button>
+
+                    {importError && (
+                      <p className="text-red-400 text-xs">{importError}</p>
+                    )}
+
+                    {/* Imported Tracks List */}
+                    {importedTracks.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-mono text-pink-400">{importPlatform} — {importedTracks.filter(t => t.selected).length}/{importedTracks.length} selected</span>
+                          <button
+                            onClick={toggleAllImportTracks}
+                            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono"
+                          >
+                            {importedTracks.every(t => t.selected) ? 'Deselect All' : 'Select All'}
+                          </button>
+                        </div>
+
+                        {importNote && (
+                          <p className="text-yellow-400/70 text-[10px] font-mono">{importNote}</p>
+                        )}
+
+                        <div className="max-h-48 overflow-y-auto space-y-1">
+                          {importedTracks.map((track, i) => (
+                            <div
+                              key={i}
+                              className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all ${
+                                track.selected ? 'bg-pink-500/10 border border-pink-500/20' : 'bg-neutral-800/50 border border-transparent hover:bg-neutral-800'
+                              }`}
+                              onClick={() => toggleImportTrack(i)}
+                            >
+                              {track.selected ? (
+                                <CheckSquare className="w-4 h-4 text-pink-400 flex-shrink-0" />
+                              ) : (
+                                <Square className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                              )}
+                              {track.thumbnail && (
+                                <img src={track.thumbnail} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                              )}
+                              <span className={`text-xs truncate ${track.selected ? 'text-white' : 'text-gray-500'}`}>{track.title}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Add Selected Button */}
+                        <button
+                          onClick={handleImportAdd}
+                          disabled={importAdding || importedTracks.filter(t => t.selected).length === 0}
+                          className="w-full py-3 bg-gradient-to-r from-green-500 to-cyan-500 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {importAdding ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span className="font-mono text-sm">Adding {importedTracks.filter(t => t.selected).length} tracks...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="w-4 h-4" />
+                              <span className="font-mono text-sm">Add {importedTracks.filter(t => t.selected).length} Tracks</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Supported Platforms */}
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {['YouTube Playlists'].map(p => (
+                        <span key={p} className="px-2 py-0.5 bg-red-500/10 text-red-400 text-xs rounded-full border border-red-500/20 font-mono">{p}</span>
+                      ))}
+                      {['Spotify', 'SoundCloud'].map(p => (
+                        <span key={p} className="px-2 py-0.5 bg-neutral-800 text-neutral-500 text-xs rounded-full font-mono">
+                          {p} <span className="text-[9px]">soon</span>
                         </span>
                       ))}
                     </div>
