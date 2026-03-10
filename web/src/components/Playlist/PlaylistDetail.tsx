@@ -736,13 +736,16 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto md:overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl border border-pink-500/20 shadow-2xl">
+      <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto md:overflow-hidden bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 rounded-2xl border border-cyan-500/20 shadow-[0_0_60px_rgba(6,182,212,0.15),0_0_120px_rgba(168,85,247,0.08)]">
         {/* Loading overlay */}
         {isLoading && (
-          <div className="absolute inset-0 z-20 bg-black/50 flex items-center justify-center">
+          <div className="absolute inset-0 z-20 bg-black/70 backdrop-blur-sm flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 text-pink-400 animate-spin" />
-              <span className="text-white text-sm">Loading tracks...</span>
+              <div className="relative">
+                <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+                <div className="absolute inset-0 w-10 h-10 rounded-full border border-cyan-400/30 animate-ping" />
+              </div>
+              <span className="text-cyan-300 text-sm font-mono tracking-wider uppercase">Initializing queue...</span>
             </div>
           </div>
         )}
@@ -750,93 +753,94 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-neutral-800/80 backdrop-blur flex items-center justify-center hover:bg-neutral-700 transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm border border-cyan-500/30 flex items-center justify-center hover:border-cyan-400/60 hover:shadow-[0_0_12px_rgba(6,182,212,0.3)] transition-all"
         >
-          <X className="w-4 h-4 text-white" />
+          <X className="w-4 h-4 text-cyan-400" />
         </button>
 
         <div className="flex flex-col md:flex-row md:h-full md:max-h-[90vh]">
           {/* Left - Playlist Info */}
-          <div className="w-full md:w-80 p-6 flex-shrink-0 bg-gradient-to-b from-pink-500/10 to-transparent">
+          <div className="w-full md:w-80 p-6 flex-shrink-0 bg-gradient-to-b from-cyan-500/5 via-purple-500/5 to-transparent">
             {/* Artwork */}
-            <div className="aspect-square rounded-xl overflow-hidden shadow-2xl mb-6">
+            <div className="aspect-square rounded-xl overflow-hidden mb-6 shadow-[0_0_40px_rgba(6,182,212,0.2),0_0_80px_rgba(168,85,247,0.1)] border border-cyan-500/10">
               {playlist.artworkUrl ? (
                 <img src={playlist.artworkUrl} alt={playlist.title} className="w-full h-full object-cover" />
               ) : firstFourArtworks.length >= 4 ? (
-                <div className="grid grid-cols-2 gap-0.5 w-full h-full bg-neutral-800">
+                <div className="grid grid-cols-2 gap-px w-full h-full bg-cyan-500/20">
                   {firstFourArtworks.map((url, i) => (
-                    <div key={i} className="bg-neutral-700">
+                    <div key={i} className="bg-neutral-900">
                       {url && <img src={url} alt="" className="w-full h-full object-cover" />}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center">
-                  <span className="text-6xl">🎵</span>
+                <div className="w-full h-full bg-gradient-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center relative playlist-scanline">
+                  <Music className="w-16 h-16 text-cyan-400/60" />
                 </div>
               )}
             </div>
 
             {/* Info */}
-            <h1 className="text-2xl font-bold text-white mb-2">{playlist.title}</h1>
+            <h1 className="text-2xl font-extrabold text-white mb-1 tracking-tight">{playlist.title}</h1>
             {playlist.description && (
-              <p className="text-gray-400 text-sm mb-4">{playlist.description}</p>
+              <p className="text-gray-400 text-sm mb-4 leading-relaxed">{playlist.description}</p>
             )}
 
-            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-              <span>{tracks.length} {tracks.length === 1 ? 'item' : 'items'}</span>
-              <span>•</span>
-              <span>{playlist.favoriteCount} likes</span>
+            <div className="flex items-center gap-3 text-xs font-mono text-gray-500 mb-4 uppercase tracking-wider">
+              <span className="text-cyan-400/80">{tracks.length} {tracks.length === 1 ? 'track' : 'tracks'}</span>
+              <span className="text-cyan-500/30">|</span>
+              <span className="text-pink-400/80">{playlist.favoriteCount} likes</span>
             </div>
 
 
             {/* Actions */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handlePlayAll}
                 disabled={isLoading}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-full hover:opacity-90 transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(236,72,153,0.4)] hover:shadow-[0_0_30px_rgba(236,72,153,0.6)]"
+                style={!isLoading ? { animation: 'playlist-play-glow 3s ease-in-out infinite' } : undefined}
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Play className="w-5 h-5" fill="white" />
                 )}
-                {isLoading ? 'Loading...' : 'Play All'}
+                <span className="font-mono uppercase tracking-wider text-sm">{isLoading ? 'Loading' : 'Play All'}</span>
               </button>
               <button
                 onClick={handleToggleFavorite}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${
                   isFavorite
-                    ? 'bg-pink-500/20 hover:bg-pink-500/30'
-                    : 'bg-neutral-800 hover:bg-neutral-700'
+                    ? 'bg-pink-500/20 border-pink-500/40 shadow-[0_0_12px_rgba(236,72,153,0.3)]'
+                    : 'bg-neutral-900 border-neutral-700 hover:border-pink-500/30'
                 }`}
               >
-                <Heart className={`w-5 h-5 ${isFavorite ? 'text-pink-400 fill-pink-400' : 'text-gray-400'}`} />
+                <Heart className={`w-4 h-4 ${isFavorite ? 'text-pink-400 fill-pink-400' : 'text-gray-500'}`} />
               </button>
               <button
                 onClick={handleShare}
-                className="w-12 h-12 rounded-full bg-neutral-800 flex items-center justify-center hover:bg-neutral-700 transition-colors"
+                className="w-11 h-11 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center hover:border-cyan-500/30 transition-all"
               >
-                <Share2 className="w-5 h-5 text-gray-400" />
+                <Share2 className="w-4 h-4 text-gray-500 hover:text-cyan-400" />
               </button>
               {isOwner && (
                 <>
                   <button
                     onClick={() => setShowAddTracks(!showAddTracks)}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-all border ${
                       showAddTracks
-                        ? 'bg-green-500/30 hover:bg-green-500/40'
-                        : 'bg-green-500/20 hover:bg-green-500/30'
+                        ? 'bg-green-500/20 border-green-500/40 shadow-[0_0_12px_rgba(34,197,94,0.3)]'
+                        : 'bg-neutral-900 border-neutral-700 hover:border-green-500/30'
                     }`}
                   >
-                    <Plus className="w-5 h-5 text-green-400" />
+                    <Plus className="w-4 h-4 text-green-400" />
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
-                    className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center hover:bg-red-500/30 transition-colors"
+                    className="w-11 h-11 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center hover:border-red-500/30 transition-all"
                   >
-                    <Trash2 className="w-5 h-5 text-red-400" />
+                    <Trash2 className="w-4 h-4 text-red-400/70" />
                   </button>
                 </>
               )}
@@ -1020,52 +1024,59 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           </div>
 
           {/* Right - Track List */}
-          <div className="flex-1 md:overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             {/* Embedded Player for External Sources */}
             {activeEmbed && (
-              <div className="sticky top-0 z-10 bg-neutral-800 border-b border-neutral-700">
-                <div className="flex items-center justify-between px-4 py-2 bg-neutral-900">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-cyan-400 text-xs font-medium">{currentQueueIndex + 1}/{tracks.length}</span>
-                    <span className="text-white font-medium text-sm truncate">{activeEmbed.title}</span>
+              <div className="sticky top-0 z-10 bg-neutral-950 border-b border-cyan-500/20">
+                {/* Player Header */}
+                <div className="flex items-center justify-between px-4 py-2 bg-black/80 border-b border-cyan-500/10">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="font-mono text-xs text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">{currentQueueIndex + 1}/{tracks.length}</span>
+                    <span className="text-white font-semibold text-sm truncate">{activeEmbed.title}</span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     <button
                       onClick={playPreviousInQueue}
                       disabled={currentQueueIndex <= 0}
-                      className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30"
+                      className="p-2 hover:bg-cyan-500/10 rounded-full transition-all disabled:opacity-20"
                       aria-label="Previous track"
                     >
-                      <SkipBack className="w-4 h-4 text-white" />
+                      <SkipBack className="w-4 h-4 text-cyan-400" />
                     </button>
                     <button
                       onClick={playNextInQueue}
                       disabled={currentQueueIndex >= tracks.length - 1}
-                      className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-30"
+                      className="p-2 hover:bg-cyan-500/10 rounded-full transition-all disabled:opacity-20"
                       aria-label="Next track"
                     >
-                      <SkipForward className="w-4 h-4 text-white" />
+                      <SkipForward className="w-4 h-4 text-cyan-400" />
                     </button>
                     <button
                       onClick={() => {
-                        // When closing embed, auto-advance to next track if available
                         if (currentQueueIndex < tracks.length - 1) {
                           playNextInQueue()
                         } else {
-                          // No more tracks, stop playback
                           setActiveEmbed(null)
                           setIsPlayingAll(false)
                           setCurrentQueueIndex(-1)
                         }
                       }}
-                      className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                      className="p-2 hover:bg-red-500/10 rounded-full transition-all"
                       aria-label="Skip to next / Close player"
                     >
-                      <X className="w-4 h-4 text-gray-400" />
+                      <X className="w-4 h-4 text-gray-500 hover:text-red-400" />
                     </button>
                   </div>
                 </div>
-                <div className="relative w-full" style={{ paddingBottom: activeEmbed.sourceType === PlaylistTrackSourceType.Spotify ? '352px' : activeEmbed.sourceType === PlaylistTrackSourceType.Bandcamp ? '470px' : '56.25%' }}>
+                {/* Embed Container — capped on mobile to prevent track list crush */}
+                <div
+                  className="relative w-full playlist-scanline"
+                  style={{
+                    paddingBottom: activeEmbed.sourceType === PlaylistTrackSourceType.Spotify ? 'min(352px, 45vh)'
+                      : activeEmbed.sourceType === PlaylistTrackSourceType.Bandcamp ? 'min(380px, 50vh)'
+                      : 'min(56.25%, 50vh)',
+                  }}
+                >
                   <iframe
                     src={activeEmbed.url}
                     className="absolute inset-0 w-full h-full"
@@ -1078,33 +1089,37 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
             )}
 
             {/* Header */}
-            <div className="sticky top-0 bg-neutral-900/90 backdrop-blur px-6 py-4 border-b border-neutral-800" style={{ top: activeEmbed ? 'auto' : 0 }}>
-              <div className="flex items-center text-xs text-gray-500 uppercase tracking-wider">
+            <div className="sticky bg-black/90 backdrop-blur-sm px-6 py-3 border-b border-cyan-500/10" style={{ top: activeEmbed ? 'auto' : 0, zIndex: 5 }}>
+              <div className="flex items-center text-[10px] font-mono text-cyan-500/50 uppercase tracking-[0.2em]">
                 <span className="w-8 text-center">#</span>
                 <span className="flex-1 ml-4">Title</span>
                 <span className="w-24 text-right hidden sm:block">Source</span>
                 <span className="w-16 text-right">
-                  <Clock className="w-4 h-4 inline" />
+                  <Clock className="w-3.5 h-3.5 inline text-cyan-500/40" />
                 </span>
                 {isOwner && <span className="w-10" />}
               </div>
             </div>
 
             {/* Tracks */}
-            <div className="p-2">
+            <div className="p-1.5 sm:p-2">
               {tracks.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <p className="text-lg mb-2">No tracks yet</p>
-                  <p className="text-sm">Add tracks to your playlist to get started</p>
+                <div className="text-center py-16 text-gray-500">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-cyan-500/5 border border-cyan-500/10 mb-4">
+                    <Music className="w-8 h-8 text-cyan-500/30" />
+                  </div>
+                  <p className="text-lg font-bold text-white/60 mb-1">No tracks yet</p>
+                  <p className="text-sm text-gray-600 font-mono">Add tracks to initialize the queue</p>
                 </div>
               ) : (
                 tracks.map((pt, index) => {
                   const isNft = (pt.sourceType === PlaylistTrackSourceType.Nft || pt.sourceType === null || pt.sourceType === undefined) && !!pt.trackId
                   const isCurrentTrack = isNft && pt.trackId ? isCurrentSong(pt.trackId) : false
-                  const isTrackPlaying = isCurrentTrack && isPlaying
+                  const isActiveExternal = !isNft && isPlayingAll && currentQueueIndex === index
+                  const isHighlighted = isCurrentTrack || isActiveExternal
+                  const isTrackPlaying = (isCurrentTrack && isPlaying) || isActiveExternal
                   const hasExternalUrl = pt.externalUrl || pt.uploadedFileUrl
 
-                  // Resolve display info: prefer PlaylistTrack fields, fall back to pre-fetched NFT metadata
                   const meta = pt.trackId ? nftTrackMeta[pt.trackId] : undefined
                   const displayTitle = isNft
                     ? (pt.title || meta?.title || 'Untitled')
@@ -1125,68 +1140,93 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                     }
                   }
 
+                  // Platform-specific badge colors
+                  const getPlatformColor = () => {
+                    if (isNft) return { bg: 'bg-purple-500/15', text: 'text-purple-400', border: 'border-purple-500/20' }
+                    switch (pt.sourceType) {
+                      case PlaylistTrackSourceType.Youtube: return { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/20' }
+                      case PlaylistTrackSourceType.Spotify: return { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/20' }
+                      case PlaylistTrackSourceType.Soundcloud: return { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/20' }
+                      case PlaylistTrackSourceType.Bandcamp: return { bg: 'bg-blue-500/15', text: 'text-blue-400', border: 'border-blue-500/20' }
+                      case PlaylistTrackSourceType.AppleMusic: return { bg: 'bg-pink-500/15', text: 'text-pink-400', border: 'border-pink-500/20' }
+                      default: return { bg: 'bg-cyan-500/15', text: 'text-cyan-400', border: 'border-cyan-500/20' }
+                    }
+                  }
+                  const platformColor = getPlatformColor()
+
                   return (
                     <div
                       key={pt.id}
-                      className={`group flex items-center px-4 py-3 rounded-lg hover:bg-neutral-800/50 transition-colors ${
-                        isCurrentTrack ? 'bg-pink-500/10' : ''
+                      className={`group flex items-center px-3 sm:px-4 py-2.5 rounded-lg transition-all ${
+                        isHighlighted
+                          ? 'playlist-now-playing bg-cyan-500/5'
+                          : 'hover:bg-white/[0.03] border-l-2 border-transparent'
                       }`}
                     >
-                      {/* Number / Play indicator */}
+                      {/* Number / Play indicator / EQ bars */}
                       <div
-                        className="w-8 text-center cursor-pointer"
+                        className="w-8 text-center cursor-pointer flex-shrink-0"
                         onClick={handleClick}
                       >
                         {isTrackPlaying ? (
-                          <Pause className="w-4 h-4 text-pink-400 mx-auto" />
-                        ) : isCurrentTrack ? (
-                          <Play className="w-4 h-4 text-pink-400 mx-auto" fill="currentColor" />
-                        ) : hasExternalUrl ? (
-                          <>
-                            <span className="text-gray-500 group-hover:hidden">{index + 1}</span>
-                            <ExternalLink className="w-4 h-4 text-cyan-400 mx-auto hidden group-hover:block" />
-                          </>
+                          <div className="flex items-end justify-center gap-[2px] h-4 mx-auto">
+                            <div className="playlist-eq-bar" style={{ animationDelay: '0s' }} />
+                            <div className="playlist-eq-bar" style={{ animationDelay: '0.2s' }} />
+                            <div className="playlist-eq-bar" style={{ animationDelay: '0.4s' }} />
+                          </div>
+                        ) : isHighlighted ? (
+                          <Play className="w-4 h-4 text-cyan-400 mx-auto" fill="currentColor" />
                         ) : (
                           <>
-                            <span className="text-gray-500 group-hover:hidden">{index + 1}</span>
-                            <Play className="w-4 h-4 text-white mx-auto hidden group-hover:block" fill="white" />
+                            <span className="font-mono text-xs text-gray-600 group-hover:hidden">{String(index + 1).padStart(2, '0')}</span>
+                            <Play className="w-4 h-4 text-cyan-400/70 mx-auto hidden group-hover:block" fill="currentColor" />
                           </>
                         )}
                       </div>
 
                       {/* Track info */}
                       <div
-                        className="flex items-center gap-3 flex-1 ml-4 min-w-0 cursor-pointer"
+                        className="flex items-center gap-3 flex-1 ml-3 min-w-0 cursor-pointer"
                         onClick={handleClick}
                       >
-                        <div className="w-10 h-10 rounded overflow-hidden flex-shrink-0">
+                        <div className={`w-10 h-10 rounded overflow-hidden flex-shrink-0 ${
+                          isHighlighted ? 'ring-1 ring-cyan-400/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]' : ''
+                        }`}>
                           {displayArtwork ? (
                             <img src={displayArtwork} alt={displayTitle} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-neutral-700 flex items-center justify-center">
-                              <Music className="w-4 h-4 text-neutral-500" />
+                            <div className={`w-full h-full flex items-center justify-center ${
+                              isNft ? 'bg-purple-500/10' : 'bg-cyan-500/10'
+                            }`}>
+                              <Music className={`w-4 h-4 ${isNft ? 'text-purple-500/40' : 'text-cyan-500/40'}`} />
                             </div>
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className={`font-medium truncate ${isCurrentTrack ? 'text-pink-400' : 'text-white'}`}>
+                          <p className={`font-semibold text-sm truncate ${
+                            isHighlighted ? 'text-cyan-300' : 'text-white/90'
+                          }`}>
                             {displayTitle}
                           </p>
-                          <p className="text-gray-500 text-sm truncate">{displayArtist}</p>
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <p className="text-gray-500 text-xs truncate">{displayArtist}</p>
+                            {/* Mobile platform badge */}
+                            <span className={`sm:hidden text-[9px] px-1.5 py-0.5 rounded ${platformColor.bg} ${platformColor.text} font-mono uppercase flex-shrink-0`}>
+                              {isNft ? 'SC' : getSourceLabel(pt.sourceType).substring(0, 3)}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Source Type */}
-                      <div className="w-24 text-right hidden sm:block">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          isNft ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
-                        }`}>
+                      {/* Source Type — desktop */}
+                      <div className="w-24 text-right hidden sm:block flex-shrink-0">
+                        <span className={`text-[10px] px-2 py-0.5 rounded border font-mono uppercase tracking-wider ${platformColor.bg} ${platformColor.text} ${platformColor.border}`}>
                           {isNft ? 'SoundChain' : getSourceLabel(pt.sourceType)}
                         </span>
                       </div>
 
                       {/* Duration */}
-                      <div className="w-16 text-right text-gray-500 text-sm">
+                      <div className="w-14 sm:w-16 text-right text-gray-600 text-xs font-mono flex-shrink-0">
                         {formatDuration(displayDuration)}
                       </div>
 
@@ -1197,9 +1237,9 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                             e.stopPropagation()
                             handleRemoveTrack(pt.id)
                           }}
-                          className="w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="w-8 sm:w-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                         >
-                          <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-400" />
+                          <Trash2 className="w-3.5 h-3.5 text-gray-600 hover:text-red-400" />
                         </button>
                       )}
                     </div>
@@ -1210,27 +1250,27 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
             {/* Share Toast */}
             {showShareToast && (
-              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-60 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg animate-fade-in">
-                Link copied to clipboard!
+              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-60 bg-cyan-500 text-black px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.5)] font-mono text-sm font-bold tracking-wide">
+                Link copied to clipboard
               </div>
             )}
 
             {/* Delete Playlist Confirmation */}
             {showDeleteConfirm && (
-              <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
-                <div className="bg-neutral-800 rounded-xl p-6 max-w-sm w-full mx-4">
+              <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                <div className="bg-neutral-900 rounded-xl p-6 max-w-sm w-full mx-4 border border-red-500/20 shadow-[0_0_40px_rgba(239,68,68,0.15)]">
                   <h3 className="text-lg font-bold text-white mb-2">Delete Playlist?</h3>
-                  <p className="text-gray-400 mb-4">This action cannot be undone. All tracks will be removed from this playlist.</p>
+                  <p className="text-gray-400 text-sm mb-5">This action cannot be undone. All tracks will be removed.</p>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="flex-1 py-2 px-4 rounded-lg bg-neutral-700 text-white hover:bg-neutral-600 transition-colors"
+                      className="flex-1 py-2.5 px-4 rounded-lg bg-neutral-800 border border-neutral-700 text-white hover:border-neutral-600 transition-all font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleDeletePlaylist}
-                      className="flex-1 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+                      className="flex-1 py-2.5 px-4 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all font-medium"
                     >
                       Delete
                     </button>
