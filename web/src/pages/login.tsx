@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { OAuthExtension as OAuth2Extension } from '@magic-ext/oauth2';
 import { LoaderAnimation } from 'components/LoaderAnimation';
 import { FormValues, LoginForm } from 'components/LoginForm';
 import SEO from 'components/SEO';
@@ -329,9 +330,44 @@ export default function LoginPage() {
       setError(null);
       localStorage.removeItem('didToken');
 
-      // oauth v1 uses redirect flow — user leaves the page, comes back with magic_credential
-      // The result is picked up by handleMagicCredential useEffect on page reload
-      console.log('[OAuth] Redirecting to', provider, 'login...');
+      const isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (!isMobileDevice) {
+        // DESKTOP: Use OAuth2 popup flow — avoids PKCE redirect issues caused by
+        // MetaMask/Coinbase extensions clearing localStorage during page reload.
+        // Creates a separate Magic instance WITHOUT network config (not needed for auth).
+        console.log('[OAuth] Desktop popup flow for', provider);
+        try {
+          const { Magic: PopupMagic } = await import('magic-sdk');
+          const popupMagic = new PopupMagic(process.env.NEXT_PUBLIC_MAGIC_KEY || 'pk_live_858EC1BFF763F101', {
+            extensions: [new OAuth2Extension()],
+          });
+          const result = await (popupMagic as any).oauth2.loginWithPopup({
+            provider,
+            scope: ['openid', 'email', 'profile'],
+          });
+          if (result?.magic?.idToken) {
+            const loginResult = await login({ variables: { input: { token: result.magic.idToken } } });
+            if (loginResult.data?.login.jwt) {
+              await setJwt(loginResult.data.login.jwt);
+              localStorage.setItem('didToken', result.magic.idToken);
+              await handlePostLoginRedirect(undefined, true);
+              return;
+            }
+          }
+          throw new Error('No token received from popup');
+        } catch (popupErr: any) {
+          console.error('[OAuth] Popup failed:', popupErr?.message);
+          // If popup was blocked or user closed it, show friendly message
+          if (popupErr?.message?.includes('user denied') || popupErr?.message?.includes('closed') || popupErr?.message?.includes('cancelled')) {
+            throw new Error('Login popup was closed. Please try again.');
+          }
+          throw new Error(`${provider} login failed: ${popupErr?.message || 'Unknown error'}. Please try again.`);
+        }
+      }
+
+      // MOBILE: Use redirect flow (popups are unreliable on mobile browsers)
+      console.log('[OAuth] Mobile redirect flow for', provider);
       await (magic as any).oauth.loginWithRedirect({
         provider,
         redirectURI: `${window.location.origin}/login`,
