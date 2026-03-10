@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import Asset from 'components/Asset/Asset'
 import { Modal } from 'components/Modal'
 import { TrackListItem } from 'components/TrackListItem'
@@ -21,7 +21,7 @@ import NextLink from 'next/link'
 import { useRouter } from 'next/router'
 import { remainingTime, timeFromSecs } from 'utils/calculateTime'
 import { checkIsMobile } from 'utils/IsMobile'
-import { Flame, Share2, ChevronDown, BadgeCheck, ListMusic, SkipBack, SkipForward, Link2, MessageSquare, Film } from 'lucide-react'
+import { Flame, Share2, ChevronDown, BadgeCheck, ListMusic, SkipBack, SkipForward, Link2, MessageSquare, Film, ExternalLink } from 'lucide-react'
 import { SpeakerXMarkIcon, SpeakerWaveIcon } from '@heroicons/react/24/outline'
 import dynamic from 'next/dynamic'
 import { toast } from 'react-toastify'
@@ -116,6 +116,41 @@ export const AudioPlayerModal = () => {
   // Use artwork URL with fallback - track errors for background image
   const artworkUrl = (!currentSong.art || artworkError) ? DEFAULT_ARTWORK : currentSong.art
 
+  // External track detection — parse EXTERNAL:sourceType:url format
+  const isExternalTrack = currentSong.src?.startsWith('EXTERNAL:')
+  const externalEmbed = useMemo(() => {
+    if (!isExternalTrack) return null
+    const parts = currentSong.src.split(':')
+    const sourceType = parts[1]?.toLowerCase()
+    const url = parts.slice(2).join(':')
+    if (!url) return null
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://soundchain.fm'
+    let embedUrl = url
+    if (sourceType === 'youtube') {
+      const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+      if (match) {
+        const listParam = url.match(/[?&]list=([a-zA-Z0-9_-]+)/)
+        embedUrl = `https://www.youtube.com/embed/${match[1]}?autoplay=1&enablejsapi=1&origin=${origin}${listParam ? `&list=${listParam[1]}` : ''}`
+      }
+    } else if (sourceType === 'spotify') {
+      const match = url.match(/spotify\.com\/(track|album|playlist)\/([a-zA-Z0-9]+)/)
+      if (match) embedUrl = `https://open.spotify.com/embed/${match[1]}/${match[2]}`
+    } else if (sourceType === 'soundcloud') {
+      embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true`
+    } else if (sourceType === 'bandcamp') {
+      embedUrl = `https://bandcamp.com/EmbeddedPlayer/size=large/bgcol=333333/linkcol=e99708/tracklist=false/artwork=small/transparent=true/url=${encodeURIComponent(url)}/`
+    } else if (sourceType === 'vimeo') {
+      const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
+      if (match) embedUrl = `https://player.vimeo.com/video/${match[1]}?autoplay=1`
+    } else if (sourceType === 'apple_music') {
+      embedUrl = url.replace('music.apple.com', 'embed.music.apple.com')
+    } else if (sourceType === 'tidal') {
+      const match = url.match(/tidal\.com\/(?:browse\/)?(track|album|playlist)\/(\d+)/)
+      if (match) embedUrl = `https://embed.tidal.com/${match[1]}s/${match[2]}`
+    }
+    return { url: embedUrl, sourceType }
+  }, [currentSong.src, isExternalTrack])
+
   // Reset error state when track changes
   useEffect(() => {
     setArtworkError(false)
@@ -205,9 +240,9 @@ export const AudioPlayerModal = () => {
       onClose={handleClose}
       fullScreen
     >
-      <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden">
+      <div className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-black">
         {/* Hidden img to detect load errors for background image */}
-        {currentSong.art && !artworkError && (
+        {currentSong.art && !artworkError && !isExternalTrack && (
           <img
             src={currentSong.art}
             alt=""
@@ -215,15 +250,36 @@ export const AudioPlayerModal = () => {
             onError={() => setArtworkError(true)}
           />
         )}
-        {/* Full-bleed Background Artwork */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url(${artworkUrl})`,
-          }}
-        />
-        {/* Dark gradient overlay for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/80" />
+
+        {isExternalTrack && externalEmbed ? (
+          <>
+            {/* External track — embed iframe as background */}
+            <div className="absolute inset-0 bg-black" />
+            <div className="absolute inset-0 top-12 bottom-48">
+              <iframe
+                src={externalEmbed.url}
+                className="w-full h-full border-0"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                title={currentSong.title || 'External Track'}
+              />
+            </div>
+            {/* Gradient overlay at bottom for controls readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black pointer-events-none" />
+          </>
+        ) : (
+          <>
+            {/* Full-bleed Background Artwork */}
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url(${artworkUrl})`,
+              }}
+            />
+            {/* Dark gradient overlay for readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/80" />
+          </>
+        )}
 
         {/* Content Layer */}
         <div className="relative z-10 flex flex-col h-full">
@@ -279,9 +335,16 @@ export const AudioPlayerModal = () => {
               </button>
             </div>
 
-            {/* SoundCloud-style Waveform with Comments - Full Width */}
+            {/* Waveform / External Platform Badge */}
             <div className="w-full px-4 mb-4">
-              {currentSong.src && (
+              {isExternalTrack ? (
+                <div className="flex items-center justify-center gap-2 py-3">
+                  <ExternalLink className="w-4 h-4 text-cyan-400" />
+                  <span className="text-cyan-400/70 text-xs font-mono uppercase tracking-wider">
+                    Playing via {externalEmbed?.sourceType || 'embed'}
+                  </span>
+                </div>
+              ) : currentSong.src ? (
                 <WaveformWithComments
                   trackId={currentSong.trackId}
                   audioUrl={currentSong.src}
@@ -295,7 +358,7 @@ export const AudioPlayerModal = () => {
                   onPlayPause={togglePlay}
                   variant="glass"
                 />
-              )}
+              ) : null}
             </div>
 
             {/* Main Controls */}
