@@ -48,6 +48,28 @@ Custom cheat sheet for FURL CLI — SMITH, Forge, and Jack modes.
 
 ---
 
+## Agent EYE Commands
+
+| Command | Description |
+|---------|-------------|
+| `/eye watch` | Start passive bug capture (WATCHING mode) |
+| `/eye sleep` | Stop capture (DORMANT mode) |
+| `/eye bugs` | List recent captured bugs |
+| `/eye clear` | Clear bug buffer |
+| `/eye status` | Show mode and stats |
+| `/eye diagnose <url>` | Full diagnostic scan — JS errors, console, network, DOM, screenshot |
+
+### Agent EYE Tools (LLM-callable)
+
+| Tool | Description |
+|------|-------------|
+| `agent_eye_bugs` | List/inspect bugs, filter by severity |
+| `agent_eye_status` | Mode, counts, buffer capacity |
+| `agent_eye_clear` | Clear all bugs |
+| `agent_eye_diagnose` | Navigate URL + full scan → report to ~/soundchain/reports/ |
+
+---
+
 ## Agent Control
 
 | Command | Description |
