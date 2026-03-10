@@ -57,7 +57,19 @@ Custom cheat sheet for FURL CLI — SMITH, Forge, and Jack modes.
 | `/eye bugs` | List recent captured bugs |
 | `/eye clear` | Clear bug buffer |
 | `/eye status` | Show mode and stats |
-| `/eye diagnose <url>` | Full diagnostic scan — JS errors, console, network, DOM, screenshot |
+| `/eye diagnose <url>` | Full diagnostic scan via Chrome co-worker bridge |
+| `/eye bridge` | Check Chrome co-worker connection status |
+
+### Chrome Co-Worker Bridge (Triangle)
+
+```
+FURL xterm (mobile) → Claude Code CLI → Chrome Co-Worker → Diagnostic Report
+```
+
+Auto-discovery priority:
+1. OpenClaw Chrome Extension Relay (`:18792`) — drives your LIVE Chrome tabs
+2. Raw CDP (`:9222`) — headless Chrome fallback
+3. Manual `--cdp <url>` — custom endpoint
 
 ### Agent EYE Tools (LLM-callable)
 
@@ -66,7 +78,7 @@ Custom cheat sheet for FURL CLI — SMITH, Forge, and Jack modes.
 | `agent_eye_bugs` | List/inspect bugs, filter by severity |
 | `agent_eye_status` | Mode, counts, buffer capacity |
 | `agent_eye_clear` | Clear all bugs |
-| `agent_eye_diagnose` | Navigate URL + full scan → report to ~/soundchain/reports/ |
+| `agent_eye_diagnose` | Full scan via Chrome co-worker → report to ~/soundchain/reports/ |
 
 ---
 
