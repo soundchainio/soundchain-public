@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
-import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder, useAddPlaylistItemMutation } from 'lib/graphql'
+import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder, useAddPlaylistItemMutation, useUpdatePlaylistMutation } from 'lib/graphql'
 import { useApolloClient } from '@apollo/client'
 import Asset from 'components/Asset/Asset'
+import { useUpload } from 'hooks/useUpload'
 
 // Extract URL from Bandcamp iframe embed code
 // Bandcamp shares as HTML: <iframe ... src="https://bandcamp.com/EmbeddedPlayer/..." ...></iframe>
@@ -156,6 +157,26 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [toggleFavorite] = useTogglePlaylistFavoriteMutation()
   const [createPlaylistTracks] = useCreatePlaylistTracksMutation()
   const [addPlaylistItem] = useAddPlaylistItemMutation()
+  const [updatePlaylist] = useUpdatePlaylistMutation()
+  const coverInputRef = useRef<HTMLInputElement>(null)
+  const [coverArtUrl, setCoverArtUrl] = useState<string | null>(playlist.artworkUrl || null)
+  const { preview: coverPreview, uploading: coverUploading, upload: uploadCover } = useUpload(
+    coverArtUrl || undefined,
+    async (url) => {
+      setCoverArtUrl(url)
+      try {
+        await updatePlaylist({ variables: { input: { playlistId: playlist.id, artworkUrl: url } } })
+        await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
+      } catch (err) {
+        console.error('Failed to update cover art:', err)
+      }
+    }
+  )
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !file.type.startsWith('image/') || file.size > 10 * 1024 * 1024) return
+    try { await uploadCover([file]) } catch {}
+  }
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showShareToast, setShowShareToast] = useState(false)
   const [showAddTracks, setShowAddTracks] = useState(false)
@@ -181,6 +202,22 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
   const tracks = playlist.tracks?.nodes || []
   const existingTrackIds = new Set(tracks.map(t => t.trackId).filter(Boolean))
+
+  // Sync queue state with global player on mount/reopen
+  useEffect(() => {
+    if (!currentSong?.trackId || tracks.length === 0) return
+    const songId = currentSong.trackId
+    // Match NFT tracks by trackId, external tracks by external_{id} pattern
+    const matchIndex = tracks.findIndex((t, _i) => {
+      if (t.trackId && songId === t.trackId) return true
+      if (songId === `external_${t.id}`) return true
+      return false
+    })
+    if (matchIndex >= 0) {
+      setCurrentQueueIndex(matchIndex)
+      setIsPlayingAll(true)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pre-fetch metadata for NFT tracks that are missing title/artist
   const [nftTrackMeta, setNftTrackMeta] = useState<Record<string, { title: string; artist: string; artworkUrl: string | null; duration: number | null }>>({})
@@ -842,9 +879,12 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           {/* Left - Playlist Info */}
           <div className="w-full md:w-80 p-6 flex-shrink-0 bg-gradient-to-b from-cyan-500/5 via-purple-500/5 to-transparent">
             {/* Artwork */}
-            <div className="aspect-square rounded-xl overflow-hidden mb-6 shadow-[0_0_40px_rgba(6,182,212,0.2),0_0_80px_rgba(168,85,247,0.1)] border border-cyan-500/10">
-              {playlist.artworkUrl ? (
-                <img src={playlist.artworkUrl} alt={playlist.title} className="w-full h-full object-cover" />
+            <div
+              className="aspect-square rounded-xl overflow-hidden mb-6 shadow-[0_0_40px_rgba(6,182,212,0.2),0_0_80px_rgba(168,85,247,0.1)] border border-cyan-500/10 relative group cursor-pointer"
+              onClick={isOwner ? () => coverInputRef.current?.click() : undefined}
+            >
+              {coverPreview || coverArtUrl ? (
+                <img src={coverPreview || coverArtUrl || ''} alt={playlist.title} className="w-full h-full object-cover" />
               ) : firstFourArtworks.length >= 4 ? (
                 <div className="grid grid-cols-2 gap-px w-full h-full bg-cyan-500/20">
                   {firstFourArtworks.map((url, i) => (
@@ -857,6 +897,21 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 <div className="w-full h-full bg-gradient-to-br from-cyan-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center relative playlist-scanline">
                   <Music className="w-16 h-16 text-cyan-400/60" />
                 </div>
+              )}
+              {isOwner && (
+                <>
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    {coverUploading ? (
+                      <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                    ) : (
+                      <div className="flex flex-col items-center gap-1">
+                        <Camera className="w-6 h-6 text-cyan-400" />
+                        <span className="text-cyan-400 text-xs font-mono">Change Cover</span>
+                      </div>
+                    )}
+                  </div>
+                  <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleCoverChange} />
+                </>
               )}
             </div>
 

@@ -364,7 +364,7 @@ export class PlaylistService extends ModelService<typeof Playlist> {
     });
 
     await playlistTrack.save();
-    return playlistTrack;
+    return playlistTrack.toObject();
   }
 
   // Delete a playlist item by ID
