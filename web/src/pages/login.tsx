@@ -597,16 +597,39 @@ export default function LoginPage() {
       try {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         const timeoutMs = isMobile ? 30000 : 15000;
-        let oauthResult = null;
-        let oauthError: any = null;
-        try {
+
+        // Try getRedirectResult with retry — MetaMask/Coinbase extensions can interfere
+        // with localStorage on initial page load (PKCE verifier lost). A short delay
+        // before retry lets extensions finish their injection.
+        const attemptGetRedirectResult = async (): Promise<any> => {
           const oauthPromise = (magic as any).oauth.getRedirectResult();
           const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error(`OAuth timeout after ${timeoutMs/1000}s`)), timeoutMs)
           );
-          oauthResult = await Promise.race([oauthPromise, timeoutPromise]);
+          return Promise.race([oauthPromise, timeoutPromise]);
+        };
+
+        let oauthResult = null;
+        let lastError: any = null;
+
+        // Attempt 1: immediate
+        try {
+          oauthResult = await attemptGetRedirectResult();
         } catch (err: any) {
-          oauthError = err;
+          lastError = err;
+          console.log('[Auth] getRedirectResult attempt 1 failed:', err.message);
+        }
+
+        // Attempt 2: after 1s delay (lets MetaMask/Coinbase finish injecting)
+        if (!oauthResult?.magic?.idToken && lastError) {
+          try {
+            await new Promise(r => setTimeout(r, 1000));
+            oauthResult = await attemptGetRedirectResult();
+            lastError = null;
+          } catch (err: any) {
+            lastError = err;
+            console.log('[Auth] getRedirectResult attempt 2 failed:', err.message);
+          }
         }
 
         if (oauthResult?.magic?.idToken) {
@@ -621,49 +644,44 @@ export default function LoginPage() {
           }
         }
 
-        if (oauthError) {
-          // getRedirectResult() fails when PKCE verifier is lost from localStorage.
-          // Common causes: Safari ITP, Chrome privacy settings, browser extensions (MetaMask),
-          // or Chrome clearing storage during cross-origin redirect.
-          // Fall through to credential flow on ALL platforms — the magic_credential
-          // in the URL is still valid for loginWithCredential().
-          console.log('[Auth] getRedirectResult failed, trying credential flow...', oauthError.message);
+        // Both getRedirectResult attempts failed — try credential flow as fallback
+        if (lastError) {
+          console.log('[Auth] getRedirectResult failed, trying credential flow...', lastError.message);
         }
 
-        // Try email magic link credential flow
         try {
           await magic.auth.loginWithCredential();
+          const didToken = await magic.user.getIdToken();
+          localStorage.setItem('didToken', didToken);
+          const loginResult = await login({ variables: { input: { token: didToken } } });
+          if (loginResult.data?.login.jwt) {
+            await setJwt(loginResult.data.login.jwt);
+            await handlePostLoginRedirect(undefined, true);
+            return;
+          }
         } catch (credErr: any) {
           console.log('[Auth] loginWithCredential failed:', credErr?.message);
-          // On mobile Safari, credential flow also fails due to ITP.
-          // Last resort: try getIdToken in case Magic session is valid despite errors.
-          if (isMobile) {
-            try {
-              const fallbackToken = await magic.user.getIdToken();
-              if (fallbackToken) {
-                localStorage.setItem('didToken', fallbackToken);
-                const loginResult = await login({ variables: { input: { token: fallbackToken } } });
-                if (loginResult.data?.login.jwt) {
-                  await setJwt(loginResult.data.login.jwt);
-                  await handlePostLoginRedirect(undefined, true);
-                  return;
-                }
-              }
-            } catch (_) {}
-            throw new Error('Google login is not supported on mobile browsers. Please enter your email address below to log in.');
+        }
+
+        // Last resort: try getIdToken in case Magic session is valid despite errors
+        try {
+          const fallbackToken = await magic.user.getIdToken();
+          if (fallbackToken) {
+            localStorage.setItem('didToken', fallbackToken);
+            const loginResult = await login({ variables: { input: { token: fallbackToken } } });
+            if (loginResult.data?.login.jwt) {
+              await setJwt(loginResult.data.login.jwt);
+              await handlePostLoginRedirect(undefined, true);
+              return;
+            }
           }
-          throw credErr;
+        } catch (_) {}
+
+        // All methods exhausted
+        if (isMobile) {
+          throw new Error('Google login is not supported on mobile browsers. Please enter your email address below to log in.');
         }
-        const didToken = await magic.user.getIdToken();
-        localStorage.setItem('didToken', didToken);
-        const loginResult = await login({ variables: { input: { token: didToken } } });
-        if (loginResult.data?.login.jwt) {
-          await setJwt(loginResult.data.login.jwt);
-          await new Promise(resolve => setTimeout(resolve, 200));
-          await handlePostLoginRedirect();
-        } else {
-          throw new Error('Login failed: No JWT returned');
-        }
+        throw new Error(lastError?.message || 'Google login failed. Please try again, or use Email login.');
       } catch (error: any) {
         console.error('[Auth] Callback error:', error);
         if (error.message?.includes('already exists')) {
