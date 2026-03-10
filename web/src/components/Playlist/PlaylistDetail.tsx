@@ -1116,7 +1116,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 {addMode === 'import' && (
                   <div className="p-4 space-y-3">
                     <p className="text-gray-400 text-xs font-mono">
-                      Import tracks from a YouTube playlist URL.
+                      Import all tracks from a YouTube playlist — unlimited.
                     </p>
 
                     {/* URL Input */}
@@ -1217,14 +1217,8 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
                     {/* Supported Platforms */}
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      {['YouTube Playlists'].map(p => (
-                        <span key={p} className="px-2 py-0.5 bg-red-500/10 text-red-400 text-xs rounded-full border border-red-500/20 font-mono">{p}</span>
-                      ))}
-                      {['Spotify', 'SoundCloud'].map(p => (
-                        <span key={p} className="px-2 py-0.5 bg-neutral-800 text-neutral-500 text-xs rounded-full font-mono">
-                          {p} <span className="text-[9px]">soon</span>
-                        </span>
-                      ))}
+                      <span className="px-2 py-0.5 bg-red-500/10 text-red-400 text-xs rounded-full border border-red-500/20 font-mono">YouTube <span className="text-[9px] text-red-300">unlimited</span></span>
+                      <span className="px-2 py-0.5 bg-neutral-800 text-neutral-500 text-xs rounded-full font-mono">SoundCloud <span className="text-[9px]">soon</span></span>
                     </div>
                   </div>
                 )}
