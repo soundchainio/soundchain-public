@@ -1,12 +1,18 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera } from 'lucide-react'
+import { Play, Pause, Heart, Share2, Clock, X, Trash2, ExternalLink, Music, Loader2, Plus, Search, SkipBack, SkipForward, Link2, Import, Check, CheckSquare, Square, Camera, MessageSquare, Film, Copy } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
 import { GetUserPlaylistsQuery, useDeletePlaylistItemMutation, useDeletePlaylistMutation, useTogglePlaylistFavoriteMutation, useCreatePlaylistTracksMutation, useExploreTracksQuery, PlaylistTrackSourceType, TrackDocument, SortExploreTracksField, SortOrder, useAddPlaylistItemMutation, useUpdatePlaylistMutation } from 'lib/graphql'
 import { useApolloClient } from '@apollo/client'
 import Asset from 'components/Asset/Asset'
 import { useUpload } from 'hooks/useUpload'
+import { useRouter } from 'next/router'
+import { useModalDispatch } from 'contexts/ModalContext'
+import { toast } from 'react-toastify'
+import dynamic from 'next/dynamic'
+
+const CreateStoryModal = dynamic(() => import('components/dex/CreateStoryModal').then(m => ({ default: m.CreateStoryModal })), { ssr: false })
 
 // Extract URL from Bandcamp iframe embed code
 // Bandcamp shares as HTML: <iframe ... src="https://bandcamp.com/EmbeddedPlayer/..." ...></iframe>
@@ -113,8 +119,8 @@ const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string =
       if (match) return `https://open.spotify.com/embed/${match[1]}/${match[2]}`
     }
     if (sourceType === PlaylistTrackSourceType.Soundcloud) {
-      // SoundCloud requires their widget API
-      return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true`
+      // SoundCloud widget with dark theme params
+      return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true&color=%2306b6d4&buying=false&sharing=false&show_comments=false`
     }
     if (sourceType === PlaylistTrackSourceType.Vimeo) {
       const match = url.match(/vimeo\.com\/(?:video\/)?(\d+)/)
@@ -151,6 +157,8 @@ const isDirectAudioUrl = (url: string): boolean => {
 
 export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, currentUserWallet }: PlaylistDetailProps) => {
   const apolloClient = useApolloClient()
+  const router = useRouter()
+  const { dispatchShowPostModal } = useModalDispatch()
   const { playlistState, currentSong, isPlaying, togglePlay, isCurrentSong } = useAudioPlayerContext()
   const [deletePlaylistItem] = useDeletePlaylistItemMutation()
   const [deletePlaylist] = useDeletePlaylistMutation()
@@ -199,9 +207,30 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const [importPlatform, setImportPlatform] = useState('')
   const [importNote, setImportNote] = useState('')
   const [importAdding, setImportAdding] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [showStoryModal, setShowStoryModal] = useState(false)
+  const shareMenuRef = useRef<HTMLDivElement>(null)
 
-  const tracks = playlist.tracks?.nodes || []
+  // Local tracks state for optimistic updates (Bug #4 fix)
+  const [localTracks, setLocalTracks] = useState<PlaylistTrackType[]>(playlist.tracks?.nodes || [])
+  useEffect(() => {
+    setLocalTracks(playlist.tracks?.nodes || [])
+  }, [playlist.tracks?.nodes])
+  const tracks = localTracks
   const existingTrackIds = new Set(tracks.map(t => t.trackId).filter(Boolean))
+
+  // Close share menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(e.target as Node)) {
+        setShowShareMenu(false)
+      }
+    }
+    if (showShareMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showShareMenu])
 
   // Sync queue state with global player on mount/reopen
   useEffect(() => {
@@ -347,7 +376,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           },
         },
       })
-      // Refetch playlist data
+      toast.success('Track added!')
       await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
     } catch (err) {
       console.error('Failed to add track:', err)
@@ -424,9 +453,10 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           },
         },
       })
-      // Clear form and refetch
+      // Clear form, show toast, and refetch
       setExternalLinkUrl('')
       setExternalLinkTitle('')
+      toast.success('Link added!')
       await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
     } catch (err) {
       console.error('Failed to add external link:', err)
@@ -671,23 +701,37 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
   }
 
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/dex/playlist/${playlist.id}`
+  const playlistShareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/dex/playlist/${playlist.id}`
+
+  const handleShareCopyLink = async () => {
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: playlist.title,
-          text: `Check out this playlist: ${playlist.title}`,
-          url: shareUrl,
-        })
-      } else {
-        await navigator.clipboard.writeText(shareUrl)
-        setShowShareToast(true)
-        setTimeout(() => setShowShareToast(false), 2000)
-      }
-    } catch (error) {
-      console.error('Error sharing:', error)
+      await navigator.clipboard.writeText(playlistShareUrl)
+      toast('Link copied to clipboard')
+    } catch {
+      setShowShareToast(true)
+      setTimeout(() => setShowShareToast(false), 2000)
     }
+    setShowShareMenu(false)
+  }
+
+  const handleShareAsPost = async () => {
+    // Copy playlist link to clipboard so user can paste in post
+    try { await navigator.clipboard.writeText(playlistShareUrl) } catch {}
+    setShowShareMenu(false)
+    onClose()
+    toast('Playlist link copied — paste it in your post!')
+    dispatchShowPostModal({ show: true })
+  }
+
+  const handleShareToStory = () => {
+    setShowShareMenu(false)
+    setShowStoryModal(true)
+  }
+
+  const handleShareToPulse = () => {
+    setShowShareMenu(false)
+    onClose()
+    router.push(`/dex/pulse?share=${encodeURIComponent(playlistShareUrl)}`)
   }
 
   const handleRemoveTrack = async (playlistItemId: string) => {
@@ -695,6 +739,10 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
       await deletePlaylistItem({
         variables: { playlistItemId },
       })
+      // Optimistic removal from local state
+      setLocalTracks(prev => prev.filter(t => t.id !== playlistItemId))
+      toast.success('Track removed')
+      await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
     } catch (error) {
       console.error('Failed to remove track:', error)
     }
@@ -764,6 +812,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
         })
       }
       await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
+      toast.success(`${selected.length} tracks imported!`)
       setImportedTracks([])
       setImportUrl('')
       setImportPlatform('')
@@ -953,12 +1002,48 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
               >
                 <Heart className={`w-4 h-4 ${isFavorite ? 'text-pink-400 fill-pink-400' : 'text-gray-500'}`} />
               </button>
-              <button
-                onClick={handleShare}
-                className="w-11 h-11 rounded-full bg-neutral-900 border border-neutral-700 flex items-center justify-center hover:border-cyan-500/30 transition-all"
-              >
-                <Share2 className="w-4 h-4 text-gray-500 hover:text-cyan-400" />
-              </button>
+              <div className="relative" ref={shareMenuRef}>
+                <button
+                  onClick={() => setShowShareMenu(!showShareMenu)}
+                  className={`w-11 h-11 rounded-full bg-neutral-900 border flex items-center justify-center transition-all ${
+                    showShareMenu ? 'border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.3)]' : 'border-neutral-700 hover:border-cyan-500/30'
+                  }`}
+                >
+                  <Share2 className={`w-4 h-4 ${showShareMenu ? 'text-cyan-400' : 'text-gray-500 hover:text-cyan-400'}`} />
+                </button>
+                {showShareMenu && (
+                  <div className="absolute bottom-full mb-2 left-0 w-52 rounded-xl bg-black/90 backdrop-blur-xl border border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.15)] overflow-hidden z-50">
+                    <button
+                      onClick={handleShareCopyLink}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-cyan-500/10 transition-colors"
+                    >
+                      <Copy className="w-4 h-4 text-cyan-400" />
+                      Copy Link
+                    </button>
+                    <button
+                      onClick={handleShareAsPost}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-cyan-500/10 transition-colors"
+                    >
+                      <MessageSquare className="w-4 h-4 text-purple-400" />
+                      Share to Feed
+                    </button>
+                    <button
+                      onClick={handleShareToStory}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-cyan-500/10 transition-colors"
+                    >
+                      <Film className="w-4 h-4 text-pink-400" />
+                      Share to Story/Reel
+                    </button>
+                    <button
+                      onClick={handleShareToPulse}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-cyan-500/10 transition-colors"
+                    >
+                      <Share2 className="w-4 h-4 text-green-400" />
+                      Send via Pulse
+                    </button>
+                  </div>
+                )}
+              </div>
               {isOwner && (
                 <>
                   <button
@@ -1328,7 +1413,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                 </div>
                 {/* Embed Container — capped on mobile to prevent track list crush */}
                 <div
-                  className="relative w-full playlist-scanline"
+                  className="relative w-full playlist-scanline bg-black rounded-b-lg overflow-hidden"
                   style={{
                     paddingBottom: activeEmbed.sourceType === PlaylistTrackSourceType.Spotify ? 'min(352px, 45vh)'
                       : activeEmbed.sourceType === PlaylistTrackSourceType.Bandcamp ? 'min(380px, 50vh)'
@@ -1394,7 +1479,8 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
                         handlePlayTrack(index)
                       }
                     } else if (hasExternalUrl) {
-                      handleOpenExternal(pt.externalUrl || pt.uploadedFileUrl!, displayTitle, pt.sourceType, index)
+                      // Bug #2B fix: Route through unified queue so global player syncs
+                      handlePlayTrack(index)
                     }
                   }
 
@@ -1511,6 +1597,20 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
               <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-60 bg-cyan-500 text-black px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(6,182,212,0.5)] font-mono text-sm font-bold tracking-wide">
                 Link copied to clipboard
               </div>
+            )}
+
+            {/* Story/Reel Creation Modal */}
+            {showStoryModal && (
+              <CreateStoryModal
+                isOpen={showStoryModal}
+                onClose={() => setShowStoryModal(false)}
+                prefillTrack={{
+                  trackId: playlist.id,
+                  title: playlist.title || 'Playlist',
+                  artist: 'SoundChain Playlist',
+                  artworkUrl: coverArtUrl || '',
+                }}
+              />
             )}
 
             {/* Delete Playlist Confirmation */}

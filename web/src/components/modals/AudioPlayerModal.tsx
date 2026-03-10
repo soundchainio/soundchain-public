@@ -136,7 +136,7 @@ export const AudioPlayerModal = () => {
       const match = url.match(/spotify\.com\/(track|album|playlist)\/([a-zA-Z0-9]+)/)
       if (match) embedUrl = `https://open.spotify.com/embed/${match[1]}/${match[2]}`
     } else if (sourceType === 'soundcloud') {
-      embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true`
+      embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true&visual=true&color=%2306b6d4&buying=false&sharing=false&show_comments=false`
     } else if (sourceType === 'bandcamp') {
       embedUrl = `https://bandcamp.com/EmbeddedPlayer/size=large/bgcol=333333/linkcol=e99708/tracklist=false/artwork=small/transparent=true/url=${encodeURIComponent(url)}/`
     } else if (sourceType === 'vimeo') {
@@ -255,7 +255,7 @@ export const AudioPlayerModal = () => {
           <>
             {/* External track — embed iframe as background */}
             <div className="absolute inset-0 bg-black" />
-            <div className="absolute inset-0 top-12 bottom-48">
+            <div className="absolute inset-0 top-12 bottom-48 bg-black rounded-lg overflow-hidden">
               <iframe
                 src={externalEmbed.url}
                 className="w-full h-full border-0"
@@ -308,7 +308,7 @@ export const AudioPlayerModal = () => {
               <div className="flex-1 min-w-0">
                 <NextLink href={`/dex/track/${currentSong.trackId}`} className="block group">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-white truncate group-hover:text-cyan-400 transition-colors drop-shadow-lg">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white line-clamp-2 break-words group-hover:text-cyan-400 transition-colors drop-shadow-lg">
                       {currentSong.title || 'Unknown Title'}
                     </h1>
                     <BadgeCheck className="w-6 h-6 text-cyan-400 flex-shrink-0 drop-shadow-lg" />
