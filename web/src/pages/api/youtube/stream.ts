@@ -21,14 +21,17 @@ import ytdl from '@distube/ytdl-core'
 // [{"name":"SID","value":"...","domain":".youtube.com"},{"name":"HSID","value":"...","domain":".youtube.com"}, ...]
 // Or as a Netscape cookie string (one cookie per line: domain\tTRUE\t/\tTRUE\t0\tname\tvalue)
 let ytdlAgent: any = undefined
+let cookieError: string | null = null
 try {
   const cookieEnv = process.env.YOUTUBE_COOKIES
   if (cookieEnv) {
     const cookies = JSON.parse(cookieEnv)
     ytdlAgent = ytdl.createAgent(cookies)
+  } else {
+    cookieError = 'YOUTUBE_COOKIES env var not set'
   }
-} catch {
-  // Invalid cookie format — proceed without auth
+} catch (e: any) {
+  cookieError = `Cookie parse error: ${e?.message?.slice(0, 100)}`
 }
 
 const tryYtdl = async (videoId: string): Promise<any> => {
@@ -210,14 +213,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(404).json({
       error: 'No streams available for this video',
-      ...(debug ? { tried: errors, hasCookies: !!ytdlAgent, nodeVersion: process.version } : {}),
+      ...(debug ? { tried: errors, hasCookies: !!ytdlAgent, cookieError, nodeVersion: process.version } : {}),
     })
   } catch (err: any) {
     console.error('[youtube/stream] Error:', err?.message)
     return res.status(502).json({
       error: 'Failed to fetch stream',
       message: err?.message,
-      ...(debug ? { tried: errors, hasCookies: !!ytdlAgent } : {}),
+      ...(debug ? { tried: errors, hasCookies: !!ytdlAgent, cookieError } : {}),
     })
   }
 }
