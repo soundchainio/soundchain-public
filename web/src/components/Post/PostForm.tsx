@@ -25,10 +25,9 @@ import { PostMediaUploader } from './PostMediaUploader'
 import { InlineEmbedPicker } from './InlineEmbedPicker'
 import { useMe } from 'hooks/useMe'
 
-// YouTube embed preview with age-restriction detection
-// Age-restricted videos can't be embedded on third-party sites (YouTube policy).
-// Detection: YouTube iframe API sends error 150 via postMessage, plus we use a
-// timeout fallback — if player doesn't send "onReady" within 4s, assume blocked.
+// YouTube embed preview with age-restriction bypass via Piped proxy
+// When YouTube blocks an embed (age-restricted), we fetch the direct stream URL
+// from Piped API and play it in a native HTML5 <video> element — no restrictions.
 const YouTubePreview = ({ embedUrl, thumbnailUrl, watchUrl, orientationStableStyle }: {
   embedUrl: string
   thumbnailUrl: string | null
@@ -36,18 +35,26 @@ const YouTubePreview = ({ embedUrl, thumbnailUrl, watchUrl, orientationStableSty
   orientationStableStyle: Record<string, any>
 }) => {
   const [blocked, setBlocked] = useState(false)
+  const [streamUrl, setStreamUrl] = useState<string | null>(null)
+  const [streamLoading, setStreamLoading] = useState(false)
   const playerReady = useRef(false)
 
+  // Extract video ID from embed URL
+  const vidMatch = embedUrl.match(/embed\/([a-zA-Z0-9_-]{11})/)
+  const videoId = vidMatch?.[1]
+
   useEffect(() => {
+    playerReady.current = false
+    setBlocked(false)
+    setStreamUrl(null)
+
     const handleMessage = (e: MessageEvent) => {
       try {
         if (typeof e.data === 'string') {
           const data = JSON.parse(e.data)
-          // YouTube iframe API JSON messages
           if (data?.event === 'onReady' || data?.event === 'onStateChange') {
             playerReady.current = true
           }
-          // Error 150 = content owner blocked embedding / age-restricted
           if (data?.event === 'onError' || data?.info === 150) {
             setBlocked(true)
           }
@@ -56,8 +63,7 @@ const YouTubePreview = ({ embedUrl, thumbnailUrl, watchUrl, orientationStableSty
     }
     window.addEventListener('message', handleMessage)
 
-    // Timeout fallback: if YouTube player doesn't report ready in 4s, it's likely
-    // showing the age-restriction login page instead of the video
+    // Timeout: if YouTube player doesn't report ready in 4s, it's blocked
     const timer = setTimeout(() => {
       if (!playerReady.current) setBlocked(true)
     }, 4000)
@@ -68,6 +74,51 @@ const YouTubePreview = ({ embedUrl, thumbnailUrl, watchUrl, orientationStableSty
     }
   }, [embedUrl])
 
+  // When blocked, fetch direct stream from Piped
+  useEffect(() => {
+    if (!blocked || !videoId || streamUrl || streamLoading) return
+    setStreamLoading(true)
+    fetch(`/api/youtube/stream?v=${videoId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.videoUrl) setStreamUrl(data.videoUrl)
+      })
+      .catch(() => {})
+      .finally(() => setStreamLoading(false))
+  }, [blocked, videoId, streamUrl, streamLoading])
+
+  // State: playing via Piped proxy stream
+  if (blocked && streamUrl) {
+    return (
+      <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
+        <video
+          className="w-full h-[160px] object-contain bg-black"
+          controls
+          autoPlay
+          muted
+          playsInline
+          src={streamUrl}
+        />
+      </div>
+    )
+  }
+
+  // State: blocked, fetching stream
+  if (blocked && streamLoading) {
+    return (
+      <div className="relative flex w-full h-[160px] items-center justify-center bg-neutral-900 rounded-lg overflow-hidden">
+        {thumbnailUrl && (
+          <img src={thumbnailUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
+        )}
+        <div className="relative z-10 flex flex-col items-center gap-1.5">
+          <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <span className="text-white/60 text-xs">Loading stream...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // State: blocked, stream failed — fallback to "Watch on YouTube"
   if (blocked) {
     return (
       <a
@@ -82,12 +133,13 @@ const YouTubePreview = ({ embedUrl, thumbnailUrl, watchUrl, orientationStableSty
         <div className="relative z-10 flex flex-col items-center gap-1.5">
           <ExternalLink className="w-6 h-6 text-cyan-400" />
           <span className="text-white font-medium text-sm">Watch on YouTube</span>
-          <span className="text-white/50 text-xs">Age-restricted — can't embed on third-party sites</span>
+          <span className="text-white/50 text-xs">Tap to open on YouTube</span>
         </div>
       </a>
     )
   }
 
+  // State: normal YouTube embed (not blocked)
   return (
     <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
       <iframe
