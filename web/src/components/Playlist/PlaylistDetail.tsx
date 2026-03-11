@@ -14,21 +14,14 @@ import dynamic from 'next/dynamic'
 
 const CreateStoryModal = dynamic(() => import('components/dex/CreateStoryModal').then(m => ({ default: m.CreateStoryModal })), { ssr: false })
 
-// Extract URL from Bandcamp iframe embed code
-// Bandcamp shares as HTML: <iframe ... src="https://bandcamp.com/EmbeddedPlayer/..." ...></iframe>
-const extractBandcampUrl = (input: string): string | null => {
-  // Check if it's an iframe embed code
-  if (input.includes('<iframe') && input.includes('bandcamp.com')) {
-    // Extract the src URL from the iframe
+// Extract src URL from any iframe embed code (Bandcamp, SoundCloud, Spotify, etc.)
+const extractEmbedSrc = (input: string): string | null => {
+  if (input.includes('<iframe')) {
     const srcMatch = input.match(/src=["']([^"']+)["']/)
-    if (srcMatch && srcMatch[1]) {
-      return srcMatch[1]
-    }
-    // Also try to extract the album/track URL from the anchor tag inside
-    const hrefMatch = input.match(/href=["'](https:\/\/[^"']*bandcamp\.com[^"']*)["']/)
-    if (hrefMatch && hrefMatch[1]) {
-      return hrefMatch[1]
-    }
+    if (srcMatch && srcMatch[1]) return srcMatch[1]
+    // Fallback: extract href from anchor tags inside iframe embeds
+    const hrefMatch = input.match(/href=["'](https:\/\/[^"']+)["']/)
+    if (hrefMatch && hrefMatch[1]) return hrefMatch[1]
   }
   return null
 }
@@ -37,10 +30,10 @@ const extractBandcampUrl = (input: string): string | null => {
 const normalizeExternalLink = (input: string): { url: string; isBandcampEmbed: boolean } => {
   const trimmed = input.trim()
 
-  // Check for Bandcamp iframe embed
-  const bandcampUrl = extractBandcampUrl(trimmed)
-  if (bandcampUrl) {
-    return { url: bandcampUrl, isBandcampEmbed: true }
+  // Check for any iframe embed
+  const embedUrl = extractEmbedSrc(trimmed)
+  if (embedUrl) {
+    return { url: embedUrl, isBandcampEmbed: embedUrl.includes('bandcamp.com') }
   }
 
   // Return as-is for regular URLs
@@ -530,7 +523,7 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     }
 
     try {
-      await addPlaylistItem({
+      const result = await addPlaylistItem({
         variables: {
           input: {
             playlistId: playlist.id,
@@ -540,14 +533,23 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
           },
         },
       })
+      const response = result.data?.addPlaylistItem
+      if (response && !response.success) {
+        const errorMsg = response.error || 'Unknown error'
+        console.error('addPlaylistItem returned error:', errorMsg)
+        setAddLinkError(`Failed: ${errorMsg}`)
+        setAddingTracks(false)
+        return
+      }
       // Clear form, show toast, and refetch
       setExternalLinkUrl('')
       setExternalLinkTitle('')
       toast.success('Link added!')
       await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to add external link:', err)
-      setAddLinkError('Failed to add link. Please try again.')
+      const msg = err?.graphQLErrors?.[0]?.message || err?.message || 'Unknown error'
+      setAddLinkError(`Failed to add link: ${msg}`)
     } finally {
       setAddingTracks(false)
     }

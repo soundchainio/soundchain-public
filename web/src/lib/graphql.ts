@@ -4317,7 +4317,7 @@ export type AddPlaylistItemMutationVariables = Exact<{
 }>;
 
 
-export type AddPlaylistItemMutation = { __typename?: 'Mutation', addPlaylistItem: { __typename?: 'AddPlaylistItemPayload', success: boolean, playlistTrack: { __typename?: 'PlaylistTrack', id: string, playlistId: string, trackId: string | null, sourceType: PlaylistTrackSourceType | null, externalUrl: string | null, uploadedFileUrl: string | null, title: string | null, artist: string | null, artworkUrl: string | null, duration: number | null, position: number } | null } };
+export type AddPlaylistItemMutation = { __typename?: 'Mutation', addPlaylistItem: { __typename?: 'AddPlaylistItemPayload', success: boolean, error: string | null, playlistTrack: { __typename?: 'PlaylistTrack', id: string, playlistId: string, trackId: string | null, sourceType: PlaylistTrackSourceType | null, externalUrl: string | null, uploadedFileUrl: string | null, title: string | null, artist: string | null, artworkUrl: string | null, duration: number | null, position: number } | null } };
 
 export type DeletePlaylistItemMutationVariables = Exact<{
   playlistItemId: Scalars['String']['input'];
@@ -9465,6 +9465,7 @@ export const AddPlaylistItemDocument = gql`
       position
     }
     success
+    error
   }
 }
     `;
