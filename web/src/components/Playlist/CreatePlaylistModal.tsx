@@ -43,35 +43,22 @@ interface CreatePlaylistModalProps {
   onSuccess?: (playlistId: string) => void
 }
 
-// Extract URL from Bandcamp iframe embed code
-// Bandcamp shares as HTML: <iframe ... src="https://bandcamp.com/EmbeddedPlayer/..." ...></iframe>
-const extractBandcampUrl = (input: string): string | null => {
-  if (input.includes('<iframe') && input.includes('bandcamp.com')) {
-    // Extract the src URL from the iframe
+// Extract src URL from any iframe embed code (Bandcamp, SoundCloud, Spotify, etc.)
+const extractEmbedSrc = (input: string): string | null => {
+  if (input.includes('<iframe')) {
     const srcMatch = input.match(/src=["']([^"']+)["']/)
-    if (srcMatch && srcMatch[1]) {
-      return srcMatch[1]
-    }
-    // Also try to extract the album/track URL from the anchor tag inside
-    const hrefMatch = input.match(/href=["'](https:\/\/[^"']*bandcamp\.com[^"']*)["']/)
-    if (hrefMatch && hrefMatch[1]) {
-      return hrefMatch[1]
-    }
+    if (srcMatch && srcMatch[1]) return srcMatch[1]
+    // Fallback: extract href from anchor tag inside (Bandcamp embeds have these)
+    const hrefMatch = input.match(/href=["'](https:\/\/[^"']+)["']/)
+    if (hrefMatch && hrefMatch[1]) return hrefMatch[1]
   }
   return null
 }
 
-// Normalize link input - handles Bandcamp iframe embeds
+// Normalize link input - handles iframe embeds from any platform
 const normalizeLink = (input: string): string => {
   const trimmed = input.trim()
-
-  // Check for Bandcamp iframe embed
-  const bandcampUrl = extractBandcampUrl(trimmed)
-  if (bandcampUrl) {
-    return bandcampUrl
-  }
-
-  return trimmed
+  return extractEmbedSrc(trimmed) || trimmed
 }
 
 // Detect platform from URL

@@ -21,15 +21,17 @@ const youtubeMusicRegex = /music\.youtube\.com/
 const youtubeGeneralRegex = /(?:youtube\.com|youtube-nocookie\.com|youtu\.be)/
 const youtubeEmbedRegex = /<iframe[^>]+src="([^"]+youtube[^"]+)"/
 
-// SoundCloud - support regular links and embed codes
-const soundcloudRegex = /soundcloud\.com/
+// SoundCloud - support regular links, embed codes, and mobile app share links
+const soundcloudRegex = /(?:on\.)?soundcloud\.com/
 const soundcloudEmbedRegex = /<iframe[^>]+src="([^"]+soundcloud[^"]+)"/
 const soundcloudLinkRegex = /(src=")(.*)(")/g
+const soundcloudShortRegex = /on\.soundcloud\.com/
 
-// Spotify - support track/album links and embed codes
-const spotifyRegex = /spotify\.com/
+// Spotify - support track/album links, embed codes, and mobile app share links
+const spotifyRegex = /(?:open\.)?spotify\.(?:com|link)/
 const spotifyEmbedRegex = /<iframe[^>]+src="([^"]+spotify[^"]+)"/
 const spotifyLinkRegex = /(?:open\.spotify\.com\/|spotify:)(track|album|playlist|episode|show)[\/:]([a-zA-Z0-9]+)/
+const spotifyShortRegex = /spotify\.link/
 
 // Vimeo - support regular links and embed codes
 const vimeoRegex = /vimeo\.com/
@@ -430,6 +432,24 @@ const normalizeCustomHTML = (str: string) => {
   return str
 }
 
+const SHORT_URL_DOMAINS = [soundcloudShortRegex, spotifyShortRegex]
+
+const resolveShortUrl = async (url: string): Promise<string> => {
+  const isShort = SHORT_URL_DOMAINS.some((regex) => regex.test(url))
+  if (!isShort) return url
+
+  try {
+    const res = await fetch(`/api/resolve-url?url=${encodeURIComponent(url)}`)
+    if (res.ok) {
+      const data = await res.json()
+      if (data.resolved) return data.resolved
+    }
+  } catch (error) {
+    console.error('Short URL resolve error:', error)
+  }
+  return url
+}
+
 export const getNormalizedLink = async (str: string) => {
   // First, remove any markdown image syntax to avoid matching emote/sticker URLs
   // Pattern: ![anything](url) - used for emotes/stickers
@@ -454,9 +474,11 @@ export const getNormalizedLink = async (str: string) => {
     return normalizeCustomHTML(strWithoutEmotes)
   }
 
-  const link = (strWithoutEmotes.match(linksRegex) || [])[0]
+  const rawLink = (strWithoutEmotes.match(linksRegex) || [])[0]
 
-  if (!link) return undefined
+  if (!rawLink) return undefined
+
+  const link = await resolveShortUrl(rawLink)
 
   if (youtubeGeneralRegex.test(link)) return normalizeYoutube(link)
   if (soundcloudRegex.test(link)) return await normalizeSoundcloud(link)

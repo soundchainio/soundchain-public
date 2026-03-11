@@ -20,6 +20,15 @@ interface AddToPlaylistModalProps {
   onSuccess?: () => void
 }
 
+// Extract URL from iframe embed codes (Bandcamp, SoundCloud, etc.)
+const extractEmbedSrc = (input: string): string | null => {
+  if (input.includes('<iframe')) {
+    const srcMatch = input.match(/src=["']([^"']+)["']/)
+    if (srcMatch && srcMatch[1]) return srcMatch[1]
+  }
+  return null
+}
+
 // Helper to detect source type from URL
 const detectSourceType = (url: string): PlaylistTrackSourceType => {
   const lowercaseUrl = url.toLowerCase()
@@ -106,11 +115,14 @@ export const AddToPlaylistModal = ({ isOpen, onClose, playlistId, onSuccess }: A
   const handleAddUrl = () => {
     if (!url.trim()) return
 
-    const sourceType = detectSourceType(url)
+    // Extract src from iframe embed codes (Bandcamp, SoundCloud, etc.)
+    const resolvedUrl = extractEmbedSrc(url.trim()) || url.trim()
+
+    const sourceType = detectSourceType(resolvedUrl)
     const newItem: PendingItem = {
       id: `url-${Date.now()}`,
       sourceType,
-      url: url.trim(),
+      url: resolvedUrl,
       title: '',
       artist: '',
       status: 'pending'

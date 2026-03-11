@@ -136,7 +136,9 @@ const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string =
       if (match) return `https://embed.tidal.com/${match[1]}s/${match[2]}`
     }
     if (sourceType === PlaylistTrackSourceType.Bandcamp) {
-      // Bandcamp - use their embed player
+      // If already an EmbeddedPlayer URL (from iframe paste), use as-is
+      if (url.includes('/EmbeddedPlayer/')) return url
+      // Regular bandcamp page URL — wrap in embed player
       return `https://bandcamp.com/EmbeddedPlayer/size=large/bgcol=333333/linkcol=e99708/tracklist=false/artwork=small/transparent=true/url=${encodeURIComponent(url)}/`
     }
 
@@ -153,6 +155,66 @@ const getEmbedUrl = (url: string, sourceType: PlaylistTrackSourceType): string =
 const isDirectAudioUrl = (url: string): boolean => {
   const lowerUrl = url.toLowerCase()
   return !!lowerUrl.match(/\.(mp3|wav|ogg|flac|aac|m4a)(\?|$)/)
+}
+
+// Validate YouTube video embeddability via oEmbed API
+// Returns true if video can be embedded, false if unavailable/restricted
+const validateYouTubeEmbeddable = async (videoId: string): Promise<boolean> => {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 4000)
+    const res = await fetch(
+      `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`,
+      { signal: controller.signal }
+    )
+    clearTimeout(timeout)
+    // YouTube returns 401/403 for non-embeddable, 404 for non-existent
+    return res.ok
+  } catch {
+    // Network error or timeout — allow save (don't block on flaky network)
+    return true
+  }
+}
+
+// Extract Bandcamp track title from EmbeddedPlayer URL or page
+// EmbeddedPlayer URLs look like: bandcamp.com/EmbeddedPlayer/album=123/size=large/.../transparent=true/
+// The title is NOT in the URL params — we need to fetch it from the page's og:title
+const fetchBandcampTitle = async (url: string): Promise<string | null> => {
+  try {
+    // If it's an EmbeddedPlayer URL, try to extract the album/track page URL from it
+    // and fetch og:title from there via our oembed proxy
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+    // Use noembed which supports Bandcamp
+    const res = await fetch(
+      `https://noembed.com/embed?url=${encodeURIComponent(url)}`,
+      { signal: controller.signal }
+    )
+    clearTimeout(timeout)
+    if (res.ok) {
+      const data = await res.json()
+      if (data.title) {
+        return data.author_name ? `${data.title} — ${data.author_name}` : data.title
+      }
+    }
+    // Fallback: try to extract from URL path segments
+    // e.g. https://artist.bandcamp.com/track/song-name
+    const bcPageMatch = url.match(/([a-z0-9-]+)\.bandcamp\.com\/(?:track|album)\/([a-z0-9-]+)/i)
+    if (bcPageMatch) {
+      const artist = bcPageMatch[1].replace(/-/g, ' ')
+      const track = bcPageMatch[2].replace(/-/g, ' ')
+      return `${track} — ${artist}`
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+// Extract YouTube video ID from various URL formats
+const extractYouTubeVideoId = (url: string): string | null => {
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return match ? match[1] : null
 }
 
 export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, currentUserWallet }: PlaylistDetailProps) => {
@@ -418,27 +480,52 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
     setAddingTracks(true)
     setAddLinkError('')
 
+    // BUG-001 FIX: Validate YouTube embeddability before saving
+    if (detected.sourceType === PlaylistTrackSourceType.Youtube) {
+      const videoId = extractYouTubeVideoId(normalizedUrl)
+      if (videoId) {
+        const embeddable = await validateYouTubeEmbeddable(videoId)
+        if (!embeddable) {
+          setAddLinkError('This YouTube video is unavailable or does not allow embedding. Please use a different link.')
+          setAddingTracks(false)
+          return
+        }
+      }
+    }
+
     // BUG-003 FIX: Fetch oEmbed metadata for auto-title when user doesn't provide one
     let resolvedTitle = externalLinkTitle.trim()
     if (!resolvedTitle) {
-      try {
-        const controller = new AbortController()
-        const timeout = setTimeout(() => controller.abort(), 3000)
-        const oembedRes = await fetch(
-          `https://noembed.com/embed?url=${encodeURIComponent(normalizedUrl)}`,
-          { signal: controller.signal }
-        )
-        clearTimeout(timeout)
-        if (oembedRes.ok) {
-          const oembed = await oembedRes.json()
-          if (oembed.title) {
-            resolvedTitle = oembed.author_name
-              ? `${oembed.title} — ${oembed.author_name}`
-              : oembed.title
-          }
+      // BUG-002 FIX: Special handling for Bandcamp EmbeddedPlayer URLs
+      // noembed.com doesn't understand EmbeddedPlayer URLs, so we use a dedicated fetcher
+      if (detected.sourceType === PlaylistTrackSourceType.Bandcamp || normalizedUrl.includes('bandcamp.com')) {
+        const bcTitle = await fetchBandcampTitle(normalizedUrl)
+        if (bcTitle) {
+          resolvedTitle = bcTitle
         }
-      } catch {
-        // oEmbed fetch failed (timeout, CORS, network) — use platform name as fallback
+      }
+
+      // Generic oEmbed fallback for other platforms (or if Bandcamp fetch failed)
+      if (!resolvedTitle) {
+        try {
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 3000)
+          const oembedRes = await fetch(
+            `https://noembed.com/embed?url=${encodeURIComponent(normalizedUrl)}`,
+            { signal: controller.signal }
+          )
+          clearTimeout(timeout)
+          if (oembedRes.ok) {
+            const oembed = await oembedRes.json()
+            if (oembed.title) {
+              resolvedTitle = oembed.author_name
+                ? `${oembed.title} — ${oembed.author_name}`
+                : oembed.title
+            }
+          }
+        } catch {
+          // oEmbed fetch failed (timeout, CORS, network) — use platform name as fallback
+        }
       }
     }
 
@@ -736,12 +823,36 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
 
   const handleRemoveTrack = async (playlistItemId: string) => {
     try {
+      // BUG-003 FIX: Check if deleted track is currently playing
+      const deletedTrack = tracks.find(t => t.id === playlistItemId)
+      const deletedTrackId = deletedTrack?.trackId || `external_${playlistItemId}`
+      const isCurrentlyPlaying = currentSong?.trackId === deletedTrackId || currentSong?.trackId === deletedTrack?.trackId
+
       await deletePlaylistItem({
         variables: { playlistItemId },
       })
       // Optimistic removal from local state
       setLocalTracks(prev => prev.filter(t => t.id !== playlistItemId))
       toast.success('Track removed')
+
+      // If the deleted track was currently playing, close embed and advance to next track
+      if (isCurrentlyPlaying) {
+        setActiveEmbed(null)
+        // Find the index of the deleted track and play the next one
+        const deletedIndex = tracks.findIndex(t => t.id === playlistItemId)
+        const remainingTracks = tracks.filter(t => t.id !== playlistItemId)
+        if (remainingTracks.length > 0) {
+          // Play next track (or first if deleted was last)
+          const nextIndex = Math.min(deletedIndex, remainingTracks.length - 1)
+          // Defer to after state update so localTracks is current
+          setTimeout(() => playTrackAtIndex(nextIndex), 100)
+        } else {
+          // No tracks left — stop playback
+          setIsPlayingAll(false)
+          setCurrentQueueIndex(0)
+        }
+      }
+
       await apolloClient.refetchQueries({ include: ['GetUserPlaylists'] })
     } catch (error) {
       console.error('Failed to remove track:', error)
@@ -863,12 +974,17 @@ export const PlaylistDetail = ({ playlist, onClose, onDelete, isOwner = false, c
   const extractTitleFromUrl = (url: string): string | null => {
     try {
       const parsed = new URL(url)
+      // BUG-002 FIX: Skip Bandcamp EmbeddedPlayer URLs — path segments are params like
+      // "size=large", "bgcol=333333", "transparent=true" which are NOT track titles
+      if (parsed.pathname.includes('EmbeddedPlayer')) return null
       const segments = parsed.pathname.split('/').filter(Boolean)
       // Get the last meaningful path segment (usually the track/video slug)
       const slug = segments.length > 0 ? segments[segments.length - 1] : null
       if (!slug || slug.length < 3) return null
       // Skip common non-title segments
       if (['watch', 'embed', 'track', 'album', 'playlist', 'v', 'e'].includes(slug.toLowerCase())) return null
+      // Skip segments that look like key=value params (e.g. Bandcamp EmbeddedPlayer path segments)
+      if (slug.includes('=')) return null
       // Convert slug to readable title: "my-cool-track" → "my cool track"
       return slug.replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim()
     } catch {
