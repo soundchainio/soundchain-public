@@ -182,7 +182,10 @@ export default function EmbedPostPage({ post, postId }: EmbedPostPageProps) {
               controls
               playsinline
               config={{
-                youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                youtube: {
+                  playerVars: { modestbranding: 1, rel: 0, playsinline: 1 },
+                  embedOptions: { host: 'https://www.youtube-nocookie.com' },
+                },
                 vimeo: { playerOptions: { responsive: true, playsinline: true } },
               }}
             />

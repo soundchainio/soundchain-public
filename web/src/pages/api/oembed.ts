@@ -224,8 +224,8 @@ async function handleSoundChainOEmbed(
 
 async function fetchThumbnail(mediaLink: string): Promise<string | null> {
   // YouTube - direct URL (no API needed) - handles embed/, watch?v=, shorts/, youtu.be/
-  if (mediaLink.includes('youtube.com') || mediaLink.includes('youtu.be')) {
-    const match = mediaLink.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/)
+  if (mediaLink.includes('youtube.com') || mediaLink.includes('youtube-nocookie.com') || mediaLink.includes('youtu.be')) {
+    const match = mediaLink.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/|v\/))([a-zA-Z0-9_-]{11})/)
     if (match) {
       // Try maxresdefault first, fallback to hqdefault
       return `https://img.youtube.com/vi/${match[1]}/maxresdefault.jpg`

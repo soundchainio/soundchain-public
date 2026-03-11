@@ -5,7 +5,7 @@ import { Ellipsis } from 'icons/Ellipsis'
 import { PostQuery, Role, Track, useCommentsLazyQuery, PageInput } from 'lib/graphql'
 import Link from 'next/link'
 import ReactPlayer from 'react-player'
-import { Clock, Lock, MessageCircle } from 'lucide-react'
+import { Clock, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
@@ -16,7 +16,7 @@ import { NewCommentForm } from '../NewCommentForm'
 
 // Helper to extract YouTube video ID and generate thumbnail URL
 const getYouTubeThumbnail = (url: string): string | null => {
-  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtube-nocookie\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
   if (match && match[1]) {
     return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
   }
@@ -299,33 +299,62 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
 
             return useReactPlayer ? (
               // YouTube videos, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
-              <div
-                key={`player-${post.id}`}
-                className="relative w-full orientation-stable"
-                style={{
-                  paddingTop: '56.25%',
-                  contain: 'layout style',
-                  willChange: 'contents',
-                  transform: 'translateZ(0)',
-                }}
-              >
-                <ReactPlayer
-                  width="100%"
-                  height="100%"
-                  style={{ position: 'absolute', top: 0, left: 0 }}
-                  url={post.mediaLink}
-                  playsinline
-                  controls
-                  light={typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? false : (getYouTubeThumbnail(post.mediaLink) || true)}
-                  pip
-                  playing={false}
-                  stopOnUnmount={false}
-                  config={{
-                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' } },
-                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
-                    facebook: { appId: '' },
+              <div key={`player-${post.id}`} className="relative w-full orientation-stable">
+                <div
+                  id={`player-active-${post.id}`}
+                  className="relative w-full"
+                  style={{
+                    paddingTop: '56.25%',
+                    contain: 'layout style',
+                    willChange: 'contents',
+                    transform: 'translateZ(0)',
                   }}
-                />
+                >
+                  <ReactPlayer
+                    width="100%"
+                    height="100%"
+                    style={{ position: 'absolute', top: 0, left: 0 }}
+                    url={post.mediaLink}
+                    playsinline
+                    controls
+                    light={typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? false : (getYouTubeThumbnail(post.mediaLink) || true)}
+                    pip
+                    playing={false}
+                    stopOnUnmount={false}
+                    onError={() => {
+                      const container = document.getElementById(`player-fallback-${post.id}`)
+                      if (container) container.style.display = 'flex'
+                      const player = document.getElementById(`player-active-${post.id}`)
+                      if (player) player.style.display = 'none'
+                    }}
+                    config={{
+                      youtube: {
+                        playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
+                        embedOptions: { host: 'https://www.youtube-nocookie.com' },
+                      },
+                      vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                      facebook: { appId: '' },
+                    }}
+                  />
+                </div>
+                {/* Fallback for age-restricted or blocked embeds */}
+                <a
+                  id={`player-fallback-${post.id}`}
+                  href={post.mediaLink?.replace('youtube-nocookie.com/embed/', 'youtube.com/watch?v=').replace(/[?&]autoplay=1/, '')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full items-center justify-center gap-3 bg-neutral-900 rounded-lg overflow-hidden cursor-pointer hover:bg-neutral-800 transition-colors"
+                  style={{ display: 'none', aspectRatio: '16/9' }}
+                >
+                  {getYouTubeThumbnail(post.mediaLink) && (
+                    <img src={getYouTubeThumbnail(post.mediaLink)!} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                  )}
+                  <div className="relative z-10 flex flex-col items-center gap-2">
+                    <ExternalLink className="w-8 h-8 text-cyan-400" />
+                    <span className="text-white font-medium text-sm">Watch on YouTube</span>
+                    <span className="text-white/50 text-xs">Age-restricted — tap to open</span>
+                  </div>
+                </a>
               </div>
             ) : (
               // All other platforms (audio, social, playlists) - use iframe embed

@@ -5,7 +5,7 @@ const spotifyRegex = /spotify\.com/;
 const soundcloudRegex = /soundcloud\.com/;
 const bandcampRegex = /bandcamp\.com/;
 const vimeoRegex = /vimeo\.com/;
-const youtubeRegex = /(?:youtube\.com|youtu\.be)/;
+const youtubeRegex = /(?:youtube\.com|youtube-nocookie\.com|youtu\.be)/;
 
 /**
  * Fetches thumbnail URL for a media embed link via oEmbed APIs
@@ -142,7 +142,7 @@ export async function fetchMediaThumbnail(mediaLink: string, originalMediaLink?:
 
     // YouTube - direct thumbnail URL (no API needed)
     if (youtubeRegex.test(mediaLink)) {
-      const match = mediaLink.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+      const match = mediaLink.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
       if (match) {
         return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
       }
