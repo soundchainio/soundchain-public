@@ -1,4 +1,4 @@
-import { memo, useState, useRef, useCallback } from 'react'
+import { memo, useState, useRef, useCallback, useEffect } from 'react'
 import { useModalDispatch } from 'contexts/ModalContext'
 import { useMe } from 'hooks/useMe'
 import { Ellipsis } from 'icons/Ellipsis'
@@ -51,6 +51,29 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const [showPermanentModal, setShowPermanentModal] = useState(false)
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
   const [showComments, setShowComments] = useState(false)
+
+  // Listen for YouTube iframe API error 150 (age-restricted/blocked)
+  // Supplements ReactPlayer's onError which doesn't always fire for age-gated content
+  useEffect(() => {
+    const showFallback = () => {
+      const container = document.getElementById(`player-fallback-${post?.id}`)
+      if (container) container.style.display = 'flex'
+      const player = document.getElementById(`player-active-${post?.id}`)
+      if (player) player.style.display = 'none'
+    }
+    const handleMessage = (e: MessageEvent) => {
+      try {
+        if (typeof e.data === 'string') {
+          const data = JSON.parse(e.data)
+          if (data?.event === 'onError' || data?.info === 150) {
+            showFallback()
+          }
+        }
+      } catch { /* not JSON */ }
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [post?.id])
 
   const firstPage: PageInput = { first: 5 }
   const [loadComments, { data: commentsData, loading: commentsLoading }] = useCommentsLazyQuery({

@@ -8,7 +8,8 @@ import {
   useTrackLazyQuery,
   useUpdatePostMutation,
 } from 'lib/graphql'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { ExternalLink } from 'lucide-react'
 import { PostFormType } from 'types/PostFormType'
 import { MediaProvider } from 'types/MediaProvider'
 import { toast } from 'react-toastify'
@@ -23,6 +24,83 @@ import { RepostPreview } from './RepostPreview'
 import { PostMediaUploader } from './PostMediaUploader'
 import { InlineEmbedPicker } from './InlineEmbedPicker'
 import { useMe } from 'hooks/useMe'
+
+// YouTube embed preview with age-restriction detection
+// Age-restricted videos can't be embedded on third-party sites (YouTube policy).
+// Detection: YouTube iframe API sends error 150 via postMessage, plus we use a
+// timeout fallback — if player doesn't send "onReady" within 4s, assume blocked.
+const YouTubePreview = ({ embedUrl, thumbnailUrl, watchUrl, orientationStableStyle }: {
+  embedUrl: string
+  thumbnailUrl: string | null
+  watchUrl: string
+  orientationStableStyle: Record<string, any>
+}) => {
+  const [blocked, setBlocked] = useState(false)
+  const playerReady = useRef(false)
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      try {
+        if (typeof e.data === 'string') {
+          const data = JSON.parse(e.data)
+          // YouTube iframe API JSON messages
+          if (data?.event === 'onReady' || data?.event === 'onStateChange') {
+            playerReady.current = true
+          }
+          // Error 150 = content owner blocked embedding / age-restricted
+          if (data?.event === 'onError' || data?.info === 150) {
+            setBlocked(true)
+          }
+        }
+      } catch { /* not JSON */ }
+    }
+    window.addEventListener('message', handleMessage)
+
+    // Timeout fallback: if YouTube player doesn't report ready in 4s, it's likely
+    // showing the age-restriction login page instead of the video
+    const timer = setTimeout(() => {
+      if (!playerReady.current) setBlocked(true)
+    }, 4000)
+
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      clearTimeout(timer)
+    }
+  }, [embedUrl])
+
+  if (blocked) {
+    return (
+      <a
+        href={watchUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative flex w-full h-[160px] items-center justify-center bg-neutral-900 rounded-lg overflow-hidden cursor-pointer hover:bg-neutral-800 transition-colors"
+      >
+        {thumbnailUrl && (
+          <img src={thumbnailUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+        )}
+        <div className="relative z-10 flex flex-col items-center gap-1.5">
+          <ExternalLink className="w-6 h-6 text-cyan-400" />
+          <span className="text-white font-medium text-sm">Watch on YouTube</span>
+          <span className="text-white/50 text-xs">Age-restricted — can't embed on third-party sites</span>
+        </div>
+      </a>
+    )
+  }
+
+  return (
+    <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
+      <iframe
+        className="w-full h-[160px]"
+        frameBorder="0"
+        allowFullScreen
+        src={`${embedUrl}${embedUrl.includes('?') ? '&' : '?'}enablejsapi=1`}
+        title="Media preview"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      />
+    </div>
+  )
+}
 
 interface InitialValues {
   body: string
@@ -219,24 +297,23 @@ export const PostForm = ({ ...props }: PostFormProps) => {
               const url = new URL(enhancedUrl)
               url.searchParams.set('autoplay', '1')
               url.searchParams.set('mute', '1')
-              url.searchParams.set('iv_load_policy', '3') // Remove age restrictions
               url.searchParams.set('modestbranding', '1')
               url.searchParams.set('rel', '0')
               enhancedUrl = url.toString()
 
-              // Return compact YouTube embed for modal preview
-              return (
-                <div className="w-full bg-black rounded-lg overflow-hidden" style={orientationStableStyle}>
-                  <iframe
-                    className="w-full h-[160px]"
-                    frameBorder="0"
-                    allowFullScreen
-                    src={enhancedUrl}
-                    title="Media preview"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  />
-                </div>
-              )
+              // Extract video ID for thumbnail
+              const vidMatch = enhancedUrl.match(/embed\/([a-zA-Z0-9_-]{11})/)
+              const videoId = vidMatch?.[1]
+              const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null
+              const watchUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : enhancedUrl
+
+              // YouTube preview with age-restriction fallback
+              return <YouTubePreview
+                embedUrl={enhancedUrl}
+                thumbnailUrl={thumbnailUrl}
+                watchUrl={watchUrl}
+                orientationStableStyle={orientationStableStyle}
+              />
             }
 
             if (mediaType === MediaProvider.VIMEO) {
