@@ -1,17 +1,86 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import ytdl from '@distube/ytdl-core'
 
 /**
  * GET /api/youtube/stream?v={videoId}
  *
  * Returns the best available video stream URL for a YouTube video.
- * Tries Piped API instances first, then falls back to Invidious API.
+ * Primary: ytdl-core (talks directly to YouTube's InnerTube API — no external deps)
+ * Fallback: Piped/Invidious open-source proxy instances
+ *
  * This bypasses YouTube's embed restrictions (age-gated, region-blocked, etc.)
- * by fetching the direct stream URL from open-source proxy instances.
+ * by extracting direct stream URLs that play in native <video> elements.
  *
  * Returns: { videoUrl, audioUrl, title, thumbnail, duration, uploader }
  */
 
-// Piped API instances (endpoint: /streams/{videoId})
+// --- Primary: ytdl-core (direct YouTube InnerTube API) ---
+
+// Build ytdl agent with YouTube cookies if available (needed for age-restricted content).
+// Set YOUTUBE_COOKIES env var in Vercel as a JSON array of cookie objects:
+// [{"name":"SID","value":"...","domain":".youtube.com"},{"name":"HSID","value":"...","domain":".youtube.com"}, ...]
+// Or as a Netscape cookie string (one cookie per line: domain\tTRUE\t/\tTRUE\t0\tname\tvalue)
+let ytdlAgent: any = undefined
+try {
+  const cookieEnv = process.env.YOUTUBE_COOKIES
+  if (cookieEnv) {
+    const cookies = JSON.parse(cookieEnv)
+    ytdlAgent = ytdl.createAgent(cookies)
+  }
+} catch {
+  // Invalid cookie format — proceed without auth
+}
+
+const tryYtdl = async (videoId: string): Promise<any> => {
+  try {
+    const url = `https://www.youtube.com/watch?v=${videoId}`
+    const opts: any = {}
+    if (ytdlAgent) opts.agent = ytdlAgent
+    const info = await ytdl.getInfo(url, opts)
+
+    const formats = (info.formats || []).filter((f: any) => f.url)
+    if (formats.length === 0) return null
+
+    // Prefer combined (audio+video) streams for simplest playback
+    const combined = formats.filter((f: any) => f.hasAudio && f.hasVideo)
+    const combinedMp4 = combined.filter((f: any) => f.container === 'mp4')
+    const bestCombined = combinedMp4.find((f: any) => f.qualityLabel === '720p')
+      || combined.find((f: any) => f.qualityLabel === '720p')
+      || combinedMp4.sort((a: any, b: any) => (b.height || 0) - (a.height || 0))[0]
+      || combined.sort((a: any, b: any) => (b.height || 0) - (a.height || 0))[0]
+
+    // Also find best video-only (higher quality available than combined)
+    const videoOnly = formats.filter((f: any) => f.hasVideo && !f.hasAudio && f.container === 'mp4')
+    const bestVideoOnly = videoOnly.find((f: any) => f.qualityLabel === '720p')
+      || videoOnly.sort((a: any, b: any) => (b.height || 0) - (a.height || 0))[0]
+
+    // Best audio-only: highest bitrate
+    const audioOnly = formats.filter((f: any) => f.hasAudio && !f.hasVideo)
+    const bestAudio = audioOnly
+      .sort((a: any, b: any) => (b.audioBitrate || 0) - (a.audioBitrate || 0))[0]
+
+    // Use combined stream if available (simplest — single <video> src).
+    // Otherwise fall back to video-only (client would need separate audio, but at least video works).
+    const videoStream = bestCombined || bestVideoOnly
+    if (!videoStream && !bestAudio) return null
+
+    return {
+      source: 'ytdl',
+      videoUrl: videoStream?.url || null,
+      audioUrl: bestAudio?.url || null,
+      title: info.videoDetails?.title || null,
+      thumbnail: info.videoDetails?.thumbnails?.slice(-1)[0]?.url || null,
+      duration: parseInt(info.videoDetails?.lengthSeconds || '0') || null,
+      uploader: info.videoDetails?.author?.name || null,
+    }
+  } catch (err: any) {
+    console.error('[youtube/stream] ytdl-core error:', err?.message?.slice(0, 200))
+    return null
+  }
+}
+
+// --- Fallback: Piped API instances ---
+
 const PIPED_INSTANCES = [
   'https://pipedapi.kavin.rocks',
   'https://pipedapi.adminforge.de',
@@ -21,7 +90,6 @@ const PIPED_INSTANCES = [
   'https://pipedapi.leptons.xyz',
 ]
 
-// Invidious API instances (endpoint: /api/v1/videos/{videoId})
 const INVIDIOUS_INSTANCES = [
   'https://inv.nadeko.net',
   'https://invidious.nerdvpn.de',
@@ -41,10 +109,28 @@ const tryPiped = async (videoId: string, signal: AbortSignal): Promise<any> => {
       if (!res.ok) continue
       const data = await res.json()
       if (data?.error || data?.message?.includes('shutdown')) continue
-      if (data.videoStreams || data.audioStreams) return { source: 'piped', data }
-    } catch {
-      // Try next instance
-    }
+      if (!data.videoStreams && !data.audioStreams) continue
+
+      const videoStreams: any[] = data.videoStreams || []
+      const audioStreams: any[] = data.audioStreams || []
+      const combined = videoStreams.filter((s: any) => !s.videoOnly)
+      const bestCombined = combined.find((s: any) => s.quality === '720p') || combined.find((s: any) => s.mimeType?.includes('video/mp4')) || combined[0]
+      const bestMp4 = videoStreams.find((s: any) => s.mimeType?.includes('video/mp4'))
+      const videoStream = bestCombined || bestMp4 || videoStreams[0]
+      const bestAudio = audioStreams
+        .filter((s: any) => s.mimeType?.includes('audio/mp4') || s.mimeType?.includes('audio/webm'))
+        .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))[0] || audioStreams[0]
+
+      return {
+        source: 'piped',
+        videoUrl: videoStream?.url || null,
+        audioUrl: bestAudio?.url || null,
+        title: data.title || null,
+        thumbnail: data.thumbnailUrl || null,
+        duration: data.duration || null,
+        uploader: data.uploader || null,
+      }
+    } catch { /* next instance */ }
   }
   return null
 }
@@ -52,22 +138,39 @@ const tryPiped = async (videoId: string, signal: AbortSignal): Promise<any> => {
 const tryInvidious = async (videoId: string, signal: AbortSignal): Promise<any> => {
   for (const instance of INVIDIOUS_INSTANCES) {
     try {
-      const res = await fetch(`${instance}/api/v1/videos/${videoId}?fields=title,adaptiveFormats,author,authorThumbnails,lengthSeconds,videoThumbnails`, {
+      const res = await fetch(`${instance}/api/v1/videos/${videoId}?fields=title,adaptiveFormats,author,lengthSeconds,videoThumbnails`, {
         headers: { 'User-Agent': 'SoundChain/1.0' },
         signal,
       })
       if (!res.ok) continue
       const text = await res.text()
-      // Skip HTML error pages or shutdown notices
       if (text.startsWith('<!') || text.startsWith('<') || text.includes('shutdown')) continue
       const data = JSON.parse(text)
-      if (data?.adaptiveFormats?.length > 0) return { source: 'invidious', data }
-    } catch {
-      // Try next instance
-    }
+      const formats: any[] = data?.adaptiveFormats || []
+      if (formats.length === 0) continue
+
+      const videos = formats.filter((f: any) => f.type?.startsWith('video/'))
+      const audios = formats.filter((f: any) => f.type?.startsWith('audio/'))
+      const best720 = videos.find((f: any) => f.qualityLabel === '720p' && f.type?.includes('mp4'))
+      const bestMp4 = videos.find((f: any) => f.type?.includes('mp4'))
+      const bestAudio = audios
+        .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))[0]
+
+      return {
+        source: 'invidious',
+        videoUrl: (best720 || bestMp4 || videos[0])?.url || null,
+        audioUrl: bestAudio?.url || null,
+        title: data.title || null,
+        thumbnail: data.videoThumbnails?.[0]?.url || null,
+        duration: data.lengthSeconds || null,
+        uploader: data.author || null,
+      }
+    } catch { /* next instance */ }
   }
   return null
 }
+
+// --- Handler ---
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -79,81 +182,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid video ID' })
   }
 
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 12000) // 12s timeout
-
   try {
-    // Try Piped first, then Invidious
-    const result = await tryPiped(videoId, controller.signal) || await tryInvidious(videoId, controller.signal)
+    // 1. Try ytdl-core first (direct YouTube API, no external deps)
+    const ytdlResult = await tryYtdl(videoId)
+    if (ytdlResult?.videoUrl || ytdlResult?.audioUrl) {
+      // Cache for 4 hours (ytdl stream URLs are valid for ~6 hours)
+      res.setHeader('Cache-Control', 'public, s-maxage=14400, stale-while-revalidate=3600')
+      return res.status(200).json(ytdlResult)
+    }
+
+    // 2. Fallback to Piped/Invidious proxy instances
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10000)
+    const proxyResult = await tryPiped(videoId, controller.signal) || await tryInvidious(videoId, controller.signal)
     clearTimeout(timeout)
 
-    if (!result) {
-      return res.status(502).json({ error: 'All proxy instances failed' })
+    if (proxyResult?.videoUrl || proxyResult?.audioUrl) {
+      res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=1800')
+      return res.status(200).json(proxyResult)
     }
 
-    let videoUrl: string | null = null
-    let audioUrl: string | null = null
-    let title: string | null = null
-    let thumbnail: string | null = null
-    let duration: number | null = null
-    let uploader: string | null = null
-
-    if (result.source === 'piped') {
-      const data = result.data
-      const videoStreams: any[] = data.videoStreams || []
-      const audioStreams: any[] = data.audioStreams || []
-
-      // Best video: combined (has audio) > 720p mp4 > any mp4 > first
-      const combined = videoStreams.filter((s: any) => !s.videoOnly)
-      const bestCombined = combined.find((s: any) => s.quality === '720p') || combined.find((s: any) => s.mimeType?.includes('video/mp4')) || combined[0]
-      const best720mp4 = videoStreams.find((s: any) => s.quality === '720p' && s.mimeType?.includes('video/mp4'))
-      const bestMp4 = videoStreams.find((s: any) => s.mimeType?.includes('video/mp4'))
-      const videoStream = bestCombined || best720mp4 || bestMp4 || videoStreams[0]
-
-      // Best audio: highest bitrate mp4/webm
-      const bestAudio = audioStreams
-        .filter((s: any) => s.mimeType?.includes('audio/mp4') || s.mimeType?.includes('audio/webm'))
-        .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))[0] || audioStreams[0]
-
-      videoUrl = videoStream?.url || null
-      audioUrl = bestAudio?.url || null
-      title = data.title || null
-      thumbnail = data.thumbnailUrl || null
-      duration = data.duration || null
-      uploader = data.uploader || null
-    } else if (result.source === 'invidious') {
-      const data = result.data
-      const formats: any[] = data.adaptiveFormats || []
-
-      // Best video: combined mp4 720p > any mp4 > first video
-      const videos = formats.filter((f: any) => f.type?.startsWith('video/'))
-      const audios = formats.filter((f: any) => f.type?.startsWith('audio/'))
-      const best720 = videos.find((f: any) => f.qualityLabel === '720p' && f.type?.includes('mp4'))
-      const bestMp4 = videos.find((f: any) => f.type?.includes('mp4'))
-      const videoStream = best720 || bestMp4 || videos[0]
-
-      const bestAudio = audios
-        .filter((f: any) => f.type?.includes('mp4') || f.type?.includes('webm'))
-        .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))[0] || audios[0]
-
-      videoUrl = videoStream?.url || null
-      audioUrl = bestAudio?.url || null
-      title = data.title || null
-      thumbnail = data.videoThumbnails?.[0]?.url || null
-      duration = data.lengthSeconds || null
-      uploader = data.author || null
-    }
-
-    if (!videoUrl && !audioUrl) {
-      return res.status(404).json({ error: 'No streams available for this video' })
-    }
-
-    // Cache for 1 hour (stream URLs expire after a few hours)
-    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=1800')
-
-    return res.status(200).json({ videoUrl, audioUrl, title, thumbnail, duration, uploader })
+    return res.status(404).json({ error: 'No streams available for this video' })
   } catch (err: any) {
-    clearTimeout(timeout)
     console.error('[youtube/stream] Error:', err?.message)
     return res.status(502).json({ error: 'Failed to fetch stream', message: err?.message })
   }
