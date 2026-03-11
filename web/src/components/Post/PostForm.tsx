@@ -49,10 +49,17 @@ const YouTubePreview = ({ embedUrl, thumbnailUrl, watchUrl, orientationStableSty
     setStreamUrl(null)
 
     const handleMessage = (e: MessageEvent) => {
+      // Only accept messages from YouTube origins
+      if (typeof e.origin === 'string' && !e.origin.includes('youtube')) return
       try {
         if (typeof e.data === 'string') {
           const data = JSON.parse(e.data)
-          if (data?.event === 'onReady' || data?.event === 'onStateChange') {
+          // onReady means the YouTube player initialized (not age-gated)
+          if (data?.event === 'onReady') {
+            playerReady.current = true
+          }
+          // onStateChange with state 1 (PLAYING) or 3 (BUFFERING) = working
+          if (data?.event === 'onStateChange' && (data?.info === 1 || data?.info === 3)) {
             playerReady.current = true
           }
           if (data?.event === 'onError' || data?.info === 150) {
@@ -64,6 +71,7 @@ const YouTubePreview = ({ embedUrl, thumbnailUrl, watchUrl, orientationStableSty
     window.addEventListener('message', handleMessage)
 
     // Timeout: if YouTube player doesn't report ready in 4s, it's blocked
+    // Age-gated content shows a login page instead of initializing the player
     const timer = setTimeout(() => {
       if (!playerReady.current) setBlocked(true)
     }, 4000)

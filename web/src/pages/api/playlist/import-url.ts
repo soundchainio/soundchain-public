@@ -21,6 +21,9 @@ const PIPED_INSTANCES = [
   'https://pipedapi.kavin.rocks',
   'https://pipedapi.adminforge.de',
   'https://api.piped.projectsegfau.lt',
+  'https://pipedapi.in.projectsegfau.lt',
+  'https://pipedapi.r4fo.com',
+  'https://pipedapi.leptons.xyz',
 ]
 
 // Extract playlist ID from YouTube URL

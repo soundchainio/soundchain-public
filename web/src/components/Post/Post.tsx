@@ -52,38 +52,38 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
   const [showComments, setShowComments] = useState(false)
   const [pipedStreamUrl, setPipedStreamUrl] = useState<string | null>(null)
+  const [ytBlocked, setYtBlocked] = useState(false)
+  const ytPlayerReady = useRef(false)
+  const ytBlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Listen for YouTube iframe API error 150 (age-restricted/blocked)
-  // When detected: hide embed, try fetching direct stream via Piped proxy, show fallback
-  useEffect(() => {
-    const showFallback = () => {
-      const container = document.getElementById(`player-fallback-${post?.id}`)
-      if (container) container.style.display = 'flex'
-      const player = document.getElementById(`player-active-${post?.id}`)
-      if (player) player.style.display = 'none'
-
-      // Try to fetch direct stream from Piped for inline playback
-      const vidMatch = post?.mediaLink?.match(/(?:embed\/|watch\?v=|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
-      if (vidMatch?.[1]) {
-        fetch(`/api/youtube/stream?v=${vidMatch[1]}`)
-          .then(r => r.json())
-          .then(data => { if (data.videoUrl) setPipedStreamUrl(data.videoUrl) })
-          .catch(() => {})
-      }
-    }
-    const handleMessage = (e: MessageEvent) => {
-      try {
-        if (typeof e.data === 'string') {
-          const data = JSON.parse(e.data)
-          if (data?.event === 'onError' || data?.info === 150) {
-            showFallback()
-          }
+  // Detect YouTube age-restricted/blocked embeds via timeout.
+  // YouTube's IFrame API never initializes for age-gated content,
+  // so onReady never fires → timeout triggers → show fallback.
+  const isYouTube = !!post?.mediaLink?.match(/youtube|youtu\.be|youtube-nocookie/)
+  const startYtBlockCheck = useCallback(() => {
+    if (!isYouTube || ytPlayerReady.current || ytBlocked) return
+    if (ytBlockTimer.current) clearTimeout(ytBlockTimer.current)
+    ytBlockTimer.current = setTimeout(() => {
+      if (!ytPlayerReady.current) {
+        setYtBlocked(true)
+        // Try proxy for inline playback
+        const vidMatch = post?.mediaLink?.match(/(?:embed\/|watch\?v=|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+        if (vidMatch?.[1]) {
+          fetch(`/api/youtube/stream?v=${vidMatch[1]}`)
+            .then(r => r.json())
+            .then(data => { if (data.videoUrl) setPipedStreamUrl(data.videoUrl) })
+            .catch(() => {})
         }
-      } catch { /* not JSON */ }
-    }
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
-  }, [post?.id, post?.mediaLink])
+      }
+    }, 5000)
+  }, [isYouTube, ytBlocked, post?.mediaLink])
+
+  // On mobile (no light mode), start timeout immediately on mount
+  useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    if (isYouTube && isMobile) startYtBlockCheck()
+    return () => { if (ytBlockTimer.current) clearTimeout(ytBlockTimer.current) }
+  }, [isYouTube, startYtBlockCheck])
 
   const firstPage: PageInput = { first: 5 }
   const [loadComments, { data: commentsData, loading: commentsLoading }] = useCommentsLazyQuery({
@@ -333,82 +333,77 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             return useReactPlayer ? (
               // YouTube videos, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
               <div key={`player-${post.id}`} className="relative w-full orientation-stable">
-                <div
-                  id={`player-active-${post.id}`}
-                  className="relative w-full"
-                  style={{
-                    paddingTop: '56.25%',
-                    contain: 'layout style',
-                    willChange: 'contents',
-                    transform: 'translateZ(0)',
-                  }}
-                >
-                  <ReactPlayer
-                    width="100%"
-                    height="100%"
-                    style={{ position: 'absolute', top: 0, left: 0 }}
-                    url={post.mediaLink}
-                    playsinline
-                    controls
-                    light={typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? false : (getYouTubeThumbnail(post.mediaLink) || true)}
-                    pip
-                    playing={false}
-                    stopOnUnmount={false}
-                    onError={() => {
-                      const container = document.getElementById(`player-fallback-${post.id}`)
-                      if (container) container.style.display = 'flex'
-                      const player = document.getElementById(`player-active-${post.id}`)
-                      if (player) player.style.display = 'none'
-                      // Try Piped proxy for inline playback
-                      const vm = post.mediaLink?.match(/(?:embed\/|watch\?v=|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
-                      if (vm?.[1]) {
-                        fetch(`/api/youtube/stream?v=${vm[1]}`)
-                          .then(r => r.json())
-                          .then(data => { if (data.videoUrl) setPipedStreamUrl(data.videoUrl) })
-                          .catch(() => {})
-                      }
+                {!ytBlocked ? (
+                  <div
+                    className="relative w-full"
+                    style={{
+                      paddingTop: '56.25%',
+                      contain: 'layout style',
+                      willChange: 'contents',
+                      transform: 'translateZ(0)',
                     }}
-                    config={{
-                      youtube: {
-                        playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
-                        embedOptions: { host: 'https://www.youtube-nocookie.com' },
-                      },
-                      vimeo: { playerOptions: { responsive: true, playsinline: true } },
-                      facebook: { appId: '' },
-                    }}
-                  />
-                </div>
-                {/* Fallback for age-restricted or blocked embeds — Piped proxy player or "Watch on YouTube" link */}
-                <div
-                  id={`player-fallback-${post.id}`}
-                  className="w-full bg-neutral-900 rounded-lg overflow-hidden"
-                  style={{ display: 'none', aspectRatio: '16/9' }}
-                >
-                  {pipedStreamUrl ? (
-                    <video
-                      className="w-full h-full object-contain bg-black"
+                  >
+                    <ReactPlayer
+                      width="100%"
+                      height="100%"
+                      style={{ position: 'absolute', top: 0, left: 0 }}
+                      url={post.mediaLink}
+                      playsinline
                       controls
-                      playsInline
-                      src={pipedStreamUrl}
+                      light={typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? false : (getYouTubeThumbnail(post.mediaLink) || true)}
+                      pip
+                      playing={false}
+                      stopOnUnmount={false}
+                      onReady={() => { ytPlayerReady.current = true }}
+                      onClickPreview={() => { startYtBlockCheck() }}
+                      onError={() => {
+                        setYtBlocked(true)
+                        const vm = post.mediaLink?.match(/(?:embed\/|watch\?v=|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
+                        if (vm?.[1]) {
+                          fetch(`/api/youtube/stream?v=${vm[1]}`)
+                            .then(r => r.json())
+                            .then(data => { if (data.videoUrl) setPipedStreamUrl(data.videoUrl) })
+                            .catch(() => {})
+                        }
+                      }}
+                      config={{
+                        youtube: {
+                          playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
+                          embedOptions: { host: 'https://www.youtube-nocookie.com' },
+                        },
+                        vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                        facebook: { appId: '' },
+                      }}
                     />
-                  ) : (
-                    <a
-                      href={post.mediaLink?.replace('youtube-nocookie.com/embed/', 'youtube.com/watch?v=').replace(/[?&]autoplay=1/, '')}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative w-full h-full flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition-colors"
-                    >
-                      {getYouTubeThumbnail(post.mediaLink) && (
-                        <img src={getYouTubeThumbnail(post.mediaLink)!} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
-                      )}
-                      <div className="relative z-10 flex flex-col items-center gap-2">
-                        <ExternalLink className="w-8 h-8 text-cyan-400" />
-                        <span className="text-white font-medium text-sm">Watch on YouTube</span>
-                        <span className="text-white/50 text-xs">Age-restricted — tap to open</span>
-                      </div>
-                    </a>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="w-full bg-neutral-900 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
+                    {pipedStreamUrl ? (
+                      <video
+                        className="w-full h-full object-contain bg-black"
+                        controls
+                        playsInline
+                        src={pipedStreamUrl}
+                      />
+                    ) : (
+                      <a
+                        href={post.mediaLink?.replace('youtube-nocookie.com/embed/', 'youtube.com/watch?v=').replace(/[?&]autoplay=1/, '')}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="relative w-full h-full flex items-center justify-center cursor-pointer hover:bg-neutral-800 transition-colors"
+                      >
+                        {getYouTubeThumbnail(post.mediaLink) && (
+                          <img src={getYouTubeThumbnail(post.mediaLink)!} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
+                        )}
+                        <div className="relative z-10 flex flex-col items-center gap-2">
+                          <ExternalLink className="w-8 h-8 text-cyan-400" />
+                          <span className="text-white font-medium text-sm">Watch on YouTube</span>
+                          <span className="text-white/50 text-xs">Age-restricted — tap to open</span>
+                        </div>
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             ) : (
               // All other platforms (audio, social, playlists) - use iframe embed
