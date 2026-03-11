@@ -38,7 +38,9 @@ const tryYtdl = async (videoId: string): Promise<any> => {
     if (ytdlAgent) opts.agent = ytdlAgent
     const info = await ytdl.getInfo(url, opts)
 
-    const formats = (info.formats || []).filter((f: any) => f.url)
+    const allFormats = info.formats || []
+    const formats = allFormats.filter((f: any) => f.url)
+    console.log(`[ytdl] ${videoId}: ${allFormats.length} total formats, ${formats.length} with URLs, cookies=${!!ytdlAgent}`)
     if (formats.length === 0) return null
 
     // Prefer combined (audio+video) streams for simplest playback
@@ -75,7 +77,7 @@ const tryYtdl = async (videoId: string): Promise<any> => {
     }
   } catch (err: any) {
     console.error('[youtube/stream] ytdl-core error:', err?.message?.slice(0, 200))
-    return null
+    return { error: err?.message?.slice(0, 200) }
   }
 }
 
@@ -182,14 +184,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid video ID' })
   }
 
+  const debug = req.query.debug === '1'
+  const errors: string[] = []
+
   try {
     // 1. Try ytdl-core first (direct YouTube API, no external deps)
     const ytdlResult = await tryYtdl(videoId)
     if (ytdlResult?.videoUrl || ytdlResult?.audioUrl) {
-      // Cache for 4 hours (ytdl stream URLs are valid for ~6 hours)
       res.setHeader('Cache-Control', 'public, s-maxage=14400, stale-while-revalidate=3600')
-      return res.status(200).json(ytdlResult)
+      return res.status(200).json(debug ? { ...ytdlResult, hasCookies: !!ytdlAgent } : ytdlResult)
     }
+    errors.push(ytdlResult?.error ? `ytdl: ${ytdlResult.error}` : 'ytdl: no streams')
 
     // 2. Fallback to Piped/Invidious proxy instances
     const controller = new AbortController()
@@ -201,10 +206,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=1800')
       return res.status(200).json(proxyResult)
     }
+    errors.push('piped: all failed', 'invidious: all failed')
 
-    return res.status(404).json({ error: 'No streams available for this video' })
+    return res.status(404).json({
+      error: 'No streams available for this video',
+      ...(debug ? { tried: errors, hasCookies: !!ytdlAgent, nodeVersion: process.version } : {}),
+    })
   } catch (err: any) {
     console.error('[youtube/stream] Error:', err?.message)
-    return res.status(502).json({ error: 'Failed to fetch stream', message: err?.message })
+    return res.status(502).json({
+      error: 'Failed to fetch stream',
+      message: err?.message,
+      ...(debug ? { tried: errors, hasCookies: !!ytdlAgent } : {}),
+    })
   }
 }
