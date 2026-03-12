@@ -8810,8 +8810,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           Playlists
                         </span>
                       </Button>
-                      {/* Generate tab - ONLY shown when viewing own profile (beta) */}
-                      {isViewingOwnProfile && (
+                      {/* Generate tab - BETA: furdA1 only */}
+                      {isViewingOwnProfile && viewingProfile.userHandle === 'furdA1' && (
                         <Button
                           variant="ghost"
                           onClick={() => setProfileTab('generate')}
@@ -9171,7 +9171,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           } : undefined}
                         />
                       )}
-                      {profileTab === 'generate' && isViewingOwnProfile && (
+                      {profileTab === 'generate' && isViewingOwnProfile && viewingProfile.userHandle === 'furdA1' && (
                         <GeneratePanel />
                       )}
                     </div>
