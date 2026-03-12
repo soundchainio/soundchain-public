@@ -56,8 +56,13 @@ function buildWorkflow(params: {
         class_type: 'EmptyLatentImage',
         inputs: { width, height, batch_size: 1 },
       },
-      // KSampler
+      // Load Wan VAE separately (UNETLoader has no VAE output)
       '6': {
+        class_type: 'VAELoader',
+        inputs: { vae_name: 'wan_2.1_vae.safetensors' },
+      },
+      // KSampler
+      '7': {
         class_type: 'KSampler',
         inputs: {
           model: ['1', 0],
@@ -72,15 +77,15 @@ function buildWorkflow(params: {
           denoise: 1,
         },
       },
-      // VAE Decode — Wan UNET output slot 2 is the VAE
-      '7': {
+      // VAE Decode — uses separate VAELoader (node 6)
+      '8': {
         class_type: 'VAEDecode',
-        inputs: { samples: ['6', 0], vae: ['1', 2] },
+        inputs: { samples: ['7', 0], vae: ['6', 0] },
       },
       // Save image
-      '8': {
+      '9': {
         class_type: 'SaveImage',
-        inputs: { images: ['7', 0], filename_prefix: 'soundchain' },
+        inputs: { images: ['8', 0], filename_prefix: 'soundchain' },
       },
     },
   }
@@ -183,7 +188,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       filename: imageInfo.filename,
       server: serverConfig.name,
       prompt,
-      seed: workflow.prompt['6'].inputs.seed,
+      seed: workflow.prompt['7'].inputs.seed,
     })
   } catch (err: any) {
     console.error('AI Generate error:', err)
