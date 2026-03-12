@@ -1,14 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
+// ComfyUI servers — use COMFYUI_FLEET_URL / COMFYUI_ROG_URL env vars for tunnel URLs,
+// falls back to local network addresses for dev
 const COMFYUI_SERVERS: Record<string, { url: string; name: string; unet: string; textEncoder: string }> = {
   fleet: {
-    url: 'http://localhost:8189',
+    url: process.env.COMFYUI_FLEET_URL || 'http://localhost:8189',
     name: 'Fleet Commander (M1 Max, 64GB)',
     unet: 'wan2.1_t2v_1.3B_bf16.safetensors',
     textEncoder: 'umt5_xxl_fp8_e4m3fn_scaled.safetensors',
   },
   rog: {
-    url: 'http://192.168.1.31:8188',
+    url: process.env.COMFYUI_ROG_URL || 'http://192.168.1.31:8188',
     name: 'ROG (GTX 1050 Ti, 4GB)',
     unet: 'wan2.1_t2v_1.3B_bf16.safetensors',
     textEncoder: 'umt5_xxl_fp8_e4m3fn_scaled.safetensors',
