@@ -82,6 +82,7 @@ import {
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
 import { ProfileReels } from 'components/dex/ProfileReels'
+import { GeneratePanel } from 'components/dex/GeneratePanel'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
@@ -1221,7 +1222,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [showTop100Modal, setShowTop100Modal] = useState(false)
 
   // Profile tab state (Feed | Music | Playlists)
-  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'shop' | 'playlists' | 'wall'>('myfeed')
+  const [profileTab, setProfileTab] = useState<'myfeed' | 'posts' | 'music' | 'shop' | 'playlists' | 'wall' | 'generate'>('myfeed')
 
   // Bio accordion state - collapsible bio panel for own profile
   const [isBioExpanded, setIsBioExpanded] = useState(false)
@@ -8809,6 +8810,19 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           Playlists
                         </span>
                       </Button>
+                      {/* Generate tab - ONLY shown when viewing own profile (beta) */}
+                      {isViewingOwnProfile && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => setProfileTab('generate')}
+                          className={`flex-shrink-0 transition-all duration-300 hover:bg-violet-500/10 ${profileTab === 'generate' ? 'bg-violet-500/10' : ''}`}
+                        >
+                          <Sparkles className={`w-4 h-4 mr-2 transition-colors duration-300 ${profileTab === 'generate' ? 'text-violet-400' : 'text-gray-400'}`} />
+                          <span className={`text-sm font-black transition-all duration-300 ${profileTab === 'generate' ? 'text-violet-400' : 'text-gray-400'}`}>
+                            Generate
+                          </span>
+                        </Button>
+                      )}
                       {/* Bio Accordion Toggle - Only shown when viewing own profile */}
                       {isViewingOwnProfile && (me?.profile?.bio || userData?.me?.profile?.bio) && (
                         <button
@@ -9156,6 +9170,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                             toast.success(`Added "${audio.title}" to profile playlist`)
                           } : undefined}
                         />
+                      )}
+                      {profileTab === 'generate' && isViewingOwnProfile && (
+                        <GeneratePanel />
                       )}
                     </div>
                   </div>
