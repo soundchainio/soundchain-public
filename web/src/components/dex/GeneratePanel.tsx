@@ -274,6 +274,27 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     })
   }, [])
 
+  const resizeImageToDataUrl = useCallback((file: File, maxDim: number = 768): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        let { width: w, height: h } = img
+        if (w > maxDim || h > maxDim) {
+          const scale = maxDim / Math.max(w, h)
+          w = Math.round(w * scale)
+          h = Math.round(h * scale)
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.85))
+        URL.revokeObjectURL(img.src)
+      }
+      img.src = URL.createObjectURL(file)
+    })
+  }, [])
+
   const handleImageFiles = useCallback((files: File[]) => {
     for (const file of files) {
       if (!file.type.startsWith('image/')) {
@@ -284,19 +305,17 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         toast.error(`${file.name} must be under 10MB`)
         continue
       }
-      const reader = new FileReader()
-      reader.onload = (e) => {
+      resizeImageToDataUrl(file).then((dataUrl) => {
         setRefImages((prev) => {
           if (prev.length >= 4) {
             toast.error('Max 4 reference images')
             return prev
           }
-          return [...prev, { data: e.target?.result as string, name: file.name }]
+          return [...prev, { data: dataUrl, name: file.name }]
         })
-      }
-      reader.readAsDataURL(file)
+      })
     }
-  }, [])
+  }, [resizeImageToDataUrl])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -396,7 +415,14 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         signal: abortRef.current.signal,
       })
 
-      const data = await res.json()
+      const text = await res.text()
+      let data: any
+      try {
+        data = JSON.parse(text)
+      } catch {
+        setError(res.status === 413 ? 'Images too large — try fewer or smaller images' : `Server error: ${text.slice(0, 100)}`)
+        return
+      }
       if (!res.ok) {
         setError(data.error || 'Generation failed')
         return
