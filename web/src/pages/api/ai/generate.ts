@@ -162,6 +162,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: `Unknown backend: ${backend}. Use "imagine" or "ollama".` })
   }
 
+  // Log request details for debugging
+  const refCount = referenceImages?.length || 0
+  const payloadKB = Math.round(JSON.stringify(req.body).length / 1024)
+  console.log(`[Imagine] model=${model || 'sdxl-turbo'} faceMode=${!!faceMode} refs=${refCount} payload=${payloadKB}KB backend=${backendConfig.url}`)
+
   try {
     let result
     if (backend === 'imagine') {
@@ -188,14 +193,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(result)
   } catch (err: any) {
-    console.error('AI Generate error:', err)
+    console.error(`[Imagine] ERROR: faceMode=${!!faceMode} refs=${refCount} payload=${payloadKB}KB`, err.message || err)
     const message = err.message || 'Generation failed'
     if (message.includes('ECONNREFUSED') || message.includes('fetch failed')) {
       return res.status(503).json({
         error: `Cannot reach ${backendConfig.name}. Is it running?`,
       })
     }
-    return res.status(500).json({ error: message })
+    // Always pass the real error to the client so we can debug
+    return res.status(500).json({ error: `[Face=${!!faceMode}, Refs=${refCount}, ${payloadKB}KB] ${message}` })
   }
 }
 
