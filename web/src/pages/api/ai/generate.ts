@@ -36,24 +36,45 @@ async function handleImagine(
     ipScale?: number
   }
 ) {
-  const res = await fetch(`${backendUrl}/api/generate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      prompt: body.prompt,
-      model: body.model || 'sdxl-turbo',
-      negative_prompt: body.negativePrompt || 'ugly, blurry, low quality, deformed, disfigured, watermark, text, bad anatomy',
-      width: body.width,
-      height: body.height,
-      steps: body.steps,
-      seed: body.seed ?? -1,
-      cfg: body.cfg,
-      ...(body.image ? { image: body.image, strength: body.strength ?? 0.7 } : {}),
-      reference_images: body.referenceImages || [],
-      face_mode: body.faceMode || false,
-      ip_adapter_scale: body.ipScale ?? 0.6,
-    }),
-  })
+  // Timeout: 4.5 minutes (leave buffer within Vercel's 5min maxDuration)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 270_000)
+
+  let res: Response
+  try {
+    res = await fetch(`${backendUrl}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: body.prompt,
+        model: body.model || 'sdxl-turbo',
+        negative_prompt: body.negativePrompt || 'ugly, blurry, low quality, deformed, disfigured, watermark, text, bad anatomy',
+        width: body.width,
+        height: body.height,
+        steps: body.steps,
+        seed: body.seed ?? -1,
+        cfg: body.cfg,
+        ...(body.image ? { image: body.image, strength: body.strength ?? 0.7 } : {}),
+        reference_images: body.referenceImages || [],
+        face_mode: body.faceMode || false,
+        ip_adapter_scale: body.ipScale ?? 0.6,
+      }),
+      signal: controller.signal,
+    })
+  } catch (err: any) {
+    clearTimeout(timeout)
+    if (err.name === 'AbortError') {
+      const refCount = body.referenceImages?.length || 0
+      throw new Error(
+        `Generation timed out after 4.5 minutes.${
+          refCount >= 3 ? ' Try fewer reference images or' : ' Try'
+        } a faster model (SDXL Turbo) or smaller dimensions.`
+      )
+    }
+    throw err
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!res.ok) {
     const errText = await res.text()
@@ -63,6 +84,10 @@ async function handleImagine(
       errMsg = errJson.detail || errMsg
     } catch {
       errMsg = errText || errMsg
+    }
+    // Surface OOM and memory errors clearly
+    if (errMsg.toLowerCase().includes('out of memory') || errMsg.toLowerCase().includes('oom') || errMsg.includes('CUDA')) {
+      errMsg = `Server ran out of memory — try fewer reference images, a faster model, or smaller dimensions. (${errMsg})`
     }
     throw new Error(errMsg)
   }

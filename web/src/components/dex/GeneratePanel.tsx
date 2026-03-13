@@ -1,7 +1,11 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
-import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders, RefreshCw, Focus, Sun, Palette, LayoutGrid, Contrast, Ban } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders, RefreshCw, Focus, Sun, Palette, LayoutGrid, Contrast, Ban, Film } from 'lucide-react'
 import { Button } from 'components/ui/button'
 import { toast } from 'react-toastify'
+import type { StoryboardMode } from './storyboard/storyboardTypes'
+
+const StoryboardPanel = dynamic(() => import('./storyboard/StoryboardPanel'), { ssr: false })
 
 const MODELS = [
   {
@@ -213,6 +217,7 @@ interface HistoryItem extends GenerateResult {
 }
 
 export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataUrl: string) => void }) {
+  const [mode, setMode] = useState<StoryboardMode>('single')
   const [prompt, setPrompt] = useState('')
   const [negativePrompt, setNegativePrompt] = useState(DEFAULT_NEGATIVE)
   const [selectedModel, setSelectedModel] = useState('sdxl-turbo')
@@ -561,6 +566,37 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 border border-violet-500/30">IMAGINE</span>
       </div>
 
+      {/* Mode Toggle */}
+      <div className="flex gap-1 p-0.5 bg-white/5 rounded-lg border border-white/10">
+        <button
+          onClick={() => setMode('single')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            mode === 'single'
+              ? 'bg-violet-500/20 text-violet-300 border border-violet-400/30'
+              : 'text-gray-500 hover:text-gray-300 border border-transparent'
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          Single
+        </button>
+        <button
+          onClick={() => setMode('storyboard')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            mode === 'storyboard'
+              ? 'bg-violet-500/20 text-violet-300 border border-violet-400/30'
+              : 'text-gray-500 hover:text-gray-300 border border-transparent'
+          }`}
+        >
+          <Film className="w-3.5 h-3.5" />
+          Storyboard
+        </button>
+      </div>
+
+      {/* Storyboard Mode */}
+      {mode === 'storyboard' ? (
+        <StoryboardPanel onShareToStory={onShareToStory} />
+      ) : (
+      <>
       {/* Prompt */}
       <div>
         <textarea
@@ -999,6 +1035,8 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             ))}
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   )
