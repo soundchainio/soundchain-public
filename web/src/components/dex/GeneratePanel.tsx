@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
-import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check } from 'lucide-react'
+import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2 } from 'lucide-react'
 import { Button } from 'components/ui/button'
 import { toast } from 'react-toastify'
 
@@ -79,6 +79,14 @@ const MODELS = [
 
 const STYLE_PRESETS = [
   {
+    label: 'Realistic',
+    prefix: 'photorealistic, photograph, 8k uhd, sharp focus, detailed skin texture, natural lighting, DSLR, ',
+    negative: 'cartoon, anime, drawing, painting, illustration, cgi, 3d render, disfigured, bad anatomy, deformed face, ugly, blurry, watermark, text, extra fingers, mutated hands, poorly drawn face, mutation, long neck',
+    width: 512,
+    height: 512,
+    color: 'green',
+  },
+  {
     label: 'Album Art',
     prefix: 'album cover art, ',
     negative: 'text, watermark, logo, words, letters',
@@ -88,27 +96,19 @@ const STYLE_PRESETS = [
   },
   {
     label: 'Portrait',
-    prefix: 'portrait photo, ',
-    negative: 'deformed face, ugly, blurry',
+    prefix: 'photorealistic portrait, studio lighting, softbox, sharp focus, detailed skin, DSLR, ',
+    negative: 'cartoon, anime, drawing, deformed face, ugly, blurry, bad anatomy, disfigured, extra fingers, mutated hands, poorly drawn face, watermark, text',
     width: 512,
     height: 768,
     color: 'pink',
   },
   {
-    label: 'Scene',
-    prefix: 'cinematic scene, ',
-    negative: 'cartoon, anime, drawing',
+    label: 'Cinematic',
+    prefix: 'cinematic still, film grain, dramatic lighting, shallow depth of field, anamorphic lens, ',
+    negative: 'cartoon, anime, drawing, low quality, blurry',
     width: 768,
     height: 512,
     color: 'amber',
-  },
-  {
-    label: 'Abstract',
-    prefix: 'abstract art, ',
-    negative: 'realistic, photo, face',
-    width: 512,
-    height: 512,
-    color: 'green',
   },
   {
     label: 'Cyberpunk',
@@ -151,6 +151,13 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const [showSettings, setShowSettings] = useState(false)
   const [activePreset, setActivePreset] = useState<string | null>(null)
 
+  // img2img state
+  const [refImage, setRefImage] = useState<string | null>(null) // base64 data URL
+  const [refImageName, setRefImageName] = useState<string | null>(null)
+  const [strength, setStrength] = useState(0.7)
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [generating, setGenerating] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const [error, setError] = useState<string | null>(null)
@@ -184,6 +191,54 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const saveHistory = useCallback((item: GenerateResult) => {
     setHistory((prev) => {
       const next = [{ ...item, timestamp: Date.now() }, ...prev].slice(0, 10)
+      try { localStorage.setItem('sc_generate_history', JSON.stringify(next)) } catch {}
+      return next
+    })
+  }, [])
+
+  const handleImageFile = useCallback((file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image must be under 10MB')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setRefImage(e.target?.result as string)
+      setRefImageName(file.name)
+    }
+    reader.readAsDataURL(file)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file) handleImageFile(file)
+  }, [handleImageFile])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
+
+  const removeRefImage = useCallback(() => {
+    setRefImage(null)
+    setRefImageName(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [])
+
+  const deleteHistoryItem = useCallback((timestamp: number) => {
+    setHistory((prev) => {
+      const next = prev.filter((item) => item.timestamp !== timestamp)
       try { localStorage.setItem('sc_generate_history', JSON.stringify(next)) } catch {}
       return next
     })
@@ -236,6 +291,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           steps,
           seed,
           cfg,
+          ...(refImage ? { image: refImage, strength } : {}),
         }),
         signal: abortRef.current.signal,
       })
@@ -315,6 +371,68 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           rows={3}
           disabled={generating}
         />
+      </div>
+
+      {/* Reference Image (img2img) */}
+      <div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) handleImageFile(file)
+          }}
+        />
+        {refImage ? (
+          <div className="relative rounded-lg overflow-hidden border border-violet-500/30 bg-black">
+            <img src={refImage} alt="Reference" className="w-full h-32 object-cover opacity-80" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xs bg-black/70 backdrop-blur-sm text-violet-300 px-2 py-1 rounded-full">
+                <ImageIcon className="w-3 h-3 inline mr-1" />
+                img2img mode
+              </span>
+            </div>
+            <button
+              onClick={removeRefImage}
+              className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 text-white hover:bg-red-500/80 flex items-center justify-center transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+            {/* Strength slider */}
+            <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-1.5 flex items-center gap-2">
+              <span className="text-[10px] text-gray-400 whitespace-nowrap">Strength</span>
+              <input
+                type="range"
+                min={0.1}
+                max={1.0}
+                step={0.05}
+                value={strength}
+                onChange={(e) => setStrength(Number(e.target.value))}
+                className="flex-1 h-1 accent-violet-500"
+              />
+              <span className="text-[10px] text-violet-400 w-7 text-right">{strength.toFixed(2)}</span>
+            </div>
+          </div>
+        ) : (
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current?.click()}
+            className={`border border-dashed rounded-lg px-3 py-2.5 flex items-center justify-center gap-2 cursor-pointer transition-all ${
+              isDragging
+                ? 'border-violet-400 bg-violet-500/10 scale-[1.01]'
+                : 'border-white/10 hover:border-white/20 hover:bg-white/5'
+            }`}
+          >
+            <Upload className={`w-3.5 h-3.5 ${isDragging ? 'text-violet-400' : 'text-gray-600'}`} />
+            <span className={`text-xs ${isDragging ? 'text-violet-300' : 'text-gray-600'}`}>
+              {isDragging ? 'Drop image!' : 'Drop or tap to add reference image (img2img)'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Model Picker */}
@@ -505,7 +623,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         <div className="flex flex-col items-center justify-center gap-2 py-6">
           <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
           <span className="text-sm text-gray-400">
-            Generating with {currentModel?.name}...
+            {refImage ? 'Reimagining' : 'Generating'} with {currentModel?.name}...
           </span>
           <span className="text-xs text-gray-600">
             {elapsed}s elapsed {currentModel && `(est. ${currentModel.estimate})`}
@@ -575,15 +693,25 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           <p className="text-xs text-gray-500 mb-2">Recent ({history.length})</p>
           <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
             {history.map((item, i) => (
-              <button
-                key={item.timestamp}
-                onClick={() => setResult(item)}
-                className={`flex-shrink-0 w-14 h-14 rounded-md overflow-hidden border transition-all ${
-                  result?.seed === item.seed && result?.model === item.model ? 'border-violet-400 ring-1 ring-violet-400/30' : 'border-white/10 hover:border-white/30'
-                }`}
-              >
-                <img src={item.image} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" />
-              </button>
+              <div key={item.timestamp} className="relative flex-shrink-0 group">
+                <button
+                  onClick={() => setResult(item)}
+                  className={`w-14 h-14 rounded-md overflow-hidden border transition-all ${
+                    result?.seed === item.seed && result?.model === item.model ? 'border-violet-400 ring-1 ring-violet-400/30' : 'border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <img src={item.image} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    deleteHistoryItem(item.timestamp)
+                  }}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             ))}
           </div>
         </div>

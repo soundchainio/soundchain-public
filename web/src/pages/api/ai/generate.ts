@@ -29,6 +29,8 @@ async function handleImagine(
     steps?: number
     seed?: number
     cfg?: number
+    image?: string
+    strength?: number
   }
 ) {
   const res = await fetch(`${backendUrl}/api/generate`, {
@@ -43,6 +45,7 @@ async function handleImagine(
       steps: body.steps,
       seed: body.seed ?? -1,
       cfg: body.cfg,
+      ...(body.image ? { image: body.image, strength: body.strength ?? 0.7 } : {}),
     }),
   })
 
@@ -107,6 +110,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     steps,
     seed,
     cfg,
+    image,
+    strength,
   } = req.body
 
   // Beta gate — must be logged in
@@ -135,6 +140,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         steps,
         seed,
         cfg,
+        image,
+        strength,
       })
     } else if (backend === 'ollama') {
       result = await handleOllama(backendConfig.url, { prompt, model })
@@ -157,7 +164,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 export const config = {
   api: {
-    bodyParser: { sizeLimit: '1mb' },
+    bodyParser: { sizeLimit: '10mb' },
     responseLimit: '20mb',
   },
   maxDuration: 300, // 5 minutes for CPU inference
