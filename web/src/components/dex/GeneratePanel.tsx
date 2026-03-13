@@ -1,11 +1,80 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
-import { Sparkles, Download, ImageIcon, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Server, X } from 'lucide-react'
+import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check } from 'lucide-react'
 import { Button } from 'components/ui/button'
 import { toast } from 'react-toastify'
 
-const SERVERS = [
-  { id: 'fleet', name: 'Fleet Commander', desc: 'M1 Max, 64GB', color: 'cyan' },
-  { id: 'rog', name: 'ROG', desc: 'GTX 1050 Ti, 4GB', color: 'orange' },
+const MODELS = [
+  {
+    id: 'sdxl-turbo',
+    name: 'SDXL Turbo',
+    desc: '4-step, fastest',
+    estimate: '~30-60s',
+    color: 'cyan',
+    category: 'fast',
+    defaultSteps: 4,
+    defaultWidth: 512,
+    defaultHeight: 512,
+    defaultCfg: 0.0,
+    maxWidth: 512,
+    maxHeight: 512,
+  },
+  {
+    id: 'sd-1.5',
+    name: 'SD 1.5',
+    desc: 'Classic, versatile',
+    estimate: '~2-3 min',
+    color: 'purple',
+    category: 'classic',
+    defaultSteps: 20,
+    defaultWidth: 512,
+    defaultHeight: 512,
+    defaultCfg: 7.5,
+    maxWidth: 768,
+    maxHeight: 768,
+  },
+  // Phase 2 models
+  // {
+  //   id: 'animagine-xl-4',
+  //   name: 'Animagine XL',
+  //   desc: 'Anime style',
+  //   estimate: '~5-10 min',
+  //   color: 'pink',
+  //   category: 'anime',
+  //   defaultSteps: 28,
+  //   defaultWidth: 1024,
+  //   defaultHeight: 1024,
+  //   defaultCfg: 7.0,
+  //   maxWidth: 1024,
+  //   maxHeight: 1024,
+  // },
+  // {
+  //   id: 'illustrious-xl',
+  //   name: 'Illustrious XL',
+  //   desc: 'Illustration',
+  //   estimate: '~5-10 min',
+  //   color: 'amber',
+  //   category: 'illustration',
+  //   defaultSteps: 28,
+  //   defaultWidth: 1024,
+  //   defaultHeight: 1024,
+  //   defaultCfg: 7.0,
+  //   maxWidth: 1024,
+  //   maxHeight: 1024,
+  // },
+  // {
+  //   id: 'kolors',
+  //   name: 'Kolors',
+  //   desc: 'Photorealistic',
+  //   estimate: '~5-10 min',
+  //   color: 'green',
+  //   category: 'photorealistic',
+  //   defaultSteps: 25,
+  //   defaultWidth: 1024,
+  //   defaultHeight: 1024,
+  //   defaultCfg: 5.0,
+  //   maxWidth: 1024,
+  //   maxHeight: 1024,
+  // },
 ]
 
 const STYLE_PRESETS = [
@@ -13,8 +82,8 @@ const STYLE_PRESETS = [
     label: 'Album Art',
     prefix: 'album cover art, ',
     negative: 'text, watermark, logo, words, letters',
-    width: 768,
-    height: 768,
+    width: 512,
+    height: 512,
     color: 'purple',
   },
   {
@@ -37,8 +106,8 @@ const STYLE_PRESETS = [
     label: 'Abstract',
     prefix: 'abstract art, ',
     negative: 'realistic, photo, face',
-    width: 768,
-    height: 768,
+    width: 512,
+    height: 512,
     color: 'green',
   },
   {
@@ -55,10 +124,13 @@ const DEFAULT_NEGATIVE = 'ugly, blurry, low quality, deformed, disfigured, water
 
 interface GenerateResult {
   image: string
-  filename: string
-  server: string
+  model: string
   prompt: string
   seed: number
+  time_seconds?: number
+  width?: number
+  height?: number
+  steps?: number
 }
 
 interface HistoryItem extends GenerateResult {
@@ -68,23 +140,25 @@ interface HistoryItem extends GenerateResult {
 export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataUrl: string) => void }) {
   const [prompt, setPrompt] = useState('')
   const [negativePrompt, setNegativePrompt] = useState(DEFAULT_NEGATIVE)
-  const [server, setServer] = useState('fleet')
-  const [width, setWidth] = useState(768)
-  const [height, setHeight] = useState(768)
-  const [steps, setSteps] = useState(20)
+  const [selectedModel, setSelectedModel] = useState('sdxl-turbo')
+  const [width, setWidth] = useState(512)
+  const [height, setHeight] = useState(512)
+  const [steps, setSteps] = useState(4)
   const [seed, setSeed] = useState(-1)
-  const [cfg, setCfg] = useState(7)
+  const [cfg, setCfg] = useState(0.0)
 
   const [showNegative, setShowNegative] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [activePreset, setActivePreset] = useState<string | null>(null)
 
   const [generating, setGenerating] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<GenerateResult | null>(null)
   const [history, setHistory] = useState<HistoryItem[]>([])
 
   const abortRef = useRef<AbortController | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Load history from localStorage
   useEffect(() => {
@@ -94,6 +168,19 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     } catch {}
   }, [])
 
+  // Elapsed timer during generation
+  useEffect(() => {
+    if (generating) {
+      setElapsed(0)
+      timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000)
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [generating])
+
   const saveHistory = useCallback((item: GenerateResult) => {
     setHistory((prev) => {
       const next = [{ ...item, timestamp: Date.now() }, ...prev].slice(0, 10)
@@ -102,12 +189,25 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     })
   }, [])
 
+  const selectModel = useCallback((modelId: string) => {
+    const model = MODELS.find((m) => m.id === modelId)
+    if (!model) return
+    setSelectedModel(modelId)
+    setSteps(model.defaultSteps)
+    setWidth(model.defaultWidth)
+    setHeight(model.defaultHeight)
+    setCfg(model.defaultCfg)
+  }, [])
+
   const applyPreset = useCallback((preset: typeof STYLE_PRESETS[0]) => {
     setActivePreset(preset.label)
-    setWidth(preset.width)
-    setHeight(preset.height)
+    const model = MODELS.find((m) => m.id === selectedModel)
+    const maxW = model?.maxWidth || 1024
+    const maxH = model?.maxHeight || 1024
+    setWidth(Math.min(preset.width, maxW))
+    setHeight(Math.min(preset.height, maxH))
     setNegativePrompt(preset.negative + ', ' + DEFAULT_NEGATIVE)
-  }, [])
+  }, [selectedModel])
 
   const handleGenerate = useCallback(async () => {
     if (!prompt.trim()) {
@@ -128,8 +228,9 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: fullPrompt,
+          backend: 'imagine',
+          model: selectedModel,
           negativePrompt,
-          server,
           width,
           height,
           steps,
@@ -154,7 +255,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     } finally {
       setGenerating(false)
     }
-  }, [prompt, negativePrompt, server, width, height, steps, seed, cfg, activePreset, saveHistory])
+  }, [prompt, negativePrompt, selectedModel, width, height, steps, seed, cfg, activePreset, saveHistory])
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort()
@@ -165,7 +266,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     if (!result?.image) return
     const link = document.createElement('a')
     link.href = result.image
-    link.download = result.filename || 'soundchain-ai.png'
+    link.download = `soundchain-${result.model}-${result.seed}.png`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -193,13 +294,15 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     cyan: 'bg-cyan-500/40 text-cyan-300 border-cyan-400',
   }
 
+  const currentModel = MODELS.find((m) => m.id === selectedModel)
+
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Sparkles className="w-5 h-5 text-violet-400" />
         <h3 className="text-white font-semibold">AI Image Generate</h3>
-        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 border border-violet-500/30">BETA</span>
+        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 border border-violet-500/30">IMAGINE</span>
       </div>
 
       {/* Prompt */}
@@ -212,6 +315,52 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           rows={3}
           disabled={generating}
         />
+      </div>
+
+      {/* Model Picker */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Cpu className="w-3.5 h-3.5 text-gray-500" />
+          <span className="text-xs text-gray-500">Model:</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {MODELS.map((model) => (
+            <button
+              key={model.id}
+              onClick={() => selectModel(model.id)}
+              className={`relative p-2.5 rounded-lg border text-left transition-all ${
+                selectedModel === model.id
+                  ? model.color === 'cyan'
+                    ? 'bg-cyan-500/20 border-cyan-400/50 ring-1 ring-cyan-400/20'
+                    : 'bg-purple-500/20 border-purple-400/50 ring-1 ring-purple-400/20'
+                  : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+              }`}
+              disabled={generating}
+            >
+              <div className="flex items-center justify-between">
+                <span className={`text-sm font-medium ${
+                  selectedModel === model.id
+                    ? model.color === 'cyan' ? 'text-cyan-300' : 'text-purple-300'
+                    : 'text-white'
+                }`}>
+                  {model.name}
+                </span>
+                {selectedModel === model.id && (
+                  <Check className={`w-3.5 h-3.5 ${model.color === 'cyan' ? 'text-cyan-400' : 'text-purple-400'}`} />
+                )}
+              </div>
+              <p className="text-[10px] text-gray-500 mt-0.5">{model.desc}</p>
+              <div className="flex items-center gap-1 mt-1">
+                {model.category === 'fast' ? (
+                  <Zap className="w-3 h-3 text-yellow-500" />
+                ) : (
+                  <Clock className="w-3 h-3 text-gray-600" />
+                )}
+                <span className="text-[10px] text-gray-600">{model.estimate}</span>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Negative Prompt (collapsible) */}
@@ -231,29 +380,6 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           disabled={generating}
         />
       )}
-
-      {/* Server Picker */}
-      <div className="flex items-center gap-2">
-        <Server className="w-3.5 h-3.5 text-gray-500" />
-        <span className="text-xs text-gray-500">Server:</span>
-        {SERVERS.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setServer(s.id)}
-            className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-all ${
-              server === s.id
-                ? s.color === 'cyan'
-                  ? 'bg-cyan-500/30 text-cyan-300 border-cyan-400'
-                  : 'bg-orange-500/30 text-orange-300 border-orange-400'
-                : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
-            }`}
-            disabled={generating}
-          >
-            {s.name}
-            <span className="ml-1 opacity-60 text-[10px]">{s.desc}</span>
-          </button>
-        ))}
-      </div>
 
       {/* Style Presets */}
       <div className="flex flex-wrap gap-1.5">
@@ -296,7 +422,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
               value={width}
               onChange={(e) => setWidth(Number(e.target.value))}
               min={256}
-              max={1024}
+              max={currentModel?.maxWidth || 1024}
               step={64}
               className="w-full mt-1 bg-neutral-900 border border-white/10 rounded px-2 py-1 text-white text-xs"
               disabled={generating}
@@ -309,7 +435,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
               value={height}
               onChange={(e) => setHeight(Number(e.target.value))}
               min={256}
-              max={1024}
+              max={currentModel?.maxHeight || 1024}
               step={64}
               className="w-full mt-1 bg-neutral-900 border border-white/10 rounded px-2 py-1 text-white text-xs"
               disabled={generating}
@@ -344,7 +470,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
               type="number"
               value={cfg}
               onChange={(e) => setCfg(Number(e.target.value))}
-              min={1}
+              min={0}
               max={20}
               step={0.5}
               className="w-full mt-1 bg-neutral-900 border border-white/10 rounded px-2 py-1 text-white text-xs"
@@ -376,9 +502,14 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
 
       {/* Progress */}
       {generating && (
-        <div className="flex items-center justify-center gap-2 py-6">
+        <div className="flex flex-col items-center justify-center gap-2 py-6">
           <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
-          <span className="text-sm text-gray-400">Generating on {SERVERS.find((s) => s.id === server)?.name}...</span>
+          <span className="text-sm text-gray-400">
+            Generating with {currentModel?.name}...
+          </span>
+          <span className="text-xs text-gray-600">
+            {elapsed}s elapsed {currentModel && `(est. ${currentModel.estimate})`}
+          </span>
         </div>
       )}
 
@@ -401,8 +532,16 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
             />
             <div className="absolute top-2 right-2 flex gap-1.5">
               <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
+                {result.model}
+              </span>
+              <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
                 seed: {result.seed}
               </span>
+              {result.time_seconds && (
+                <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
+                  {result.time_seconds}s
+                </span>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -440,7 +579,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 key={item.timestamp}
                 onClick={() => setResult(item)}
                 className={`flex-shrink-0 w-14 h-14 rounded-md overflow-hidden border transition-all ${
-                  result?.filename === item.filename ? 'border-violet-400 ring-1 ring-violet-400/30' : 'border-white/10 hover:border-white/30'
+                  result?.seed === item.seed && result?.model === item.model ? 'border-violet-400 ring-1 ring-violet-400/30' : 'border-white/10 hover:border-white/30'
                 }`}
               >
                 <img src={item.image} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" />
