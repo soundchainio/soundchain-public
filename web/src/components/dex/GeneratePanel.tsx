@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
-import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders } from 'lucide-react'
+import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders, RefreshCw, Focus, Sun, Palette, LayoutGrid, Contrast, Ban } from 'lucide-react'
 import { Button } from 'components/ui/button'
 import { toast } from 'react-toastify'
 
@@ -122,6 +122,81 @@ const STYLE_PRESETS = [
 
 const DEFAULT_NEGATIVE = 'ugly, blurry, low quality, deformed, disfigured, watermark, text, bad anatomy'
 
+const REFINEMENT_CATEGORIES = [
+  {
+    id: 'face',
+    label: 'Face Consistency',
+    icon: ScanFace,
+    color: 'pink',
+    promptBoost: '',
+    negativeBoost: 'distorted face, wrong face, face morphing',
+    paramChanges: { ipScaleDelta: 0.15, faceMode: true },
+  },
+  {
+    id: 'quality',
+    label: 'Visual Quality',
+    icon: Sparkles,
+    color: 'purple',
+    promptBoost: 'masterpiece, best quality, ultra detailed',
+    negativeBoost: 'low quality, jpeg artifacts, noise, grain',
+    paramChanges: { stepsDelta: 4 },
+  },
+  {
+    id: 'detail',
+    label: 'Detail & Sharpness',
+    icon: Focus,
+    color: 'cyan',
+    promptBoost: 'sharp focus, intricate details, 8k uhd',
+    negativeBoost: 'blurry, soft, out of focus, bokeh',
+    paramChanges: { stepsDelta: 2 },
+  },
+  {
+    id: 'lighting',
+    label: 'Lighting',
+    icon: Sun,
+    color: 'amber',
+    promptBoost: 'professional studio lighting, rim light, soft shadows',
+    negativeBoost: 'flat lighting, overexposed, underexposed, harsh shadows',
+    paramChanges: {},
+  },
+  {
+    id: 'style',
+    label: 'Style Match',
+    icon: Palette,
+    color: 'green',
+    promptBoost: '',
+    negativeBoost: '',
+    paramChanges: { cfgDelta: 2.0, applyPreset: true },
+  },
+  {
+    id: 'composition',
+    label: 'Composition',
+    icon: LayoutGrid,
+    color: 'purple',
+    promptBoost: 'centered, rule of thirds, balanced composition',
+    negativeBoost: 'cropped, cut off, awkward framing',
+    paramChanges: {},
+  },
+  {
+    id: 'color',
+    label: 'Color & Contrast',
+    icon: Contrast,
+    color: 'pink',
+    promptBoost: 'vibrant colors, high contrast, color graded',
+    negativeBoost: 'washed out, desaturated, dull colors, low contrast',
+    paramChanges: {},
+  },
+  {
+    id: 'artifacts',
+    label: 'Artifacts & Text',
+    icon: Ban,
+    color: 'amber',
+    promptBoost: '',
+    negativeBoost: 'text, watermark, logo, signature, artifacts, glitch, border',
+    paramChanges: {},
+  },
+] as const
+
 interface GenerateResult {
   image: string
   model: string
@@ -158,6 +233,8 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const [ipScale, setIpScale] = useState(0.6)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const [refinements, setRefinements] = useState<string[]>([])
 
   const [generating, setGenerating] = useState(false)
   const [elapsed, setElapsed] = useState(0)
@@ -357,6 +434,80 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     onShareToStory(result.image)
   }, [result, onShareToStory])
 
+  const [pendingRefineGenerate, setPendingRefineGenerate] = useState(false)
+
+  const toggleRefinement = useCallback((id: string) => {
+    setRefinements((prev) => {
+      if (prev.includes(id)) return prev.filter((r) => r !== id)
+      if (prev.length >= 3) return prev
+      return [...prev, id]
+    })
+  }, [])
+
+  const handleRefineAndGenerate = useCallback(() => {
+    if (refinements.length === 0) return
+
+    const promptBoosts: string[] = []
+    const negativeBoosts: string[] = []
+    let stepsDelta = 0
+    let cfgDelta = 0
+    let ipScaleDelta = 0
+    let shouldSetFaceMode = false
+    let shouldApplyPreset = false
+
+    for (const catId of refinements) {
+      const cat = REFINEMENT_CATEGORIES.find((c) => c.id === catId)
+      if (!cat) continue
+
+      if (cat.promptBoost) {
+        cat.promptBoost.split(', ').forEach((term) => {
+          if (!prompt.toLowerCase().includes(term.toLowerCase())) promptBoosts.push(term)
+        })
+      }
+      if (cat.negativeBoost) {
+        cat.negativeBoost.split(', ').forEach((term) => {
+          if (!negativePrompt.toLowerCase().includes(term.toLowerCase())) negativeBoosts.push(term)
+        })
+      }
+
+      const p = cat.paramChanges
+      if ('stepsDelta' in p) stepsDelta += (p as any).stepsDelta
+      if ('cfgDelta' in p) cfgDelta += (p as any).cfgDelta
+      if ('ipScaleDelta' in p) ipScaleDelta += (p as any).ipScaleDelta
+      if ('faceMode' in p) shouldSetFaceMode = true
+      if ('applyPreset' in p) shouldApplyPreset = true
+    }
+
+    if (promptBoosts.length > 0) {
+      setPrompt((prev) => promptBoosts.join(', ') + ', ' + prev)
+    }
+    if (negativeBoosts.length > 0) {
+      setNegativePrompt((prev) => prev + ', ' + negativeBoosts.join(', '))
+    }
+    if (stepsDelta > 0) setSteps((prev) => Math.min(prev + stepsDelta, 50))
+    if (cfgDelta > 0) setCfg((prev) => Math.min(prev + cfgDelta, 20))
+    if (ipScaleDelta > 0) setIpScale((prev) => Math.min(prev + ipScaleDelta, 1.0))
+    if (shouldSetFaceMode) setFaceMode(true)
+    if (shouldApplyPreset && activePreset) {
+      const preset = STYLE_PRESETS.find((p) => p.label === activePreset)
+      if (preset && !prompt.toLowerCase().includes(preset.prefix.toLowerCase().slice(0, 10))) {
+        setPrompt((prev) => preset.prefix + prev)
+      }
+    }
+
+    setSeed(-1)
+    setRefinements([])
+    setPendingRefineGenerate(true)
+  }, [refinements, prompt, negativePrompt, activePreset])
+
+  // Trigger generation after refine state updates have flushed
+  useEffect(() => {
+    if (pendingRefineGenerate) {
+      setPendingRefineGenerate(false)
+      handleGenerate()
+    }
+  }, [pendingRefineGenerate, handleGenerate])
+
   const colorMap: Record<string, string> = {
     purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30 hover:bg-purple-500/30',
     pink: 'bg-pink-500/20 text-pink-400 border-pink-500/30 hover:bg-pink-500/30',
@@ -411,95 +562,73 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         />
         {refImages.length > 0 ? (
           <div className="space-y-2">
-            {/* Thumbnail grid */}
-            <div className="grid grid-cols-4 gap-2">
-              {refImages.map((img, i) => (
-                <div key={i} className="relative rounded-lg overflow-hidden border border-violet-500/30 bg-black aspect-square">
-                  <img src={img.data} alt={img.name} className="w-full h-full object-cover opacity-80" />
+            {/* Compact horizontal thumbnail strip + controls */}
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-hide flex-shrink-0">
+                {refImages.map((img, i) => (
+                  <div key={i} className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden border border-violet-500/30 bg-black">
+                    <img src={img.data} alt={img.name} className="w-full h-full object-cover opacity-80" />
+                    <button
+                      onClick={() => removeRefImage(i)}
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-black/80 text-white hover:bg-red-500/80 flex items-center justify-center transition-colors"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                ))}
+                {refImages.length < 4 && (
                   <button
-                    onClick={() => removeRefImage(i)}
-                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white hover:bg-red-500/80 flex items-center justify-center transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-12 h-12 flex-shrink-0 rounded-md border border-dashed border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 flex items-center justify-center transition-all"
                   >
-                    <X className="w-3 h-3" />
+                    <Upload className="w-3.5 h-3.5 text-gray-600" />
                   </button>
+                )}
+              </div>
+              <div className="flex flex-col gap-1 flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] bg-black/70 text-violet-300 px-1.5 py-0.5 rounded-full border border-violet-500/20 whitespace-nowrap">
+                    <ImageIcon className="w-2.5 h-2.5 inline mr-0.5" />
+                    {refImages.length === 1 && !faceMode ? 'img2img' : `IP-Adapter (${refImages.length})`}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setFaceMode(!faceMode)}
+                      className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border transition-colors ${
+                        faceMode ? 'bg-violet-500/30 text-violet-300 border-violet-400/50' : 'text-gray-500 border-white/10 hover:text-gray-300'
+                      }`}
+                    >
+                      <ScanFace className="w-2.5 h-2.5" />
+                      Face
+                    </button>
+                    <button
+                      onClick={clearAllRefImages}
+                      className="text-[10px] text-gray-500 hover:text-red-400 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
-              ))}
-              {refImages.length < 4 && (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-lg border border-dashed border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 flex items-center justify-center aspect-square transition-all"
-                >
-                  <Upload className="w-4 h-4 text-gray-600" />
-                </button>
-              )}
-            </div>
-
-            {/* Mode badge */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs bg-black/70 text-violet-300 px-2 py-0.5 rounded-full border border-violet-500/20">
-                <ImageIcon className="w-3 h-3 inline mr-1" />
-                {refImages.length === 1 && !faceMode ? 'img2img' : `IP-Adapter (${refImages.length} ref${refImages.length > 1 ? 's' : ''})`}
-              </span>
-              <button
-                onClick={clearAllRefImages}
-                className="text-[10px] text-gray-500 hover:text-red-400 transition-colors"
-              >
-                Clear all
-              </button>
-            </div>
-
-            {/* Face Match toggle */}
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-1.5">
-                <ScanFace className="w-3.5 h-3.5 text-violet-400" />
-                <span className="text-xs text-gray-300">Face Match</span>
+                {/* Strength slider */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-gray-500 whitespace-nowrap">
+                    {(refImages.length >= 2 || faceMode) ? 'Ref' : 'Str'}
+                  </span>
+                  <input
+                    type="range"
+                    min={0.1}
+                    max={1.0}
+                    step={0.05}
+                    value={(refImages.length >= 2 || faceMode) ? ipScale : strength}
+                    onChange={(e) => (refImages.length >= 2 || faceMode) ? setIpScale(Number(e.target.value)) : setStrength(Number(e.target.value))}
+                    className="flex-1 h-1 accent-violet-500"
+                  />
+                  <span className="text-[9px] text-violet-400 w-6 text-right">
+                    {((refImages.length >= 2 || faceMode) ? ipScale : strength).toFixed(2)}
+                  </span>
+                </div>
               </div>
-              <button
-                onClick={() => setFaceMode(!faceMode)}
-                className={`relative w-9 h-5 rounded-full transition-colors ${
-                  faceMode ? 'bg-violet-500' : 'bg-white/10'
-                }`}
-              >
-                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
-                  faceMode ? 'left-[18px]' : 'left-0.5'
-                }`} />
-              </button>
             </div>
-
-            {/* Reference Strength slider (IP-Adapter scale) */}
-            {(refImages.length >= 2 || faceMode) && (
-              <div className="flex items-center gap-2 px-1">
-                <Sliders className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                <span className="text-[10px] text-gray-400 whitespace-nowrap">Ref Strength</span>
-                <input
-                  type="range"
-                  min={0.1}
-                  max={1.0}
-                  step={0.05}
-                  value={ipScale}
-                  onChange={(e) => setIpScale(Number(e.target.value))}
-                  className="flex-1 h-1 accent-violet-500"
-                />
-                <span className="text-[10px] text-violet-400 w-7 text-right">{ipScale.toFixed(2)}</span>
-              </div>
-            )}
-
-            {/* img2img strength slider (single image, no face mode) */}
-            {refImages.length === 1 && !faceMode && (
-              <div className="flex items-center gap-2 px-1">
-                <span className="text-[10px] text-gray-400 whitespace-nowrap">Strength</span>
-                <input
-                  type="range"
-                  min={0.1}
-                  max={1.0}
-                  step={0.05}
-                  value={strength}
-                  onChange={(e) => setStrength(Number(e.target.value))}
-                  className="flex-1 h-1 accent-violet-500"
-                />
-                <span className="text-[10px] text-violet-400 w-7 text-right">{strength.toFixed(2)}</span>
-              </div>
-            )}
           </div>
         ) : (
           <div
@@ -767,6 +896,49 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
               >
                 <Share2 className="w-3.5 h-3.5 mr-1.5" />
                 Share to Story
+              </Button>
+            )}
+          </div>
+
+          {/* Refinement Feedback Panel */}
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-3.5 h-3.5 text-gray-500" />
+              <span className="text-xs text-gray-500">Not satisfied?</span>
+              {refinements.length > 0 && (
+                <span className="text-[10px] text-violet-400">{refinements.length}/3 selected</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {REFINEMENT_CATEGORIES.map((cat) => {
+                const Icon = cat.icon
+                const isActive = refinements.includes(cat.id)
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleRefinement(cat.id)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border transition-all ${
+                      isActive
+                        ? 'bg-violet-500/30 text-violet-300 border-violet-400/60'
+                        : refinements.length >= 3
+                        ? 'opacity-40 cursor-not-allowed bg-white/5 text-gray-500 border-white/10'
+                        : colorMap[cat.color] || 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'
+                    }`}
+                    disabled={!isActive && refinements.length >= 3}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {cat.label}
+                  </button>
+                )
+              })}
+            </div>
+            {refinements.length > 0 && (
+              <Button
+                onClick={handleRefineAndGenerate}
+                className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold py-2"
+              >
+                <RefreshCw className="w-3.5 h-3.5 mr-2" />
+                Refine & Regenerate
               </Button>
             )}
           </div>
