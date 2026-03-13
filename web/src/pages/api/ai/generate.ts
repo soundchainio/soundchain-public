@@ -12,11 +12,11 @@ async function getBetaUser(req: NextApiRequest): Promise<string | null> {
     const meRes = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', authorization: `Bearer ${jwt}` },
-      body: JSON.stringify({ query: '{ me { id profile { handle } } }' }),
+      body: JSON.stringify({ query: '{ me { id handle } }' }),
     })
     if (!meRes.ok) return null
     const data = await meRes.json()
-    return data?.data?.me?.profile?.handle || null
+    return data?.data?.me?.handle || null
   } catch {
     return null
   }
