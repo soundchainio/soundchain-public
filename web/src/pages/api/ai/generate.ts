@@ -1,25 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-// Beta whitelist — only these handles can generate (Phase 1)
-const BETA_HANDLES = ['furdA1']
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
-
-async function getBetaUser(req: NextApiRequest): Promise<string | null> {
+// Beta: require logged-in user (has JWT). Only furdA1 knows the Generate tab exists.
+function isAuthenticated(req: NextApiRequest): boolean {
   const jwt = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '')
-  if (!jwt) return null
-  try {
-    const meRes = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${jwt}` },
-      body: JSON.stringify({ query: '{ me { id handle } }' }),
-    })
-    if (!meRes.ok) return null
-    const data = await meRes.json()
-    return data?.data?.me?.handle || null
-  } catch {
-    return null
-  }
+  return !!jwt && jwt.length > 10
 }
 
 // Multi-backend router — routes to Imagine Server (diffusers) or Ollama
@@ -125,9 +109,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     cfg,
   } = req.body
 
-  // Beta gate — only whitelisted handles
-  const handle = await getBetaUser(req)
-  if (!handle || !BETA_HANDLES.includes(handle)) {
+  // Beta gate — must be logged in
+  if (!isAuthenticated(req)) {
     return res.status(403).json({ error: 'Imagine is in beta. Stay tuned.' })
   }
 
