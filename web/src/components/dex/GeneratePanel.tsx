@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
-import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2 } from 'lucide-react'
+import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders } from 'lucide-react'
 import { Button } from 'components/ui/button'
 import { toast } from 'react-toastify'
 
@@ -151,10 +151,11 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const [showSettings, setShowSettings] = useState(false)
   const [activePreset, setActivePreset] = useState<string | null>(null)
 
-  // img2img state
-  const [refImage, setRefImage] = useState<string | null>(null) // base64 data URL
-  const [refImageName, setRefImageName] = useState<string | null>(null)
+  // img2img + IP-Adapter state
+  const [refImages, setRefImages] = useState<{data: string, name: string}[]>([])
   const [strength, setStrength] = useState(0.7)
+  const [faceMode, setFaceMode] = useState(false)
+  const [ipScale, setIpScale] = useState(0.6)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -196,29 +197,36 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     })
   }, [])
 
-  const handleImageFile = useCallback((file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file')
-      return
+  const handleImageFiles = useCallback((files: File[]) => {
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not an image`)
+        continue
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} must be under 10MB`)
+        continue
+      }
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setRefImages((prev) => {
+          if (prev.length >= 4) {
+            toast.error('Max 4 reference images')
+            return prev
+          }
+          return [...prev, { data: e.target?.result as string, name: file.name }]
+        })
+      }
+      reader.readAsDataURL(file)
     }
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image must be under 10MB')
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setRefImage(e.target?.result as string)
-      setRefImageName(file.name)
-    }
-    reader.readAsDataURL(file)
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file) handleImageFile(file)
-  }, [handleImageFile])
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length) handleImageFiles(files)
+  }, [handleImageFiles])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -230,9 +238,14 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     setIsDragging(false)
   }, [])
 
-  const removeRefImage = useCallback(() => {
-    setRefImage(null)
-    setRefImageName(null)
+  const removeRefImage = useCallback((index: number) => {
+    setRefImages((prev) => prev.filter((_, i) => i !== index))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }, [])
+
+  const clearAllRefImages = useCallback(() => {
+    setRefImages([])
+    setFaceMode(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }, [])
 
@@ -277,6 +290,11 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     const preset = STYLE_PRESETS.find((p) => p.label === activePreset)
     const fullPrompt = preset ? preset.prefix + prompt : prompt
 
+    // Determine mode: if 1 image without face mode, use standard img2img (faster)
+    // If 2+ images OR face mode, use IP-Adapter path
+    const useIpAdapter = refImages.length >= 2 || (refImages.length >= 1 && faceMode)
+    const useSingleImg2Img = refImages.length === 1 && !faceMode
+
     try {
       const res = await fetch('/api/ai/generate', {
         method: 'POST',
@@ -291,7 +309,12 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           steps,
           seed,
           cfg,
-          ...(refImage ? { image: refImage, strength } : {}),
+          ...(useSingleImg2Img ? { image: refImages[0].data, strength } : {}),
+          ...(useIpAdapter ? {
+            referenceImages: refImages.map(r => r.data),
+            faceMode,
+            ipScale,
+          } : {}),
         }),
         signal: abortRef.current.signal,
       })
@@ -311,7 +334,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     } finally {
       setGenerating(false)
     }
-  }, [prompt, negativePrompt, selectedModel, width, height, steps, seed, cfg, activePreset, saveHistory])
+  }, [prompt, negativePrompt, selectedModel, width, height, steps, seed, cfg, activePreset, saveHistory, refImages, faceMode, ipScale, strength])
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort()
@@ -373,47 +396,110 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         />
       </div>
 
-      {/* Reference Image (img2img) */}
+      {/* Reference Images (img2img / IP-Adapter) */}
       <div>
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
+          multiple
           className="hidden"
           onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) handleImageFile(file)
+            const files = Array.from(e.target.files || [])
+            if (files.length) handleImageFiles(files)
           }}
         />
-        {refImage ? (
-          <div className="relative rounded-lg overflow-hidden border border-violet-500/30 bg-black">
-            <img src={refImage} alt="Reference" className="w-full h-32 object-cover opacity-80" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs bg-black/70 backdrop-blur-sm text-violet-300 px-2 py-1 rounded-full">
+        {refImages.length > 0 ? (
+          <div className="space-y-2">
+            {/* Thumbnail grid */}
+            <div className="grid grid-cols-4 gap-2">
+              {refImages.map((img, i) => (
+                <div key={i} className="relative rounded-lg overflow-hidden border border-violet-500/30 bg-black aspect-square">
+                  <img src={img.data} alt={img.name} className="w-full h-full object-cover opacity-80" />
+                  <button
+                    onClick={() => removeRefImage(i)}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white hover:bg-red-500/80 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              {refImages.length < 4 && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-lg border border-dashed border-white/10 hover:border-violet-400/50 hover:bg-violet-500/5 flex items-center justify-center aspect-square transition-all"
+                >
+                  <Upload className="w-4 h-4 text-gray-600" />
+                </button>
+              )}
+            </div>
+
+            {/* Mode badge */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs bg-black/70 text-violet-300 px-2 py-0.5 rounded-full border border-violet-500/20">
                 <ImageIcon className="w-3 h-3 inline mr-1" />
-                img2img mode
+                {refImages.length === 1 && !faceMode ? 'img2img' : `IP-Adapter (${refImages.length} ref${refImages.length > 1 ? 's' : ''})`}
               </span>
+              <button
+                onClick={clearAllRefImages}
+                className="text-[10px] text-gray-500 hover:text-red-400 transition-colors"
+              >
+                Clear all
+              </button>
             </div>
-            <button
-              onClick={removeRefImage}
-              className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 text-white hover:bg-red-500/80 flex items-center justify-center transition-colors"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-            {/* Strength slider */}
-            <div className="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-1.5 flex items-center gap-2">
-              <span className="text-[10px] text-gray-400 whitespace-nowrap">Strength</span>
-              <input
-                type="range"
-                min={0.1}
-                max={1.0}
-                step={0.05}
-                value={strength}
-                onChange={(e) => setStrength(Number(e.target.value))}
-                className="flex-1 h-1 accent-violet-500"
-              />
-              <span className="text-[10px] text-violet-400 w-7 text-right">{strength.toFixed(2)}</span>
+
+            {/* Face Match toggle */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-1.5">
+                <ScanFace className="w-3.5 h-3.5 text-violet-400" />
+                <span className="text-xs text-gray-300">Face Match</span>
+              </div>
+              <button
+                onClick={() => setFaceMode(!faceMode)}
+                className={`relative w-9 h-5 rounded-full transition-colors ${
+                  faceMode ? 'bg-violet-500' : 'bg-white/10'
+                }`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                  faceMode ? 'left-[18px]' : 'left-0.5'
+                }`} />
+              </button>
             </div>
+
+            {/* Reference Strength slider (IP-Adapter scale) */}
+            {(refImages.length >= 2 || faceMode) && (
+              <div className="flex items-center gap-2 px-1">
+                <Sliders className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                <span className="text-[10px] text-gray-400 whitespace-nowrap">Ref Strength</span>
+                <input
+                  type="range"
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  value={ipScale}
+                  onChange={(e) => setIpScale(Number(e.target.value))}
+                  className="flex-1 h-1 accent-violet-500"
+                />
+                <span className="text-[10px] text-violet-400 w-7 text-right">{ipScale.toFixed(2)}</span>
+              </div>
+            )}
+
+            {/* img2img strength slider (single image, no face mode) */}
+            {refImages.length === 1 && !faceMode && (
+              <div className="flex items-center gap-2 px-1">
+                <span className="text-[10px] text-gray-400 whitespace-nowrap">Strength</span>
+                <input
+                  type="range"
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  value={strength}
+                  onChange={(e) => setStrength(Number(e.target.value))}
+                  className="flex-1 h-1 accent-violet-500"
+                />
+                <span className="text-[10px] text-violet-400 w-7 text-right">{strength.toFixed(2)}</span>
+              </div>
+            )}
           </div>
         ) : (
           <div
@@ -429,7 +515,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           >
             <Upload className={`w-3.5 h-3.5 ${isDragging ? 'text-violet-400' : 'text-gray-600'}`} />
             <span className={`text-xs ${isDragging ? 'text-violet-300' : 'text-gray-600'}`}>
-              {isDragging ? 'Drop image!' : 'Drop or tap to add reference image (img2img)'}
+              {isDragging ? 'Drop images!' : 'Drop or tap to add reference images (up to 4)'}
             </span>
           </div>
         )}
@@ -623,7 +709,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         <div className="flex flex-col items-center justify-center gap-2 py-6">
           <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
           <span className="text-sm text-gray-400">
-            {refImage ? 'Reimagining' : 'Generating'} with {currentModel?.name}...
+            {refImages.length >= 2 || faceMode ? 'Blending references' : refImages.length === 1 ? 'Reimagining' : 'Generating'} with {currentModel?.name}...
           </span>
           <span className="text-xs text-gray-600">
             {elapsed}s elapsed {currentModel && `(est. ${currentModel.estimate})`}
