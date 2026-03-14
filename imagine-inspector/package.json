@@ -1,0 +1,15 @@
+{
+  "name": "imagine-inspector",
+  "version": "1.0.0",
+  "description": "Local Electron app that inspects Grok Imagine API calls via Chrome DevTools Protocol",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "SoundChain",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "electron": "^33.0.0"
+  }
+}

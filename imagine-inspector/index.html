@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imagine Inspector</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+      background: #0d1117;
+      color: #c9d1d9;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- Header Bar --- */
+    .header {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      height: 48px;
+    }
+
+    .header .title {
+      color: #58a6ff;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .header .subtitle {
+      color: #8b949e;
+      font-size: 11px;
+    }
+
+    .header .spacer { flex: 1; }
+
+    .header button {
+      background: #21262d;
+      color: #c9d1d9;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .header button:hover {
+      background: #30363d;
+      border-color: #58a6ff;
+    }
+
+    .header button.active {
+      background: #1f6feb;
+      border-color: #1f6feb;
+      color: #fff;
+    }
+
+    .header button.danger {
+      border-color: #f85149;
+      color: #f85149;
+    }
+
+    .header button.danger:hover {
+      background: #f8514922;
+    }
+
+    .header .badge {
+      background: #1f6feb;
+      color: #fff;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .header .badge.imagine {
+      background: #a371f7;
+    }
+
+    /* --- Status Bar --- */
+    .status-bar {
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 4px 16px;
+      font-size: 11px;
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+      height: 28px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .status-dot.green { background: #3fb950; }
+    .status-dot.red { background: #f85149; }
+    .status-dot.yellow { background: #d29922; }
+
+    /* --- Filter Bar --- */
+    .filter-bar {
+      background: #0d1117;
+      border-bottom: 1px solid #30363d;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .filter-bar input {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #c9d1d9;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      flex: 1;
+      max-width: 300px;
+    }
+
+    .filter-bar input:focus {
+      outline: none;
+      border-color: #58a6ff;
+    }
+
+    .filter-bar label {
+      font-size: 11px;
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .filter-bar input[type="checkbox"] {
+      accent-color: #a371f7;
+    }
+
+    /* --- Log Container --- */
+    .log-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .log-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .log-container::-webkit-scrollbar-track {
+      background: #0d1117;
+    }
+
+    .log-container::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 4px;
+    }
+
+    /* --- Log Entry --- */
+    .log-entry {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .log-entry:hover {
+      border-color: #58a6ff;
+    }
+
+    .log-entry.imagine {
+      border-left: 3px solid #a371f7;
+    }
+
+    .log-entry.error {
+      border-left: 3px solid #f85149;
+    }
+
+    .log-entry.websocket {
+      border-left: 3px solid #d29922;
+    }
+
+    .log-entry.console {
+      border-left: 3px solid #3fb950;
+    }
+
+    .log-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .log-header:hover {
+      background: #1c2128;
+    }
+
+    .log-method {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      min-width: 44px;
+      text-align: center;
+    }
+
+    .log-method.GET { background: #238636; color: #fff; }
+    .log-method.POST { background: #1f6feb; color: #fff; }
+    .log-method.PUT { background: #d29922; color: #fff; }
+    .log-method.DELETE { background: #f85149; color: #fff; }
+    .log-method.WS { background: #d29922; color: #fff; }
+    .log-method.LOG { background: #3fb950; color: #fff; }
+    .log-method.WARN { background: #d29922; color: #fff; }
+    .log-method.ERR { background: #f85149; color: #fff; }
+
+    .log-status {
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 28px;
+    }
+
+    .log-status.ok { color: #3fb950; }
+    .log-status.redirect { color: #d29922; }
+    .log-status.error { color: #f85149; }
+
+    .log-url {
+      font-size: 11px;
+      color: #8b949e;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .log-time {
+      font-size: 10px;
+      color: #484f58;
+      flex-shrink: 0;
+    }
+
+    .log-tag {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .log-tag.imagine {
+      background: #a371f722;
+      color: #a371f7;
+    }
+
+    .log-tag.face {
+      background: #f8514922;
+      color: #f85149;
+    }
+
+    /* --- Expandable Body --- */
+    .log-body {
+      display: none;
+      border-top: 1px solid #30363d;
+      padding: 8px 10px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .log-body.expanded {
+      display: block;
+    }
+
+    .log-body pre {
+      font-size: 11px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-body .section-label {
+      color: #58a6ff;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin: 8px 0 4px 0;
+    }
+
+    .log-body .section-label:first-child {
+      margin-top: 0;
+    }
+
+    /* --- Empty State --- */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #484f58;
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h2 {
+      color: #8b949e;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    /* Flash animation for new entries */
+    @keyframes flash {
+      0% { background: #1f6feb22; }
+      100% { background: transparent; }
+    }
+
+    .log-entry.new {
+      animation: flash 1s ease-out;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <span class="title">IMAGINE INSPECTOR</span>
+    <span class="subtitle">CDP Network Monitor</span>
+    <span class="spacer"></span>
+    <span class="badge" id="totalBadge">0</span>
+    <span class="badge imagine" id="imagineBadge">0 imagine</span>
+    <button id="btnStart" class="active">Capture</button>
+    <button id="btnStop">Stop</button>
+    <button id="btnClear" class="danger">Clear</button>
+    <button id="btnExport">Export JSON</button>
+    <button id="btnReload">Reload Grok</button>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span><span class="status-dot yellow" id="statusDot"></span><span id="statusText">Initializing...</span></span>
+    <span id="statusDetail"></span>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <input type="text" id="filterInput" placeholder="Filter by URL, method, or body content..." />
+    <label><input type="checkbox" id="filterImagine" /> Imagine only</label>
+    <label><input type="checkbox" id="filterFace" /> Face-related</label>
+    <label><input type="checkbox" id="filterPost" /> POST only</label>
+    <label><input type="checkbox" id="hideAssets" checked /> Hide assets</label>
+  </div>
+
+  <!-- Log Container -->
+  <div class="log-container" id="logContainer">
+    <div class="empty-state" id="emptyState">
+      <div class="icon">🔍</div>
+      <h2>Waiting for traffic...</h2>
+      <p>
+        Log in to X/Grok in the left pane, then navigate to Imagine.<br/>
+        All API calls to x.ai domains will appear here in real-time.<br/>
+        Click any entry to expand request/response details.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // --- State ---
+    let allEntries = []
+    let autoScroll = true
+    let totalCount = 0
+    let imagineCount = 0
+
+    // --- DOM refs ---
+    const logContainer = document.getElementById('logContainer')
+    const emptyState = document.getElementById('emptyState')
+    const filterInput = document.getElementById('filterInput')
+    const filterImagine = document.getElementById('filterImagine')
+    const filterFace = document.getElementById('filterFace')
+    const filterPost = document.getElementById('filterPost')
+    const hideAssets = document.getElementById('hideAssets')
+    const totalBadge = document.getElementById('totalBadge')
+    const imagineBadge = document.getElementById('imagineBadge')
+    const statusDot = document.getElementById('statusDot')
+    const statusText = document.getElementById('statusText')
+    const statusDetail = document.getElementById('statusDetail')
+
+    // Asset extensions to hide
+    const ASSET_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp', '.woff', '.woff2', '.ttf', '.css', '.map']
+
+    function isAssetUrl(url) {
+      if (!url) return false
+      const lower = url.toLowerCase().split('?')[0]
+      return ASSET_EXTENSIONS.some(ext => lower.endsWith(ext))
+    }
+
+    // --- Filters ---
+    function passesFilter(entry) {
+      const query = filterInput.value.toLowerCase()
+
+      // Hide assets
+      if (hideAssets.checked && entry.captureType === 'network' && isAssetUrl(entry.url)) {
+        return false
+      }
+
+      // Imagine only
+      if (filterImagine.checked && !entry.isImagineRelated) return false
+
+      // Face-related
+      if (filterFace.checked) {
+        const str = JSON.stringify(entry).toLowerCase()
+        if (!str.includes('face')) return false
+      }
+
+      // POST only
+      if (filterPost.checked && entry.method !== 'POST') return false
+
+      // Text filter
+      if (query) {
+        const str = JSON.stringify(entry).toLowerCase()
+        if (!str.includes(query)) return false
+      }
+
+      return true
+    }
+
+    function refilter() {
+      // Re-render all entries with current filters
+      logContainer.innerHTML = ''
+      let visibleCount = 0
+
+      for (const entry of allEntries) {
+        if (passesFilter(entry)) {
+          logContainer.appendChild(createLogElement(entry, false))
+          visibleCount++
+        }
+      }
+
+      if (visibleCount === 0) {
+        logContainer.appendChild(emptyState)
+        emptyState.style.display = ''
+      } else {
+        emptyState.style.display = 'none'
+      }
+    }
+
+    // --- Rendering ---
+    function formatTime(ts) {
+      if (!ts) return ''
+      const d = new Date(ts)
+      return d.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        + '.' + String(d.getMilliseconds()).padStart(3, '0')
+    }
+
+    function statusClass(code) {
+      if (!code) return ''
+      if (code < 300) return 'ok'
+      if (code < 400) return 'redirect'
+      return 'error'
+    }
+
+    function syntaxHighlight(json) {
+      if (typeof json !== 'string') {
+        json = JSON.stringify(json, null, 2)
+      }
+      return json
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"(\\u[a-fA-F0-9]{4}|\\[^u]|[^"\\])*"(?=\s*:)/g, '<span style="color:#79c0ff">$&</span>')  // keys
+        .replace(/"(\\u[a-fA-F0-9]{4}|\\[^u]|[^"\\])*"/g, '<span style="color:#a5d6ff">$&</span>')            // string values
+        .replace(/\b(true|false)\b/g, '<span style="color:#ff7b72">$&</span>')                                   // booleans
+        .replace(/\b(null)\b/g, '<span style="color:#8b949e">$&</span>')                                         // null
+        .replace(/\b(-?\d+\.?\d*([eE][+-]?\d+)?)\b/g, '<span style="color:#d2a8ff">$&</span>')                  // numbers
+    }
+
+    function truncateUrl(url, maxLen = 80) {
+      if (!url || url.length <= maxLen) return url || ''
+      return url.substring(0, maxLen) + '...'
+    }
+
+    function createLogElement(entry, isNew = true) {
+      const div = document.createElement('div')
+      div.className = 'log-entry'
+      if (isNew) div.className += ' new'
+      if (entry.isImagineRelated) div.className += ' imagine'
+      if (entry.error || (entry.status && entry.status >= 400)) div.className += ' error'
+      if (entry.captureType === 'websocket') div.className += ' websocket'
+      if (entry.captureType === 'console') div.className += ' console'
+
+      // --- Header ---
+      const header = document.createElement('div')
+      header.className = 'log-header'
+
+      // Method badge
+      const methodEl = document.createElement('span')
+      methodEl.className = 'log-method'
+      if (entry.captureType === 'network') {
+        methodEl.textContent = entry.method || '?'
+        methodEl.className += ' ' + (entry.method || '')
+      } else if (entry.captureType === 'websocket') {
+        methodEl.textContent = 'WS'
+        methodEl.className += ' WS'
+      } else if (entry.captureType === 'console') {
+        const lvl = (entry.level || 'log').toUpperCase()
+        methodEl.textContent = lvl === 'ERROR' ? 'ERR' : lvl === 'WARNING' ? 'WARN' : 'LOG'
+        methodEl.className += ' ' + methodEl.textContent
+      }
+      header.appendChild(methodEl)
+
+      // Status code
+      if (entry.status) {
+        const statusEl = document.createElement('span')
+        statusEl.className = 'log-status ' + statusClass(entry.status)
+        statusEl.textContent = entry.status
+        header.appendChild(statusEl)
+      }
+
+      // URL / text
+      const urlEl = document.createElement('span')
+      urlEl.className = 'log-url'
+      if (entry.captureType === 'console') {
+        urlEl.textContent = entry.text || ''
+      } else if (entry.captureType === 'websocket') {
+        urlEl.textContent = `[${entry.direction}] ${truncateUrl(entry.payloadData, 100)}`
+      } else {
+        urlEl.textContent = truncateUrl(entry.url)
+        urlEl.title = entry.url || ''
+      }
+      header.appendChild(urlEl)
+
+      // Tags
+      if (entry.isImagineRelated) {
+        const tag = document.createElement('span')
+        tag.className = 'log-tag imagine'
+        tag.textContent = 'IMAGINE'
+        header.appendChild(tag)
+
+        // Check for face-related
+        const str = JSON.stringify(entry).toLowerCase()
+        if (str.includes('face')) {
+          const faceTag = document.createElement('span')
+          faceTag.className = 'log-tag face'
+          faceTag.textContent = 'FACE'
+          header.appendChild(faceTag)
+        }
+      }
+
+      // Timestamp
+      const timeEl = document.createElement('span')
+      timeEl.className = 'log-time'
+      timeEl.textContent = formatTime(entry.timestamp)
+      header.appendChild(timeEl)
+
+      div.appendChild(header)
+
+      // --- Expandable Body ---
+      const body = document.createElement('div')
+      body.className = 'log-body'
+
+      let bodyHtml = ''
+
+      if (entry.captureType === 'network') {
+        // Request headers
+        if (entry.headers && Object.keys(entry.headers).length > 0) {
+          bodyHtml += '<div class="section-label">Request Headers</div>'
+          bodyHtml += '<pre>' + syntaxHighlight(entry.headers) + '</pre>'
+        }
+
+        // Request body
+        if (entry.postDataParsed) {
+          bodyHtml += '<div class="section-label">Request Body (JSON)</div>'
+          bodyHtml += '<pre>' + syntaxHighlight(entry.postDataParsed) + '</pre>'
+        } else if (entry.postData) {
+          bodyHtml += '<div class="section-label">Request Body</div>'
+          bodyHtml += '<pre>' + entry.postData.substring(0, 5000) + '</pre>'
+        }
+
+        // Response headers
+        if (entry.responseHeaders && Object.keys(entry.responseHeaders).length > 0) {
+          bodyHtml += '<div class="section-label">Response Headers</div>'
+          bodyHtml += '<pre>' + syntaxHighlight(entry.responseHeaders) + '</pre>'
+        }
+
+        // Response body
+        if (entry.responseParsed) {
+          bodyHtml += '<div class="section-label">Response Body (JSON)</div>'
+          bodyHtml += '<pre>' + syntaxHighlight(entry.responseParsed) + '</pre>'
+        } else if (entry.responseBody) {
+          bodyHtml += '<div class="section-label">Response Body</div>'
+          bodyHtml += '<pre>' + String(entry.responseBody).substring(0, 5000) + '</pre>'
+        }
+
+        // Timing
+        if (entry.timing) {
+          bodyHtml += '<div class="section-label">Timing</div>'
+          bodyHtml += '<pre>' + syntaxHighlight(entry.timing) + '</pre>'
+        }
+
+        // Error
+        if (entry.error) {
+          bodyHtml += '<div class="section-label">Error</div>'
+          bodyHtml += '<pre style="color:#f85149">' + entry.error + '</pre>'
+        }
+      } else if (entry.captureType === 'websocket') {
+        if (entry.parsed) {
+          bodyHtml += '<div class="section-label">Payload (JSON)</div>'
+          bodyHtml += '<pre>' + syntaxHighlight(entry.parsed) + '</pre>'
+        } else {
+          bodyHtml += '<div class="section-label">Payload</div>'
+          bodyHtml += '<pre>' + (entry.payloadData || '').substring(0, 5000) + '</pre>'
+        }
+      } else if (entry.captureType === 'console') {
+        bodyHtml += '<div class="section-label">Console Message</div>'
+        bodyHtml += '<pre>' + (entry.text || '') + '</pre>'
+        if (entry.url) {
+          bodyHtml += '<div class="section-label">Source</div>'
+          bodyHtml += '<pre>' + entry.url + (entry.line ? ':' + entry.line : '') + '</pre>'
+        }
+      }
+
+      body.innerHTML = bodyHtml
+      div.appendChild(body)
+
+      // Toggle expand
+      header.addEventListener('click', () => {
+        body.classList.toggle('expanded')
+      })
+
+      return div
+    }
+
+    // --- Event Listeners ---
+
+    // Captures from main process
+    window.inspector.onCapture((entry) => {
+      allEntries.push(entry)
+      totalCount++
+      if (entry.isImagineRelated) imagineCount++
+
+      totalBadge.textContent = totalCount
+      imagineBadge.textContent = imagineCount + ' imagine'
+
+      if (passesFilter(entry)) {
+        emptyState.style.display = 'none'
+        const el = createLogElement(entry)
+        logContainer.appendChild(el)
+
+        // Auto-scroll if near bottom
+        if (autoScroll) {
+          logContainer.scrollTop = logContainer.scrollHeight
+        }
+      }
+    })
+
+    // Status updates
+    window.inspector.onStatus((status) => {
+      statusText.textContent = status.message
+
+      if (status.type === 'attached' || status.type === 'started') {
+        statusDot.className = 'status-dot green'
+      } else if (status.type === 'error' || status.type === 'detached') {
+        statusDot.className = 'status-dot red'
+      } else if (status.type === 'stopped') {
+        statusDot.className = 'status-dot yellow'
+      } else if (status.type === 'cleared') {
+        statusDot.className = 'status-dot yellow'
+        allEntries = []
+        totalCount = 0
+        imagineCount = 0
+        totalBadge.textContent = '0'
+        imagineBadge.textContent = '0 imagine'
+        logContainer.innerHTML = ''
+        logContainer.appendChild(emptyState)
+        emptyState.style.display = ''
+      }
+    })
+
+    // Auto-scroll detection
+    logContainer.addEventListener('scroll', () => {
+      const { scrollTop, scrollHeight, clientHeight } = logContainer
+      autoScroll = scrollHeight - scrollTop - clientHeight < 50
+    })
+
+    // Filter controls
+    filterInput.addEventListener('input', refilter)
+    filterImagine.addEventListener('change', refilter)
+    filterFace.addEventListener('change', refilter)
+    filterPost.addEventListener('change', refilter)
+    hideAssets.addEventListener('change', refilter)
+
+    // Buttons
+    document.getElementById('btnStart').addEventListener('click', () => window.inspector.startCapture())
+    document.getElementById('btnStop').addEventListener('click', () => window.inspector.stopCapture())
+    document.getElementById('btnClear').addEventListener('click', () => window.inspector.clearCaptures())
+    document.getElementById('btnReload').addEventListener('click', () => window.inspector.reload())
+
+    document.getElementById('btnExport').addEventListener('click', async () => {
+      const result = await window.inspector.exportCaptures()
+      if (result.success) {
+        statusText.textContent = `Exported ${result.count} captures to ${result.path}`
+        statusDetail.textContent = ''
+      }
+    })
+  </script>
+</body>
+</html>
