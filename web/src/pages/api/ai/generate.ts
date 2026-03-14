@@ -86,8 +86,15 @@ async function handleImagine(
       errMsg = errText || errMsg
     }
     // Surface OOM and memory errors clearly
-    if (errMsg.toLowerCase().includes('out of memory') || errMsg.toLowerCase().includes('oom') || errMsg.includes('CUDA')) {
-      errMsg = `Server ran out of memory — try fewer reference images, a faster model, or smaller dimensions. (${errMsg})`
+    const lower = errMsg.toLowerCase()
+    if (lower.includes('out of memory') || lower.includes('oom') || errMsg.includes('CUDA') || lower.includes('killed') || lower.includes('cannot allocate')) {
+      const refCount = body.referenceImages?.length || 0
+      errMsg = `Server ran out of memory${refCount >= 2 ? ` with ${refCount} reference images` : ''} — try fewer reference images, a faster model (SDXL Turbo), or smaller dimensions.`
+    }
+    // Surface generic 500 with actionable guidance
+    if (res.status === 500 && errMsg === `Imagine server error: 500`) {
+      const refCount = body.referenceImages?.length || 0
+      errMsg = `Generation failed on the server.${refCount >= 3 ? ' Too many reference images may cause this — try 1-2 instead.' : ''} Try a faster model or smaller dimensions.`
     }
     throw new Error(errMsg)
   }
