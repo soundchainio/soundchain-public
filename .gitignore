@@ -51,3 +51,4 @@ node_modules/
 
 # Private workflow files
 scripts/post-announcements.sh
+session-notes-*.md

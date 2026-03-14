@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders, RefreshCw, Focus, Sun, Palette, LayoutGrid, Contrast, Ban, Film } from 'lucide-react'
+import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders, RefreshCw, Focus, Sun, Palette, LayoutGrid, Contrast, Ban, Film, Play, ShieldOff } from 'lucide-react'
 import { Button } from 'components/ui/button'
 import { toast } from 'react-toastify'
 import type { StoryboardMode } from './storyboard/storyboardTypes'
@@ -239,6 +239,26 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [nsfwMode, setNsfwMode] = useState(false)
+
+  // Animate mode state
+  const [animateImage, setAnimateImage] = useState<string | null>(null)
+  const [animateImageName, setAnimateImageName] = useState('')
+  const [animateDuration, setAnimateDuration] = useState(6)
+  const [animateMotion, setAnimateMotion] = useState(127)
+  const [animateSteps, setAnimateSteps] = useState(25)
+  const [animatePrompt, setAnimatePrompt] = useState('')
+  const [animateResult, setAnimateResult] = useState<{
+    video: string
+    duration_seconds: number
+    num_frames: number
+    fps: number
+    time_seconds: number
+    width: number
+    height: number
+  } | null>(null)
+  const animateFileRef = useRef<HTMLInputElement>(null)
+
   const [refinements, setRefinements] = useState<string[]>([])
 
   const [generating, setGenerating] = useState(false)
@@ -465,6 +485,70 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     onShareToStory(result.image)
   }, [result, onShareToStory])
 
+  const handleAnimate = useCallback(async () => {
+    if (!animateImage) {
+      toast.error('Upload an image to animate')
+      return
+    }
+
+    setGenerating(true)
+    setError(null)
+    abortRef.current = new AbortController()
+
+    try {
+      const res = await fetch('/api/ai/animate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: animateImage,
+          prompt: animatePrompt || '',
+          target_duration: animateDuration,
+          motion_bucket_id: animateMotion,
+          steps: animateSteps,
+          nsfw: nsfwMode,
+          ...(faceMode && refImages.length > 0 ? {
+            reference_images: refImages.map(r => r.data),
+            face_mode: true,
+            ip_adapter_scale: ipScale,
+          } : {}),
+        }),
+        signal: abortRef.current.signal,
+      })
+
+      const text = await res.text()
+      let data: any
+      try {
+        data = JSON.parse(text)
+      } catch {
+        setError(`Server error: ${text.slice(0, 200)}`)
+        return
+      }
+      if (!res.ok) {
+        setError(data.error || 'Animation failed')
+        return
+      }
+
+      setAnimateResult(data)
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        setError(err.message || 'Network error')
+      }
+    } finally {
+      setGenerating(false)
+    }
+  }, [animateImage, animatePrompt, animateDuration, animateMotion, animateSteps, nsfwMode, faceMode, refImages, ipScale])
+
+  const handleSaveVideo = useCallback(() => {
+    if (!animateResult?.video) return
+    const link = document.createElement('a')
+    link.href = animateResult.video
+    link.download = `soundchain-animate-${Date.now()}.mp4`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('Video saved!')
+  }, [animateResult])
+
   const [pendingRefineGenerate, setPendingRefineGenerate] = useState(false)
 
   const toggleRefinement = useCallback((id: string) => {
@@ -580,6 +664,17 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
           Single
         </button>
         <button
+          onClick={() => setMode('animate')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+            mode === 'animate'
+              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30'
+              : 'text-gray-500 hover:text-gray-300 border border-transparent'
+          }`}
+        >
+          <Play className="w-3.5 h-3.5" />
+          Animate
+        </button>
+        <button
           onClick={() => setMode('storyboard')}
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
             mode === 'storyboard'
@@ -595,6 +690,242 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
       {/* Storyboard Mode */}
       {mode === 'storyboard' ? (
         <StoryboardPanel onShareToStory={onShareToStory} />
+      ) : mode === 'animate' ? (
+        <>
+        {/* Animate Mode — SVD Img2Vid */}
+        <div className="p-3 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Play className="w-4 h-4 text-cyan-400" />
+            <span className="text-sm font-medium text-cyan-300">Animate Images</span>
+            <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30">SVD</span>
+          </div>
+          <p className="text-xs text-gray-500 mb-3">
+            Upload an image and bring it to life with Stable Video Diffusion. Add face references for character consistency. CPU inference — expect 5-30 min per generation.
+          </p>
+
+          {/* Image Upload */}
+          <input
+            ref={animateFileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (!file) return
+              resizeImageToDataUrl(file).then((dataUrl) => {
+                setAnimateImage(dataUrl)
+                setAnimateImageName(file.name)
+              })
+            }}
+          />
+
+          {animateImage ? (
+            <div className="relative mb-3">
+              <img
+                src={animateImage}
+                alt="Image to animate"
+                className="w-full h-40 object-cover rounded-lg border border-cyan-500/30"
+              />
+              <button
+                onClick={() => { setAnimateImage(null); setAnimateImageName(''); if (animateFileRef.current) animateFileRef.current.value = '' }}
+                className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 text-white hover:bg-red-500/80 flex items-center justify-center"
+              >
+                <X className="w-3 h-3" />
+              </button>
+              <span className="absolute bottom-2 left-2 text-[10px] bg-black/70 text-cyan-300 px-1.5 py-0.5 rounded">
+                {animateImageName}
+              </span>
+            </div>
+          ) : (
+            <button
+              onClick={() => animateFileRef.current?.click()}
+              className="w-full mb-3 border border-dashed border-cyan-500/30 rounded-lg px-3 py-6 flex flex-col items-center justify-center gap-2 hover:bg-cyan-500/5 transition-all"
+            >
+              <Upload className="w-5 h-5 text-cyan-500/50" />
+              <span className="text-xs text-gray-500">Upload image to animate</span>
+            </button>
+          )}
+
+          {/* Optional prompt */}
+          <textarea
+            value={animatePrompt}
+            onChange={(e) => setAnimatePrompt(e.target.value)}
+            placeholder="Optional: describe the motion... e.g. slowly panning camera, wind blowing hair"
+            className="w-full mb-3 bg-neutral-900 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-gray-500 resize-none focus:outline-none focus:border-cyan-500/50"
+            rows={2}
+            disabled={generating}
+          />
+
+          {/* Face references for animate */}
+          <div className="mb-3">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || [])
+                if (files.length) handleImageFiles(files)
+              }}
+            />
+            <div className="flex items-center gap-2 flex-wrap">
+              {refImages.length > 0 && (
+                <div className="flex gap-1.5">
+                  {refImages.map((img, i) => (
+                    <div key={i} className="relative w-10 h-10 flex-shrink-0 rounded-md overflow-hidden border border-violet-500/30">
+                      <img src={img.data} alt={img.name} className="w-full h-full object-cover opacity-80" />
+                      <button onClick={() => removeRefImage(i)} className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-black/80 text-white hover:bg-red-500/80 flex items-center justify-center"><X className="w-2.5 h-2.5" /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border border-white/10 text-gray-500 hover:text-gray-300 hover:border-white/20 transition-colors"
+              >
+                <ScanFace className="w-3 h-3" />
+                {refImages.length > 0 ? 'Add Face' : 'Add Face Refs'}
+              </button>
+              {refImages.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setFaceMode(!faceMode)}
+                    className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                      faceMode ? 'bg-violet-500/30 text-violet-300 border-violet-400/50' : 'text-gray-500 border-white/10 hover:text-gray-300'
+                    }`}
+                  >
+                    <ScanFace className="w-2.5 h-2.5" />
+                    Face Lock
+                  </button>
+                  <button onClick={clearAllRefImages} className="text-[10px] text-gray-500 hover:text-red-400">Clear</button>
+                </>
+              )}
+              <button
+                onClick={() => setNsfwMode(!nsfwMode)}
+                className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-full border transition-colors ${
+                  nsfwMode ? 'bg-red-500/30 text-red-300 border-red-400/50' : 'text-gray-500 border-white/10 hover:text-gray-300'
+                }`}
+              >
+                <ShieldOff className="w-2.5 h-2.5" />
+                NSFW
+              </button>
+            </div>
+          </div>
+
+          {/* Duration + Motion + Steps */}
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase tracking-wider">Duration</label>
+              <div className="flex items-center gap-1 mt-1">
+                <input
+                  type="range" min={2} max={180} value={animateDuration}
+                  onChange={(e) => setAnimateDuration(Number(e.target.value))}
+                  className="flex-1 h-1 accent-cyan-500"
+                  disabled={generating}
+                />
+                <span className="text-[10px] text-cyan-400 w-8 text-right">{animateDuration}s</span>
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase tracking-wider">Motion</label>
+              <div className="flex items-center gap-1 mt-1">
+                <input
+                  type="range" min={1} max={255} value={animateMotion}
+                  onChange={(e) => setAnimateMotion(Number(e.target.value))}
+                  className="flex-1 h-1 accent-cyan-500"
+                  disabled={generating}
+                />
+                <span className="text-[10px] text-cyan-400 w-6 text-right">{animateMotion}</span>
+              </div>
+            </div>
+            <div>
+              <label className="text-[10px] text-gray-500 uppercase tracking-wider">Steps</label>
+              <input
+                type="number" value={animateSteps} min={5} max={50}
+                onChange={(e) => setAnimateSteps(Number(e.target.value))}
+                className="w-full mt-1 bg-neutral-900 border border-white/10 rounded px-2 py-1 text-white text-xs"
+                disabled={generating}
+              />
+            </div>
+          </div>
+
+          {/* Generate / Cancel */}
+          {generating ? (
+            <Button onClick={handleCancel} className="w-full bg-red-600/80 hover:bg-red-600 text-white font-bold py-2.5">
+              <X className="w-4 h-4 mr-2" /> Cancel
+            </Button>
+          ) : (
+            <Button
+              onClick={handleAnimate}
+              disabled={!animateImage}
+              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2.5 disabled:opacity-40"
+            >
+              <Play className="w-4 h-4 mr-2" /> Animate Image
+            </Button>
+          )}
+
+          {/* Progress */}
+          {generating && (
+            <div className="flex flex-col items-center justify-center gap-2 py-6">
+              <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
+              <span className="text-sm text-gray-400">Animating with SVD...</span>
+              <span className="text-xs text-gray-600">{elapsed}s elapsed (est. 5-30 min on CPU)</span>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && !generating && (
+            <div className="flex items-start gap-2 p-3 mt-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Video Result */}
+          {animateResult && !generating && (
+            <div className="space-y-3 mt-3">
+              <div className="relative rounded-lg overflow-hidden border border-cyan-500/20 bg-black">
+                <video
+                  src={animateResult.video}
+                  controls
+                  autoPlay
+                  loop
+                  className="w-full h-auto"
+                />
+                <div className="absolute top-2 right-2 flex gap-1.5">
+                  <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
+                    SVD
+                  </span>
+                  <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
+                    {animateResult.duration_seconds}s
+                  </span>
+                  <span className="text-[9px] bg-black/70 backdrop-blur-sm text-gray-300 px-1.5 py-0.5 rounded">
+                    {animateResult.time_seconds}s gen
+                  </span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={handleSaveVideo} className="border-white/10 text-white hover:bg-white/10">
+                  <Download className="w-3.5 h-3.5 mr-1.5" /> Save Video
+                </Button>
+                {onShareToStory && (
+                  <Button
+                    variant="outline" size="sm"
+                    onClick={() => onShareToStory?.(animateResult.video)}
+                    className="border-white/10 text-white hover:bg-white/10"
+                  >
+                    <Share2 className="w-3.5 h-3.5 mr-1.5" /> Share to Story
+                  </Button>
+                )}
+              </div>
+              <div className="text-[10px] text-gray-600">
+                {animateResult.width}x{animateResult.height} · {animateResult.num_frames} frames · {animateResult.fps}fps
+              </div>
+            </div>
+          )}
+        </div>
+        </>
       ) : (
       <>
       {/* Prompt */}
@@ -662,6 +993,15 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                     >
                       <ScanFace className="w-2.5 h-2.5" />
                       Face
+                    </button>
+                    <button
+                      onClick={() => setNsfwMode(!nsfwMode)}
+                      className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full border transition-colors ${
+                        nsfwMode ? 'bg-red-500/30 text-red-300 border-red-400/50' : 'text-gray-500 border-white/10 hover:text-gray-300'
+                      }`}
+                    >
+                      <ShieldOff className="w-2.5 h-2.5" />
+                      NSFW
                     </button>
                     <button
                       onClick={clearAllRefImages}

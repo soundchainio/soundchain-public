@@ -39,7 +39,7 @@ export interface StoryboardFrame {
 
 export type ComicLayout = 'strip' | '2x2' | '2x3' | '3x2'
 
-export type StoryboardMode = 'single' | 'storyboard'
+export type StoryboardMode = 'single' | 'storyboard' | 'animate'
 
 export type StoryboardAction =
   | { type: 'ADD_FACE'; face: FaceBankEntry }
