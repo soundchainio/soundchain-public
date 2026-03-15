@@ -221,18 +221,20 @@ function startCapture() {
 
         console.log('[Imagine Inspector] Intercepting stream:', url, 'id:', streamId);
 
-        // Notify stream started
-        try {
-          window._inspectorCapture(JSON.stringify({
-            type: 'stream-start',
-            streamId: streamId,
-            url: url,
-            method: method,
-            timestamp: new Date().toISOString(),
-          }));
-        } catch(e) {
-          console.warn('[Imagine Inspector] Failed to send stream-start:', e.message);
+        // Send IPC via console.debug with magic prefix — always available,
+        // unlike Runtime.addBinding which has timing issues with pre-load scripts
+        function sendCapture(data) {
+          console.debug('__INSPECTOR_CAPTURE__' + JSON.stringify(data));
         }
+
+        // Notify stream started
+        sendCapture({
+          type: 'stream-start',
+          streamId: streamId,
+          url: url,
+          method: method,
+          timestamp: new Date().toISOString(),
+        });
 
         // Tee the stream
         const [consumerBranch, inspectorBranch] = this.tee();
@@ -249,19 +251,17 @@ function startCapture() {
               const body = fullBody.length > 2_000_000
                 ? fullBody.substring(0, 2_000_000) + '\\n[TRUNCATED]'
                 : fullBody;
-              try {
-                window._inspectorCapture(JSON.stringify({
-                  type: 'stream-end',
-                  streamId: streamId,
-                  url: url,
-                  status: status,
-                  statusText: statusText,
-                  headers: headers,
-                  body: body,
-                  totalChunks: chunkIndex,
-                  timestamp: new Date().toISOString(),
-                }));
-              } catch(e) {}
+              sendCapture({
+                type: 'stream-end',
+                streamId: streamId,
+                url: url,
+                status: status,
+                statusText: statusText,
+                headers: headers,
+                body: body,
+                totalChunks: chunkIndex,
+                timestamp: new Date().toISOString(),
+              });
               console.log('[Imagine Inspector] Stream complete:', url, chunkIndex, 'chunks,', fullBody.length, 'bytes');
               return;
             }
@@ -271,15 +271,13 @@ function startCapture() {
             chunkIndex++;
 
             if (chunkIndex <= 30) {
-              try {
-                window._inspectorCapture(JSON.stringify({
-                  type: 'stream-chunk',
-                  streamId: streamId,
-                  chunkIndex: chunkIndex,
-                  data: text.substring(0, 10000),
-                  timestamp: new Date().toISOString(),
-                }));
-              } catch(e) {}
+              sendCapture({
+                type: 'stream-chunk',
+                streamId: streamId,
+                chunkIndex: chunkIndex,
+                data: text.substring(0, 10000),
+                timestamp: new Date().toISOString(),
+              });
             }
 
             return readChunk();
@@ -287,15 +285,13 @@ function startCapture() {
         }
 
         readChunk().catch(err => {
-          try {
-            window._inspectorCapture(JSON.stringify({
-              type: 'stream-error',
-              streamId: streamId,
-              error: err.message || String(err),
-              body: fullBody,
-              timestamp: new Date().toISOString(),
-            }));
-          } catch(e) {}
+          sendCapture({
+            type: 'stream-error',
+            streamId: streamId,
+            error: err.message || String(err),
+            body: fullBody,
+            timestamp: new Date().toISOString(),
+          });
         });
 
         // Return consumer branch to Grok
@@ -526,13 +522,96 @@ function startCapture() {
       }
     }
 
-    // --- Console Messages ---
+    // --- Console Messages (also handles stream capture IPC via magic prefix) ---
     if (method === 'Console.messageAdded') {
       const { message } = params
+      const text = message.text || ''
+
+      // Check for stream capture IPC via console.debug with magic prefix
+      const CAPTURE_PREFIX = '__INSPECTOR_CAPTURE__'
+      if (text.startsWith(CAPTURE_PREFIX)) {
+        try {
+          const data = JSON.parse(text.slice(CAPTURE_PREFIX.length))
+
+          if (data.type === 'stream-end') {
+            const entry = {
+              captureType: 'stream',
+              streamId: data.streamId,
+              url: data.url,
+              status: data.status,
+              statusText: data.statusText,
+              responseHeaders: data.headers,
+              totalChunks: data.totalChunks,
+              timestamp: data.timestamp,
+              isImagineRelated: true,
+            }
+
+            const rawBody = data.body || ''
+            entry.responseBody = rawBody
+
+            // Parse as NDJSON
+            const lines = rawBody.split('\n').filter((l) => l.trim())
+            const parsed = []
+            for (const line of lines) {
+              try { parsed.push(JSON.parse(line)) } catch { parsed.push({ _raw: line }) }
+            }
+            entry.responseParsed = parsed
+            entry.ndJsonLineCount = parsed.length
+
+            // Extract image URLs
+            const imageUrls = []
+            const textChunks = []
+            for (const obj of parsed) {
+              if (obj.imageUrl) imageUrls.push(obj.imageUrl)
+              if (obj.image_url) imageUrls.push(obj.image_url)
+              if (obj.result?.imageUrl) imageUrls.push(obj.result.imageUrl)
+              if (obj.result?.media_url) imageUrls.push(obj.result.media_url)
+              if (obj.result?.image_urls) imageUrls.push(...obj.result.image_urls)
+              if (obj.result?.message) textChunks.push(obj.result.message)
+              if (obj.result?.token) textChunks.push(obj.result.token)
+            }
+            if (imageUrls.length > 0) entry.extractedImageUrls = imageUrls
+            if (textChunks.length > 0) entry.extractedText = textChunks.join('')
+
+            addCapture(entry)
+          } else if (data.type === 'stream-chunk') {
+            addCapture({
+              captureType: 'stream-chunk',
+              streamId: data.streamId,
+              chunkIndex: data.chunkIndex,
+              data: data.data,
+              timestamp: data.timestamp,
+              isImagineRelated: true,
+            })
+          } else if (data.type === 'stream-start') {
+            addCapture({
+              captureType: 'stream-start',
+              streamId: data.streamId,
+              url: data.url,
+              method: data.method,
+              timestamp: data.timestamp,
+              isImagineRelated: true,
+            })
+          } else if (data.type === 'stream-error') {
+            addCapture({
+              captureType: 'stream-error',
+              streamId: data.streamId,
+              error: data.error,
+              responseBody: data.body,
+              timestamp: data.timestamp,
+              isImagineRelated: true,
+            })
+          }
+        } catch (err) {
+          console.error('[Inspector] Failed to parse capture IPC:', err.message)
+        }
+        return // Don't also log as a regular console message
+      }
+
       const entry = {
         captureType: 'console',
         level: message.level,
-        text: message.text,
+        text: text,
         url: message.url,
         line: message.line,
         timestamp: createTimestamp(),
@@ -727,14 +806,14 @@ ipcMain.handle('scrape-history', async () => {
 
           results.totalConversations = allConversations.length;
 
-          // Step 2: Process each conversation
+          // Step 2: Process each conversation — fetch actual messages
           for (const conv of allConversations.slice(0, 200)) {
             const id = conv.conversationId || conv.id || conv.conversation_id || conv.chatId;
             const convData = {
               id: id,
               title: conv.title || conv.name || conv.summary || 'Untitled',
               createdAt: conv.createdAt || conv.created_at || conv.timestamp || conv.createTime,
-              updatedAt: conv.updatedAt || conv.updated_at || conv.updateTime,
+              updatedAt: conv.updatedAt || conv.updated_at || conv.updateTime || conv.modifyTime,
               messages: [],
               images: [],
               source: 'api-list',
@@ -751,49 +830,129 @@ ipcMain.handle('scrape-history', async () => {
               }
             }
 
-            // Try to fetch conversation detail if no inline messages
+            // Try to fetch conversation MESSAGES (not just metadata)
             if (convData.messages.length === 0 && id) {
-              const detailEndpoints = [
-                '/rest/app-chat/conversations/' + id,
-                '/rest/app-chat/conversation/' + id,
-                '/rest/grok/conversation/' + id,
+              // Try message-specific endpoints first, then fall back to conversation detail
+              const messageEndpoints = [
+                // Message history endpoints (most likely)
+                { url: '/rest/app-chat/conversations/' + id + '/responses', method: 'GET' },
+                { url: '/rest/app-chat/conversations/' + id + '/messages', method: 'GET' },
+                { url: '/rest/app-chat/conversations/' + id + '/history', method: 'GET' },
+                // POST-based message fetch (some APIs use POST for retrieval)
+                { url: '/rest/app-chat/conversations/' + id + '/responses', method: 'POST',
+                  body: JSON.stringify({ conversationId: id }) },
+                // Conversation detail (metadata only, but try for nested messages)
+                { url: '/rest/app-chat/conversations/' + id, method: 'GET' },
               ];
 
-              for (const dep of detailEndpoints) {
+              for (const ep of messageEndpoints) {
                 try {
-                  const detResp = await fetch(dep, { credentials: 'include' });
-                  const ct = detResp.headers.get('content-type') || '';
-                  if (detResp.ok && ct.includes('json')) {
-                    const detail = await detResp.json();
-                    convData.detailEndpoint = dep;
-                    convData.detailKeys = Object.keys(detail);
+                  const fetchOpts = { credentials: 'include', method: ep.method };
+                  if (ep.body) {
+                    fetchOpts.headers = { 'Content-Type': 'application/json' };
+                    fetchOpts.body = ep.body;
+                  }
+                  const resp = await fetch(ep.url, fetchOpts);
+                  const ct = resp.headers.get('content-type') || '';
 
-                    const messages = detail.messages || detail.responses
-                      || detail.turns || detail.data || detail.history || [];
+                  if (resp.ok && ct.includes('json')) {
+                    const rawText = await resp.text();
 
-                    for (const msg of (Array.isArray(messages) ? messages : [])) {
+                    // Try parsing as regular JSON first
+                    let data;
+                    try {
+                      data = JSON.parse(rawText);
+                    } catch(e) {
+                      // Try NDJSON (newline-delimited JSON) — Grok uses this for streaming
+                      const lines = rawText.split('\\n').filter(l => l.trim());
+                      data = [];
+                      for (const line of lines) {
+                        try { data.push(JSON.parse(line)); } catch(e2) {}
+                      }
+                    }
+
+                    if (!data) continue;
+
+                    // Store debug info for first conversation
+                    if (!results.apiDebug.messageEndpoint) {
+                      results.apiDebug.messageEndpoint = ep.url;
+                      results.apiDebug.messageMethod = ep.method;
+                      results.apiDebug.messageResponseSample = rawText.substring(0, 3000);
+                      if (typeof data === 'object' && !Array.isArray(data)) {
+                        results.apiDebug.messageResponseKeys = Object.keys(data);
+                      }
+                    }
+
+                    // Extract messages from various response structures
+                    let messages = [];
+                    if (Array.isArray(data)) {
+                      messages = data;
+                    } else if (typeof data === 'object') {
+                      messages = data.messages || data.responses || data.turns
+                        || data.history || data.data || data.items || data.results || [];
+                      if (!Array.isArray(messages)) messages = [];
+
+                      // Also check for nested modelResponse / userQuery patterns
+                      if (messages.length === 0) {
+                        // Some APIs return {modelResponse: {...}, query: "..."}
+                        if (data.modelResponse || data.response || data.query || data.userMessage) {
+                          messages = [data];
+                        }
+                      }
+                    }
+
+                    for (const msg of messages) {
                       processMessage(msg, convData, results);
                     }
-                    convData.source = 'api-detail';
-                    break;
+
+                    if (convData.messages.length > 0) {
+                      convData.source = 'api-messages';
+                      convData.messageEndpoint = ep.url;
+                      break;
+                    }
+
+                    // Even if no messages extracted, check for image URLs in raw text
+                    const imgMatches = rawText.match(/https:\/\/[^"\\s]*imagine-public[^"\\s]*/g);
+                    if (imgMatches && imgMatches.length > 0) {
+                      for (const imgUrl of imgMatches) {
+                        convData.images.push(imgUrl);
+                        results.imageCount++;
+                      }
+                      convData.source = 'api-raw-parse';
+                      convData.messageEndpoint = ep.url;
+                      break;
+                    }
+                  } else if (resp.ok && (ct.includes('text') || ct.includes('html'))) {
+                    // HTML response — scan for image URLs
+                    const html = await resp.text();
+                    const imgMatches = html.match(/https:\/\/[^"'\\s]*imagine-public[^"'\\s]*/g);
+                    if (imgMatches && imgMatches.length > 0) {
+                      for (const imgUrl of [...new Set(imgMatches)]) {
+                        convData.images.push(imgUrl);
+                        results.imageCount++;
+                      }
+                      convData.source = 'html-parse';
+                      break;
+                    }
                   }
                 } catch(e) {
-                  // Try next
+                  // Try next endpoint
                 }
               }
 
-              await new Promise(r => setTimeout(r, 150));
+              // Rate limit protection — don't hammer the API
+              await new Promise(r => setTimeout(r, 200));
             }
 
             results.conversations.push(convData);
           }
 
-          // Step 3: Also grab visible images from DOM as fallback enrichment
-          const domImages = document.querySelectorAll('img[src*="imagine-public"]');
-          const domImageUrls = [];
-          domImages.forEach(img => {
+          // Step 3: DOM scrape — grab ALL visible images and conversation links
+          const domImages = [];
+          // Grab imagine-public images (generated images/videos)
+          document.querySelectorAll('img[src*="imagine-public"], img[src*="x.ai/imagine"]').forEach(img => {
             if (img.src && !img.src.includes('analytics') && !img.src.includes('adsct')) {
-              domImageUrls.push({
+              domImages.push({
                 url: img.src,
                 alt: img.alt || '',
                 width: img.naturalWidth,
@@ -801,8 +960,26 @@ ipcMain.handle('scrape-history', async () => {
               });
             }
           });
-          results.domImages = domImageUrls;
-          results.domImageCount = domImageUrls.length;
+          // Also grab video elements with imagine sources
+          document.querySelectorAll('video source[src*="imagine-public"], video[src*="imagine-public"]').forEach(vid => {
+            const src = vid.src || vid.getAttribute('src');
+            if (src) {
+              domImages.push({
+                url: src,
+                alt: 'video',
+                type: 'video',
+              });
+            }
+          });
+          results.domImages = domImages;
+          results.domImageCount = domImages.length;
+
+          // Grab conversation sidebar links for potential navigation
+          const convLinks = [];
+          document.querySelectorAll('a[href*="/conversation/"], a[href*="conversationId"]').forEach(a => {
+            convLinks.push({ href: a.href, text: (a.textContent || '').trim().substring(0, 100) });
+          });
+          results.domConversationLinks = convLinks;
 
         } catch(e) {
           results.errors.push('Top-level: ' + e.message + ' ' + e.stack);
@@ -810,25 +987,68 @@ ipcMain.handle('scrape-history', async () => {
 
         return results;
 
-        // Helper to extract message data
+        // Helper to extract message data from various Grok response formats
         function processMessage(msg, convData, results) {
+          if (!msg || typeof msg !== 'object') return;
+
           const msgData = {
-            role: msg.role || msg.sender || (msg.isUser ? 'user' : 'assistant'),
-            text: msg.message || msg.text || msg.content || msg.query || '',
+            role: msg.role || msg.sender || msg.type
+              || (msg.isUser ? 'user' : (msg.isModelResponse ? 'assistant' : undefined))
+              || (msg.query ? 'user' : (msg.modelResponse ? 'assistant' : 'unknown')),
+            text: msg.message || msg.text || msg.content || msg.query
+              || msg.userMessage || msg.modelResponse || msg.response || '',
           };
+
+          // Handle nested response structures
+          if (msg.modelResponse && typeof msg.modelResponse === 'object') {
+            msgData.text = msg.modelResponse.message || msg.modelResponse.text
+              || msg.modelResponse.content || JSON.stringify(msg.modelResponse).substring(0, 2000);
+          }
+
+          // Extract prompt/query for user messages
+          if (msg.query || msg.userMessage || msg.prompt) {
+            msgData.prompt = msg.query || msg.userMessage || msg.prompt;
+          }
 
           // Extract all possible image attachment formats
           const attSources = [
             msg.attachments, msg.fileAttachments, msg.images,
             msg.media, msg.mediaAttachments, msg.generatedImages,
-            msg.imageAttachments,
+            msg.imageAttachments, msg.mediaUrls, msg.outputImages,
+            msg.result?.images, msg.result?.media,
           ];
+
+          // Also check for single image fields
+          const singleImageUrls = [
+            msg.imageUrl, msg.image_url, msg.thumbnailUrl,
+            msg.mediaUrl, msg.media_url, msg.shareUrl,
+            msg.result?.imageUrl, msg.result?.media_url,
+            msg.result?.thumbnailUrl, msg.result?.shareUrl,
+          ];
+
+          for (const imgUrl of singleImageUrls) {
+            if (imgUrl && typeof imgUrl === 'string') {
+              msgData.images = msgData.images || [];
+              msgData.images.push({ url: imgUrl });
+              convData.images.push(imgUrl);
+              results.imageCount++;
+            }
+          }
 
           for (const atts of attSources) {
             if (!Array.isArray(atts)) continue;
             for (const att of atts) {
+              if (typeof att === 'string') {
+                // Array of URL strings
+                msgData.images = msgData.images || [];
+                msgData.images.push({ url: att });
+                convData.images.push(att);
+                results.imageCount++;
+                continue;
+              }
               const imgUrl = att.imageUrl || att.url || att.media_url
-                || att.thumbnailUrl || att.src || att.shareUrl;
+                || att.thumbnailUrl || att.src || att.shareUrl
+                || att.mediaUrl || att.image_url;
               if (imgUrl) {
                 msgData.images = msgData.images || [];
                 msgData.images.push({
@@ -843,7 +1063,24 @@ ipcMain.handle('scrape-history', async () => {
             }
           }
 
-          convData.messages.push(msgData);
+          // Scan raw message JSON for imagine-public URLs as last resort
+          if (!msgData.images || msgData.images.length === 0) {
+            const rawStr = JSON.stringify(msg);
+            const imgMatches = rawStr.match(/https:\/\/[^"\\s]*imagine-public[^"\\s]*/g);
+            if (imgMatches) {
+              msgData.images = [];
+              for (const url of [...new Set(imgMatches)]) {
+                msgData.images.push({ url: url, source: 'raw-scan' });
+                convData.images.push(url);
+                results.imageCount++;
+              }
+            }
+          }
+
+          // Only add messages that have actual content
+          if (msgData.text || msgData.prompt || (msgData.images && msgData.images.length > 0)) {
+            convData.messages.push(msgData);
+          }
         }
       })()
     `)
