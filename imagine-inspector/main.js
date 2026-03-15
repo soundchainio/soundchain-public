@@ -124,7 +124,130 @@ function startCapture() {
     maxTotalBufferSize: 10 * 1024 * 1024, // 10MB buffer for response bodies
   })
   wc.debugger.sendCommand('Console.enable')
+  wc.debugger.sendCommand('Runtime.enable')
   wc.debugger.sendCommand('Network.setCacheDisabled', { cacheDisabled: false })
+
+  // --- Stream Interception via Runtime.addBinding ---
+  // CDP can't capture streaming Fetch response bodies (they show as ERR_ABORTED).
+  // Solution: inject a fetch() wrapper that clones the response, reads the stream
+  // chunk by chunk, and sends data back via a native binding.
+  wc.debugger.sendCommand('Runtime.addBinding', { name: '_inspectorCapture' })
+
+  // Inject fetch interceptor after each navigation
+  const injectFetchInterceptor = () => {
+    const script = `
+      (function() {
+        if (window.__inspectorPatched) return;
+        window.__inspectorPatched = true;
+
+        const originalFetch = window.fetch;
+        const INTERCEPT_PATTERNS = [
+          'add_response.json',
+          'grok/generate',
+          'imagine',
+          'create_image',
+        ];
+
+        window.fetch = function(...args) {
+          const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
+          const shouldIntercept = INTERCEPT_PATTERNS.some(p => url.includes(p));
+
+          if (!shouldIntercept) {
+            return originalFetch.apply(this, args);
+          }
+
+          const streamId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+
+          // Notify stream started
+          window._inspectorCapture(JSON.stringify({
+            type: 'stream-start',
+            streamId: streamId,
+            url: url,
+            method: args[1]?.method || 'GET',
+            timestamp: new Date().toISOString(),
+          }));
+
+          return originalFetch.apply(this, args).then(response => {
+            // Clone response so Grok gets the original untouched stream
+            const cloned = response.clone();
+
+            // Read the cloned stream in background
+            const reader = cloned.body.getReader();
+            const decoder = new TextDecoder();
+            let fullBody = '';
+            let chunkIndex = 0;
+
+            function readChunk() {
+              return reader.read().then(({ done, value }) => {
+                if (done) {
+                  // Stream complete — send full body
+                  window._inspectorCapture(JSON.stringify({
+                    type: 'stream-end',
+                    streamId: streamId,
+                    url: url,
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    body: fullBody,
+                    totalChunks: chunkIndex,
+                    timestamp: new Date().toISOString(),
+                  }));
+                  return;
+                }
+
+                const text = decoder.decode(value, { stream: true });
+                fullBody += text;
+                chunkIndex++;
+
+                // Send individual chunks for real-time monitoring
+                // Only send first 50 chunks to avoid flooding IPC
+                if (chunkIndex <= 50) {
+                  window._inspectorCapture(JSON.stringify({
+                    type: 'stream-chunk',
+                    streamId: streamId,
+                    chunkIndex: chunkIndex,
+                    data: text.substring(0, 10000),
+                    timestamp: new Date().toISOString(),
+                  }));
+                }
+
+                return readChunk();
+              });
+            }
+
+            readChunk().catch(err => {
+              window._inspectorCapture(JSON.stringify({
+                type: 'stream-error',
+                streamId: streamId,
+                error: err.message || String(err),
+                body: fullBody,
+                timestamp: new Date().toISOString(),
+              }));
+            });
+
+            // Return original response to Grok (untouched)
+            return response;
+          });
+        };
+      })();
+    `
+    wc.debugger
+      .sendCommand('Runtime.evaluate', {
+        expression: script,
+        allowUnsafeEvalBlockedByCSP: true,
+      })
+      .then(() => {
+        sendStatus({ type: 'injected', message: 'Fetch interceptor injected — streaming capture active' })
+      })
+      .catch((err) => {
+        console.error('[Inspector] Failed to inject fetch interceptor:', err.message)
+      })
+  }
+
+  // Inject on initial load and after each navigation
+  injectFetchInterceptor()
+  wc.on('did-finish-load', injectFetchInterceptor)
+  wc.on('did-navigate-in-page', injectFetchInterceptor)
 
   // Track pending requests for response body retrieval
   const pendingRequests = new Map()
@@ -220,6 +343,98 @@ function startCapture() {
       reqData.canceled = canceled
       finishCapture(reqData)
       pendingRequests.delete(requestId)
+    }
+
+    // --- Runtime.bindingCalled → Stream Captures ---
+    if (method === 'Runtime.bindingCalled' && params.name === '_inspectorCapture') {
+      try {
+        const data = JSON.parse(params.payload)
+
+        if (data.type === 'stream-end') {
+          // Full stream response captured — this is the gold
+          const entry = {
+            captureType: 'stream',
+            streamId: data.streamId,
+            url: data.url,
+            status: data.status,
+            statusText: data.statusText,
+            responseHeaders: data.headers,
+            totalChunks: data.totalChunks,
+            timestamp: data.timestamp,
+            isImagineRelated: true,
+          }
+
+          // Parse the streaming body — Grok uses newline-delimited JSON (NDJSON)
+          const rawBody = data.body || ''
+          entry.responseBody = rawBody
+
+          // Try to parse as NDJSON (one JSON object per line)
+          const lines = rawBody.split('\n').filter((l) => l.trim())
+          const parsed = []
+          for (const line of lines) {
+            try {
+              parsed.push(JSON.parse(line))
+            } catch {
+              // Not JSON, keep as raw text
+              parsed.push({ _raw: line })
+            }
+          }
+          entry.responseParsed = parsed
+          entry.ndJsonLineCount = parsed.length
+
+          // Extract key fields from parsed NDJSON for quick view
+          const imageUrls = []
+          const textChunks = []
+          for (const obj of parsed) {
+            // Look for image URLs in various possible fields
+            if (obj.imageUrl) imageUrls.push(obj.imageUrl)
+            if (obj.image_url) imageUrls.push(obj.image_url)
+            if (obj.result?.imageUrl) imageUrls.push(obj.result.imageUrl)
+            if (obj.result?.media_url) imageUrls.push(obj.result.media_url)
+            if (obj.result?.image_urls) imageUrls.push(...obj.result.image_urls)
+            // Look for text/token responses
+            if (obj.result?.message) textChunks.push(obj.result.message)
+            if (obj.result?.token) textChunks.push(obj.result.token)
+          }
+          if (imageUrls.length > 0) entry.extractedImageUrls = imageUrls
+          if (textChunks.length > 0) entry.extractedText = textChunks.join('')
+
+          addCapture(entry)
+        } else if (data.type === 'stream-chunk') {
+          // Individual chunk — show in real-time
+          const entry = {
+            captureType: 'stream-chunk',
+            streamId: data.streamId,
+            chunkIndex: data.chunkIndex,
+            data: data.data,
+            timestamp: data.timestamp,
+            isImagineRelated: true,
+          }
+          addCapture(entry)
+        } else if (data.type === 'stream-start') {
+          const entry = {
+            captureType: 'stream-start',
+            streamId: data.streamId,
+            url: data.url,
+            method: data.method,
+            timestamp: data.timestamp,
+            isImagineRelated: true,
+          }
+          addCapture(entry)
+        } else if (data.type === 'stream-error') {
+          const entry = {
+            captureType: 'stream-error',
+            streamId: data.streamId,
+            error: data.error,
+            responseBody: data.body,
+            timestamp: data.timestamp,
+            isImagineRelated: true,
+          }
+          addCapture(entry)
+        }
+      } catch (err) {
+        console.error('[Inspector] Failed to parse binding payload:', err.message)
+      }
     }
 
     // --- Console Messages ---

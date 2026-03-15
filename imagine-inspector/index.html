@@ -205,6 +205,16 @@
       border-left: 3px solid #3fb950;
     }
 
+    .log-entry.stream {
+      border-left: 3px solid #79c0ff;
+      background: #0d1b2a;
+    }
+
+    .log-entry.stream-end {
+      border-left: 3px solid #56d364;
+      background: #0d1b2a;
+    }
+
     .log-header {
       display: flex;
       align-items: center;
@@ -235,6 +245,8 @@
     .log-method.LOG { background: #3fb950; color: #fff; }
     .log-method.WARN { background: #d29922; color: #fff; }
     .log-method.ERR { background: #f85149; color: #fff; }
+    .log-method.STREAM { background: #79c0ff; color: #000; }
+    .log-method.CHUNK { background: #388bfd; color: #fff; font-size: 9px; }
 
     .log-status {
       font-size: 11px;
@@ -354,6 +366,7 @@
     <span class="spacer"></span>
     <span class="badge" id="totalBadge">0</span>
     <span class="badge imagine" id="imagineBadge">0 imagine</span>
+    <span class="badge" id="streamBadge" style="background:#79c0ff;color:#000">0 streams</span>
     <button id="btnStart" class="active">Capture</button>
     <button id="btnStop">Stop</button>
     <button id="btnClear" class="danger">Clear</button>
@@ -373,6 +386,7 @@
     <label><input type="checkbox" id="filterImagine" /> Imagine only</label>
     <label><input type="checkbox" id="filterFace" /> Face-related</label>
     <label><input type="checkbox" id="filterPost" /> POST only</label>
+    <label><input type="checkbox" id="filterStreams" /> Streams only</label>
     <label><input type="checkbox" id="hideAssets" checked /> Hide assets</label>
   </div>
 
@@ -395,6 +409,7 @@
     let autoScroll = true
     let totalCount = 0
     let imagineCount = 0
+    let streamCount = 0
 
     // --- DOM refs ---
     const logContainer = document.getElementById('logContainer')
@@ -403,7 +418,9 @@
     const filterImagine = document.getElementById('filterImagine')
     const filterFace = document.getElementById('filterFace')
     const filterPost = document.getElementById('filterPost')
+    const filterStreams = document.getElementById('filterStreams')
     const hideAssets = document.getElementById('hideAssets')
+    const streamBadge = document.getElementById('streamBadge')
     const totalBadge = document.getElementById('totalBadge')
     const imagineBadge = document.getElementById('imagineBadge')
     const statusDot = document.getElementById('statusDot')
@@ -438,7 +455,10 @@
       }
 
       // POST only
-      if (filterPost.checked && entry.method !== 'POST') return false
+      if (filterPost.checked && entry.method !== 'POST' && !entry.captureType?.startsWith('stream')) return false
+
+      // Streams only
+      if (filterStreams.checked && !entry.captureType?.startsWith('stream')) return false
 
       // Text filter
       if (query) {
@@ -512,6 +532,8 @@
       if (entry.error || (entry.status && entry.status >= 400)) div.className += ' error'
       if (entry.captureType === 'websocket') div.className += ' websocket'
       if (entry.captureType === 'console') div.className += ' console'
+      if (entry.captureType === 'stream' || entry.captureType === 'stream-end') div.className += ' stream-end'
+      if (entry.captureType === 'stream-start' || entry.captureType === 'stream-chunk') div.className += ' stream'
 
       // --- Header ---
       const header = document.createElement('div')
@@ -530,6 +552,18 @@
         const lvl = (entry.level || 'log').toUpperCase()
         methodEl.textContent = lvl === 'ERROR' ? 'ERR' : lvl === 'WARNING' ? 'WARN' : 'LOG'
         methodEl.className += ' ' + methodEl.textContent
+      } else if (entry.captureType === 'stream-start') {
+        methodEl.textContent = 'STREAM'
+        methodEl.className += ' STREAM'
+      } else if (entry.captureType === 'stream-chunk') {
+        methodEl.textContent = 'CHUNK'
+        methodEl.className += ' CHUNK'
+      } else if (entry.captureType === 'stream-end' || entry.captureType === 'stream') {
+        methodEl.textContent = 'STREAM'
+        methodEl.className += ' STREAM'
+      } else if (entry.captureType === 'stream-error') {
+        methodEl.textContent = 'ERR'
+        methodEl.className += ' ERR'
       }
       header.appendChild(methodEl)
 
@@ -548,6 +582,20 @@
         urlEl.textContent = entry.text || ''
       } else if (entry.captureType === 'websocket') {
         urlEl.textContent = `[${entry.direction}] ${truncateUrl(entry.payloadData, 100)}`
+      } else if (entry.captureType === 'stream-start') {
+        urlEl.textContent = `STREAM START → ${truncateUrl(entry.url)}`
+        urlEl.style.color = '#79c0ff'
+      } else if (entry.captureType === 'stream-chunk') {
+        urlEl.textContent = `  chunk #${entry.chunkIndex}: ${truncateUrl(entry.data, 80)}`
+        urlEl.style.color = '#8b949e'
+      } else if (entry.captureType === 'stream-end' || entry.captureType === 'stream') {
+        const lines = entry.ndJsonLineCount || '?'
+        const imgs = entry.extractedImageUrls?.length || 0
+        urlEl.textContent = `STREAM END ← ${truncateUrl(entry.url)} [${lines} lines${imgs ? ', ' + imgs + ' images' : ''}]`
+        urlEl.style.color = '#56d364'
+      } else if (entry.captureType === 'stream-error') {
+        urlEl.textContent = `STREAM ERROR: ${entry.error}`
+        urlEl.style.color = '#f85149'
       } else {
         urlEl.textContent = truncateUrl(entry.url)
         urlEl.title = entry.url || ''
@@ -642,6 +690,74 @@
           bodyHtml += '<div class="section-label">Source</div>'
           bodyHtml += '<pre>' + entry.url + (entry.line ? ':' + entry.line : '') + '</pre>'
         }
+      } else if (entry.captureType === 'stream-end' || entry.captureType === 'stream') {
+        // Response headers
+        if (entry.responseHeaders && Object.keys(entry.responseHeaders).length > 0) {
+          bodyHtml += '<div class="section-label">Response Headers</div>'
+          bodyHtml += '<pre>' + syntaxHighlight(entry.responseHeaders) + '</pre>'
+        }
+
+        // Extracted images
+        if (entry.extractedImageUrls && entry.extractedImageUrls.length > 0) {
+          bodyHtml += '<div class="section-label">Extracted Image URLs (' + entry.extractedImageUrls.length + ')</div>'
+          bodyHtml += '<pre>' + syntaxHighlight(entry.extractedImageUrls) + '</pre>'
+        }
+
+        // Extracted text
+        if (entry.extractedText) {
+          bodyHtml += '<div class="section-label">Extracted Text Response</div>'
+          bodyHtml += '<pre style="color:#a5d6ff">' + entry.extractedText.substring(0, 10000) + '</pre>'
+        }
+
+        // NDJSON parsed lines
+        if (entry.responseParsed && entry.responseParsed.length > 0) {
+          bodyHtml += '<div class="section-label">Streamed Response (' + entry.ndJsonLineCount + ' NDJSON lines)</div>'
+          // Show each parsed line
+          for (let i = 0; i < Math.min(entry.responseParsed.length, 100); i++) {
+            const line = entry.responseParsed[i]
+            if (line._raw) {
+              bodyHtml += '<pre style="color:#8b949e;margin:2px 0">Line ' + (i + 1) + ': ' + line._raw.substring(0, 500) + '</pre>'
+            } else {
+              bodyHtml += '<pre style="margin:2px 0"><span style="color:#484f58">Line ' + (i + 1) + ':</span> ' + syntaxHighlight(line) + '</pre>'
+            }
+          }
+          if (entry.responseParsed.length > 100) {
+            bodyHtml += '<pre style="color:#8b949e">... and ' + (entry.responseParsed.length - 100) + ' more lines</pre>'
+          }
+        }
+
+        // Raw body fallback
+        if (!entry.responseParsed && entry.responseBody) {
+          bodyHtml += '<div class="section-label">Raw Response Body</div>'
+          bodyHtml += '<pre>' + entry.responseBody.substring(0, 10000) + '</pre>'
+        }
+
+        // Stream metadata
+        bodyHtml += '<div class="section-label">Stream Metadata</div>'
+        bodyHtml += '<pre>' + syntaxHighlight({
+          streamId: entry.streamId,
+          status: entry.status,
+          totalChunks: entry.totalChunks,
+        }) + '</pre>'
+      } else if (entry.captureType === 'stream-chunk') {
+        bodyHtml += '<div class="section-label">Chunk #' + entry.chunkIndex + '</div>'
+        // Try to parse the chunk as JSON
+        try {
+          const parsed = JSON.parse(entry.data)
+          bodyHtml += '<pre>' + syntaxHighlight(parsed) + '</pre>'
+        } catch {
+          bodyHtml += '<pre>' + (entry.data || '').substring(0, 5000) + '</pre>'
+        }
+      } else if (entry.captureType === 'stream-start') {
+        bodyHtml += '<div class="section-label">Stream Request</div>'
+        bodyHtml += '<pre>' + syntaxHighlight({ url: entry.url, method: entry.method, streamId: entry.streamId }) + '</pre>'
+      } else if (entry.captureType === 'stream-error') {
+        bodyHtml += '<div class="section-label">Stream Error</div>'
+        bodyHtml += '<pre style="color:#f85149">' + (entry.error || '') + '</pre>'
+        if (entry.responseBody) {
+          bodyHtml += '<div class="section-label">Partial Body (before error)</div>'
+          bodyHtml += '<pre>' + entry.responseBody.substring(0, 5000) + '</pre>'
+        }
       }
 
       body.innerHTML = bodyHtml
@@ -662,9 +778,11 @@
       allEntries.push(entry)
       totalCount++
       if (entry.isImagineRelated) imagineCount++
+      if (entry.captureType?.startsWith('stream')) streamCount++
 
       totalBadge.textContent = totalCount
       imagineBadge.textContent = imagineCount + ' imagine'
+      streamBadge.textContent = streamCount + ' streams'
 
       if (passesFilter(entry)) {
         emptyState.style.display = 'none'
@@ -693,8 +811,10 @@
         allEntries = []
         totalCount = 0
         imagineCount = 0
+        streamCount = 0
         totalBadge.textContent = '0'
         imagineBadge.textContent = '0 imagine'
+        streamBadge.textContent = '0 streams'
         logContainer.innerHTML = ''
         logContainer.appendChild(emptyState)
         emptyState.style.display = ''
@@ -712,6 +832,7 @@
     filterImagine.addEventListener('change', refilter)
     filterFace.addEventListener('change', refilter)
     filterPost.addEventListener('change', refilter)
+    filterStreams.addEventListener('change', refilter)
     hideAssets.addEventListener('change', refilter)
 
     // Buttons
