@@ -674,163 +674,177 @@ ipcMain.handle('scrape-history', async () => {
     // Inject scraper script into the Grok page using their logged-in session
     const result = await grokView.webContents.executeJavaScript(`
       (async function() {
-        const results = { conversations: [], errors: [], imageCount: 0 };
+        const results = { conversations: [], errors: [], imageCount: 0, apiDebug: {} };
 
         try {
-          // Step 1: Fetch conversation list from Grok's API
-          // Try grok.com API first, then x.com/x.ai variants
-          let historyData = null;
-          const endpoints = [
+          // Step 1: Fetch conversation list using the correct grok.com API
+          // From captures we know: /rest/app-chat/conversations?pageSize=60 works
+          const listEndpoints = [
+            '/rest/app-chat/conversations?pageSize=200',
+            '/rest/app-chat/conversations?pageSize=60',
             '/rest/grok/conversations',
-            '/api/grok/conversations',
-            '/2/grok/conversations',
           ];
 
-          for (const ep of endpoints) {
+          let allConversations = [];
+
+          for (const ep of listEndpoints) {
             try {
               const resp = await fetch(ep, { credentials: 'include' });
               if (resp.ok) {
-                historyData = await resp.json();
-                results.historyEndpoint = ep;
+                const contentType = resp.headers.get('content-type') || '';
+                if (!contentType.includes('json')) {
+                  results.errors.push(ep + ' returned ' + contentType + ' (not JSON)');
+                  continue;
+                }
+                const data = await resp.json();
+                results.apiDebug.listEndpoint = ep;
+                results.apiDebug.listResponseKeys = Object.keys(data);
+                results.apiDebug.listResponseSample = JSON.stringify(data).substring(0, 2000);
+
+                // Extract conversation array from various possible structures
+                allConversations = Array.isArray(data) ? data
+                  : data.conversations || data.items || data.data
+                  || data.chats || data.results || data.history || [];
+
+                if (!Array.isArray(allConversations)) {
+                  // Maybe each key is a conversation
+                  allConversations = Object.values(data).filter(v => typeof v === 'object' && v !== null);
+                }
+
+                results.apiDebug.conversationCount = allConversations.length;
+                if (allConversations.length > 0) {
+                  results.apiDebug.sampleConvKeys = Object.keys(allConversations[0]);
+                  results.apiDebug.sampleConv = JSON.stringify(allConversations[0]).substring(0, 1000);
+                }
                 break;
+              } else {
+                results.errors.push(ep + ' returned ' + resp.status);
               }
             } catch(e) {
-              results.errors.push('Endpoint ' + ep + ': ' + e.message);
+              results.errors.push(ep + ': ' + e.message);
             }
           }
 
-          if (!historyData) {
-            // Fallback: try to scrape from the DOM
-            results.errors.push('No API endpoint worked, trying DOM scrape...');
+          results.totalConversations = allConversations.length;
 
-            // Look for conversation links in sidebar/history
-            const links = document.querySelectorAll('a[href*="/conversation/"], a[href*="/c/"]');
-            const convIds = [];
-            links.forEach(link => {
-              const match = link.href.match(/\\/(?:conversation|c)\\/([a-zA-Z0-9_-]+)/);
-              if (match && !convIds.includes(match[1])) {
-                convIds.push(match[1]);
-                results.conversations.push({
-                  id: match[1],
-                  title: link.textContent?.trim() || 'Untitled',
-                  source: 'dom-scrape',
-                });
-              }
-            });
-
-            if (convIds.length === 0) {
-              // Last resort: look for any image elements that might be generated
-              const images = document.querySelectorAll('img[src*="grok"], img[src*="imagine"], img[src*="x.ai"]');
-              images.forEach((img, i) => {
-                results.conversations.push({
-                  id: 'img-' + i,
-                  imageUrl: img.src,
-                  alt: img.alt,
-                  source: 'dom-image',
-                });
-                results.imageCount++;
-              });
-            }
-
-            return results;
-          }
-
-          // Step 2: Process API response
-          const conversations = Array.isArray(historyData)
-            ? historyData
-            : historyData.conversations || historyData.items || historyData.data || [];
-
-          results.totalConversations = conversations.length;
-
-          // Step 3: For each conversation, check if it has image content
-          for (const conv of conversations.slice(0, 100)) { // Limit to 100 most recent
+          // Step 2: Process each conversation
+          for (const conv of allConversations.slice(0, 200)) {
+            const id = conv.conversationId || conv.id || conv.conversation_id || conv.chatId;
             const convData = {
-              id: conv.conversationId || conv.id || conv.conversation_id,
-              title: conv.title || conv.name || 'Untitled',
-              createdAt: conv.createdAt || conv.created_at || conv.timestamp,
+              id: id,
+              title: conv.title || conv.name || conv.summary || 'Untitled',
+              createdAt: conv.createdAt || conv.created_at || conv.timestamp || conv.createTime,
+              updatedAt: conv.updatedAt || conv.updated_at || conv.updateTime,
               messages: [],
               images: [],
+              source: 'api-list',
             };
 
-            // Try to fetch conversation detail
-            const detailEndpoints = [
-              '/rest/grok/conversation/' + convData.id,
-              '/api/grok/conversation/' + convData.id,
-              '/2/grok/conversation/' + convData.id,
-            ];
+            // Include raw conversation metadata for debugging
+            convData.rawKeys = Object.keys(conv);
 
-            for (const dep of detailEndpoints) {
-              try {
-                const detResp = await fetch(dep, { credentials: 'include' });
-                if (detResp.ok) {
-                  const detail = await detResp.json();
-                  const messages = detail.messages || detail.responses || detail.data || [];
-
-                  for (const msg of (Array.isArray(messages) ? messages : [])) {
-                    const msgData = {
-                      role: msg.role || msg.sender || (msg.isUser ? 'user' : 'assistant'),
-                      text: msg.message || msg.text || msg.content || '',
-                    };
-
-                    // Extract image attachments
-                    const attachments = msg.attachments || msg.fileAttachments || msg.images || msg.media || [];
-                    for (const att of (Array.isArray(attachments) ? attachments : [])) {
-                      const imgUrl = att.imageUrl || att.url || att.media_url || att.thumbnailUrl;
-                      if (imgUrl) {
-                        msgData.images = msgData.images || [];
-                        msgData.images.push({
-                          url: imgUrl,
-                          width: att.width,
-                          height: att.height,
-                          mediaId: att.mediaId || att.id,
-                        });
-                        convData.images.push(imgUrl);
-                        results.imageCount++;
-                      }
-                    }
-
-                    // Check for inline image URLs in message text
-                    const urlMatch = (msgData.text || '').match(/https:\\/\\/[^\\s"]+\\.(?:jpg|jpeg|png|webp)/gi);
-                    if (urlMatch) {
-                      msgData.images = msgData.images || [];
-                      urlMatch.forEach(u => {
-                        msgData.images.push({ url: u, source: 'inline' });
-                        convData.images.push(u);
-                        results.imageCount++;
-                      });
-                    }
-
-                    convData.messages.push(msgData);
-                  }
-
-                  convData.source = 'api-detail';
-                  break;
-                }
-              } catch(e) {
-                // Try next endpoint
+            // Check if conversation object itself contains messages inline
+            const inlineMessages = conv.messages || conv.responses || conv.turns || [];
+            if (Array.isArray(inlineMessages) && inlineMessages.length > 0) {
+              for (const msg of inlineMessages) {
+                processMessage(msg, convData, results);
               }
             }
 
-            // Only include conversations that have images or mention imagine
-            const hasImages = convData.images.length > 0;
-            const mentionsImagine = JSON.stringify(convData).toLowerCase().includes('imagine') ||
-                                    JSON.stringify(convData).toLowerCase().includes('image') ||
-                                    JSON.stringify(convData).toLowerCase().includes('picture') ||
-                                    JSON.stringify(convData).toLowerCase().includes('photo');
+            // Try to fetch conversation detail if no inline messages
+            if (convData.messages.length === 0 && id) {
+              const detailEndpoints = [
+                '/rest/app-chat/conversations/' + id,
+                '/rest/app-chat/conversation/' + id,
+                '/rest/grok/conversation/' + id,
+              ];
 
-            if (hasImages || mentionsImagine) {
-              results.conversations.push(convData);
+              for (const dep of detailEndpoints) {
+                try {
+                  const detResp = await fetch(dep, { credentials: 'include' });
+                  const ct = detResp.headers.get('content-type') || '';
+                  if (detResp.ok && ct.includes('json')) {
+                    const detail = await detResp.json();
+                    convData.detailEndpoint = dep;
+                    convData.detailKeys = Object.keys(detail);
+
+                    const messages = detail.messages || detail.responses
+                      || detail.turns || detail.data || detail.history || [];
+
+                    for (const msg of (Array.isArray(messages) ? messages : [])) {
+                      processMessage(msg, convData, results);
+                    }
+                    convData.source = 'api-detail';
+                    break;
+                  }
+                } catch(e) {
+                  // Try next
+                }
+              }
+
+              await new Promise(r => setTimeout(r, 150));
             }
 
-            // Small delay to avoid rate limiting
-            await new Promise(r => setTimeout(r, 200));
+            results.conversations.push(convData);
           }
 
+          // Step 3: Also grab visible images from DOM as fallback enrichment
+          const domImages = document.querySelectorAll('img[src*="imagine-public"]');
+          const domImageUrls = [];
+          domImages.forEach(img => {
+            if (img.src && !img.src.includes('analytics') && !img.src.includes('adsct')) {
+              domImageUrls.push({
+                url: img.src,
+                alt: img.alt || '',
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+              });
+            }
+          });
+          results.domImages = domImageUrls;
+          results.domImageCount = domImageUrls.length;
+
         } catch(e) {
-          results.errors.push('Top-level error: ' + e.message);
+          results.errors.push('Top-level: ' + e.message + ' ' + e.stack);
         }
 
         return results;
+
+        // Helper to extract message data
+        function processMessage(msg, convData, results) {
+          const msgData = {
+            role: msg.role || msg.sender || (msg.isUser ? 'user' : 'assistant'),
+            text: msg.message || msg.text || msg.content || msg.query || '',
+          };
+
+          // Extract all possible image attachment formats
+          const attSources = [
+            msg.attachments, msg.fileAttachments, msg.images,
+            msg.media, msg.mediaAttachments, msg.generatedImages,
+            msg.imageAttachments,
+          ];
+
+          for (const atts of attSources) {
+            if (!Array.isArray(atts)) continue;
+            for (const att of atts) {
+              const imgUrl = att.imageUrl || att.url || att.media_url
+                || att.thumbnailUrl || att.src || att.shareUrl;
+              if (imgUrl) {
+                msgData.images = msgData.images || [];
+                msgData.images.push({
+                  url: imgUrl,
+                  width: att.width, height: att.height,
+                  mediaId: att.mediaId || att.id,
+                  type: att.type || att.mediaType,
+                });
+                convData.images.push(imgUrl);
+                results.imageCount++;
+              }
+            }
+          }
+
+          convData.messages.push(msgData);
+        }
       })()
     `)
 
