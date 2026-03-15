@@ -15,8 +15,13 @@ const INTERCEPT_DOMAINS = [
   'api.x.ai',
   'x.com',
   'api.x.com',
+  'grok.com',
+  'api.grok.com',
   'abs.twimg.com',
 ]
+
+// Persist session data (cookies, localStorage) so user stays logged in
+const SESSION_DIR = path.join(app.getPath('userData'), 'grok-session')
 
 // Keywords that flag an entry as Imagine-related
 const IMAGINE_KEYWORDS = [
@@ -64,13 +69,14 @@ function createMainWindow() {
 
   mainWindow.loadFile('index.html')
 
-  // Create Grok BrowserView (left pane)
+  // Create Grok BrowserView (left pane) with persistent session
   grokView = new BrowserView({
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      // Allow Grok's own scripts to run
       sandbox: false,
+      // Persist cookies/localStorage between sessions so user stays logged in
+      partition: 'persist:grok',
     },
   })
 
@@ -95,8 +101,8 @@ function createMainWindow() {
     updateBounds()
   })
 
-  // Load Grok
-  grokView.webContents.loadURL('https://x.com/i/grok')
+  // Load Grok standalone (not X/Twitter — supports standalone Grok accounts)
+  grokView.webContents.loadURL('https://grok.com')
 
   // Auto-start capture when Grok loads
   grokView.webContents.on('did-finish-load', () => {
