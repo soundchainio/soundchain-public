@@ -135,237 +135,202 @@ function startCapture() {
   wc.debugger.sendCommand('Runtime.enable')
   wc.debugger.sendCommand('Network.setCacheDisabled', { cacheDisabled: false })
 
-  // --- Stream Interception via ReadableStream.prototype.getReader ---
-  // X.com's Service Worker intercepts fetch() calls BEFORE our window.fetch patch.
-  // So patching fetch() doesn't work — the SW consumes the stream.
-  // Instead, we patch ReadableStream.prototype.getReader at a LOWER level.
-  // When ANY code (Grok, SW, whatever) calls response.body.getReader(),
-  // we tee() the stream first, returning one branch to the consumer
-  // and reading the other branch ourselves to capture the data.
+  // --- Stream Interception via Page.addScriptToEvaluateOnNewDocument ---
+  // Previous approaches failed:
+  //   1. Patching window.fetch via Runtime.evaluate → SW intercepts fetch first
+  //   2. Patching ReadableStream.getReader via Runtime.evaluate → runs too late,
+  //      X.com's code already cached the original getReader reference
   //
-  // We also patch fetch() to TAG response bodies with URL metadata,
-  // so when getReader() fires we know WHICH URL this stream belongs to.
+  // This approach uses Page.addScriptToEvaluateOnNewDocument which injects our
+  // patch into the MAIN WORLD *before* ANY page JavaScript loads. X.com's code
+  // can't cache the original because our patch IS the original at load time.
+  //
+  // We also set up Runtime.addBinding for the IPC channel back to main process.
   wc.debugger.sendCommand('Runtime.addBinding', { name: '_inspectorCapture' })
+  wc.debugger.sendCommand('Page.enable')
 
-  // Inject stream interceptor after each navigation
-  const injectStreamInterceptor = () => {
-    const script = `
-      (function() {
-        if (window.__inspectorStreamPatched) return;
-        window.__inspectorStreamPatched = true;
+  // The script that patches ReadableStream.getReader BEFORE page JS loads
+  const streamInterceptorScript = `
+    (function() {
+      // === DIAGNOSTIC: confirm this script actually runs ===
+      console.log('[Imagine Inspector] Stream interceptor injecting into main world...');
 
-        const INTERCEPT_PATTERNS = [
-          'add_response.json',
-          'grok/generate',
-          'imagine',
-          'create_image',
-          'CreateGrokConversation',
-        ];
+      const INTERCEPT_PATTERNS = [
+        'add_response.json',
+        'grok/generate',
+        'imagine',
+        'create_image',
+      ];
 
-        // --- LAYER 1: Patch fetch() to TAG response bodies with URL ---
-        // This doesn't intercept the stream — it just marks the ReadableStream
-        // with metadata so getReader() knows which URL it came from.
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-          const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
-          const method = args[1]?.method || (args[0]?.method) || 'GET';
-          const shouldTag = INTERCEPT_PATTERNS.some(p => url.includes(p));
+      // === LAYER 1: Patch fetch() to TAG response bodies with URL ===
+      const originalFetch = window.fetch;
+      window.fetch = function(...args) {
+        const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+        const method = args[1]?.method || (args[0]?.method) || 'GET';
+        const shouldTag = INTERCEPT_PATTERNS.some(p => url.includes(p));
 
-          return originalFetch.apply(this, args).then(response => {
-            if (shouldTag && response.body) {
-              // Tag the ReadableStream body with URL metadata
-              response.body.__inspectorUrl = url;
-              response.body.__inspectorMethod = method;
-              response.body.__inspectorStatus = response.status;
-              response.body.__inspectorStatusText = response.statusText;
-              try {
-                response.body.__inspectorHeaders = Object.fromEntries(response.headers.entries());
-              } catch(e) {
-                response.body.__inspectorHeaders = {};
-              }
-            }
-            return response;
-          });
-        };
-
-        // --- LAYER 2: Patch ReadableStream.prototype.getReader ---
-        // This is the low-level interception point.
-        // When Grok (or the SW consumer) calls getReader(), we:
-        // 1. Check if the stream is tagged with a URL we care about
-        // 2. If yes, tee() the stream — one branch for Grok, one for us
-        // 3. Return Grok's branch reader (they never know we're watching)
-        // 4. Read our branch in the background to capture the full body
-        const originalGetReader = ReadableStream.prototype.getReader;
-
-        ReadableStream.prototype.getReader = function(opts) {
-          const url = this.__inspectorUrl;
-
-          // Not a tagged stream — pass through unchanged
-          if (!url) {
-            return originalGetReader.call(this, opts);
-          }
-
-          // Clear tag so we don't intercept twice on the same stream
-          const method = this.__inspectorMethod || 'GET';
-          const status = this.__inspectorStatus || 0;
-          const statusText = this.__inspectorStatusText || '';
-          const headers = this.__inspectorHeaders || {};
-          delete this.__inspectorUrl;
-          delete this.__inspectorMethod;
-          delete this.__inspectorStatus;
-          delete this.__inspectorStatusText;
-          delete this.__inspectorHeaders;
-
-          const streamId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
-
-          // Notify stream started
-          try {
-            window._inspectorCapture(JSON.stringify({
-              type: 'stream-start',
-              streamId: streamId,
-              url: url,
-              method: method,
-              timestamp: new Date().toISOString(),
-            }));
-          } catch(e) {}
-
-          // Tee the stream: one for Grok (consumer), one for us (inspector)
-          const [consumerBranch, inspectorBranch] = this.tee();
-
-          // Read our branch in the background
-          const inspectorReader = originalGetReader.call(inspectorBranch);
-          const decoder = new TextDecoder();
-          let fullBody = '';
-          let chunkIndex = 0;
-
-          function readInspectorChunk() {
-            return inspectorReader.read().then(({ done, value }) => {
-              if (done) {
-                // Stream complete — send full body back to main process
-                try {
-                  // Truncate to 2MB to avoid IPC limits
-                  const body = fullBody.length > 2_000_000
-                    ? fullBody.substring(0, 2_000_000) + '\\n[TRUNCATED at 2MB]'
-                    : fullBody;
-                  window._inspectorCapture(JSON.stringify({
-                    type: 'stream-end',
-                    streamId: streamId,
-                    url: url,
-                    status: status,
-                    statusText: statusText,
-                    headers: headers,
-                    body: body,
-                    totalChunks: chunkIndex,
-                    timestamp: new Date().toISOString(),
-                  }));
-                } catch(e) {}
-                return;
-              }
-
-              const text = decoder.decode(value, { stream: true });
-              fullBody += text;
-              chunkIndex++;
-
-              // Send first 30 chunks for real-time monitoring
-              if (chunkIndex <= 30) {
-                try {
-                  window._inspectorCapture(JSON.stringify({
-                    type: 'stream-chunk',
-                    streamId: streamId,
-                    chunkIndex: chunkIndex,
-                    data: text.substring(0, 10000),
-                    timestamp: new Date().toISOString(),
-                  }));
-                } catch(e) {}
-              }
-
-              return readInspectorChunk();
-            });
-          }
-
-          readInspectorChunk().catch(err => {
+        return originalFetch.apply(this, args).then(response => {
+          if (shouldTag && response.body) {
+            response.body.__iUrl = url;
+            response.body.__iMethod = method;
+            response.body.__iStatus = response.status;
+            response.body.__iStatusText = response.statusText || '';
             try {
-              window._inspectorCapture(JSON.stringify({
-                type: 'stream-error',
-                streamId: streamId,
-                error: err.message || String(err),
-                body: fullBody,
-                timestamp: new Date().toISOString(),
-              }));
-            } catch(e) {}
-          });
+              response.body.__iHeaders = Object.fromEntries(response.headers.entries());
+            } catch(e) {
+              response.body.__iHeaders = {};
+            }
+            console.log('[Imagine Inspector] Tagged stream for:', url);
+          }
+          return response;
+        }).catch(err => {
+          // Don't break fetch on errors
+          throw err;
+        });
+      };
 
-          // Return consumer branch reader to Grok — they see the original stream
-          return originalGetReader.call(consumerBranch, opts);
-        };
-      })();
-    `
-    wc.debugger
-      .sendCommand('Runtime.evaluate', {
-        expression: script,
-        allowUnsafeEvalBlockedByCSP: true,
-      })
-      .then(() => {
-        sendStatus({ type: 'injected', message: 'ReadableStream interceptor injected — stream capture active' })
-      })
-      .catch((err) => {
-        console.error('[Inspector] Failed to inject stream interceptor:', err.message)
-      })
-  }
+      // === LAYER 2: Patch ReadableStream.prototype.getReader ===
+      // Runs BEFORE X.com's code loads, so they get our patched version
+      const originalGetReader = ReadableStream.prototype.getReader;
 
-  // Also inject via executeJavaScript for better main-world coverage
-  const injectViaExecuteJS = () => {
-    const swBypassScript = `
-      (function() {
-        if (window.__inspectorSWPatched) return;
-        window.__inspectorSWPatched = true;
+      ReadableStream.prototype.getReader = function(opts) {
+        const url = this.__iUrl;
 
-        // Patch Response.prototype.body getter to tag streams from SW
-        // When the SW returns a Response, the body ReadableStream won't have
-        // our fetch() tags. So we also hook Response.prototype to catch these.
-        const origJson = Response.prototype.json;
-        const origText = Response.prototype.text;
-        const origArrayBuffer = Response.prototype.arrayBuffer;
+        if (!url) {
+          return originalGetReader.call(this, opts);
+        }
 
-        // Monitor Response consumption methods as backup
-        // (some consumers use .json()/.text() instead of .getReader())
-        Response.prototype.json = function() {
-          const url = this.url || '';
-          if (['add_response.json', 'grok/generate', 'imagine'].some(p => url.includes(p))) {
-            const streamId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
-            return origJson.call(this).then(data => {
+        // Grab and clear metadata
+        const method = this.__iMethod || 'GET';
+        const status = this.__iStatus || 0;
+        const statusText = this.__iStatusText || '';
+        const headers = this.__iHeaders || {};
+        delete this.__iUrl;
+        delete this.__iMethod;
+        delete this.__iStatus;
+        delete this.__iStatusText;
+        delete this.__iHeaders;
+
+        const streamId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+
+        console.log('[Imagine Inspector] Intercepting stream:', url, 'id:', streamId);
+
+        // Notify stream started
+        try {
+          window._inspectorCapture(JSON.stringify({
+            type: 'stream-start',
+            streamId: streamId,
+            url: url,
+            method: method,
+            timestamp: new Date().toISOString(),
+          }));
+        } catch(e) {
+          console.warn('[Imagine Inspector] Failed to send stream-start:', e.message);
+        }
+
+        // Tee the stream
+        const [consumerBranch, inspectorBranch] = this.tee();
+
+        // Read inspector branch in background
+        const inspectorReader = originalGetReader.call(inspectorBranch);
+        const decoder = new TextDecoder();
+        let fullBody = '';
+        let chunkIndex = 0;
+
+        function readChunk() {
+          return inspectorReader.read().then(({ done, value }) => {
+            if (done) {
+              const body = fullBody.length > 2_000_000
+                ? fullBody.substring(0, 2_000_000) + '\\n[TRUNCATED]'
+                : fullBody;
               try {
                 window._inspectorCapture(JSON.stringify({
                   type: 'stream-end',
                   streamId: streamId,
                   url: url,
-                  status: this.status,
-                  body: JSON.stringify(data).substring(0, 2_000_000),
-                  totalChunks: 1,
+                  status: status,
+                  statusText: statusText,
+                  headers: headers,
+                  body: body,
+                  totalChunks: chunkIndex,
                   timestamp: new Date().toISOString(),
                 }));
               } catch(e) {}
-              return data;
-            });
-          }
-          return origJson.call(this);
-        };
-      })();
-    `
-    wc.executeJavaScript(swBypassScript).catch(() => {})
-  }
+              console.log('[Imagine Inspector] Stream complete:', url, chunkIndex, 'chunks,', fullBody.length, 'bytes');
+              return;
+            }
 
-  // Inject on initial load and after each navigation
-  injectStreamInterceptor()
-  injectViaExecuteJS()
-  wc.on('did-finish-load', () => {
-    injectStreamInterceptor()
-    injectViaExecuteJS()
-  })
-  wc.on('did-navigate-in-page', () => {
-    injectStreamInterceptor()
-    injectViaExecuteJS()
-  })
+            const text = decoder.decode(value, { stream: true });
+            fullBody += text;
+            chunkIndex++;
+
+            if (chunkIndex <= 30) {
+              try {
+                window._inspectorCapture(JSON.stringify({
+                  type: 'stream-chunk',
+                  streamId: streamId,
+                  chunkIndex: chunkIndex,
+                  data: text.substring(0, 10000),
+                  timestamp: new Date().toISOString(),
+                }));
+              } catch(e) {}
+            }
+
+            return readChunk();
+          });
+        }
+
+        readChunk().catch(err => {
+          try {
+            window._inspectorCapture(JSON.stringify({
+              type: 'stream-error',
+              streamId: streamId,
+              error: err.message || String(err),
+              body: fullBody,
+              timestamp: new Date().toISOString(),
+            }));
+          } catch(e) {}
+        });
+
+        // Return consumer branch to Grok
+        return originalGetReader.call(consumerBranch, opts);
+      };
+
+      console.log('[Imagine Inspector] ReadableStream.getReader patched successfully (pre-page-load)');
+    })();
+  `
+
+  // Inject BEFORE any page JavaScript loads — this is the key difference
+  // from Runtime.evaluate which runs AFTER page JS has already loaded.
+  wc.debugger
+    .sendCommand('Page.addScriptToEvaluateOnNewDocument', {
+      source: streamInterceptorScript,
+      worldName: '', // empty = main world (not isolated)
+    })
+    .then(({ identifier }) => {
+      console.log('[Inspector] Pre-load script registered, id:', identifier)
+      sendStatus({ type: 'injected', message: 'Pre-load stream interceptor registered — will activate on next page load' })
+    })
+    .catch((err) => {
+      console.error('[Inspector] Failed to register pre-load script:', err.message)
+      // Fallback: try Runtime.evaluate (less reliable but worth trying)
+      wc.debugger
+        .sendCommand('Runtime.evaluate', {
+          expression: streamInterceptorScript,
+          allowUnsafeEvalBlockedByCSP: true,
+        })
+        .then(() => sendStatus({ type: 'injected', message: 'Stream interceptor injected via fallback' }))
+        .catch((e) => console.error('[Inspector] Fallback injection also failed:', e.message))
+    })
+
+  // Force a reload so the pre-load script takes effect on the fresh page
+  // (the script only runs on NEW document loads)
+  setTimeout(() => {
+    if (grokView && !grokView.webContents.isDestroyed()) {
+      console.log('[Inspector] Reloading Grok to activate pre-load interceptor...')
+      grokView.webContents.reload()
+    }
+  }, 1500)
 
   // Track pending requests for response body retrieval
   const pendingRequests = new Map()
