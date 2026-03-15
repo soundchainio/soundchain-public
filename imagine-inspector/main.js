@@ -135,81 +135,140 @@ function startCapture() {
   wc.debugger.sendCommand('Runtime.enable')
   wc.debugger.sendCommand('Network.setCacheDisabled', { cacheDisabled: false })
 
-  // --- Stream Interception via Runtime.addBinding ---
-  // CDP can't capture streaming Fetch response bodies (they show as ERR_ABORTED).
-  // Solution: inject a fetch() wrapper that clones the response, reads the stream
-  // chunk by chunk, and sends data back via a native binding.
+  // --- Stream Interception via ReadableStream.prototype.getReader ---
+  // X.com's Service Worker intercepts fetch() calls BEFORE our window.fetch patch.
+  // So patching fetch() doesn't work — the SW consumes the stream.
+  // Instead, we patch ReadableStream.prototype.getReader at a LOWER level.
+  // When ANY code (Grok, SW, whatever) calls response.body.getReader(),
+  // we tee() the stream first, returning one branch to the consumer
+  // and reading the other branch ourselves to capture the data.
+  //
+  // We also patch fetch() to TAG response bodies with URL metadata,
+  // so when getReader() fires we know WHICH URL this stream belongs to.
   wc.debugger.sendCommand('Runtime.addBinding', { name: '_inspectorCapture' })
 
-  // Inject fetch interceptor after each navigation
-  const injectFetchInterceptor = () => {
+  // Inject stream interceptor after each navigation
+  const injectStreamInterceptor = () => {
     const script = `
       (function() {
-        if (window.__inspectorPatched) return;
-        window.__inspectorPatched = true;
+        if (window.__inspectorStreamPatched) return;
+        window.__inspectorStreamPatched = true;
 
-        const originalFetch = window.fetch;
         const INTERCEPT_PATTERNS = [
           'add_response.json',
           'grok/generate',
           'imagine',
           'create_image',
+          'CreateGrokConversation',
         ];
 
+        // --- LAYER 1: Patch fetch() to TAG response bodies with URL ---
+        // This doesn't intercept the stream — it just marks the ReadableStream
+        // with metadata so getReader() knows which URL it came from.
+        const originalFetch = window.fetch;
         window.fetch = function(...args) {
           const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
-          const shouldIntercept = INTERCEPT_PATTERNS.some(p => url.includes(p));
+          const method = args[1]?.method || (args[0]?.method) || 'GET';
+          const shouldTag = INTERCEPT_PATTERNS.some(p => url.includes(p));
 
-          if (!shouldIntercept) {
-            return originalFetch.apply(this, args);
+          return originalFetch.apply(this, args).then(response => {
+            if (shouldTag && response.body) {
+              // Tag the ReadableStream body with URL metadata
+              response.body.__inspectorUrl = url;
+              response.body.__inspectorMethod = method;
+              response.body.__inspectorStatus = response.status;
+              response.body.__inspectorStatusText = response.statusText;
+              try {
+                response.body.__inspectorHeaders = Object.fromEntries(response.headers.entries());
+              } catch(e) {
+                response.body.__inspectorHeaders = {};
+              }
+            }
+            return response;
+          });
+        };
+
+        // --- LAYER 2: Patch ReadableStream.prototype.getReader ---
+        // This is the low-level interception point.
+        // When Grok (or the SW consumer) calls getReader(), we:
+        // 1. Check if the stream is tagged with a URL we care about
+        // 2. If yes, tee() the stream — one branch for Grok, one for us
+        // 3. Return Grok's branch reader (they never know we're watching)
+        // 4. Read our branch in the background to capture the full body
+        const originalGetReader = ReadableStream.prototype.getReader;
+
+        ReadableStream.prototype.getReader = function(opts) {
+          const url = this.__inspectorUrl;
+
+          // Not a tagged stream — pass through unchanged
+          if (!url) {
+            return originalGetReader.call(this, opts);
           }
+
+          // Clear tag so we don't intercept twice on the same stream
+          const method = this.__inspectorMethod || 'GET';
+          const status = this.__inspectorStatus || 0;
+          const statusText = this.__inspectorStatusText || '';
+          const headers = this.__inspectorHeaders || {};
+          delete this.__inspectorUrl;
+          delete this.__inspectorMethod;
+          delete this.__inspectorStatus;
+          delete this.__inspectorStatusText;
+          delete this.__inspectorHeaders;
 
           const streamId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
 
           // Notify stream started
-          window._inspectorCapture(JSON.stringify({
-            type: 'stream-start',
-            streamId: streamId,
-            url: url,
-            method: args[1]?.method || 'GET',
-            timestamp: new Date().toISOString(),
-          }));
+          try {
+            window._inspectorCapture(JSON.stringify({
+              type: 'stream-start',
+              streamId: streamId,
+              url: url,
+              method: method,
+              timestamp: new Date().toISOString(),
+            }));
+          } catch(e) {}
 
-          return originalFetch.apply(this, args).then(response => {
-            // Clone response so Grok gets the original untouched stream
-            const cloned = response.clone();
+          // Tee the stream: one for Grok (consumer), one for us (inspector)
+          const [consumerBranch, inspectorBranch] = this.tee();
 
-            // Read the cloned stream in background
-            const reader = cloned.body.getReader();
-            const decoder = new TextDecoder();
-            let fullBody = '';
-            let chunkIndex = 0;
+          // Read our branch in the background
+          const inspectorReader = originalGetReader.call(inspectorBranch);
+          const decoder = new TextDecoder();
+          let fullBody = '';
+          let chunkIndex = 0;
 
-            function readChunk() {
-              return reader.read().then(({ done, value }) => {
-                if (done) {
-                  // Stream complete — send full body
+          function readInspectorChunk() {
+            return inspectorReader.read().then(({ done, value }) => {
+              if (done) {
+                // Stream complete — send full body back to main process
+                try {
+                  // Truncate to 2MB to avoid IPC limits
+                  const body = fullBody.length > 2_000_000
+                    ? fullBody.substring(0, 2_000_000) + '\\n[TRUNCATED at 2MB]'
+                    : fullBody;
                   window._inspectorCapture(JSON.stringify({
                     type: 'stream-end',
                     streamId: streamId,
                     url: url,
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: Object.fromEntries(response.headers.entries()),
-                    body: fullBody,
+                    status: status,
+                    statusText: statusText,
+                    headers: headers,
+                    body: body,
                     totalChunks: chunkIndex,
                     timestamp: new Date().toISOString(),
                   }));
-                  return;
-                }
+                } catch(e) {}
+                return;
+              }
 
-                const text = decoder.decode(value, { stream: true });
-                fullBody += text;
-                chunkIndex++;
+              const text = decoder.decode(value, { stream: true });
+              fullBody += text;
+              chunkIndex++;
 
-                // Send individual chunks for real-time monitoring
-                // Only send first 50 chunks to avoid flooding IPC
-                if (chunkIndex <= 50) {
+              // Send first 30 chunks for real-time monitoring
+              if (chunkIndex <= 30) {
+                try {
                   window._inspectorCapture(JSON.stringify({
                     type: 'stream-chunk',
                     streamId: streamId,
@@ -217,13 +276,15 @@ function startCapture() {
                     data: text.substring(0, 10000),
                     timestamp: new Date().toISOString(),
                   }));
-                }
+                } catch(e) {}
+              }
 
-                return readChunk();
-              });
-            }
+              return readInspectorChunk();
+            });
+          }
 
-            readChunk().catch(err => {
+          readInspectorChunk().catch(err => {
+            try {
               window._inspectorCapture(JSON.stringify({
                 type: 'stream-error',
                 streamId: streamId,
@@ -231,11 +292,11 @@ function startCapture() {
                 body: fullBody,
                 timestamp: new Date().toISOString(),
               }));
-            });
-
-            // Return original response to Grok (untouched)
-            return response;
+            } catch(e) {}
           });
+
+          // Return consumer branch reader to Grok — they see the original stream
+          return originalGetReader.call(consumerBranch, opts);
         };
       })();
     `
@@ -245,17 +306,66 @@ function startCapture() {
         allowUnsafeEvalBlockedByCSP: true,
       })
       .then(() => {
-        sendStatus({ type: 'injected', message: 'Fetch interceptor injected — streaming capture active' })
+        sendStatus({ type: 'injected', message: 'ReadableStream interceptor injected — stream capture active' })
       })
       .catch((err) => {
-        console.error('[Inspector] Failed to inject fetch interceptor:', err.message)
+        console.error('[Inspector] Failed to inject stream interceptor:', err.message)
       })
   }
 
+  // Also inject via executeJavaScript for better main-world coverage
+  const injectViaExecuteJS = () => {
+    const swBypassScript = `
+      (function() {
+        if (window.__inspectorSWPatched) return;
+        window.__inspectorSWPatched = true;
+
+        // Patch Response.prototype.body getter to tag streams from SW
+        // When the SW returns a Response, the body ReadableStream won't have
+        // our fetch() tags. So we also hook Response.prototype to catch these.
+        const origJson = Response.prototype.json;
+        const origText = Response.prototype.text;
+        const origArrayBuffer = Response.prototype.arrayBuffer;
+
+        // Monitor Response consumption methods as backup
+        // (some consumers use .json()/.text() instead of .getReader())
+        Response.prototype.json = function() {
+          const url = this.url || '';
+          if (['add_response.json', 'grok/generate', 'imagine'].some(p => url.includes(p))) {
+            const streamId = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+            return origJson.call(this).then(data => {
+              try {
+                window._inspectorCapture(JSON.stringify({
+                  type: 'stream-end',
+                  streamId: streamId,
+                  url: url,
+                  status: this.status,
+                  body: JSON.stringify(data).substring(0, 2_000_000),
+                  totalChunks: 1,
+                  timestamp: new Date().toISOString(),
+                }));
+              } catch(e) {}
+              return data;
+            });
+          }
+          return origJson.call(this);
+        };
+      })();
+    `
+    wc.executeJavaScript(swBypassScript).catch(() => {})
+  }
+
   // Inject on initial load and after each navigation
-  injectFetchInterceptor()
-  wc.on('did-finish-load', injectFetchInterceptor)
-  wc.on('did-navigate-in-page', injectFetchInterceptor)
+  injectStreamInterceptor()
+  injectViaExecuteJS()
+  wc.on('did-finish-load', () => {
+    injectStreamInterceptor()
+    injectViaExecuteJS()
+  })
+  wc.on('did-navigate-in-page', () => {
+    injectStreamInterceptor()
+    injectViaExecuteJS()
+  })
 
   // Track pending requests for response body retrieval
   const pendingRequests = new Map()
