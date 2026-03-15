@@ -753,7 +753,7 @@ ipcMain.handle('scrape-history', async () => {
     // Inject scraper script into the Grok page using their logged-in session
     const result = await grokView.webContents.executeJavaScript(`
       (async function() {
-        const results = { conversations: [], errors: [], imageCount: 0, apiDebug: {} };
+        const results = { conversations: [], errors: [], imageCount: 0, apiDebug: {}, scriptVersion: 4 };
 
         try {
           // Step 1: Fetch conversation list using the correct grok.com API
@@ -864,7 +864,7 @@ ipcMain.handle('scrape-history', async () => {
                       data = JSON.parse(rawText);
                     } catch(e) {
                       // Try NDJSON (newline-delimited JSON) — Grok uses this for streaming
-                      const lines = rawText.split('\\n').filter(l => l.trim());
+                      const lines = rawText.split(String.fromCharCode(10)).filter(l => l.trim());
                       data = [];
                       for (const line of lines) {
                         try { data.push(JSON.parse(line)); } catch(e2) {}
@@ -884,9 +884,22 @@ ipcMain.handle('scrape-history', async () => {
                     }
 
                     // Extract messages from various response structures
-                    let messages = [];
+                    // NDJSON from /responses returns [{responses: [msg, msg, ...]}, ...]
+                    var messages = [];
                     if (Array.isArray(data)) {
-                      messages = data;
+                      // NDJSON: array of parsed lines, each may have .responses
+                      for (var di = 0; di < data.length; di++) {
+                        var item = data[di];
+                        if (item && item.responses && Array.isArray(item.responses)) {
+                          for (var ri = 0; ri < item.responses.length; ri++) {
+                            messages.push(item.responses[ri]);
+                          }
+                        } else if (item && (item.message || item.text || item.sender)) {
+                          messages.push(item);
+                        }
+                      }
+                      // Fallback: if no nested responses found, treat array as direct messages
+                      if (messages.length === 0) messages = data;
                     } else if (typeof data === 'object') {
                       messages = data.messages || data.responses || data.turns
                         || data.history || data.data || data.items || data.results || [];
@@ -912,11 +925,19 @@ ipcMain.handle('scrape-history', async () => {
                     }
 
                     // Even if no messages extracted, check for image URLs in raw text
-                    const imgMatches = rawText.match(/https:\/\/[^"\\s]*imagine-public[^"\\s]*/g);
-                    if (imgMatches && imgMatches.length > 0) {
-                      for (const imgUrl of imgMatches) {
-                        convData.images.push(imgUrl);
-                        results.imageCount++;
+                    var imgRegex = /https:[/][/][^"\\s]*imagine-public[^"\\s]*/g;
+                    var assetRegex = /users[/][0-9a-f-]+[/]generated[/][0-9a-f-]+[/]image\\.jpg/g;
+                    var imgMatches = rawText.match(imgRegex) || [];
+                    var assetMatches = rawText.match(assetRegex) || [];
+                    var allRawMatches = imgMatches.concat(assetMatches.map(function(m) { return 'https://assets.grok.com/' + m; }));
+                    if (allRawMatches.length > 0) {
+                      var seen = {};
+                      for (var rm = 0; rm < allRawMatches.length; rm++) {
+                        if (!seen[allRawMatches[rm]]) {
+                          seen[allRawMatches[rm]] = true;
+                          convData.images.push(allRawMatches[rm]);
+                          results.imageCount++;
+                        }
                       }
                       convData.source = 'api-raw-parse';
                       convData.messageEndpoint = ep.url;
@@ -925,7 +946,7 @@ ipcMain.handle('scrape-history', async () => {
                   } else if (resp.ok && (ct.includes('text') || ct.includes('html'))) {
                     // HTML response — scan for image URLs
                     const html = await resp.text();
-                    const imgMatches = html.match(/https:\/\/[^"'\\s]*imagine-public[^"'\\s]*/g);
+                    const imgMatches = html.match(/https:[/][/][^"'\\s]*imagine-public[^"'\\s]*/g);
                     if (imgMatches && imgMatches.length > 0) {
                       for (const imgUrl of [...new Set(imgMatches)]) {
                         convData.images.push(imgUrl);
@@ -991,7 +1012,9 @@ ipcMain.handle('scrape-history', async () => {
         function processMessage(msg, convData, results) {
           if (!msg || typeof msg !== 'object') return;
 
-          const msgData = {
+          var ASSETS_BASE = 'https://assets.grok.com/';
+
+          var msgData = {
             role: msg.role || msg.sender || msg.type
               || (msg.isUser ? 'user' : (msg.isModelResponse ? 'assistant' : undefined))
               || (msg.query ? 'user' : (msg.modelResponse ? 'assistant' : 'unknown')),
@@ -1005,29 +1028,80 @@ ipcMain.handle('scrape-history', async () => {
               || msg.modelResponse.content || JSON.stringify(msg.modelResponse).substring(0, 2000);
           }
 
-          // Extract prompt/query for user messages
+          // Extract prompt/query for user messages and Imagine generation prompts
           if (msg.query || msg.userMessage || msg.prompt) {
             msgData.prompt = msg.query || msg.userMessage || msg.prompt;
           }
 
-          // Extract all possible image attachment formats
-          const attSources = [
-            msg.attachments, msg.fileAttachments, msg.images,
+          // ---- KEY: Extract generatedImageUrls (Imagine generations) ----
+          // These are relative paths like "users/{userId}/generated/{imageId}/image.jpg"
+          var genUrls = msg.generatedImageUrls;
+          if (Array.isArray(genUrls)) {
+            for (var gi = 0; gi < genUrls.length; gi++) {
+              var gu = genUrls[gi];
+              if (gu && typeof gu === 'string' && gu.length > 5) {
+                var fullUrl = gu.startsWith('http') ? gu : ASSETS_BASE + gu;
+                msgData.images = msgData.images || [];
+                msgData.images.push({ url: fullUrl, source: 'generated', type: 'imagine' });
+                convData.images.push(fullUrl);
+                results.imageCount++;
+              }
+            }
+          }
+
+          // ---- KEY: Extract fileAttachmentsMetadata (uploaded + generated files) ----
+          // Each has: fileUri (relative path), fileMimeType, fileSource, etc.
+          var fileMeta = msg.fileAttachmentsMetadata;
+          if (Array.isArray(fileMeta)) {
+            for (var fi = 0; fi < fileMeta.length; fi++) {
+              var fm = fileMeta[fi];
+              if (fm && fm.fileUri && typeof fm.fileUri === 'string' && fm.fileUri.length > 5) {
+                var fUrl = fm.fileUri.startsWith('http') ? fm.fileUri : ASSETS_BASE + fm.fileUri;
+                msgData.images = msgData.images || [];
+                msgData.images.push({
+                  url: fUrl,
+                  source: fm.fileSource || 'file',
+                  type: fm.fileMimeType || 'unknown',
+                  fileName: fm.fileName || '',
+                  fileId: fm.fileMetadataId || '',
+                });
+                convData.images.push(fUrl);
+                results.imageCount++;
+              }
+            }
+          }
+
+          // ---- imageEditUris (for edited images) ----
+          var editUris = msg.imageEditUris;
+          if (Array.isArray(editUris)) {
+            for (var ei = 0; ei < editUris.length; ei++) {
+              var eu = editUris[ei];
+              if (eu && typeof eu === 'string' && eu.length > 5) {
+                var eUrl = eu.startsWith('http') ? eu : ASSETS_BASE + eu;
+                msgData.images = msgData.images || [];
+                msgData.images.push({ url: eUrl, source: 'edit' });
+                convData.images.push(eUrl);
+                results.imageCount++;
+              }
+            }
+          }
+
+          // ---- Legacy: Extract other possible image attachment formats ----
+          var attSources = [
+            msg.attachments, msg.images,
             msg.media, msg.mediaAttachments, msg.generatedImages,
             msg.imageAttachments, msg.mediaUrls, msg.outputImages,
-            msg.result?.images, msg.result?.media,
           ];
 
-          // Also check for single image fields
-          const singleImageUrls = [
+          // Check for single image URL fields
+          var singleImageUrls = [
             msg.imageUrl, msg.image_url, msg.thumbnailUrl,
             msg.mediaUrl, msg.media_url, msg.shareUrl,
-            msg.result?.imageUrl, msg.result?.media_url,
-            msg.result?.thumbnailUrl, msg.result?.shareUrl,
           ];
 
-          for (const imgUrl of singleImageUrls) {
-            if (imgUrl && typeof imgUrl === 'string') {
+          for (var si = 0; si < singleImageUrls.length; si++) {
+            var imgUrl = singleImageUrls[si];
+            if (imgUrl && typeof imgUrl === 'string' && imgUrl.startsWith('http')) {
               msgData.images = msgData.images || [];
               msgData.images.push({ url: imgUrl });
               convData.images.push(imgUrl);
@@ -1035,44 +1109,33 @@ ipcMain.handle('scrape-history', async () => {
             }
           }
 
-          for (const atts of attSources) {
+          for (var ai = 0; ai < attSources.length; ai++) {
+            var atts = attSources[ai];
             if (!Array.isArray(atts)) continue;
-            for (const att of atts) {
-              if (typeof att === 'string') {
-                // Array of URL strings
+            for (var aj = 0; aj < atts.length; aj++) {
+              var att = atts[aj];
+              if (typeof att === 'string' && att.startsWith('http')) {
                 msgData.images = msgData.images || [];
                 msgData.images.push({ url: att });
                 convData.images.push(att);
                 results.imageCount++;
                 continue;
               }
-              const imgUrl = att.imageUrl || att.url || att.media_url
-                || att.thumbnailUrl || att.src || att.shareUrl
-                || att.mediaUrl || att.image_url;
-              if (imgUrl) {
-                msgData.images = msgData.images || [];
-                msgData.images.push({
-                  url: imgUrl,
-                  width: att.width, height: att.height,
-                  mediaId: att.mediaId || att.id,
-                  type: att.type || att.mediaType,
-                });
-                convData.images.push(imgUrl);
-                results.imageCount++;
-              }
-            }
-          }
-
-          // Scan raw message JSON for imagine-public URLs as last resort
-          if (!msgData.images || msgData.images.length === 0) {
-            const rawStr = JSON.stringify(msg);
-            const imgMatches = rawStr.match(/https:\/\/[^"\\s]*imagine-public[^"\\s]*/g);
-            if (imgMatches) {
-              msgData.images = [];
-              for (const url of [...new Set(imgMatches)]) {
-                msgData.images.push({ url: url, source: 'raw-scan' });
-                convData.images.push(url);
-                results.imageCount++;
+              if (att && typeof att === 'object') {
+                var aUrl = att.imageUrl || att.url || att.media_url
+                  || att.thumbnailUrl || att.src || att.shareUrl
+                  || att.mediaUrl || att.image_url;
+                if (aUrl && typeof aUrl === 'string' && aUrl.startsWith('http')) {
+                  msgData.images = msgData.images || [];
+                  msgData.images.push({
+                    url: aUrl,
+                    width: att.width, height: att.height,
+                    mediaId: att.mediaId || att.id,
+                    type: att.type || att.mediaType,
+                  });
+                  convData.images.push(aUrl);
+                  results.imageCount++;
+                }
               }
             }
           }
@@ -1105,8 +1168,9 @@ ipcMain.handle('scrape-history', async () => {
       errors: result.errors || [],
     }
   } catch (err) {
-    sendStatus({ type: 'error', message: `Scrape failed: ${err.message}` })
-    return { success: false, error: err.message }
+    console.error('[Inspector] Scrape error:', err)
+    sendStatus({ type: 'error', message: `Scrape failed: ${err.message || err}` })
+    return { success: false, error: err.message || String(err) }
   }
 })
 
