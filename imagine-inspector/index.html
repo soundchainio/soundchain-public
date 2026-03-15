@@ -371,6 +371,7 @@
     <button id="btnStop">Stop</button>
     <button id="btnClear" class="danger">Clear</button>
     <button id="btnExport">Export JSON</button>
+    <button id="btnHistory" style="background:#1a3a2a;border-color:#238636;color:#3fb950">Scrape History</button>
     <button id="btnReload">Reload Grok</button>
     <span style="color:#30363d;margin:0 2px">|</span>
     <button id="splitLogs" title="Inspector only (hide Grok)">Logs</button>
@@ -862,6 +863,31 @@
         statusText.textContent = `Exported ${result.count} captures to ${result.path}`
         statusDetail.textContent = ''
       }
+    })
+
+    document.getElementById('btnHistory').addEventListener('click', async () => {
+      const btn = document.getElementById('btnHistory')
+      btn.textContent = 'Scraping...'
+      btn.disabled = true
+      btn.style.opacity = '0.6'
+      try {
+        const result = await window.inspector.scrapeHistory()
+        if (result.success) {
+          statusText.textContent = `History scraped: ${result.conversations} conversations, ${result.images} images`
+          statusDetail.textContent = result.path
+          if (result.errors?.length > 0) {
+            statusDetail.textContent += ' | Errors: ' + result.errors.join(', ')
+          }
+        } else {
+          statusText.textContent = 'Scrape failed: ' + (result.error || 'Unknown error')
+          statusDetail.textContent = result.errors?.join(', ') || ''
+        }
+      } catch(e) {
+        statusText.textContent = 'Scrape error: ' + e.message
+      }
+      btn.textContent = 'Scrape History'
+      btn.disabled = false
+      btn.style.opacity = '1'
     })
   </script>
 </body>

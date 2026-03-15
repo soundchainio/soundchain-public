@@ -24,4 +24,7 @@ contextBridge.exposeInMainWorld('inspector', {
 
   // Split pane control
   setSplit: (ratio) => ipcRenderer.send('set-split', ratio),
+
+  // Scrape Grok Imagine history
+  scrapeHistory: () => ipcRenderer.invoke('scrape-history'),
 })

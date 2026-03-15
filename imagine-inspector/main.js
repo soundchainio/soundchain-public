@@ -664,6 +664,201 @@ ipcMain.on('reload-grok', () => {
   }
 })
 
+// --- Scrape Grok Imagine History ---
+ipcMain.handle('scrape-history', async () => {
+  if (!grokView) return { success: false, error: 'No Grok view' }
+
+  sendStatus({ type: 'scraping', message: 'Scraping Grok Imagine history...' })
+
+  try {
+    // Inject scraper script into the Grok page using their logged-in session
+    const result = await grokView.webContents.executeJavaScript(`
+      (async function() {
+        const results = { conversations: [], errors: [], imageCount: 0 };
+
+        try {
+          // Step 1: Fetch conversation list from Grok's API
+          // Try grok.com API first, then x.com/x.ai variants
+          let historyData = null;
+          const endpoints = [
+            '/rest/grok/conversations',
+            '/api/grok/conversations',
+            '/2/grok/conversations',
+          ];
+
+          for (const ep of endpoints) {
+            try {
+              const resp = await fetch(ep, { credentials: 'include' });
+              if (resp.ok) {
+                historyData = await resp.json();
+                results.historyEndpoint = ep;
+                break;
+              }
+            } catch(e) {
+              results.errors.push('Endpoint ' + ep + ': ' + e.message);
+            }
+          }
+
+          if (!historyData) {
+            // Fallback: try to scrape from the DOM
+            results.errors.push('No API endpoint worked, trying DOM scrape...');
+
+            // Look for conversation links in sidebar/history
+            const links = document.querySelectorAll('a[href*="/conversation/"], a[href*="/c/"]');
+            const convIds = [];
+            links.forEach(link => {
+              const match = link.href.match(/\\/(?:conversation|c)\\/([a-zA-Z0-9_-]+)/);
+              if (match && !convIds.includes(match[1])) {
+                convIds.push(match[1]);
+                results.conversations.push({
+                  id: match[1],
+                  title: link.textContent?.trim() || 'Untitled',
+                  source: 'dom-scrape',
+                });
+              }
+            });
+
+            if (convIds.length === 0) {
+              // Last resort: look for any image elements that might be generated
+              const images = document.querySelectorAll('img[src*="grok"], img[src*="imagine"], img[src*="x.ai"]');
+              images.forEach((img, i) => {
+                results.conversations.push({
+                  id: 'img-' + i,
+                  imageUrl: img.src,
+                  alt: img.alt,
+                  source: 'dom-image',
+                });
+                results.imageCount++;
+              });
+            }
+
+            return results;
+          }
+
+          // Step 2: Process API response
+          const conversations = Array.isArray(historyData)
+            ? historyData
+            : historyData.conversations || historyData.items || historyData.data || [];
+
+          results.totalConversations = conversations.length;
+
+          // Step 3: For each conversation, check if it has image content
+          for (const conv of conversations.slice(0, 100)) { // Limit to 100 most recent
+            const convData = {
+              id: conv.conversationId || conv.id || conv.conversation_id,
+              title: conv.title || conv.name || 'Untitled',
+              createdAt: conv.createdAt || conv.created_at || conv.timestamp,
+              messages: [],
+              images: [],
+            };
+
+            // Try to fetch conversation detail
+            const detailEndpoints = [
+              '/rest/grok/conversation/' + convData.id,
+              '/api/grok/conversation/' + convData.id,
+              '/2/grok/conversation/' + convData.id,
+            ];
+
+            for (const dep of detailEndpoints) {
+              try {
+                const detResp = await fetch(dep, { credentials: 'include' });
+                if (detResp.ok) {
+                  const detail = await detResp.json();
+                  const messages = detail.messages || detail.responses || detail.data || [];
+
+                  for (const msg of (Array.isArray(messages) ? messages : [])) {
+                    const msgData = {
+                      role: msg.role || msg.sender || (msg.isUser ? 'user' : 'assistant'),
+                      text: msg.message || msg.text || msg.content || '',
+                    };
+
+                    // Extract image attachments
+                    const attachments = msg.attachments || msg.fileAttachments || msg.images || msg.media || [];
+                    for (const att of (Array.isArray(attachments) ? attachments : [])) {
+                      const imgUrl = att.imageUrl || att.url || att.media_url || att.thumbnailUrl;
+                      if (imgUrl) {
+                        msgData.images = msgData.images || [];
+                        msgData.images.push({
+                          url: imgUrl,
+                          width: att.width,
+                          height: att.height,
+                          mediaId: att.mediaId || att.id,
+                        });
+                        convData.images.push(imgUrl);
+                        results.imageCount++;
+                      }
+                    }
+
+                    // Check for inline image URLs in message text
+                    const urlMatch = (msgData.text || '').match(/https:\\/\\/[^\\s"]+\\.(?:jpg|jpeg|png|webp)/gi);
+                    if (urlMatch) {
+                      msgData.images = msgData.images || [];
+                      urlMatch.forEach(u => {
+                        msgData.images.push({ url: u, source: 'inline' });
+                        convData.images.push(u);
+                        results.imageCount++;
+                      });
+                    }
+
+                    convData.messages.push(msgData);
+                  }
+
+                  convData.source = 'api-detail';
+                  break;
+                }
+              } catch(e) {
+                // Try next endpoint
+              }
+            }
+
+            // Only include conversations that have images or mention imagine
+            const hasImages = convData.images.length > 0;
+            const mentionsImagine = JSON.stringify(convData).toLowerCase().includes('imagine') ||
+                                    JSON.stringify(convData).toLowerCase().includes('image') ||
+                                    JSON.stringify(convData).toLowerCase().includes('picture') ||
+                                    JSON.stringify(convData).toLowerCase().includes('photo');
+
+            if (hasImages || mentionsImagine) {
+              results.conversations.push(convData);
+            }
+
+            // Small delay to avoid rate limiting
+            await new Promise(r => setTimeout(r, 200));
+          }
+
+        } catch(e) {
+          results.errors.push('Top-level error: ' + e.message);
+        }
+
+        return results;
+      })()
+    `)
+
+    // Save results to file
+    const exportPath = path.join(
+      app.getPath('downloads'),
+      `grok-imagine-history-${Date.now()}.json`
+    )
+    fs.writeFileSync(exportPath, JSON.stringify(result, null, 2))
+
+    sendStatus({
+      type: 'scraped',
+      message: `Scraped ${result.conversations?.length || 0} conversations, ${result.imageCount || 0} images → ${exportPath}`,
+    })
+
+    return {
+      success: true,
+      path: exportPath,
+      conversations: result.conversations?.length || 0,
+      images: result.imageCount || 0,
+      errors: result.errors || [],
+    }
+  } catch (err) {
+    sendStatus({ type: 'error', message: `Scrape failed: ${err.message}` })
+    return { success: false, error: err.message }
+  }
+})
+
 // --- App Lifecycle ---
 app.whenReady().then(createMainWindow)
 
