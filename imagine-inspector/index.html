@@ -372,6 +372,10 @@
     <button id="btnClear" class="danger">Clear</button>
     <button id="btnExport">Export JSON</button>
     <button id="btnReload">Reload Grok</button>
+    <span style="color:#30363d;margin:0 2px">|</span>
+    <button id="splitLogs" title="Inspector only (hide Grok)">Logs</button>
+    <button id="splitEven" title="50/50 split" class="active">50/50</button>
+    <button id="splitGrok" title="More Grok, less inspector">Grok</button>
   </div>
 
   <!-- Status Bar -->
@@ -840,6 +844,17 @@
     document.getElementById('btnStop').addEventListener('click', () => window.inspector.stopCapture())
     document.getElementById('btnClear').addEventListener('click', () => window.inspector.clearCaptures())
     document.getElementById('btnReload').addEventListener('click', () => window.inspector.reload())
+
+    // Split buttons
+    const splitBtns = { logs: document.getElementById('splitLogs'), even: document.getElementById('splitEven'), grok: document.getElementById('splitGrok') }
+    function setSplit(ratio, activeBtn) {
+      window.inspector.setSplit(ratio)
+      Object.values(splitBtns).forEach(b => b.classList.remove('active'))
+      activeBtn.classList.add('active')
+    }
+    splitBtns.logs.addEventListener('click', () => setSplit(0.05, splitBtns.logs))
+    splitBtns.even.addEventListener('click', () => setSplit(0.50, splitBtns.even))
+    splitBtns.grok.addEventListener('click', () => setSplit(0.70, splitBtns.grok))
 
     document.getElementById('btnExport').addEventListener('click', async () => {
       const result = await window.inspector.exportCaptures()

@@ -21,4 +21,7 @@ contextBridge.exposeInMainWorld('inspector', {
   // Navigate Grok view
   navigateTo: (url) => ipcRenderer.send('navigate-to', url),
   reload: () => ipcRenderer.send('reload-grok'),
+
+  // Split pane control
+  setSplit: (ratio) => ipcRenderer.send('set-split', ratio),
 })

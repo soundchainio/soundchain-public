@@ -76,16 +76,24 @@ function createMainWindow() {
 
   mainWindow.setBrowserView(grokView)
 
-  // Position: left 55% of window for Grok, right 45% for inspector
+  // Split ratio — adjustable via IPC from renderer
+  let splitRatio = 0.50 // 50/50 default
+
   const updateBounds = () => {
-    if (!mainWindow || mainWindow.isDestroyed()) return
+    if (!mainWindow || mainWindow.isDestroyed() || !grokView) return
     const { width, height } = mainWindow.getContentBounds()
-    const grokWidth = Math.floor(width * 0.55)
+    const grokWidth = Math.floor(width * splitRatio)
     grokView.setBounds({ x: 0, y: 0, width: grokWidth, height })
   }
 
   updateBounds()
   mainWindow.on('resize', updateBounds)
+
+  // Listen for split ratio changes from renderer
+  ipcMain.on('set-split', (_event, ratio) => {
+    splitRatio = ratio
+    updateBounds()
+  })
 
   // Load Grok
   grokView.webContents.loadURL('https://x.com/i/grok')
