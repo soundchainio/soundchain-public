@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const secret = process.env.PUBLISH_SECRET || ''
   const authHeader = req.headers.authorization
   if (!secret || authHeader !== `Bearer ${secret}`) {
-    return res.status(401).json({ error: 'Unauthorized', debug: { hasSecret: !!secret, secretLen: secret.length, hasAuth: !!authHeader } })
+    return res.status(401).json({ error: 'Unauthorized', debug: { hasSecret: !!secret, secretLen: secret.length, hasAuth: !!authHeader, hasXKey: !!process.env.X_API_KEY, hasXToken: !!process.env.X_ACCESS_TOKEN, envKeys: Object.keys(process.env).filter(k => k.includes('PUBLISH') || k.includes('X_API') || k.includes('X_ACCESS')).join(',') } })
   }
 
   if (!X_API_KEY || !X_ACCESS_TOKEN) {
