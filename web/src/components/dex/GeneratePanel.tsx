@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders, RefreshCw, Focus, Sun, Palette, LayoutGrid, Contrast, Ban, Film, Play, ShieldOff } from 'lucide-react'
+import { Sparkles, Download, Share2, ChevronDown, ChevronUp, Loader2, AlertCircle, Cpu, X, Zap, Clock, Check, Upload, ImageIcon, Trash2, ScanFace, Sliders, RefreshCw, Focus, Sun, Palette, LayoutGrid, Contrast, Ban, Film, Play, ShieldOff, Pencil, RotateCcw } from 'lucide-react'
 import { Button } from 'components/ui/button'
 import { toast } from 'react-toastify'
 import type { StoryboardMode } from './storyboard/storyboardTypes'
@@ -122,9 +122,33 @@ const STYLE_PRESETS = [
     height: 512,
     color: 'cyan',
   },
+  {
+    label: 'Hyper-Real',
+    prefix: 'hyper-realistic, ultra detailed photograph, 8k resolution, perfect composition, professional photography, sharp focus, ',
+    negative: 'cartoon, anime, drawing, painting, illustration, cgi, 3d render, disfigured, bad anatomy, deformed face, ugly, blurry, watermark, text, extra fingers, mutated hands, poorly drawn face, mutation, long neck, low quality, jpeg artifacts',
+    width: 512,
+    height: 512,
+    color: 'green',
+  },
+  {
+    label: 'Anime',
+    prefix: 'anime style, manga illustration, cel shading, vibrant colors, detailed linework, ',
+    negative: 'photorealistic, photograph, 3d render, realistic skin, western cartoon, ugly, deformed',
+    width: 512,
+    height: 768,
+    color: 'pink',
+  },
+  {
+    label: 'Music Video',
+    prefix: 'music video still, cinematic, dramatic lighting, stylized, high production value, dynamic composition, ',
+    negative: 'low quality, amateur, ugly, deformed, text, watermark, blurry, static, boring',
+    width: 768,
+    height: 512,
+    color: 'cyan',
+  },
 ]
 
-const DEFAULT_NEGATIVE = 'ugly, blurry, low quality, deformed, disfigured, watermark, text, bad anatomy'
+const DEFAULT_NEGATIVE = 'ugly, blurry, low quality, deformed, disfigured, watermark, text, bad anatomy, extra fingers, mutated hands, poorly drawn face, long neck, jpeg artifacts, duplicate, out of frame'
 
 const REFINEMENT_CATEGORIES = [
   {
@@ -240,6 +264,10 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [nsfwMode, setNsfwMode] = useState(false)
+
+  // Edit mode — Grok-style iterative image editing
+  const [editMode, setEditMode] = useState(false)
+  const [editSourceImage, setEditSourceImage] = useState<string | null>(null)
 
   // Animate mode state
   const [animateImage, setAnimateImage] = useState<string | null>(null)
@@ -455,6 +483,13 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
 
       setResult(data)
       saveHistory(data)
+      // After edit completes, exit edit mode but keep the new image for further edits
+      if (editMode) {
+        setEditMode(false)
+        setEditSourceImage(null)
+        setRefImages([])
+        setStrength(0.7)
+      }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         setError(err.message || 'Network error')
@@ -462,7 +497,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     } finally {
       setGenerating(false)
     }
-  }, [prompt, negativePrompt, selectedModel, width, height, steps, seed, cfg, activePreset, saveHistory, refImages, faceMode, ipScale, strength])
+  }, [prompt, negativePrompt, selectedModel, width, height, steps, seed, cfg, activePreset, saveHistory, refImages, faceMode, ipScale, strength, editMode])
 
   const handleCancel = useCallback(() => {
     abortRef.current?.abort()
@@ -484,6 +519,38 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
     if (!result?.image || !onShareToStory) return
     onShareToStory(result.image)
   }, [result, onShareToStory])
+
+  // Edit This Image — Grok-style iterative refinement
+  const handleEditImage = useCallback((imageDataUrl: string) => {
+    setEditMode(true)
+    setEditSourceImage(imageDataUrl)
+    // Load the image as a reference for img2img editing
+    setRefImages([{ data: imageDataUrl, name: 'edit-source.jpg' }])
+    setStrength(0.55) // Lower strength preserves more of original (like Grok's edits)
+    setFaceMode(false)
+    setPrompt('')
+    setSeed(-1)
+    toast.success('Edit mode — describe what to change')
+  }, [])
+
+  const handleCancelEdit = useCallback(() => {
+    setEditMode(false)
+    setEditSourceImage(null)
+    setRefImages([])
+    setStrength(0.7)
+  }, [])
+
+  // Use history/result image as reference for new generation
+  const handleUseAsReference = useCallback((imageDataUrl: string) => {
+    setRefImages(prev => {
+      if (prev.length >= 4) {
+        toast.error('Max 4 reference images')
+        return prev
+      }
+      return [...prev, { data: imageDataUrl, name: 'reference.jpg' }]
+    })
+    toast.success('Added as reference image')
+  }, [])
 
   const handleAnimate = useCallback(async () => {
     if (!animateImage) {
@@ -928,12 +995,34 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         </>
       ) : (
       <>
+      {/* Edit Mode Banner */}
+      {editMode && editSourceImage && (
+        <div className="flex items-center gap-2 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+          <div className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden border border-amber-500/30">
+            <img src={editSourceImage} alt="Editing" className="w-full h-full object-cover" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <Pencil className="w-3 h-3 text-amber-400" />
+              <span className="text-xs font-medium text-amber-300">Edit Mode</span>
+            </div>
+            <p className="text-[10px] text-gray-500 mt-0.5">Describe changes — style, background, lighting, etc.</p>
+          </div>
+          <button
+            onClick={handleCancelEdit}
+            className="text-[10px] text-gray-500 hover:text-red-400 px-2 py-1 rounded border border-white/10 hover:border-red-500/30 transition-colors"
+          >
+            Exit Edit
+          </button>
+        </div>
+      )}
+
       {/* Prompt */}
       <div>
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Describe your image... e.g. a cyberpunk album cover with neon lights"
+          placeholder={editMode ? "Describe what to change... e.g. add sunset background, make it more dramatic, change to night scene" : "Describe your image... e.g. a cyberpunk album cover with neon lights"}
           className="w-full bg-neutral-900 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-gray-500 resize-none focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/20"
           rows={3}
           disabled={generating}
@@ -1228,10 +1317,17 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         <Button
           onClick={handleGenerate}
           disabled={!prompt.trim()}
-          className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold py-2.5 disabled:opacity-40"
+          className={`w-full text-white font-bold py-2.5 disabled:opacity-40 ${
+            editMode
+              ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500'
+              : 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500'
+          }`}
         >
-          <Sparkles className="w-4 h-4 mr-2" />
-          Generate
+          {editMode ? (
+            <><Pencil className="w-4 h-4 mr-2" /> Apply Edit</>
+          ) : (
+            <><Sparkles className="w-4 h-4 mr-2" /> Generate</>
+          )}
         </Button>
       )}
 
@@ -1240,7 +1336,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
         <div className="flex flex-col items-center justify-center gap-2 py-6">
           <Loader2 className="w-5 h-5 text-violet-400 animate-spin" />
           <span className="text-sm text-gray-400">
-            {refImages.length >= 2 || faceMode ? 'Blending references' : refImages.length === 1 ? 'Reimagining' : 'Generating'} with {currentModel?.name}...
+            {editMode ? 'Applying edit' : refImages.length >= 2 || faceMode ? 'Blending references' : refImages.length === 1 ? 'Reimagining' : 'Generating'} with {currentModel?.name}...
           </span>
           <span className="text-xs text-gray-600">
             {elapsed}s elapsed {currentModel && `(est. ${currentModel.estimate})`}
@@ -1287,7 +1383,39 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
               className="border-white/10 text-white hover:bg-white/10"
             >
               <Download className="w-3.5 h-3.5 mr-1.5" />
-              Save to Device
+              Save
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => result?.image && handleEditImage(result.image)}
+              className="border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+            >
+              <Pencil className="w-3.5 h-3.5 mr-1.5" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => result?.image && handleUseAsReference(result.image)}
+              className="border-violet-500/30 text-violet-300 hover:bg-violet-500/10"
+            >
+              <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+              Use as Ref
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (!result?.image) return
+                setAnimateImage(result.image)
+                setAnimateImageName('generated-image.png')
+                setMode('animate')
+              }}
+              className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+            >
+              <Play className="w-3.5 h-3.5 mr-1.5" />
+              Animate
             </Button>
             {onShareToStory && (
               <Button
@@ -1297,7 +1425,7 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 className="border-white/10 text-white hover:bg-white/10"
               >
                 <Share2 className="w-3.5 h-3.5 mr-1.5" />
-                Share to Story
+                Share
               </Button>
             )}
           </div>
@@ -1362,15 +1490,29 @@ export function GeneratePanel({ onShareToStory }: { onShareToStory?: (imageDataU
                 >
                   <img src={item.image} alt={`Generated ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    deleteHistoryItem(item.timestamp)
-                  }}
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 z-10"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                {/* Action buttons on hover */}
+                <div className="absolute -top-1.5 -right-1.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleEditImage(item.image)
+                    }}
+                    className="w-5 h-5 rounded-full bg-amber-500/90 text-white flex items-center justify-center hover:bg-amber-500"
+                    title="Edit this image"
+                  >
+                    <Pencil className="w-2.5 h-2.5" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      deleteHistoryItem(item.timestamp)
+                    }}
+                    className="w-5 h-5 rounded-full bg-red-500/90 text-white flex items-center justify-center hover:bg-red-500"
+                    title="Delete"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
