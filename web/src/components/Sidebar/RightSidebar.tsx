@@ -6,6 +6,7 @@ import { useTracksQuery, useExploreUsersQuery, SortTrackField, SortOrder } from 
 import { Avatar } from '../Avatar'
 import { TrendingUp, Flame, Play, Users, BadgeCheck, Sparkles, Trophy, ChevronDown, ChevronUp } from 'lucide-react'
 import { useAudioPlayerContext, Song } from 'hooks/useAudioPlayer'
+import { AdSlot } from '../ads/AdSlot'
 
 export const RightSidebar = () => {
   const { playlistState } = useAudioPlayerContext()
@@ -136,6 +137,9 @@ export const RightSidebar = () => {
           </Link>
         </div>
 
+        {/* Ad Slot 1 — between Trending & Featured */}
+        <AdSlot slot="ad-slot-1" format="rectangle" />
+
         {/* Featured Artists */}
         <div className="bg-neutral-900/80 rounded-2xl p-4 border border-purple-500/20">
           <div className="flex items-center gap-2 mb-4">
@@ -189,6 +193,9 @@ export const RightSidebar = () => {
             Discover more
           </Link>
         </div>
+
+        {/* Ad Slot 2 — between Featured & Top100 */}
+        <AdSlot slot="ad-slot-2" format="rectangle" />
 
         {/* Top 100 NFTs Accordion */}
         <div className="bg-gradient-to-br from-neutral-900 via-yellow-900/10 to-neutral-900 rounded-2xl border border-yellow-500/20 overflow-hidden">

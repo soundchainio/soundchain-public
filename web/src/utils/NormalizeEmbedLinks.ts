@@ -303,10 +303,10 @@ const normalizeTikTok = (str: string) => {
     return str
   }
 
-  // Extract video ID from TikTok URL
+  // Extract video ID from TikTok URL — autoplay muted
   const match = str.match(tiktokLinkRegex)
   if (match && match[1]) {
-    return `https://www.tiktok.com/embed/v2/${match[1]}`
+    return `https://www.tiktok.com/embed/v2/${match[1]}?autoplay=1&mute=1`
   }
 
   return str

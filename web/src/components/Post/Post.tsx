@@ -7,7 +7,7 @@ import Link from 'next/link'
 import ReactPlayer from 'react-player'
 import { Clock, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
-import { hasLazyLoadWithThumbnailSupport, IdentifySource } from 'utils/NormalizeEmbedLinks'
+import { canPlayWithReactPlayer, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
 import { MakePostPermanentModal } from '../modals/MakePostPermanentModal'
 import { Comment } from '../Comment/Comment'
@@ -38,6 +38,7 @@ import { PostSkeleton } from './PostSkeleton'
 import { RepostPreview } from './RepostPreview'
 import { PostBodyWithEmotes } from '../EmoteRenderer'
 import { AutoplayVideo } from '../AutoplayMedia'
+import { NativeTweetCard } from './NativeTweetCard'
 import { FastAudioPlayer } from '../FastAudioPlayer'
 
 interface PostProps {
@@ -55,6 +56,11 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const [ytBlocked, setYtBlocked] = useState(false)
   const ytPlayerReady = useRef(false)
   const ytBlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Autoplay on scroll — muted video plays when 50% visible (like X/Instagram)
+  const [isPlayerInView, setIsPlayerInView] = useState(false)
+  const [isPlayerMuted, setIsPlayerMuted] = useState(true)
+  const playerContainerRef = useRef<HTMLDivElement>(null)
 
   // Detect YouTube age-restricted/blocked embeds via timeout.
   // YouTube's IFrame API never initializes for age-gated content,
@@ -84,6 +90,18 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
     if (isYouTube && isMobile) startYtBlockCheck()
     return () => { if (ytBlockTimer.current) clearTimeout(ytBlockTimer.current) }
   }, [isYouTube, startYtBlockCheck])
+
+  // IntersectionObserver for autoplay-on-scroll
+  useEffect(() => {
+    const el = playerContainerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsPlayerInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
+      { threshold: [0.5] }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const firstPage: PageInput = { first: 5 }
   const [loadComments, { data: commentsData, loading: commentsLoading }] = useCommentsLazyQuery({
@@ -328,11 +346,12 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             const mediaUrl = post.mediaLink?.replace(/^http:/, 'https:') || ''
             // Playlists need iframe to show tracklist - ReactPlayer doesn't support playlists
             const isPlaylist = mediaUrl.includes('listType=playlist') || mediaUrl.includes('videoseries') || mediaUrl.includes('list=')
-            const useReactPlayer = !isPlaylist && hasLazyLoadWithThumbnailSupport(post.mediaLink)
+            const useReactPlayer = !isPlaylist && canPlayWithReactPlayer(post.mediaLink)
 
             return useReactPlayer ? (
               // YouTube videos, Vimeo, Facebook - use ReactPlayer with 16:9 aspect ratio
-              <div key={`player-${post.id}`} className="relative w-full orientation-stable">
+              // Autoplay muted on scroll (like X/Instagram)
+              <div key={`player-${post.id}`} ref={playerContainerRef} className="relative w-full orientation-stable">
                 {!ytBlocked ? (
                   <div
                     className="relative w-full"
@@ -350,12 +369,11 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       url={post.mediaLink}
                       playsinline
                       controls
-                      light={typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? false : (getYouTubeThumbnail(post.mediaLink) || true)}
+                      muted={isPlayerMuted}
                       pip
-                      playing={false}
+                      playing={isPlayerInView}
                       stopOnUnmount={false}
                       onReady={() => { ytPlayerReady.current = true }}
-                      onClickPreview={() => { startYtBlockCheck() }}
                       onError={() => {
                         setYtBlocked(true)
                         const vm = post.mediaLink?.match(/(?:embed\/|watch\?v=|youtu\.be\/|youtube-nocookie\.com\/embed\/)([a-zA-Z0-9_-]{11})/)
@@ -375,6 +393,18 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                         facebook: { appId: '' },
                       }}
                     />
+                    {/* Mute/Unmute overlay */}
+                    <button
+                      onClick={() => setIsPlayerMuted(!isPlayerMuted)}
+                      className="absolute bottom-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+                      title={isPlayerMuted ? 'Unmute' : 'Mute'}
+                    >
+                      {isPlayerMuted ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                      )}
+                    </button>
                   </div>
                 ) : (
                   <div className="w-full bg-neutral-900 rounded-lg overflow-hidden" style={{ aspectRatio: '16/9' }}>
@@ -409,6 +439,14 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
               // All other platforms (audio, social, playlists) - use iframe embed
               (() => {
                 const mediaType = IdentifySource(post.mediaLink).type
+
+                // Native X/Twitter card — render natively instead of iframe widget
+                if (mediaType === MediaProvider.X) {
+                  const tweetIdMatch = mediaUrl.match(/id=(\d+)/)
+                  if (tweetIdMatch?.[1]) {
+                    return <NativeTweetCard tweetId={tweetIdMatch[1]} originalUrl={mediaUrl} />
+                  }
+                }
 
                 // Platform-specific embed heights
                 // YouTube playlists need more height to show tracklist

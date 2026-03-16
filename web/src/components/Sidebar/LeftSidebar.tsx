@@ -6,6 +6,7 @@ import { useMe } from 'hooks/useMe'
 import { useFavoriteTracksQuery, useTracksQuery, useGetUserPlaylistsQuery, SortTrackField, SortOrder } from 'lib/graphql'
 import { Avatar } from '../Avatar'
 import { Music, Users, Heart, Disc3, Settings, Wallet, ListMusic, Rocket, ExternalLink, Share2, Megaphone } from 'lucide-react'
+import { AdSlot } from '../ads/AdSlot'
 
 // Announcement type from /v1/feed API
 interface Announcement {
@@ -194,6 +195,9 @@ export const LeftSidebar = () => {
               ))}
             </div>
           )}
+
+          {/* Ad Slot 3 — guest sidebar */}
+          <AdSlot slot="ad-slot-3" format="vertical" />
 
           {/* Quick Stats */}
           <div className="bg-neutral-900/80 rounded-2xl p-4 border border-neutral-800">

@@ -267,6 +267,14 @@ function SoundchainApp({ Component, pageProps }: CustomAppProps) {
             `,
           }}
         />
+        {process.env.NEXT_PUBLIC_ADSENSE_PUB_ID && (
+          <Script
+            async
+            strategy="afterInteractive"
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_PUB_ID}`}
+            crossOrigin="anonymous"
+          />
+        )}
       </Head>
       <AppErrorBoundary>
         {Component.getLayout ? (
