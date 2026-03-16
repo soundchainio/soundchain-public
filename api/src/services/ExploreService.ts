@@ -127,9 +127,44 @@ export class ExploreService extends Service {
       }
     }
 
-    // No genre filter — existing text search behavior
+    // No search and no genre — return ALL tracks (no text filter)
+    // FIX: new RegExp(null) creates /null/i which matches literal "null" — return everything instead
+    if (!search) {
+      return {
+        aggregation: [
+          { $match: { deleted: false }},
+          {
+            $group: {
+              _id: {
+                $ifNull: [
+                  '$trackEditionId',
+                  '$_id',
+                ]
+              },
+              sumPlaybackCount: { $sum: '$playbackCount' },
+              sumFavoriteCount: { $sum: '$favoriteCount' },
+              first: { $first: '$$ROOT' }
+            },
+          },
+          {
+            $replaceRoot: {
+              newRoot: {
+                $mergeObjects: [
+                  '$first',
+                  {
+                    playbackCount: '$sumPlaybackCount',
+                    favoriteCount: '$sumFavoriteCount'
+                  },
+                ]
+              }
+            }
+          }
+        ]
+      }
+    }
+
+    // Text search behavior — search title/description/artist/album AND genres
     const regex = new RegExp(search, 'i');
-    // Build match conditions — search title/description/artist/album AND genres
     const matchConditions: any[] = [
       { title: regex },
       { description: regex },
@@ -139,11 +174,9 @@ export class ExploreService extends Service {
     ]
     // Genre labels (Hip-Hop, R&B, Soul/Funk) differ from enum values (HIP_HOP, R_AND_B, SOUL_FUNK)
     // Convert label format to enum format and add as explicit match
-    if (search) {
-      const genreValueMatch = search.toUpperCase().replace(/[-\s/]+/g, '_').replace(/&/g, '_AND_')
-      if (genreValueMatch !== search.toUpperCase()) {
-        matchConditions.push({ genres: genreValueMatch })
-      }
+    const genreValueMatch = search.toUpperCase().replace(/[-\s/]+/g, '_').replace(/&/g, '_AND_')
+    if (genreValueMatch !== search.toUpperCase()) {
+      matchConditions.push({ genres: genreValueMatch })
     }
     return {
       aggregation: [
