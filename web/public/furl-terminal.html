@@ -89,8 +89,12 @@
   var wsBase = httpBase.replace(/^http/, 'ws');
   var ws = null;
   var reconnectAttempts = 0;
-  var maxReconnect = 5;
+  var maxReconnect = 50;
   var reconnectTimer = null;
+  var keepaliveInterval = null;
+  var keepaliveWorker = null;
+  var wasDisconnectedWhileHidden = false;
+  var isFirstConnect = true;
 
   function connect() {
     setStatus('connecting', 'connecting...');
@@ -132,11 +136,30 @@
       try { fitAddon.fit(); } catch(e){}
       sendResize();
 
+      // Keepalive ping every 30s — prevents Cloudflare 100s idle timeout
+      clearInterval(keepaliveInterval);
+      keepaliveInterval = setInterval(function() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(new ArrayBuffer(0));
+        }
+      }, 30000);
+
+      // Start Web Worker keepalive (immune to background tab throttling)
+      startKeepaliveWorker();
+
       // Staggered resize + fit sequence
       setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); term.focus(); }, 200);
-      setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 800);
-      // Auto-launch Claude Code
-      setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('claude\n'); }, 1500);
+
+      if (isFirstConnect) {
+        isFirstConnect = false;
+        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 800);
+        // Auto-launch Claude Code only on first connect
+        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('claude\n'); }, 1500);
+      } else {
+        // Reconnection — just send enter to refresh prompt, don't relaunch claude
+        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 500);
+        term.writeln('\r\n\x1b[32m[reconnected — session restored]\x1b[0m');
+      }
     };
 
     ws.onmessage = function(evt) {
@@ -152,9 +175,15 @@
 
     ws.onclose = function() {
       clearTimeout(connectTimeout);
+      clearInterval(keepaliveInterval);
       setStatus('error', 'disconnected');
-      term.writeln('\r\n\x1b[33m[tunnel disconnected]\x1b[0m');
-      scheduleReconnect();
+      if (document.hidden) {
+        // Tab is backgrounded — don't spam terminal, reconnect when user returns
+        wasDisconnectedWhileHidden = true;
+      } else {
+        term.writeln('\r\n\x1b[33m[tunnel disconnected]\x1b[0m');
+        scheduleReconnect();
+      }
     };
 
     ws.onerror = function() {
@@ -225,13 +254,45 @@
   // Window resize → refit terminal
   window.addEventListener('resize', function(){ try { fitAddon.fit(); } catch(e){} });
 
-  // Visibility API — pause/resume awareness
+  // Visibility API — instant reconnect when user returns to tab
   document.addEventListener('visibilitychange', function(){
-    if (!document.hidden && ws && ws.readyState === WebSocket.OPEN) {
-      try { fitAddon.fit(); } catch(e){}
-      sendResize();
+    if (document.hidden) {
+      // Tab going to background — send last-gasp keepalive
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(new ArrayBuffer(0));
+      }
+    } else {
+      // Tab returned to foreground
+      if (!ws || ws.readyState !== WebSocket.OPEN || wasDisconnectedWhileHidden) {
+        // Connection died while away — reconnect instantly
+        wasDisconnectedWhileHidden = false;
+        reconnectAttempts = 0; // reset — this is user-initiated, not a failure
+        term.writeln('\r\n\x1b[33m[reconnecting...]\x1b[0m');
+        clearTimeout(reconnectTimer);
+        connect();
+      } else {
+        // Connection survived — just refit
+        try { fitAddon.fit(); } catch(e){}
+        sendResize();
+      }
     }
   });
+
+  // Web Worker keepalive — immune to background tab throttling on desktop
+  function startKeepaliveWorker() {
+    try {
+      if (keepaliveWorker) keepaliveWorker.terminate();
+      var blob = new Blob(['setInterval(function(){postMessage("ping")},25000)'], { type: 'application/javascript' });
+      keepaliveWorker = new Worker(URL.createObjectURL(blob));
+      keepaliveWorker.onmessage = function() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(new ArrayBuffer(0));
+        }
+      };
+    } catch(e) {
+      // Workers not supported — keepaliveInterval handles it
+    }
+  }
 
   // Listen for postMessage from parent (for programmatic input/disconnect)
   window.addEventListener('message', function(evt) {
@@ -258,7 +319,7 @@
   term.writeln('\x1b[36m\u250C\u2500 CLI BRIDGE (iframe-isolated) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\x1b[0m');
   term.writeln('\x1b[36m\u2502\x1b[0m connecting to ' + (isRelay ? 'SoundChain relay' : 'tunnel') + '...');
   term.writeln('\x1b[36m\u2502\x1b[0m \x1b[90m' + httpBase + '\x1b[0m');
-  term.writeln('\x1b[36m\u2502\x1b[0m \x1b[32mThis terminal survives page refreshes!\x1b[0m');
+  term.writeln('\x1b[36m\u2502\x1b[0m \x1b[32mThis terminal survives page refreshes & tab switches!\x1b[0m');
   term.writeln('\x1b[36m\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\x1b[0m');
   term.writeln('');
 
