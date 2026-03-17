@@ -54,42 +54,122 @@ export default async function handler(
   }
 
   try {
-    const { handle } = req.body
+    const { handle, userId } = req.body
 
+    // Mode 1: Direct userId — sign JWT immediately (no DB lookup needed)
+    if (userId && typeof userId === 'string') {
+      const now = Math.floor(Date.now() / 1000)
+      const payload: Record<string, unknown> = {
+        [JWT_NAMESPACE]: { roles: [] },
+        sub: userId,
+        iat: now,
+        exp: now + (365 * 24 * 60 * 60)
+      }
+      const token = signJwt(payload, JWT_SECRET)
+      return res.status(200).json({
+        success: true,
+        userId,
+        token,
+        expiresIn: '365 days',
+        usage: 'Set as channels.soundchain.apiToken in OpenClaw config'
+      })
+    }
+
+    // Mode 2: Lookup by handle — try local MongoDB first, then GraphQL API
     if (!handle || typeof handle !== 'string') {
-      return res.status(400).json({ error: 'handle is required in request body' })
+      return res.status(400).json({ error: 'handle or userId is required in request body' })
     }
 
-    // Look up user by handle
-    const client = await clientPromise
-    const db = client.db('soundchain')
-    const user = await db.collection('users').findOne({
-      handle: handle.toLowerCase()
+    // Try local MongoDB (Atlas — has users if same cluster as main app)
+    let userDoc: any = null
+    try {
+      const client = await clientPromise
+      const db = client.db('soundchain')
+      userDoc = await db.collection('users').findOne({ handle: handle.toLowerCase() })
+    } catch (e) {
+      // MongoDB lookup failed, will try GraphQL
+    }
+
+    if (userDoc) {
+      const now = Math.floor(Date.now() / 1000)
+      const payload: Record<string, unknown> = {
+        [JWT_NAMESPACE]: { roles: [] },
+        sub: userDoc._id.toString(),
+        iat: now,
+        exp: now + (365 * 24 * 60 * 60)
+      }
+      const token = signJwt(payload, JWT_SECRET)
+      return res.status(200).json({
+        success: true,
+        handle: userDoc.handle,
+        userId: userDoc._id.toString(),
+        profileId: userDoc.profileId?.toString(),
+        token,
+        expiresIn: '365 days',
+        usage: 'Set as channels.soundchain.apiToken in OpenClaw config'
+      })
+    }
+
+    // Fallback: Query Lambda GraphQL API for profileId, then list collections for debug
+    const GQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
+    const gqlRes = await fetch(GQL_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `{ profileByHandle(handle: "${handle.replace(/"/g, '')}") { id displayName } }`
+      })
     })
+    const gqlData = await gqlRes.json()
+    const profileId = gqlData?.data?.profileByHandle?.id
 
-    if (!user) {
-      return res.status(404).json({ error: `User with handle "${handle}" not found` })
+    if (!profileId) {
+      return res.status(404).json({
+        error: `Profile "${handle}" not found via GraphQL either`,
+        hint: 'Try passing userId directly: {"userId": "..."}'
+      })
     }
 
-    // Generate JWT matching JwtService.create() format exactly
-    const now = Math.floor(Date.now() / 1000)
-    const payload: Record<string, unknown> = {
-      [JWT_NAMESPACE]: { roles: [] },
-      sub: user._id.toString(),
-      iat: now,
-      exp: now + (365 * 24 * 60 * 60) // 365 days for agent tokens
+    // We found the profileId but need the userId. Try finding user by profileId in Atlas
+    let userByProfile: any = null
+    try {
+      const client = await clientPromise
+      const db = client.db('soundchain')
+      userByProfile = await db.collection('users').findOne({ profileId: profileId })
+      if (!userByProfile) {
+        // Try with ObjectId
+        const { ObjectId } = await import('mongodb')
+        userByProfile = await db.collection('users').findOne({ profileId: new ObjectId(profileId) })
+      }
+    } catch (e) {
+      // Fallback failed
     }
 
-    const token = signJwt(payload, JWT_SECRET)
+    if (userByProfile) {
+      const now = Math.floor(Date.now() / 1000)
+      const payload: Record<string, unknown> = {
+        [JWT_NAMESPACE]: { roles: [] },
+        sub: userByProfile._id.toString(),
+        iat: now,
+        exp: now + (365 * 24 * 60 * 60)
+      }
+      const token = signJwt(payload, JWT_SECRET)
+      return res.status(200).json({
+        success: true,
+        handle,
+        userId: userByProfile._id.toString(),
+        profileId,
+        token,
+        expiresIn: '365 days',
+        usage: 'Set as channels.soundchain.apiToken in OpenClaw config'
+      })
+    }
 
-    return res.status(200).json({
-      success: true,
-      handle: user.handle,
-      userId: user._id.toString(),
-      profileId: user.profileId?.toString(),
-      token,
-      expiresIn: '365 days',
-      usage: 'Set as channels.soundchain.apiToken in OpenClaw config'
+    // Could not find user — return profileId so caller can provide userId manually
+    return res.status(404).json({
+      error: 'User not in Atlas DB. Pass userId directly.',
+      profileId,
+      profileName: gqlData?.data?.profileByHandle?.displayName,
+      hint: 'Get userId from browser: login as furl → DevTools → Application → Cookies → decode JWT "token" at jwt.io → sub field is the userId. Then call: {"userId": "<sub value>"}'
     })
 
   } catch (error: any) {
