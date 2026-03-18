@@ -6299,7 +6299,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     )}
                     {/* Legacy OAuth Wallet Option (separate from HD — for migration) */}
                     {userData?.me?.hdWalletAddress && (() => {
-                      const legacyAddr = userData?.me?.magicWalletAddress || userData?.me?.googleWalletAddress || userData?.me?.discordWalletAddress || userData?.me?.twitchWalletAddress || userData?.me?.emailWalletAddress || (account && account.toLowerCase() !== userData?.me?.hdWalletAddress?.toLowerCase() ? account : null)
+                      const legacyAddr = userData?.me?.magicWalletAddress || userData?.me?.googleWalletAddress || userData?.me?.discordWalletAddress || userData?.me?.twitchWalletAddress || userData?.me?.emailWalletAddress
                       return legacyAddr && legacyAddr.toLowerCase() !== userData?.me?.hdWalletAddress?.toLowerCase() ? (
                         <option value="legacy" className="bg-gray-900 text-yellow-400">
                           OAuth Wallet: {legacyAddr.slice(0, 6)}...{legacyAddr.slice(-4)} (has POL)
