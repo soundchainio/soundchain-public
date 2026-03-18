@@ -1787,6 +1787,7 @@ export function AgentStatusTicker() {
   const xtermContainerDesktopRef = useRef<HTMLDivElement>(null)
   const xtermIframeRef = useRef<HTMLIFrameElement | null>(null) // iframe hosting terminal
   const pendingCliUrlRef = useRef<string | null>(null) // URL waiting for container mount
+  const connectingRef = useRef(false) // Lock to prevent duplicate connections
 
   // ─── CLI Bridge: iframe-isolated terminal ───────────────────────────
   // Terminal runs in an iframe (/furl-terminal.html) so it survives
@@ -1856,6 +1857,7 @@ export function AgentStatusTicker() {
         xtermIframeRef.current.remove()
       } catch {}
       xtermIframeRef.current = null
+      connectingRef.current = false
     }
   }, [])
 
@@ -1863,19 +1865,20 @@ export function AgentStatusTicker() {
   // On page refresh, restore tunnel URL from sessionStorage
   useEffect(() => {
     if (jackMode !== 'CLI_BRIDGE') return
-    // Skip if iframe already exists and is connected — prevents duplicate sessions
+    // Hard lock — only one connection attempt at a time
+    if (connectingRef.current) return
     if (xtermIframeRef.current && xtermIframeRef.current.parentElement) return
     if (!pendingCliUrlRef.current) {
       const saved = sessionStorage.getItem('furl_tunnel_url')
       if (saved) pendingCliUrlRef.current = saved
       else return
     }
+    connectingRef.current = true
     const url = pendingCliUrlRef.current
     let attempt = 0
-    const maxAttempts = 20 // 20 × 100ms = 2s max wait for DOM
+    const maxAttempts = 20
     const tryConnect = () => {
-      // Double-check iframe wasn't created by a concurrent effect
-      if (xtermIframeRef.current && xtermIframeRef.current.parentElement) return
+      if (xtermIframeRef.current && xtermIframeRef.current.parentElement) { connectingRef.current = false; return }
       const mob = xtermContainerMobileRef.current
       const desk = xtermContainerDesktopRef.current
       const container = (mob && (mob.getBoundingClientRect().height > 0 || mob.offsetParent !== null))
@@ -1886,8 +1889,11 @@ export function AgentStatusTicker() {
       if (container) {
         pendingCliUrlRef.current = null
         connectCliBridge(url)
+        connectingRef.current = false
       } else if (++attempt < maxAttempts) {
         setTimeout(tryConnect, 100)
+      } else {
+        connectingRef.current = false
       }
     }
     // First attempt after a tick (DOM needs to commit)
