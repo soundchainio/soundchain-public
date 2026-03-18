@@ -1863,6 +1863,8 @@ export function AgentStatusTicker() {
   // On page refresh, restore tunnel URL from sessionStorage
   useEffect(() => {
     if (jackMode !== 'CLI_BRIDGE') return
+    // Skip if iframe already exists and is connected — prevents duplicate sessions
+    if (xtermIframeRef.current && xtermIframeRef.current.parentElement) return
     if (!pendingCliUrlRef.current) {
       const saved = sessionStorage.getItem('furl_tunnel_url')
       if (saved) pendingCliUrlRef.current = saved
@@ -1872,6 +1874,8 @@ export function AgentStatusTicker() {
     let attempt = 0
     const maxAttempts = 20 // 20 × 100ms = 2s max wait for DOM
     const tryConnect = () => {
+      // Double-check iframe wasn't created by a concurrent effect
+      if (xtermIframeRef.current && xtermIframeRef.current.parentElement) return
       const mob = xtermContainerMobileRef.current
       const desk = xtermContainerDesktopRef.current
       const container = (mob && (mob.getBoundingClientRect().height > 0 || mob.offsetParent !== null))
