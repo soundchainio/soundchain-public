@@ -44,24 +44,24 @@ export class BillboardService extends Service {
     const now = new Date()
     const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000)
 
-    const billboard = await BillboardModel.create({
-      profileId: input.profileId,
-      slot: input.slot,
-      title: input.title,
-      description: input.description,
-      imageUrl: input.imageUrl,
-      linkUrl: input.linkUrl,
-      durationDays: input.durationDays,
-      txHash: input.txHash,
-      ogunPaid,
-      status: BillboardStatus.ACTIVE,
-      startsAt: now,
-      expiresAt,
-      impressions: 0,
-      clicks: 0,
-    })
+    const doc = new BillboardModel()
+    doc.profileId = input.profileId
+    doc.slot = input.slot
+    doc.title = input.title
+    doc.description = input.description
+    doc.imageUrl = input.imageUrl
+    doc.linkUrl = input.linkUrl
+    doc.durationDays = input.durationDays
+    doc.txHash = input.txHash
+    doc.ogunPaid = ogunPaid
+    doc.status = BillboardStatus.ACTIVE
+    doc.startsAt = now
+    doc.expiresAt = expiresAt
+    doc.impressions = 0
+    doc.clicks = 0
+    await doc.save()
 
-    return billboard.toObject() as unknown as Billboard
+    return doc.toObject() as unknown as Billboard
   }
 
   /**
