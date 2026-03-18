@@ -6298,11 +6298,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                       </option>
                     )}
                     {/* Legacy OAuth Wallet Option (separate from HD — for migration) */}
-                    {userData?.me?.hdWalletAddress && (userData?.me?.magicWalletAddress || userData?.me?.googleWalletAddress || userData?.me?.discordWalletAddress || userData?.me?.twitchWalletAddress || userData?.me?.emailWalletAddress) && (() => {
-                      const legacyAddr = userData?.me?.magicWalletAddress || userData?.me?.googleWalletAddress || userData?.me?.discordWalletAddress || userData?.me?.twitchWalletAddress || userData?.me?.emailWalletAddress
+                    {userData?.me?.hdWalletAddress && (() => {
+                      const legacyAddr = userData?.me?.magicWalletAddress || userData?.me?.googleWalletAddress || userData?.me?.discordWalletAddress || userData?.me?.twitchWalletAddress || userData?.me?.emailWalletAddress || (account && account.toLowerCase() !== userData?.me?.hdWalletAddress?.toLowerCase() ? account : null)
                       return legacyAddr && legacyAddr.toLowerCase() !== userData?.me?.hdWalletAddress?.toLowerCase() ? (
                         <option value="legacy" className="bg-gray-900 text-yellow-400">
-                          Legacy OAuth: {legacyAddr.slice(0, 6)}...{legacyAddr.slice(-4)} ({parseFloat(maticBalance || '0').toFixed(4)} POL)
+                          OAuth Wallet: {legacyAddr.slice(0, 6)}...{legacyAddr.slice(-4)} (has POL)
                         </option>
                       ) : null
                     })()}
