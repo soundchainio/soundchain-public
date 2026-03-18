@@ -45,7 +45,14 @@ export class BillboardService extends Service {
     const expiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000)
 
     const billboard = await BillboardModel.create({
-      ...input,
+      profileId: input.profileId,
+      slot: input.slot,
+      title: input.title,
+      description: input.description,
+      imageUrl: input.imageUrl,
+      linkUrl: input.linkUrl,
+      durationDays: input.durationDays,
+      txHash: input.txHash,
       ogunPaid,
       status: BillboardStatus.ACTIVE,
       startsAt: now,
@@ -54,7 +61,7 @@ export class BillboardService extends Service {
       clicks: 0,
     })
 
-    return billboard.toObject() as Billboard
+    return billboard.toObject() as unknown as Billboard
   }
 
   /**

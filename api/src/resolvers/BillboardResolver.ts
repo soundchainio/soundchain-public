@@ -62,8 +62,8 @@ export class BillboardResolver {
   @Authorized(Role.USER)
   async myBillboards(@Ctx() ctx: Context): Promise<Billboard[]> {
     const user = await ctx.user
-    if (!user?.profile) return []
-    return ctx.billboardService.getByProfile(user.profile.toString())
+    if (!user?.profileId) return []
+    return ctx.billboardService.getByProfile(user.profileId.toString())
   }
 
   /** Get pricing for all slots */
@@ -80,14 +80,14 @@ export class BillboardResolver {
     @Ctx() ctx: Context,
   ): Promise<Billboard> {
     const user = await ctx.user
-    if (!user?.profile) throw new Error('Profile required')
+    if (!user?.profileId) throw new Error('Profile required')
 
     if (input.durationDays < 1 || input.durationDays > 7) {
       throw new Error('Duration must be 1-7 days')
     }
 
     return ctx.billboardService.createBillboard({
-      profileId: user.profile.toString(),
+      profileId: user.profileId.toString(),
       ...input,
     })
   }
@@ -100,8 +100,8 @@ export class BillboardResolver {
     @Ctx() ctx: Context,
   ): Promise<Billboard | null> {
     const user = await ctx.user
-    if (!user?.profile) return null
-    return ctx.billboardService.pause(billboardId, user.profile.toString())
+    if (!user?.profileId) return null
+    return ctx.billboardService.pause(billboardId, user.profileId.toString())
   }
 
   /** Resume a paused billboard */
@@ -112,8 +112,8 @@ export class BillboardResolver {
     @Ctx() ctx: Context,
   ): Promise<Billboard | null> {
     const user = await ctx.user
-    if (!user?.profile) return null
-    return ctx.billboardService.resume(billboardId, user.profile.toString())
+    if (!user?.profileId) return null
+    return ctx.billboardService.resume(billboardId, user.profileId.toString())
   }
 
   /** Track a billboard impression */
