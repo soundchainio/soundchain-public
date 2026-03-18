@@ -40,6 +40,7 @@ import { WebPushService } from '../services/WebPushService';
 import { StoryService } from '../services/StoryService';
 import { ProfileViewService } from '../services/ProfileViewService';
 import { WallPostService } from '../services/WallPostService';
+import { BillboardService } from '../services/BillboardService';
 
 export class Context {
   auctionItemService: AuctionItemService;
@@ -84,6 +85,7 @@ export class Context {
   storyService: StoryService;
   profileViewService: ProfileViewService;
   wallPostService: WallPostService;
+  billboardService: BillboardService;
 
   constructor(jwtUser?: JwtUser) {
     this.auctionItemService = new AuctionItemService(this);
@@ -126,6 +128,7 @@ export class Context {
     this.storyService = new StoryService(this);
     this.profileViewService = new ProfileViewService(this);
     this.wallPostService = new WallPostService(this);
+    this.billboardService = new BillboardService(this);
     this.user = jwtUser && this.userService.getUser(jwtUser.sub);
   }
 }

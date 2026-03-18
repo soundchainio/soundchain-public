@@ -46,10 +46,12 @@ import { DeveloperResolver } from './DeveloperResolver';
 import { StoryResolver } from './StoryResolver';
 import { ProfileViewResolver } from './ProfileViewResolver';
 import { WallPostResolver } from './WallPostResolver';
+import { BillboardResolver } from './BillboardResolver';
 import { CallSignalResolver } from './CallSignalResolver';
 
 export const resolvers = [
   ActivityResolver,
+  BillboardResolver,
   CallSignalResolver,
   AuctionEndedNotificationResolver,
   AuctionIsEndingNotificationResolver,
