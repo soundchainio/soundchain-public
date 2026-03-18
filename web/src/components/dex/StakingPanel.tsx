@@ -123,6 +123,11 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
   const [claimStreamingRewardsMutation] = useMutation(CLAIM_STREAMING_REWARDS)
   const [claimLoading, setClaimLoading] = useState(false)
 
+  // Wallet selector for claims — lets user choose which wallet receives OGUN
+  const hdWallet = me?.hdWalletAddress
+  const oauthWallet = me?.magicWalletAddress || me?.googleWalletAddress || me?.discordWalletAddress || me?.twitchWalletAddress || me?.emailWalletAddress
+  const [claimWallet, setClaimWallet] = useState<string>(hdWallet || oauthWallet || '')
+
   // Calculate streaming totals
   const scids = streamingData?.scidsByProfile || []
   const streamingStats = {
@@ -140,10 +145,11 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       .slice(0, 5),
   }
 
-  // Handle claim to wallet (with 0.05% platform fee)
+  // Handle claim to wallet — uses selected claimWallet, NO Magic RPC needed
   const handleClaimToWallet = async () => {
-    if (!account) {
-      toast.error('Please connect your wallet first')
+    const targetWallet = claimWallet || account
+    if (!targetWallet) {
+      toast.error('Please select a wallet to claim to')
       return
     }
 
@@ -152,7 +158,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       const { data } = await claimStreamingRewardsMutation({
         variables: {
           input: {
-            walletAddress: account,
+            walletAddress: targetWallet,
             stakeDirectly: false,
           },
         },
@@ -160,30 +166,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
       if (data?.claimStreamingRewards?.success) {
         const totalClaimed = data.claimStreamingRewards.totalClaimed
+        const txHash = data.claimStreamingRewards.transactionHash
 
-        // Collect 0.05% platform fee from claimed OGUN
-        const platformFeeRate = config.soundchainFee || 0.0005
-        const platformFee = totalClaimed * platformFeeRate
-        const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com')
-        const treasuryAddress = config.treasuryAddress
-
-        if (platformFee > 0 && treasuryAddress && web3Instance) {
-          try {
-            const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
-            const gasPrice = await web3Instance.eth.getGasPrice()
-            console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN streaming fee to treasury: ${treasuryAddress}`)
-            const feeTx = tokenContract(web3Instance).methods.transfer(treasuryAddress, feeWei)
-            const feeGas = await feeTx.estimateGas({ from: account })
-            await feeTx.send({ from: account, gas: feeGas.toString(), gasPrice: gasPrice.toString() })
-            console.log('✅ Streaming rewards platform fee sent to treasury')
-          } catch (feeErr) {
-            console.error('Fee collection failed:', feeErr)
-            // Don't fail the whole claim if fee collection fails
-          }
+        if (txHash) {
+          toast.success(`Claimed ${totalClaimed.toFixed(2)} OGUN! TX: ${txHash.slice(0, 10)}...`)
+        } else {
+          toast.success(`Claimed ${totalClaimed.toFixed(2)} OGUN to ${targetWallet.slice(0, 6)}...${targetWallet.slice(-4)}`)
         }
-
-        const netClaimed = totalClaimed - platformFee
-        toast.success(`Successfully claimed ${netClaimed.toFixed(2)} OGUN! (fee: ${platformFee.toFixed(4)} OGUN)`)
         refetchStreaming()
         fetchBalances()
       } else {
@@ -825,6 +814,30 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Wallet Selector for Claims */}
+            {streamingStats.totalUnclaimed > 0 && (
+              <div className="mb-2 p-2 bg-black/30 rounded-lg border border-gray-700">
+                <label className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 block">Claim to wallet</label>
+                <select
+                  value={claimWallet}
+                  onChange={(e) => setClaimWallet(e.target.value)}
+                  className="w-full bg-black/50 border border-gray-700 rounded px-3 py-2 text-cyan-400 font-mono text-xs focus:border-cyan-500 focus:outline-none"
+                  style={{ colorScheme: 'dark' }}
+                >
+                  {hdWallet && (
+                    <option value={hdWallet}>
+                      HD Wallet: {hdWallet.slice(0, 6)}...{hdWallet.slice(-4)}
+                    </option>
+                  )}
+                  {oauthWallet && oauthWallet !== hdWallet && (
+                    <option value={oauthWallet}>
+                      OAuth Wallet: {oauthWallet.slice(0, 6)}...{oauthWallet.slice(-4)}
+                    </option>
+                  )}
+                </select>
               </div>
             )}
 
