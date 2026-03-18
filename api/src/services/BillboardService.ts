@@ -77,7 +77,7 @@ export class BillboardService extends Service {
       .sort({ ogunPaid: -1 }) // Highest bidder wins the slot
       .lean()
 
-    return billboard as Billboard | null
+    return billboard as unknown as Billboard | null
   }
 
   /**
@@ -97,7 +97,7 @@ export class BillboardService extends Service {
       .sort({ ogunPaid: -1 })
       .lean()
 
-    return billboards as Billboard[]
+    return billboards as unknown as Billboard[]
   }
 
   /**
@@ -109,7 +109,7 @@ export class BillboardService extends Service {
       .limit(50)
       .lean()
 
-    return billboards as Billboard[]
+    return billboards as unknown as Billboard[]
   }
 
   /**
@@ -142,7 +142,7 @@ export class BillboardService extends Service {
       { new: true },
     ).lean()
 
-    return billboard as Billboard | null
+    return billboard as unknown as Billboard | null
   }
 
   /**
@@ -155,7 +155,7 @@ export class BillboardService extends Service {
       { new: true },
     ).lean()
 
-    return billboard as Billboard | null
+    return billboard as unknown as Billboard | null
   }
 
   /**
