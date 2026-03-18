@@ -138,7 +138,9 @@ export class StreamingRewardsContract {
         amountWei,
         isNft,
         {
-          gasLimit: 200000, // Set reasonable gas limit
+          gasLimit: 200000,
+          maxFeePerGas: ethers.utils.parseUnits('50', 'gwei'),
+          maxPriorityFeePerGas: ethers.utils.parseUnits('30', 'gwei'),
         }
       );
 
@@ -188,7 +190,11 @@ export class StreamingRewardsContract {
         scid,
         amountWei,
         isNft,
-        { gasLimit: 300000 }
+        {
+          gasLimit: 300000,
+          maxFeePerGas: ethers.utils.parseUnits('50', 'gwei'),
+          maxPriorityFeePerGas: ethers.utils.parseUnits('30', 'gwei'),
+        }
       );
 
       const receipt = await tx.wait(1);
@@ -241,7 +247,11 @@ export class StreamingRewardsContract {
         scids,
         amountsWei,
         isNfts,
-        { gasLimit: 50000 + (users.length * 80000) } // Base + per-item gas
+        {
+          gasLimit: 50000 + (users.length * 80000), // Base + per-item gas
+          maxFeePerGas: ethers.utils.parseUnits('50', 'gwei'),
+          maxPriorityFeePerGas: ethers.utils.parseUnits('30', 'gwei'),
+        }
       );
 
       const receipt = await tx.wait(1);
