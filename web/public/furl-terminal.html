@@ -206,10 +206,10 @@
         // Auto-launch Claude Code with TERM=dumb to prevent spinner garbling through relay
         setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('TERM=dumb NO_COLOR=1 claude\n'); }, 1500);
       } else {
-        // Reconnection — DON'T send \n (causes stacked prompts on new shell).
-        // Just refit and let the user see the existing state.
+        // Reconnection — relay reattaches to existing ttyd session (same sessionId).
+        // Shell is still alive with Claude running. Just refit the terminal.
         setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); }, 300);
-        term.writeln('\r\n\x1b[32m[reconnected — session restored]\x1b[0m');
+        term.writeln('\r\n\x1b[32m[reconnected]\x1b[0m');
       }
     };
 
