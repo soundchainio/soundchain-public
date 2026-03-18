@@ -69,6 +69,32 @@
   term.open(document.getElementById('terminal'));
   term.focus();
 
+  // ─── Clipboard: Copy on selection, Paste on Ctrl/Cmd+V or right-click ───
+  term.onSelectionChange(function() {
+    var sel = term.getSelection();
+    if (sel) {
+      navigator.clipboard.writeText(sel).catch(function(){});
+    }
+  });
+
+  // Intercept paste (Ctrl+V / Cmd+V)
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+      e.preventDefault();
+      navigator.clipboard.readText().then(function(text) {
+        if (text) sendInput(text);
+      }).catch(function(){});
+    }
+  });
+
+  // Right-click paste
+  document.getElementById('term-wrap').addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    navigator.clipboard.readText().then(function(text) {
+      if (text) sendInput(text);
+    }).catch(function(){});
+  });
+
   setTimeout(function(){ try { fitAddon.fit(); } catch(e){} }, 50);
 
   // Click to focus
@@ -312,6 +338,9 @@
     if (evt.data.type === 'furl-fit') {
       try { fitAddon.fit(); } catch(e){}
       sendResize();
+    }
+    if (evt.data.type === 'furl-paste' && evt.data.text) {
+      sendInput(evt.data.text);
     }
   });
 
