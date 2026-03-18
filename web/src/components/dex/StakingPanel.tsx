@@ -186,10 +186,11 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
   }
 
-  // Handle stake rewards directly (with 0.05% platform fee)
+  // Handle stake rewards directly — uses selected claimWallet, NO Magic RPC
   const handleStakeRewards = async () => {
-    if (!account) {
-      toast.error('Please connect your wallet first')
+    const targetWallet = claimWallet || account
+    if (!targetWallet) {
+      toast.error('Please select a wallet first')
       return
     }
 
@@ -198,7 +199,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       const { data } = await claimStreamingRewardsMutation({
         variables: {
           input: {
-            walletAddress: account,
+            walletAddress: targetWallet,
             stakeDirectly: true,
           },
         },
@@ -206,31 +207,13 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
       if (data?.claimStreamingRewards?.success) {
         const totalClaimed = data.claimStreamingRewards.totalClaimed
+        const txHash = data.claimStreamingRewards.transactionHash
 
-        // Collect 0.05% platform fee from staked OGUN
-        // Note: The OGUN goes directly to staking, so we need user to pay fee from their balance
-        const platformFeeRate = config.soundchainFee || 0.0005
-        const platformFee = totalClaimed * platformFeeRate
-        const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com')
-        const treasuryAddress = config.treasuryAddress
-
-        if (platformFee > 0 && treasuryAddress && web3Instance) {
-          try {
-            const feeWei = web3Instance.utils.toWei(platformFee.toFixed(18), 'ether')
-            const gasPrice = await web3Instance.eth.getGasPrice()
-            console.log(`📤 Sending ${platformFee.toFixed(6)} OGUN streaming stake fee to treasury: ${treasuryAddress}`)
-            const feeTx = tokenContract(web3Instance).methods.transfer(treasuryAddress, feeWei)
-            const feeGas = await feeTx.estimateGas({ from: account })
-            await feeTx.send({ from: account, gas: feeGas.toString(), gasPrice: gasPrice.toString() })
-            console.log('✅ Streaming stake platform fee sent to treasury')
-          } catch (feeErr) {
-            console.error('Fee collection failed:', feeErr)
-            // Don't fail the whole stake if fee collection fails
-          }
+        if (txHash) {
+          toast.success(`Staked ${totalClaimed.toFixed(2)} OGUN! TX: ${txHash.slice(0, 10)}...`)
+        } else {
+          toast.success(`Staked ${totalClaimed.toFixed(2)} OGUN to ${targetWallet.slice(0, 6)}...${targetWallet.slice(-4)}`)
         }
-
-        const netStaked = totalClaimed - platformFee
-        toast.success(`Successfully staked ${netStaked.toFixed(2)} OGUN from streaming! (fee: ${platformFee.toFixed(4)} OGUN)`)
         refetchStreaming()
         fetchBalances()
       } else {
