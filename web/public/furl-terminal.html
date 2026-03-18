@@ -138,12 +138,20 @@
   var wasDisconnectedWhileHidden = false;
   var isFirstConnect = true;
 
+  // Persistent browser ID — survives reconnects so relay can deduplicate sessions
+  var browserId = sessionStorage.getItem('furl_browser_id');
+  if (!browserId) {
+    browserId = 'b' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    sessionStorage.setItem('furl_browser_id', browserId);
+  }
+
   function connect() {
     setStatus('connecting', 'connecting...');
 
     var wsUrl;
     if (isRelay) {
-      wsUrl = wsBase;
+      // Send browserId so relay can close stale sessions from this same browser
+      wsUrl = wsBase + '?browserId=' + encodeURIComponent(browserId);
       doConnect(wsUrl);
     } else {
       // Legacy ttyd: fetch /token first
@@ -195,11 +203,12 @@
       if (isFirstConnect) {
         isFirstConnect = false;
         setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 800);
-        // Auto-launch Claude Code only on first connect
-        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('claude\n'); }, 1500);
+        // Auto-launch Claude Code with TERM=dumb to prevent spinner garbling through relay
+        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('TERM=dumb NO_COLOR=1 claude\n'); }, 1500);
       } else {
-        // Reconnection — just send enter to refresh prompt, don't relaunch claude
-        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); sendInput('\n'); }, 500);
+        // Reconnection — DON'T send \n (causes stacked prompts on new shell).
+        // Just refit and let the user see the existing state.
+        setTimeout(function(){ try { fitAddon.fit(); } catch(e){} sendResize(); }, 300);
         term.writeln('\r\n\x1b[32m[reconnected — session restored]\x1b[0m');
       }
     };
