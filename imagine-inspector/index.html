@@ -372,6 +372,7 @@
     <button id="btnClear" class="danger">Clear</button>
     <button id="btnExport">Export JSON</button>
     <button id="btnHistory" style="background:#1a3a2a;border-color:#238636;color:#3fb950">Scrape History</button>
+    <button id="btnDownload" style="background:#1a2a3a;border-color:#1f6feb;color:#58a6ff">Download Generated</button>
     <button id="btnReload">Reload Grok</button>
     <span style="color:#30363d;margin:0 2px">|</span>
     <button id="splitLogs" title="Inspector only (hide Grok)">Logs</button>
@@ -863,6 +864,30 @@
         statusText.textContent = `Exported ${result.count} captures to ${result.path}`
         statusDetail.textContent = ''
       }
+    })
+
+    document.getElementById('btnDownload').addEventListener('click', async () => {
+      const btn = document.getElementById('btnDownload')
+      btn.textContent = 'Downloading...'
+      btn.disabled = true
+      btn.style.opacity = '0.6'
+      try {
+        const result = await window.inspector.downloadGeneratedFromScrape()
+        if (result.success) {
+          statusText.textContent = `Downloaded ${result.downloaded}/${result.total} images`
+          statusDetail.textContent = result.destFolder
+          if (result.errors?.length > 0) {
+            statusDetail.textContent += ' | Failed: ' + result.errors.slice(0, 3).join(', ')
+          }
+        } else {
+          statusText.textContent = 'Download failed: ' + (result.error || 'Unknown')
+        }
+      } catch(e) {
+        statusText.textContent = 'Download error: ' + e.message
+      }
+      btn.textContent = 'Download Generated'
+      btn.disabled = false
+      btn.style.opacity = '1'
     })
 
     document.getElementById('btnHistory').addEventListener('click', async () => {

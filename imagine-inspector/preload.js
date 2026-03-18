@@ -27,4 +27,8 @@ contextBridge.exposeInMainWorld('inspector', {
 
   // Scrape Grok Imagine history
   scrapeHistory: () => ipcRenderer.invoke('scrape-history'),
+
+  // Download generated images using authenticated session
+  downloadImages: (urls, destFolder) => ipcRenderer.invoke('download-images', { urls, destFolder }),
+  downloadGeneratedFromScrape: () => ipcRenderer.invoke('download-generated-from-scrape'),
 })

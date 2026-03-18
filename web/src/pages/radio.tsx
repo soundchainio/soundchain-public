@@ -10,7 +10,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 
-const AdUnit = dynamic(() => import('components/AdUnit'), { ssr: false })
+const AdSlot = dynamic(() => import('components/ads/AdSlot').then(mod => ({ default: mod.AdSlot })), { ssr: false })
 import { GetServerSideProps } from 'next'
 import { initializeApollo } from 'lib/apollo'
 import {
@@ -880,9 +880,9 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           </div>
         </nav>
 
-        {/* Ad — below player controls */}
+        {/* Ad billboard — below player controls, never interrupts audio */}
         <div className="max-w-4xl mx-auto px-4 pt-4">
-          <AdUnit slot="auto" format="auto" className="rounded-lg overflow-hidden" />
+          <AdSlot slot="radio-billboard" format="horizontal" className="rounded-lg" />
         </div>
 
         {/* Main Content */}

@@ -1174,6 +1174,216 @@ ipcMain.handle('scrape-history', async () => {
   }
 })
 
+// --- Download Generated Images via Authenticated Session ---
+ipcMain.handle('download-images', async (_event, { urls, destFolder }) => {
+  if (!grokView) return { success: false, error: 'No Grok view' }
+  if (!urls || urls.length === 0) return { success: false, error: 'No URLs provided' }
+
+  // Ensure destination folder exists
+  if (!fs.existsSync(destFolder)) {
+    fs.mkdirSync(destFolder, { recursive: true })
+  }
+
+  const results = { downloaded: 0, failed: 0, errors: [], files: [] }
+
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i]
+    // Extract image ID from URL for filename
+    const match = url.match(/generated\/([0-9a-f-]+)\/image\.jpg/)
+    const imgId = match ? match[1] : `image-${i}`
+    const fileName = `${imgId}.jpg`
+    const filePath = path.join(destFolder, fileName)
+
+    sendStatus({
+      type: 'downloading',
+      message: `Downloading image ${i + 1}/${urls.length}: ${imgId.substring(0, 8)}...`,
+    })
+
+    try {
+      // Fetch inside the BrowserView's page context — session cookies are included
+      const base64Data = await grokView.webContents.executeJavaScript(`
+        (async function() {
+          try {
+            var resp = await fetch(${JSON.stringify(url)}, { credentials: 'include' });
+            if (!resp.ok) return { error: 'HTTP ' + resp.status + ' ' + resp.statusText };
+            var blob = await resp.blob();
+            return new Promise(function(resolve, reject) {
+              var reader = new FileReader();
+              reader.onloadend = function() {
+                // result is "data:image/jpeg;base64,XXXX..."
+                var base64 = reader.result.split(',')[1];
+                resolve({ data: base64, size: blob.size, type: blob.type });
+              };
+              reader.onerror = function() { reject({ error: 'FileReader failed' }); };
+              reader.readAsDataURL(blob);
+            });
+          } catch(e) {
+            return { error: e.message || String(e) };
+          }
+        })()
+      `)
+
+      if (base64Data.error) {
+        results.failed++
+        results.errors.push(`${imgId}: ${base64Data.error}`)
+        continue
+      }
+
+      // Write binary data to file
+      const buffer = Buffer.from(base64Data.data, 'base64')
+      fs.writeFileSync(filePath, buffer)
+      results.downloaded++
+      results.files.push({ path: filePath, size: buffer.length, id: imgId })
+    } catch (err) {
+      results.failed++
+      results.errors.push(`${imgId}: ${err.message || String(err)}`)
+    }
+
+    // Small delay between downloads to avoid rate limiting
+    await new Promise((r) => setTimeout(r, 300))
+  }
+
+  sendStatus({
+    type: 'downloaded',
+    message: `Downloaded ${results.downloaded}/${urls.length} images to ${destFolder}`,
+  })
+
+  return { success: true, ...results }
+})
+
+// --- Download from Scrape Data (reads latest scrape, extracts generated URLs, downloads) ---
+ipcMain.handle('download-generated-from-scrape', async () => {
+  if (!grokView) return { success: false, error: 'No Grok view' }
+
+  // Find the latest scrape file
+  const downloadsDir = app.getPath('downloads')
+  const files = fs.readdirSync(downloadsDir)
+    .filter((f) => f.startsWith('grok-imagine-history-') && f.endsWith('.json'))
+    .sort()
+    .reverse()
+
+  if (files.length === 0) {
+    return { success: false, error: 'No scrape files found. Run Scrape History first.' }
+  }
+
+  const latestFile = path.join(downloadsDir, files[0])
+  sendStatus({ type: 'downloading', message: `Reading scrape: ${files[0]}` })
+
+  const data = JSON.parse(fs.readFileSync(latestFile, 'utf-8'))
+
+  // Extract unique generated image URLs
+  const generatedUrls = new Set()
+  for (const conv of data.conversations || []) {
+    for (const msg of conv.messages || []) {
+      for (const img of msg.images || []) {
+        if (img.url && img.url.includes('/generated/')) {
+          generatedUrls.add(img.url)
+        }
+      }
+    }
+    // Also check top-level conv images
+    for (const imgUrl of conv.images || []) {
+      if (typeof imgUrl === 'string' && imgUrl.includes('/generated/')) {
+        generatedUrls.add(imgUrl)
+      }
+    }
+  }
+
+  if (generatedUrls.size === 0) {
+    return { success: false, error: 'No generated images found in scrape data' }
+  }
+
+  const destFolder = path.join(downloadsDir, 'grok-imagine-generations')
+  const urls = [...generatedUrls]
+
+  sendStatus({
+    type: 'downloading',
+    message: `Found ${urls.length} unique generated images. Downloading...`,
+  })
+
+  // Reuse the download-images handler logic
+  return ipcMain.emit('_internal-download', urls, destFolder) ||
+    await downloadImagesInternal(urls, destFolder)
+})
+
+async function downloadImagesInternal(urls, destFolder) {
+  if (!fs.existsSync(destFolder)) {
+    fs.mkdirSync(destFolder, { recursive: true })
+  }
+
+  const results = { downloaded: 0, failed: 0, errors: [], files: [], total: urls.length }
+
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i]
+    const match = url.match(/generated\/([0-9a-f-]+)\/image\.jpg/)
+    const imgId = match ? match[1] : `image-${i}`
+    const fileName = `${imgId}.jpg`
+    const filePath = path.join(destFolder, fileName)
+
+    // Skip if already downloaded
+    if (fs.existsSync(filePath) && fs.statSync(filePath).size > 0) {
+      results.downloaded++
+      results.files.push({ path: filePath, size: fs.statSync(filePath).size, id: imgId, skipped: true })
+      sendStatus({
+        type: 'downloading',
+        message: `[${i + 1}/${urls.length}] Skipped (exists): ${imgId.substring(0, 8)}...`,
+      })
+      continue
+    }
+
+    sendStatus({
+      type: 'downloading',
+      message: `[${i + 1}/${urls.length}] Downloading: ${imgId.substring(0, 8)}...`,
+    })
+
+    try {
+      const base64Data = await grokView.webContents.executeJavaScript(`
+        (async function() {
+          try {
+            var resp = await fetch(${JSON.stringify(url)}, { credentials: 'include' });
+            if (!resp.ok) return { error: 'HTTP ' + resp.status + ' ' + resp.statusText };
+            var blob = await resp.blob();
+            return new Promise(function(resolve, reject) {
+              var reader = new FileReader();
+              reader.onloadend = function() {
+                var base64 = reader.result.split(',')[1];
+                resolve({ data: base64, size: blob.size, type: blob.type });
+              };
+              reader.onerror = function() { reject({ error: 'FileReader failed' }); };
+              reader.readAsDataURL(blob);
+            });
+          } catch(e) {
+            return { error: e.message || String(e) };
+          }
+        })()
+      `)
+
+      if (base64Data.error) {
+        results.failed++
+        results.errors.push(`${imgId}: ${base64Data.error}`)
+        continue
+      }
+
+      const buffer = Buffer.from(base64Data.data, 'base64')
+      fs.writeFileSync(filePath, buffer)
+      results.downloaded++
+      results.files.push({ path: filePath, size: buffer.length, id: imgId })
+    } catch (err) {
+      results.failed++
+      results.errors.push(`${imgId}: ${err.message || String(err)}`)
+    }
+
+    await new Promise((r) => setTimeout(r, 300))
+  }
+
+  sendStatus({
+    type: 'downloaded',
+    message: `Done! ${results.downloaded}/${urls.length} images saved to ${destFolder}`,
+  })
+
+  return { success: true, destFolder, ...results }
+}
+
 // --- App Lifecycle ---
 app.whenReady().then(createMainWindow)
 

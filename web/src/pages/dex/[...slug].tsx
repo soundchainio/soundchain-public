@@ -85,7 +85,7 @@ import { ProfileReels } from 'components/dex/ProfileReels'
 import { GeneratePanel } from 'components/dex/GeneratePanel'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
-const AdUnit = dynamic(() => import('components/AdUnit'), { ssr: false })
+const AdSlot = dynamic(() => import('components/ads/AdSlot').then(mod => ({ default: mod.AdSlot })), { ssr: false })
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
 const CreateModal = dynamic(() => import('components/modals/CreateModal'), { ssr: false })
@@ -5073,8 +5073,8 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               {/* Main Feed - Posts lead, clean and content-first */}
               {/* Using memoized Posts to prevent re-renders when header modals open (keeps video/audio playing) */}
               <div className="flex-1 max-w-full md:max-w-[680px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
-                {/* Ad unit above feed — blends with dark theme */}
-                <AdUnit slot="auto" format="auto" className="mb-3 rounded-lg overflow-hidden" />
+                {/* Ad billboard above feed */}
+                <AdSlot slot="feed-top" format="horizontal" className="mb-3 rounded-lg" />
                 {MemoizedFeedPosts}
               </div>
 
