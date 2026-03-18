@@ -7,7 +7,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
+
+const AdUnit = dynamic(() => import('components/AdUnit'), { ssr: false })
 import { GetServerSideProps } from 'next'
 import { initializeApollo } from 'lib/apollo'
 import {
@@ -876,6 +879,11 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             </div>
           </div>
         </nav>
+
+        {/* Ad — below player controls */}
+        <div className="max-w-4xl mx-auto px-4 pt-4">
+          <AdUnit slot="auto" format="auto" className="rounded-lg overflow-hidden" />
+        </div>
 
         {/* Main Content */}
         <main className="max-w-4xl mx-auto px-4 py-8">
