@@ -88,8 +88,8 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
                     pip
                     stopOnUnmount={false}
                     config={{
-                      youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
-                      vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                      youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: 1, autoplay: 1 } },
+                      vimeo: { playerOptions: { responsive: true, playsinline: true, muted: true, autoplay: true } },
                       facebook: { appId: '' },
                     }}
                   />
