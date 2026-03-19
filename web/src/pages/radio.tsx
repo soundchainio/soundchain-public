@@ -883,20 +883,20 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         {/* Billboard Grid — living metaverse checkerboard */}
         <div className="max-w-4xl mx-auto px-3 pt-3">
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
-            {/* Each square is a billboard slot — paid OGUN ads or promo placeholders */}
+            {/* Each square is a living feature — links to real pages, future agent seats */}
             {[
               { label: 'Upload Free', sub: 'Earn per stream', icon: '🎵', gradient: 'from-cyan-500/20 to-blue-500/10', link: '/dex/announcements' },
-              { label: 'OGUN Radio', sub: '619 tracks 24/7', icon: '📻', gradient: 'from-red-500/20 to-orange-500/10', link: '/radio' },
-              { label: 'Promote Here', sub: 'Pay with OGUN', icon: '📢', gradient: 'from-purple-500/20 to-pink-500/10', link: '/dex/announcements' },
+              { label: 'Feed', sub: 'Posts & vibes', icon: '📱', gradient: 'from-red-500/20 to-orange-500/10', link: '/dex/feed' },
               { label: 'Explore', sub: '34 genres', icon: '🔍', gradient: 'from-green-500/20 to-emerald-500/10', link: '/dex/explore' },
-              { label: 'Billboard', sub: 'Advertise', icon: '🏙️', gradient: 'from-yellow-500/20 to-amber-500/10', link: '/dex/announcements' },
               { label: 'Marketplace', sub: 'Buy & Sell', icon: '🛒', gradient: 'from-indigo-500/20 to-violet-500/10', link: '/dex/marketplace' },
-              { label: 'Your Ad', sub: 'OGUN powered', icon: '⚡', gradient: 'from-orange-500/20 to-red-500/10', link: '/dex/announcements' },
-              { label: 'Staking', sub: '125% APR', icon: '🔒', gradient: 'from-teal-500/20 to-cyan-500/10', link: '/dex/staking' },
               { label: 'Artists', sub: 'Discover new', icon: '🎤', gradient: 'from-pink-500/20 to-rose-500/10', link: '/dex/users' },
-              { label: 'Your Ad', sub: 'OGUN powered', icon: '💎', gradient: 'from-sky-500/20 to-blue-500/10', link: '/dex/announcements' },
-              { label: 'Feedback', sub: 'Shape the app', icon: '💬', gradient: 'from-lime-500/20 to-green-500/10', link: '/dex/feedback' },
-              { label: 'Promote Here', sub: 'Starting 25/day', icon: '🚀', gradient: 'from-fuchsia-500/20 to-purple-500/10', link: '/dex/announcements' },
+              { label: 'Playlists', sub: 'Curated mixes', icon: '🎧', gradient: 'from-purple-500/20 to-pink-500/10', link: '/dex/playlists' },
+              { label: 'Wallet', sub: 'OGUN & POL', icon: '💰', gradient: 'from-yellow-500/20 to-amber-500/10', link: '/dex/wallet' },
+              { label: 'Staking', sub: '125% APR', icon: '🔒', gradient: 'from-teal-500/20 to-cyan-500/10', link: '/dex/staking' },
+              { label: 'Moltbook', sub: 'Agent network', icon: '🦞', gradient: 'from-orange-500/20 to-red-500/10', link: '/dex/moltbook' },
+              { label: 'Pulse', sub: 'Messaging', icon: '💬', gradient: 'from-sky-500/20 to-blue-500/10', link: '/dex/pulse' },
+              { label: 'Library', sub: 'Your collection', icon: '📚', gradient: 'from-lime-500/20 to-green-500/10', link: '/dex/library' },
+              { label: 'Feedback', sub: 'Shape the app', icon: '🚀', gradient: 'from-fuchsia-500/20 to-purple-500/10', link: '/dex/feedback' },
             ].map((tile, i) => (
               <a key={i} href={tile.link} className={`bg-gradient-to-br ${tile.gradient} border border-white/5 rounded-lg p-2 text-center hover:border-cyan-500/30 hover:scale-105 transition-all duration-200 cursor-pointer group`}>
                 <div className="text-lg mb-0.5">{tile.icon}</div>
