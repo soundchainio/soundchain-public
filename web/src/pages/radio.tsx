@@ -880,13 +880,39 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           </div>
         </nav>
 
-        {/* Ad billboard — below player controls, never interrupts audio */}
-        <div className="max-w-4xl mx-auto px-4 pt-4">
-          <AdSlot slot="radio-billboard" format="horizontal" className="rounded-lg" />
+        {/* Billboard Grid — living metaverse checkerboard */}
+        <div className="max-w-4xl mx-auto px-3 pt-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
+            {/* Each square is a billboard slot — paid OGUN ads or promo placeholders */}
+            {[
+              { label: 'Upload Free', sub: 'Earn per stream', icon: '🎵', gradient: 'from-cyan-500/20 to-blue-500/10', link: '/dex/announcements' },
+              { label: 'OGUN Radio', sub: '619 tracks 24/7', icon: '📻', gradient: 'from-red-500/20 to-orange-500/10', link: '/radio' },
+              { label: 'Promote Here', sub: 'Pay with OGUN', icon: '📢', gradient: 'from-purple-500/20 to-pink-500/10', link: '/dex/announcements' },
+              { label: 'Explore', sub: '34 genres', icon: '🔍', gradient: 'from-green-500/20 to-emerald-500/10', link: '/dex/explore' },
+              { label: 'Billboard', sub: 'Advertise', icon: '🏙️', gradient: 'from-yellow-500/20 to-amber-500/10', link: '/dex/announcements' },
+              { label: 'Marketplace', sub: 'Buy & Sell', icon: '🛒', gradient: 'from-indigo-500/20 to-violet-500/10', link: '/dex/marketplace' },
+              { label: 'Your Ad', sub: 'OGUN powered', icon: '⚡', gradient: 'from-orange-500/20 to-red-500/10', link: '/dex/announcements' },
+              { label: 'Staking', sub: '125% APR', icon: '🔒', gradient: 'from-teal-500/20 to-cyan-500/10', link: '/dex/staking' },
+              { label: 'Artists', sub: 'Discover new', icon: '🎤', gradient: 'from-pink-500/20 to-rose-500/10', link: '/dex/users' },
+              { label: 'Your Ad', sub: 'OGUN powered', icon: '💎', gradient: 'from-sky-500/20 to-blue-500/10', link: '/dex/announcements' },
+              { label: 'Feedback', sub: 'Shape the app', icon: '💬', gradient: 'from-lime-500/20 to-green-500/10', link: '/dex/feedback' },
+              { label: 'Promote Here', sub: 'Starting 25/day', icon: '🚀', gradient: 'from-fuchsia-500/20 to-purple-500/10', link: '/dex/announcements' },
+            ].map((tile, i) => (
+              <a key={i} href={tile.link} className={`bg-gradient-to-br ${tile.gradient} border border-white/5 rounded-lg p-2 text-center hover:border-cyan-500/30 hover:scale-105 transition-all duration-200 cursor-pointer group`}>
+                <div className="text-lg mb-0.5">{tile.icon}</div>
+                <div className="text-[9px] font-bold text-white/90 leading-tight">{tile.label}</div>
+                <div className="text-[7px] text-gray-400 leading-tight">{tile.sub}</div>
+              </a>
+            ))}
+          </div>
+          {/* AdSense slot below the grid */}
+          <div className="mt-2">
+            <AdSlot slot="radio-billboard" format="horizontal" className="rounded-lg" />
+          </div>
         </div>
 
         {/* Main Content */}
-        <main className="max-w-4xl mx-auto px-4 py-8">
+        <main className="max-w-4xl mx-auto px-4 py-4">
           {/* Radio Display */}
           <div className="relative bg-[#0a1628] border border-red-900/30 rounded-2xl p-6 md:p-8 shadow-2xl shadow-red-900/20">
 
