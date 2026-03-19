@@ -201,5 +201,5 @@ function generateJWT(user: any, agent: any): string {
     iat: Math.floor(Date.now() / 1000),
   }
 
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '365d' })
 }

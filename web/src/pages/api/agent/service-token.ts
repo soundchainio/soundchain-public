@@ -59,13 +59,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       iat: Math.floor(Date.now() / 1000),
     }
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' })
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '365d' })
 
     return res.status(200).json({
       success: true,
       handle: user.handle,
       token,
-      expires_in: '30d',
+      expires_in: '365d',
       usage: 'Authorization: Bearer <token>',
     })
   } catch (err: any) {
