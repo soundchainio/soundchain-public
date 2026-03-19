@@ -1,0 +1,35 @@
+name: Update Skill.md
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/src/pages/api/agent/**'
+      - 'web/src/pages/radio.tsx'
+      - 'web/public/skill.md'
+      - 'api/src/services/SCidService.ts'
+      - 'api/src/resolvers/**'
+
+jobs:
+  update-skill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate updated skill.md header
+        run: |
+          # Count tracks, endpoints, and features from source
+          AGENT_ENDPOINTS=$(find web/src/pages/api/agent -name "*.ts" 2>/dev/null | wc -l | tr -d ' ')
+          echo "Found $AGENT_ENDPOINTS agent API endpoints"
+          echo "AGENT_ENDPOINTS=$AGENT_ENDPOINTS" >> $GITHUB_ENV
+
+      - name: Commit if changed
+        run: |
+          git config user.name "SoundChain Bot"
+          git config user.email "bot@soundchain.io"
+          if git diff --quiet web/public/skill.md; then
+            echo "No skill.md changes"
+          else
+            git add web/public/skill.md
+            git commit -m "chore: auto-update skill.md [skip ci]"
+            git push
+          fi
