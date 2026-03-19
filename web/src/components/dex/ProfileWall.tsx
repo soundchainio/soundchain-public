@@ -813,13 +813,15 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
   // Normalize a raw URL into an embeddable URL for iframe-based platforms
   const getEmbedUrl = (url: string): string => {
     let embedUrl = url.replace(/^http:/, 'https:')
-    // Spotify: open.spotify.com/track/X → open.spotify.com/embed/track/X
+    // Spotify: open.spotify.com/track/X → open.spotify.com/embed/track/X with autoplay
     if (/open\.spotify\.com\/(?!embed\/)/.test(embedUrl)) {
-      embedUrl = embedUrl.replace('open.spotify.com/', 'open.spotify.com/embed/')
+      embedUrl = embedUrl.replace('open.spotify.com/', 'open.spotify.com/embed/') + '?autoplay=1'
+    } else if (embedUrl.includes('spotify.com/embed/') && !embedUrl.includes('autoplay')) {
+      embedUrl = embedUrl + (embedUrl.includes('?') ? '&' : '?') + 'autoplay=1'
     }
     // SoundCloud: add ?visual=true for player embed (oEmbed fallback)
     if (/soundcloud\.com\//.test(embedUrl) && !embedUrl.includes('w.soundcloud.com')) {
-      embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(embedUrl)}&color=%2306b6d4&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`
+      embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(embedUrl)}&color=%2306b6d4&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=true`
     }
     // Bandcamp: /track/ or /album/ → add /size=large/bgcol=333333/linkcol=0687f5/
     if (/bandcamp\.com\/(track|album)\//.test(embedUrl) && !embedUrl.includes('bandcamp.com/EmbeddedPlayer')) {
@@ -904,12 +906,12 @@ export function ProfileWall({ profileId, isOwnProfile: isOwnProfileProp, viewerP
                 style={{ aspectRatio: '16/9' }}>
                 <ReactPlayer
                   width="100%" height="100%"
-                  url={mediaUrl} playsinline controls
-                  light={isMobile ? false : (getYouTubeThumbnail(mediaUrl) || true)}
-                  pip playing={false} stopOnUnmount={false}
+                  url={mediaUrl} playsinline controls muted
+                  playing
+                  pip stopOnUnmount={false}
                   config={{
-                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' } },
-                    vimeo: { playerOptions: { responsive: true, playsinline: true } },
+                    youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, autoplay: 1, mute: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' } },
+                    vimeo: { playerOptions: { responsive: true, playsinline: true, autoplay: true, muted: true } },
                     facebook: { appId: '' },
                   }}
                 />

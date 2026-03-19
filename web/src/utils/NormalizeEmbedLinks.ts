@@ -210,7 +210,7 @@ const normalizeSpotify = (str: string) => {
   if (match && match[1] && match[2]) {
     const type = match[1] // track, album, playlist, etc.
     const id = match[2]
-    return `https://open.spotify.com/embed/${type}/${id}`
+    return `https://open.spotify.com/embed/${type}/${id}?autoplay=1`
   }
 
   return str
@@ -372,7 +372,7 @@ const normalizeTwitch = (str: string) => {
   // Extract video ID from Twitch video URL
   const videoMatch = str.match(twitchVideoRegex)
   if (videoMatch && videoMatch[1]) {
-    return `https://player.twitch.tv/?video=${videoMatch[1]}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'soundchain.io'}&autoplay=false`
+    return `https://player.twitch.tv/?video=${videoMatch[1]}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'soundchain.io'}&autoplay=true`
   }
 
   // Extract channel name from Twitch channel URL
@@ -381,7 +381,7 @@ const normalizeTwitch = (str: string) => {
     const channel = channelMatch[1]
     // Exclude 'videos' as it's not a channel name
     if (channel !== 'videos') {
-      return `https://player.twitch.tv/?channel=${channel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'soundchain.io'}&autoplay=false`
+      return `https://player.twitch.tv/?channel=${channel}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'soundchain.io'}&autoplay=true`
     }
   }
 

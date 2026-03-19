@@ -14,15 +14,6 @@ import { IdentifySource, hasLazyLoadWithThumbnailSupport } from 'utils/Normalize
 import { MediaProvider } from 'types/MediaProvider'
 import { EmoteRenderer } from '../EmoteRenderer'
 
-// Helper to extract YouTube video ID and generate thumbnail URL
-const getYouTubeThumbnail = (url: string): string | null => {
-  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
-  if (match && match[1]) {
-    return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`
-  }
-  return null
-}
-
 // Get embed height for platform (scaled for compact cards)
 const getCompactEmbedHeight = (mediaType: string) => {
   switch (mediaType) {
@@ -50,11 +41,25 @@ interface CompactPostProps {
 }
 
 
+// Helper to inject autoplay params into iframe embed URLs
+const addAutoplayParam = (url: string): string => {
+  try {
+    if (url.includes('spotify.com/embed/')) return url.includes('autoplay') ? url : url + (url.includes('?') ? '&' : '?') + 'autoplay=1'
+    if (url.includes('w.soundcloud.com/player')) return url.replace('auto_play=false', 'auto_play=true')
+    if (url.includes('youtube') && !url.includes('autoplay')) return url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=1'
+    if (url.includes('player.twitch.tv')) return url.replace('autoplay=false', 'autoplay=true')
+    if (url.includes('tiktok.com/embed') && !url.includes('autoplay')) return url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=1'
+  } catch { /* return original */ }
+  return url
+}
+
 const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView = false }: CompactPostProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isMuted, setIsMuted] = useState(true) // Videos start muted for autoplay
   const [showShareToStory, setShowShareToStory] = useState(false)
+  const [isEmbedInView, setIsEmbedInView] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const embedContainerRef = useRef<HTMLDivElement>(null)
   const me = useMe()
   const router = useRouter()
 
@@ -79,6 +84,18 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
     )
 
     observer.observe(video)
+    return () => observer.disconnect()
+  }, [])
+
+  // IntersectionObserver for ReactPlayer embed autoplay
+  useEffect(() => {
+    const el = embedContainerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsEmbedInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
+      { threshold: [0.5] }
+    )
+    observer.observe(el)
     return () => observer.disconnect()
   }, [])
 
@@ -181,17 +198,19 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
 
       {/* Media link - Legacy-style iframe embeds */}
       {!hasUploadedMedia && hasMediaLink && post.mediaLink && !hasTrack ? (
-        <div className="w-full h-full" onClick={(e) => e.stopPropagation()}>
+        <div ref={embedContainerRef} className="w-full h-full" onClick={(e) => e.stopPropagation()}>
           {hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-            // YouTube, Vimeo, Facebook - use ReactPlayer (legacy style)
+            // YouTube, Vimeo, Facebook - autoplay muted on scroll
             <ReactPlayer
               width="100%"
               height="100%"
               url={post.mediaLink}
               playsinline
               controls
-              light={typeof window !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ? false : (getYouTubeThumbnail(post.mediaLink) || true)}
+              muted
+              playing={isEmbedInView}
               pip
+              stopOnUnmount={false}
               config={{
                 youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
                 vimeo: { playerOptions: { responsive: true, playsinline: true } },
@@ -199,12 +218,12 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               }}
             />
           ) : (
-            // All other platforms (audio + social) - airtight iframe embed
+            // All other platforms (audio + social) - airtight iframe embed with autoplay
             <iframe
               frameBorder="0"
               className="w-full h-full bg-black"
               style={{ minHeight: getCompactEmbedHeight(platformType) }}
-              src={post.mediaLink.replace(/^http:/, 'https:')}
+              src={addAutoplayParam(post.mediaLink.replace(/^http:/, 'https:'))}
               title="Media"
               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
               allowFullScreen

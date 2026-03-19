@@ -14,6 +14,33 @@ import { Comment } from '../Comment/Comment'
 import { CommentSkeleton } from '../Comment/CommentSkeleton'
 import { NewCommentForm } from '../NewCommentForm'
 
+// Helper to inject autoplay params into iframe embed URLs
+const addAutoplayParam = (url: string): string => {
+  try {
+    // Spotify embeds
+    if (url.includes('spotify.com/embed/')) {
+      return url.includes('autoplay') ? url : url + (url.includes('?') ? '&' : '?') + 'autoplay=1'
+    }
+    // SoundCloud embeds
+    if (url.includes('w.soundcloud.com/player')) {
+      return url.replace('auto_play=false', 'auto_play=true')
+    }
+    // YouTube embeds (playlists/nocookie)
+    if (url.includes('youtube') && !url.includes('autoplay')) {
+      return url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=1'
+    }
+    // Twitch
+    if (url.includes('player.twitch.tv')) {
+      return url.replace('autoplay=false', 'autoplay=true')
+    }
+    // TikTok
+    if (url.includes('tiktok.com/embed') && !url.includes('autoplay')) {
+      return url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=1'
+    }
+  } catch { /* return original */ }
+  return url
+}
+
 // Helper to extract YouTube video ID and generate thumbnail URL
 const getYouTubeThumbnail = (url: string): string | null => {
   const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtube-nocookie\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
@@ -484,7 +511,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       frameBorder="0"
                       className="w-full bg-black"
                       style={{ minHeight: embedHeight }}
-                      src={mediaUrl}
+                      src={addAutoplayParam(mediaUrl)}
                       title="Media"
                       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
                       allowFullScreen

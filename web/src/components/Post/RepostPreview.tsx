@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react'
 import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import { Track, usePostQuery } from 'lib/graphql'
 import { MediaProvider } from 'types/MediaProvider'
@@ -11,6 +12,18 @@ import { RepostPreviewSkeleton } from '../RepostPreviewSkeleton'
 import { Timestamp } from '../Timestamp'
 import ReactPlayer from 'react-player'
 
+// Helper to inject autoplay params into iframe embed URLs
+const addAutoplayParam = (url: string): string => {
+  try {
+    if (url.includes('spotify.com/embed/')) return url.includes('autoplay') ? url : url + (url.includes('?') ? '&' : '?') + 'autoplay=1'
+    if (url.includes('w.soundcloud.com/player')) return url.replace('auto_play=false', 'auto_play=true')
+    if (url.includes('youtube') && !url.includes('autoplay')) return url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=1'
+    if (url.includes('player.twitch.tv')) return url.replace('autoplay=false', 'autoplay=true')
+    if (url.includes('tiktok.com/embed') && !url.includes('autoplay')) return url + (url.includes('?') ? '&' : '?') + 'autoplay=1&mute=1'
+  } catch { /* return original */ }
+  return url
+}
+
 interface RepostPreviewProps {
   postId: string
   handleOnPlayClicked?: (trackId: string) => void
@@ -19,6 +32,19 @@ interface RepostPreviewProps {
 export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: RepostPreviewProps) => {
   const { data } = usePostQuery({ variables: { id: postId } })
   const post = data?.post
+  const [isInView, setIsInView] = useState(false)
+  const playerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = playerRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsInView(entry.isIntersecting && entry.intersectionRatio >= 0.5),
+      { threshold: [0.5] }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   if (!post) return <RepostPreviewSkeleton />
 
@@ -48,8 +74,8 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
             {/* Embedded media - Airtight responsive */}
             {post.mediaLink && (
               hasLazyLoadWithThumbnailSupport(post.mediaLink) ? (
-                // YouTube, Vimeo, Facebook - responsive 16:9
-                <div className="relative w-full mt-3" style={{ paddingTop: '56.25%' }}>
+                // YouTube, Vimeo, Facebook - autoplay muted on scroll
+                <div ref={playerRef} className="relative w-full mt-3" style={{ paddingTop: '56.25%' }}>
                   <ReactPlayer
                     width="100%"
                     height="100%"
@@ -57,8 +83,10 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
                     url={post.mediaLink}
                     playsinline
                     controls
-                    light={true}
+                    muted
+                    playing={isInView}
                     pip
+                    stopOnUnmount={false}
                     config={{
                       youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
                       vimeo: { playerOptions: { responsive: true, playsinline: true } },
@@ -96,7 +124,7 @@ export const RepostPreview = ({ postId, handleOnPlayClicked = () => null }: Repo
                       frameBorder="0"
                       className="mt-3 w-full bg-black rounded-lg"
                       style={{ minHeight: embedHeight }}
-                      src={mediaUrl}
+                      src={addAutoplayParam(mediaUrl)}
                       title="Media"
                       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share"
                       allowFullScreen
