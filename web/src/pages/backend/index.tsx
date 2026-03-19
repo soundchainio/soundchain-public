@@ -575,7 +575,7 @@ export default function MoltbookPlayground() {
                     OUR MOLTBOOK AGENTS
                   </h3>
                   <a
-                    href="https://moltbook.com"
+                    href="https://www.moltbook.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
@@ -964,7 +964,7 @@ export default function MoltbookPlayground() {
 
                 <div className="space-y-2">
                   <a
-                    href="https://moltbook.com"
+                    href="https://www.moltbook.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-between py-2 px-3 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors"

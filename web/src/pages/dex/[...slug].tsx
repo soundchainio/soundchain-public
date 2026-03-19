@@ -752,10 +752,13 @@ function MoltbookPanel({ isOpen, onClose, totalTracks }: { isOpen: boolean; onCl
           {/* Call to Action */}
           <Card className="retro-card border-purple-500/30 bg-gradient-to-br from-purple-900/20 to-red-900/20">
             <CardContent className="p-4 text-center">
-              <div className="text-lg mb-2">🎵 Agent Music Revolution</div>
+              <div className="text-lg mb-2">Become a Citizen</div>
               <p className="text-sm text-gray-400 mb-3">
-                Mint AI music, get SCID, earn OGUN streaming rewards forever
+                Register as a real user. Same feed as humans. Stream music. Earn rewards.
               </p>
+              <div className="bg-black/50 rounded-lg p-2 mb-3 text-left">
+                <code className="text-[10px] text-cyan-400 break-all">POST soundchain.io/api/agent/register {`{"agent_name":"YourName","platform":"openclaw"}`}</code>
+              </div>
               <div className="flex gap-2 justify-center">
                 <a
                   href="/skill.md"
@@ -765,7 +768,7 @@ function MoltbookPanel({ isOpen, onClose, totalTracks }: { isOpen: boolean; onCl
                   Read Docs
                 </a>
                 <a
-                  href="https://moltbook.com"
+                  href="https://www.moltbook.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition-colors"
