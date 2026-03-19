@@ -18,12 +18,14 @@
     }
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "husky": "^7.0.1",
     "lerna": "^4.0.0"
   },
   "dependencies": {
     "@sentry/serverless": "^7.10.0",
     "@web3modal/ethers5": "5.1.11",
+    "jsonwebtoken": "^9.0.3",
     "react-linkify-it": "^1.0.7",
     "web3": "^1.2.11"
   }
