@@ -212,7 +212,7 @@ const CompactPostComponent = ({ post, handleOnPlayClicked, onPostClick, listView
               pip
               stopOnUnmount={false}
               config={{
-                youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1 } },
+                youtube: { playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: 1, autoplay: 1 } },
                 vimeo: { playerOptions: { responsive: true, playsinline: true } },
                 facebook: { appId: '' },
               }}

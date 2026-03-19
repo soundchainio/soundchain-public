@@ -413,7 +413,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       }}
                       config={{
                         youtube: {
-                          playerVars: { modestbranding: 1, rel: 0, playsinline: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
+                          playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: 1, autoplay: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
                           embedOptions: { host: 'https://www.youtube-nocookie.com' },
                         },
                         vimeo: { playerOptions: { responsive: true, playsinline: true } },
