@@ -885,18 +885,18 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
             {/* Each square is a living feature — links to real pages, future agent seats */}
             {[
-              { label: 'Upload Free', sub: 'Earn per stream', icon: '🎵', gradient: 'from-cyan-500/20 to-blue-500/10', link: '/dex/announcements' },
+              { label: 'Upload Free', sub: 'Earn per stream', icon: '🎵', gradient: 'from-cyan-500/20 to-blue-500/10', link: '/dex/feed' },
               { label: 'Feed', sub: 'Posts & vibes', icon: '📱', gradient: 'from-red-500/20 to-orange-500/10', link: '/dex/feed' },
               { label: 'Explore', sub: '34 genres', icon: '🔍', gradient: 'from-green-500/20 to-emerald-500/10', link: '/dex/explore' },
               { label: 'Marketplace', sub: 'Buy & Sell', icon: '🛒', gradient: 'from-indigo-500/20 to-violet-500/10', link: '/dex/marketplace' },
               { label: 'Artists', sub: 'Discover new', icon: '🎤', gradient: 'from-pink-500/20 to-rose-500/10', link: '/dex/users' },
               { label: 'Playlists', sub: 'Curated mixes', icon: '🎧', gradient: 'from-purple-500/20 to-pink-500/10', link: '/dex/playlists' },
               { label: 'Wallet', sub: 'OGUN & POL', icon: '💰', gradient: 'from-yellow-500/20 to-amber-500/10', link: '/dex/wallet' },
-              { label: 'Staking', sub: '125% APR', icon: '🔒', gradient: 'from-teal-500/20 to-cyan-500/10', link: '/dex/staking' },
-              { label: 'Moltbook', sub: 'Agent network', icon: '🦞', gradient: 'from-orange-500/20 to-red-500/10', link: '/dex/moltbook' },
+              { label: 'Staking', sub: '125% APR', icon: '🔒', gradient: 'from-teal-500/20 to-cyan-500/10', link: '/dex/wallet' },
+              { label: 'Moltbook', sub: 'Agent network', icon: '🦞', gradient: 'from-orange-500/20 to-red-500/10', link: 'https://www.moltbook.com' },
               { label: 'Pulse', sub: 'Messaging', icon: '💬', gradient: 'from-sky-500/20 to-blue-500/10', link: '/dex/pulse' },
               { label: 'Library', sub: 'Your collection', icon: '📚', gradient: 'from-lime-500/20 to-green-500/10', link: '/dex/library' },
-              { label: 'Feedback', sub: 'Shape the app', icon: '🚀', gradient: 'from-fuchsia-500/20 to-purple-500/10', link: '/dex/feedback' },
+              { label: 'SCID', sub: 'Your certificates', icon: '🏆', gradient: 'from-fuchsia-500/20 to-purple-500/10', link: '/dex/wallet' },
             ].map((tile, i) => (
               <a key={i} href={tile.link} className={`bg-gradient-to-br ${tile.gradient} border border-white/5 rounded-lg p-2 text-center hover:border-cyan-500/30 hover:scale-105 transition-all duration-200 cursor-pointer group`}>
                 <div className="text-lg mb-0.5">{tile.icon}</div>
@@ -912,20 +912,20 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         </div>
 
         {/* Main Content */}
-        <main className="max-w-4xl mx-auto px-4 py-4">
+        <main className="max-w-4xl mx-auto px-3 md:px-4 py-2 md:py-4">
           {/* Radio Display */}
-          <div className="relative bg-[#0a1628] border border-red-900/30 rounded-2xl p-6 md:p-8 shadow-2xl shadow-red-900/20">
+          <div className="relative bg-[#0a1628] border border-red-900/30 rounded-2xl p-4 md:p-8 shadow-2xl shadow-red-900/20">
 
             {/* Station Header */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-900/30 rounded-full mb-4">
+            <div className="text-center mb-4 md:mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-900/30 rounded-full mb-2 md:mb-4">
                 <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
                 <span className="text-red-400 text-sm font-medium">
                   {isPlaying ? 'NOW PLAYING' : 'BROADCASTING'}
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">OGUN Radio</h1>
-              <p className="text-gray-400 flex items-center justify-center gap-2">
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2">OGUN Radio</h1>
+              <p className="text-sm md:text-base text-gray-400 flex items-center justify-center gap-2">
                 {totalTracks || queueLength || '...'} Tracks <Shuffle className="w-4 h-4 text-green-400" /> Infinite Shuffle
               </p>
             </div>
@@ -949,9 +949,9 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             ) : currentTrack ? (
               <>
                 {/* Now Playing */}
-                <div className="flex flex-col md:flex-row items-center gap-6 mb-8">
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-4 md:mb-8">
                   {/* Artwork with spinning animation when playing */}
-                  <div className="relative w-48 h-48 md:w-64 md:h-64 flex-shrink-0">
+                  <div className="relative w-36 h-36 sm:w-48 sm:h-48 md:w-64 md:h-64 flex-shrink-0">
                     <div className={`w-full h-full ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '8s' }}>
                       {currentTrack.artwork_url ? (
                         <img
@@ -978,10 +978,10 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
                   {/* Track Info */}
                   <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 line-clamp-2">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2 line-clamp-2">
                       {currentTrack.title}
                     </h2>
-                    <p className="text-xl text-gray-400 mb-2">{currentTrack.artist}</p>
+                    <p className="text-base md:text-xl text-gray-400 mb-1 md:mb-2">{currentTrack.artist}</p>
                     {currentTrack.genres && currentTrack.genres.length > 0 && (
                       <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 mb-3">
                         {currentTrack.genres.slice(0, 3).map((g) => {
@@ -1012,7 +1012,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 </div>
 
                 {/* Progress Bar */}
-                <div className="mb-6">
+                <div className="mb-3 md:mb-6">
                   <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-200"
@@ -1026,7 +1026,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 </div>
 
                 {/* Controls */}
-                <div className="flex items-center justify-center gap-6">
+                <div className="flex items-center justify-center gap-4 md:gap-6">
                   {/* Volume */}
                   <button
                     onClick={() => setIsMuted(!isMuted)}
@@ -1058,7 +1058,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 </div>
 
                 {/* Volume Slider */}
-                <div className="flex items-center justify-center gap-3 mt-4">
+                <div className="flex items-center justify-center gap-3 mt-2 md:mt-4">
                   <Volume2 className="w-4 h-4 text-gray-500" />
                   <input
                     type="range"
@@ -1072,7 +1072,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 </div>
 
                 {/* Track Link + Share Options */}
-                <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
+                <div className="mt-4 md:mt-8 flex items-center justify-center gap-2 md:gap-3 flex-wrap">
                   <Link
                     href={`/dex/track/${currentTrack.id}`}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm text-gray-300 transition-colors"
@@ -1128,8 +1128,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
           {/* Genre Channels - XM Radio Style */}
           {availableGenres.length > 0 && (
-            <div className="mt-8">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="mt-4 md:mt-8">
+              <div className="flex items-center gap-2 mb-2 md:mb-3">
                 <Radio className="w-4 h-4 text-red-500" />
                 <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Channels</h3>
                 {selectedGenre !== 'all' && (
@@ -1165,23 +1165,23 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           )}
 
           {/* Info Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <div className="bg-[#0a1628] border border-cyan-900/30 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-cyan-400">{totalTracks || queueLength || '...'}</div>
-              <div className="text-sm text-gray-500">Tracks</div>
+          <div className="grid grid-cols-3 gap-2 md:gap-4 mt-4 md:mt-8">
+            <div className="bg-[#0a1628] border border-cyan-900/30 rounded-xl p-3 md:p-4 text-center">
+              <div className="text-xl md:text-3xl font-bold text-cyan-400">{totalTracks || queueLength || '...'}</div>
+              <div className="text-xs md:text-sm text-gray-500">Tracks</div>
             </div>
-            <div className="bg-[#0a1628] border border-yellow-900/30 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-yellow-400">24/7</div>
-              <div className="text-sm text-gray-500">Infinite Loop</div>
+            <div className="bg-[#0a1628] border border-yellow-900/30 rounded-xl p-3 md:p-4 text-center">
+              <div className="text-xl md:text-3xl font-bold text-yellow-400">24/7</div>
+              <div className="text-xs md:text-sm text-gray-500">Infinite Loop</div>
             </div>
-            <div className="bg-[#0a1628] border border-green-900/30 rounded-xl p-4 text-center">
-              <div className="text-3xl font-bold text-green-400">OGUN</div>
-              <div className="text-sm text-gray-500">Streaming Rewards</div>
+            <div className="bg-[#0a1628] border border-green-900/30 rounded-xl p-3 md:p-4 text-center">
+              <div className="text-xl md:text-3xl font-bold text-green-400">OGUN</div>
+              <div className="text-xs md:text-sm text-gray-500">Streaming Rewards</div>
             </div>
           </div>
 
           {/* API Info */}
-          <div className="mt-8 text-center text-sm text-gray-500">
+          <div className="mt-4 md:mt-8 text-center text-sm text-gray-500">
             <p>Powered by OGUN L2 - Decentralized Music Streaming</p>
             <p className="mt-1">
               Agent API: <code className="text-cyan-400">soundchain.io/api/agent/radio</code>

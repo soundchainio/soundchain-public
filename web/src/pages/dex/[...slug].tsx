@@ -5069,13 +5069,13 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Feed View - 3-column desktop layout, full-width on mobile */}
           {selectedView === 'feed' && (
-            <div className={`relative flex justify-center gap-4 xl:gap-6 min-h-screen py-4 -mx-4 px-4 ${currentSong?.src ? 'pb-24 md:pb-28' : ''}`}>
+            <div className={`relative flex justify-center gap-0 xl:gap-6 min-h-screen py-2 md:py-4 -mx-2 px-2 md:-mx-4 md:px-4 ${currentSong?.src ? 'pb-24 md:pb-28' : ''}`}>
               {/* Left Sidebar - Mini Profile Dashboard (Desktop only) */}
               <MiniProfileDashboard />
 
               {/* Main Feed - Posts lead, clean and content-first */}
               {/* Using memoized Posts to prevent re-renders when header modals open (keeps video/audio playing) */}
-              <div className="flex-1 max-w-full md:max-w-[680px]" style={{ height: 'calc(100vh - 200px)', minHeight: '600px' }}>
+              <div className="flex-1 max-w-full md:max-w-[680px]" style={{ minHeight: 'calc(100vh - 160px)' }}>
                 {/* Ad billboard above feed */}
                 <AdSlot slot="feed-top" format="horizontal" className="mb-3 rounded-lg" />
                 {MemoizedFeedPosts}

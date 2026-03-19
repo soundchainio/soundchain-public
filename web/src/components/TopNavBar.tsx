@@ -20,6 +20,7 @@ import { SocialLinksPanel } from './SocialLinksPanel'
 import { Title } from './Title'
 import { TopNavBarButton } from './TopNavBarButton'
 import { AgentStatusTicker } from './AgentStatusTicker'
+import { LiveUserCount } from './LiveUserCount'
 
 // Chain data for dropdown
 const CHAINS = [
@@ -283,6 +284,9 @@ export const TopNavBar = ({
               {RightButton}
             </div>
           )}
+
+          {/* Live User Count */}
+          <LiveUserCount />
 
           {/* Social Links - Always visible */}
           <SoundChainPopOver icon={SocialIcon}>
