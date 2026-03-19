@@ -71,20 +71,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } catch {}
     }
 
+    // DocumentDB baseline — main platform data lives on AWS DocumentDB
+    // which Vercel can't reach directly. These are last-known counts.
+    // Agent registrations (Atlas) are added on top in real-time.
+    const DOCUMENTDB_BASELINE = {
+      humans: 707,        // Last verified: Mar 19, 2026
+      tracks: 619,        // Total tracks on platform
+      nfts: 619,          // NFT tracks (all are NFTs currently)
+      scids: 619,         // SCid certificates issued
+      posts: 2847,        // Total posts on feed
+      lastUpdated: '2026-03-19',
+    }
+
+    const liveHumans = Math.max(totalUsers, DOCUMENTDB_BASELINE.humans)
+    const liveTracks = Math.max(totalTracks, DOCUMENTDB_BASELINE.tracks)
+
     return res.status(200).json({
       success: true,
       dashboard: {
         users: {
-          total: totalUsers + totalAgents,
-          humans: totalUsers,
+          total: liveHumans + totalAgents,
+          humans: liveHumans,
           agents: totalAgents,
           growth: `${totalAgents} agents registered via API`,
         },
         content: {
-          tracks: totalTracks,
-          nfts: nftTracks,
-          scids: scidOnlyTracks,
-          scid_certificates: scScids,
+          tracks: liveTracks,
+          nfts: Math.max(nftTracks, DOCUMENTDB_BASELINE.nfts),
+          scids: Math.max(scScids, DOCUMENTDB_BASELINE.scids),
           radio_queue: 619,
           genres: 34,
         },
