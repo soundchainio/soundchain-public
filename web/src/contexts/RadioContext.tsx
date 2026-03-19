@@ -6,7 +6,7 @@
  * The /radio page shows the full UI; other pages show a MiniRadioBar.
  */
 
-import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react'
+import React, { createContext, useContext, useState, useRef, useCallback, useEffect, useMemo } from 'react'
 
 export interface RadioTrack {
   id: string
@@ -169,12 +169,15 @@ export function RadioProvider({ children }: { children: React.ReactNode }) {
     fetchTrack(g)
   }, [fetchTrack])
 
-  // Audio event handlers
+  // Audio event handlers — throttle timeupdate to prevent re-render storm
+  const lastTimeUpdate = useRef(0)
   const handleTimeUpdate = useCallback(() => {
-    if (audioRef.current) {
-      setProgress(audioRef.current.currentTime)
-      setDuration(audioRef.current.duration || 0)
-    }
+    if (!audioRef.current) return
+    const now = Date.now()
+    if (now - lastTimeUpdate.current < 1000) return // Max 1 update/sec
+    lastTimeUpdate.current = now
+    setProgress(audioRef.current.currentTime)
+    setDuration(audioRef.current.duration || 0)
   }, [])
 
   const handlePlay = useCallback(() => setIsPlaying(true), [])
@@ -184,7 +187,7 @@ export function RadioProvider({ children }: { children: React.ReactNode }) {
     fetchTrack()
   }, [fetchTrack])
 
-  const value: RadioContextType = {
+  const value: RadioContextType = useMemo(() => ({
     currentTrack,
     isPlaying,
     isLoading,
@@ -207,7 +210,7 @@ export function RadioProvider({ children }: { children: React.ReactNode }) {
     setSelectedGenre: handleGenreChange,
     startRadio,
     audioRef,
-  }
+  }), [currentTrack, isPlaying, isLoading, volume, isMuted, progress, duration, queueLength, totalTracks, error, selectedGenre, availableGenres, genreTrackCount, play, pause, togglePlay, skipToNext, setVolume, setMuted, handleGenreChange, startRadio])
 
   return (
     <RadioContext.Provider value={value}>
