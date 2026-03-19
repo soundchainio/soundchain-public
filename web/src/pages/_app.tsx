@@ -32,6 +32,7 @@ const WalletProvider = dynamic(() => import('hooks/useWalletContext'), { ssr: fa
 const MagicProvider = dynamic(() => import('hooks/useMagicContext'), { ssr: false })
 const Web3ModalProvider = dynamic(() => import('contexts/Web3ModalContext').then(mod => mod.Web3ModalProvider), { ssr: false })
 const UnifiedWalletProvider = dynamic(() => import('contexts/UnifiedWalletContext').then(mod => mod.UnifiedWalletProvider), { ssr: false })
+const RadioProvider = dynamic(() => import('contexts/RadioContext').then(mod => mod.RadioProvider), { ssr: false })
 
 // Capacitor native app detection and safe area handling
 const CapacitorInit = dynamic(() => import('hooks/useCapacitor').then(mod => {
@@ -150,6 +151,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                 <WalletProvider>
                   <UnifiedWalletProvider>
                     <AudioPlayerProvider>
+                    <RadioProvider>
                     <TrackProvider>
                       <HideBottomNavBarProvider>
                         <LayoutContextProvider>
@@ -162,6 +164,7 @@ function SoundchainMainLayout({ Component, pageProps }: CustomAppProps) {
                         </LayoutContextProvider>
                       </HideBottomNavBarProvider>
                     </TrackProvider>
+                    </RadioProvider>
                   </AudioPlayerProvider>
                   </UnifiedWalletProvider>
                 </WalletProvider>

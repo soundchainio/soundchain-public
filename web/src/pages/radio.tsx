@@ -46,6 +46,8 @@ import { OgunRewardToast, DailyLimitToast } from 'components/common/OgunRewardTo
 import { Card } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { ConcertChat } from 'components/dex/ConcertChat'
+import { useModalDispatch } from 'contexts/ModalContext'
+import { useRadioOptional } from 'contexts/RadioContext'
 import 'react-toastify/dist/ReactToastify.css'
 import { ReactElement } from 'react'
 import { CustomLayout } from './_app'
@@ -163,6 +165,8 @@ export const getServerSideProps: GetServerSideProps<OGUNRadioProps> = async (con
 
 export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGUNRadioProps) {
   const router = useRouter()
+  const { dispatchShowCreateModal } = useModalDispatch()
+  const globalRadio = useRadioOptional()
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -883,26 +887,43 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         {/* Billboard Grid — living metaverse checkerboard */}
         <div className="max-w-4xl mx-auto px-3 pt-3">
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
-            {/* Each square is a living feature — links to real pages, future agent seats */}
+            {/* Each tile opens as modal overlay or new tab — radio NEVER stops */}
             {[
-              { label: 'Upload Free', sub: 'Earn per stream', icon: '🎵', gradient: 'from-cyan-500/20 to-blue-500/10', link: '/dex/feed' },
-              { label: 'Feed', sub: 'Posts & vibes', icon: '📱', gradient: 'from-red-500/20 to-orange-500/10', link: '/dex/feed' },
-              { label: 'Explore', sub: '34 genres', icon: '🔍', gradient: 'from-green-500/20 to-emerald-500/10', link: '/dex/explore' },
-              { label: 'Marketplace', sub: 'Buy & Sell', icon: '🛒', gradient: 'from-indigo-500/20 to-violet-500/10', link: '/dex/marketplace' },
-              { label: 'Artists', sub: 'Discover new', icon: '🎤', gradient: 'from-pink-500/20 to-rose-500/10', link: '/dex/users' },
-              { label: 'Playlists', sub: 'Curated mixes', icon: '🎧', gradient: 'from-purple-500/20 to-pink-500/10', link: '/dex/playlists' },
-              { label: 'Wallet', sub: 'OGUN & POL', icon: '💰', gradient: 'from-yellow-500/20 to-amber-500/10', link: '/dex/wallet' },
-              { label: 'Staking', sub: '125% APR', icon: '🔒', gradient: 'from-teal-500/20 to-cyan-500/10', link: '/dex/wallet' },
-              { label: 'Moltbook', sub: 'Agent network', icon: '🦞', gradient: 'from-orange-500/20 to-red-500/10', link: 'https://www.moltbook.com' },
-              { label: 'Pulse', sub: 'Messaging', icon: '💬', gradient: 'from-sky-500/20 to-blue-500/10', link: '/dex/pulse' },
-              { label: 'Library', sub: 'Your collection', icon: '📚', gradient: 'from-lime-500/20 to-green-500/10', link: '/dex/library' },
-              { label: 'SCID', sub: 'Your certificates', icon: '🏆', gradient: 'from-fuchsia-500/20 to-purple-500/10', link: '/dex/wallet' },
+              { label: 'Upload Free', sub: 'Earn per stream', icon: '🎵', gradient: 'from-cyan-500/20 to-blue-500/10', action: 'upload' as const },
+              { label: 'Feed', sub: 'Posts & vibes', icon: '📱', gradient: 'from-red-500/20 to-orange-500/10', action: 'nav' as const, link: '/dex/feed' },
+              { label: 'Explore', sub: '34 genres', icon: '🔍', gradient: 'from-green-500/20 to-emerald-500/10', action: 'nav' as const, link: '/dex/explore' },
+              { label: 'Marketplace', sub: 'Buy & Sell', icon: '🛒', gradient: 'from-indigo-500/20 to-violet-500/10', action: 'nav' as const, link: '/dex/marketplace' },
+              { label: 'Artists', sub: 'Discover new', icon: '🎤', gradient: 'from-pink-500/20 to-rose-500/10', action: 'nav' as const, link: '/dex/users' },
+              { label: 'Playlists', sub: 'Curated mixes', icon: '🎧', gradient: 'from-purple-500/20 to-pink-500/10', action: 'nav' as const, link: '/dex/playlists' },
+              { label: 'Wallet', sub: 'OGUN & POL', icon: '💰', gradient: 'from-yellow-500/20 to-amber-500/10', action: 'nav' as const, link: '/dex/wallet' },
+              { label: 'Staking', sub: '125% APR', icon: '🔒', gradient: 'from-teal-500/20 to-cyan-500/10', action: 'nav' as const, link: '/dex/wallet' },
+              { label: 'Moltbook', sub: 'Agent network', icon: '🦞', gradient: 'from-orange-500/20 to-red-500/10', action: 'external' as const, link: 'https://www.moltbook.com' },
+              { label: 'Pulse', sub: 'Messaging', icon: '💬', gradient: 'from-sky-500/20 to-blue-500/10', action: 'nav' as const, link: '/dex/pulse' },
+              { label: 'Library', sub: 'Your collection', icon: '📚', gradient: 'from-lime-500/20 to-green-500/10', action: 'nav' as const, link: '/dex/library' },
+              { label: 'SCID', sub: 'Your certificates', icon: '🏆', gradient: 'from-fuchsia-500/20 to-purple-500/10', action: 'nav' as const, link: '/dex/wallet' },
             ].map((tile, i) => (
-              <a key={i} href={tile.link} className={`bg-gradient-to-br ${tile.gradient} border border-white/5 rounded-lg p-2 text-center hover:border-cyan-500/30 hover:scale-105 transition-all duration-200 cursor-pointer group`}>
+              <button
+                key={i}
+                onClick={() => {
+                  if (tile.action === 'upload') {
+                    // Open publish modal as overlay — radio keeps playing
+                    dispatchShowCreateModal(true, 'mint')
+                  } else if (tile.action === 'external') {
+                    window.open(tile.link, '_blank', 'noopener')
+                  } else if (tile.link) {
+                    // Sync radio state to global context before navigating
+                    if (globalRadio && currentTrack && isPlaying) {
+                      globalRadio.startRadio()
+                    }
+                    router.push(tile.link)
+                  }
+                }}
+                className={`bg-gradient-to-br ${tile.gradient} border border-white/5 rounded-lg p-2 text-center hover:border-cyan-500/30 hover:scale-105 transition-all duration-200 cursor-pointer group`}
+              >
                 <div className="text-lg mb-0.5">{tile.icon}</div>
                 <div className="text-[9px] font-bold text-white/90 leading-tight">{tile.label}</div>
                 <div className="text-[7px] text-gray-400 leading-tight">{tile.sub}</div>
-              </a>
+              </button>
             ))}
           </div>
           {/* AdSense slot below the grid */}
@@ -940,7 +961,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                 <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                 <p className="text-red-400 mb-4">{error}</p>
                 <button
-                  onClick={fetchCurrentTrack}
+                  onClick={() => fetchCurrentTrack()}
                   className="px-6 py-2 bg-red-900/50 text-red-400 rounded-lg hover:bg-red-900/70 transition-colors"
                 >
                   Retry

@@ -40,6 +40,7 @@ const DesktopBottomAudioPlayer = dynamic(import('components/common/BottomAudioPl
 const AudioEngine = dynamic(import('components/common/BottomAudioPlayer/AudioEngine'))
 const AudioPlayerModal = dynamic(import('components/modals/AudioPlayerModal'))
 const CreateModal = dynamic(import('components/modals/CreateModal'))
+const MiniRadioBar = dynamic(() => import('components/MiniRadioBar').then(mod => mod.MiniRadioBar), { ssr: false })
 
 interface LayoutProps {
   children: ReactNode
@@ -99,6 +100,7 @@ export const Layout = ({ children, className }: LayoutProps) => {
       <div className="max-h-full flex-1 overflow-y-auto">
         <div className="flex h-full flex-1 overflow-hidden">
           <div className="flex w-0 flex-1 flex-col overflow-hidden">
+            <MiniRadioBar />
             <TopNavBar {...topNavBarProps} />
             <div id="top-sheet"></div>
             <main id="main" className="relative flex-1 overflow-y-auto bg-gray-10 focus:outline-none">
