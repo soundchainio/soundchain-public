@@ -9,6 +9,7 @@ import { Clock, Lock, MessageCircle, ExternalLink } from 'lucide-react'
 import { AuthorActionsType } from 'types/AuthorActionsType'
 import { canPlayWithReactPlayer, IdentifySource } from 'utils/NormalizeEmbedLinks'
 import { MediaProvider } from 'types/MediaProvider'
+import { LinkPreviewCard } from './LinkPreviewCard'
 import { MakePostPermanentModal } from '../modals/MakePostPermanentModal'
 import { Comment } from '../Comment/Comment'
 import { CommentSkeleton } from '../Comment/CommentSkeleton'
@@ -466,6 +467,11 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
               // All other platforms (audio, social, playlists) - use iframe embed
               (() => {
                 const mediaType = IdentifySource(post.mediaLink).type
+
+                // Unknown URL — not a known embed provider, show rich link preview card
+                if (!mediaType) {
+                  return <LinkPreviewCard url={mediaUrl} />
+                }
 
                 // Native X/Twitter card — render natively instead of iframe widget
                 if (mediaType === MediaProvider.X) {
