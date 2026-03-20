@@ -281,16 +281,15 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     }
   }, [walletconnectAccount, metamaskAccount, magicLinkAccount, wcWeb3, metamaskWeb3, magicLinkWeb3, userWallet])
 
-  // Fetch balances - uses public RPC as fallback when Magic web3 isn't available
+  // Fetch balances - ALWAYS uses direct Polygon RPC (Magic RPC is unreliable)
   const fetchBalances = useCallback(async () => {
-    // Need account at minimum - can use public RPC for read-only calls
     if (!account) {
       console.log('StakingPanel: No account, skipping balance fetch')
       return
     }
 
-    // Use Magic web3 if available, otherwise fallback to Alchemy Polygon RPC
-    const web3Instance = web3 || new Web3(process.env.NEXT_PUBLIC_POLYGON_RPC || 'https://polygon-bor-rpc.publicnode.com')
+    // Direct Polygon RPC — never route through Magic
+    const web3Instance = new Web3('https://polygon-bor-rpc.publicnode.com')
 
     try {
       // POL (native) Balance
