@@ -129,23 +129,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const wallet = new ethers.Wallet(WALLET_PRIVATE_KEY, provider)
     const contract = new ethers.Contract(STREAMING_REWARDS_ADDRESS, STREAMING_REWARDS_ABI, wallet)
 
-    // Verify distributor is authorized
-    const isAuth = await contract.isAuthorizedDistributor(wallet.address)
-    if (!isAuth) {
-      return res.status(500).json({
-        error: 'Distributor wallet not authorized on contract',
-        distributorAddress: wallet.address,
-      })
-    }
-
-    // Check contract balance
-    const balance = await contract.getAvailableBalance()
-    const balanceOgun = parseFloat(ethers.utils.formatEther(balance))
-    if (balanceOgun < totalUnclaimed) {
-      return res.status(500).json({
-        error: `Insufficient contract balance. Available: ${balanceOgun.toFixed(2)} OGUN, Needed: ${totalUnclaimed.toFixed(2)} OGUN`,
-      })
-    }
+    // Skip slow contract checks (isAuthorized, getBalance) to stay within 10s Hobby limit
+    // If these fail, the tx itself will revert and we'll get the error from submitReward
 
     // Submit reward on-chain
     const amountWei = ethers.utils.parseEther(totalUnclaimed.toFixed(18))
@@ -168,11 +153,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log(`[Claim] TX submitted: ${tx.hash}`)
 
-    // Wait for confirmation
-    const receipt = await tx.wait(1)
-    console.log(`[Claim] TX confirmed in block ${receipt.blockNumber}`)
-
-    // Update DB — mark all SCids as claimed
+    // Don't await confirmation — return tx hash immediately (Hobby plan 10s limit)
+    // Update DB optimistically — mark as claimed with pending tx
     for (const scid of unclaimedScids) {
       await db.collection('scids').updateOne(
         { _id: scid._id },
@@ -180,7 +162,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           $set: {
             ogunRewardsClaimed: scid.ogunRewardsEarned || 0,
             lastClaimedAt: new Date(),
-            lastClaimTxHash: receipt.transactionHash,
+            lastClaimTxHash: tx.hash,
+            claimStatus: 'pending',
           },
         }
       )
@@ -190,10 +173,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       totalClaimed: totalUnclaimed,
       tracksCount: unclaimedScids.length,
-      transactionHash: receipt.transactionHash,
-      blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed.toString(),
+      transactionHash: tx.hash,
       walletAddress,
+      note: 'Transaction submitted. Check Polygonscan for confirmation.',
+      polygonscan: `https://polygonscan.com/tx/${tx.hash}`,
     })
   } catch (err: any) {
     console.error('[Claim] Error:', err.message)
