@@ -53,8 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const doc = {
       message: message.trim(),
-      fromId: auth.profileId,
-      toId,
+      fromId: (() => { try { return new (require('mongodb').ObjectId)(auth.profileId) } catch { return auth.profileId } })(),
+      toId: (() => { try { return new (require('mongodb').ObjectId)(toId) } catch { return toId } })(),
       createdAt: now,
       updatedAt: now,
       readAt: null,

@@ -37,14 +37,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const messages = db.collection('messages')
     const profiles = db.collection('profiles')
 
+    // Convert profileId string to ObjectId for matching (messages store ObjectId)
+    let profileOid: any
+    try { profileOid = new ObjectId(auth.profileId) } catch { profileOid = auth.profileId }
+
     // Find all messages where the authenticated user is sender or recipient
     // Group by conversation partner, get the latest message per chat
     const pipeline = [
       {
         $match: {
           $or: [
-            { fromId: auth.profileId },
-            { toId: auth.profileId },
+            { fromId: profileOid },
+            { toId: profileOid },
           ],
         },
       },
@@ -52,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         $addFields: {
           partnerId: {
             $cond: {
-              if: { $eq: ['$fromId', auth.profileId] },
+              if: { $eq: ['$fromId', profileOid] },
               then: '$toId',
               else: '$fromId',
             },
@@ -102,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const chats = chatDocs.map((chat) => {
       const profile = profileMap.get(chat._id?.toString()) || {}
-      const isUnread = chat.fromId !== auth.profileId && !chat.readAt
+      const isUnread = chat.fromId?.toString() !== auth.profileId && !chat.readAt
       return {
         id: chat.messageId?.toString(),
         message: chat.message,
