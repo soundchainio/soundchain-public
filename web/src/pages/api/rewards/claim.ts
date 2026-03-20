@@ -71,10 +71,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    // Find user's SCids — profileId stored as string in scids collection
-    const allScids = await db.collection('scids').find({
-      profileId: auth.profileId,
+    // Find user's SCids — try both string and ObjectId profileId formats
+    const profileStr = auth.profileId
+    let allScids = await db.collection('scids').find({
+      profileId: profileStr,
     }).toArray()
+
+    // If no match as string, try ObjectId
+    if (allScids.length === 0) {
+      try {
+        allScids = await db.collection('scids').find({
+          profileId: new ObjectId(profileStr),
+        }).toArray()
+      } catch {}
+    }
+
+    // If still no match, try finding by user handle
+    if (allScids.length === 0 && auth.handle) {
+      const userDoc = await db.collection('users').findOne({ handle: auth.handle })
+      if (userDoc?.profileId) {
+        const pid = userDoc.profileId.toString()
+        allScids = await db.collection('scids').find({ profileId: pid }).toArray()
+      }
+    }
 
     const unclaimedScids = allScids.filter(s =>
       (s.ogunRewardsEarned || 0) > (s.ogunRewardsClaimed || 0)
@@ -82,6 +101,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (unclaimedScids.length === 0) {
       return res.status(200).json({
+        _debug: { profileId: profileStr, handle: auth.handle, scidsFound: allScids.length },
         success: false,
         error: 'No unclaimed rewards available',
         totalClaimed: 0,
