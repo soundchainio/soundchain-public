@@ -156,8 +156,8 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
     setClaimLoading(true)
     try {
       // Use Vercel API route directly — 60s timeout vs API Gateway's 29s
-      const jwtToken = document.cookie.match(/token=([^;]+)/)?.[1] ||
-        localStorage.getItem('token') || ''
+      const { getJwt } = await import('lib/apollo')
+      const jwtToken = getJwt() || ''
 
       const response = await fetch('/api/rewards/claim', {
         method: 'POST',
