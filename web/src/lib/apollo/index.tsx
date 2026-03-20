@@ -108,7 +108,7 @@ export const apolloClient = createApolloClient()
 // SSR-specific Apollo client with hardcoded production URL
 // This ensures SSR always hits the correct API endpoint
 export function initializeApollo() {
-  const ssrApiUrl = 'https://api.soundchain.io/graphql'
+  const ssrApiUrl = 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
   const ssrHttpLink = createHttpLink({ uri: ssrApiUrl, fetch })
 
   const errorLink = onError(({ graphQLErrors, networkError }) => {
