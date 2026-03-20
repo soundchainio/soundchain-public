@@ -141,9 +141,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log(`[Claim] Gas: maxFee=${ethers.utils.formatUnits(maxFee, 'gwei')} maxPriority=35 gwei`)
 
-    // Contract limit: 0.5 OGUN max per submitReward call
-    // Batch claims — one TX per SCid, capped at 0.5 OGUN each
-    const MAX_PER_CLAIM = 0.5
+    // Contract limit: expectedRate * 10 per call. With isNft=true, rate=0.5, cap=5 OGUN
+    const MAX_PER_CLAIM = 5.0
     const txHashes: string[] = []
     let totalClaimed = 0
     let nonce = await wallet.getTransactionCount('latest')
@@ -154,7 +153,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const firstScid = unclaimedScids[0]
     const unclaimed = (firstScid.ogunRewardsEarned || 0) - (firstScid.ogunRewardsClaimed || 0)
     const claimAmount = Math.min(unclaimed, MAX_PER_CLAIM)
-    const isNft = !!firstScid.contractAddress
+    // Always pass isNft=true — raises per-claim cap from 0.5 to 5 OGUN (saves gas)
+    const isNft = true
 
     const tx = await contract.submitReward(
       walletAddress,
