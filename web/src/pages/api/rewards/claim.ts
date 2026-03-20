@@ -124,58 +124,82 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       })
     }
 
-    // Initialize contract
-    const provider = new ethers.providers.JsonRpcProvider(POLYGON_RPC)
+    // Initialize contract with Alchemy RPC for reliable TX propagation
+    const alchemyRpc = process.env.ALCHEMY_API_KEY
+      ? `https://polygon-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`
+      : POLYGON_RPC
+    const provider = new ethers.providers.JsonRpcProvider(alchemyRpc)
     const wallet = new ethers.Wallet(WALLET_PRIVATE_KEY, provider)
     const contract = new ethers.Contract(STREAMING_REWARDS_ADDRESS, STREAMING_REWARDS_ABI, wallet)
 
-    // Skip slow contract checks (isAuthorized, getBalance) to stay within 10s Hobby limit
-    // If these fail, the tx itself will revert and we'll get the error from submitReward
+    // Get current gas prices from network (Polygon requires 25+ gwei priority)
+    const feeData = await provider.getFeeData()
+    const maxFee = feeData.maxFeePerGas
+      ? feeData.maxFeePerGas.mul(2)
+      : ethers.utils.parseUnits('200', 'gwei')
+    const maxPriority = ethers.utils.parseUnits('35', 'gwei') // Always above Polygon 25 gwei minimum
 
-    // Submit reward on-chain
-    const amountWei = ethers.utils.parseEther(totalUnclaimed.toFixed(18))
-    const firstScid = unclaimedScids[0].scid || 'batch-claim'
-    const isNft = unclaimedScids.some(s => s.contractAddress)
+    console.log(`[Claim] Gas: maxFee=${ethers.utils.formatUnits(maxFee, 'gwei')} maxPriority=35 gwei`)
 
-    console.log(`[Claim] Submitting ${totalUnclaimed.toFixed(4)} OGUN to ${walletAddress} for ${unclaimedScids.length} tracks`)
+    // Contract limit: 0.5 OGUN max per submitReward call
+    // Batch claims — one TX per SCid, capped at 0.5 OGUN each
+    const MAX_PER_CLAIM = 0.5
+    const txHashes: string[] = []
+    let totalClaimed = 0
+    let nonce = await wallet.getTransactionCount('latest')
+
+    console.log(`[Claim] Batching ${unclaimedScids.length} SCids at ${MAX_PER_CLAIM} OGUN max each, nonce=${nonce}`)
+
+    // Submit first TX only (stay within Hobby 10s limit), queue rest
+    const firstScid = unclaimedScids[0]
+    const unclaimed = (firstScid.ogunRewardsEarned || 0) - (firstScid.ogunRewardsClaimed || 0)
+    const claimAmount = Math.min(unclaimed, MAX_PER_CLAIM)
+    const isNft = !!firstScid.contractAddress
 
     const tx = await contract.submitReward(
       walletAddress,
-      firstScid,
-      amountWei,
+      firstScid.scid || 'claim',
+      ethers.utils.parseEther(claimAmount.toFixed(18)),
       isNft,
       {
         gasLimit: 200000,
-        maxFeePerGas: ethers.utils.parseUnits('50', 'gwei'),
-        maxPriorityFeePerGas: ethers.utils.parseUnits('30', 'gwei'),
+        maxFeePerGas: maxFee,
+        maxPriorityFeePerGas: maxPriority,
+        nonce,
       }
     )
 
-    console.log(`[Claim] TX submitted: ${tx.hash}`)
+    console.log(`[Claim] TX submitted: ${tx.hash} (${claimAmount} OGUN)`)
+    txHashes.push(tx.hash)
+    totalClaimed += claimAmount
 
-    // Don't await confirmation — return tx hash immediately (Hobby plan 10s limit)
-    // Update DB optimistically — mark as claimed with pending tx
-    for (const scid of unclaimedScids) {
-      await db.collection('scids').updateOne(
-        { _id: scid._id },
-        {
-          $set: {
-            ogunRewardsClaimed: scid.ogunRewardsEarned || 0,
-            lastClaimedAt: new Date(),
-            lastClaimTxHash: tx.hash,
-            claimStatus: 'pending',
-          },
-        }
-      )
-    }
+    // Update this SCid in DB
+    await db.collection('scids').updateOne(
+      { _id: firstScid._id },
+      {
+        $inc: { ogunRewardsClaimed: claimAmount },
+        $set: {
+          lastClaimedAt: new Date(),
+          lastClaimTxHash: tx.hash,
+          claimStatus: 'pending',
+        },
+      }
+    )
+
+    // Return immediately — remaining SCids can be claimed on next button press
+    const remainingUnclaimed = totalUnclaimed - totalClaimed
 
     return res.status(200).json({
       success: true,
-      totalClaimed: totalUnclaimed,
-      tracksCount: unclaimedScids.length,
+      totalClaimed,
+      tracksCount: 1,
+      totalRemaining: remainingUnclaimed,
+      remainingTracks: unclaimedScids.length - 1,
       transactionHash: tx.hash,
       walletAddress,
-      note: 'Transaction submitted. Check Polygonscan for confirmation.',
+      note: remainingUnclaimed > 0
+        ? `Claimed ${claimAmount} OGUN. ${remainingUnclaimed.toFixed(2)} OGUN remaining — click Claim again for next batch.`
+        : 'All rewards claimed!',
       polygonscan: `https://polygonscan.com/tx/${tx.hash}`,
     })
   } catch (err: any) {
