@@ -53,8 +53,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const doc = {
       message: message.trim(),
-      fromId: auth.profileId,
-      toId,
+      from: auth.profileId,
+      to: toId,
       createdAt: now,
       updatedAt: now,
       readAt: null,
@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       message: {
         id: result.insertedId.toString(),
         message: doc.message,
-        fromId: doc.fromId,
+        fromId: doc.from,
         toId: doc.toId,
         createdAt: doc.createdAt.toISOString(),
         readAt: null,
