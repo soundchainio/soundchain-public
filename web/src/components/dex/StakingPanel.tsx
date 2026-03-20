@@ -145,7 +145,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
       .slice(0, 5),
   }
 
-  // Handle claim to wallet — uses selected claimWallet, NO Magic RPC needed
+  // Handle claim to wallet — uses Vercel API route (bypasses API Gateway 29s limit)
   const handleClaimToWallet = async () => {
     const targetWallet = claimWallet || account
     if (!targetWallet) {
@@ -155,18 +155,27 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
 
     setClaimLoading(true)
     try {
-      const { data } = await claimStreamingRewardsMutation({
-        variables: {
-          input: {
-            walletAddress: targetWallet,
-            stakeDirectly: false,
-          },
+      // Use Vercel API route directly — 60s timeout vs API Gateway's 29s
+      const jwtToken = document.cookie.match(/token=([^;]+)/)?.[1] ||
+        localStorage.getItem('token') || ''
+
+      const response = await fetch('/api/rewards/claim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwtToken}`,
         },
+        body: JSON.stringify({
+          walletAddress: targetWallet,
+          stakeDirectly: false,
+        }),
       })
 
-      if (data?.claimStreamingRewards?.success) {
-        const totalClaimed = data.claimStreamingRewards.totalClaimed
-        const txHash = data.claimStreamingRewards.transactionHash
+      const data = await response.json()
+
+      if (data.success) {
+        const totalClaimed = data.totalClaimed
+        const txHash = data.transactionHash
 
         if (txHash) {
           toast.success(`Claimed ${totalClaimed.toFixed(2)} OGUN! TX: ${txHash.slice(0, 10)}...`)
@@ -176,7 +185,7 @@ export const StakingPanel = ({ onClose }: StakingPanelProps) => {
         refetchStreaming()
         fetchBalances()
       } else {
-        toast.error(data?.claimStreamingRewards?.error || 'Claim failed')
+        toast.error(data.error || 'Claim failed')
       }
     } catch (err: any) {
       console.error('Claim error:', err)
