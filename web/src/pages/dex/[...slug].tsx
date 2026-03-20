@@ -83,6 +83,7 @@ import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
 import { ProfileReels } from 'components/dex/ProfileReels'
 import { GeneratePanel } from 'components/dex/GeneratePanel'
+import { DmMessageContent } from 'components/pulse/DmMessageContent'
 
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
@@ -7096,7 +7097,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                       ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 text-black'
                                       : 'bg-gray-800/80 text-white border border-gray-700/50'
                                   }`}>
-                                    <p className="text-sm leading-relaxed break-words">{message.message}</p>
+                                    <DmMessageContent text={message.message} isMe={isMe} />
                                     <p className={`text-[10px] mt-1 ${isMe ? 'text-cyan-900/70' : 'text-gray-500'}`}>
                                       {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
