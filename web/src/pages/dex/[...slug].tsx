@@ -1802,6 +1802,20 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     notifyOnNetworkStatusChange: true,
   })
 
+  // Fetch all users from unified Atlas database
+  const [atlasAgents, setAtlasAgents] = useState<any[]>([])
+  useEffect(() => {
+    if (selectedView !== 'explore' && selectedView !== 'users') return
+    const search = debouncedSearchQuery.trim()
+    const url = `/api/explore/users-merged?limit=500${search ? `&search=${encodeURIComponent(search)}` : ''}`
+    fetch(url)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.nodes) setAtlasAgents(data.nodes)
+      })
+      .catch(() => {}) // silently fail — GraphQL still works as fallback
+  }, [selectedView, debouncedSearchQuery])
+
   // State for loading more users
   const [loadingMoreUsers, setLoadingMoreUsers] = useState(false)
 
@@ -4624,18 +4638,22 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
 
           {/* Users View - Browse and Leaderboard for all profiles */}
           {selectedView === 'users' && (() => {
-            // Deduplicate and filter users once
-            const allUsers = (exploreUsersData?.exploreUsers?.nodes || [])
-              .filter((profile: any, index: number, self: any[]) =>
-                profile.userHandle && self.findIndex((p: any) => p.id === profile.id) === index
-              )
+            // Merge GraphQL users + Atlas agents, deduplicate by id
+            const graphqlUsers = exploreUsersData?.exploreUsers?.nodes || []
+            const mergedIds = new Set<string>()
+            const allUsers = [...graphqlUsers, ...atlasAgents]
+              .filter((profile: any) => {
+                if (!profile.userHandle || mergedIds.has(profile.id)) return false
+                mergedIds.add(profile.id)
+                return true
+              })
             // Sort by createdAt for sequence numbering
             const sortedByCreation = [...allUsers].sort((a: any, b: any) =>
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
             )
             // True total from API (e.g. 702) — used to offset sequence numbers
             // so newest user = #totalCount, oldest = #1
-            const totalUsersCount = exploreUsersData?.exploreUsers?.pageInfo?.totalCount || allUsers.length
+            const totalUsersCount = Math.max(exploreUsersData?.exploreUsers?.pageInfo?.totalCount || 0, allUsers.length)
             const seqOffset = totalUsersCount - sortedByCreation.length
             // New users = created in last 30 days
             const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
@@ -5381,7 +5399,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               {/* New Users - compact avatar row */}
-              {(exploreUsersData?.exploreUsers?.nodes?.length ?? 0) > 0 && (
+              {((exploreUsersData?.exploreUsers?.nodes?.length ?? 0) > 0 || atlasAgents.length > 0) && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-white">New Users</h3>
@@ -5389,8 +5407,9 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   </div>
                   <div className="overflow-x-auto scrollbar-hide">
                     <div className="flex gap-3 min-w-max pb-1">
-                      {exploreUsersData?.exploreUsers?.nodes
+                      {[...(exploreUsersData?.exploreUsers?.nodes || []), ...atlasAgents]
                         ?.filter((p: any, i: number, self: any[]) => p.userHandle && self.findIndex((u: any) => u.id === p.id) === i)
+                        ?.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                         ?.slice(0, 20)
                         ?.map((profile: any) => (
                         <Link key={profile.id} href={`/dex/users/${profile.userHandle}`}>

@@ -22,7 +22,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const scDb = client.db('soundchain')
     const agentsDb = client.db('agents')
 
-    // Count from both possible locations
+    // All data now lives in Atlas (migrated from DocumentDB on Mar 19, 2026)
     const [
       scUsers, scProfiles, scAgents, scTracks, scPosts, scFeedback, scScids,
       agAgents,
@@ -37,7 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       agentsDb.collection('agents').countDocuments().catch(() => 0),
     ])
 
-    // Use whichever DB has data
     const totalAgents = Math.max(scAgents, agAgents)
     const totalUsers = Math.max(scUsers, scProfiles)
     const totalTracks = scTracks
@@ -50,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       scidOnlyTracks = totalTracks - nftTracks
     } catch {}
 
-    // Recent agent registrations (check both DBs)
+    // Recent agent registrations
     let recentAgents: any[] = []
     try {
       recentAgents = await scDb.collection('agents')
@@ -71,20 +70,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } catch {}
     }
 
-    // DocumentDB baseline — main platform data lives on AWS DocumentDB
-    // which Vercel can't reach directly. These are last-known counts.
-    // Agent registrations (Atlas) are added on top in real-time.
-    const DOCUMENTDB_BASELINE = {
-      humans: 707,        // Last verified: Mar 19, 2026
-      tracks: 619,        // Total tracks on platform
-      nfts: 619,          // NFT tracks (all are NFTs currently)
-      scids: 619,         // SCid certificates issued
-      posts: 2847,        // Total posts on feed
-      lastUpdated: '2026-03-19',
-    }
-
-    const liveHumans = Math.max(totalUsers, DOCUMENTDB_BASELINE.humans)
-    const liveTracks = Math.max(totalTracks, DOCUMENTDB_BASELINE.tracks)
+    const liveHumans = totalUsers
+    const liveTracks = totalTracks
 
     return res.status(200).json({
       success: true,
@@ -97,8 +84,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
         content: {
           tracks: liveTracks,
-          nfts: Math.max(nftTracks, DOCUMENTDB_BASELINE.nfts),
-          scids: Math.max(scScids, DOCUMENTDB_BASELINE.scids),
+          nfts: nftTracks,
+          scids: scScids,
           radio_queue: 619,
           genres: 34,
         },
