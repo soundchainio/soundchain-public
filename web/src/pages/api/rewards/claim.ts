@@ -71,16 +71,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    // Find user's unclaimed SCids
-    const profileOid = new ObjectId(auth.profileId)
-    const scids = await db.collection('scids').find({
-      profileId: profileOid,
-      ogunRewardsClaimed: { $lt: { $ifNull: ['$ogunRewardsEarned', 0] } },
-    }).toArray()
-
-    // Simpler query — find SCids where earned > claimed
+    // Find user's SCids — profileId stored as string in scids collection
     const allScids = await db.collection('scids').find({
-      profileId: profileOid,
+      profileId: auth.profileId,
     }).toArray()
 
     const unclaimedScids = allScids.filter(s =>
