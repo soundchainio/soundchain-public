@@ -43,8 +43,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       {
         $match: {
           $or: [
-            { from: auth.profileId },
-            { to: auth.profileId },
+            { fromId: auth.profileId },
+            { toId: auth.profileId },
           ],
         },
       },
@@ -52,9 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         $addFields: {
           partnerId: {
             $cond: {
-              if: { $eq: ['$from', auth.profileId] },
-              then: '$to',
-              else: '$from',
+              if: { $eq: ['$fromId', auth.profileId] },
+              then: '$toId',
+              else: '$fromId',
             },
           },
         },
@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         $group: {
           _id: '$partnerId',
           message: { $first: '$message' },
-          from: { $first: '$from' },
+          fromId: { $first: '$fromId' },
           createdAt: { $first: '$createdAt' },
           readAt: { $first: '$readAt' },
           messageId: { $first: '$_id' },
@@ -102,7 +102,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const chats = chatDocs.map((chat) => {
       const profile = profileMap.get(chat._id?.toString()) || {}
-      const isUnread = chat.from !== auth.profileId && !chat.readAt
+      const isUnread = chat.fromId !== auth.profileId && !chat.readAt
       return {
         id: chat.messageId?.toString(),
         message: chat.message,
