@@ -40,23 +40,51 @@ const BASE_REWARD_PER_STREAM = 0.5    // 0.5 OGUN per stream
 const CREATOR_SPLIT = 0.7              // 70% to creator
 const LISTENER_SPLIT = 0.3             // 30% to listener
 
-function getAuthProfile(req: NextApiRequest) {
+async function getAuthProfile(req: NextApiRequest) {
   const auth = req.headers.authorization
   if (!auth?.startsWith('Bearer ')) return null
+  const token = auth.slice(7)
+
+  // Method 1: Try local JWT verification
   try {
-    const decoded = jwt.verify(auth.slice(7), JWT_SECRET) as any
-    return {
-      userId: decoded.sub,
-      profileId: decoded[`${JWT_NAMESPACE}/profileId`],
-      handle: decoded[`${JWT_NAMESPACE}/handle`],
+    const decoded = jwt.verify(token, JWT_SECRET) as any
+    const profileId = decoded[`${JWT_NAMESPACE}/profileId`]
+    if (profileId) {
+      return {
+        userId: decoded.sub,
+        profileId,
+        handle: decoded[`${JWT_NAMESPACE}/handle`],
+      }
     }
-  } catch { return null }
+  } catch {}
+
+  // Method 2: Verify via GraphQL API (works even if JWT_SECRET differs)
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ query: '{ me { id profile { id userHandle } } }' }),
+      signal: AbortSignal.timeout(10_000),
+    })
+    const data = await res.json()
+    const me = data?.data?.me
+    if (me?.profile?.id) {
+      return {
+        userId: me.id,
+        profileId: me.profile.id,
+        handle: me.profile.userHandle || '',
+      }
+    }
+  } catch {}
+
+  return null
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
-  const auth = getAuthProfile(req)
+  const auth = await getAuthProfile(req)
   if (!auth) return res.status(401).json({ error: 'Unauthorized' })
 
   const { walletAddress, stakeDirectly } = req.body
