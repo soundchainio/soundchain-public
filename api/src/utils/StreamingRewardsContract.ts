@@ -33,8 +33,8 @@ const STREAMING_REWARDS_ABI = [
   'event RewardsStaked(address indexed user, uint256 amount, bytes32 indexed scidHash)',
 ];
 
-// Contract address on Polygon Mainnet
-const STREAMING_REWARDS_ADDRESS = '0xcf9416c49D525f7a50299c71f33606A158F28546';
+// Contract address on Polygon Mainnet — V2 (no per-claim cap, deployed Mar 20 2026)
+const STREAMING_REWARDS_ADDRESS = '0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083';
 
 // RPC URL
 const POLYGON_RPC_URL = process.env.POLYGON_RPC_URL ||

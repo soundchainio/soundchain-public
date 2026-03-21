@@ -26,7 +26,8 @@ const JWT_NAMESPACE = 'https://soundchain.io'
 const WALLET_PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY
 const POLYGON_RPC = process.env.POLYGON_RPC_URL || 'https://polygon-bor-rpc.publicnode.com'
 
-const STREAMING_REWARDS_ADDRESS = '0xcf9416c49D525f7a50299c71f33606A158F28546'
+// V2 — no per-claim cap, deployed Mar 20 2026
+const STREAMING_REWARDS_ADDRESS = '0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083'
 const STREAMING_REWARDS_ABI = [
   'function submitReward(address user, string scid, uint256 amount, bool isNft) external',
   'function submitRewardWithListenerSplit(address creator, address listener, string scid, uint256 totalAmount, bool isNft) external',
@@ -141,8 +142,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log(`[Claim] Gas: maxFee=${ethers.utils.formatUnits(maxFee, 'gwei')} maxPriority=35 gwei`)
 
-    // Contract limit: expectedRate * 10 per call. With isNft=true, rate=0.5, cap=5 OGUN
-    const MAX_PER_CLAIM = 5.0
+    // V2 contract — no per-claim cap. Daily limit (100 OGUN/track/day) is the only boundary.
+    const MAX_PER_CLAIM = 100 // Daily limit per track
     const txHashes: string[] = []
     let totalClaimed = 0
     let nonce = await wallet.getTransactionCount('latest')
