@@ -24,9 +24,21 @@
     font:10px 'JetBrains Mono',Menlo,Monaco,monospace;padding:1px 8px;border-radius:3px;cursor:pointer;
     line-height:14px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   #btnPaste:active{background:rgba(6,182,212,0.15)}
+  /* Landscape lock overlay — prevents rotation from killing WebSocket */
+  #landscape-lock{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0a0a0a;z-index:9999;
+    flex-direction:column;align-items:center;justify-content:center;color:#22d3ee;
+    font:16px 'JetBrains Mono',Menlo,Monaco,monospace;text-align:center;padding:24px}
+  #landscape-lock .rotate-icon{font-size:48px;margin-bottom:16px;animation:wobble 2s infinite}
+  #landscape-lock p{color:#999;font-size:12px;margin-top:8px}
+  @keyframes wobble{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-20deg)}75%{transform:rotate(20deg)}}
+  @media(orientation:landscape) and (max-height:500px){
+    #landscape-lock{display:flex}
+    #term-wrap,#status{display:none}
+  }
 </style>
 </head>
 <body>
+<div id="landscape-lock"><span class="rotate-icon">📱</span>Rotate to Portrait<p>Landscape disconnects the tunnel</p></div>
 <div id="status"><span class="dot connecting" id="dot"></span><span id="msg">connecting...</span><button id="btnPaste">Paste</button></div>
 <div id="term-wrap"><div id="terminal"></div></div>
 
@@ -359,6 +371,9 @@
       sendInput(evt.data.text);
     }
   });
+
+  // Lock to portrait (Android Chrome — iOS Safari ignores this but CSS overlay handles it)
+  try { screen.orientation.lock('portrait-primary').catch(function(){}); } catch(e){}
 
   // Start connection
   term.writeln('\x1b[36m\u250C\u2500 CLI BRIDGE (iframe-isolated) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\x1b[0m');
