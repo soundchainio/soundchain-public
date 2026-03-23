@@ -46,7 +46,7 @@ import { OgunRewardToast, DailyLimitToast } from 'components/common/OgunRewardTo
 import { Card } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { ConcertChat } from 'components/dex/ConcertChat'
-import { useModalDispatch } from 'contexts/ModalContext'
+import { useModalDispatch, ModalProvider } from 'contexts/ModalContext'
 import { useRadioOptional } from 'contexts/RadioContext'
 import 'react-toastify/dist/ReactToastify.css'
 import { ReactElement } from 'react'
@@ -1246,4 +1246,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 }
 
 // Custom layout - radio page is standalone, no default Layout wrapper
-OGUNRadio.getLayout = ((page: ReactElement) => page) as CustomLayout
+// Must include ModalProvider since useModalDispatch is used in the page
+OGUNRadio.getLayout = ((page: ReactElement) => (
+  <ModalProvider>{page}</ModalProvider>
+)) as CustomLayout
