@@ -35,22 +35,19 @@ interface UseWebRTCCallOptions {
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
+  // Multiple STUN servers for NAT traversal (free, always available)
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  // BUG-CALL-004: TURN relay configurable via env vars, falls back to free public relay
+  { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: 'stun:stun3.l.google.com:19302' },
+  { urls: 'stun:stun4.l.google.com:19302' },
+  // TURN relay for symmetric NAT (mobile carriers, corporate networks)
+  // Configure via Vercel env vars — sign up at dashboard.metered.ca (free tier)
   ...(process.env.NEXT_PUBLIC_TURN_URL ? [{
     urls: process.env.NEXT_PUBLIC_TURN_URL.split(','),
     username: process.env.NEXT_PUBLIC_TURN_USER || '',
     credential: process.env.NEXT_PUBLIC_TURN_CRED || '',
-  }] : [{
-    urls: [
-      'turn:openrelay.metered.ca:80',
-      'turn:openrelay.metered.ca:443',
-      'turn:openrelay.metered.ca:443?transport=tcp',
-    ],
-    username: 'openrelayproject',
-    credential: 'openrelayproject',
-  }]),
+  }] : []),
 ]
 
 export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall }: UseWebRTCCallOptions) {
