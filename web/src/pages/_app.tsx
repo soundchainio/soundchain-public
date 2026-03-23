@@ -219,10 +219,10 @@ function SoundchainApp({ Component, pageProps }: CustomAppProps) {
         <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png" />
         <link rel="mask-icon" href="/favicons/safari-pinned-tab.svg" color="#5bbad5" />
         <meta name="msapplication-TileColor" content="#da532c" />
-        {!isPulsePage && <link rel="manifest" href="/manifest.json" />}
-        {isPulsePage && <link rel="manifest" href="/pulse-manifest.json" />}
-        <meta name="apple-mobile-web-app-title" content={isPulsePage ? 'SC Pulse' : 'SoundChain'} />
-        <meta name="application-name" content={isPulsePage ? 'SC Pulse' : 'SoundChain'} />
+        {!isPulsePage && <link key="manifest" rel="manifest" href="/manifest.json" />}
+        {isPulsePage && <link key="manifest" rel="manifest" href="/pulse-manifest.json?v=2" />}
+        <meta name="apple-mobile-web-app-title" content={isPulsePage ? 'SoundChain Pulse' : 'SoundChain'} />
+        <meta name="application-name" content={isPulsePage ? 'SoundChain Pulse' : 'SoundChain'} />
         {/* PWA recovery: catch chunk loading failures from stale service worker cache */}
         <Script
           id="pwa-recovery"

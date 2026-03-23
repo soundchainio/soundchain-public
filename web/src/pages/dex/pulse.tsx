@@ -242,12 +242,13 @@ function PulsePage() {
   }, [])
 
   // DOM cleanup as safety net — remove stale main manifest, ensure pulse manifest exists
+  // Uses versioned URL (?v=2) to bust Safari's aggressive manifest cache
   useEffect(() => {
-    const correctHref = '/pulse-manifest.json'
+    const correctHref = '/pulse-manifest.json?v=2'
     document.querySelectorAll('link[rel="manifest"]').forEach(el => {
-      if (el.getAttribute('href') !== correctHref) el.remove()
+      if (!el.getAttribute('href')?.startsWith('/pulse-manifest.json')) el.remove()
     })
-    if (!document.querySelector(`link[rel="manifest"][href="${correctHref}"]`)) {
+    if (!document.querySelector('link[rel="manifest"][href^="/pulse-manifest.json"]')) {
       const link = document.createElement('link')
       link.rel = 'manifest'
       link.href = correctHref
