@@ -111,7 +111,7 @@ export default async function handler(
     }
 
     // Fallback: Query Lambda GraphQL API for profileId, then list collections for debug
-    const GQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
+    const GQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
     const gqlRes = await fetch(GQL_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

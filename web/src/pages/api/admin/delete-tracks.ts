@@ -9,7 +9,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Simple admin key check
 const ADMIN_KEY = process.env.ADMIN_DELETE_KEY || 'soundchain-admin-2026'
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
+const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 
 // Delete track mutation (admin version doesn't require owner check)
 const DELETE_TRACK_MUTATION = `

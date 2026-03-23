@@ -4,97 +4,61 @@
  * GET /api/agent/radio?action=playlist - Get radio playlist
  * POST /api/agent/radio/broadcast - Broadcast "Now Playing" (cron)
  *
- * The OGUN agent becomes the decentralized publishing house,
- * showcasing NFT tracks to humans and agents alike.
+ * Now queries Atlas directly instead of proxying through Lambda GraphQL.
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
+import clientPromise from 'lib/mongodb'
 
-// GraphQL query for radio tracks - includes assetUrl for audio playback and SCID for streaming rewards
-// Uses cursor-based pagination with 'after' for fetching all tracks
-const TRACKS_QUERY = `
-  query RadioTracks($limit: Int, $after: String) {
-    exploreTracks(page: { first: $limit, after: $after }) {
-      nodes {
-        id
-        title
-        artist
-        album
-        description
-        artworkUrl
-        assetUrl
-        playbackCount
-        genres
-        scid {
-          scid
-          streamCount
-          ogunRewardsEarned
-        }
-      }
-      pageInfo {
-        totalCount
-        hasNextPage
-        endCursor
-      }
-    }
-  }
-`
-
-// Page size - API has hidden limit around 200-250, so we use 200 to be safe
-const PAGE_SIZE = 200
-
-// Direct GraphQL fetch for serverless - fetches ALL tracks via pagination
+// Fetch all tracks with audio from Atlas directly
 async function fetchAllTracks() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
-
   try {
-    let allTracks: any[] = []
-    let hasNextPage = true
-    let cursor: string | null = null
-    let totalCount = 0
+    const client = await clientPromise
+    const db = client.db('soundchain')
 
-    // Paginate through all tracks
-    while (hasNextPage) {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: TRACKS_QUERY,
-          variables: {
-            limit: PAGE_SIZE,
-            after: cursor
+    // Get tracks that have an assetUrl (audio file)
+    const tracks = await db.collection('tracks')
+      .find(
+        { assetUrl: { $exists: true, $ne: null, $ne: '' }, deleted: { $ne: true } },
+        {
+          projection: {
+            _id: 1, title: 1, artist: 1, album: 1, description: 1,
+            artworkUrl: 1, assetUrl: 1, playbackCount: 1, genres: 1,
           }
-        })
-      })
+        }
+      )
+      .toArray()
 
-      const json = await response.json()
-      const pageData = json.data?.exploreTracks
+    // Look up SCIDs for these tracks
+    const trackIds = tracks.map(t => t._id.toString())
+    const scids = await db.collection('scids')
+      .find(
+        { trackId: { $in: trackIds } },
+        { projection: { trackId: 1, scid: 1, streamCount: 1, ogunRewardsEarned: 1 } }
+      )
+      .toArray()
 
-      if (!pageData || !pageData.nodes) {
-        console.error('[OGUN Radio] Invalid response:', json)
-        break
+    const scidMap = new Map(scids.map(s => [s.trackId, s]))
+
+    const formatted = tracks.map(track => {
+      const scid = scidMap.get(track._id.toString())
+      return {
+        id: track._id.toString(),
+        title: track.title || 'Untitled',
+        artist: track.artist || 'Unknown Artist',
+        album: track.album,
+        description: track.description,
+        artworkUrl: track.artworkUrl,
+        assetUrl: track.assetUrl,
+        playbackCount: track.playbackCount || 0,
+        genres: track.genres || [],
+        scid: scid ? { scid: scid.scid, streamCount: scid.streamCount, ogunRewardsEarned: scid.ogunRewardsEarned } : null,
       }
+    })
 
-      const tracks = pageData.nodes
-      allTracks = allTracks.concat(tracks)
-
-      // Update pagination info
-      totalCount = pageData.pageInfo?.totalCount || allTracks.length
-      hasNextPage = pageData.pageInfo?.hasNextPage || false
-      cursor = pageData.pageInfo?.endCursor || null
-
-      console.log(`[OGUN Radio] Fetched page: ${tracks.length} tracks (total so far: ${allTracks.length}/${totalCount})`)
-
-      // Safety: prevent infinite loops
-      if (allTracks.length >= totalCount || !cursor) {
-        hasNextPage = false
-      }
-    }
-
-    console.log(`[OGUN Radio] Fetched ALL ${allTracks.length} of ${totalCount} total tracks`)
-    return { tracks: allTracks, totalCount }
+    return { tracks: formatted, totalCount: formatted.length }
   } catch (e) {
-    console.error('[OGUN Radio] Fetch error:', e)
+    console.error('[OGUN Radio] Atlas fetch error:', e)
     return { tracks: [], totalCount: 0 }
   }
 }
@@ -130,45 +94,30 @@ let trackStartTime: Date | null = null
 let radioPlaylist: RadioTrack[] = []
 let totalTracksInDatabase: number = 0
 let lastFetchTime: Date | null = null
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000 // Refresh every 5 minutes to catch new mints
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000
 
 function formatTrackForBroadcast(track: RadioTrack): string {
   const lines = [
-    `🎵 **NOW PLAYING on OGUN Radio**`,
+    `**NOW PLAYING on OGUN Radio**`,
     ``,
     `**${track.title}**`,
     `by ${track.artist}`,
   ]
 
-  if (track.album) {
-    lines.push(`Album: ${track.album}`)
-  }
-
+  if (track.album) lines.push(`Album: ${track.album}`)
   if (track.is_nft) {
-    lines.push(``)
-    lines.push(`🎨 **NFT Track** - Fully on-chain licensed`)
-    lines.push(`💰 Streaming rewards enabled via OGUN L2`)
+    lines.push(``, `**NFT Track** - Fully on-chain licensed`)
+    lines.push(`Streaming rewards enabled via OGUN L2`)
   }
-
-  if (track.owner) {
-    lines.push(``)
-    lines.push(`Owner: @${track.owner.handle}`)
-  }
-
-  if (track.scid) {
-    lines.push(`SCID: ${track.scid}`)
-  }
-
-  lines.push(``)
-  lines.push(`🔗 Listen: soundchain.io/dex/track/${track.id}`)
-  lines.push(`📻 Radio: soundchain.io/api/agent/radio`)
-  lines.push(``)
-  lines.push(`*OGUN - The gas powering the L2 music economy*`)
+  if (track.owner) lines.push(``, `Owner: @${track.owner.handle}`)
+  if (track.scid) lines.push(`SCID: ${track.scid}`)
+  lines.push(``, `Listen: soundchain.io/dex/track/${track.id}`)
+  lines.push(`Radio: soundchain.io/api/agent/radio`)
+  lines.push(``, `*OGUN - The gas powering the L2 music economy*`)
 
   return lines.join('\n')
 }
 
-// Genre display labels for the radio UI
 const GENRE_LABELS: Record<string, string> = {
   acoustic: 'Acoustic', alternative: 'Alternative', ambient: 'Ambient', americana: 'Americana',
   blues: 'Blues', cannabis: 'Cannabis', c_pop: 'C-Pop', christian: 'Christian',
@@ -201,6 +150,29 @@ function getFilteredPlaylist(genre?: string): RadioTrack[] {
   return radioPlaylist.filter(t => (t.genres || []).includes(genre))
 }
 
+function rawToRadioTrack(track: any): RadioTrack {
+  return {
+    id: track.id,
+    title: track.title || 'Untitled',
+    artist: track.artist || 'Unknown Artist',
+    album: track.album,
+    description: track.description,
+    artwork_url: track.artworkUrl,
+    stream_url: track.assetUrl,
+    duration: null as any,
+    play_count: track.playbackCount || 0,
+    scid: track.scid?.scid || null,
+    is_nft: true,
+    genres: track.genres || [],
+    owner: null,
+    licensing: {
+      type: 'nft' as const,
+      ogun_enabled: true,
+      streaming_rewards: track.scid?.scid ? true : false,
+    },
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -210,35 +182,17 @@ export default async function handler(
   const genreFilter = req.query.genre as string | undefined
 
   if (req.method === 'GET') {
-    // Return current track or get a new one
     if (action === 'playlist') {
-      // Ensure we have the full playlist
       if (radioPlaylist.length === 0) {
         const { tracks: rawTracks, totalCount } = await fetchAllTracks()
         totalTracksInDatabase = totalCount
         radioPlaylist = rawTracks
           .filter((track: any) => track.assetUrl)
-          .map((track: any) => ({
-            id: track.id,
-            title: track.title || 'Untitled',
-            artist: track.artist || 'Unknown Artist',
-            album: track.album,
-            description: track.description,
-            artwork_url: track.artworkUrl,
-            stream_url: track.assetUrl,
-            duration: null,
-            play_count: track.playbackCount || 0,
-            scid: track.scid?.scid || null, // SCID code for streaming rewards
-            is_nft: true,
-            genres: track.genres || [],
-            owner: null,
-            licensing: { type: 'nft' as const, ogun_enabled: true, streaming_rewards: track.scid?.scid ? true : false }
-          }))
+          .map(rawToRadioTrack)
           .sort(() => Math.random() - 0.5)
         lastFetchTime = new Date()
       }
 
-      // Return the full radio playlist
       return res.status(200).json({
         success: true,
         data: {
@@ -258,45 +212,20 @@ export default async function handler(
       })
     }
 
-    // Fetch tracks if playlist is empty OR if it's time to refresh (to catch new mints)
     const needsRefresh = !lastFetchTime || (Date.now() - lastFetchTime.getTime() > REFRESH_INTERVAL_MS)
 
     if (radioPlaylist.length === 0 || needsRefresh) {
       try {
-        // Fetch ALL tracks via direct GraphQL
         const { tracks: rawTracks, totalCount } = await fetchAllTracks()
         totalTracksInDatabase = totalCount
 
         const tracks: RadioTrack[] = rawTracks
-          .filter((track: any) => track.assetUrl) // Only tracks with audio
-          .map((track: any) => ({
-            id: track.id,
-            title: track.title || 'Untitled',
-            artist: track.artist || 'Unknown Artist',
-            album: track.album,
-            description: track.description,
-            artwork_url: track.artworkUrl,
-            stream_url: track.assetUrl, // The actual audio file URL
-            duration: null,
-            play_count: track.playbackCount || 0,
-            scid: track.scid?.scid || null, // SCID code for streaming rewards
-            is_nft: true, // All tracks on SoundChain are NFTs
-            genres: track.genres || [],
-            owner: null,
-            licensing: {
-              type: 'nft' as const,
-              ogun_enabled: true,
-              streaming_rewards: track.scid?.scid ? true : false // Only if track has SCID
-            }
-          }))
+          .filter((track: any) => track.assetUrl)
+          .map(rawToRadioTrack)
 
-        // If we have a current track, preserve its position
         const currentTrackId = currentTrack?.id
-
-        // Shuffle the tracks
         radioPlaylist = tracks.sort(() => Math.random() - 0.5)
 
-        // If we had a current track, make sure it's still at the front
         if (currentTrackId) {
           const currentIdx = radioPlaylist.findIndex(t => t.id === currentTrackId)
           if (currentIdx > 0) {
@@ -307,30 +236,23 @@ export default async function handler(
 
         lastFetchTime = new Date()
         console.log(`[OGUN Radio] Loaded ${radioPlaylist.length} playable tracks (${totalTracksInDatabase} total in DB)`)
-
       } catch (error: any) {
         console.error('[OGUN Radio] Error fetching tracks:', error)
-        // Only fail if we have no playlist at all
         if (radioPlaylist.length === 0) {
           return res.status(500).json({
             success: false,
             error: 'Failed to load radio playlist',
-            meta: {
-              timestamp: new Date().toISOString(),
-              request_id: requestId
-            }
+            meta: { timestamp: new Date().toISOString(), request_id: requestId }
           })
         }
       }
     }
 
-    // Get current or next track
     if (!currentTrack && radioPlaylist.length > 0) {
       currentTrack = radioPlaylist[0]
       trackStartTime = new Date()
     }
 
-    // Genre filtering: if genre param specified, return a random track from that genre
     const availableGenres = getAvailableGenres()
     let nowPlaying = currentTrack
     if (genreFilter && genreFilter !== 'all') {
@@ -378,15 +300,11 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
-    // Advance to next track and optionally broadcast
     const broadcast = req.query.broadcast === 'true'
 
-    // Rotate playlist
     if (radioPlaylist.length > 0) {
       const played = radioPlaylist.shift()
-      if (played) {
-        radioPlaylist.push(played) // Move to end
-      }
+      if (played) radioPlaylist.push(played)
       currentTrack = radioPlaylist[0] || null
       trackStartTime = new Date()
     }
@@ -398,14 +316,9 @@ export default async function handler(
         started_at: trackStartTime?.toISOString(),
         queue_length: radioPlaylist.length
       },
-      meta: {
-        timestamp: new Date().toISOString(),
-        request_id: requestId,
-        agent: 'OGUN Radio'
-      }
+      meta: { timestamp: new Date().toISOString(), request_id: requestId, agent: 'OGUN Radio' }
     }
 
-    // Broadcast to SoundChain agent feed
     if (broadcast && currentTrack) {
       try {
         const blogRes = await fetch(`${process.env.NEXT_PUBLIC_URL || 'https://soundchain.io'}/api/agent/blog`, {
@@ -414,16 +327,13 @@ export default async function handler(
           body: JSON.stringify({
             agent_name: 'OGUN',
             type: 'now_playing',
-            title: `🎵 Now Playing: ${currentTrack.title}`,
+            title: `Now Playing: ${currentTrack.title}`,
             content: formatTrackForBroadcast(currentTrack),
             tags: ['radio', 'nft', 'ogun', 'now-playing', ...(currentTrack.genres || [])]
           })
         })
-
         const blogData = await blogRes.json()
-        response.broadcast = {
-          soundchain: blogData.success ? 'sent' : 'failed'
-        }
+        response.broadcast = { soundchain: blogData.success ? 'sent' : 'failed' }
       } catch (e) {
         response.broadcast = { soundchain: 'error' }
       }
@@ -435,9 +345,6 @@ export default async function handler(
   return res.status(405).json({
     success: false,
     error: 'Method not allowed. Use GET to fetch current track, POST to advance.',
-    meta: {
-      timestamp: new Date().toISOString(),
-      request_id: requestId
-    }
+    meta: { timestamp: new Date().toISOString(), request_id: requestId }
   })
 }

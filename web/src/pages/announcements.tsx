@@ -74,7 +74,7 @@ export default function AnnouncementsPage() {
     async function fetchAnnouncements() {
       try {
         // Use direct API Gateway URL for reliability
-        const response = await fetch('https://19ne212py4.execute-api.us-east-1.amazonaws.com/production/v1/feed')
+        const response = await fetch('/api/announcements')
         if (!response.ok) throw new Error('Failed to fetch announcements')
         const data = await response.json()
         setAnnouncements(data.announcements || [])

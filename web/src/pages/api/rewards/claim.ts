@@ -60,7 +60,7 @@ async function getAuthProfile(req: NextApiRequest) {
 
   // Method 2: Verify via GraphQL API (works even if JWT_SECRET differs)
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
     const res = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

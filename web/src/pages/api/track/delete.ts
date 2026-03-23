@@ -10,7 +10,7 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
+const GRAPHQL_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soundchain.io/graphql'
 
 // Find track by SCID
 const FIND_BY_SCID_QUERY = `

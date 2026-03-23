@@ -2,60 +2,11 @@
  * SoundChain Agent Gateway - Platform Stats
  * GET /api/agent/stats
  *
- * Returns real counts from the database:
- * - Total tracks
- * - Tracks with IPFS (audio)
- * - Tracks with IPFS artwork
- * - NFT tracks
- * - Total profiles/artists
+ * Returns real counts from Atlas directly (no Lambda proxy).
  */
 
 import type { NextApiRequest, NextApiResponse } from 'next'
-
-// Query simplified - only fields that exist on Track type
-const TRACKS_COUNT_QUERY = `
-  query StatsTracksQuery($limit: Int) {
-    exploreTracks(page: { first: $limit }) {
-      nodes {
-        id
-        artworkUrl
-        assetUrl
-      }
-      pageInfo {
-        totalCount
-      }
-    }
-  }
-`
-
-// Direct GraphQL fetch for serverless
-async function fetchStats(limit: number = 200) {
-  // Use direct API Gateway URL - custom domain has issues
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://19ne212py4.execute-api.us-east-1.amazonaws.com/production'
-
-  console.log('[Agent Stats] Fetching from:', apiUrl)
-
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: TRACKS_COUNT_QUERY,
-      variables: { limit }
-    })
-  })
-
-  const text = await response.text()
-  console.log('[Agent Stats] Response status:', response.status)
-  console.log('[Agent Stats] Response preview:', text.substring(0, 200))
-
-  try {
-    const json = JSON.parse(text)
-    return json.data?.exploreTracks || { nodes: [], pageInfo: { totalCount: 0 } }
-  } catch (e) {
-    console.error('[Agent Stats] JSON parse error:', e)
-    return { nodes: [], pageInfo: { totalCount: 0 } }
-  }
-}
+import clientPromise from 'lib/mongodb'
 
 interface StatsResponse {
   success: boolean
@@ -97,39 +48,24 @@ export default async function handler(
   }
 
   try {
-    // Query with empty search to get all tracks
-    const result = await fetchStats(200)
+    const client = await clientPromise
+    const db = client.db('soundchain')
 
-    const totalTracks = result?.pageInfo?.totalCount || 0
-    const totalProfiles = 0 // Not queried in simple mode
+    const [totalTracks, totalProfiles, ipfsAudioCount, ipfsArtworkCount, scidCount] = await Promise.all([
+      db.collection('tracks').countDocuments({ deleted: { $ne: true } }),
+      db.collection('profiles').countDocuments({}),
+      db.collection('tracks').countDocuments({
+        deleted: { $ne: true },
+        assetUrl: { $exists: true, $ne: null, $regex: /ipfs|pinata/i },
+      }),
+      db.collection('tracks').countDocuments({
+        deleted: { $ne: true },
+        artworkUrl: { $exists: true, $ne: null, $regex: /ipfs|pinata/i },
+      }),
+      db.collection('scids').countDocuments({}),
+    ])
 
-    const tracks = result?.nodes || []
-    const actualSampleSize = tracks.length
-
-    // Count IPFS tracks in sample
-    let ipfsAudioCount = 0
-    let ipfsArtworkCount = 0
-    let nftCount = 0
-    let scidCount = 0
-
-    tracks.forEach((track: any) => {
-      // IPFS audio = assetUrl contains ipfs/pinata
-      if (track.assetUrl?.includes('ipfs') || track.assetUrl?.includes('pinata')) {
-        ipfsAudioCount++
-        nftCount++ // IPFS-backed = effectively NFT
-      }
-      // IPFS artwork = artworkUrl contains ipfs/pinata
-      if (track.artworkUrl?.includes('ipfs') || track.artworkUrl?.includes('pinata')) {
-        ipfsArtworkCount++
-      }
-    })
-    scidCount = nftCount // Estimate
-
-    // Calculate percentages and estimate totals
-    const ipfsAudioPercent = actualSampleSize > 0 ? ipfsAudioCount / actualSampleSize : 0
-    const ipfsArtworkPercent = actualSampleSize > 0 ? ipfsArtworkCount / actualSampleSize : 0
-    const nftPercent = actualSampleSize > 0 ? nftCount / actualSampleSize : 0
-    const scidPercent = actualSampleSize > 0 ? scidCount / actualSampleSize : 0
+    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300')
 
     return res.status(200).json({
       success: true,
@@ -138,32 +74,28 @@ export default async function handler(
         total_profiles: totalProfiles,
         ipfs_audio_tracks: ipfsAudioCount,
         ipfs_artwork_tracks: ipfsArtworkCount,
-        nft_tracks: nftCount,
+        nft_tracks: ipfsAudioCount,
         scid_enabled_tracks: scidCount,
-        sample_size: actualSampleSize,
+        sample_size: totalTracks,
         estimated_totals: {
-          ipfs_audio: Math.round(totalTracks * ipfsAudioPercent),
-          ipfs_artwork: Math.round(totalTracks * ipfsArtworkPercent),
-          nfts: Math.round(totalTracks * nftPercent),
-          scid_enabled: Math.round(totalTracks * scidPercent)
+          ipfs_audio: ipfsAudioCount,
+          ipfs_artwork: ipfsArtworkCount,
+          nfts: ipfsAudioCount,
+          scid_enabled: scidCount,
         }
       },
       meta: {
         timestamp: new Date().toISOString(),
         request_id: requestId,
-        note: `Stats based on sample of ${actualSampleSize} tracks. Estimates extrapolated to total.`
+        note: `Exact counts from Atlas (no sampling).`
       }
     })
-
   } catch (error: any) {
     console.error('[Agent Stats] Error:', error)
     return res.status(500).json({
       success: false,
       error: 'Failed to fetch platform stats',
-      meta: {
-        timestamp: new Date().toISOString(),
-        request_id: requestId
-      }
+      meta: { timestamp: new Date().toISOString(), request_id: requestId }
     })
   }
 }

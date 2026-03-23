@@ -33,7 +33,7 @@ export const LeftSidebar = () => {
   useEffect(() => {
     async function fetchAnnouncements() {
       try {
-        const response = await fetch('https://19ne212py4.execute-api.us-east-1.amazonaws.com/production/v1/feed?limit=3')
+        const response = await fetch('/api/announcements?limit=3')
         if (response.ok) {
           const data = await response.json()
           setAnnouncements(data.announcements || [])
