@@ -3504,7 +3504,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
               </div>
 
               {/* Moltbook Agent Playground Button - hidden on mobile */}
-              <Button variant="ghost" size="sm" onClick={() => setShowBackendPanel(true)} className="hover:bg-red-500/20 hidden sm:flex">
+              <Button variant="ghost" size="sm" onClick={() => router.push('/backend')} className="hover:bg-red-500/20 hidden sm:flex">
                 <span className="text-xl">🦞</span>
                 <span className="hidden xl:inline ml-2 text-red-400">Moltbook</span>
               </Button>
