@@ -225,18 +225,28 @@ function PulsePage() {
     setIsChromeIOS(/CriOS/.test(ua)) // Chrome on iOS uses CriOS user agent
   }, [])
 
-  // Force correct PWA manifest in DOM — Safari reads manifest at HTML parse time,
-  // so client-side navigation from /dex/feed leaves stale /manifest.json in <head>.
-  // This ensures /pulse-manifest.json is the ONLY manifest link when on Pulse.
+  // Force correct PWA manifest — Safari reads manifest at HTML parse time ONLY.
+  // If user arrived via SPA navigation (e.g. from /dex/feed), Safari cached the
+  // main manifest and DOM changes won't make it re-read. Force a full page reload
+  // so Safari gets fresh SSR HTML with /pulse-manifest.json.
+  useEffect(() => {
+    const hasWrongManifest = !!document.querySelector('link[rel="manifest"][href="/manifest.json"]')
+
+    if (hasWrongManifest && !sessionStorage.getItem('pulse-manifest-reloaded')) {
+      sessionStorage.setItem('pulse-manifest-reloaded', '1')
+      window.location.replace('/dex/pulse')
+      return
+    }
+    // Clear reload flag on unmount so it works again on next SPA visit
+    return () => { sessionStorage.removeItem('pulse-manifest-reloaded') }
+  }, [])
+
+  // DOM cleanup as safety net — remove stale main manifest, ensure pulse manifest exists
   useEffect(() => {
     const correctHref = '/pulse-manifest.json'
-    // Remove ALL existing manifest links (including stale main manifest)
     document.querySelectorAll('link[rel="manifest"]').forEach(el => {
-      if (el.getAttribute('href') !== correctHref) {
-        el.remove()
-      }
+      if (el.getAttribute('href') !== correctHref) el.remove()
     })
-    // Ensure pulse manifest link exists
     if (!document.querySelector(`link[rel="manifest"][href="${correctHref}"]`)) {
       const link = document.createElement('link')
       link.rel = 'manifest'
@@ -285,8 +295,17 @@ function PulsePage() {
   const { data: chatsData, loading: chatsLoading, refetch: refetchChats, startPolling, stopPolling } = useChatsQuery({
     pollInterval: 5000,
   })
+  // Stabilize startPolling/stopPolling via refs — Apollo does NOT guarantee referential stability
+  // and using them as useCallback deps causes cascade re-renders (#310 on mobile Safari)
+  const startPollingRef = useRef(startPolling)
+  const stopPollingRef = useRef(stopPolling)
+  startPollingRef.current = startPolling
+  stopPollingRef.current = stopPolling
+
   const [loadHistory, { data: historyData, loading: historyLoading, refetch: refetchHistory }] =
     useChatHistoryLazyQuery({ fetchPolicy: 'network-only' })
+  const refetchHistoryRef = useRef(refetchHistory)
+  refetchHistoryRef.current = refetchHistory
   const [sendMessage, { loading: sending }] = useSendMessageMutation({
     onCompleted: () => {
       refetchHistory?.()
@@ -297,9 +316,13 @@ function PulsePage() {
   const [fetchUnread, { data: unreadData }] = useUnreadMessageCountLazyQuery({ fetchPolicy: 'no-cache' })
   const [sendTyping] = useMutation(SEND_TYPING, { onError: () => {} }) // Silent fail — backend may not have this yet
 
+  // Stabilize fetchUnread via ref — Apollo lazy query functions are NOT referentially stable
+  const fetchUnreadRef = useRef(fetchUnread)
+  fetchUnreadRef.current = fetchUnread
+
   useEffect(() => {
-    if (me) fetchUnread()
-  }, [me, fetchUnread])
+    if (me) fetchUnreadRef.current()
+  }, [me])
 
   // Redirect to login if not authenticated (wait for auth check to complete)
   useEffect(() => {
@@ -341,13 +364,14 @@ function PulsePage() {
   // Poll chat history every 5s when viewing a conversation
   // SKIP refetch while user is actively typing — prevents iOS text field bugs
   // (keyboard dismiss, text vanishing, cursor jumps from re-render during input)
+  // Uses refetchHistoryRef to avoid effect cascade from unstable Apollo refetch reference
   useEffect(() => {
     if (view !== 'chat' || !selectedChat) return
     let interval: NodeJS.Timeout | undefined
-    const startPolling = () => {
+    const poll = () => {
       interval = setInterval(() => {
         if (!isUserTypingRef.current && !document.hidden) {
-          refetchHistory?.()
+          refetchHistoryRef.current?.()
         }
       }, 5000)
     }
@@ -355,16 +379,16 @@ function PulsePage() {
       if (document.hidden) {
         if (interval) clearInterval(interval)
       } else {
-        startPolling()
+        poll()
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)
-    startPolling()
+    poll()
     return () => {
       if (interval) clearInterval(interval)
       document.removeEventListener('visibilitychange', handleVisibility)
     }
-  }, [view, selectedChat, refetchHistory])
+  }, [view, selectedChat])
 
   // Detect incoming peer messages — flash typing indicator before message appears
   useEffect(() => {
@@ -386,16 +410,17 @@ function PulsePage() {
   // Send typing signal when user types (debounced — max once per 3s)
   // Also pauses ALL polling (chats list + chat history) while typing
   // Prevents iOS text field bugs: keyboard dismiss, text vanishing, cursor jumps
+  // Uses refs for startPolling/stopPolling to avoid re-render cascade (#310)
   const handleTypingSignal = useCallback(() => {
     // Pause all polling while typing
     if (!isUserTypingRef.current) {
       isUserTypingRef.current = true
-      stopPolling()
+      stopPollingRef.current()
     }
     if (typingIdleTimerRef.current) clearTimeout(typingIdleTimerRef.current)
     typingIdleTimerRef.current = setTimeout(() => {
       isUserTypingRef.current = false
-      startPolling(5000) // Resume chats polling 3s after last keystroke
+      startPollingRef.current(5000) // Resume chats polling 3s after last keystroke
     }, 3000)
 
     if (!selectedChat) return
@@ -403,7 +428,7 @@ function PulsePage() {
     if (now - lastTypingSentRef.current < 3000) return
     lastTypingSentRef.current = now
     sendTyping({ variables: { toId: selectedChat.profileId } }).catch(() => {})
-  }, [selectedChat, sendTyping, stopPolling, startPolling])
+  }, [selectedChat, sendTyping])
 
   // Scroll to bottom ONLY when message count actually changes (not on every poll re-render)
   // This prevents iOS keyboard dismiss + text loss from scrollIntoView stealing focus
@@ -491,8 +516,8 @@ function PulsePage() {
     // Resume polling if it was paused during typing
     isUserTypingRef.current = false
     if (typingIdleTimerRef.current) clearTimeout(typingIdleTimerRef.current)
-    startPolling(5000)
-  }, [startPolling, closePickers])
+    startPollingRef.current(5000)
+  }, [closePickers])
 
   const handleSend = async () => {
     warmUpAudio()
@@ -1612,7 +1637,7 @@ function PulsePage() {
       />
       <Head>
         <title>SoundChain Pulse</title>
-        <link rel="manifest" href="/pulse-manifest.json" />
+        <link key="manifest" rel="manifest" href="/pulse-manifest.json" />
         <meta name="apple-mobile-web-app-title" content="SC Pulse" />
         <meta name="application-name" content="SC Pulse" />
         <meta name="theme-color" content={WA.accent} />
