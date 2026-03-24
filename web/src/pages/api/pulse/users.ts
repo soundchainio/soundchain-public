@@ -12,8 +12,8 @@ function getAuthProfile(req: NextApiRequest): { userId: string; profileId: strin
     const decoded = jwt.verify(auth.slice(7), JWT_SECRET) as any
     return {
       userId: decoded.sub,
-      profileId: decoded[`${JWT_NAMESPACE}/profileId`],
-      handle: decoded[`${JWT_NAMESPACE}/handle`],
+      profileId: decoded[`${JWT_NAMESPACE}/profileId`] || '',
+      handle: decoded[`${JWT_NAMESPACE}/handle`] || '',
     }
   } catch {
     return null

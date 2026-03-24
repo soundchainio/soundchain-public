@@ -19,12 +19,21 @@ function getAuthProfile(req: NextApiRequest): { userId: string; profileId: strin
     const decoded = jwt.verify(token, JWT_SECRET) as any
     return {
       userId: decoded.sub,
-      profileId: decoded[`${JWT_NAMESPACE}/profileId`],
-      handle: decoded[`${JWT_NAMESPACE}/handle`],
+      profileId: decoded[`${JWT_NAMESPACE}/profileId`] || '',
+      handle: decoded[`${JWT_NAMESPACE}/handle`] || '',
     }
   } catch {
     return null
   }
+}
+
+// Resolve profileId from userId if not present in JWT (agent tokens)
+async function resolveProfileId(auth: { userId: string; profileId: string }, db: any): Promise<string> {
+  if (auth.profileId) return auth.profileId
+  const profiles = db.collection('profiles')
+  const profile = await profiles.findOne({ userId: auth.userId })
+    || await profiles.findOne({ userId: new ObjectId(auth.userId) })
+  return profile?._id?.toString() || ''
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -43,9 +52,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const messages = db.collection('messages')
     const profiles = db.collection('profiles')
 
+    // Resolve profileId from userId if not in JWT (agent tokens)
+    const profileId = await resolveProfileId(auth, db)
+    if (!profileId) {
+      return res.status(401).json({ error: 'Profile not found for user' })
+    }
+
     // Convert profileId string to ObjectId for matching (messages store ObjectId)
     let profileOid: any
-    try { profileOid = new ObjectId(auth.profileId) } catch { profileOid = auth.profileId }
+    try { profileOid = new ObjectId(profileId) } catch { profileOid = profileId }
 
     // Find all messages where the authenticated user is sender or recipient
     // Group by conversation partner, get the latest message per chat
@@ -112,7 +127,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const chats = chatDocs.map((chat) => {
       const profile = profileMap.get(chat._id?.toString()) || {}
-      const isUnread = chat.fromId?.toString() !== auth.profileId && !chat.readAt
+      const isUnread = chat.fromId?.toString() !== profileId && !chat.readAt
       return {
         id: chat.messageId?.toString(),
         message: chat.message,

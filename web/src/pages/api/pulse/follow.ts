@@ -13,12 +13,20 @@ function getAuthProfile(req: NextApiRequest): { userId: string; profileId: strin
     const decoded = jwt.verify(auth.slice(7), JWT_SECRET) as any
     return {
       userId: decoded.sub,
-      profileId: decoded[`${JWT_NAMESPACE}/profileId`],
-      handle: decoded[`${JWT_NAMESPACE}/handle`],
+      profileId: decoded[`${JWT_NAMESPACE}/profileId`] || '',
+      handle: decoded[`${JWT_NAMESPACE}/handle`] || '',
     }
   } catch {
     return null
   }
+}
+
+async function resolveProfileId(auth: { userId: string; profileId: string }, db: any): Promise<string> {
+  if (auth.profileId) return auth.profileId
+  const profiles = db.collection('profiles')
+  const profile = await profiles.findOne({ userId: auth.userId })
+    || await profiles.findOne({ userId: new ObjectId(auth.userId) })
+  return profile?._id?.toString() || ''
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -37,15 +45,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'profileId is required' })
   }
 
-  if (profileId === auth.profileId) {
-    return res.status(400).json({ error: 'Cannot follow yourself' })
-  }
-
   try {
     const client = await clientPromise
     const db = client.db('soundchain')
     const follows = db.collection('follows')
     const profiles = db.collection('profiles')
+
+    // Resolve profileId from userId if not in JWT (agent tokens)
+    const myProfileId = await resolveProfileId(auth, db)
+    if (!myProfileId) {
+      return res.status(401).json({ error: 'Profile not found for user' })
+    }
+
+    if (profileId === myProfileId) {
+      return res.status(400).json({ error: 'Cannot follow yourself' })
+    }
 
     // Verify target profile exists
     let targetProfile
@@ -63,12 +77,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const now = new Date()
     await follows.updateOne(
       {
-        followerId: auth.profileId,
+        followerId: myProfileId,
         followingId: profileId,
       },
       {
         $setOnInsert: {
-          followerId: auth.profileId,
+          followerId: myProfileId,
           followingId: profileId,
           createdAt: now,
         },
@@ -86,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         { $inc: { followerCount: 1 } }
       ),
       profiles.updateOne(
-        { _id: new ObjectId(auth.profileId) },
+        { _id: new ObjectId(myProfileId) },
         { $inc: { followingCount: 1 } }
       ),
     ]).catch(() => {
@@ -95,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json({
       success: true,
-      followerId: auth.profileId,
+      followerId: myProfileId,
       followingId: profileId,
     })
   } catch (error: any) {

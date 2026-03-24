@@ -1,12 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import jwt from 'jsonwebtoken'
 import clientPromise from '../../../lib/mongodb'
+import { ObjectId } from 'mongodb'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'not-so-secret'
 const JWT_NAMESPACE = 'https://soundchain.io'
 
 function getAuthProfile(req: NextApiRequest): { userId: string; profileId: string; handle: string } | null {
-  // Try Authorization header first, then cookie (same-origin Vercel API routes get cookies automatically)
   let token = ''
   const auth = req.headers.authorization
   if (auth?.startsWith('Bearer ')) {
@@ -19,12 +19,20 @@ function getAuthProfile(req: NextApiRequest): { userId: string; profileId: strin
     const decoded = jwt.verify(token, JWT_SECRET) as any
     return {
       userId: decoded.sub,
-      profileId: decoded[`${JWT_NAMESPACE}/profileId`],
-      handle: decoded[`${JWT_NAMESPACE}/handle`],
+      profileId: decoded[`${JWT_NAMESPACE}/profileId`] || '',
+      handle: decoded[`${JWT_NAMESPACE}/handle`] || '',
     }
   } catch {
     return null
   }
+}
+
+async function resolveProfileId(auth: { userId: string; profileId: string }, db: any): Promise<string> {
+  if (auth.profileId) return auth.profileId
+  const profiles = db.collection('profiles')
+  const profile = await profiles.findOne({ userId: auth.userId })
+    || await profiles.findOne({ userId: new ObjectId(auth.userId) })
+  return profile?._id?.toString() || ''
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -47,20 +55,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'message is required' })
   }
 
-  if (toId === auth.profileId) {
-    return res.status(400).json({ error: 'Cannot send a message to yourself' })
-  }
-
   try {
     const client = await clientPromise
     const db = client.db('soundchain')
     const messages = db.collection('messages')
 
+    // Resolve profileId from userId if not in JWT (agent tokens)
+    const profileId = await resolveProfileId(auth, db)
+    if (!profileId) {
+      return res.status(401).json({ error: 'Profile not found for user' })
+    }
+
+    if (toId === profileId) {
+      return res.status(400).json({ error: 'Cannot send a message to yourself' })
+    }
+
     const now = new Date()
 
     const doc = {
       message: message.trim(),
-      fromId: (() => { try { return new (require('mongodb').ObjectId)(auth.profileId) } catch { return auth.profileId } })(),
+      fromId: (() => { try { return new ObjectId(profileId) } catch { return profileId } })(),
       toId: (() => { try { return new (require('mongodb').ObjectId)(toId) } catch { return toId } })(),
       createdAt: now,
       updatedAt: now,
