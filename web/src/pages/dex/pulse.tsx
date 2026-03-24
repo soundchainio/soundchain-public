@@ -529,7 +529,7 @@ function PulsePage() {
     warmUpAudio()
     const text = messageText.trim()
     if (!text || !selectedChat) return
-    // Clear text IMMEDIATELY — don't wait for mutation to complete
+    // Clear text IMMEDIATELY — don't wait for send to complete
     setMessageText('')
     closePickers()
     // Reset textarea height
@@ -537,18 +537,23 @@ function PulsePage() {
       inputRef.current.style.height = 'auto'
     }
     try {
-      await sendMessage({
-        variables: {
-          input: {
-            message: text,
-            toId: selectedChat.profileId, // CRITICAL: profile ID, not chat ID
-          },
-        },
-        refetchQueries: [ChatsDocument],
+      // Direct REST API → Atlas (bypasses Lambda GraphQL for instant delivery)
+      const res = await fetch('/api/pulse/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toId: selectedChat.profileId,
+          message: text,
+        }),
       })
+      if (!res.ok) throw new Error(`Send failed: ${res.status}`)
+      // Refresh chat list + history
+      refetchChats()
+      refetchHistoryRef.current?.()
     } catch {
       // Restore text on failure so user doesn't lose their message
       setMessageText(text)
+      toast.error('Message failed to send', { autoClose: 3000 })
     }
   }
 
@@ -565,30 +570,25 @@ function PulsePage() {
   }
 
   const handleStickerSelect = (url: string) => {
-    // Send sticker as message with img markdown
-    sendMessage({
-      variables: {
-        input: {
-          message: url,
-          toId: selectedChat!.profileId,
-        },
-      },
-      refetchQueries: [ChatsDocument],
-    })
+    if (!selectedChat) return
     closePickers()
+    fetch('/api/pulse/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ toId: selectedChat.profileId, message: url }),
+    }).then(() => { refetchChats(); refetchHistoryRef.current?.() })
+      .catch(() => toast.error('Sticker failed to send'))
   }
 
   const handleGifSelect = (url: string) => {
-    sendMessage({
-      variables: {
-        input: {
-          message: url,
-          toId: selectedChat!.profileId,
-        },
-      },
-      refetchQueries: [ChatsDocument],
-    })
+    if (!selectedChat) return
     closePickers()
+    fetch('/api/pulse/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ toId: selectedChat.profileId, message: url }),
+    }).then(() => { refetchChats(); refetchHistoryRef.current?.() })
+      .catch(() => toast.error('GIF failed to send'))
   }
 
   const handleCopyMessage = async (msgId: string, text: string) => {

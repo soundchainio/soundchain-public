@@ -6,10 +6,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'not-so-secret'
 const JWT_NAMESPACE = 'https://soundchain.io'
 
 function getAuthProfile(req: NextApiRequest): { userId: string; profileId: string; handle: string } | null {
+  // Try Authorization header first, then cookie (same-origin Vercel API routes get cookies automatically)
+  let token = ''
   const auth = req.headers.authorization
-  if (!auth?.startsWith('Bearer ')) return null
+  if (auth?.startsWith('Bearer ')) {
+    token = auth.slice(7)
+  } else if (req.cookies?.token) {
+    token = req.cookies.token
+  }
+  if (!token) return null
   try {
-    const decoded = jwt.verify(auth.slice(7), JWT_SECRET) as any
+    const decoded = jwt.verify(token, JWT_SECRET) as any
     return {
       userId: decoded.sub,
       profileId: decoded[`${JWT_NAMESPACE}/profileId`],
