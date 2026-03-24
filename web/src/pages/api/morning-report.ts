@@ -19,8 +19,8 @@ const REPORT_SECRET = process.env.REPORT_SECRET || process.env.PUBLISH_SECRET ||
 
 // Whitelisted profile handles that receive morning reports via Pulse DM
 const REPORT_RECIPIENTS = [
-  'furdA1',        // Main account
-  'JSan619',       // Jeremy
+  'furdA1',              // Main account
+  'Jeremy_Soundchain',   // Jeremy
 ]
 
 // The bot profile that sends the report (FURL or system)
@@ -175,7 +175,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       for (const handle of REPORT_RECIPIENTS) {
         const profile = await db.collection('profiles').findOne({
-          userHandle: { $regex: new RegExp(`^${handle}$`, 'i') },
+          $or: [
+            { userHandle: { $regex: new RegExp(`^${handle}$`, 'i') } },
+            { displayName: { $regex: new RegExp(`^${handle}$`, 'i') } },
+          ],
         })
         if (profile) {
           try {
