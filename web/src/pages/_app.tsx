@@ -79,8 +79,10 @@ class AppErrorBoundary extends React.Component<
     } catch {
       // best effort
     }
-    // Hard reload from network
-    window.location.reload()
+    // Hard reload from network — use cache-busted URL to bypass any remaining cache
+    const url = new URL(window.location.href)
+    url.searchParams.set('_cb', Date.now().toString())
+    window.location.replace(url.toString())
   }
 
   render() {

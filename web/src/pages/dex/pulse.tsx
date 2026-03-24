@@ -229,7 +229,12 @@ function PulsePage() {
   // If user arrived via SPA navigation (e.g. from /dex/feed), Safari cached the
   // main manifest and DOM changes won't make it re-read. Force a full page reload
   // so Safari gets fresh SSR HTML with /pulse-manifest.json.
+  // SKIP in standalone mode — manifest is already locked in, reload causes infinite loop.
   useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    if (standalone) return // Already installed — manifest is baked in
+
     const hasWrongManifest = !!document.querySelector('link[rel="manifest"][href="/manifest.json"]')
 
     if (hasWrongManifest && !sessionStorage.getItem('pulse-manifest-reloaded')) {
