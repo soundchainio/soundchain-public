@@ -12,70 +12,89 @@ import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, X, Users, Radio } from '
 import { useEffect, useRef, useCallback } from 'react'
 import type { CallState, CallMode } from 'hooks/useWebRTCCall'
 
+// Generate a ringtone WAV as a data URI (works without user gesture, unlike AudioContext)
+function generateRingtoneDataUri(): string {
+  const sampleRate = 8000
+  const duration = 2 // 2 seconds
+  const samples = sampleRate * duration
+  const buffer = new ArrayBuffer(44 + samples * 2)
+  const view = new DataView(buffer)
+  // WAV header
+  const writeStr = (offset: number, str: string) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)) }
+  writeStr(0, 'RIFF'); view.setUint32(4, 36 + samples * 2, true); writeStr(8, 'WAVE')
+  writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true)
+  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true)
+  writeStr(36, 'data'); view.setUint32(40, samples * 2, true)
+  // Two-tone ring: 440Hz + 480Hz, 1s on / 1s off
+  for (let i = 0; i < samples; i++) {
+    const t = i / sampleRate
+    const onOff = t % 2 < 1 ? 1 : 0
+    const env = onOff * Math.min(1, (t % 2) * 20) * Math.min(1, (1 - (t % 2)) * 20)
+    const sample = (Math.sin(2 * Math.PI * 440 * t) + Math.sin(2 * Math.PI * 480 * t)) * 0.2 * env
+    view.setInt16(44 + i * 2, Math.max(-32768, Math.min(32767, sample * 32767)), true)
+  }
+  const bytes = new Uint8Array(buffer)
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+  return 'data:audio/wav;base64,' + btoa(binary)
+}
+
+let _ringtoneUri: string | null = null
+function getRingtoneUri() {
+  if (!_ringtoneUri) _ringtoneUri = generateRingtoneDataUri()
+  return _ringtoneUri
+}
+
 // Ringtone — plays during 'ringing' (incoming) and 'calling' (outgoing) states
+// Uses <audio> element with WAV data URI — works without user gesture (unlike AudioContext)
 function useRingtone(callState: CallState) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const vibrateRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     const shouldRing = callState === 'ringing' || callState === 'calling'
 
     if (shouldRing) {
-      // Create audio element with a pleasant ring tone (Web Audio API generated)
+      // Start ringtone via <audio> element (no user gesture needed)
       if (!audioRef.current) {
-        const audio = new Audio()
-        // Use a data URI for a simple ring tone (two-tone pattern)
-        // This generates a basic ring using AudioContext if available
         try {
-          const ctx = new AudioContext()
-          const duration = 1.5
-          const sampleRate = ctx.sampleRate
-          const buffer = ctx.createBuffer(1, sampleRate * duration, sampleRate)
-          const data = buffer.getChannelData(0)
-          for (let i = 0; i < data.length; i++) {
-            const t = i / sampleRate
-            // Two-tone ring: 440Hz + 480Hz with envelope
-            const ring1 = Math.sin(2 * Math.PI * 440 * t)
-            const ring2 = Math.sin(2 * Math.PI * 480 * t)
-            // Ring pattern: 1s on, 0.5s off
-            const onOff = t % 2 < 1 ? 1 : 0
-            // Soft envelope
-            const env = onOff * Math.min(1, (t % 2) * 10) * Math.min(1, (1 - (t % 2)) * 10)
-            data[i] = (ring1 + ring2) * 0.15 * env
-          }
-          const source = ctx.createBufferSource()
-          source.buffer = buffer
-          source.loop = true
-          source.connect(ctx.destination)
-          source.start()
-          audioRef.current = { stop: () => { source.stop(); ctx.close() } } as any
-        } catch {
-          // Fallback: no ringtone (AudioContext not available)
-        }
+          const audio = new Audio(getRingtoneUri())
+          audio.loop = true
+          audio.volume = 0.5
+          audio.play().catch(() => {}) // Silent fail if autoplay blocked
+          audioRef.current = audio
+        } catch {}
       }
 
-      // Vibration pattern for incoming calls (mobile)
+      // Vibration for incoming calls on mobile
       if (callState === 'ringing' && navigator.vibrate) {
-        const vibrateLoop = setInterval(() => {
+        navigator.vibrate([300, 200, 300, 200, 300])
+        vibrateRef.current = setInterval(() => {
           navigator.vibrate([300, 200, 300, 200, 300])
         }, 2000)
-        return () => {
-          clearInterval(vibrateLoop)
-          navigator.vibrate(0) // Stop vibration
-        }
       }
     } else {
-      // Stop ringtone
+      // Stop everything
       if (audioRef.current) {
-        try { (audioRef.current as any).stop?.() } catch {}
+        audioRef.current.pause()
         audioRef.current = null
+      }
+      if (vibrateRef.current) {
+        clearInterval(vibrateRef.current)
+        vibrateRef.current = null
       }
       navigator.vibrate?.(0)
     }
 
     return () => {
       if (audioRef.current) {
-        try { (audioRef.current as any).stop?.() } catch {}
+        audioRef.current.pause()
         audioRef.current = null
+      }
+      if (vibrateRef.current) {
+        clearInterval(vibrateRef.current)
+        vibrateRef.current = null
       }
       navigator.vibrate?.(0)
     }
