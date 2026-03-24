@@ -64,7 +64,7 @@ import {
 } from 'lib/graphql'
 
 import { EmoteRenderer } from 'components/EmoteRenderer'
-import { useWebRTCCall } from 'hooks/useWebRTCCall'
+import { useWebRTCCall, type CallMode } from 'hooks/useWebRTCCall'
 const PulseNotificationFeed = dynamic(() => import('components/pulse/PulseNotificationFeed'), { ssr: false })
 const EmojiPicker = dynamic(() => import('@emoji-mart/react').then((m) => m.default), { ssr: false })
 const StickerPicker = dynamic(() => import('components/StickerPicker').then((m) => m.StickerPicker), { ssr: false })
@@ -288,6 +288,9 @@ function PulsePage() {
     myName: me?.profile?.displayName || me?.profile?.userHandle || '',
     myAvatar: me?.profile?.profilePicture || undefined,
     gateway,
+    onIncomingCall: useCallback((_callId: string, _callerId: string, callerName: string, mode: CallMode) => {
+      toast.info(`Incoming ${mode} call from ${callerName}`, { autoClose: 10000 })
+    }, []),
   })
 
   // Track previous chat state for new-message toast detection
@@ -1406,8 +1409,22 @@ function PulsePage() {
           </div>
           {/* Voice/Video call buttons */}
           <CallButton
-            onVoiceCall={() => webrtc.startCall(selectedChat.profileId, selectedChat.displayName, selectedChat.profilePicture || undefined, 'voice')}
-            onVideoCall={() => webrtc.startCall(selectedChat.profileId, selectedChat.displayName, selectedChat.profilePicture || undefined, 'video')}
+            onVoiceCall={() => {
+              if (!connected) {
+                toast.error('Relay offline — calls need live connection. Check your WiFi.', { autoClose: 5000 })
+                return
+              }
+              toast.info(`Calling ${selectedChat.displayName}...`, { autoClose: 3000 })
+              webrtc.startCall(selectedChat.profileId, selectedChat.displayName, selectedChat.profilePicture || undefined, 'voice')
+            }}
+            onVideoCall={() => {
+              if (!connected) {
+                toast.error('Relay offline — calls need live connection. Check your WiFi.', { autoClose: 5000 })
+                return
+              }
+              toast.info(`Video calling ${selectedChat.displayName}...`, { autoClose: 3000 })
+              webrtc.startCall(selectedChat.profileId, selectedChat.displayName, selectedChat.profilePicture || undefined, 'video')
+            }}
           />
         </div>
 

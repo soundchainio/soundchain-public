@@ -91,7 +91,10 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
   // Send signal via gateway (uses ref to always check latest connection state)
   const sendSignal = useCallback((toId: string, cId: string, signalType: string, data: Record<string, unknown>) => {
     const gw = gatewayRef.current
-    if (!gw || !myId) return
+    if (!gw || !myId) {
+      console.warn(`[Call] sendSignal blocked: gw=${!!gw} myId=${myId}`)
+      return
+    }
     const payload = {
       toId,
       callId: cId,
@@ -101,11 +104,12 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
       senderAvatar: myAvatar,
       data,
     }
-    // Try WebSocket first
     if (gw.connected) {
+      console.log(`[Call] Sending ${signalType} to ${toId} (callId=${cId})`)
       gw.emit('call.signal', payload)
+    } else {
+      console.warn(`[Call] Gateway NOT connected — ${signalType} to ${toId} DROPPED`)
     }
-    // TODO: fallback to GraphQL mutation when gateway is disconnected
   }, [myId, myName, myAvatar])
 
   // Get user media
@@ -390,6 +394,8 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
   useEffect(() => {
     if (!gateway || !myId) return
 
+    console.log(`[Call] Signal listener registered — myId=${myId}, gateway.connected=${gateway.connected}`)
+
     const cleanup = gateway.on('call.signal', (payload: Record<string, unknown>) => {
       const { signalType, callId: inCallId, senderId, senderName, senderAvatar, data } = payload as {
         signalType: string
@@ -400,9 +406,14 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
         data: Record<string, unknown>
       }
 
+      console.log(`[Call] Received signal: ${signalType} from ${senderName} (${senderId}), toId=${payload.toId}, myId=${myId}`)
+
       // Only process signals meant for us
       const toId = payload.toId as string
-      if (toId && toId !== myId) return
+      if (toId && toId !== myId) {
+        console.log(`[Call] Signal not for us — toId=${toId} !== myId=${myId}`)
+        return
+      }
 
       switch (signalType) {
         case 'invite': {
