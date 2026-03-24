@@ -1661,7 +1661,9 @@ function PulsePage() {
   return (
     <>
       <Head>
+        <title>SoundChain Pulse</title>
         <link key="pulse-manifest" rel="manifest" href="/pulse-manifest.json?v=3" />
+        <link key="pulse-icon" rel="apple-touch-icon" sizes="180x180" href="/favicons/pulse-apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="SoundChain Pulse" />
       </Head>
       {renderNewChatOverlay()}
