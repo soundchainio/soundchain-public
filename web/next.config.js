@@ -10,13 +10,18 @@ const withPWA = require('next-pwa')({
   // Exclude some precaching for faster SW updates
   buildExcludes: [/chunks\/.*$/, /middleware-manifest\.json$/],
   // Use NetworkFirst for page navigations so stale SW cache never blocks pages
+  // Pulse uses NetworkOnly to prevent #310 crashes from stale cached JS
   runtimeCaching: [
+    {
+      urlPattern: /\/dex\/pulse/,
+      handler: 'NetworkOnly',
+    },
     {
       urlPattern: /^https:\/\/.*\/(radio|dex|login|backend|get-verified).*$/,
       handler: 'NetworkFirst',
       options: {
         cacheName: 'pages',
-        networkTimeoutSeconds: 10,
+        networkTimeoutSeconds: 5,
         expiration: { maxEntries: 32, maxAgeSeconds: 24 * 60 * 60 },
       },
     },
