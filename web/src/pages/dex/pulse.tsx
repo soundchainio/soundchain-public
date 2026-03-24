@@ -292,6 +292,11 @@ function PulsePage() {
   // Memoize gateway object to prevent useWebRTCCall from re-running effects every render
   const gateway = useMemo(() => ({ emit, on, connected }), [emit, on, connected])
 
+  // Stable callback for incoming call toast — must be declared before useWebRTCCall
+  const onIncomingCall = useCallback((_callId: string, _callerId: string, callerName: string, mode: CallMode) => {
+    toast.info(`Incoming ${mode} call from ${callerName}`, { autoClose: 10000 })
+  }, [])
+
   // WebRTC Voice/Video Calling — myId must be profile ID to match
   // the toId used by startCall (selectedChat.profileId)
   const webrtc = useWebRTCCall({
@@ -299,9 +304,7 @@ function PulsePage() {
     myName: me?.profile?.displayName || me?.profile?.userHandle || '',
     myAvatar: me?.profile?.profilePicture || undefined,
     gateway,
-    onIncomingCall: useCallback((_callId: string, _callerId: string, callerName: string, mode: CallMode) => {
-      toast.info(`Incoming ${mode} call from ${callerName}`, { autoClose: 10000 })
-    }, []),
+    onIncomingCall,
   })
 
   // Track previous chat state for new-message toast detection
