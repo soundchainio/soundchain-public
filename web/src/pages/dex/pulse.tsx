@@ -948,7 +948,13 @@ function PulsePage() {
             setPushError('Notifications blocked. Check your browser settings to allow notifications for this site.')
           }
         } else if (err.includes('not supported')) {
-          setPushError('Notifications not available on this device/browser.')
+          if (isChromeIOS) {
+            setPushError('Chrome on iOS cannot send notifications. Open soundchain.io/dex/pulse in Safari, tap Share → Add to Home Screen, then enable notifications from there.')
+          } else if (isIOS) {
+            setPushError('To get notifications on iPhone: open this page in Safari, tap Share → Add to Home Screen, then enable notifications from the Home Screen app.')
+          } else {
+            setPushError('Notifications not available on this device/browser.')
+          }
         } else {
           setPushError(err || 'Subscription failed — tap Enable to try again.')
         }
