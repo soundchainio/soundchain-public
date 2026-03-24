@@ -9,8 +9,78 @@
  */
 
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, X, Users, Radio } from 'lucide-react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import type { CallState, CallMode } from 'hooks/useWebRTCCall'
+
+// Ringtone — plays during 'ringing' (incoming) and 'calling' (outgoing) states
+function useRingtone(callState: CallState) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    const shouldRing = callState === 'ringing' || callState === 'calling'
+
+    if (shouldRing) {
+      // Create audio element with a pleasant ring tone (Web Audio API generated)
+      if (!audioRef.current) {
+        const audio = new Audio()
+        // Use a data URI for a simple ring tone (two-tone pattern)
+        // This generates a basic ring using AudioContext if available
+        try {
+          const ctx = new AudioContext()
+          const duration = 1.5
+          const sampleRate = ctx.sampleRate
+          const buffer = ctx.createBuffer(1, sampleRate * duration, sampleRate)
+          const data = buffer.getChannelData(0)
+          for (let i = 0; i < data.length; i++) {
+            const t = i / sampleRate
+            // Two-tone ring: 440Hz + 480Hz with envelope
+            const ring1 = Math.sin(2 * Math.PI * 440 * t)
+            const ring2 = Math.sin(2 * Math.PI * 480 * t)
+            // Ring pattern: 1s on, 0.5s off
+            const onOff = t % 2 < 1 ? 1 : 0
+            // Soft envelope
+            const env = onOff * Math.min(1, (t % 2) * 10) * Math.min(1, (1 - (t % 2)) * 10)
+            data[i] = (ring1 + ring2) * 0.15 * env
+          }
+          const source = ctx.createBufferSource()
+          source.buffer = buffer
+          source.loop = true
+          source.connect(ctx.destination)
+          source.start()
+          audioRef.current = { stop: () => { source.stop(); ctx.close() } } as any
+        } catch {
+          // Fallback: no ringtone (AudioContext not available)
+        }
+      }
+
+      // Vibration pattern for incoming calls (mobile)
+      if (callState === 'ringing' && navigator.vibrate) {
+        const vibrateLoop = setInterval(() => {
+          navigator.vibrate([300, 200, 300, 200, 300])
+        }, 2000)
+        return () => {
+          clearInterval(vibrateLoop)
+          navigator.vibrate(0) // Stop vibration
+        }
+      }
+    } else {
+      // Stop ringtone
+      if (audioRef.current) {
+        try { (audioRef.current as any).stop?.() } catch {}
+        audioRef.current = null
+      }
+      navigator.vibrate?.(0)
+    }
+
+    return () => {
+      if (audioRef.current) {
+        try { (audioRef.current as any).stop?.() } catch {}
+        audioRef.current = null
+      }
+      navigator.vibrate?.(0)
+    }
+  }, [callState])
+}
 
 interface CallPeer {
   id: string
@@ -104,6 +174,9 @@ export function CallUI({
   onDeclineCall,
   onLeaveTownHall,
 }: CallUIProps) {
+  // Play ringtone + vibrate on incoming/outgoing call
+  useRingtone(callState)
+
   if (callState === 'idle') return null
 
   // Town Hall Mode
