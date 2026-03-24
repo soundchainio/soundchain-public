@@ -35,14 +35,20 @@ interface UseWebRTCCallOptions {
 }
 
 const ICE_SERVERS: RTCIceServer[] = [
-  // Multiple STUN servers for NAT traversal (free, always available)
+  // STUN servers for NAT traversal
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  { urls: 'stun:stun2.l.google.com:19302' },
-  { urls: 'stun:stun3.l.google.com:19302' },
-  { urls: 'stun:stun4.l.google.com:19302' },
-  // TURN relay for symmetric NAT (mobile carriers, corporate networks)
-  // Configure via Vercel env vars — sign up at dashboard.metered.ca (free tier)
+  // SoundChain TURN server (self-hosted on EC2 — no third-party dependency)
+  // Handles symmetric NAT: mobile carriers, corporate networks, cross-carrier calls
+  {
+    urls: [
+      'turn:44.209.136.62:3478',
+      'turn:44.209.136.62:3478?transport=tcp',
+    ],
+    username: process.env.NEXT_PUBLIC_TURN_USER || 'soundchain',
+    credential: process.env.NEXT_PUBLIC_TURN_CRED || 'b39406934b87e1f4967645b6e6da4319b2ebec452fddb0ef',
+  },
+  // Optional: override with external TURN provider via env vars
   ...(process.env.NEXT_PUBLIC_TURN_URL ? [{
     urls: process.env.NEXT_PUBLIC_TURN_URL.split(','),
     username: process.env.NEXT_PUBLIC_TURN_USER || '',
