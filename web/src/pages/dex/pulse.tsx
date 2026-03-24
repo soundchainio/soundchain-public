@@ -215,13 +215,19 @@ function PulsePage() {
   // Platform detection — runs client-side only to match SSR output (prevents hydration crash)
   const [isChromeIOS, setIsChromeIOS] = useState(false)
   useEffect(() => {
-    setIsStandalone(
-      window.matchMedia('(display-mode: standalone)').matches ||
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true
-    )
+    setIsStandalone(standalone)
     const ua = navigator.userAgent
     setIsIOS(/iPad|iPhone|iPod/.test(ua))
     setIsAndroid(/Android/.test(ua))
+
+    // Force service worker update in standalone PWA — ensures latest code loads
+    if (standalone && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => reg.update())
+      })
+    }
     setIsChromeIOS(/CriOS/.test(ua)) // Chrome on iOS uses CriOS user agent
   }, [])
 
