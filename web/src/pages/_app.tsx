@@ -183,9 +183,11 @@ function SoundchainPageLayout({ Component, pageProps }: CustomAppProps) {
   return (
     <ApolloProvider pageProps={pageProps}>
       <MagicProvider>
-        <WalletProvider>
-          {Component.getLayout(<Component {...pageProps} />)}
-        </WalletProvider>
+        <ModalProvider>
+          <WalletProvider>
+            {Component.getLayout(<Component {...pageProps} />)}
+          </WalletProvider>
+        </ModalProvider>
       </MagicProvider>
     </ApolloProvider>
   )
@@ -219,8 +221,8 @@ function SoundchainApp({ Component, pageProps }: CustomAppProps) {
         <link rel="icon" type="image/png" sizes="16x16" href="/favicons/favicon-16x16.png" />
         <link rel="mask-icon" href="/favicons/safari-pinned-tab.svg" color="#5bbad5" />
         <meta name="msapplication-TileColor" content="#da532c" />
-        {!isPulsePage && <link key="manifest" rel="manifest" href="/manifest.json" />}
-        {isPulsePage && <link key="manifest" rel="manifest" href="/pulse-manifest.json?v=2" />}
+        {!isPulsePage && <link key="main-manifest" rel="manifest" href="/manifest.json" />}
+        {isPulsePage && <link key="pulse-manifest" rel="manifest" href="/pulse-manifest.json?v=3" />}
         <meta name="apple-mobile-web-app-title" content={isPulsePage ? 'SoundChain Pulse' : 'SoundChain'} />
         <meta name="application-name" content={isPulsePage ? 'SoundChain Pulse' : 'SoundChain'} />
         {/* PWA recovery: catch chunk loading failures from stale service worker cache */}

@@ -244,7 +244,7 @@ function PulsePage() {
   // DOM cleanup as safety net — remove stale main manifest, ensure pulse manifest exists
   // Uses versioned URL (?v=2) to bust Safari's aggressive manifest cache
   useEffect(() => {
-    const correctHref = '/pulse-manifest.json?v=2'
+    const correctHref = '/pulse-manifest.json?v=3'
     document.querySelectorAll('link[rel="manifest"]').forEach(el => {
       if (!el.getAttribute('href')?.startsWith('/pulse-manifest.json')) el.remove()
     })
@@ -1655,6 +1655,10 @@ function PulsePage() {
 
   return (
     <>
+      <Head>
+        <link key="pulse-manifest" rel="manifest" href="/pulse-manifest.json?v=3" />
+        <meta name="apple-mobile-web-app-title" content="SoundChain Pulse" />
+      </Head>
       {renderNewChatOverlay()}
       {renderInstallModal()}
       {/* WebRTC Call Overlay */}
