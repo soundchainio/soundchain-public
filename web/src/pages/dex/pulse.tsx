@@ -337,6 +337,22 @@ function PulsePage() {
     }
   }, [me, meLoading, router])
 
+  // Auto-start call when opened with ?call=profileId (from profile page phone button)
+  const autoCallTriggered = useRef(false)
+  useEffect(() => {
+    if (autoCallTriggered.current || !me?.profile?.id || !connected) return
+    const callTarget = router.query.call as string
+    if (!callTarget) return
+    autoCallTriggered.current = true
+    const calleeName = (router.query.name as string) || 'User'
+    const calleeAvatar = (router.query.avatar as string) || undefined
+    // Small delay to ensure WebSocket is fully registered
+    setTimeout(() => {
+      webrtc.startCall(callTarget, calleeName, calleeAvatar, 'voice')
+      toast.info(`Calling ${calleeName}...`, { autoClose: 3000 })
+    }, 1000)
+  }, [me?.profile?.id, connected, router.query.call])
+
   // Map chats to normalized items
   const chats: ChatItem[] = useMemo(() => {
     const nodes = chatsData?.chats?.nodes || []

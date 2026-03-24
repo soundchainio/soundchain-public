@@ -77,7 +77,7 @@ import {
   Database, X, ChevronDown, ChevronUp, ExternalLink, LogOut as Logout, BadgeCheck, ListMusic, Compass, RefreshCw,
   AlertCircle, RefreshCcw, PiggyBank, Settings, Headphones, Check, User, AtSign,
   Radio, MapPin, Download, Smartphone, Rss, Gift, Sparkles, PenLine, ArrowLeft, FileText, Tag, MessageSquare, Eye,
-  Star, GripVertical, ShieldCheck, Youtube, Disc3, Send, Bot
+  Star, GripVertical, ShieldCheck, Youtube, Disc3, Send, Bot, Phone
 } from 'lucide-react'
 import { ConcertChat } from 'components/dex/ConcertChat'
 import { StoriesBar } from 'components/dex/StoriesBar'
@@ -8282,6 +8282,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                           >
                             <MessageCircle className="w-4 h-4" />
                             Message
+                          </button>
+                        )}
+                        {!isViewingOwnProfile && (
+                          <button
+                            onClick={() => {
+                              if (!me) { router.push('/login'); return; }
+                              router.push(`/dex/pulse?call=${viewingProfile.id}&name=${encodeURIComponent(viewingProfile.displayName || '')}&avatar=${encodeURIComponent(viewingProfile.profilePicture || '')}`)
+                            }}
+                            className="p-2 text-sm bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg transition-colors"
+                            title="Voice call"
+                          >
+                            <Phone className="w-4 h-4" />
                           </button>
                         )}
                         <button
