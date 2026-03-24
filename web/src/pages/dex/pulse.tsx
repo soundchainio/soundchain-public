@@ -274,15 +274,17 @@ function PulsePage() {
     }
   }
 
-  // OpenClaw real-time gateway
-  const { connected, fallbackPolling, on, emit } = useOpenClawGateway(me?.id)
+  // OpenClaw real-time gateway — register with profile ID (not user ID)
+  // because call signals use profileId as toId (from chat system)
+  const { connected, fallbackPolling, on, emit } = useOpenClawGateway(me?.profile?.id)
 
   // Memoize gateway object to prevent useWebRTCCall from re-running effects every render
   const gateway = useMemo(() => ({ emit, on, connected }), [emit, on, connected])
 
-  // WebRTC Voice/Video Calling
+  // WebRTC Voice/Video Calling — myId must be profile ID to match
+  // the toId used by startCall (selectedChat.profileId)
   const webrtc = useWebRTCCall({
-    myId: me?.id,
+    myId: me?.profile?.id,
     myName: me?.profile?.displayName || me?.profile?.userHandle || '',
     myAvatar: me?.profile?.profilePicture || undefined,
     gateway,
