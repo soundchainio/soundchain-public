@@ -221,9 +221,9 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(width, height),
-      1.8,   // strength — intense glow
-      0.6,   // radius — wide bloom spread
-      0.15   // threshold — bloom almost everything
+      0.8,   // strength — subtle glow (was 1.8)
+      0.4,   // radius — tighter bloom (was 0.6)
+      0.4    // threshold — only bright objects bloom (was 0.15)
     )
     composer.addPass(bloomPass)
     bloomPassRef.current = bloomPass
@@ -393,7 +393,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     scene.add(helixPoints)
     helixParticlesRef.current = helixPoints
 
-    // ============ STARFIELD NEBULA (8000 particles) ============
+    // ============ STARFIELD NEBULA (8K density, dimmed for readability) ============
     const starCount = 8000
     const starPositions = new Float32Array(starCount * 3)
     const starSizes = new Float32Array(starCount)
@@ -406,15 +406,16 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
       starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
       starPositions[i * 3 + 2] = r * Math.cos(phi)
-      starSizes[i] = Math.random() * 3 + 0.5
-      // Subtle color variation
+      starSizes[i] = Math.random() * 1.5 + 0.3
+      // Dimmed color variation (40% brightness for readability)
       const colorChoice = Math.random()
+      const dim = 0.4
       if (colorChoice < 0.3) {
-        starColors[i * 3] = 0.6; starColors[i * 3 + 1] = 0.8; starColors[i * 3 + 2] = 1.0
+        starColors[i * 3] = 0.6 * dim; starColors[i * 3 + 1] = 0.8 * dim; starColors[i * 3 + 2] = 1.0 * dim
       } else if (colorChoice < 0.6) {
-        starColors[i * 3] = 1.0; starColors[i * 3 + 1] = 0.9; starColors[i * 3 + 2] = 0.7
+        starColors[i * 3] = 1.0 * dim; starColors[i * 3 + 1] = 0.9 * dim; starColors[i * 3 + 2] = 0.7 * dim
       } else {
-        starColors[i * 3] = 1.0; starColors[i * 3 + 1] = 1.0; starColors[i * 3 + 2] = 1.0
+        starColors[i * 3] = 1.0 * dim; starColors[i * 3 + 1] = 1.0 * dim; starColors[i * 3 + 2] = 1.0 * dim
       }
     }
     const starGeo = new THREE.BufferGeometry()
@@ -733,7 +734,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
 
       // --- Bloom intensity reacts to bass ---
       if (bloomPassRef.current) {
-        bloomPassRef.current.strength = 1.4 + sBass * 1.5
+        bloomPassRef.current.strength = 0.6 + sBass * 0.6
       }
 
       // --- Cinematic camera orbit ---
