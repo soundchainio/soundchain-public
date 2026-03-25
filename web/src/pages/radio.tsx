@@ -11,7 +11,8 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 
 const RadioScene4D = dynamic(() => import('components/RadioScene4D'), { ssr: false })
-const CreateModal = dynamic(() => import('components/modals/CreateModal'), { ssr: false })
+// CreateModal requires MagicContext + UnifiedWallet providers (not on radio page)
+// Upload button navigates to /dex/feed with create modal trigger instead
 import { GetServerSideProps } from 'next'
 import { initializeApollo } from 'lib/apollo'
 import {
@@ -993,7 +994,10 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
                 {/* Start Upload button — opens CreateModal overlay, keeps accordion open */}
                 <button
-                  onClick={() => dispatchShowCreateModal(true, 'mint')}
+                  onClick={() => {
+                    if (globalRadio && currentTrack && isPlaying) globalRadio.startRadio()
+                    router.push('/dex/feed?upload=scid')
+                  }}
                   className="w-full py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-bold hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-[1.02] transition-all border border-cyan-400/20"
                 >
                   🚀 Start Upload
@@ -1360,8 +1364,6 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           backdropFilter: 'blur(8px)',
         }}
       />
-      {/* CreateModal — renders as overlay when dispatchShowCreateModal is called */}
-      <CreateModal />
     </>
   )
 }
