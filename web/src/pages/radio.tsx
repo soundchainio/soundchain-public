@@ -511,7 +511,16 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
         {/* Tap Anywhere Prompt - minimal, disappears on interaction */}
         {needsInteraction && !isLoading && currentTrack && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 cursor-pointer">
+          <div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 cursor-pointer"
+            onClick={() => {
+              if (audioRef.current && currentTrack?.stream_url) {
+                audioRef.current.play()
+                  .then(() => { setNeedsInteraction(false); setIsPlaying(true) })
+                  .catch(() => {})
+              }
+            }}
+          >
             <div className="text-center">
               <div className="relative inline-block">
                 <div className="absolute -inset-8 rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-orange-500/20 blur-2xl animate-pulse" />
@@ -944,8 +953,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
         {/* Main Content — floats over 4D scene */}
         <main className="relative z-10 max-w-4xl mx-auto px-3 md:px-4 pt-0 pb-4">
-          {/* Radio Display — dark glass panel over 4D cosmic background */}
-          <div className="relative bg-black/70 backdrop-blur-md border border-white/10 rounded-2xl p-4 md:p-6">
+          {/* Radio Display — semi-transparent glass, 4D scene visible behind */}
+          <div className="relative bg-black/50 backdrop-blur-sm border border-white/10 rounded-2xl p-4 md:p-6">
 
             {/* Station Header */}
             <div className="text-center mb-3 md:mb-6">
