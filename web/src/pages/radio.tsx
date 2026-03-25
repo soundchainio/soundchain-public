@@ -994,10 +994,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
                 {/* Start Upload button — opens CreateModal overlay, keeps accordion open */}
                 <button
-                  onClick={() => {
-                    if (globalRadio && currentTrack && isPlaying) globalRadio.startRadio()
-                    router.push('/dex/feed?upload=scid')
-                  }}
+                  onClick={() => window.open('/dex/feed?upload=scid', '_blank', 'noopener')}
                   className="w-full py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-bold hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-[1.02] transition-all border border-cyan-400/20"
                 >
                   🚀 Start Upload
