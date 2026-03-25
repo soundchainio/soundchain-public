@@ -10,7 +10,6 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 
-const AdSlot = dynamic(() => import('components/ads/AdSlot').then(mod => ({ default: mod.AdSlot })), { ssr: false })
 const RadioScene4D = dynamic(() => import('components/RadioScene4D'), { ssr: false })
 import { GetServerSideProps } from 'next'
 import { initializeApollo } from 'lib/apollo'
@@ -496,9 +495,10 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
         {/* Discord-specific (uses OG but prefers these) */}
         <meta name="theme-color" content="#FF6B00" />
+        <style>{`body { background: #020810 !important; }`}</style>
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-b from-[#030d1b] via-[#0a1628] to-[#030d1b] text-white">
+      <div className="min-h-screen bg-transparent text-white overflow-x-hidden">
         {/* Hidden Audio Element */}
         <audio
           ref={audioRef}
@@ -511,17 +511,20 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
         {/* Tap Anywhere Prompt - minimal, disappears on interaction */}
         {needsInteraction && !isLoading && currentTrack && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer">
-            <div className="text-center animate-pulse">
-              <Radio className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <p className="text-2xl font-bold text-white">TAP ANYWHERE</p>
-              <p className="text-gray-400 mt-2">to start OGUN Radio</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 cursor-pointer">
+            <div className="text-center">
+              <div className="relative inline-block">
+                <div className="absolute -inset-8 rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-orange-500/20 blur-2xl animate-pulse" />
+                <Radio className="relative w-20 h-20 text-red-500 mx-auto drop-shadow-[0_0_30px_rgba(239,68,68,0.6)]" />
+              </div>
+              <p className="text-3xl font-black text-white mt-6 tracking-tight drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">ENTER THE FREQUENCY</p>
+              <p className="text-sm font-mono text-gray-400 mt-2 tracking-widest">TAP ANYWHERE TO TRANSMIT</p>
             </div>
           </div>
         )}
 
         {/* Modern DEX-style Header */}
-        <nav className="backdrop-blur-xl bg-gray-900/95 border-b border-cyan-500/20 px-2 sm:px-4 py-1.5 sm:py-2 sticky top-0 z-50 shadow-lg">
+        <nav className="backdrop-blur-md bg-black/30 border-b border-white/5 px-2 sm:px-4 py-1.5 sm:py-2 sticky top-0 z-50">
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Back Button */}
@@ -886,7 +889,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         </nav>
 
         {/* Billboard Grid — living metaverse checkerboard */}
-        <div className="max-w-4xl mx-auto px-3 pt-3">
+        <div className="relative z-10 max-w-4xl mx-auto px-3 pt-1">
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
             {/* Each tile opens as modal overlay or new tab — radio NEVER stops */}
             {[
@@ -919,7 +922,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                     router.push(tile.link)
                   }
                 }}
-                className={`bg-gradient-to-br ${tile.gradient} border border-white/5 rounded-lg p-2 text-center hover:border-cyan-500/30 hover:scale-105 transition-all duration-200 cursor-pointer group`}
+                className={`bg-black/30 backdrop-blur-sm border border-white/10 rounded-lg p-2 text-center hover:border-cyan-500/40 hover:scale-105 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-200 cursor-pointer group`}
               >
                 <div className="text-lg mb-0.5">{tile.icon}</div>
                 <div className="text-[9px] font-bold text-white/90 leading-tight">{tile.label}</div>
@@ -927,41 +930,36 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
               </button>
             ))}
           </div>
-          {/* AdSense slot below the grid */}
-          <div className="mt-2">
-            <AdSlot slot="radio-billboard" format="horizontal" className="rounded-lg" />
-          </div>
         </div>
 
-        {/* 4D Immersive Scene + Main Content */}
-        <div className="relative">
-          {/* 4D WebGL Background — audio-reactive Three.js scene */}
-          <div className="absolute inset-0 overflow-hidden" style={{ minHeight: '600px' }}>
-            <RadioScene4D
-              audioRef={audioRef}
-              isPlaying={isPlaying}
-              artworkUrl={currentTrack?.artwork_url}
-              genre={currentTrack?.genres?.[0]}
-            />
-            {/* Gradient fade at bottom so scene blends into page */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#030d1b] to-transparent pointer-events-none" />
-          </div>
+        {/* 4D Immersive Scene — FULL VIEWPORT fixed background */}
+        <div className="fixed inset-0 w-full h-full overflow-hidden" style={{ zIndex: 0 }}>
+          <RadioScene4D
+            audioRef={audioRef}
+            isPlaying={isPlaying}
+            artworkUrl={currentTrack?.artwork_url}
+            genre={currentTrack?.genres?.[0]}
+          />
+        </div>
 
-        <main className="relative z-10 max-w-4xl mx-auto px-3 md:px-4 py-2 md:py-4">
-          {/* Radio Display — translucent to let 4D scene shine through */}
-          <div className="relative bg-[#0a1628]/70 backdrop-blur-xl border border-red-900/30 rounded-2xl p-4 md:p-8 shadow-2xl shadow-red-900/20">
+        {/* Main Content — floats over 4D scene */}
+        <main className="relative z-10 max-w-4xl mx-auto px-3 md:px-4 pt-0 pb-4">
+          {/* Radio Display — transparent glass, 4D universe bleeds through */}
+          <div className="relative bg-black/15 backdrop-blur-[2px] border border-white/5 rounded-2xl p-4 md:p-6">
 
             {/* Station Header */}
-            <div className="text-center mb-4 md:mb-8">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-900/30 rounded-full mb-2 md:mb-4">
-                <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                <span className="text-red-400 text-sm font-medium">
-                  {isPlaying ? 'NOW PLAYING' : 'BROADCASTING'}
+            <div className="text-center mb-3 md:mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-black/40 rounded-full mb-2 border border-white/10">
+                <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-green-500 animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'}`} />
+                <span className="text-xs font-mono font-bold tracking-[0.15em] text-gray-300">
+                  {isPlaying ? 'TRANSMITTING' : 'STANDBY'}
                 </span>
               </div>
-              <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2">OGUN Radio</h1>
-              <p className="text-sm md:text-base text-gray-400 flex items-center justify-center gap-2">
-                {totalTracks || queueLength || '...'} Tracks <Shuffle className="w-4 h-4 text-green-400" /> Infinite Shuffle
+              <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.15)]">
+                OGUN <span className="bg-gradient-to-r from-red-500 via-orange-400 to-yellow-400 bg-clip-text text-transparent">Radio</span>
+              </h1>
+              <p className="text-xs md:text-sm text-gray-400 flex items-center justify-center gap-2 mt-1 font-mono">
+                {totalTracks || queueLength || '...'} Tracks <Shuffle className="w-3 h-3 text-green-400" /> Infinite Shuffle
               </p>
             </div>
 
@@ -984,39 +982,49 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             ) : currentTrack ? (
               <>
                 {/* Now Playing */}
-                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-4 md:mb-8">
-                  {/* Artwork with spinning animation when playing */}
-                  <div className="relative w-36 h-36 sm:w-48 sm:h-48 md:w-64 md:h-64 flex-shrink-0">
-                    <div className={`w-full h-full ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '8s' }}>
+                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-4 md:mb-6">
+                  {/* Artwork — the reactor core powering the 4D universe */}
+                  <div className="relative w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 flex-shrink-0">
+                    {/* Outer energy ring — pulses when playing */}
+                    <div className={`absolute -inset-3 rounded-full ${isPlaying ? 'animate-pulse' : ''}`} style={{ animationDuration: '2s' }}>
+                      <div className="w-full h-full rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-orange-500/20 blur-xl" />
+                    </div>
+                    {/* Inner energy ring */}
+                    <div className={`absolute -inset-1 rounded-full border ${isPlaying ? 'border-cyan-500/30' : 'border-white/10'} ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '12s' }}>
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]" />
+                    </div>
+                    {/* Vinyl disc */}
+                    <div className={`relative w-full h-full ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '8s' }}>
                       {currentTrack.artwork_url ? (
                         <img
                           src={currentTrack.artwork_url}
                           alt={currentTrack.title}
-                          className="w-full h-full object-cover rounded-full shadow-lg border-4 border-gray-800"
+                          className="w-full h-full object-cover rounded-full shadow-[0_0_40px_rgba(34,211,238,0.15),0_0_80px_rgba(168,85,247,0.1)] border-2 border-white/10"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-red-900 to-purple-900 rounded-full flex items-center justify-center border-4 border-gray-800">
+                        <div className="w-full h-full bg-gradient-to-br from-red-900/80 to-purple-900/80 rounded-full flex items-center justify-center border-2 border-white/10">
                           <Music className="w-20 h-20 text-white/50" />
                         </div>
                       )}
                     </div>
-                    {/* Center hole for vinyl effect */}
+                    {/* Center hole — glowing core */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-8 h-8 bg-[#0a1628] rounded-full border-2 border-gray-700" />
+                      <div className={`w-8 h-8 rounded-full border border-white/20 ${isPlaying ? 'bg-gradient-to-br from-cyan-900/80 to-purple-900/80 shadow-[0_0_15px_rgba(34,211,238,0.4)]' : 'bg-black/60'}`} />
                     </div>
                     {currentTrack.is_nft && (
-                      <div className="absolute -top-2 -right-2 px-2 py-1 bg-yellow-500 text-black text-xs font-bold rounded-full">
-                        ⛓️
+                      <div className="absolute -top-2 -right-2 px-2 py-1 bg-yellow-500/90 text-black text-xs font-bold rounded-full shadow-[0_0_10px_rgba(234,179,8,0.5)]">
+                        NFT
                       </div>
                     )}
                   </div>
 
                   {/* Track Info */}
                   <div className="flex-1 text-center md:text-left">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2 line-clamp-2">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-1 line-clamp-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                       {currentTrack.title}
                     </h2>
-                    <p className="text-base md:text-xl text-gray-400 mb-1 md:mb-2">{currentTrack.artist}</p>
+                    <p className="text-base md:text-lg text-gray-300/80 mb-1">{currentTrack.artist}</p>
                     {currentTrack.genres && currentTrack.genres.length > 0 && (
                       <div className="flex flex-wrap items-center justify-center md:justify-start gap-1.5 mb-3">
                         {currentTrack.genres.slice(0, 3).map((g) => {
@@ -1046,15 +1054,15 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                   </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="mb-3 md:mb-6">
-                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                {/* Progress Bar — neon EQ style */}
+                <div className="mb-3 md:mb-5">
+                  <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-200"
+                      className="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-orange-500 transition-all duration-200 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
                       style={{ width: `${duration ? (progress / duration) * 100 : 0}%` }}
                     />
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <div className="flex justify-between text-[10px] text-gray-500 mt-1 font-mono">
                     <span>{formatTime(progress)}</span>
                     <span>{formatTime(duration)}</span>
                   </div>
@@ -1161,94 +1169,104 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             ) : null}
           </div>
 
-          {/* Genre Channels - XM Radio Style */}
+          {/* Genre Channels — Cyberpunk Living Pills */}
           {availableGenres.length > 0 && (
-            <div className="mt-4 md:mt-8">
-              <div className="flex items-center gap-2 mb-2 md:mb-3">
-                <Radio className="w-4 h-4 text-red-500" />
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Channels</h3>
+            <div className="mt-4 md:mt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Radio className="w-4 h-4 text-red-500 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" />
+                <h3 className="text-xs font-bold text-gray-300 uppercase tracking-[0.2em]">Frequency Channels</h3>
                 {selectedGenre !== 'all' && (
-                  <span className="text-xs text-cyan-400 ml-auto">{genreTrackCount} tracks</span>
+                  <span className="text-[10px] text-cyan-400 ml-auto font-mono">{genreTrackCount} tracks locked</span>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 <button
                   onClick={() => handleGenreChange('all')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide transition-all duration-300 ${
                     selectedGenre === 'all'
-                      ? 'bg-red-600 text-white shadow-lg shadow-red-500/20'
-                      : 'bg-gray-800/80 text-gray-400 hover:bg-gray-700 hover:text-white'
+                      ? 'bg-gradient-to-r from-red-600 to-orange-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] border border-red-400/50 scale-105'
+                      : 'bg-black/40 text-gray-400 border border-white/10 hover:border-red-500/40 hover:text-red-400 hover:shadow-[0_0_12px_rgba(239,68,68,0.2)]'
                   }`}
                 >
-                  All {totalTracks || ''}
+                  ALL {totalTracks || ''}
                 </button>
-                {availableGenres.slice(0, 20).map((genre) => (
-                  <button
-                    key={genre.key}
-                    onClick={() => handleGenreChange(genre.key)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      selectedGenre === genre.key
-                        ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-500/20'
-                        : 'bg-gray-800/80 text-gray-400 hover:bg-gray-700 hover:text-white'
-                    }`}
-                  >
-                    {genre.label} <span className="opacity-60">{genre.count}</span>
-                  </button>
-                ))}
+                {availableGenres.slice(0, 20).map((genre, i) => {
+                  const isActive = selectedGenre === genre.key
+                  // Cycle through cyberpunk colors per genre
+                  const colors = [
+                    { active: 'from-cyan-500 to-blue-600', border: 'border-cyan-400/50', glow: 'shadow-[0_0_20px_rgba(34,211,238,0.5)]', hover: 'hover:border-cyan-500/40 hover:text-cyan-400 hover:shadow-[0_0_12px_rgba(34,211,238,0.3)]' },
+                    { active: 'from-purple-500 to-pink-600', border: 'border-purple-400/50', glow: 'shadow-[0_0_20px_rgba(168,85,247,0.5)]', hover: 'hover:border-purple-500/40 hover:text-purple-400 hover:shadow-[0_0_12px_rgba(168,85,247,0.3)]' },
+                    { active: 'from-green-500 to-emerald-600', border: 'border-green-400/50', glow: 'shadow-[0_0_20px_rgba(74,222,128,0.5)]', hover: 'hover:border-green-500/40 hover:text-green-400 hover:shadow-[0_0_12px_rgba(74,222,128,0.3)]' },
+                    { active: 'from-orange-500 to-red-600', border: 'border-orange-400/50', glow: 'shadow-[0_0_20px_rgba(249,115,22,0.5)]', hover: 'hover:border-orange-500/40 hover:text-orange-400 hover:shadow-[0_0_12px_rgba(249,115,22,0.3)]' },
+                    { active: 'from-pink-500 to-rose-600', border: 'border-pink-400/50', glow: 'shadow-[0_0_20px_rgba(236,72,153,0.5)]', hover: 'hover:border-pink-500/40 hover:text-pink-400 hover:shadow-[0_0_12px_rgba(236,72,153,0.3)]' },
+                    { active: 'from-yellow-500 to-amber-600', border: 'border-yellow-400/50', glow: 'shadow-[0_0_20px_rgba(234,179,8,0.5)]', hover: 'hover:border-yellow-500/40 hover:text-yellow-400 hover:shadow-[0_0_12px_rgba(234,179,8,0.3)]' },
+                    { active: 'from-teal-500 to-cyan-600', border: 'border-teal-400/50', glow: 'shadow-[0_0_20px_rgba(45,212,191,0.5)]', hover: 'hover:border-teal-500/40 hover:text-teal-400 hover:shadow-[0_0_12px_rgba(45,212,191,0.3)]' },
+                  ]
+                  const c = colors[i % colors.length]
+                  return (
+                    <button
+                      key={genre.key}
+                      onClick={() => handleGenreChange(genre.key)}
+                      className={`px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wide transition-all duration-300 ${
+                        isActive
+                          ? `bg-gradient-to-r ${c.active} text-white ${c.glow} ${c.border} scale-105`
+                          : `bg-black/40 text-gray-400 border border-white/10 ${c.hover}`
+                      }`}
+                    >
+                      {genre.label} <span className={isActive ? 'text-white/70' : 'opacity-50'}>{genre.count}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* Info Cards — translucent over 4D scene */}
-          <div className="grid grid-cols-3 gap-2 md:gap-4 mt-4 md:mt-8">
-            <div className="bg-[#0a1628]/60 backdrop-blur-md border border-cyan-900/30 rounded-xl p-3 md:p-4 text-center">
-              <div className="text-xl md:text-3xl font-bold text-cyan-400">{totalTracks || queueLength || '...'}</div>
-              <div className="text-xs md:text-sm text-gray-500">Tracks</div>
+          {/* Info Cards — glass panels over 4D universe */}
+          <div className="grid grid-cols-3 gap-2 md:gap-3 mt-4 md:mt-6">
+            <div className="bg-black/20 backdrop-blur-sm border border-cyan-500/20 rounded-xl p-3 text-center hover:border-cyan-400/40 transition-all">
+              <div className="text-xl md:text-3xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]">{totalTracks || queueLength || '...'}</div>
+              <div className="text-xs text-gray-400">Tracks</div>
             </div>
-            <div className="bg-[#0a1628]/60 backdrop-blur-md border border-yellow-900/30 rounded-xl p-3 md:p-4 text-center">
-              <div className="text-xl md:text-3xl font-bold text-yellow-400">24/7</div>
-              <div className="text-xs md:text-sm text-gray-500">Infinite Loop</div>
+            <div className="bg-black/20 backdrop-blur-sm border border-yellow-500/20 rounded-xl p-3 text-center hover:border-yellow-400/40 transition-all">
+              <div className="text-xl md:text-3xl font-bold text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]">24/7</div>
+              <div className="text-xs text-gray-400">Infinite Loop</div>
             </div>
-            <div className="bg-[#0a1628]/60 backdrop-blur-md border border-green-900/30 rounded-xl p-3 md:p-4 text-center">
-              <div className="text-xl md:text-3xl font-bold text-green-400">OGUN</div>
-              <div className="text-xs md:text-sm text-gray-500">Streaming Rewards</div>
+            <div className="bg-black/20 backdrop-blur-sm border border-green-500/20 rounded-xl p-3 text-center hover:border-green-400/40 transition-all">
+              <div className="text-xl md:text-3xl font-bold text-green-400 drop-shadow-[0_0_12px_rgba(74,222,128,0.5)]">OGUN</div>
+              <div className="text-xs text-gray-400">Streaming Rewards</div>
             </div>
           </div>
 
-          {/* Ecosystem Badges — showcase ClawHub + npm published status */}
-          <div className="mt-4 md:mt-8 flex flex-wrap items-center justify-center gap-2 md:gap-3">
+          {/* Ecosystem Badges — neon-lit status indicators */}
+          <div className="mt-4 md:mt-6 flex flex-wrap items-center justify-center gap-2">
             <a href="https://www.npmjs.com/package/@soundchain/openclaw-plugin" target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-900/30 backdrop-blur-md border border-red-500/30 rounded-full text-xs font-bold text-red-400 hover:bg-red-900/50 hover:border-red-500/50 transition-all group">
-              <span className="w-2 h-2 rounded-full bg-red-500 group-hover:animate-pulse" />
-              npm published
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/30 border border-red-500/30 rounded-full text-[10px] font-bold text-red-400 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:border-red-400/60 transition-all group">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 group-hover:animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.8)]" />
+              npm
             </a>
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-900/30 backdrop-blur-md border border-orange-500/30 rounded-full text-xs font-bold text-orange-400">
-              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-              ClawHub LIVE
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/30 border border-orange-500/30 rounded-full text-[10px] font-bold text-orange-400 shadow-[0_0_8px_rgba(249,115,22,0.15)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse shadow-[0_0_6px_rgba(249,115,22,0.8)]" />
+              ClawHub
             </span>
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-900/30 backdrop-blur-md border border-purple-500/30 rounded-full text-xs font-bold text-purple-400">
-              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-              Polygon L2
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/30 border border-purple-500/30 rounded-full text-[10px] font-bold text-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.15)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse shadow-[0_0_6px_rgba(168,85,247,0.8)]" />
+              Polygon
             </span>
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-900/30 backdrop-blur-md border border-cyan-500/30 rounded-full text-xs font-bold text-cyan-400">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-              IPFS Streaming
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/30 border border-cyan-500/30 rounded-full text-[10px] font-bold text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.15)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_6px_rgba(34,211,238,0.8)]" />
+              IPFS
             </span>
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-900/30 backdrop-blur-md border border-green-500/30 rounded-full text-xs font-bold text-green-400">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-black/30 border border-green-500/30 rounded-full text-[10px] font-bold text-green-400 shadow-[0_0_8px_rgba(74,222,128,0.15)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_6px_rgba(74,222,128,0.8)]" />
               {totalTracks || 618}+ Agents
             </span>
           </div>
 
-          {/* API Info */}
-          <div className="mt-4 md:mt-8 text-center text-sm text-gray-500">
-            <p>Powered by OGUN L2 - Decentralized Music Streaming</p>
-            <p className="mt-1">
-              Agent API: <code className="text-cyan-400">soundchain.io/api/agent/radio</code>
-            </p>
+          {/* Footer whisper */}
+          <div className="mt-4 md:mt-6 text-center">
+            <p className="text-[10px] font-mono text-gray-600 tracking-widest uppercase">OGUN L2 // Decentralized Music // 2073</p>
           </div>
         </main>
-        </div>{/* end 4D scene + main content wrapper */}
       </div>
 
       {/* Share to Story Modal */}

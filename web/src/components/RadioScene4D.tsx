@@ -1,17 +1,25 @@
 /**
- * RadioScene4D — Immersive audio-reactive 3D scene for OGUN Radio
+ * RadioScene4D — NVIDIA-grade immersive audio-reactive 3D experience
  *
- * 4D = 3D space + time/audio reactivity
- * - Central artwork orb pulses with bass
- * - Double helix particle stream orbits the center
- * - Floating ecosystem nodes (Polygon, IPFS, Agents, ClawHub, npm)
- * - Circular frequency ring visualizer
- * - Particle starfield reacts to mids/highs
- * - Genre-aware color palette shifts
+ * God's eye view of music in 2073. Cyberpunk dystopian AI era.
+ * - UnrealBloomPass post-processing (everything glows)
+ * - Central reactor orb pulses with bass, radiates energy beams
+ * - 3 concentric frequency rings deform from live FFT data
+ * - Double helix DNA stream (4000 particles)
+ * - 8000-particle reactive starfield nebula
+ * - Tron-style infinite ground grid
+ * - 6 orbiting ecosystem nodes with text sprite labels
+ * - Energy beams connecting orb to nodes
+ * - Cinematic slow-orbit camera
+ * - 14 genre-aware color palettes shift the entire mood
  */
 
 import React, { useEffect, useRef, useCallback } from 'react'
 import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 
 interface RadioScene4DProps {
   audioRef: React.RefObject<HTMLAudioElement | null>
@@ -50,28 +58,70 @@ const ECOSYSTEM_NODES = [
   { label: 'OGUN', color: 0xffd700 },
 ]
 
+// Create a text sprite for 3D labels
+function createTextSprite(text: string, color: number): THREE.Sprite {
+  const canvas = document.createElement('canvas')
+  canvas.width = 256
+  canvas.height = 64
+  const ctx = canvas.getContext('2d')!
+  ctx.clearRect(0, 0, 256, 64)
+
+  // Glow effect
+  const hexColor = '#' + new THREE.Color(color).getHexString()
+  ctx.shadowColor = hexColor
+  ctx.shadowBlur = 12
+  ctx.fillStyle = hexColor
+  ctx.font = 'bold 28px monospace'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(text, 128, 32)
+  // Second pass for brightness
+  ctx.fillText(text, 128, 32)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  const sprite = new THREE.Sprite(material)
+  sprite.scale.set(1.5, 0.375, 1)
+  return sprite
+}
+
 export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }: RadioScene4DProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const composerRef = useRef<EffectComposer | null>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
-  const dataArrayRef = useRef<Uint8Array | null>(null)
+  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null)
   const animFrameRef = useRef<number>(0)
   const clockRef = useRef(new THREE.Clock())
   const artworkTextureRef = useRef<THREE.Texture | null>(null)
   const artworkUrlRef = useRef<string>('')
 
-  // Mutable refs for scene objects
+  // Scene object refs
   const orbRef = useRef<THREE.Mesh | null>(null)
   const orbMaterialRef = useRef<THREE.ShaderMaterial | null>(null)
   const helixParticlesRef = useRef<THREE.Points | null>(null)
   const starfieldRef = useRef<THREE.Points | null>(null)
-  const freqRingRef = useRef<THREE.Line | null>(null)
+  const freqRingsRef = useRef<THREE.Line[]>([])
   const nodeGroupRef = useRef<THREE.Group | null>(null)
   const glowRef = useRef<THREE.Mesh | null>(null)
+  const gridRef = useRef<THREE.Group | null>(null)
+  const beamsRef = useRef<THREE.Group | null>(null)
+  const bloomPassRef = useRef<UnrealBloomPass | null>(null)
+
+  // Smoothed audio values
+  const smoothBassRef = useRef(0)
+  const smoothMidsRef = useRef(0)
+  const smoothHighsRef = useRef(0)
 
   const getPalette = useCallback(() => {
     if (!genre) return DEFAULT_PALETTE
@@ -79,57 +129,44 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     return GENRE_PALETTES[key] || DEFAULT_PALETTE
   }, [genre])
 
-  // Connect Web Audio API analyser to audio element
+  // Connect Web Audio API analyser
   useEffect(() => {
     if (!audioRef.current) return
-
     const audio = audioRef.current
     const connectAnalyser = () => {
-      if (analyserRef.current) return // already connected
-
+      if (analyserRef.current) return
       try {
         const ctx = audioCtxRef.current || new AudioContext()
         audioCtxRef.current = ctx
-
         if (!sourceRef.current) {
           sourceRef.current = ctx.createMediaElementSource(audio)
         }
-
         const analyser = ctx.createAnalyser()
-        analyser.fftSize = 256
-        analyser.smoothingTimeConstant = 0.8
-
+        analyser.fftSize = 512
+        analyser.smoothingTimeConstant = 0.82
         sourceRef.current.connect(analyser)
         analyser.connect(ctx.destination)
-
         analyserRef.current = analyser
         dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount)
       } catch (e) {
-        // Audio context may fail in some browsers — scene still renders without reactivity
         console.warn('[4D Radio] Audio analyser setup failed:', e)
       }
     }
-
-    // Connect on first play
     audio.addEventListener('play', connectAnalyser, { once: true })
-
-    return () => {
-      audio.removeEventListener('play', connectAnalyser)
-    }
+    return () => { audio.removeEventListener('play', connectAnalyser) }
   }, [audioRef])
 
-  // Resume AudioContext when playing (browsers suspend by default)
+  // Resume AudioContext
   useEffect(() => {
     if (isPlaying && audioCtxRef.current?.state === 'suspended') {
       audioCtxRef.current.resume().catch(() => {})
     }
   }, [isPlaying])
 
-  // Load artwork texture when URL changes
+  // Load artwork texture
   useEffect(() => {
     if (!artworkUrl || artworkUrl === artworkUrlRef.current) return
     artworkUrlRef.current = artworkUrl
-
     const loader = new THREE.TextureLoader()
     loader.crossOrigin = 'anonymous'
     loader.load(
@@ -138,7 +175,6 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         texture.colorSpace = THREE.SRGBColorSpace
         if (artworkTextureRef.current) artworkTextureRef.current.dispose()
         artworkTextureRef.current = texture
-        // Update orb material
         if (orbMaterialRef.current) {
           orbMaterialRef.current.uniforms.uTexture.value = texture
           orbMaterialRef.current.uniforms.uHasTexture.value = 1.0
@@ -146,42 +182,58 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       },
       undefined,
       () => {
-        // Failed to load artwork — orb stays gradient
-        if (orbMaterialRef.current) {
-          orbMaterialRef.current.uniforms.uHasTexture.value = 0.0
-        }
+        if (orbMaterialRef.current) orbMaterialRef.current.uniforms.uHasTexture.value = 0.0
       }
     )
   }, [artworkUrl])
 
-  // Initialize Three.js scene
+  // ==================== MAIN SCENE INIT ====================
   useEffect(() => {
     if (!containerRef.current) return
-
     const container = containerRef.current
     const width = container.clientWidth
     const height = container.clientHeight
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    // --- Renderer ---
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' })
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.setClearColor(0x000000, 0)
+    renderer.setClearColor(0x020810, 1)
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 1.2
     container.appendChild(renderer.domElement)
     rendererRef.current = renderer
 
-    // Scene
+    // --- Scene ---
     const scene = new THREE.Scene()
-    scene.fog = new THREE.FogExp2(0x030d1b, 0.035)
+    scene.fog = new THREE.FogExp2(0x020810, 0.018)
     sceneRef.current = scene
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 100)
-    camera.position.set(0, 0, 6)
+    // --- Camera (cinematic orbit) ---
+    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 200)
+    camera.position.set(0, 2, 8)
     cameraRef.current = camera
 
-    // --- CENTRAL ORB (album art sphere) ---
-    const orbGeo = new THREE.SphereGeometry(1.2, 64, 64)
+    // --- Post-processing: UnrealBloom ---
+    const composer = new EffectComposer(renderer)
+    const renderPass = new RenderPass(scene, camera)
+    composer.addPass(renderPass)
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(width, height),
+      1.8,   // strength — intense glow
+      0.6,   // radius — wide bloom spread
+      0.15   // threshold — bloom almost everything
+    )
+    composer.addPass(bloomPass)
+    bloomPassRef.current = bloomPass
+
+    const outputPass = new OutputPass()
+    composer.addPass(outputPass)
+    composerRef.current = composer
+
+    // ============ CENTRAL REACTOR ORB ============
+    const orbGeo = new THREE.SphereGeometry(1.3, 128, 128)
     const orbMat = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
@@ -197,18 +249,14 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         varying vec2 vUv;
         varying vec3 vNormal;
         varying vec3 vPosition;
-
         void main() {
           vUv = uv;
           vNormal = normal;
-
-          // Bass-reactive displacement
-          float displacement = sin(position.x * 4.0 + uTime * 2.0) * sin(position.y * 4.0 + uTime * 1.5) * sin(position.z * 4.0 + uTime) * uBass * 0.15;
+          // Aggressive bass displacement — the orb BREATHES
+          float displacement = sin(position.x * 5.0 + uTime * 3.0) * sin(position.y * 5.0 + uTime * 2.0) * sin(position.z * 5.0 + uTime * 1.5) * uBass * 0.25;
           vec3 pos = position + normal * displacement;
-          // Breathing scale
-          float scale = 1.0 + uBass * 0.08;
+          float scale = 1.0 + uBass * 0.12;
           pos *= scale;
-
           vPosition = pos;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }
@@ -223,29 +271,27 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         varying vec2 vUv;
         varying vec3 vNormal;
         varying vec3 vPosition;
-
         void main() {
           vec3 color;
           if (uHasTexture > 0.5) {
             color = texture2D(uTexture, vUv).rgb;
-            // Add subtle energy glow from bass
-            float energy = uBass * 0.3;
-            color += uPrimary * energy * 0.5;
+            // Energy injection from bass
+            float energy = uBass * 0.5;
+            color += uPrimary * energy * 0.4;
+            // Boost brightness for bloom to catch
+            color *= 1.2 + uBass * 0.3;
           } else {
-            // Gradient fallback
-            float t = vUv.y + sin(vUv.x * 6.28 + uTime) * 0.1;
+            float t = vUv.y + sin(vUv.x * 6.28 + uTime * 2.0) * 0.15;
             color = mix(uPrimary, uSecondary, t);
-            // Pulsing energy
-            float pulse = sin(uTime * 3.0) * 0.5 + 0.5;
-            color += vec3(pulse * uBass * 0.3);
+            float pulse = sin(uTime * 4.0) * 0.5 + 0.5;
+            color += vec3(pulse * uBass * 0.5);
+            color *= 1.5;
           }
-
-          // Rim lighting
+          // Intense rim lighting — makes edges glow hot
           vec3 viewDir = normalize(cameraPosition - vPosition);
           float rim = 1.0 - max(dot(viewDir, vNormal), 0.0);
-          rim = pow(rim, 3.0);
-          color += uPrimary * rim * (0.5 + uBass * 0.5);
-
+          rim = pow(rim, 2.5);
+          color += uPrimary * rim * (1.0 + uBass * 1.5);
           gl_FragColor = vec4(color, 1.0);
         }
       `,
@@ -255,8 +301,8 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     orbRef.current = orb
     orbMaterialRef.current = orbMat
 
-    // --- GLOW SPHERE (additive bloom around orb) ---
-    const glowGeo = new THREE.SphereGeometry(1.5, 32, 32)
+    // ============ GLOW SPHERE (bloom amplifier) ============
+    const glowGeo = new THREE.SphereGeometry(1.8, 32, 32)
     const glowMat = new THREE.ShaderMaterial({
       uniforms: {
         uColor: { value: DEFAULT_PALETTE.primary },
@@ -274,9 +320,9 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         uniform float uBass;
         varying vec3 vNormal;
         void main() {
-          float intensity = pow(0.6 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.5);
-          float alpha = intensity * (0.3 + uBass * 0.4);
-          gl_FragColor = vec4(uColor, alpha);
+          float intensity = pow(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
+          float alpha = intensity * (0.5 + uBass * 0.8);
+          gl_FragColor = vec4(uColor * 1.5, alpha);
         }
       `,
       transparent: true,
@@ -288,32 +334,58 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     scene.add(glow)
     glowRef.current = glow
 
-    // --- DOUBLE HELIX PARTICLES ---
-    const helixCount = 2000
+    // ============ DOUBLE HELIX (4000 particles) ============
+    const helixCount = 4000
     const helixPositions = new Float32Array(helixCount * 3)
     const helixColors = new Float32Array(helixCount * 3)
+    const helixSizes = new Float32Array(helixCount)
     for (let i = 0; i < helixCount; i++) {
-      const t = (i / helixCount) * Math.PI * 8
+      const t = (i / helixCount) * Math.PI * 10
       const strand = i % 2 === 0 ? 1 : -1
-      const radius = 2.0 + Math.sin(t * 0.5) * 0.3
+      const radius = 2.2 + Math.sin(t * 0.3) * 0.4
       helixPositions[i * 3] = Math.cos(t) * radius * strand
-      helixPositions[i * 3 + 1] = (i / helixCount - 0.5) * 8
+      helixPositions[i * 3 + 1] = (i / helixCount - 0.5) * 12
       helixPositions[i * 3 + 2] = Math.sin(t) * radius * strand
-
-      // Color gradient along helix
       const ct = i / helixCount
-      helixColors[i * 3] = ct
+      helixColors[i * 3] = 0.2 + ct * 0.8
       helixColors[i * 3 + 1] = 1.0 - ct * 0.5
       helixColors[i * 3 + 2] = 0.5 + ct * 0.5
+      helixSizes[i] = Math.random() * 3 + 1
     }
     const helixGeo = new THREE.BufferGeometry()
     helixGeo.setAttribute('position', new THREE.BufferAttribute(helixPositions, 3))
     helixGeo.setAttribute('color', new THREE.BufferAttribute(helixColors, 3))
-    const helixMat = new THREE.PointsMaterial({
-      size: 0.03,
+    helixGeo.setAttribute('size', new THREE.BufferAttribute(helixSizes, 1))
+    const helixMat = new THREE.ShaderMaterial({
+      uniforms: { uMids: { value: 0 }, uTime: { value: 0 } },
+      vertexShader: `
+        attribute float size;
+        varying vec3 vColor;
+        varying float vAlpha;
+        uniform float uMids;
+        uniform float uTime;
+        void main() {
+          vColor = color;
+          vec3 pos = position;
+          pos += normalize(pos) * sin(uTime * 2.0 + length(pos)) * uMids * 0.4;
+          vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+          gl_PointSize = size * (180.0 / -mvPos.z) * (1.0 + uMids * 0.8);
+          gl_Position = projectionMatrix * mvPos;
+          vAlpha = 0.5 + uMids * 0.5;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vColor;
+        varying float vAlpha;
+        void main() {
+          float d = length(gl_PointCoord - vec2(0.5));
+          if (d > 0.5) discard;
+          float alpha = (1.0 - d * 2.0) * vAlpha;
+          gl_FragColor = vec4(vColor * 1.5, alpha);
+        }
+      `,
       vertexColors: true,
       transparent: true,
-      opacity: 0.7,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     })
@@ -321,50 +393,65 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     scene.add(helixPoints)
     helixParticlesRef.current = helixPoints
 
-    // --- STARFIELD (background particles) ---
-    const starCount = 3000
+    // ============ STARFIELD NEBULA (8000 particles) ============
+    const starCount = 8000
     const starPositions = new Float32Array(starCount * 3)
     const starSizes = new Float32Array(starCount)
+    const starColors = new Float32Array(starCount * 3)
     for (let i = 0; i < starCount; i++) {
-      starPositions[i * 3] = (Math.random() - 0.5) * 40
-      starPositions[i * 3 + 1] = (Math.random() - 0.5) * 40
-      starPositions[i * 3 + 2] = (Math.random() - 0.5) * 40
-      starSizes[i] = Math.random() * 2 + 0.5
+      // Distribute in a sphere
+      const theta = Math.random() * Math.PI * 2
+      const phi = Math.acos(2 * Math.random() - 1)
+      const r = 5 + Math.random() * 50
+      starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+      starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+      starPositions[i * 3 + 2] = r * Math.cos(phi)
+      starSizes[i] = Math.random() * 3 + 0.5
+      // Subtle color variation
+      const colorChoice = Math.random()
+      if (colorChoice < 0.3) {
+        starColors[i * 3] = 0.6; starColors[i * 3 + 1] = 0.8; starColors[i * 3 + 2] = 1.0
+      } else if (colorChoice < 0.6) {
+        starColors[i * 3] = 1.0; starColors[i * 3 + 1] = 0.9; starColors[i * 3 + 2] = 0.7
+      } else {
+        starColors[i * 3] = 1.0; starColors[i * 3 + 1] = 1.0; starColors[i * 3 + 2] = 1.0
+      }
     }
     const starGeo = new THREE.BufferGeometry()
     starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
     starGeo.setAttribute('size', new THREE.BufferAttribute(starSizes, 1))
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3))
     const starMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uMids: { value: 0 },
-        uTime: { value: 0 },
-        uColor: { value: new THREE.Color(0xffffff) },
-      },
+      uniforms: { uMids: { value: 0 }, uTime: { value: 0 } },
       vertexShader: `
         attribute float size;
+        varying vec3 vColor;
+        varying float vAlpha;
         uniform float uMids;
         uniform float uTime;
-        varying float vAlpha;
         void main() {
+          vColor = color;
           vec3 pos = position;
-          // Subtle breathing
-          pos += normalize(pos) * sin(uTime + length(pos)) * uMids * 0.3;
+          pos += normalize(pos) * sin(uTime * 0.5 + length(pos) * 0.1) * uMids * 0.8;
           vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-          gl_PointSize = size * (200.0 / -mvPos.z) * (1.0 + uMids * 0.5);
+          gl_PointSize = size * (250.0 / -mvPos.z) * (1.0 + uMids * 0.6);
           gl_Position = projectionMatrix * mvPos;
-          vAlpha = 0.3 + uMids * 0.4 + sin(uTime * 2.0 + length(position) * 0.5) * 0.2;
+          float twinkle = sin(uTime * 3.0 + length(position) * 0.5) * 0.3 + 0.7;
+          vAlpha = (0.3 + uMids * 0.5) * twinkle;
         }
       `,
       fragmentShader: `
-        uniform vec3 uColor;
+        varying vec3 vColor;
         varying float vAlpha;
         void main() {
           float d = length(gl_PointCoord - vec2(0.5));
           if (d > 0.5) discard;
-          float alpha = (1.0 - d * 2.0) * vAlpha;
-          gl_FragColor = vec4(uColor, alpha);
+          float core = smoothstep(0.5, 0.0, d);
+          float alpha = core * vAlpha;
+          gl_FragColor = vec4(vColor * 1.3, alpha);
         }
       `,
+      vertexColors: true,
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
@@ -373,181 +460,305 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     scene.add(starfield)
     starfieldRef.current = starfield
 
-    // --- FREQUENCY RING (circular audio visualizer) ---
-    const ringSegments = 128
-    const ringPositions = new Float32Array(ringSegments * 3)
-    for (let i = 0; i < ringSegments; i++) {
-      const angle = (i / ringSegments) * Math.PI * 2
-      ringPositions[i * 3] = Math.cos(angle) * 2.5
-      ringPositions[i * 3 + 1] = Math.sin(angle) * 2.5
-      ringPositions[i * 3 + 2] = 0
-    }
-    const ringGeo = new THREE.BufferGeometry()
-    ringGeo.setAttribute('position', new THREE.BufferAttribute(ringPositions, 3))
-    const ringMat = new THREE.LineBasicMaterial({
-      color: DEFAULT_PALETTE.primary,
+    // ============ 3 CONCENTRIC FREQUENCY RINGS ============
+    const ringConfigs = [
+      { radius: 2.8, segments: 128, color: DEFAULT_PALETTE.primary, opacity: 0.8, yOffset: 0 },
+      { radius: 3.8, segments: 96, color: DEFAULT_PALETTE.secondary, opacity: 0.5, yOffset: -0.5 },
+      { radius: 4.8, segments: 64, color: DEFAULT_PALETTE.accent, opacity: 0.3, yOffset: -1.0 },
+    ]
+    const rings: THREE.Line[] = []
+    ringConfigs.forEach((cfg) => {
+      const positions = new Float32Array(cfg.segments * 3)
+      for (let i = 0; i < cfg.segments; i++) {
+        const angle = (i / cfg.segments) * Math.PI * 2
+        positions[i * 3] = Math.cos(angle) * cfg.radius
+        positions[i * 3 + 1] = Math.sin(angle) * cfg.radius
+        positions[i * 3 + 2] = 0
+      }
+      const geo = new THREE.BufferGeometry()
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+      const mat = new THREE.LineBasicMaterial({
+        color: cfg.color,
+        transparent: true,
+        opacity: cfg.opacity,
+        blending: THREE.AdditiveBlending,
+        linewidth: 1,
+      })
+      const ring = new THREE.LineLoop(geo, mat)
+      ring.rotation.x = Math.PI * 0.5
+      ring.position.y = cfg.yOffset
+      ring.userData = { baseRadius: cfg.radius, segments: cfg.segments }
+      scene.add(ring)
+      rings.push(ring)
+    })
+    freqRingsRef.current = rings
+
+    // ============ TRON GRID FLOOR ============
+    const gridGroup = new THREE.Group()
+    const gridSize = 80
+    const gridDivisions = 60
+    const gridMat = new THREE.LineBasicMaterial({
+      color: 0x0a3050,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.25,
       blending: THREE.AdditiveBlending,
     })
-    const freqRing = new THREE.LineLoop(ringGeo, ringMat)
-    freqRing.rotation.x = Math.PI * 0.5
-    scene.add(freqRing)
-    freqRingRef.current = freqRing
+    // X lines
+    for (let i = -gridDivisions / 2; i <= gridDivisions / 2; i++) {
+      const geo = new THREE.BufferGeometry()
+      const x = (i / gridDivisions) * gridSize * 2
+      geo.setFromPoints([
+        new THREE.Vector3(x, 0, -gridSize),
+        new THREE.Vector3(x, 0, gridSize)
+      ])
+      gridGroup.add(new THREE.Line(geo, gridMat))
+    }
+    // Z lines
+    for (let i = -gridDivisions / 2; i <= gridDivisions / 2; i++) {
+      const geo = new THREE.BufferGeometry()
+      const z = (i / gridDivisions) * gridSize * 2
+      geo.setFromPoints([
+        new THREE.Vector3(-gridSize, 0, z),
+        new THREE.Vector3(gridSize, 0, z)
+      ])
+      gridGroup.add(new THREE.Line(geo, gridMat))
+    }
+    gridGroup.position.y = -3.5
+    scene.add(gridGroup)
+    gridRef.current = gridGroup
 
-    // --- ECOSYSTEM FLOATING NODES ---
+    // ============ ECOSYSTEM NODES + TEXT LABELS + ENERGY BEAMS ============
     const nodeGroup = new THREE.Group()
+    const beamGroup = new THREE.Group()
+
     ECOSYSTEM_NODES.forEach((node, i) => {
       const angle = (i / ECOSYSTEM_NODES.length) * Math.PI * 2
-      const nodeGeo = new THREE.OctahedronGeometry(0.15, 0)
+
+      // Node mesh (icosahedron for more futuristic look)
+      const nodeGeo = new THREE.IcosahedronGeometry(0.2, 1)
       const nodeMat = new THREE.MeshBasicMaterial({
         color: node.color,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.9,
         wireframe: true,
       })
       const mesh = new THREE.Mesh(nodeGeo, nodeMat)
       mesh.position.set(
-        Math.cos(angle) * 3.5,
-        Math.sin(angle) * 0.8,
-        Math.sin(angle) * 3.5
+        Math.cos(angle) * 4.5,
+        Math.sin(angle) * 1.2,
+        Math.sin(angle) * 4.5
       )
       mesh.userData = { baseAngle: angle, label: node.label }
       nodeGroup.add(mesh)
 
-      // Point light for each node
-      const light = new THREE.PointLight(node.color, 0.3, 3)
+      // Text sprite label
+      const sprite = createTextSprite(node.label, node.color)
+      sprite.position.copy(mesh.position)
+      sprite.position.y += 0.5
+      sprite.userData = { baseAngle: angle }
+      nodeGroup.add(sprite)
+
+      // Point light
+      const light = new THREE.PointLight(node.color, 0.5, 5)
       light.position.copy(mesh.position)
+      light.userData = { baseAngle: angle }
       nodeGroup.add(light)
+
+      // Energy beam from orb to node
+      const beamGeo = new THREE.BufferGeometry()
+      beamGeo.setFromPoints([new THREE.Vector3(0, 0, 0), mesh.position.clone()])
+      const beamMat = new THREE.LineBasicMaterial({
+        color: node.color,
+        transparent: true,
+        opacity: 0.08,
+        blending: THREE.AdditiveBlending,
+      })
+      const beam = new THREE.Line(beamGeo, beamMat)
+      beam.userData = { baseAngle: angle, nodeIndex: i }
+      beamGroup.add(beam)
     })
+
     scene.add(nodeGroup)
+    scene.add(beamGroup)
     nodeGroupRef.current = nodeGroup
+    beamsRef.current = beamGroup
 
-    // Ambient light
-    scene.add(new THREE.AmbientLight(0x111122, 0.5))
+    // Ambient fill
+    scene.add(new THREE.AmbientLight(0x080818, 0.3))
 
-    // --- ANIMATION LOOP ---
+    // ==================== ANIMATION LOOP ====================
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate)
-
       const elapsed = clockRef.current.getElapsedTime()
       const delta = clockRef.current.getDelta()
 
-      // Read frequency data
+      // Read FFT
       let bass = 0, mids = 0, highs = 0
       if (analyserRef.current && dataArrayRef.current) {
         analyserRef.current.getByteFrequencyData(dataArrayRef.current)
         const data = dataArrayRef.current
         const len = data.length
-
-        // Bass: bins 0-10, Mids: bins 10-60, Highs: bins 60+
-        for (let i = 0; i < 10; i++) bass += data[i]
-        bass = bass / (10 * 255)
-        for (let i = 10; i < 60; i++) mids += data[i]
-        mids = mids / (50 * 255)
-        for (let i = 60; i < len; i++) highs += data[i]
-        highs = highs / ((len - 60) * 255)
+        for (let i = 0; i < 12; i++) bass += data[i]
+        bass = bass / (12 * 255)
+        for (let i = 12; i < 80; i++) mids += data[i]
+        mids = mids / (68 * 255)
+        for (let i = 80; i < len; i++) highs += data[i]
+        highs = highs / ((len - 80) * 255)
       }
 
-      // Smooth values (lerp toward target)
-      const lerpFactor = 1.0 - Math.pow(0.001, delta)
+      // Smooth audio values (lerp)
+      const lf = 1.0 - Math.pow(0.0005, delta)
+      smoothBassRef.current += (bass - smoothBassRef.current) * lf
+      smoothMidsRef.current += (mids - smoothMidsRef.current) * lf
+      smoothHighsRef.current += (highs - smoothHighsRef.current) * lf
+      const sBass = smoothBassRef.current
+      const sMids = smoothMidsRef.current
+      const sHighs = smoothHighsRef.current
 
-      // Update central orb
+      // --- Central orb ---
       if (orbRef.current && orbMaterialRef.current) {
         orbMaterialRef.current.uniforms.uTime.value = elapsed
-        orbMaterialRef.current.uniforms.uBass.value += (bass - orbMaterialRef.current.uniforms.uBass.value) * lerpFactor
-        orbRef.current.rotation.y = elapsed * 0.15
-        orbRef.current.rotation.x = Math.sin(elapsed * 0.1) * 0.1
+        orbMaterialRef.current.uniforms.uBass.value = sBass
+        orbRef.current.rotation.y = elapsed * 0.12
+        orbRef.current.rotation.x = Math.sin(elapsed * 0.08) * 0.15
       }
 
-      // Update glow
+      // --- Glow ---
       if (glowRef.current) {
-        const glowMat = glowRef.current.material as THREE.ShaderMaterial
-        glowMat.uniforms.uBass.value += (bass - glowMat.uniforms.uBass.value) * lerpFactor
-        const glowScale = 1.0 + bass * 0.3
-        glowRef.current.scale.setScalar(glowScale)
+        const gm = glowRef.current.material as THREE.ShaderMaterial
+        gm.uniforms.uBass.value = sBass
+        glowRef.current.scale.setScalar(1.0 + sBass * 0.5)
       }
 
-      // Rotate helix
+      // --- Helix ---
       if (helixParticlesRef.current) {
-        helixParticlesRef.current.rotation.y = elapsed * 0.3
-        helixParticlesRef.current.rotation.x = Math.sin(elapsed * 0.05) * 0.2
-        const hMat = helixParticlesRef.current.material as THREE.PointsMaterial
-        hMat.opacity = 0.4 + mids * 0.6
-        hMat.size = 0.02 + mids * 0.03
+        helixParticlesRef.current.rotation.y = elapsed * 0.25
+        helixParticlesRef.current.rotation.x = Math.sin(elapsed * 0.04) * 0.15
+        const hm = helixParticlesRef.current.material as THREE.ShaderMaterial
+        hm.uniforms.uMids.value = sMids
+        hm.uniforms.uTime.value = elapsed
       }
 
-      // Starfield reactivity
+      // --- Starfield ---
       if (starfieldRef.current) {
-        const sMat = starfieldRef.current.material as THREE.ShaderMaterial
-        sMat.uniforms.uMids.value += (mids - sMat.uniforms.uMids.value) * lerpFactor
-        sMat.uniforms.uTime.value = elapsed
-        starfieldRef.current.rotation.y = elapsed * 0.02
-        starfieldRef.current.rotation.x = elapsed * 0.01
+        const sm = starfieldRef.current.material as THREE.ShaderMaterial
+        sm.uniforms.uMids.value = sMids
+        sm.uniforms.uTime.value = elapsed
+        starfieldRef.current.rotation.y = elapsed * 0.015
+        starfieldRef.current.rotation.x = elapsed * 0.008
       }
 
-      // Frequency ring — deform based on FFT data
-      if (freqRingRef.current && dataArrayRef.current) {
-        const positions = freqRingRef.current.geometry.attributes.position as THREE.BufferAttribute
-        const data = dataArrayRef.current
-        for (let i = 0; i < ringSegments; i++) {
-          const angle = (i / ringSegments) * Math.PI * 2
-          const freqIndex = Math.floor((i / ringSegments) * data.length)
-          const freqValue = (data[freqIndex] || 0) / 255
-          const radius = 2.5 + freqValue * 1.2
-          positions.setXYZ(i, Math.cos(angle) * radius, Math.sin(angle) * radius, 0)
+      // --- 3 Frequency rings ---
+      freqRingsRef.current.forEach((ring, ringIdx) => {
+        const { baseRadius, segments } = ring.userData as { baseRadius: number; segments: number }
+        const positions = ring.geometry.attributes.position as THREE.BufferAttribute
+        if (dataArrayRef.current) {
+          const data = dataArrayRef.current
+          for (let i = 0; i < segments; i++) {
+            const angle = (i / segments) * Math.PI * 2
+            const freqIndex = Math.floor((i / segments) * data.length)
+            const freqValue = (data[freqIndex] || 0) / 255
+            const reactivity = [1.5, 1.0, 0.6][ringIdx]
+            const radius = baseRadius + freqValue * reactivity
+            positions.setXYZ(i, Math.cos(angle) * radius, Math.sin(angle) * radius, 0)
+          }
+          positions.needsUpdate = true
         }
-        positions.needsUpdate = true
-        freqRingRef.current.rotation.z = elapsed * 0.1
-        const rMat = freqRingRef.current.material as THREE.LineBasicMaterial
-        rMat.opacity = 0.3 + bass * 0.7
+        ring.rotation.z = elapsed * (0.08 + ringIdx * 0.04) * (ringIdx % 2 === 0 ? 1 : -1)
+        const rMat = ring.material as THREE.LineBasicMaterial
+        rMat.opacity = [0.6, 0.35, 0.2][ringIdx] + sBass * 0.4
+      })
+
+      // --- Grid pulse ---
+      if (gridRef.current) {
+        gridRef.current.children.forEach((line) => {
+          const mat = line instanceof THREE.Line ? (line.material as THREE.LineBasicMaterial) : null
+          if (mat) mat.opacity = 0.15 + sBass * 0.25
+        })
       }
 
-      // Orbit ecosystem nodes
+      // --- Ecosystem nodes orbit ---
       if (nodeGroupRef.current) {
-        nodeGroupRef.current.children.forEach((child) => {
+        const children = nodeGroupRef.current.children
+        children.forEach((child) => {
+          const baseAngle = child.userData.baseAngle as number | undefined
+          if (baseAngle === undefined) return
+          const orbitSpeed = 0.15
+          const angle = baseAngle + elapsed * orbitSpeed
+          const radius = 4.5 + Math.sin(elapsed * 0.4 + baseAngle) * 0.6
+
           if (child instanceof THREE.Mesh) {
-            const baseAngle = child.userData.baseAngle as number
-            const orbitSpeed = 0.2
-            const angle = baseAngle + elapsed * orbitSpeed
-            const radius = 3.5 + Math.sin(elapsed * 0.5 + baseAngle) * 0.5
             child.position.x = Math.cos(angle) * radius
             child.position.z = Math.sin(angle) * radius
-            child.position.y = Math.sin(elapsed * 0.3 + baseAngle * 2) * 1.0
-            child.rotation.x = elapsed * 1.5
-            child.rotation.z = elapsed * 1.0
-            // Pulse with highs
-            const nodeScale = 1.0 + highs * 0.8
-            child.scale.setScalar(nodeScale)
-          }
-          if (child instanceof THREE.PointLight && child.parent) {
-            // Lights follow their mesh siblings
-            const meshSibling = nodeGroupRef.current!.children.find(
-              (c) => c instanceof THREE.Mesh && c.userData.baseAngle === child.userData?.baseAngle
+            child.position.y = Math.sin(elapsed * 0.25 + baseAngle * 2) * 1.2
+            child.rotation.x = elapsed * 2.0
+            child.rotation.z = elapsed * 1.5
+            child.scale.setScalar(1.0 + sHighs * 1.0)
+          } else if (child instanceof THREE.Sprite) {
+            // Sprite follows the mesh above
+            const meshSibling = children.find(
+              (c) => c instanceof THREE.Mesh && c.userData.baseAngle === baseAngle
+            )
+            if (meshSibling) {
+              child.position.copy(meshSibling.position)
+              child.position.y += 0.5
+            }
+          } else if (child instanceof THREE.PointLight) {
+            const meshSibling = children.find(
+              (c) => c instanceof THREE.Mesh && c.userData.baseAngle === baseAngle
             )
             if (meshSibling) child.position.copy(meshSibling.position)
           }
         })
-        nodeGroupRef.current.rotation.y = elapsed * 0.05
+        nodeGroupRef.current.rotation.y = elapsed * 0.03
       }
 
-      // Gentle camera breathing
-      camera.position.x = Math.sin(elapsed * 0.1) * 0.3
-      camera.position.y = Math.cos(elapsed * 0.15) * 0.2
+      // --- Energy beams update ---
+      if (beamsRef.current && nodeGroupRef.current) {
+        beamsRef.current.children.forEach((beam) => {
+          if (!(beam instanceof THREE.Line)) return
+          const { baseAngle, nodeIndex } = beam.userData as { baseAngle: number; nodeIndex: number }
+          const meshes = nodeGroupRef.current!.children.filter(c => c instanceof THREE.Mesh)
+          const targetMesh = meshes[nodeIndex]
+          if (targetMesh) {
+            const positions = beam.geometry.attributes.position as THREE.BufferAttribute
+            positions.setXYZ(0, 0, 0, 0)
+            positions.setXYZ(1, targetMesh.position.x, targetMesh.position.y, targetMesh.position.z)
+            positions.needsUpdate = true
+          }
+          const bMat = beam.material as THREE.LineBasicMaterial
+          bMat.opacity = 0.04 + sHighs * 0.15 + Math.sin(elapsed * 2 + baseAngle) * 0.03
+        })
+      }
+
+      // --- Bloom intensity reacts to bass ---
+      if (bloomPassRef.current) {
+        bloomPassRef.current.strength = 1.4 + sBass * 1.5
+      }
+
+      // --- Cinematic camera orbit ---
+      const camRadius = 7.5 + Math.sin(elapsed * 0.05) * 1.5
+      const camAngle = elapsed * 0.06
+      const camHeight = 1.5 + Math.sin(elapsed * 0.08) * 1.5
+      camera.position.x = Math.sin(camAngle) * camRadius
+      camera.position.z = Math.cos(camAngle) * camRadius
+      camera.position.y = camHeight
       camera.lookAt(0, 0, 0)
 
-      renderer.render(scene, camera)
+      // Render with bloom
+      composer.render()
     }
 
     clockRef.current.start()
     animate()
 
-    // Resize handler
+    // Resize
     const handleResize = () => {
-      if (!container || !renderer || !camera) return
+      if (!container || !renderer || !camera || !composer) return
       const w = container.clientWidth
       const h = container.clientHeight
       renderer.setSize(w, h)
+      composer.setSize(w, h)
       camera.aspect = w / h
       camera.updateProjectionMatrix()
     }
@@ -575,10 +786,12 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       const gm = glowRef.current.material as THREE.ShaderMaterial
       gm.uniforms.uColor.value.copy(palette.primary)
     }
-    if (freqRingRef.current) {
-      const rm = freqRingRef.current.material as THREE.LineBasicMaterial
-      rm.color.copy(palette.primary)
-    }
+    // Update ring colors
+    freqRingsRef.current.forEach((ring, i) => {
+      const rm = ring.material as THREE.LineBasicMaterial
+      const colors = [palette.primary, palette.secondary, palette.accent]
+      rm.color.copy(colors[i] || palette.primary)
+    })
   }, [genre, getPalette])
 
   return (
