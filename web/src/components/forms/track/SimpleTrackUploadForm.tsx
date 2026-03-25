@@ -76,6 +76,7 @@ interface Props {
     genres?: Genre[]
     assetUrl: string
     artworkUrl?: string
+    musicVideoUrl?: string
     saveToDatabase?: boolean // Optional: skip DB storage
   }) => Promise<UploadResult>
 }
@@ -150,6 +151,36 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
     maxSize: 10 * 1024 * 1024, // 10MB
   })
 
+  // Music Video upload (optional, max 1GB)
+  const [videoFile, setVideoFile] = useState<File | null>(null)
+  const [uploadingVideo, setUploadingVideo] = useState(false)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+
+  const onDropVideo = useCallback(async (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]
+    if (!file) return
+    setVideoFile(file)
+    setUploadingVideo(true)
+    try {
+      const url = await onUploadAudio(file) // Reuse same upload handler
+      setVideoUrl(url)
+    } catch (error) {
+      console.error('Failed to upload video:', error)
+      setVideoFile(null)
+    } finally {
+      setUploadingVideo(false)
+    }
+  }, [onUploadAudio])
+
+  const { getRootProps: getVideoRootProps, getInputProps: getVideoInputProps, isDragActive: isVideoDragActive } = useDropzone({
+    onDrop: onDropVideo,
+    accept: {
+      'video/*': ['.mp4', '.webm', '.mov'],
+    },
+    maxFiles: 1,
+    maxSize: 1024 * 1024 * 1024, // 1GB
+  })
+
   const handleSubmit = async (values: SimpleTrackFormValues) => {
     if (!assetUrl) {
       alert('Please upload an audio file first')
@@ -168,6 +199,7 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
         genres: values.genres.length > 0 ? values.genres : undefined,
         assetUrl,
         artworkUrl: artworkUrl || undefined,
+        musicVideoUrl: videoUrl || undefined,
         saveToDatabase: false, // Non-web3 uploads are certificate-only
       })
 
@@ -435,6 +467,38 @@ export function SimpleTrackUploadForm({ onUploadComplete, onUploadAudio, onUploa
 
           {/* Copyright */}
           <InputField name="copyright" type="text" label="COPYRIGHT" maxLength={100} placeholder="© 2026 Artist Name" />
+
+          {/* Music Video (optional) */}
+          <div>
+            <label className="block text-sm font-bold text-gray-300 mb-2">
+              MUSIC VIDEO <span className="text-gray-500 font-normal">(optional, max 1GB)</span>
+            </label>
+            <div
+              {...getVideoRootProps()}
+              className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                isVideoDragActive ? 'border-purple-500 bg-purple-500/10' : videoFile ? 'border-green-500/50 bg-green-900/20' : 'border-gray-700 hover:border-gray-500'
+              }`}
+            >
+              <input {...getVideoInputProps()} />
+              {uploadingVideo ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+                  <span className="text-sm text-gray-400">Uploading video...</span>
+                </div>
+              ) : videoFile ? (
+                <div className="flex items-center justify-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                  <span className="text-sm text-green-400">{videoFile.name}</span>
+                  <span className="text-xs text-gray-500">({(videoFile.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                </div>
+              ) : (
+                <div>
+                  <p className="text-sm text-gray-400">Drag & drop your music video here</p>
+                  <p className="text-xs text-gray-500 mt-1">MP4, WebM, MOV (max 1GB)</p>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Genres */}
           <div>
