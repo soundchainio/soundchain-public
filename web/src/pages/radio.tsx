@@ -953,8 +953,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
         {/* Main Content — floats over 4D scene */}
         <main className="relative z-10 max-w-4xl mx-auto px-3 md:px-4 pt-0 pb-4">
-          {/* Radio Display — semi-transparent glass, 4D scene visible behind */}
-          <div className="relative bg-black/50 backdrop-blur-sm border border-white/10 rounded-2xl p-4 md:p-6">
+          {/* Radio Display — fully transparent, floating over 4D scene */}
+          <div className="relative p-4 md:p-6" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)' }}>
 
             {/* Station Header */}
             <div className="text-center mb-3 md:mb-6">
