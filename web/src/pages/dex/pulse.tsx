@@ -215,19 +215,13 @@ function PulsePage() {
   // Platform detection — runs client-side only to match SSR output (prevents hydration crash)
   const [isChromeIOS, setIsChromeIOS] = useState(false)
   useEffect(() => {
-    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+    setIsStandalone(
+      window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true
-    setIsStandalone(standalone)
+    )
     const ua = navigator.userAgent
     setIsIOS(/iPad|iPhone|iPod/.test(ua))
     setIsAndroid(/Android/.test(ua))
-
-    // Force service worker update in standalone PWA — ensures latest code loads
-    if (standalone && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(reg => reg.update())
-      })
-    }
     setIsChromeIOS(/CriOS/.test(ua)) // Chrome on iOS uses CriOS user agent
   }, [])
 
@@ -235,12 +229,7 @@ function PulsePage() {
   // If user arrived via SPA navigation (e.g. from /dex/feed), Safari cached the
   // main manifest and DOM changes won't make it re-read. Force a full page reload
   // so Safari gets fresh SSR HTML with /pulse-manifest.json.
-  // SKIP in standalone mode — manifest is already locked in, reload causes infinite loop.
   useEffect(() => {
-    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true
-    if (standalone) return // Already installed — manifest is baked in
-
     const hasWrongManifest = !!document.querySelector('link[rel="manifest"][href="/manifest.json"]')
 
     if (hasWrongManifest && !sessionStorage.getItem('pulse-manifest-reloaded')) {
@@ -255,7 +244,7 @@ function PulsePage() {
   // DOM cleanup as safety net — remove stale main manifest, ensure pulse manifest exists
   // Uses versioned URL (?v=2) to bust Safari's aggressive manifest cache
   useEffect(() => {
-    const correctHref = '/pulse-manifest.json?v=3'
+    const correctHref = '/pulse-manifest.json?v=2'
     document.querySelectorAll('link[rel="manifest"]').forEach(el => {
       if (!el.getAttribute('href')?.startsWith('/pulse-manifest.json')) el.remove()
     })
@@ -292,11 +281,6 @@ function PulsePage() {
   // Memoize gateway object to prevent useWebRTCCall from re-running effects every render
   const gateway = useMemo(() => ({ emit, on, connected }), [emit, on, connected])
 
-  // Stable callback for incoming call toast — must be declared before useWebRTCCall
-  const onIncomingCall = useCallback((_callId: string, _callerId: string, callerName: string, mode: CallMode) => {
-    toast.info(`Incoming ${mode} call from ${callerName}`, { autoClose: 10000 })
-  }, [])
-
   // WebRTC Voice/Video Calling — myId must be profile ID to match
   // the toId used by startCall (selectedChat.profileId)
   const webrtc = useWebRTCCall({
@@ -304,7 +288,9 @@ function PulsePage() {
     myName: me?.profile?.displayName || me?.profile?.userHandle || '',
     myAvatar: me?.profile?.profilePicture || undefined,
     gateway,
-    onIncomingCall,
+    onIncomingCall: useCallback((_callId: string, _callerId: string, callerName: string, mode: CallMode) => {
+      toast.info(`Incoming ${mode} call from ${callerName}`, { autoClose: 10000 })
+    }, []),
   })
 
   // Track previous chat state for new-message toast detection
@@ -350,9 +336,6 @@ function PulsePage() {
       router.replace('/login')
     }
   }, [me, meLoading, router])
-
-  // Auto-call disabled — was causing re-render cascade with connected dep
-  // TODO: re-enable with stable deps after #310 is resolved
 
   // Map chats to normalized items
   const chats: ChatItem[] = useMemo(() => {
@@ -949,13 +932,7 @@ function PulsePage() {
             setPushError('Notifications blocked. Check your browser settings to allow notifications for this site.')
           }
         } else if (err.includes('not supported')) {
-          if (isChromeIOS) {
-            setPushError('Chrome on iOS cannot send notifications. Open soundchain.io/dex/pulse in Safari, tap Share → Add to Home Screen, then enable notifications from there.')
-          } else if (isIOS) {
-            setPushError('To get notifications on iPhone: open this page in Safari, tap Share → Add to Home Screen, then enable notifications from the Home Screen app.')
-          } else {
-            setPushError('Notifications not available on this device/browser.')
-          }
+          setPushError('Notifications not available on this device/browser.')
         } else {
           setPushError(err || 'Subscription failed — tap Enable to try again.')
         }
@@ -1656,12 +1633,6 @@ function PulsePage() {
 
   return (
     <>
-      <Head>
-        <title>SoundChain Pulse</title>
-        <link key="pulse-manifest" rel="manifest" href="/pulse-manifest.json?v=3" />
-        <link key="pulse-icon" rel="apple-touch-icon" sizes="180x180" href="/favicons/pulse-apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-title" content="SoundChain Pulse" />
-      </Head>
       {renderNewChatOverlay()}
       {renderInstallModal()}
       {/* WebRTC Call Overlay */}
