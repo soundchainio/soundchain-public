@@ -359,7 +359,8 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       depthWrite: false,
     })
     const helixPoints = new THREE.Points(helixGeo, helixMat)
-    scene.add(helixPoints)
+    // Helix hidden — too bright even at 40%, additive blending stacks
+    // scene.add(helixPoints)
     helixParticlesRef.current = helixPoints
 
     // ============ STARFIELD NEBULA (8K density, dimmed for readability) ============
