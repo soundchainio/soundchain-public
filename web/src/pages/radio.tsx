@@ -169,6 +169,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const globalRadio = useRadioOptional()
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [showUploadAccordion, setShowUploadAccordion] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [volume, setVolume] = useState(0.7)
   const [isMuted, setIsMuted] = useState(false)
@@ -899,48 +900,68 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           </div>
         </nav>
 
-        {/* Billboard Grid — living metaverse checkerboard */}
+        {/* Navigation Pills — horizontal scroll bar like dex page */}
         <div className="relative z-10 max-w-4xl mx-auto px-3 pt-1">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
-            {/* Each tile opens as modal overlay or new tab — radio NEVER stops */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-2">
+            {/* Upload Free — special prominent pill */}
+            <button
+              onClick={() => setShowUploadAccordion(v => !v)}
+              className="flex-shrink-0 px-3 py-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-[10px] font-bold whitespace-nowrap hover:scale-105 transition-all shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+            >
+              🎵 Upload Free
+            </button>
+            {/* Micro nav pills */}
             {[
-              { label: 'Upload Free', sub: 'Earn per stream', icon: '🎵', gradient: 'from-cyan-500/20 to-blue-500/10', action: 'upload' as const },
-              { label: 'Feed', sub: 'Posts & vibes', icon: '📱', gradient: 'from-red-500/20 to-orange-500/10', action: 'nav' as const, link: '/dex/feed' },
-              { label: 'Explore', sub: '34 genres', icon: '🔍', gradient: 'from-green-500/20 to-emerald-500/10', action: 'nav' as const, link: '/dex/explore' },
-              { label: 'Marketplace', sub: 'Buy & Sell', icon: '🛒', gradient: 'from-indigo-500/20 to-violet-500/10', action: 'nav' as const, link: '/dex/marketplace' },
-              { label: 'Artists', sub: 'Discover new', icon: '🎤', gradient: 'from-pink-500/20 to-rose-500/10', action: 'nav' as const, link: '/dex/users' },
-              { label: 'Playlists', sub: 'Curated mixes', icon: '🎧', gradient: 'from-purple-500/20 to-pink-500/10', action: 'nav' as const, link: '/dex/playlists' },
-              { label: 'Wallet', sub: 'OGUN & POL', icon: '💰', gradient: 'from-yellow-500/20 to-amber-500/10', action: 'nav' as const, link: '/dex/wallet' },
-              { label: 'Staking', sub: '125% APR', icon: '🔒', gradient: 'from-teal-500/20 to-cyan-500/10', action: 'nav' as const, link: '/dex/wallet' },
-              { label: 'Moltbook', sub: 'Agent network', icon: '🦞', gradient: 'from-orange-500/20 to-red-500/10', action: 'external' as const, link: 'https://www.moltbook.com' },
-              { label: 'Pulse', sub: 'Messaging', icon: '💬', gradient: 'from-sky-500/20 to-blue-500/10', action: 'nav' as const, link: '/dex/pulse' },
-              { label: 'Library', sub: 'Your collection', icon: '📚', gradient: 'from-lime-500/20 to-green-500/10', action: 'nav' as const, link: '/dex/library' },
-              { label: 'SCID', sub: 'Your certificates', icon: '🏆', gradient: 'from-fuchsia-500/20 to-purple-500/10', action: 'nav' as const, link: '/dex/wallet' },
-            ].map((tile, i) => (
+              { label: 'Feed', icon: '📱', link: '/dex/feed' },
+              { label: 'Explore', icon: '🔍', link: '/dex/explore' },
+              { label: 'Marketplace', icon: '🛒', link: '/dex/marketplace' },
+              { label: 'Artists', icon: '🎤', link: '/dex/users' },
+              { label: 'Playlists', icon: '🎧', link: '/dex/playlists' },
+              { label: 'Wallet', icon: '💰', link: '/dex/wallet' },
+              { label: 'Staking', icon: '🔒', link: '/dex/wallet' },
+              { label: 'Moltbook', icon: '🦞', link: 'https://www.moltbook.com', external: true },
+              { label: 'Pulse', icon: '💬', link: '/dex/pulse' },
+              { label: 'Library', icon: '📚', link: '/dex/library' },
+              { label: 'SCID', icon: '🏆', link: '/dex/wallet' },
+            ].map((pill) => (
               <button
-                key={i}
+                key={pill.label}
                 onClick={() => {
-                  if (tile.action === 'upload') {
-                    // Open publish modal as overlay — radio keeps playing
-                    dispatchShowCreateModal(true, 'mint')
-                  } else if (tile.action === 'external') {
-                    window.open(tile.link, '_blank', 'noopener')
-                  } else if (tile.link) {
-                    // Sync radio state to global context before navigating
-                    if (globalRadio && currentTrack && isPlaying) {
-                      globalRadio.startRadio()
-                    }
-                    router.push(tile.link)
+                  if (pill.external) {
+                    window.open(pill.link, '_blank', 'noopener')
+                  } else {
+                    if (globalRadio && currentTrack && isPlaying) globalRadio.startRadio()
+                    router.push(pill.link)
                   }
                 }}
-                className={`bg-black/30 backdrop-blur-sm border border-white/10 rounded-lg p-2 text-center hover:border-cyan-500/40 hover:scale-105 hover:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all duration-200 cursor-pointer group`}
+                className="flex-shrink-0 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 text-[9px] font-medium text-gray-300 whitespace-nowrap hover:border-cyan-500/40 hover:text-white transition-all"
               >
-                <div className="text-lg mb-0.5">{tile.icon}</div>
-                <div className="text-[9px] font-bold text-white/90 leading-tight">{tile.label}</div>
-                <div className="text-[7px] text-gray-400 leading-tight">{tile.sub}</div>
+                {pill.icon} {pill.label}
               </button>
             ))}
           </div>
+
+          {/* Upload Free Accordion — expands below pills, collapsible */}
+          {showUploadAccordion && (
+            <div className="mt-2 bg-black/60 backdrop-blur-md border border-cyan-500/30 rounded-xl p-4 relative">
+              <button
+                onClick={() => setShowUploadAccordion(false)}
+                className="absolute top-2 right-2 p-1 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+              <h3 className="text-sm font-bold text-cyan-400 mb-2">Upload Free — Earn OGUN Per Stream</h3>
+              <p className="text-xs text-gray-400 mb-3">
+                Upload your music and get a SoundChain ID (SCID). Every stream earns OGUN rewards — 70% creator, 30% listener. No minting required.
+              </p>
+              <button
+                onClick={() => { setShowUploadAccordion(false); dispatchShowCreateModal(true, 'mint') }}
+                className="w-full py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-bold hover:scale-[1.02] transition-transform"
+              >
+                🎵 Start Upload
+              </button>
+            </div>
+          )}
         </div>
 
         {/* 4D Immersive Scene — FULL VIEWPORT fixed background */}
