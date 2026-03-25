@@ -177,13 +177,8 @@ function PulsePage() {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const newChatInputRef = useRef<HTMLInputElement>(null)
 
-  // Push notifications — disabled to debug #310 crash
-  // usePushNotifications internally uses useQuery with network-only which may cause re-render loop
-  const pushPermission = 'prompt' as const
-  const pushSubscribed = false
-  const pushSupported = false
-  const pushSubscribe = async () => ({ success: false, error: 'disabled' })
-  const pushHookError = null as string | null
+  // Push notifications
+  const { permission: pushPermission, isSubscribed: pushSubscribed, isSupported: pushSupported, subscribe: pushSubscribe, error: pushHookError } = usePushNotifications()
   const [pushLoading, setPushLoading] = useState(false)
   const [testPush, { loading: testPushLoading }] = useMutation(TEST_PUSH)
   const [testPushResult, setTestPushResult] = useState<string | null>(null)
@@ -356,21 +351,8 @@ function PulsePage() {
     }
   }, [me, meLoading, router])
 
-  // Auto-start call when opened with ?call=profileId (from profile page phone button)
-  const autoCallTriggered = useRef(false)
-  useEffect(() => {
-    if (autoCallTriggered.current || !me?.profile?.id || !connected) return
-    const callTarget = router.query.call as string
-    if (!callTarget) return
-    autoCallTriggered.current = true
-    const calleeName = (router.query.name as string) || 'User'
-    const calleeAvatar = (router.query.avatar as string) || undefined
-    // Small delay to ensure WebSocket is fully registered
-    setTimeout(() => {
-      webrtc.startCall(callTarget, calleeName, calleeAvatar, 'voice')
-      toast.info(`Calling ${calleeName}...`, { autoClose: 3000 })
-    }, 1000)
-  }, [me?.profile?.id, connected, router.query.call])
+  // Auto-call disabled — was causing re-render cascade with connected dep
+  // TODO: re-enable with stable deps after #310 is resolved
 
   // Map chats to normalized items
   const chats: ChatItem[] = useMemo(() => {
