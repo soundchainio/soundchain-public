@@ -60,13 +60,9 @@ async function generateReport(): Promise<HealthReport> {
     fetch('https://soundchain.io/', { signal: AbortSignal.timeout(10000) })
       .then(r => ({ status: r.ok ? 'UP' : 'DOWN', code: r.status }))
       .catch(() => ({ status: 'DOWN', code: 0 })),
-    fetch('https://api.soundchain.io/graphql', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: '{ __typename }' }),
-      signal: AbortSignal.timeout(10000),
-    })
-      .then(r => ({ status: r.ok ? 'UP' : 'DOWN', code: r.status }))
+    fetch('https://soundchain.io/api/agent/stats', { signal: AbortSignal.timeout(10000) })
+      .then(r => r.json())
+      .then((d: any) => ({ status: d.success ? 'UP' : 'DOWN', code: 200 }))
       .catch(() => ({ status: 'DOWN', code: 0 })),
     fetch('https://tunnel.soundchain.io/health', { signal: AbortSignal.timeout(5000) })
       .then(r => r.json())
