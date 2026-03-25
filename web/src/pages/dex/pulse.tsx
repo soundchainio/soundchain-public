@@ -538,9 +538,14 @@ function PulsePage() {
     }
     try {
       // Direct REST API → Atlas (bypasses Lambda GraphQL for instant delivery)
+      const jwt = document.cookie.match(/(?:^|;\s*)token=([^;]*)/)?.[1] || localStorage.getItem('jwt_fallback') || ''
       const res = await fetch('/api/pulse/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {}),
+        },
+        credentials: 'include',
         body: JSON.stringify({
           toId: selectedChat.profileId,
           message: text,
@@ -572,9 +577,11 @@ function PulsePage() {
   const handleStickerSelect = (url: string) => {
     if (!selectedChat) return
     closePickers()
+    const jwt = document.cookie.match(/(?:^|;\s*)token=([^;]*)/)?.[1] || localStorage.getItem('jwt_fallback') || ''
     fetch('/api/pulse/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {}) },
+      credentials: 'include',
       body: JSON.stringify({ toId: selectedChat.profileId, message: url }),
     }).then(() => { refetchChats(); refetchHistoryRef.current?.() })
       .catch(() => toast.error('Sticker failed to send'))
@@ -583,9 +590,11 @@ function PulsePage() {
   const handleGifSelect = (url: string) => {
     if (!selectedChat) return
     closePickers()
+    const jwt = document.cookie.match(/(?:^|;\s*)token=([^;]*)/)?.[1] || localStorage.getItem('jwt_fallback') || ''
     fetch('/api/pulse/send', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {}) },
+      credentials: 'include',
       body: JSON.stringify({ toId: selectedChat.profileId, message: url }),
     }).then(() => { refetchChats(); refetchHistoryRef.current?.() })
       .catch(() => toast.error('GIF failed to send'))
