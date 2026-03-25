@@ -502,6 +502,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         {/* Hidden Audio Element */}
         <audio
           ref={audioRef}
+          crossOrigin="anonymous"
+          preload="auto"
           onTimeUpdate={handleTimeUpdate}
           onEnded={handleTrackEnd}
           onPlay={() => setIsPlaying(true)}
