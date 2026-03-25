@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 
 const AdSlot = dynamic(() => import('components/ads/AdSlot').then(mod => ({ default: mod.AdSlot })), { ssr: false })
+const RadioScene4D = dynamic(() => import('components/RadioScene4D'), { ssr: false })
 import { GetServerSideProps } from 'next'
 import { initializeApollo } from 'lib/apollo'
 import {
@@ -932,10 +933,23 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           </div>
         </div>
 
-        {/* Main Content */}
-        <main className="max-w-4xl mx-auto px-3 md:px-4 py-2 md:py-4">
-          {/* Radio Display */}
-          <div className="relative bg-[#0a1628] border border-red-900/30 rounded-2xl p-4 md:p-8 shadow-2xl shadow-red-900/20">
+        {/* 4D Immersive Scene + Main Content */}
+        <div className="relative">
+          {/* 4D WebGL Background — audio-reactive Three.js scene */}
+          <div className="absolute inset-0 overflow-hidden" style={{ minHeight: '600px' }}>
+            <RadioScene4D
+              audioRef={audioRef}
+              isPlaying={isPlaying}
+              artworkUrl={currentTrack?.artwork_url}
+              genre={currentTrack?.genres?.[0]}
+            />
+            {/* Gradient fade at bottom so scene blends into page */}
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#030d1b] to-transparent pointer-events-none" />
+          </div>
+
+        <main className="relative z-10 max-w-4xl mx-auto px-3 md:px-4 py-2 md:py-4">
+          {/* Radio Display — translucent to let 4D scene shine through */}
+          <div className="relative bg-[#0a1628]/70 backdrop-blur-xl border border-red-900/30 rounded-2xl p-4 md:p-8 shadow-2xl shadow-red-900/20">
 
             {/* Station Header */}
             <div className="text-center mb-4 md:mb-8">
@@ -1185,20 +1199,45 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             </div>
           )}
 
-          {/* Info Cards */}
+          {/* Info Cards — translucent over 4D scene */}
           <div className="grid grid-cols-3 gap-2 md:gap-4 mt-4 md:mt-8">
-            <div className="bg-[#0a1628] border border-cyan-900/30 rounded-xl p-3 md:p-4 text-center">
+            <div className="bg-[#0a1628]/60 backdrop-blur-md border border-cyan-900/30 rounded-xl p-3 md:p-4 text-center">
               <div className="text-xl md:text-3xl font-bold text-cyan-400">{totalTracks || queueLength || '...'}</div>
               <div className="text-xs md:text-sm text-gray-500">Tracks</div>
             </div>
-            <div className="bg-[#0a1628] border border-yellow-900/30 rounded-xl p-3 md:p-4 text-center">
+            <div className="bg-[#0a1628]/60 backdrop-blur-md border border-yellow-900/30 rounded-xl p-3 md:p-4 text-center">
               <div className="text-xl md:text-3xl font-bold text-yellow-400">24/7</div>
               <div className="text-xs md:text-sm text-gray-500">Infinite Loop</div>
             </div>
-            <div className="bg-[#0a1628] border border-green-900/30 rounded-xl p-3 md:p-4 text-center">
+            <div className="bg-[#0a1628]/60 backdrop-blur-md border border-green-900/30 rounded-xl p-3 md:p-4 text-center">
               <div className="text-xl md:text-3xl font-bold text-green-400">OGUN</div>
               <div className="text-xs md:text-sm text-gray-500">Streaming Rewards</div>
             </div>
+          </div>
+
+          {/* Ecosystem Badges — showcase ClawHub + npm published status */}
+          <div className="mt-4 md:mt-8 flex flex-wrap items-center justify-center gap-2 md:gap-3">
+            <a href="https://www.npmjs.com/package/@soundchain/openclaw-plugin" target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-900/30 backdrop-blur-md border border-red-500/30 rounded-full text-xs font-bold text-red-400 hover:bg-red-900/50 hover:border-red-500/50 transition-all group">
+              <span className="w-2 h-2 rounded-full bg-red-500 group-hover:animate-pulse" />
+              npm published
+            </a>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-900/30 backdrop-blur-md border border-orange-500/30 rounded-full text-xs font-bold text-orange-400">
+              <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+              ClawHub LIVE
+            </span>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-900/30 backdrop-blur-md border border-purple-500/30 rounded-full text-xs font-bold text-purple-400">
+              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+              Polygon L2
+            </span>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-900/30 backdrop-blur-md border border-cyan-500/30 rounded-full text-xs font-bold text-cyan-400">
+              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
+              IPFS Streaming
+            </span>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-900/30 backdrop-blur-md border border-green-500/30 rounded-full text-xs font-bold text-green-400">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              {totalTracks || 618}+ Agents
+            </span>
           </div>
 
           {/* API Info */}
@@ -1209,6 +1248,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             </p>
           </div>
         </main>
+        </div>{/* end 4D scene + main content wrapper */}
       </div>
 
       {/* Share to Story Modal */}
