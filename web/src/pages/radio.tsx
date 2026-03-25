@@ -169,7 +169,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const globalRadio = useRadioOptional()
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [showUploadAccordion, setShowUploadAccordion] = useState(false)
+  const [showUploadAccordion, setShowUploadAccordion] = useState(true) // Open by default
   const [isLoading, setIsLoading] = useState(true)
   const [volume, setVolume] = useState(0.7)
   const [isMuted, setIsMuted] = useState(false)
@@ -941,25 +941,63 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             ))}
           </div>
 
-          {/* Upload Free Accordion — expands below pills, collapsible */}
+          {/* Upload Free Accordion — space station design, open by default */}
           {showUploadAccordion && (
-            <div className="mt-2 bg-black/60 backdrop-blur-md border border-cyan-500/30 rounded-xl p-4 relative">
-              <button
-                onClick={() => setShowUploadAccordion(false)}
-                className="absolute top-2 right-2 p-1 rounded-full hover:bg-white/10 transition-colors"
-              >
-                <X className="w-4 h-4 text-gray-400" />
-              </button>
-              <h3 className="text-sm font-bold text-cyan-400 mb-2">Upload Free — Earn OGUN Per Stream</h3>
-              <p className="text-xs text-gray-400 mb-3">
-                Upload your music and get a SoundChain ID (SCID). Every stream earns OGUN rewards — 70% creator, 30% listener. No minting required.
-              </p>
-              <button
-                onClick={() => { setShowUploadAccordion(false); dispatchShowCreateModal(true, 'mint') }}
-                className="w-full py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-bold hover:scale-[1.02] transition-transform"
-              >
-                🎵 Start Upload
-              </button>
+            <div className="mt-2 relative overflow-hidden rounded-xl border border-cyan-500/20" style={{ background: 'linear-gradient(135deg, rgba(0,20,40,0.85) 0%, rgba(0,40,60,0.85) 50%, rgba(10,20,50,0.85) 100%)', backdropFilter: 'blur(12px)' }}>
+              {/* Animated scan line */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent animate-pulse" style={{ top: '30%' }} />
+                <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-400/20 to-transparent animate-pulse" style={{ top: '70%', animationDelay: '1s' }} />
+              </div>
+
+              <div className="relative p-4">
+                {/* Close button */}
+                <button
+                  onClick={() => setShowUploadAccordion(false)}
+                  className="absolute top-3 right-3 p-1.5 rounded-full border border-white/10 hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5 text-gray-400" />
+                </button>
+
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/30 to-blue-500/30 flex items-center justify-center border border-cyan-500/30">
+                    <span className="text-sm">🎵</span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Upload Free — Earn OGUN</h3>
+                    <p className="text-[10px] text-cyan-400/70 font-mono">SCID REGISTRATION PORTAL</p>
+                  </div>
+                </div>
+
+                {/* Info grid */}
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="bg-black/30 rounded-lg p-2 text-center border border-white/5">
+                    <div className="text-xs font-bold text-cyan-400">70%</div>
+                    <div className="text-[8px] text-gray-500">Creator</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2 text-center border border-white/5">
+                    <div className="text-xs font-bold text-green-400">30%</div>
+                    <div className="text-[8px] text-gray-500">Listener</div>
+                  </div>
+                  <div className="bg-black/30 rounded-lg p-2 text-center border border-white/5">
+                    <div className="text-xs font-bold text-yellow-400">$0</div>
+                    <div className="text-[8px] text-gray-500">Cost</div>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-gray-400 mb-3 leading-relaxed">
+                  Upload your music → get a SoundChain ID (SCID) → every stream earns OGUN rewards on Polygon. No minting fees. No gas. Just music.
+                </p>
+
+                {/* Start Upload button — opens CreateModal overlay, keeps accordion open */}
+                <button
+                  onClick={() => dispatchShowCreateModal(true, 'mint')}
+                  className="w-full py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-bold hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-[1.02] transition-all border border-cyan-400/20"
+                >
+                  🚀 Start Upload
+                </button>
+              </div>
             </div>
           )}
         </div>
