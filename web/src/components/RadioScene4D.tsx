@@ -287,11 +287,11 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
             color += vec3(pulse * uBass * 0.5);
             color *= 1.5;
           }
-          // Intense rim lighting — makes edges glow hot
+          // Subtle rim lighting
           vec3 viewDir = normalize(cameraPosition - vPosition);
           float rim = 1.0 - max(dot(viewDir, vNormal), 0.0);
-          rim = pow(rim, 2.5);
-          color += uPrimary * rim * (1.0 + uBass * 1.5);
+          rim = pow(rim, 3.0);
+          color += uPrimary * rim * 0.3;
           gl_FragColor = vec4(color, 1.0);
         }
       `,
@@ -350,7 +350,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
           float d = length(gl_PointCoord - vec2(0.5));
           if (d > 0.5) discard;
           float alpha = (1.0 - d * 2.0) * vAlpha;
-          gl_FragColor = vec4(vColor * 1.5, alpha);
+          gl_FragColor = vec4(vColor * 0.4, alpha * 0.5);
         }
       `,
       vertexColors: true,
