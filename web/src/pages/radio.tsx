@@ -993,38 +993,28 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
             ) : currentTrack ? (
               <>
                 {/* Now Playing */}
-                <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-4 md:mb-6">
-                  {/* Artwork — the reactor core powering the 4D universe */}
-                  <div className="relative w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 flex-shrink-0">
-                    {/* Outer energy ring — pulses when playing */}
-                    <div className={`absolute -inset-3 rounded-full ${isPlaying ? 'animate-pulse' : ''}`} style={{ animationDuration: '2s' }}>
-                      <div className="w-full h-full rounded-full bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-orange-500/20 blur-xl" />
-                    </div>
-                    {/* Inner energy ring */}
-                    <div className={`absolute -inset-1 rounded-full border ${isPlaying ? 'border-cyan-500/30' : 'border-white/10'} ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '12s' }}>
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]" />
-                    </div>
-                    {/* Vinyl disc */}
-                    <div className={`relative w-full h-full ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '8s' }}>
+                <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6 mb-4 md:mb-6">
+                  {/* Mini vinyl — top left corner thumbnail */}
+                  <div className="relative w-16 h-16 flex-shrink-0">
+                    <div className={`relative w-full h-full ${isPlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }}>
                       {currentTrack.artwork_url ? (
                         <img
                           src={currentTrack.artwork_url}
                           alt={currentTrack.title}
-                          className="w-full h-full object-cover rounded-full shadow-[0_0_40px_rgba(34,211,238,0.15),0_0_80px_rgba(168,85,247,0.1)] border-2 border-white/10"
+                          className="w-full h-full object-cover rounded-full border border-white/20 shadow-[0_0_15px_rgba(34,211,238,0.2)]"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-red-900/80 to-purple-900/80 rounded-full flex items-center justify-center border-2 border-white/10">
-                          <Music className="w-20 h-20 text-white/50" />
+                        <div className="w-full h-full bg-gradient-to-br from-red-900/80 to-purple-900/80 rounded-full flex items-center justify-center border border-white/10">
+                          <Music className="w-6 h-6 text-white/50" />
                         </div>
                       )}
                     </div>
-                    {/* Center hole — glowing core */}
+                    {/* Center hole */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className={`w-8 h-8 rounded-full border border-white/20 ${isPlaying ? 'bg-gradient-to-br from-cyan-900/80 to-purple-900/80 shadow-[0_0_15px_rgba(34,211,238,0.4)]' : 'bg-black/60'}`} />
+                      <div className="w-3 h-3 rounded-full bg-black/60 border border-white/20" />
                     </div>
                     {currentTrack.is_nft && (
-                      <div className="absolute -top-2 -right-2 px-2 py-1 bg-yellow-500/90 text-black text-xs font-bold rounded-full shadow-[0_0_10px_rgba(234,179,8,0.5)]">
+                      <div className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-yellow-500/90 text-black text-[8px] font-bold rounded-full">
                         NFT
                       </div>
                     )}

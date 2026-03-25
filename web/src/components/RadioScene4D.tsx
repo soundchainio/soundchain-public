@@ -561,8 +561,8 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
       if (orbRef.current && orbMaterialRef.current) {
         orbMaterialRef.current.uniforms.uTime.value = elapsed
         orbMaterialRef.current.uniforms.uBass.value = sBass
-        orbRef.current.rotation.y = elapsed * 0.12
-        orbRef.current.rotation.x = Math.sin(elapsed * 0.08) * 0.15
+        orbRef.current.rotation.y = elapsed * 0.5
+        orbRef.current.rotation.x = Math.sin(elapsed * 0.3) * 0.25
       }
 
       // --- Glow ---
