@@ -301,38 +301,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     orbRef.current = orb
     orbMaterialRef.current = orbMat
 
-    // ============ GLOW SPHERE (bloom amplifier) ============
-    const glowGeo = new THREE.SphereGeometry(1.8, 32, 32)
-    const glowMat = new THREE.ShaderMaterial({
-      uniforms: {
-        uColor: { value: DEFAULT_PALETTE.primary },
-        uBass: { value: 0 },
-      },
-      vertexShader: `
-        varying vec3 vNormal;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 uColor;
-        uniform float uBass;
-        varying vec3 vNormal;
-        void main() {
-          float intensity = pow(0.65 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-          float alpha = intensity * (0.5 + uBass * 0.8);
-          gl_FragColor = vec4(uColor * 1.5, alpha);
-        }
-      `,
-      transparent: true,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    })
-    const glow = new THREE.Mesh(glowGeo, glowMat)
-    scene.add(glow)
-    glowRef.current = glow
+    // GLOW SPHERE removed — was too bright, blocked artwork visibility
 
     // ============ DOUBLE HELIX (4000 particles) ============
     const helixCount = 4000
@@ -461,38 +430,8 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     scene.add(starfield)
     starfieldRef.current = starfield
 
-    // ============ 3 CONCENTRIC FREQUENCY RINGS ============
-    const ringConfigs = [
-      { radius: 2.8, segments: 128, color: DEFAULT_PALETTE.primary, opacity: 0.8, yOffset: 0 },
-      { radius: 3.8, segments: 96, color: DEFAULT_PALETTE.secondary, opacity: 0.5, yOffset: -0.5 },
-      { radius: 4.8, segments: 64, color: DEFAULT_PALETTE.accent, opacity: 0.3, yOffset: -1.0 },
-    ]
-    const rings: THREE.Line[] = []
-    ringConfigs.forEach((cfg) => {
-      const positions = new Float32Array(cfg.segments * 3)
-      for (let i = 0; i < cfg.segments; i++) {
-        const angle = (i / cfg.segments) * Math.PI * 2
-        positions[i * 3] = Math.cos(angle) * cfg.radius
-        positions[i * 3 + 1] = Math.sin(angle) * cfg.radius
-        positions[i * 3 + 2] = 0
-      }
-      const geo = new THREE.BufferGeometry()
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-      const mat = new THREE.LineBasicMaterial({
-        color: cfg.color,
-        transparent: true,
-        opacity: cfg.opacity,
-        blending: THREE.AdditiveBlending,
-        linewidth: 1,
-      })
-      const ring = new THREE.LineLoop(geo, mat)
-      ring.rotation.x = Math.PI * 0.5
-      ring.position.y = cfg.yOffset
-      ring.userData = { baseRadius: cfg.radius, segments: cfg.segments }
-      scene.add(ring)
-      rings.push(ring)
-    })
-    freqRingsRef.current = rings
+    // FREQUENCY RINGS removed — were too bright/white, blocking content
+    freqRingsRef.current = []
 
     // ============ TRON GRID FLOOR ============
     const gridGroup = new THREE.Group()
