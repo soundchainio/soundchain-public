@@ -53,10 +53,14 @@ const ECOSYSTEM_NODES = [
   { label: 'POLYGON', color: 0x8247e5 },
   { label: 'IPFS', color: 0x65c2cb },
   { label: 'SCID', color: 0x00e5ff },
+  { label: 'FURL', color: 0xff4488 },
+  { label: 'SMITH', color: 0x44ff88 },
+  { label: 'FORGE', color: 0xff8844 },
   { label: 'AGENTS', color: 0x00ff88 },
   { label: 'CLAWHUB', color: 0xff6600 },
   { label: 'NPM', color: 0xcb3837 },
   { label: 'OGUN', color: 0xffd700 },
+  { label: 'P2P', color: 0x22d3ee },
 ]
 
 // Create a text sprite for 3D labels
@@ -168,10 +172,15 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
   useEffect(() => {
     if (!artworkUrl || artworkUrl === artworkUrlRef.current) return
     artworkUrlRef.current = artworkUrl
+    // S3 doesn't return CORS headers — proxy through Next.js image optimizer
+    // which adds proper CORS and serves from our domain
+    const proxyUrl = artworkUrl.includes('s3.') || artworkUrl.includes('amazonaws.com')
+      ? `/api/image-proxy?url=${encodeURIComponent(artworkUrl)}`
+      : artworkUrl
     const loader = new THREE.TextureLoader()
     loader.crossOrigin = 'anonymous'
     loader.load(
-      artworkUrl,
+      proxyUrl,
       (texture) => {
         texture.colorSpace = THREE.SRGBColorSpace
         if (artworkTextureRef.current) artworkTextureRef.current.dispose()
@@ -198,7 +207,7 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
     // --- Renderer ---
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' })
     renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3)) // Higher DPI for crisp 4D rendering
     renderer.setClearColor(0x020810, 1)
     renderer.toneMapping = THREE.ACESFilmicToneMapping
     renderer.toneMappingExposure = 1.2
