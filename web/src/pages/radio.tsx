@@ -45,6 +45,10 @@ import { useMagicContext } from 'hooks/useMagicContext'
 import { gql, useQuery } from '@apollo/client'
 import { toast, ToastContainer } from 'react-toastify'
 import { OgunRewardToast, DailyLimitToast } from 'components/common/OgunRewardToast'
+import { SimpleTrackUploadForm } from 'components/forms/track/SimpleTrackUploadForm'
+import { useUpload } from 'hooks/useUpload'
+import { useCreateTrackWithSCidMutation, FeedDocument, PostsDocument, ExploreTracksDocument, Genre } from 'lib/graphql'
+import { generateCertificate, downloadCertificates } from 'utils/SCidCertificate'
 import { Card } from 'components/ui/card'
 import { Button } from 'components/ui/button'
 import { ConcertChat } from 'components/dex/ConcertChat'
@@ -172,6 +176,10 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   const [currentTrack, setCurrentTrack] = useState<RadioTrack | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [showUploadAccordion, setShowUploadAccordion] = useState(true) // Open by default
+  const [showUploadForm, setShowUploadForm] = useState(false) // SCID upload form modal
+  const [scidResult, setScidResult] = useState<{ trackId: string; scid: string; ipfsCid: string; chainCode?: string; title: string } | null>(null)
+  const { upload } = useUpload()
+  const [createTrackWithSCid] = useCreateTrackWithSCidMutation()
   const [isLoading, setIsLoading] = useState(true)
   const [volume, setVolume] = useState(0.7)
   const [isMuted, setIsMuted] = useState(false)
@@ -992,9 +1000,9 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                   Upload your music → get a SoundChain ID (SCID) → every stream earns OGUN rewards on Polygon. No minting fees. No gas. Just music.
                 </p>
 
-                {/* Start Upload button — opens CreateModal overlay, keeps accordion open */}
+                {/* Start Upload button — opens SCID form inline */}
                 <button
-                  onClick={() => window.open('/dex/feed?upload=scid', '_blank', 'noopener')}
+                  onClick={() => setShowUploadForm(true)}
                   className="w-full py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-bold hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-[1.02] transition-all border border-cyan-400/20"
                 >
                   🚀 Start Upload
@@ -1361,6 +1369,106 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           backdropFilter: 'blur(8px)',
         }}
       />
+
+      {/* SCID Upload Modal — full overlay, radio keeps playing */}
+      {showUploadForm && (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm overflow-y-auto">
+          <div className="max-w-lg mx-auto mt-8 mb-8 bg-gray-900 rounded-2xl border border-cyan-500/20 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/50">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎵</span>
+                <span className="text-sm font-bold text-white">SCid</span>
+              </div>
+              <button
+                onClick={() => { setShowUploadForm(false); setScidResult(null) }}
+                className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+
+            {scidResult ? (
+              <div className="p-6 text-center">
+                <div className="mb-4 text-4xl">🎉</div>
+                <h3 className="mb-2 text-xl font-bold text-white">Track Uploaded!</h3>
+                <p className="mb-4 text-gray-400">Your SCid certificate is ready.</p>
+                <div className="mb-4 rounded-lg bg-gray-800 p-4 text-left">
+                  <p className="text-sm text-gray-400">SCid:</p>
+                  <p className="font-mono text-cyan-400 break-all text-sm">{scidResult.scid}</p>
+                  <p className="mt-2 text-sm text-gray-400">IPFS CID:</p>
+                  <p className="font-mono text-cyan-400 break-all text-sm">{scidResult.ipfsCid}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const cert = generateCertificate({
+                      scid: scidResult.scid,
+                      chainCode: scidResult.chainCode,
+                      trackId: scidResult.trackId,
+                      title: scidResult.title,
+                      ipfsCid: scidResult.ipfsCid,
+                    })
+                    downloadCertificates(cert)
+                  }}
+                  className="w-full py-2 mb-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-sm font-bold"
+                >
+                  Download Certificate
+                </button>
+                <button
+                  onClick={() => setScidResult(null)}
+                  className="text-xs text-cyan-400 hover:text-cyan-300"
+                >
+                  Upload Another
+                </button>
+              </div>
+            ) : (
+              <div className="p-4">
+                <div className="mb-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+                  <p className="text-center text-sm text-green-400 font-bold mb-1">FREE Upload</p>
+                  <p className="text-center text-xs text-gray-400">
+                    No wallet needed. Get an SCid certificate as proof of ownership.
+                  </p>
+                  <p className="text-center text-xs text-green-400/70 mt-2">
+                    Earns 0.5 OGUN per stream (70% creator, 30% listener)
+                  </p>
+                </div>
+                <SimpleTrackUploadForm
+                  onUploadAudio={async (file: File) => await upload([file])}
+                  onUploadArtwork={async (file: File) => await upload([file])}
+                  onSubmit={async (data: any) => {
+                    const result = await createTrackWithSCid({
+                      variables: {
+                        input: {
+                          title: data.title,
+                          description: data.description,
+                          assetUrl: data.assetUrl,
+                          artworkUrl: data.artworkUrl,
+                          artist: data.artist,
+                          album: data.album,
+                          releaseYear: data.releaseYear,
+                          copyright: data.copyright,
+                          genres: data.genres as Genre[] | undefined,
+                          createPost: false,
+                        },
+                      },
+                      refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
+                    })
+                    const trackData = result.data?.createTrackWithSCid
+                    if (!trackData) throw new Error('Failed to create track')
+                    setScidResult({
+                      trackId: trackData.track.id,
+                      scid: trackData.scid?.scid || '',
+                      ipfsCid: trackData.track.ipfsCid || '',
+                      chainCode: trackData.scid?.chainCode,
+                      title: data.title,
+                    })
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }
