@@ -52,6 +52,7 @@ const DEFAULT_PALETTE = { primary: new THREE.Color(0xff4400), secondary: new THR
 const ECOSYSTEM_NODES = [
   { label: 'POLYGON', color: 0x8247e5 },
   { label: 'IPFS', color: 0x65c2cb },
+  { label: 'SCID', color: 0x00e5ff },
   { label: 'AGENTS', color: 0x00ff88 },
   { label: 'CLAWHUB', color: 0xff6600 },
   { label: 'NPM', color: 0xcb3837 },
