@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 
 const RadioScene4D = dynamic(() => import('components/RadioScene4D'), { ssr: false })
+const CreateModal = dynamic(() => import('components/modals/CreateModal'), { ssr: false })
 import { GetServerSideProps } from 'next'
 import { initializeApollo } from 'lib/apollo'
 import {
@@ -1359,6 +1360,8 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
           backdropFilter: 'blur(8px)',
         }}
       />
+      {/* CreateModal — renders as overlay when dispatchShowCreateModal is called */}
+      <CreateModal />
     </>
   )
 }
