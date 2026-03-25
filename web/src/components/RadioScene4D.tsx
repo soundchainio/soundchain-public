@@ -284,24 +284,22 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         void main() {
           vec3 color;
           if (uHasTexture > 0.5) {
+            // Show cover art as-is — minimal processing to preserve colors
             color = texture2D(uTexture, vUv).rgb;
-            // Energy injection from bass
-            float energy = uBass * 0.5;
-            color += uPrimary * energy * 0.4;
-            // Boost brightness for bloom to catch
-            color *= 1.2 + uBass * 0.3;
+            // Very subtle bass pulse — just a hint of energy
+            color += uPrimary * uBass * 0.08;
           } else {
+            // No texture — show gradient orb
             float t = vUv.y + sin(vUv.x * 6.28 + uTime * 2.0) * 0.15;
             color = mix(uPrimary, uSecondary, t);
             float pulse = sin(uTime * 4.0) * 0.5 + 0.5;
-            color += vec3(pulse * uBass * 0.5);
-            color *= 1.5;
+            color += vec3(pulse * uBass * 0.3);
           }
-          // Subtle rim lighting
+          // Very subtle rim — just enough to see the sphere edge
           vec3 viewDir = normalize(cameraPosition - vPosition);
           float rim = 1.0 - max(dot(viewDir, vNormal), 0.0);
-          rim = pow(rim, 3.0);
-          color += uPrimary * rim * 0.3;
+          rim = pow(rim, 4.0);
+          color += uPrimary * rim * 0.1;
           gl_FragColor = vec4(color, 1.0);
         }
       `,
