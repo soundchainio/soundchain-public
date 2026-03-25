@@ -177,8 +177,13 @@ function PulsePage() {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const newChatInputRef = useRef<HTMLInputElement>(null)
 
-  // Push notifications
-  const { permission: pushPermission, isSubscribed: pushSubscribed, isSupported: pushSupported, subscribe: pushSubscribe, error: pushHookError } = usePushNotifications()
+  // Push notifications — disabled to debug #310 crash
+  // usePushNotifications internally uses useQuery with network-only which may cause re-render loop
+  const pushPermission = 'prompt' as const
+  const pushSubscribed = false
+  const pushSupported = false
+  const pushSubscribe = async () => ({ success: false, error: 'disabled' })
+  const pushHookError = null as string | null
   const [pushLoading, setPushLoading] = useState(false)
   const [testPush, { loading: testPushLoading }] = useMutation(TEST_PUSH)
   const [testPushResult, setTestPushResult] = useState<string | null>(null)
