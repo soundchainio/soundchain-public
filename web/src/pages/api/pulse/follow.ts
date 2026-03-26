@@ -74,16 +74,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Upsert to prevent duplicate follows
+    // Use "followedId" to match Mongoose Follow model (not "followingId")
     const now = new Date()
-    await follows.updateOne(
+    const result = await follows.updateOne(
       {
         followerId: myProfileId,
-        followingId: profileId,
+        followedId: profileId,
       },
       {
         $setOnInsert: {
           followerId: myProfileId,
-          followingId: profileId,
+          followedId: profileId,
           createdAt: now,
         },
         $set: {
@@ -93,19 +94,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { upsert: true }
     )
 
-    // Increment follower/following counts on profiles
-    await Promise.all([
-      profiles.updateOne(
-        { _id: new ObjectId(profileId) },
-        { $inc: { followerCount: 1 } }
-      ),
-      profiles.updateOne(
-        { _id: new ObjectId(myProfileId) },
-        { $inc: { followingCount: 1 } }
-      ),
-    ]).catch(() => {
-      // Non-critical: counts may be slightly off but follow is saved
-    })
+    // Only increment counts if a NEW follow was created (not a duplicate)
+    if (result.upsertedCount > 0) {
+      await Promise.all([
+        profiles.updateOne(
+          { _id: new ObjectId(profileId) },
+          { $inc: { followerCount: 1 } }
+        ),
+        profiles.updateOne(
+          { _id: new ObjectId(myProfileId) },
+          { $inc: { followingCount: 1 } }
+        ),
+      ]).catch(() => {
+        // Non-critical: counts may be slightly off but follow is saved
+      })
+    }
 
     return res.status(200).json({
       success: true,
