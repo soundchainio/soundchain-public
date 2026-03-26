@@ -529,7 +529,7 @@ function PulsePage() {
     warmUpAudio()
     const text = messageText.trim()
     if (!text || !selectedChat) return
-    // Clear text IMMEDIATELY — don't wait for send to complete
+    // Clear text IMMEDIATELY — don't wait for mutation to complete
     setMessageText('')
     closePickers()
     // Reset textarea height
@@ -537,24 +537,15 @@ function PulsePage() {
       inputRef.current.style.height = 'auto'
     }
     try {
-      // Direct REST API → Atlas (bypasses Lambda GraphQL for instant delivery)
-      const jwt = document.cookie.match(/(?:^|;\s*)token=([^;]*)/)?.[1] || localStorage.getItem('jwt_fallback') || ''
-      const res = await fetch('/api/pulse/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {}),
+      await sendMessage({
+        variables: {
+          input: {
+            message: text,
+            toId: selectedChat.profileId, // CRITICAL: profile ID, not chat ID
+          },
         },
-        credentials: 'include',
-        body: JSON.stringify({
-          toId: selectedChat.profileId,
-          message: text,
-        }),
+        refetchQueries: [ChatsDocument],
       })
-      if (!res.ok) throw new Error(`Send failed: ${res.status}`)
-      // Refresh chat list + history
-      refetchChats()
-      refetchHistoryRef.current?.()
     } catch {
       // Restore text on failure so user doesn't lose their message
       setMessageText(text)
@@ -575,29 +566,30 @@ function PulsePage() {
   }
 
   const handleStickerSelect = (url: string) => {
-    if (!selectedChat) return
+    // Send sticker as message with img markdown
+    sendMessage({
+      variables: {
+        input: {
+          message: url,
+          toId: selectedChat!.profileId,
+        },
+      },
+      refetchQueries: [ChatsDocument],
+    })
     closePickers()
-    const jwt = document.cookie.match(/(?:^|;\s*)token=([^;]*)/)?.[1] || localStorage.getItem('jwt_fallback') || ''
-    fetch('/api/pulse/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {}) },
-      credentials: 'include',
-      body: JSON.stringify({ toId: selectedChat.profileId, message: url }),
-    }).then(() => { refetchChats(); refetchHistoryRef.current?.() })
-      .catch(() => toast.error('Sticker failed to send'))
   }
 
   const handleGifSelect = (url: string) => {
-    if (!selectedChat) return
+    sendMessage({
+      variables: {
+        input: {
+          message: url,
+          toId: selectedChat!.profileId,
+        },
+      },
+      refetchQueries: [ChatsDocument],
+    })
     closePickers()
-    const jwt = document.cookie.match(/(?:^|;\s*)token=([^;]*)/)?.[1] || localStorage.getItem('jwt_fallback') || ''
-    fetch('/api/pulse/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(jwt ? { 'Authorization': `Bearer ${jwt}` } : {}) },
-      credentials: 'include',
-      body: JSON.stringify({ toId: selectedChat.profileId, message: url }),
-    }).then(() => { refetchChats(); refetchHistoryRef.current?.() })
-      .catch(() => toast.error('GIF failed to send'))
   }
 
   const handleCopyMessage = async (msgId: string, text: string) => {
