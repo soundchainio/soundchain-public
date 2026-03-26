@@ -307,7 +307,7 @@ export const CreateModal = () => {
           releaseYear: data.releaseYear,
           copyright: data.copyright,
           genres: data.genres as Genre[] | undefined,
-          createPost: false,
+          createPost: true, // Auto-post SCID uploads to feed (same as NFT mints)
         },
       },
       refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],

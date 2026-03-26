@@ -1448,7 +1448,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                           releaseYear: data.releaseYear,
                           copyright: data.copyright,
                           genres: data.genres as Genre[] | undefined,
-                          createPost: false,
+                          createPost: true, // Auto-post to feed
                         },
                       },
                       refetchQueries: [FeedDocument, PostsDocument, ExploreTracksDocument],
