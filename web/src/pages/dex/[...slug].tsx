@@ -1999,18 +1999,34 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
     fetchPolicy: 'cache-and-network',
   })
 
+  // Atlas REST fallback when GraphQL profileByHandle fails (Lambda timeout/403)
+  const [atlasFallbackProfile, setAtlasFallbackProfile] = useState<any>(null)
+  const [atlasFallbackLoading, setAtlasFallbackLoading] = useState(false)
+  useEffect(() => {
+    if (!routeId || routeType !== 'users' || selectedView !== 'profile') return
+    if (profileByHandleLoading || profileByHandleData?.profileByHandle) return
+    if (!profileByHandleError && !profileByHandleLoading) return // Still loading or no error
+    // GraphQL failed — try Atlas REST
+    setAtlasFallbackLoading(true)
+    fetch(`/api/profile/${encodeURIComponent(routeId)}`)
+      .then(r => r.json())
+      .then(d => { if (d.profile) setAtlasFallbackProfile(d.profile) })
+      .catch(() => {})
+      .finally(() => setAtlasFallbackLoading(false))
+  }, [routeId, routeType, selectedView, profileByHandleError, profileByHandleLoading, profileByHandleData])
+
   // Merge profile data from either query source
   // IMPORTANT: This MUST be defined BEFORE isViewingOwnProfile which depends on it
   // PRIORITY: If /dex/me route, use current user's profile (no external query needed)
   const viewingProfile = isExplicitOwnProfileRoute
-    ? (userData?.me?.profile || me?.profile)  // /dex/me -> own profile from user data
-    : (profileDetailData?.profile || profileByHandleData?.profileByHandle)  // /dex/users/handle -> queried profile
+    ? (userData?.me?.profile || me?.profile)
+    : (profileDetailData?.profile || profileByHandleData?.profileByHandle || atlasFallbackProfile)
   const viewingProfileLoading = isExplicitOwnProfileRoute
     ? userLoading
-    : (profileDetailLoading || profileByHandleLoading)
+    : (profileDetailLoading || profileByHandleLoading || atlasFallbackLoading)
   const viewingProfileError = isExplicitOwnProfileRoute
     ? userError
-    : (profileDetailError || profileByHandleError)
+    : (atlasFallbackProfile ? null : (profileDetailError || profileByHandleError)) // Clear error if Atlas found it
 
   // Query to get track count for viewed profile
   const { data: viewingProfileTracksData } = useGroupedTracksQuery({
