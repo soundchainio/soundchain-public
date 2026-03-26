@@ -312,7 +312,7 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
 
           {/* Action bar: Emoji, Stickers, Embed, character count */}
           <div className="flex items-center justify-between mt-2 gap-2">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
               {/* Emoji button */}
               <button
                 type="button"
