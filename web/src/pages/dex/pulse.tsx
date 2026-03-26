@@ -1658,8 +1658,9 @@ function PulsePage() {
       />
       <Head>
         <title>SoundChain Pulse</title>
-        <link key="manifest" rel="manifest" href="/pulse-manifest.json" />
-        <meta name="apple-mobile-web-app-title" content="SC Pulse" />
+        <link key="pulse-manifest" rel="manifest" href="/pulse-manifest.json?v=4" />
+        <link key="pulse-icon" rel="apple-touch-icon" sizes="180x180" href="/favicons/pulse-apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-title" content="SoundChain Pulse" />
         <meta name="application-name" content="SC Pulse" />
         <meta name="theme-color" content={WA.accent} />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

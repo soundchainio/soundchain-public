@@ -88,6 +88,7 @@ import { DmMessageContent } from 'components/pulse/DmMessageContent'
 const MobileBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/MobileBottomAudioPlayer'))
 const DesktopBottomAudioPlayer = dynamic(() => import('components/common/BottomAudioPlayer/DesktopBottomAudioPlayer'))
 const AudioEngine = dynamic(() => import('components/common/BottomAudioPlayer/AudioEngine'))
+const PulseInstallBanner = dynamic(() => import('components/PulseInstallBanner').then(m => ({ default: m.PulseInstallBanner })), { ssr: false })
 const CreateModal = dynamic(() => import('components/modals/CreateModal'), { ssr: false })
 const PostModal = dynamic(() => import('components/Post/PostModal').then(mod => ({ default: mod.PostModal })), { ssr: false })
 const AuthorActionsModal = dynamic(() => import('components/modals/AuthorActionsModal').then(mod => ({ default: mod.AuthorActionsModal })), { ssr: false })
@@ -10015,6 +10016,8 @@ DEXDashboard.getLayout = (page: ReactElement) => {
                 <div id="modals">
                   {/* NFT Minting Modal */}
                   <CreateModal />
+                  {/* Pulse PWA Install Banner — guides iOS users to add Pulse */}
+                  <PulseInstallBanner />
                   {/* Post Creation Modal */}
                   <PostModal />
                   {/* Post Actions (edit/delete) Modal */}
