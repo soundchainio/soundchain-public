@@ -940,7 +940,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
                   if (pill.external) {
                     window.open(pill.link, '_blank', 'noopener')
                   } else {
-                    if (globalRadio && currentTrack && isPlaying) globalRadio.startRadio()
+                    try { if (globalRadio && currentTrack && isPlaying) globalRadio.startRadio() } catch {}
                     router.push(pill.link)
                   }
                 }}

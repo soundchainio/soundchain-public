@@ -1023,6 +1023,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
   const [usersViewMode, setUsersViewMode] = useState<'browse' | 'leaderboard' | 'new'>('browse')
   const [usersGenreFilter, setUsersGenreFilter] = useState<string | null>(null)
   const [expandedPillId, setExpandedPillId] = useState<string | null>(null)
+  const [usersSearchQuery, setUsersSearchQuery] = useState('')
 
   // Hydrate explore search from ?q= URL parameter (for shared genre links)
   useEffect(() => {
@@ -4705,7 +4706,11 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
             const filteredUsers = (usersGenreFilter
               ? allUsers.filter((p: any) => (p.favoriteGenres || []).includes(usersGenreFilter))
               : allUsers
-            ).slice().sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            ).filter((p: any) => {
+              if (!usersSearchQuery.trim()) return true
+              const q = usersSearchQuery.toLowerCase()
+              return (p.displayName?.toLowerCase().includes(q) || p.userHandle?.toLowerCase().includes(q))
+            }).slice().sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
             // Interactive L2 Cyberpunk User Pill — tap to expand, actions, neon glow
             const renderUserPill = (profile: any, index: number, showSequence?: boolean) => {
@@ -4890,6 +4895,18 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                   <Button variant="ghost" size="sm" onClick={() => refetchUsers()} className="text-gray-500 hover:text-cyan-400 p-1">
                     <RefreshCw className={`w-3.5 h-3.5 ${exploreUsersLoading ? 'animate-spin' : ''}`} />
                   </Button>
+                </div>
+
+                {/* Search users */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Search users by name or handle..."
+                    value={usersSearchQuery}
+                    onChange={(e) => setUsersSearchQuery(e.target.value)}
+                    className="w-full bg-black/40 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
+                  />
                 </div>
               </div>
 
