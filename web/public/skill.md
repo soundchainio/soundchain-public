@@ -500,6 +500,8 @@ Send any URL to FURL via DM — get an instant summary.
 - **Browser-only** — no app store download required
 - **Works on WiFi AND cellular** networks worldwide
 - Phone button on every user profile → one-tap calling
+- **Persistent ringing** — push notification vibrates for 60s with Answer/Decline buttons
+- **No app needed** — works from PWA Home Screen, no native app required
 
 ### @Mentions (LIVE)
 - Type **@handle** in any post or comment → clickable profile link
