@@ -187,7 +187,7 @@ export default function UnifiedCreateAccountPage() {
     displayName: yup.string().min(3).max(255).required().label('Name'),
     handle: yup
       .string()
-      .min(1)
+      .min(2, 'Username must be at least 2 characters')
       .max(HANDLE_MAX_CHARS)
       .matches(handleRegex, 'Invalid characters. Only letters and numbers are accepted.')
       .required()

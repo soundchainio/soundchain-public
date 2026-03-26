@@ -19,7 +19,7 @@ interface FormValues {
 const validationSchema: yup.Schema<FormValues> = yup.object().shape({
   handle: yup
     .string()
-    .min(1, 'Username must be at least 1 character')
+    .min(2, 'Username must be at least 2 characters')
     .max(24, 'Username must be at most 24 characters')
     .matches(handleRegex, 'Username can only contain letters, numbers, underscores, hyphens, and periods')
     .required()

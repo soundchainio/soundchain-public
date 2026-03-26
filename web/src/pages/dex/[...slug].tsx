@@ -4106,7 +4106,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                                         variant="outline"
                                         className="px-3 border-cyan-500/50 hover:bg-cyan-500/20"
                                         onClick={handleSaveHandle}
-                                        disabled={accountSettingsSaving || !editHandle.trim()}
+                                        disabled={accountSettingsSaving || !editHandle.trim() || editHandle.trim().length < 2}
                                       >
                                         {accountSettingsSaving ? '...' : 'Save'}
                                       </Button>
