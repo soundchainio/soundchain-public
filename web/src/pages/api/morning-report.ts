@@ -145,12 +145,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const shouldSend = req.query.send === 'true' || req.method === 'POST'
 
     if (shouldSend) {
-      // Auth check for sending DMs — accepts REPORT_SECRET or Vercel Cron header
-      const auth = req.headers.authorization?.replace('Bearer ', '') || req.headers['x-report-secret']
-      const isVercelCron = req.headers['x-vercel-cron'] === '1' ||
-        (process.env.CRON_SECRET && req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`)
-      if (!isVercelCron && (!REPORT_SECRET || auth !== REPORT_SECRET)) {
-        return res.status(401).json({ error: 'REPORT_SECRET required to send DMs' })
+      // Auth check — Vercel cron sets CRON_SECRET in Authorization header
+      // Also accept REPORT_SECRET for manual triggers
+      const auth = req.headers.authorization?.replace('Bearer ', '') || req.headers['x-report-secret'] || ''
+      const isAuthorized =
+        (REPORT_SECRET && auth === REPORT_SECRET) ||
+        (process.env.CRON_SECRET && auth === process.env.CRON_SECRET) ||
+        req.headers['x-vercel-cron'] === '1'
+      if (!isAuthorized) {
+        return res.status(401).json({ error: 'Unauthorized — set CRON_SECRET on Vercel' })
       }
 
       const client = await clientPromise
