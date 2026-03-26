@@ -10,26 +10,30 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import clientPromise from 'lib/mongodb'
 
+// Extend Vercel function timeout (default 10s is too short for Atlas queries)
+export const config = {
+  maxDuration: 30,
+}
+
 // Fetch all tracks with audio from Atlas directly
 async function fetchAllTracks() {
   try {
     const client = await clientPromise
     const db = client.db('soundchain')
 
-    // Get tracks that have an assetUrl (audio file)
+    // Get random sample of tracks with audio (500 max to avoid timeout)
     const tracks = await db.collection('tracks')
-      .find(
-        { assetUrl: { $exists: true, $ne: null, $ne: '' }, deleted: { $ne: true } },
-        {
-          projection: {
+      .aggregate([
+        { $match: { assetUrl: { $exists: true, $ne: null, $ne: '' }, deleted: { $ne: true } } },
+        { $sample: { size: 500 } },
+        { $project: {
             _id: 1, title: 1, artist: 1, album: 1, description: 1,
             artworkUrl: 1, assetUrl: 1, playbackCount: 1, genres: 1,
-          }
-        }
-      )
+        }},
+      ])
       .toArray()
 
-    // Look up SCIDs for these tracks
+    // Look up SCIDs for sampled tracks only
     const trackIds = tracks.map(t => t._id.toString())
     const scids = await db.collection('scids')
       .find(
