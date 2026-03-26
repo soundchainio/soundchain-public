@@ -145,7 +145,13 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
 
   // Create peer connection
   const createPeerConnection = useCallback((peerId: string, cId: string) => {
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS })
+    const pc = new RTCPeerConnection({
+      iceServers: ICE_SERVERS,
+      // On mobile, force relay mode to skip slow STUN probing and go straight to TURN
+      ...(typeof navigator !== 'undefined' && /iPhone|iPad|Android/i.test(navigator.userAgent)
+        ? { iceTransportPolicy: 'relay' as RTCIceTransportPolicy }
+        : {}),
+    })
     pcRef.current = pc
 
     // Add local tracks
@@ -258,7 +264,7 @@ export function useWebRTCCall({ myId, myName, myAvatar, gateway, onIncomingCall 
       if (callStateRef.current === 'calling') {
         endCallRef.current?.()
       }
-    }, 30000)
+    }, 60000) // 60s timeout for cellular TURN relay connections
   }, [myId, callState, getMedia, createPeerConnection, sendSignal])
 
   // Answer an incoming call
