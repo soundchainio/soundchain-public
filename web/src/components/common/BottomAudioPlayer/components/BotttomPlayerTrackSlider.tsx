@@ -59,6 +59,17 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
             <Shuffle width={18} stroke={isShuffleOn ? 'white' : '#808080'} className="hover:stroke-white" />
           </button>
         )}
+        {/* Restart current track from beginning */}
+        <button
+          aria-label="Restart track"
+          className="flex h-8 w-8 items-center justify-center text-gray-400 hover:text-white transition-colors"
+          onClick={() => setProgressStateFromSlider(0)}
+          title="Restart from beginning"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+            <path d="M1 4v6h6M3.51 15a9 9 0 1 0 2.13-9.36L1 10" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
         <RewindButton aria-label="Previous track" onClick={playPrevious} disabled={!hasPrevious}>
           <Rewind className="hover:cursor-pointer hover:fill-white active:text-gray-80" height="100%" width="100%" />
         </RewindButton>
@@ -74,20 +85,18 @@ export const BotttomPlayerTrackSlider = (props: BotttomPlayerTrackSliderProps) =
         <ForwardButton aria-label="Next track" onClick={playNext} disabled={!hasNext}>
           <Forward className="hover:cursor-pointer hover:fill-white active:text-gray-80" height="100" width="100" />
         </ForwardButton>
-        {!hideShuffle && (
-          <button
-            aria-label={`Loop: ${loopMode}`}
-            className="flex h-10 w-10 items-center justify-center"
-            onClick={toggleLoop}
-            title={loopMode === 'off' ? 'Loop off' : loopMode === 'all' ? 'Loop all' : 'Loop one'}
-          >
-            <Repeat
-              width={18}
-              showOne={loopMode === 'one'}
-              className={loopMode !== 'off' ? 'text-white' : 'text-gray-500 hover:text-white'}
-            />
-          </button>
-        )}
+        <button
+          aria-label={`Loop: ${loopMode}`}
+          className="flex h-10 w-10 items-center justify-center"
+          onClick={toggleLoop}
+          title={loopMode === 'off' ? 'Loop off' : loopMode === 'all' ? 'Loop all' : 'Loop one'}
+        >
+          <Repeat
+            width={18}
+            showOne={loopMode === 'one'}
+            className={loopMode !== 'off' ? 'text-white' : 'text-gray-500 hover:text-white'}
+          />
+        </button>
       </PlaySectionContainer>
 
       {!hideSlider && (
