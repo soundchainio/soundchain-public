@@ -1,6 +1,27 @@
 import React from 'react'
 import { LinkItUrl } from 'react-linkify-it'
 
+// Render @mentions as clickable profile links
+function renderWithMentions(text: string, keyPrefix: string = ''): React.ReactNode[] {
+  const parts = text.split(/(@\w{2,24})/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('@') && part.length >= 3) {
+      const handle = part.slice(1)
+      return (
+        <a
+          key={`${keyPrefix}mention-${i}`}
+          href={`/dex/users/${handle}`}
+          className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      )
+    }
+    return <React.Fragment key={`${keyPrefix}text-${i}`}>{part}</React.Fragment>
+  })
+}
+
 interface EmoteRendererProps {
   text: string
   className?: string
@@ -50,15 +71,16 @@ export const EmoteRenderer = ({ text, className = '', linkify = false }: EmoteRe
 
   // Check if text contains any emotes (both correct and typo formats)
   if (!text.includes('![emote:') && !text.includes('[!emote:') && !text.includes('[emote:')) {
-    // No emotes - just linkify if needed
+    // No emotes — render @mentions + linkify if needed
+    const hasMentions = /@\w{2,24}/.test(text)
     if (linkify) {
       return (
         <LinkItUrl className="text-cyan-400 hover:underline">
-          <span className={className}>{text}</span>
+          <span className={className}>{hasMentions ? renderWithMentions(text) : text}</span>
         </LinkItUrl>
       )
     }
-    return <span className={className}>{text}</span>
+    return <span className={className}>{hasMentions ? renderWithMentions(text) : text}</span>
   }
 
   // Split text and replace emotes with images
