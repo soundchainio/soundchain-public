@@ -1281,8 +1281,8 @@ function PulsePage() {
         </button>
       </div>
 
-      {/* Search bar */}
-      {showSearch && (
+      {/* Search bar — always visible for quick user/chat search */}
+      {tab === 'chats' && (
         <div className="px-3 py-2" style={{ backgroundColor: WA.bg }}>
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: WA.search_bg }}>
             <Search className="w-4 h-4 flex-shrink-0" style={{ color: WA.text_secondary }} />
