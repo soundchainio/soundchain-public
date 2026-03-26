@@ -29,6 +29,54 @@ self.addEventListener('push', (event) => {
   // URL can be top-level or nested inside data.data (WebPushService format)
   const notificationUrl = url || nestedData?.url || '/dex/notifications';
   const isDM = nestedData?.type === 'dm';
+  const isCall = nestedData?.type === 'incoming_call';
+
+  // INCOMING CALL — persistent notification with Answer/Decline actions
+  if (isCall) {
+    const callerName = nestedData?.callerName || 'Someone';
+    const callOptions = {
+      body: `${callerName} is calling you on Pulse`,
+      icon: icon || '/favicons/android-chrome-192x192.png',
+      badge: badge || '/favicons/favicon-32x32.png',
+      data: { url: '/dex/pulse', type: 'incoming_call', callId: nestedData?.callId, callerName },
+      tag: `call-${nestedData?.callId || Date.now()}`,
+      vibrate: [300, 200, 300, 200, 300, 200, 300, 200, 300, 200, 300, 200, 300], // Long vibration pattern (13 pulses ~8 seconds)
+      renotify: true,
+      requireInteraction: true, // Stays visible until user acts
+      silent: false,
+      actions: [
+        { action: 'answer', title: 'Answer', icon: '/favicons/favicon-32x32.png' },
+        { action: 'decline', title: 'Decline' },
+      ],
+    };
+
+    // Re-vibrate every 4 seconds for up to 60 seconds (simulates persistent ringing)
+    let ringCount = 0;
+    const maxRings = 15; // 15 x 4s = 60 seconds of ringing
+    const ringInterval = setInterval(() => {
+      ringCount++;
+      if (ringCount >= maxRings) {
+        clearInterval(ringInterval);
+        return;
+      }
+      // Re-show notification to trigger vibration again
+      self.registration.showNotification(
+        `Incoming ${nestedData?.callMode || 'voice'} call`,
+        { ...callOptions, tag: `call-${nestedData?.callId || Date.now()}` }
+      );
+    }, 4000);
+
+    // Store interval ID to clear on answer/decline
+    self._activeCallRing = ringInterval;
+
+    event.waitUntil(
+      self.registration.showNotification(
+        `Incoming ${nestedData?.callMode || 'voice'} call`,
+        callOptions
+      )
+    );
+    return;
+  }
 
   const options = {
     body,
@@ -55,7 +103,40 @@ self.addEventListener('notificationclick', (event) => {
 
   event.notification.close();
 
-  const url = event.notification.data?.url || '/dex/notifications';
+  // Stop call ringing if active
+  if (self._activeCallRing) {
+    clearInterval(self._activeCallRing);
+    self._activeCallRing = null;
+  }
+
+  const notifData = event.notification.data || {};
+  const isCall = notifData.type === 'incoming_call';
+
+  // Handle call action buttons
+  if (isCall) {
+    if (event.action === 'decline') {
+      console.log('[SW] Call declined');
+      return; // Just close notification, don't open app
+    }
+    // Answer or tap notification → open Pulse
+    const pulseUrl = '/dex/pulse';
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            client.navigate(pulseUrl);
+            return client.focus();
+          }
+        }
+        if (clients.openWindow) {
+          return clients.openWindow(pulseUrl);
+        }
+      })
+    );
+    return;
+  }
+
+  const url = notifData.url || '/dex/notifications';
 
   // Handle action buttons if present
   if (event.action) {
@@ -78,9 +159,13 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Handle notification close
+// Handle notification close — stop call ringing
 self.addEventListener('notificationclose', (event) => {
   console.log('[SW] Notification closed:', event);
+  if (event.notification.data?.type === 'incoming_call' && self._activeCallRing) {
+    clearInterval(self._activeCallRing);
+    self._activeCallRing = null;
+  }
 });
 
 // ============================================
