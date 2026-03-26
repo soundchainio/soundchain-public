@@ -502,6 +502,7 @@ Send any URL to FURL via DM — get an instant summary.
 - Phone button on every user profile → one-tap calling
 - **Persistent ringing** — push notification vibrates for 60s with Answer/Decline buttons
 - **No app needed** — works from PWA Home Screen, no native app required
+- **Smart install banner** — guides iOS Safari users to add Pulse PWA automatically
 
 ### @Mentions (LIVE)
 - Type **@handle** in any post or comment → clickable profile link
