@@ -128,6 +128,32 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
   const smoothMidsRef = useRef(0)
   const smoothHighsRef = useRef(0)
 
+  // Per-song randomized orbit params — changes every track for infinite variety
+  const orbitParamsRef = useRef({
+    speed: 0.15,
+    tilt: 0.25,
+    wobble: 0.4,
+    yAmplitude: 1.2,
+    radiusBase: 4.5,
+    radiusWave: 0.6,
+    spinX: 2.0,
+    spinZ: 1.5,
+  })
+
+  // Randomize orbit when track changes (artworkUrl is proxy for track change)
+  useEffect(() => {
+    orbitParamsRef.current = {
+      speed: 0.08 + Math.random() * 0.25,       // 0.08 - 0.33
+      tilt: 0.1 + Math.random() * 0.5,           // 0.1 - 0.6
+      wobble: 0.2 + Math.random() * 0.8,         // 0.2 - 1.0
+      yAmplitude: 0.5 + Math.random() * 2.0,     // 0.5 - 2.5
+      radiusBase: 3.5 + Math.random() * 2.5,     // 3.5 - 6.0
+      radiusWave: 0.3 + Math.random() * 1.0,     // 0.3 - 1.3
+      spinX: 1.0 + Math.random() * 3.0,          // 1.0 - 4.0
+      spinZ: 0.5 + Math.random() * 3.0,          // 0.5 - 3.5
+    }
+  }, [artworkUrl])
+
   const getPalette = useCallback(() => {
     if (!genre) return DEFAULT_PALETTE
     const key = genre.toLowerCase().replace(/\s+/g, '-')
@@ -632,16 +658,16 @@ export default function RadioScene4D({ audioRef, isPlaying, artworkUrl, genre }:
         children.forEach((child) => {
           const baseAngle = child.userData.baseAngle as number | undefined
           if (baseAngle === undefined) return
-          const orbitSpeed = 0.15
-          const angle = baseAngle + elapsed * orbitSpeed
-          const radius = 4.5 + Math.sin(elapsed * 0.4 + baseAngle) * 0.6
+          const op = orbitParamsRef.current
+          const angle = baseAngle + elapsed * op.speed
+          const radius = op.radiusBase + Math.sin(elapsed * op.wobble + baseAngle) * op.radiusWave
 
           if (child instanceof THREE.Mesh) {
             child.position.x = Math.cos(angle) * radius
-            child.position.z = Math.sin(angle) * radius
-            child.position.y = Math.sin(elapsed * 0.25 + baseAngle * 2) * 1.2
-            child.rotation.x = elapsed * 2.0
-            child.rotation.z = elapsed * 1.5
+            child.position.z = Math.sin(angle) * radius * Math.cos(op.tilt) // Tilted orbit plane
+            child.position.y = Math.sin(elapsed * op.tilt + baseAngle * 2) * op.yAmplitude
+            child.rotation.x = elapsed * op.spinX
+            child.rotation.z = elapsed * op.spinZ
             child.scale.setScalar(1.0 + sHighs * 1.0)
           } else if (child instanceof THREE.Sprite) {
             // Sprite follows the mesh above
