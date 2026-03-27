@@ -63,13 +63,20 @@ function createWindow() {
   // Load SoundChain
   mainWindow.loadURL(APP_URL)
 
-  // Handle external links — open in default browser
+  // Handle popups — allow Magic OAuth + SoundChain, open others externally
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (!url.startsWith(APP_URL) && !url.startsWith('https://soundchain.io')) {
-      shell.openExternal(url)
-      return { action: 'deny' }
+    // Allow Magic OAuth popups (required for Google/Discord/Twitch login)
+    if (url.includes('magic.link') || url.includes('accounts.google.com') ||
+        url.includes('discord.com/oauth') || url.includes('id.twitch.tv')) {
+      return { action: 'allow' }
     }
-    return { action: 'allow' }
+    // Allow SoundChain URLs in same window
+    if (url.startsWith(APP_URL) || url.startsWith('https://soundchain.io')) {
+      return { action: 'allow' }
+    }
+    // Everything else opens in default browser
+    shell.openExternal(url)
+    return { action: 'deny' }
   })
 
   // Auto-grant microphone permission for WebRTC calls
