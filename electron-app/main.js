@@ -112,10 +112,7 @@ function createWindow() {
       .install-banner, [class*="install-banner"], [class*="InstallBanner"] {
         display: none !important;
       }
-      /* Draggable title bar area */
-      body { -webkit-app-region: no-drag; }
-      nav { -webkit-app-region: drag; }
-      nav button, nav a, nav input { -webkit-app-region: no-drag; }
+      /* Everything is clickable — no drag regions blocking clicks */
     `)
   })
 }
