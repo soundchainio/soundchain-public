@@ -25,7 +25,7 @@ if (!AGENT_MASTER_SEED) console.error('[CRITICAL] AGENT_WALLET_SEED not configur
 
 function nameToIndex(name: string): number {
   const hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(name.toLowerCase()))
-  return parseInt(hash.slice(2, 10), 16)
+  return parseInt(hash.slice(2, 10), 16) % 2147483647
 }
 
 function deriveAgentWallet(agentName: string): { address: string; privateKey: string } {
