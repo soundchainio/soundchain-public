@@ -1293,17 +1293,56 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
 
           {/* Info Cards — glass panels over 4D universe */}
           <div className="grid grid-cols-3 gap-2 md:gap-3 mt-4 md:mt-6">
-            <div className="bg-black/20 backdrop-blur-sm border border-cyan-500/20 rounded-xl p-3 text-center hover:border-cyan-400/40 transition-all">
-              <div className="text-xl md:text-3xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]">{totalTracks || queueLength || '...'}</div>
+            {/* Tracks — real count + Polygonscan link */}
+            <a
+              href="https://polygonscan.com/token/0x45f1af89486aeec2da0b06340cd9cd3bd741a15c"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-black/20 backdrop-blur-sm border border-cyan-500/20 rounded-xl p-3 text-center hover:border-cyan-400/40 transition-all group cursor-pointer"
+            >
+              <div className="text-xl md:text-3xl font-bold text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]">
+                {totalTracks ? totalTracks.toLocaleString() : queueLength || '...'}
+              </div>
               <div className="text-xs text-gray-400">Tracks</div>
-            </div>
+              <div className="text-[8px] text-cyan-500/50 group-hover:text-cyan-400 mt-1">IPFS + Polygonscan</div>
+            </a>
+            {/* 24/7 */}
             <div className="bg-black/20 backdrop-blur-sm border border-yellow-500/20 rounded-xl p-3 text-center hover:border-yellow-400/40 transition-all">
               <div className="text-xl md:text-3xl font-bold text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.5)]">24/7</div>
               <div className="text-xs text-gray-400">Infinite Loop</div>
+              <div className="text-[8px] text-yellow-500/50 mt-1">Decentralized Radio</div>
             </div>
-            <div className="bg-black/20 backdrop-blur-sm border border-green-500/20 rounded-xl p-3 text-center hover:border-green-400/40 transition-all">
+            {/* OGUN — live distribution data + Polygonscan link */}
+            <a
+              href="https://polygonscan.com/address/0x84561ddF3A6Db139ab5f695a28c0DE46Af2a7083"
+              target="_blank"
+              rel="noreferrer"
+              className="bg-black/20 backdrop-blur-sm border border-green-500/20 rounded-xl p-3 text-center hover:border-green-400/40 transition-all group cursor-pointer"
+            >
               <div className="text-xl md:text-3xl font-bold text-green-400 drop-shadow-[0_0_12px_rgba(74,222,128,0.5)]">OGUN</div>
               <div className="text-xs text-gray-400">Streaming Rewards</div>
+              <div className="text-[8px] text-green-500/50 group-hover:text-green-400 mt-1">70% Creator · 30% Listener</div>
+            </a>
+          </div>
+
+          {/* OGUN Distribution Ticker — scrolling left to right */}
+          <div className="mt-2 overflow-hidden rounded-lg border border-green-500/10 bg-black/20">
+            <div className="flex animate-marquee whitespace-nowrap py-1.5">
+              <span className="text-[9px] text-green-400/70 mx-4">5,000,001 OGUN in Distributor V2</span>
+              <span className="text-[9px] text-yellow-400/70 mx-4">125% APR Staking</span>
+              <span className="text-[9px] text-cyan-400/70 mx-4">0.5 OGUN per stream</span>
+              <span className="text-[9px] text-purple-400/70 mx-4">SC-POL-XXXX-XXXXXXX SCID Codes</span>
+              <span className="text-[9px] text-green-400/70 mx-4">$OGUN on Polygon</span>
+              <span className="text-[9px] text-orange-400/70 mx-4">0.05% Platform Fee → Treasury</span>
+              <span className="text-[9px] text-cyan-400/70 mx-4">On-Chain Rewards Distribution</span>
+              {/* Duplicate for seamless loop */}
+              <span className="text-[9px] text-green-400/70 mx-4">5,000,001 OGUN in Distributor V2</span>
+              <span className="text-[9px] text-yellow-400/70 mx-4">125% APR Staking</span>
+              <span className="text-[9px] text-cyan-400/70 mx-4">0.5 OGUN per stream</span>
+              <span className="text-[9px] text-purple-400/70 mx-4">SC-POL-XXXX-XXXXXXX SCID Codes</span>
+              <span className="text-[9px] text-green-400/70 mx-4">$OGUN on Polygon</span>
+              <span className="text-[9px] text-orange-400/70 mx-4">0.05% Platform Fee → Treasury</span>
+              <span className="text-[9px] text-cyan-400/70 mx-4">On-Chain Rewards Distribution</span>
             </div>
           </div>
 
