@@ -292,15 +292,21 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
   const isItemLoaded = (index: number) => !pageInfo?.hasNextPage || index < nodes!.length
   const postsCount = pageInfo?.hasNextPage ? nodes!.length + 1 : nodes!.length
 
+  // Use ref for nodes to avoid useCallback dependency on Apollo's ever-changing array reference
+  // Without this: nodes changes -> handleOnPlayClicked recreated -> all Posts re-render -> #310 crash
+  const nodesRef = useRef(nodes)
+  nodesRef.current = nodes
+
   const handleOnPlayClicked = useCallback((trackId: string) => {
-    if (nodes) {
+    const currentNodes = nodesRef.current
+    if (currentNodes) {
       // Find the post that contains this track and set it as active
-      const playingPost = (nodes as PostType[]).find(post => post.track?.id === trackId)
+      const playingPost = (currentNodes as PostType[]).find(post => post.track?.id === trackId)
       if (playingPost) {
         setActivePostId(playingPost.id)
       }
 
-      const listOfTracks = (nodes as PostType[])
+      const listOfTracks = (currentNodes as PostType[])
         .filter(post => post.track && post.track.deleted === false)
         .map(post => {
           if (post.track) {
@@ -317,7 +323,7 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
       const trackIndex = listOfTracks.findIndex(track => track.trackId === trackId)
       playlistState(listOfTracks, trackIndex)
     }
-  }, [nodes, playlistState])
+  }, [playlistState])
 
   // Calculate responsive column count based on width
   // iPhone: 2 cols (~187px each), Desktop: 3-4 cols (~150px each) for tight stacking
