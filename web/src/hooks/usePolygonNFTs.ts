@@ -71,7 +71,7 @@ const ipfsToHttp = (url?: string): string | undefined => {
   if (!url) return undefined
   if (url.startsWith('ipfs://')) {
     const hash = url.replace('ipfs://', '')
-    return `https://gateway.pinata.cloud/ipfs/${hash}`
+    return `https://soundchain.mypinata.cloud/ipfs/${hash}`
   }
   if (url.startsWith('ar://')) {
     return `https://arweave.net/${url.replace('ar://', '')}`

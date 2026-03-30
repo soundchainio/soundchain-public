@@ -426,7 +426,7 @@ export const NFTCard: React.FC<NFTCardProps> = ({
                 <div className="metadata-label">BLOCKCHAIN_LINKS</div>
                 <div className="space-y-2">
                   <a
-                    href={`https://gateway.pinata.cloud/ipfs/${mockMetadata.ipfsHash}`}
+                    href={`https://soundchain.mypinata.cloud/ipfs/${mockMetadata.ipfsHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}

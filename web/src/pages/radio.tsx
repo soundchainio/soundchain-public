@@ -147,7 +147,7 @@ export const getServerSideProps: GetServerSideProps<OGUNRadioProps> = async (con
       // Transform IPFS URLs to HTTPS gateway URLs for OG images
       let artworkUrl = track.artworkUrl || ''
       if (artworkUrl.startsWith('ipfs://')) {
-        artworkUrl = `https://gateway.pinata.cloud/ipfs/${artworkUrl.replace('ipfs://', '')}`
+        artworkUrl = `https://soundchain.mypinata.cloud/ipfs/${artworkUrl.replace('ipfs://', '')}`
       }
 
       return {
@@ -469,7 +469,7 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
   // Ensure artwork URL is a proper HTTPS URL for social previews
   let ogImage = ogTrack?.artwork_url || 'https://soundchain.io/soundchain-meta-logo.png'
   if (ogImage.startsWith('ipfs://')) {
-    ogImage = `https://gateway.pinata.cloud/ipfs/${ogImage.replace('ipfs://', '')}`
+    ogImage = `https://soundchain.mypinata.cloud/ipfs/${ogImage.replace('ipfs://', '')}`
   }
 
   return (

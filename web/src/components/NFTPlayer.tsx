@@ -7,7 +7,7 @@ const NFTPlayer = ({ cid, type = 'audio' }: { cid: string; type?: 'audio' | 'vid
 
   useEffect(() => {
     const torrent = new WebTorrent();
-    const pinataUrl = `https://gateway.pinata.cloud/ipfs/${cid}`;
+    const pinataUrl = `https://soundchain.mypinata.cloud/ipfs/${cid}`;
     torrent.add(pinataUrl, { announce: ['wss://tracker.openwebtorrent.com'] });
 
     torrent.on('torrent', t => {
