@@ -3,6 +3,13 @@ import jwt from 'jsonwebtoken'
 import clientPromise from '../../../lib/mongodb'
 import { ObjectId } from 'mongodb'
 
+// Web Push for DM notifications (CarPlay, Apple Watch, lock screen)
+const webpush = (() => {
+  try { return require('web-push') } catch { return null }
+})()
+const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY || ''
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || ''
+
 const JWT_SECRET = process.env.JWT_SECRET || 'not-so-secret'
 const JWT_NAMESPACE = 'https://soundchain.io'
 
@@ -82,6 +89,61 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const result = await messages.insertOne(doc)
+
+    // Send web push notification (Apple Watch, lock screen, CarPlay)
+    if (webpush && VAPID_PUBLIC && VAPID_PRIVATE) {
+      try {
+        webpush.setVapidDetails('mailto:agents@soundchain.io', VAPID_PUBLIC, VAPID_PRIVATE)
+
+        // Get sender display name
+        const senderProfile = await db.collection('profiles').findOne({
+          _id: (() => { try { return new ObjectId(profileId) } catch { return profileId } })(),
+        })
+        const senderName = senderProfile?.displayName || senderProfile?.handle || 'Someone'
+
+        // Find recipient's user doc, then their push subscriptions
+        const recipientProfile = await db.collection('profiles').findOne({
+          _id: (() => { try { return new ObjectId(toId) } catch { return toId } })(),
+        })
+        if (recipientProfile) {
+          const recipientUser = await db.collection('users').findOne({
+            $or: [
+              { profileId: toId },
+              { profileId: new ObjectId(toId) },
+            ],
+          })
+          if (recipientUser) {
+            const subs = await db.collection('pushsubscriptions').find({
+              userId: { $in: [recipientUser._id.toString(), recipientUser._id] },
+            }).toArray()
+
+            const payload = JSON.stringify({
+              title: senderName,
+              body: doc.message.length > 80 ? doc.message.slice(0, 77) + '...' : doc.message,
+              icon: '/favicons/android-chrome-192x192.png',
+              badge: '/favicons/favicon-32x32.png',
+              data: { type: 'dm', url: '/dex/pulse' },
+              tag: `dm-${result.insertedId}`,
+            })
+
+            for (const sub of subs) {
+              try {
+                await webpush.sendNotification(
+                  { endpoint: sub.endpoint, keys: { p256dh: sub.keys?.p256dh, auth: sub.keys?.auth } },
+                  payload
+                )
+              } catch (err: any) {
+                if (err.statusCode === 404 || err.statusCode === 410) {
+                  await db.collection('pushsubscriptions').deleteOne({ _id: sub._id })
+                }
+              }
+            }
+          }
+        }
+      } catch (pushErr) {
+        console.error('[Pulse send] Push notification failed (non-blocking):', pushErr)
+      }
+    }
 
     return res.status(201).json({
       message: {
