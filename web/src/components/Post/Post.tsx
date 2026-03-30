@@ -556,7 +556,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
             <div className="px-3 py-2">
               <MiniAudioPlayer
                 song={{
-                  src: post.track.playbackUrl || post.track.assetUrl || '',
+                  src: post.track.assetUrl || post.track.playbackUrl || '',
                   trackId: post.track.id,
                   art: post.track.artworkUrl,
                   title: post.track.title,

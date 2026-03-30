@@ -64,7 +64,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
       node =>
         ({
           trackId: node.id,
-          src: node.playbackUrl || node.assetUrl || '',
+          src: node.assetUrl || node.playbackUrl || '',
           art: node.artworkUrl,
           title: node.title,
           artist: node.artist,
@@ -83,7 +83,7 @@ export const Tracks = ({ className, profileId, pageSize = 10 }: TracksProps) => 
             index={index + 1}
             song={{
               trackId: song.id,
-              src: song.playbackUrl || song.assetUrl || '',
+              src: song.assetUrl || song.playbackUrl || '',
               art: song.artworkUrl,
               title: song.title,
               artist: song.artist,
