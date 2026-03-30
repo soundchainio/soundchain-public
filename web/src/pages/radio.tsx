@@ -343,6 +343,48 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
     }
   }, [currentTrack])
 
+  // MediaSession API — feeds CarPlay, lock screen, Apple Watch with per-track metadata
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !currentTrack) return
+
+    const artwork: MediaImage[] = []
+    if (currentTrack.artwork_url) {
+      artwork.push({ src: currentTrack.artwork_url, sizes: '512x512', type: 'image/jpeg' })
+    }
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.title || 'OGUN Radio',
+      artist: currentTrack.artist || 'SoundChain',
+      album: 'OGUN Radio',
+      artwork,
+    })
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      audioRef.current?.play().catch(() => {})
+    })
+    navigator.mediaSession.setActionHandler('pause', () => {
+      audioRef.current?.pause()
+    })
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      skipToNext()
+    })
+    navigator.mediaSession.setActionHandler('previoustrack', () => {
+      if (audioRef.current) audioRef.current.currentTime = 0
+    })
+  }, [currentTrack])
+
+  // Update MediaSession position state for CarPlay progress bar
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !duration || !isPlaying) return
+    try {
+      navigator.mediaSession.setPositionState({
+        duration: duration || 0,
+        playbackRate: 1,
+        position: Math.min(progress, duration),
+      })
+    } catch { /* ignore invalid state */ }
+  }, [progress, duration, isPlaying])
+
   // Global click handler - tap anywhere to start
   useEffect(() => {
     if (!needsInteraction) return
