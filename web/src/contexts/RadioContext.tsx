@@ -111,7 +111,10 @@ export function RadioProvider({ children }: { children: React.ReactNode }) {
     if (audio.src !== currentTrack.stream_url) {
       audio.src = currentTrack.stream_url
       if (started) {
-        audio.play().catch(() => {})
+        audio.addEventListener('canplay', () => {
+          audio.play().catch(() => {})
+        }, { once: true })
+        audio.load()
       }
     }
   }, [currentTrack?.stream_url, started])

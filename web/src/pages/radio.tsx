@@ -321,20 +321,25 @@ export default function OGUNRadio({ initialTrack, trackId: initialTrackId }: OGU
         startTracking(currentTrack.id)
       }
 
-      audioRef.current.src = currentTrack.stream_url
-      audioRef.current.load()
+      const audio = audioRef.current
+      audio.src = currentTrack.stream_url
 
-      // Always try to play
-      audioRef.current.play()
-        .then(() => {
-          setNeedsInteraction(false)
-          setIsPlaying(true)
-        })
-        .catch(() => {
-          // Browser blocked autoplay - need user gesture
-          setNeedsInteraction(true)
-          setIsPlaying(false)
-        })
+      // Wait for audio to buffer before attempting play
+      const handleCanPlay = () => {
+        audio.play()
+          .then(() => {
+            setNeedsInteraction(false)
+            setIsPlaying(true)
+          })
+          .catch(() => {
+            // Browser blocked autoplay - need user gesture
+            setNeedsInteraction(true)
+            setIsPlaying(false)
+          })
+      }
+
+      audio.addEventListener('canplay', handleCanPlay, { once: true })
+      audio.load()
     }
   }, [currentTrack])
 
