@@ -194,6 +194,11 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
   // Get nodes for hooks that need them (safe even if data not loaded yet)
   const nodes = data?.posts?.nodes
 
+  // Use ref for nodes to avoid useCallback dependency on Apollo's ever-changing array reference
+  // MUST be before any conditional returns (Rules of Hooks)
+  const nodesRef = useRef(nodes)
+  nodesRef.current = nodes
+
   // Find the currently playing post (for jump-to feature) - MUST be before conditional returns
   const playingPostId = useMemo(() => {
     if (!isPlaying || !currentSong?.trackId || !nodes) return null
@@ -291,11 +296,6 @@ export const Posts = ({ profileId, disableVirtualization, viewMode: externalView
   const loadMoreItems = loading ? () => null : loadMore
   const isItemLoaded = (index: number) => !pageInfo?.hasNextPage || index < nodes!.length
   const postsCount = pageInfo?.hasNextPage ? nodes!.length + 1 : nodes!.length
-
-  // Use ref for nodes to avoid useCallback dependency on Apollo's ever-changing array reference
-  // Without this: nodes changes -> handleOnPlayClicked recreated -> all Posts re-render -> #310 crash
-  const nodesRef = useRef(nodes)
-  nodesRef.current = nodes
 
   const handleOnPlayClicked = useCallback((trackId: string) => {
     const currentNodes = nodesRef.current
