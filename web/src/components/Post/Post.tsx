@@ -86,9 +86,24 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
   const ytBlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Autoplay on scroll — muted video plays when 50% visible (like X/Instagram)
+  // Auto-unmute after first user interaction (click/tap anywhere on page)
   const [isPlayerInView, setIsPlayerInView] = useState(false)
   const [isPlayerMuted, setIsPlayerMuted] = useState(true)
   const playerContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const unmute = () => {
+      setIsPlayerMuted(false)
+      document.removeEventListener('click', unmute)
+      document.removeEventListener('touchstart', unmute)
+    }
+    document.addEventListener('click', unmute, { once: true })
+    document.addEventListener('touchstart', unmute, { once: true })
+    return () => {
+      document.removeEventListener('click', unmute)
+      document.removeEventListener('touchstart', unmute)
+    }
+  }, [])
 
   // Detect YouTube age-restricted/blocked embeds via timeout.
   // YouTube's IFrame API never initializes for age-gated content,
@@ -414,7 +429,7 @@ const PostComponent = ({ post, handleOnPlayClicked }: PostProps) => {
                       }}
                       config={{
                         youtube: {
-                          playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: 1, autoplay: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
+                          playerVars: { modestbranding: 1, rel: 0, playsinline: 1, mute: isPlayerMuted ? 1 : 0, autoplay: 1, origin: typeof window !== 'undefined' ? window.location.origin : '' },
                           embedOptions: { host: 'https://www.youtube-nocookie.com' },
                         },
                         vimeo: { playerOptions: { responsive: true, playsinline: true } },
