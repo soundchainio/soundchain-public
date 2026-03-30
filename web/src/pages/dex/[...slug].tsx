@@ -2949,7 +2949,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
       }
       const playlist: Song[] = tracks.map(t => ({
         trackId: t?.id || '',
-        src: t?.playbackUrl || '',
+        src: t?.playbackUrl || t?.assetUrl || '',
         title: t?.title || 'Unknown',
         artist: t?.artist || t?.profile?.displayName || 'Unknown Artist',
         art: t?.artworkUrl || t?.artwork || '',
@@ -5183,7 +5183,7 @@ function DEXDashboard({ ogData, isBot }: DEXDashboardProps) {
                     <Post post={postDetailData.post} handleOnPlayClicked={(trackId: string) => {
                       if (postDetailData.post?.track) {
                         playlistState([{
-                          src: postDetailData.post.track.playbackUrl,
+                          src: postDetailData.post.track.playbackUrl || postDetailData.post.track.assetUrl || '',
                           trackId: postDetailData.post.track.id,
                           art: postDetailData.post.track.artworkUrl,
                           title: postDetailData.post.track.title,

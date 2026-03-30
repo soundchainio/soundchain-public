@@ -175,8 +175,9 @@ export const NewCommentForm = ({ postId, onSuccess, compact, inputRef, myReactio
       if (router.pathname === '/posts/[id]' && !router.query.cursor) {
         updateCache(cache, result)
       }
-      cache.evict({ fieldName: 'comments' })
-      cache.gc()
+      // Only evict the specific post's comments, not ALL comments globally
+      // Previous: cache.evict({ fieldName: 'comments' }) + cache.gc()
+      // This was too aggressive — killed audio player state on every comment submit
     },
   })
 
