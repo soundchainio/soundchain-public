@@ -282,7 +282,12 @@ export const AudioEngine = () => {
     } else {
       // Direct audio file (IPFS/Pinata URLs - MP3, WAV, etc.)
       // These don't need HLS processing, just set the src directly
-      audio.src = currentSong.src
+      // Fix dead dedicated Pinata gateway — swap to public gateway at runtime
+      let audioSrc = currentSong.src
+      if (audioSrc?.includes('soundchain.mypinata.cloud')) {
+        audioSrc = audioSrc.replace('soundchain.mypinata.cloud', 'gateway.pinata.cloud')
+      }
+      audio.src = audioSrc
     }
 
 

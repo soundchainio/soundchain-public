@@ -1035,7 +1035,7 @@ function NFTThumbnail({
   const getImageUrl = (url?: string) => {
     if (!url) return defaultImage
     if (url.startsWith('ipfs://')) {
-      return `https://soundchain.mypinata.cloud/ipfs/${url.replace('ipfs://', '')}`
+      return `https://gateway.pinata.cloud/ipfs/${url.replace('ipfs://', '')}`
     }
     return url
   }

@@ -4,6 +4,7 @@ import { TracksDocument, TracksQuery, SortTrackField, SortOrder } from 'lib/grap
 
 export type Song = {
   src: string
+  fallbackSrc?: string  // S3 assetUrl fallback when IPFS playbackUrl fails
   title?: string | null
   trackId: string
   artist?: string | null

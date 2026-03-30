@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Only allow trusted image sources
   const allowed = [
     'soundchain-api-production-uploads.s3',
-    'soundchain.mypinata.cloud',
+    'gateway.pinata.cloud',
     'ipfs.io',
     'gateway.pinata.cloud',
     'nftstorage.link',

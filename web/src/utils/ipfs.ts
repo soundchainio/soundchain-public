@@ -19,13 +19,13 @@ export function getIpfsUrl(uri: string | null | undefined, fallback = '/default-
   // Handle ipfs:// protocol
   if (uri.startsWith('ipfs://')) {
     const cid = uri.replace('ipfs://', '')
-    const gateway = config.ipfsGateway || 'https://soundchain.mypinata.cloud/ipfs/'
+    const gateway = config.ipfsGateway || 'https://gateway.pinata.cloud/ipfs/'
     return `${gateway}${cid}`
   }
 
   // Handle bare CID (Qm... or baf...)
   if (uri.startsWith('Qm') || uri.startsWith('baf')) {
-    const gateway = config.ipfsGateway || 'https://soundchain.mypinata.cloud/ipfs/'
+    const gateway = config.ipfsGateway || 'https://gateway.pinata.cloud/ipfs/'
     return `${gateway}${uri}`
   }
 
